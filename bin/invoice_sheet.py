@@ -130,6 +130,8 @@ class CreditInvoiceSheet():
         self.write_date = datetime.datetime.now()
         return self.write_date
 
+    # TODO - Has dummy data
+    # TODO - Key record_values = {}
     def add_credit_invoice_sheet_record(self, **kwargs):
         if not kwargs.get('credits') or not kwargs.get('seller_id'):
             return False

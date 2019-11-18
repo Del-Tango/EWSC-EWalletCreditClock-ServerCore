@@ -7,9 +7,11 @@ from credit_clock import CreditClock
 from transfer_sheet import CreditTransferSheet
 from invoice_sheet import CreditInvoiceSheet
 
-# TODO - Create transfer sheet
-# TODO - Create invoice sheet
-
+# TODO - Create transfer sheet [ X ]
+# TODO - Create invoice sheet [ X ]
+# TODO - Switch transfer sheet [ X ]
+# TODO - Switch invoice sheet [ X ]
+# TODO - Replace all dummy data with a value dict passed by **kwargs
 class CreditEWallet():
 
     # TODO - Has dummy data
@@ -86,6 +88,52 @@ class CreditEWallet():
                 }
         return _values
 
+    def fetch_credit_wallet_transfer_sheet_by_id(self, code):
+        _transfer_sheet = self.transfer_sheet_archive.get(code)
+        return _transfer_sheet
+
+    def fetch_credit_wallet_transfer_sheet_by_ref(self, code):
+        for item in self.transfer_sheet_archive:
+            if self.transfer_sheet_archive[item].reference == code:
+                return self.transfer_sheet_archive[item]
+        return False
+
+    def fetch_credit_wallet_transfer_sheets(self, **kwargs):
+        return self.transfer_sheet_archive.values()
+
+    def fetch_credit_wallet_invoice_sheet_by_id(self, code):
+        _invoice_sheet = self.invoice_sheet_archive.get(code)
+        return _invoice_sheet
+
+    def fetch_credit_wallet_invoice_sheet_by_ref(self, code):
+        for item in self.invoice_sheet_archive:
+            if self.invoice_sheet_archive[item].reference == code:
+                return self.invoice_sheet_archive[item]
+        return False
+
+    def fetch_credit_wallet_invoice_sheets(self, **kwargs):
+        return self.invoice_sheet_archive.values()
+
+    def fetch_credit_wallet_transfer_sheet(self, **kwargs):
+        if not kwargs.get('identifier'):
+            return False
+        _handlers = {
+                'id': self.fetch_credit_wallet_transfer_sheet_by_id,
+                'reference': self.fetch_credit_wallet_transfer_sheet_by_ref,
+                'all': self.fetch_credit_wallet_transfer_sheets,
+                }
+        return _handlers[kwargs['identifier']](kwargs.get('code'))
+
+    def fetch_credit_wallet_invoice_sheet(self, **kwargs):
+        if not kwargs.get('identifier'):
+            return False
+        _handlers = {
+                'id': self.fetch_credit_wallet_invoice_sheet_by_id,
+                'reference': self.fetch_credit_wallet_invoice_sheet_by_ref,
+                'all': self.fetch_credit_wallet_invoice_sheets,
+                }
+        return _handlers[kwargs['identifier']](kwargs.get('code'))
+
     def update_write_date(self):
         global write_date
         self.write_date = datetime.datetime.now()
@@ -95,6 +143,38 @@ class CreditEWallet():
         global session_key
         self.session_key = random.randint(10000,999999)
         return self.session_key
+
+    def handle_switch_credit_wallet_transfer_sheet_by_ref(self, code):
+        global transfer_sheet
+        _new_transfer_sheet = self.fetch_credit_wallet_transfer_sheet(
+                identifier='reference', code=code
+                )
+        self.transfer_sheet = _new_transfer_sheet
+        return _new_transfer_sheet
+
+    def handle_switch_credit_wallet_transfer_sheet_by_id(self, code):
+        global transfer_sheet
+        _new_transfer_sheet = self.fetch_credit_wallet_transfer_sheet(
+                identifier='id', code=code
+                )
+        self.transfer_sheet = _new_transfer_sheet
+        return _new_transfer_sheet
+
+    def handle_switch_credit_wallet_invoice_sheet_by_ref(self, code):
+        global invoice_sheet
+        _new_invoice_sheet = self.fetch_credit_wallet_invoice_sheet(
+                identifier='ref', code=code
+                )
+        self.invoice_sheet = _new_invoice_sheet
+        return _new_invoice_sheet
+
+    def handle_switch_credit_wallet_invoice_sheet_by_id(self, code):
+        global invoice_sheet
+        _new_invoice_sheet = self.fetch_credit_wallet_invoice_sheet(
+                identifier='id', code=code
+                )
+        self.invoice_sheet = _new_invoice_sheet
+        return _new_invoice_sheet
 
     def supply_credits(self, **kwargs):
         if not kwargs.get('credits'):
@@ -143,6 +223,7 @@ class CreditEWallet():
                 }
         return _handlers[kwargs['conversion']](**kwargs)
 
+    # TODO - Refactor invoice record creation
     def buy_credits(self, **kwargs):
         if not kwargs.get('credits') or not kwargs.get('seller_id'):
             return False
@@ -158,6 +239,7 @@ class CreditEWallet():
                 )
         return _supply
 
+    # TODO - Refactor transfer record creation
     def use_credits(self, **kwargs):
         if not kwargs.get('credits') or not kwargs.get('used_on'):
             return False
@@ -240,6 +322,7 @@ class CreditEWallet():
             ))
         return self.credits
 
+    # TODO - Refactor
 #   @pysnooper.snoop()
     def display_credit_wallet_transfer_sheets(self, **kwargs):
         for sheet_id in self.transfer_sheet_archive:
@@ -249,16 +332,12 @@ class CreditEWallet():
                 sheet.fetch_transfer_sheet_id(),
                 sheet.fetch_transfer_sheet_reference()
                 ))
-#       for k, v in self.transfer_sheet_archive:
-#           print('{} - {}: {}'.format(
-#               v.fetch_transfer_sheet_create_date(), k,
-#               v.fetch_transfer_sheet_reference()
-#               ))
         return self.transfer_sheet_archive
 
     def display_credit_wallet_transfer_records(self, **kwargs):
         return self.transfer_sheet.display_transfer_sheet_records()
 
+    # TODO - Refactor
     def display_credit_wallet_invoice_sheets(self, **kwargs):
         for sheet_id in self.invoice_sheet_archive:
             sheet = self.invoice_sheet_archive[sheet_id]
@@ -267,11 +346,6 @@ class CreditEWallet():
                 sheet.fetch_invoice_sheet_id(),
                 sheet.fetch_invoice_sheet_reference()
                 ))
-#       for k, v in self.invoice_sheet_archive:
-#           print('{} - {}: {}'.format(
-#               v.fetch_invoice_sheet_create_date(), k,
-#               v.fetch_invoice_sheet_reference(),
-#               ))
         return self.invoice_sheet_archive
 
     def display_credit_wallet_invoice_records(self, **kwargs):
@@ -303,6 +377,66 @@ class CreditEWallet():
                 }
         return _handlers[kwargs['interogate']](**kwargs)
 
+    def switch_credit_wallet_transfer_sheet(self, **kwargs):
+        if not kwargs.get('identifier') or not kwargs.get('code'):
+            return False
+        _handlers = {
+                'id': self.handle_switch_credit_wallet_transfer_sheet_by_id,
+                'ref': self.handle_switch_credit_wallet_transfer_sheet_by_ref,
+                }
+        return _handlers[kwargs['identifier']](kwargs['code'])
+
+    def switch_credit_wallet_invoice_sheet(self, **kwargs):
+        if not kwargs.get('identifier') or not kwargs.get('code'):
+            return False
+        _handlers = {
+                'id': self.handle_switch_credit_wallet_invoice_sheet_by_id,
+                'ref': self.handle_switch_credit_wallet_invoice_sheet_by_ref,
+                }
+        return _handlers[kwargs['identifier']](kwargs['code'])
+
+    # TODO - Has dummy data
+    def create_transfer_sheet(self, **kwargs):
+        global transfer_sheet_archive
+        _transfer_sheet = CreditTransferSheet(
+                wallet_id=self.wallet_id,
+                reference='Second Credit Transfer Sheet',
+                )
+        self.transfer_sheet_archive.update({
+            _transfer_sheet.fetch_transfer_sheet_id(): _transfer_sheet
+            })
+        return _transfer_sheet
+
+    # TODO - Has dummy data
+    def create_invoice_sheet(self, **kwargs):
+        global invoice_sheet_archive
+        _invoice_sheet = CreditInvoiceSheet(
+                wallet_id=self.wallet_id,
+                reference='Second Credit Invoice Sheet',
+                )
+        self.invoice_sheet_archive.update({
+            _invoice_sheet.fetch_invoice_sheet_id(): _invoice_sheet
+            })
+        return _invoice_sheet
+
+    def switch_credit_wallet_sheet(self, **kwargs):
+        if not kwargs.get('sheet'):
+            return False
+        _handlers = {
+                'transfer': self.switch_credit_wallet_transfer_sheet,
+                'invoice': self.switch_credit_wallet_invoice_sheet,
+                }
+        return _handlers[kwargs['sheet']](**kwargs)
+
+    def create_sheets(self, **kwargs):
+        if not kwargs.get('sheet'):
+            return False
+        _handlers = {
+                'transfer': self.create_transfer_sheet,
+                'invoice': self.create_invoice_sheet,
+                }
+        return _handlers[kwargs['sheet']](**kwargs)
+
     def system_controller(self, **kwargs):
         if not kwargs.get('action'):
             return False
@@ -310,6 +444,7 @@ class CreditEWallet():
                 'supply': self.supply_credits,
                 'extract': self.extract_credits,
                 'convert': self.convert_credits,
+                'create_sheet': self.create_sheets,
                 }
         _handle = _handlers[kwargs['action']](**kwargs)
         if _handle:
@@ -324,6 +459,7 @@ class CreditEWallet():
                 'use': self.use_credits,
                 'transfer': self.transfer_credits,
                 'interogate': self.interogate_credits,
+                'switch_sheet': self.switch_credit_wallet_sheet,
                 }
         _handle = _handlers[kwargs['action']](**kwargs)
         if _handle and kwargs['action'] != 'interogate':
@@ -342,14 +478,18 @@ class CreditEWallet():
 
     def test_system_controller(self):
         print('[ TEST ] System controller...')
-        print('[ * ] Supply')
+        print('[ * ]: Supply')
         self.main_controller(controller='system', action='supply', credits=100)
-        print('[ * ] Extract')
+        print('[ * ]: Extract')
         self.main_controller(controller='system', action='extract', credits=25)
-        print('[ * ] Convert credits to minutes')
+        print('[ * ]: Convert credits to minutes')
         self.main_controller(controller='system', action='convert', conversion='to_minutes', credits=10)
-        print('[ * ] Convert minutes to credits')
+        print('[ * ]: Convert minutes to credits')
         self.main_controller(controller='system', action='convert', conversion='to_credits', minutes=5)
+        print('[ * ]: Create New Transfer Sheet')
+        self.main_controller(controller='system', action='create_sheet', sheet='transfer')
+        print('[ * ]: Create New Invoice Sheet')
+        self.main_controller(controller='system', action='create_sheet', sheet='invoice')
         return True
 
     def test_user_controller(self):
@@ -420,11 +560,23 @@ class CreditEWallet():
                 controller='user', action='interogate',
                 interogate='credit_clock', target='conversion_records'
                 )
+        print('[ * ]: Switch To New Transfer Sheet')
+        self.main_controller(
+                controller='user', action='switch_sheet',
+                sheet='transfer', identifier='id',
+                code=[item for item in self.invoice_sheet_archive.keys()][0]
+                )
+        print('[ * ]: Switch To New Invoice Sheet')
+        self.main_controller(
+                controller='user', action='switch_sheet',
+                sheet='invoice', identifier='id',
+                code=[item for item in self.invoice_sheet_archive.keys()][0]
+                )
 
     def test_controller(self, **kwargs):
         self.test_system_controller()
         self.test_user_controller()
-
+        print('[ OK ] All systems operational.')
 
 credit_ewallet = CreditEWallet(
         client_id=random.randint(10,20),

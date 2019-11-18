@@ -123,7 +123,7 @@ class CreditClock():
     def handle_switch_credit_clock_time_sheet_by_ref(self, code):
         global time_sheet
         _new_time_sheet = self.fetch_credit_clock_time_sheet(
-                identifier='ref', code=code
+                identifier='reference', code=code
                 )
         self.time_sheet = _new_time_sheet
         return _new_time_sheet
@@ -139,7 +139,7 @@ class CreditClock():
     def handle_switch_credit_clock_conversion_sheet_by_ref(self, code):
         global conversion_sheet
         _new_conversion_sheet = self.fetch_credit_clock_conversion_sheet(
-                identifier='ref', code=code
+                identifier='reference', code=code
                 )
         self.conversion_sheet = _new_conversion_sheet
         return _new_conversion_sheet
@@ -173,7 +173,8 @@ class CreditClock():
                 }
         return _handlers[kwargs['sheet']](**kwargs)
 
-    def create_credit_clock_time_sheet(self):
+    # TODO - Has dummy data
+    def create_credit_clock_time_sheet(self, **kwargs):
         global time_sheet_archive
         _time_sheet = CreditClockTimeSheet(
                     clock_id=self.clock_id,
@@ -184,7 +185,8 @@ class CreditClock():
             })
         return _time_sheet
 
-    def create_credit_clock_conversion_sheet(self):
+    # TODO - Has dummy data
+    def create_credit_clock_conversion_sheet(self, **kwargs):
         global conversion_sheet_archive
         _conversion_sheet = CreditClockConversionSheet(
                 clock_id=self.clock_id,
