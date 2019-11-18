@@ -152,16 +152,19 @@ class CreditTransferSheet():
         return _handlers[kwargs['search_by']](**kwargs)
 
     def add_transfer_sheet_record(self, **kwargs):
-        if not kwargs.get('transfer_type') or not kwargs.get('credits'):
+        if not kwargs.get('values'):
+            return False
+        values = kwargs['values']
+        if not values.get('transfer_type') or not values.get('credits'):
             return False
         global records
         _record = CreditTransferSheetRecord(
                     transfer_sheet_id=self.transfer_sheet_id,
-                    reference=kwargs.get('reference'),
-                    transfer_type=kwargs['transfer_type'], #incomming | outgoing | expence
-                    transfer_from=kwargs.get('transfer_from'),
-                    transfer_to=kwargs.get('transfer_to'),
-                    credits=kwargs['credits'],
+                    reference=values.get('reference'),
+                    transfer_type=values['transfer_type'], #incomming | outgoing | expence
+                    transfer_from=values.get('transfer_from'),
+                    transfer_to=values.get('transfer_to'),
+                    credits=values['credits'],
                 )
         _record_id = _record.fetch_record_id()
         self.records.update({_record_id: _record})

@@ -3,15 +3,11 @@ import datetime
 import random
 import pysnooper
 
-from credit_clock import CreditClock
-from transfer_sheet import CreditTransferSheet
-from invoice_sheet import CreditInvoiceSheet
+from .credit_clock import CreditClock
+from .record_sheets.transfer_sheet import CreditTransferSheet
+from .record_sheets.invoice_sheet import CreditInvoiceSheet
 
-# TODO - Create transfer sheet [ X ]
-# TODO - Create invoice sheet [ X ]
-# TODO - Switch transfer sheet [ X ]
-# TODO - Switch invoice sheet [ X ]
-# TODO - Replace all dummy data with a value dict passed by **kwargs
+
 class CreditEWallet():
 
     # TODO - Has dummy data
@@ -134,6 +130,29 @@ class CreditEWallet():
                 }
         return _handlers[kwargs['identifier']](kwargs.get('code'))
 
+    # TODO - Has dummy data
+    def fetch_invoice_sheet_record_values(self, **kwargs):
+        _values = {
+                'reference': kwargs.get('reference') or 'Test invoice sheet record reference',
+                'credits': kwargs['credits'],
+                'cost': kwargs.get('cost') or 1.5,
+                'currency': kwargs.get('currency') or 'RON',
+                'seller_id': kwargs['seller_id'],
+                'notes': kwargs.get('notes') or 'Test invoice sheet record notes',
+                }
+        return _values
+
+    # TODO - Has dummy data
+    def fetch_transfer_sheet_record_values(self, **kwargs):
+        _values = {
+                'reference': kwargs.get('reference') or 'Test transfer sheet record reference',
+                'transfer_type': kwargs.get('transfer_type'),
+                'transfer_from': kwargs.get('transfer_from') or self.client_id,
+                'transfer_to': kwargs['used_on'],
+                'credits': kwargs['credits'],
+                }
+        return _values
+
     def update_write_date(self):
         global write_date
         self.write_date = datetime.datetime.now()
@@ -223,7 +242,6 @@ class CreditEWallet():
                 }
         return _handlers[kwargs['conversion']](**kwargs)
 
-    # TODO - Refactor invoice record creation
     def buy_credits(self, **kwargs):
         if not kwargs.get('credits') or not kwargs.get('seller_id'):
             return False
@@ -231,15 +249,12 @@ class CreditEWallet():
         _supply = self.system_controller(
                 action='supply', credits=kwargs['credits']
                 )
+        _invoice_record_values = self.fetch_invoice_sheet_record_values(**kwargs)
         _invoice_record = self.invoice_sheet.credit_invoice_sheet_controller(
-                action='add', reference=kwargs.get('reference'),
-                credits=kwargs['credits'], cost=kwargs.get('cost'),
-                currency=kwargs.get('currency'), seller_id=kwargs['seller_id'],
-                notes=kwargs.get('notes')
+                action='add', values=_invoice_record_values
                 )
         return _supply
 
-    # TODO - Refactor transfer record creation
     def use_credits(self, **kwargs):
         if not kwargs.get('credits') or not kwargs.get('used_on'):
             return False
@@ -247,10 +262,9 @@ class CreditEWallet():
         _extract = self.system_controller(
                 action='extract', credits=kwargs['credits'],
                 )
+        _transfer_record_values = self.fetch_transfer_sheet_record_values(**kwargs)
         _transfer_record = self.transfer_sheet.credit_transfer_sheet_controller(
-                action='add', reference=kwargs.get('reference'),
-                transfer_type='expence', transfer_from=self.client_id,
-                transfer_to=kwargs['used_on'], credits=kwargs['credits']
+                action='add', values=_transfer_record_values
                 )
         return _extract
 
@@ -322,29 +336,23 @@ class CreditEWallet():
             ))
         return self.credits
 
-    # TODO - Refactor
 #   @pysnooper.snoop()
     def display_credit_wallet_transfer_sheets(self, **kwargs):
-        for sheet_id in self.transfer_sheet_archive:
-            sheet = self.transfer_sheet_archive[sheet_id]
-            print('{}: {} - {}'.format(
-                sheet.fetch_transfer_sheet_create_date(),
-                sheet.fetch_transfer_sheet_id(),
-                sheet.fetch_transfer_sheet_reference()
-                ))
-        return self.transfer_sheet_archive
+       for k, v in self.transfer_sheet_archive.items():
+           print('{}: {} - {}'.format(
+               v.fetch_transfer_sheet_create_date(), k,
+               v.fetch_transfer_sheet_reference()
+               ))
+       return self.transfer_sheet_archive
 
     def display_credit_wallet_transfer_records(self, **kwargs):
         return self.transfer_sheet.display_transfer_sheet_records()
 
-    # TODO - Refactor
     def display_credit_wallet_invoice_sheets(self, **kwargs):
-        for sheet_id in self.invoice_sheet_archive:
-            sheet = self.invoice_sheet_archive[sheet_id]
+        for k, v in self.invoice_sheet_archive.items():
             print('{}: {} - {}'.format(
-                sheet.fetch_invoice_sheet_create_date(),
-                sheet.fetch_invoice_sheet_id(),
-                sheet.fetch_invoice_sheet_reference()
+                v.fetch_invoice_sheet_create_date(), k,
+                v.fetch_invoice_sheet_reference(),
                 ))
         return self.invoice_sheet_archive
 
@@ -502,8 +510,8 @@ class CreditEWallet():
                 )
         print('[ * ]: Use')
         self.main_controller(
-                controller='user', action='use', credits='5',
-                reference='First Use', user_on='Only the best'
+                controller='user', action='use', credits=5,
+                reference='First Use', used_on='Only the best'
                 )
         _mock_partner_ewallet = CreditEWallet(credits=100)
         print('[ * ]: Transfer incomming')
@@ -578,12 +586,12 @@ class CreditEWallet():
         self.test_user_controller()
         print('[ OK ] All systems operational.')
 
-credit_ewallet = CreditEWallet(
-        client_id=random.randint(10,20),
-        reference='First Credit Wallet Reference',
-        credits=25
-        )
-credit_ewallet.main_controller(controller='test')
+#credit_ewallet = CreditEWallet(
+#        client_id=random.randint(10,20),
+#        reference='First Credit Wallet Reference',
+#        credits=25
+#        )
+#credit_ewallet.main_controller(controller='test')
 
 
 

@@ -3,12 +3,12 @@ import random
 import datetime
 import pysnooper
 
-from time_sheet import CreditClockTimeSheet
-from conversion_sheet import CreditClockConversionSheet
+from .record_sheets.time_sheet import CreditClockTimeSheet
+from .record_sheets.conversion_sheet import CreditClockConversionSheet
+
 
 # TODO - Create conversion sheet from controller
 # TODO - Create time sheet from controller
-
 class CreditClock():
 
     # TODO - Refactor - Has dummy data

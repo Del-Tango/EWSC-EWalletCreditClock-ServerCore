@@ -133,17 +133,20 @@ class CreditInvoiceSheet():
     # TODO - Has dummy data
     # TODO - Key record_values = {}
     def add_credit_invoice_sheet_record(self, **kwargs):
-        if not kwargs.get('credits') or not kwargs.get('seller_id'):
+        if not kwargs.get('values'):
+            return False
+        values = kwargs['values']
+        if not values.get('credits') or not values.get('seller_id'):
             return False
         global records
         _record = CreditInvoiceSheetRecord(
                 invoice_sheet_id=self.invoice_sheet_id,
-                reference=kwargs.get('reference'),
-                credits=kwargs.get('credits'),
-                cost=kwargs.get('cost'),
-                currency=kwargs.get('currency'),
-                seller_id=kwargs.get('seller_id'),
-                notes=kwargs.get('notes')
+                reference=values.get('reference'),
+                credits=values['credits'],
+                cost=values.get('cost'),
+                currency=values.get('currency'),
+                seller_id=values['seller_id'],
+                notes=values.get('notes')
                 )
         self.records.update({_record.fetch_record_id(): _record})
         return _record

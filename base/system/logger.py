@@ -1,5 +1,7 @@
 import datetime
 
+from .config import Config
+
 config = Config().config
 
 
