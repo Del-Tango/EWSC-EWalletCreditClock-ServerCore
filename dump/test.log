@@ -1,0 +1,6 @@
+11/19/2019 02:42:29 AM - [INFO] - 127.0.0.1 - test_user: Test INFO
+11/19/2019 02:42:29 AM - [WARNING] - 127.0.0.1 - test_user: Test Demo Logger
+11/19/2019 02:42:29 AM - [DEBUG] - 127.0.0.1 - test_user: Test Debug
+11/19/2019 02:42:29 AM - [DEBUG] - 127.0.0.1 - test_user: This message should go into the log file.
+11/19/2019 02:42:29 AM - [INFO] - 127.0.0.1 - test_user: So should this.
+11/19/2019 02:42:29 AM - [WARNING] - 127.0.0.1 - test_user: This too.

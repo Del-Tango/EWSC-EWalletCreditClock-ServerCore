@@ -95,7 +95,7 @@ class CreditTransferSheet():
     def fetch_transfer_sheet_record_by_id(self, **kwargs):
         if not kwargs.get('code'):
             return False
-        _record = [self.records.get(kwargs.get('code'))]
+        _record = self.records.get(kwargs['code'])
         return _record or False
 
     def fetch_transfer_sheet_record_by_ref(self, **kwargs):
@@ -171,13 +171,10 @@ class CreditTransferSheet():
         return _record
 
     def remove_transfer_sheet_record(self, **kwargs):
-        if not kwargs.get('search_by'):
-            return Flase
+        if not kwargs.get('record_id'):
+            return False
         global records
-        _records_to_remove = self.fetch_transfer_sheet_records(**kwargs)
-        for item in _records_to_remove:
-            del self.records[item.fetch_record_id()]
-        return self.records
+        return self.records.pop(kwargs['record_id'])
 
     def append_transfer_sheet_record(self, **kwargs):
         if not kwargs.get('records'):

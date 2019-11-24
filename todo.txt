@@ -7,3 +7,4 @@
 # TODO - Client user account security
 # TODO - EWallet Client Interface
 # TODO - EWallet report an issue system
+# TODO - Attach software liscence agreement

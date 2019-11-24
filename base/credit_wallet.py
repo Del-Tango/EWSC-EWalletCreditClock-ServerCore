@@ -4,8 +4,8 @@ import random
 import pysnooper
 
 from .credit_clock import CreditClock
-from .record_sheets.transfer_sheet import CreditTransferSheet
-from .record_sheets.invoice_sheet import CreditInvoiceSheet
+from .transfer_sheet import CreditTransferSheet
+from .invoice_sheet import CreditInvoiceSheet
 
 
 class CreditEWallet():
@@ -67,6 +67,9 @@ class CreditEWallet():
     def fetch_credit_ewallet_transfer_sheet(self):
         return self.transfer_sheet
 
+    def fetch_credit_ewallet_invoice_sheet(self):
+        return self.invoice_sheet
+
 #   @pysnooper.snoop()
     def fetch_credit_ewallet_values(self):
         _values = {
@@ -110,6 +113,20 @@ class CreditEWallet():
     def fetch_credit_wallet_invoice_sheets(self, **kwargs):
         return self.invoice_sheet_archive.values()
 
+    def fetch_credit_wallet_clock_by_id(self, code):
+        return self.credit_clock_archive.get(code)
+
+    def fetch_credit_wallet_clock_by_ref(self, code):
+        if not self.credit_clock_archive:
+            return False
+        for item in self.credit_clock_archive:
+            if self.credit_clock_archive[item].fetch_credit_clock_reference() == code:
+                return self.credit_clock_archive[item]
+        return False
+
+    def fetch_credit_wallet_clocks(self, **kwargs):
+        return self.credit_clock_archive.values()
+
     def fetch_credit_wallet_transfer_sheet(self, **kwargs):
         if not kwargs.get('identifier'):
             return False
@@ -129,6 +146,17 @@ class CreditEWallet():
                 'all': self.fetch_credit_wallet_invoice_sheets,
                 }
         return _handlers[kwargs['identifier']](kwargs.get('code'))
+
+    def fetch_credit_wallet_clock(self, **kwargs):
+        if not kwargs.get('identifier'):
+            return False
+        _handlers = {
+                'id': self.fetch_credit_wallet_clock_by_id,
+                'reference': self.fetch_credit_wallet_clock_by_ref,
+                'all': self.fetch_credit_wallet_clocks,
+                }
+        return _handlers[kwargs['identifier']](code=kwargs.get(code))
+
 
     # TODO - Has dummy data
     def fetch_invoice_sheet_record_values(self, **kwargs):
@@ -163,6 +191,30 @@ class CreditEWallet():
         self.session_key = random.randint(10000,999999)
         return self.session_key
 
+    def update_credit_clock_archive(self, credit_clock):
+        global credit_clock_archive
+        self.credit_clock_archive.update({
+            credit_clock.fetch_credit_clock_id():
+            credit_clock,
+            })
+        return self.credit_clock_archive
+
+    def update_invoice_sheet_archive(self, invoice_sheet):
+        global invoice_sheet_archive
+        self.invoice_sheet_archive.update({
+            invoice_sheet.fetch_invoice_sheet_id():
+            invoice_sheet
+            })
+        return self.invoice_sheet_archive
+
+    def update_transfer_sheet_archive(self, transfer_sheet):
+        global transfer_sheet_archive
+        self.transfer_sheet_archive.update({
+            transfer_sheet.fetch_transfer_sheet_id():
+            transfer_sheet
+            })
+        return self.transfer_sheet_archive
+
     def handle_switch_credit_wallet_transfer_sheet_by_ref(self, code):
         global transfer_sheet
         _new_transfer_sheet = self.fetch_credit_wallet_transfer_sheet(
@@ -194,6 +246,14 @@ class CreditEWallet():
                 )
         self.invoice_sheet = _new_invoice_sheet
         return _new_invoice_sheet
+
+    def handle_switch_credit_wallet_clock_by_id(self, code):
+        global credit_clock
+        _new_credit_clock = self.fetch_credit_wallet_clock(
+                identifier='id', code=code
+                )
+        self.credit_clock = _new_credit_clock
+        return _new_credit_clock
 
     def supply_credits(self, **kwargs):
         if not kwargs.get('credits'):
@@ -436,6 +496,12 @@ class CreditEWallet():
                 }
         return _handlers[kwargs['sheet']](**kwargs)
 
+    def switch_credit_wallet_clock(self, **kwargs):
+        if not kwargs.get('clock_id'):
+            return False
+        _clock = self.handle_switch_credit_wallet_clock_by_id(kwargs['clock_id'])
+        return False if not _clock else _clock
+
     def create_sheets(self, **kwargs):
         if not kwargs.get('sheet'):
             return False
@@ -445,6 +511,54 @@ class CreditEWallet():
                 }
         return _handlers[kwargs['sheet']](**kwargs)
 
+    def create_clock(self, **kwargs):
+        _new_credit_clock = CreditClock(
+                wallet_id=self.wallet_id,
+                reference=kwargs.get('reference') or str(),
+                credit_clock=kwargs.get('credit_clock') or float(),
+                )
+        self.update_credit_clock_archive(_new_credit_clock)
+        return _new_credit_clock
+
+    def unlink_transfer_sheet(self, **kwargs):
+        global transfer_sheet_archive
+        if not kwargs.get('sheet_id'):
+            return False
+        _transfer_sheet = self.fetch_transfer_sheet(
+                identifier='id', code=kwargs['sheet_id']
+                )
+        return False if not _transfer_sheet \
+                else self.transfer_sheet_archive.pop(kwargs['sheet_id'])
+
+    def unlink_invoice_sheet(self, **kwargs):
+        global invoice_sheet_archive
+        if not kwargs.get('sheet_id'):
+            return False
+        _invoice_sheet = self.fetch_invoice_sheet(
+                identifier='id', code=kwargs['sheet_id']
+                )
+        return False if not _invoice_sheet \
+                else self.invoice_sheet_archive.pop(kwargs['sheet_id'])
+
+    def unlink_sheet(self, **kwargs):
+        if not kwargs.get('sheet'):
+            return False
+        _handlers = {
+                'transfer': self.unlink_transfer_sheet,
+                'invoice': self.unlink_invoice_sheet,
+                }
+        return _handlers[kwargs['sheet']](**kwargs)
+
+    def unlink_clock(self, **kwargs):
+        global self.credit_clock_archive
+        if not kwargs.get('clock_id'):
+            return False
+        _clock = self.fetch_credit_wallet_clock(
+                identifier='id', code=kwargs['clock_id']
+                )
+        return False if not _clock else \
+                self.credit_clock_archive.pop(kwargs['clock_id'])
+
     def system_controller(self, **kwargs):
         if not kwargs.get('action'):
             return False
@@ -453,6 +567,9 @@ class CreditEWallet():
                 'extract': self.extract_credits,
                 'convert': self.convert_credits,
                 'create_sheet': self.create_sheets,
+                'create_clock': self.create_clock,
+                'unlink_sheet': self.unlink_sheet,
+                'unlink_clock': self.unlink_clock,
                 }
         _handle = _handlers[kwargs['action']](**kwargs)
         if _handle:
@@ -468,6 +585,7 @@ class CreditEWallet():
                 'transfer': self.transfer_credits,
                 'interogate': self.interogate_credits,
                 'switch_sheet': self.switch_credit_wallet_sheet,
+                'switch_clock': self.switch_credit_wallet_clock,
                 }
         _handle = _handlers[kwargs['action']](**kwargs)
         if _handle and kwargs['action'] != 'interogate':

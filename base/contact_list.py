@@ -177,13 +177,10 @@ class ContactList():
         return self.records
 
     def handle_update_contact_list_remove(self, **kwargs):
-        if not kwargs.get('records'):
+        if not kwargs.get('record_id'):
             return False
         global records
-        for item in kwargs['records']:
-            _record_id = item.fetch_record_id()
-            del self.records[_record_id]
-        return self.records
+        return self.records.pop(kwargs['record_id'])
 
     def handle_update_contact_list_clear(self, **kwargs):
         global records
@@ -252,6 +249,7 @@ class ContactList():
                 user_phone=kwargs.get('user_phone'),
                 notes=kwargs.get('notes')
                 )
+        self.handle_update_contact_list_append(records=[_record])
         return _record
 
     def display_contact_list_records(self, **kwargs):
@@ -302,6 +300,7 @@ class ContactList():
             return False
         _handlers = {
                 'load': self.load_contact_list_records,
+                'create': self.create_contact_list_record,
                 'update': self.update_contact_list,
                 'interogate': self.interogate_contact_list,
                 }

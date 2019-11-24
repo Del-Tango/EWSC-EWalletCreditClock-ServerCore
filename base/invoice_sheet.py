@@ -153,8 +153,10 @@ class CreditInvoiceSheet():
 
     def remove_credit_invoice_sheet_record(self, **kwargs):
         global records
+        if not kwargs.get('record_id'):
+            return False
         for k, v in self.records.items():
-            if k == kwargs.get('record_id'):
+            if k == kwargs['record_id']:
                 del self.records[k]
                 return self.records
         return False
@@ -232,5 +234,4 @@ class CreditInvoiceSheet():
         for item in records:
             print(item.fetch_record_values())
         return records
-
 
