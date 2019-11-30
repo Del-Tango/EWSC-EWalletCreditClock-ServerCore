@@ -1,9 +1,7 @@
+# TODO - Replace creational dummy data with a value dict passed by **kwargs
+# TODO - Persistent storage with SQLAlchemy ORM
 # TODO - BUG FIX - Ewallet Record Sequencer
 # TODO - EWallet Client
-# TODO - Replace creational dummy data with a value dict passed by **kwargs
-# TODO - Config file parser
-# TODO - Persistent storage with SQLAlchemy ORM
-# TODO - Client user account management
 # TODO - Client user account security
 # TODO - EWallet Client Interface
 # TODO - EWallet report an issue system

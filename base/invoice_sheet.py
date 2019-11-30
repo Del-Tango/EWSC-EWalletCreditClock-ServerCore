@@ -14,10 +14,9 @@ log = logging.getLogger(log_config['log_name'])
 
 class CreditInvoiceSheetRecord():
 
-    # TODO - Has dummy data
     def __init__(self, **kwargs):
         self.seq = count()
-        self.record_id = next(self.seq)
+        self.record_id = kwargs.get('record_id') or next(self.seq)
         self.invoice_sheet_id = kwargs.get('invoice_sheet_id')
         self.reference = kwargs.get('reference')
         self.create_date = datetime.datetime.now()
@@ -68,15 +67,14 @@ class CreditInvoiceSheetRecord():
 
 class CreditInvoiceSheet():
 
-    # TODO - Had dummy data
     def __init__(self, **kwargs):
         self.seq = count()
-        self.invoice_sheet_id = next(self.seq)
+        self.invoice_sheet_id = kwargs.get('invoice_sheet_id') or next(self.seq)
         self.wallet_id = kwargs.get('wallet_id')
         self.reference = kwargs.get('reference')
         self.create_date = datetime.datetime.now()
         self.write_date = datetime.datetime.now()
-        self.records = {}
+        self.records = kwargs.get('records') or {}
 
     def fetch_invoice_sheet_id(self):
         log.debug('')
@@ -103,6 +101,19 @@ class CreditInvoiceSheet():
                 'create_date': self.create_date,
                 'write_date': self.write_date,
                 'records': self.records,
+                }
+        return _values
+
+    def fetch_invoice_record_creation_values(self, **kwargs):
+        log.debug('')
+        _values = {
+                'reference': kwargs.get('reference'),
+                'invoice_sheet_id': self.invoice_sheet_id,
+                'credits': kwargs.get('credits'),
+                'cost': kwargs.get('cost') or 0,
+                'currency': kwargs.get('currency') or 'RON',
+                'seller_id': kwargs('seller_id'),
+                'notes': kwargs.get('notes'),
                 }
         return _values
 
@@ -163,28 +174,24 @@ class CreditInvoiceSheet():
         self.write_date = datetime.datetime.now()
         return self.write_date
 
-    # TODO - Has dummy data
-    # TODO - Key record_values = {}
+    def update_records(self, record):
+        log.debug('')
+        self.records.update({
+            record.fetch_record_id():
+            record
+            })
+        return self.records
+
     def add_credit_invoice_sheet_record(self, **kwargs):
         log.debug('')
-        if not kwargs.get('values'):
-            return self.error_no_new_invoice_record_values_found()
-        values = kwargs['values']
-        if not values.get('credits') or not values.get('seller_id'):
+        if not kwargs.get('credits') or not kwargs.get('seller_id'):
             return self.error_handlers_add_credit_invoice_sheet_record(
                     credits=kwargs.get('credits'),
                     seller_id=kwargs.get('seller_id'),
                     )
-        _record = CreditInvoiceSheetRecord(
-                invoice_sheet_id=self.invoice_sheet_id,
-                reference=values.get('reference'),
-                credits=values['credits'],
-                cost=values.get('cost'),
-                currency=values.get('currency'),
-                seller_id=values['seller_id'],
-                notes=values.get('notes')
-                )
-        self.records.update({_record.fetch_record_id(): _record})
+        _values = self.fetch_invoice_record_creation_values(**kwargs)
+        _record = CreditInvoiceSheetRecord(**_values)
+        _update = self.update_records(_record)
         return _record
 
     def remove_credit_invoice_sheet_record(self, **kwargs):
@@ -248,6 +255,7 @@ class CreditInvoiceSheet():
         self.records = {}
         return self.records
 
+    # TODO - Refactor
     def credit_invoice_sheet_controller(self, **kwargs):
         log.debug('')
         if not kwargs.get('action'):

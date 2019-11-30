@@ -17,7 +17,7 @@ class CreditTransferSheetRecord():
     # TODO - Refactor
     def __init__(self, **kwargs):
         self.seq = count()
-        self.record_id = next(self.seq)
+        self.record_id = kwargs.get('record_id') or next(self.seq)
         self.transfer_sheet_id = kwargs.get('transfer_sheet_id')
         self.reference = kwargs.get('reference')
         self.create_date = datetime.datetime.now()
@@ -25,7 +25,7 @@ class CreditTransferSheetRecord():
         self.transfer_type = kwargs.get('transfer_type')
         self.transfer_from = kwargs.get('transfer_from')
         self.transfer_to = kwargs.get('transfer_to')
-        self.credits = kwargs.get('credits')
+        self.credits = kwargs.get('credits') or 0
 
     def fetch_record_id(self):
         log.debug('')
@@ -73,12 +73,12 @@ class CreditTransferSheet():
     # TODO - Refactor
     def __init__(self, **kwargs):
         self.seq = count()
-        self.transfer_sheet_id = next(self.seq)
+        self.transfer_sheet_id = kwargs.get('transfer_sheet_id') or next(self.seq)
         self.wallet_id = kwargs.get('wallet_id')
         self.reference = kwargs.get('reference')
         self.create_date = datetime.datetime.now()
         self.write_date = datetime.datetime.now()
-        self.records = {}
+        self.records = kwargs.get('records') or {}
 
     def fetch_transfer_sheet_id(self):
         log.debug('')
@@ -108,10 +108,18 @@ class CreditTransferSheet():
                 }
         return _values
 
-    def update_write_date(self):
+    # [ NOTE ]: Transfer Type : (incomming | outgoing | expence)
+    def fetch_transfer_record_creation_values(self, **kwargs):
         log.debug('')
-        self.write_date = datetime.datetime.now()
-        return self.write_date
+        _values = {
+                'reference': kwargs.get('reference'),
+                'transfer_sheet_id': self.transfer_sheet_id,
+                'transfer_type': kwargs.get('transfer_type'),
+                'transfer_from': kwargs.get('transfer_from'),
+                'transfer_to': kwargs('transfer_to'),
+                'credits': kwargs('credits'),
+                }
+        return _values
 
     def fetch_transfer_sheet_record_by_id(self, **kwargs):
         log.debug('')
@@ -200,26 +208,28 @@ class CreditTransferSheet():
                 }
         return _handlers[kwargs['search_by']](**kwargs)
 
+    def update_write_date(self):
+        log.debug('')
+        self.write_date = datetime.datetime.now()
+        return self.write_date
+
+    def update_records(self, record):
+        log.debug('')
+        self.records.update({
+            record.fetch_record_id(): record
+            })
+        return self.records
+
     def add_transfer_sheet_record(self, **kwargs):
         log.debug('')
-        if not kwargs.get('values'):
-            return self.error_no_transfer_record_creation_values_found()
-        values = kwargs['values']
-        if not values.get('transfer_type') or not values.get('credits'):
+        if not kwargs.get('transfer_type') or not kwargs.get('credits'):
             return self.error_handler_add_transfer_sheet_record(
                     transfer_type=kwargs.get('transfer_type'),
                     credits=kwargs.get('credits'),
                     )
-        _record = CreditTransferSheetRecord(
-                    transfer_sheet_id=self.transfer_sheet_id,
-                    reference=values.get('reference'),
-                    transfer_type=values['transfer_type'], #incomming | outgoing | expence
-                    transfer_from=values.get('transfer_from'),
-                    transfer_to=values.get('transfer_to'),
-                    credits=values['credits'],
-                )
-        _record_id = _record.fetch_record_id()
-        self.records.update({_record_id: _record})
+        _values = self.fetch_transfer_record_creation_values(**kwargs)
+        _record = CreditTransferSheetRecord(**_values)
+        _update = self.update_records(_record)
         return _record
 
     def remove_transfer_sheet_record(self, **kwargs):
@@ -247,6 +257,7 @@ class CreditTransferSheet():
         self.records = {}
         return self.records
 
+    # TODO - Refactor
     def credit_transfer_sheet_controller(self, **kwargs):
         log.debug('')
         if not kwargs.get('action'):

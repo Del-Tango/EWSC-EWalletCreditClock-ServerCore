@@ -14,10 +14,9 @@ log = logging.getLogger(log_config['log_name'])
 
 class CreditClockConversionSheetRecord():
 
-    # TODO - Has dummy data
     def __init__(self, **kwargs):
         self.seq = count()
-        self.record_id = next(self.seq)
+        self.record_id = kwargs.geet('record_id') or next(self.seq)
         self.conversion_sheet_id = kwargs.get('conversion_sheet_id')
         self.reference = kwargs.get('reference')
         self.create_date = datetime.datetime.now()
@@ -148,12 +147,12 @@ class CreditClockConversionSheet():
 
     def __init__(self, **kwargs):
         self.seq = count()
-        self.conversion_sheet_id = next(self.seq)
+        self.conversion_sheet_id = kwargs.get('conversion_sheet_id') or next(self.seq)
         self.clock_id = kwargs.get('clock_id')
         self.reference = kwargs.get('reference')
         self.create_date = datetime.datetime.now()
         self.write_date = datetime.datetime.now()
-        self.records = {}
+        self.records = kwargs.get('records') or {}
 
     def fetch_conversion_sheet_id(self):
         log.debug('')
@@ -191,6 +190,16 @@ class CreditClockConversionSheet():
                 }
         return _values
 
+    def fetch_conversion_record_creation_values(self, **kwargs):
+        log.debug('')
+        _values = {
+                'conversion_sheet_id': self.conversion_sheet_id,
+                'reference': kwargs.get('reference'),
+                'conversion_type': kwargs.get('conversion_type'),
+                'minutes': kwargs.get('minutes'),
+                'credits': kwargs.get('credits'),
+                }
+        return _values
     def fetch_conversion_sheet_record_by_id(self, **kwargs):
         log.debug('')
         if not kwargs.get('code'):
@@ -332,13 +341,8 @@ class CreditClockConversionSheet():
 
     def add_conversion_sheet_record(self, **kwargs):
         log.debug('')
-        _record = CreditClockConversionSheetRecord(
-                    conversion_sheet_id=self.conversion_sheet_id,
-                    reference=kwargs.get('reference'),
-                    conversion_type=kwargs.get('conversion_type'),
-                    minutes=kwargs.get('minutes'),
-                    credits=kwargs.get('credits'),
-                )
+        _values = self.fetch_conversion_record_creation_values(**kwargs)
+        _record = CreditClockConversionSheetRecord(**_values)
         self.update_conversion_sheet_records(record=_record)
         return _record
 

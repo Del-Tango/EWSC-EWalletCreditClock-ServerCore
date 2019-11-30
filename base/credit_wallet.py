@@ -17,39 +17,40 @@ log = logging.getLogger(log_config['log_name'])
 
 class CreditEWallet():
 
-    # TODO - Has dummy data
 #   @pysnooper.snoop()
     def __init__(self, **kwargs):
         self.seq = count()
-        self.wallet_id = next(self.seq)
+        self.wallet_id = kwargs.get('wallet_id') or next(self.seq)
         self.client_id = kwargs.get('client_id')
         self.reference = kwargs.get('reference')
         self.create_date = datetime.datetime.now()
         self.write_date = datetime.datetime.now()
         self.credits = kwargs.get('credits') or 0
-        self.credit_clock = CreditClock(
+        self.credit_clock = kwargs.get('credit_clock') or CreditClock(
                 wallet_id=self.wallet_id,
-                reference='First Credit Clock Reference',
+                reference='Default Credit Clock',
                 credit_clock=0.0
                 )
-        self.credit_clock_archive = {
-                self.credit_clock.fetch_credit_clock_id(), self.credit_clock
+        self.credit_clock_archive = kwargs.get('credit_clock_archive') or {
+                self.credit_clock.fetch_credit_clock_id():
+                self.credit_clock
                 }
-        self.transfer_sheet = CreditTransferSheet(
+        self.transfer_sheet = kwargs.get('transfer_sheet') \
+                or CreditTransferSheet(
                 wallet_id=self.wallet_id,
-                reference='First Transfer Sheet Reference'
+                reference='Default Credit Transfer Sheet'
                 )
-        self.transfer_sheet_archive = {
-                self.transfer_sheet.fetch_transfer_sheet_id(): self.transfer_sheet
+        self.transfer_sheet_archive = kwargs.get('transfer_sheet_archive') or {
+                self.transfer_sheet.fetch_transfer_sheet_id():
+                self.transfer_sheet
                 }
-        self.invoice_sheet = CreditInvoiceSheet(
+        self.invoice_sheet = kwargs.get('invoice_sheet') or CreditInvoiceSheet(
                 wallet_id=self.wallet_id,
-                reference='First Credit Invoice Sheet',
+                reference='Default Credit Invoice Sheet',
                 )
-        self.invoice_sheet_archive = {
+        self.invoice_sheet_archive = kwargs.get('invoice_sheet_archive') or {
                 self.invoice_sheet.fetch_invoice_sheet_id(): self.invoice_sheet
                 }
-        self.session_key = random.randint(10000,999999)
 
     def fetch_credit_ewallet_id(self):
         log.debug('')
@@ -58,10 +59,6 @@ class CreditEWallet():
     def fetch_credit_ewallet_reference(self):
         log.debug('')
         return self.reference
-
-    def fetch_credit_ewallet_session_key(self):
-        log.debug('')
-        return self.session_key
 
     def fetch_credit_ewallet_client_id(self):
         log.debug('')
@@ -94,7 +91,6 @@ class CreditEWallet():
                 'id': self.wallet_id,
                 'client_id': self.client_id,
                 'reference': self.reference,
-                'session_key': self.session_key,
                 'create_date': self.create_date,
                 'write_date': self.write_date,
                 'credits': self.credits,
@@ -194,41 +190,10 @@ class CreditEWallet():
                 }
         return _handlers[kwargs['identifier']](code=kwargs.get(code))
 
-    # TODO - Has dummy data
-    def fetch_invoice_sheet_record_values(self, **kwargs):
-        log.debug('')
-        _values = {
-                'reference': kwargs.get('reference') or 'Test invoice sheet record reference',
-                'credits': kwargs['credits'],
-                'cost': kwargs.get('cost') or 1.5,
-                'currency': kwargs.get('currency') or 'RON',
-                'seller_id': kwargs['seller_id'],
-                'notes': kwargs.get('notes') or 'Test invoice sheet record notes',
-                }
-        return _values
-
-    # TODO - Has dummy data
-    def fetch_transfer_sheet_record_values(self, **kwargs):
-        log.debug('')
-        _values = {
-                'reference': kwargs.get('reference') or 'Test transfer sheet record reference',
-                'transfer_type': kwargs.get('transfer_type'),
-                'transfer_from': kwargs.get('transfer_from') or self.client_id,
-                'transfer_to': kwargs['used_on'],
-                'credits': kwargs['credits'],
-                }
-        return _values
-
     def update_write_date(self):
         log.debug('')
         self.write_date = datetime.datetime.now()
         return self.write_date
-
-    # TODO - Has dummy data
-    def update_session_key(self):
-        log.debug('')
-        self.session_key = random.randint(10000,999999)
-        return self.session_key
 
     def update_credit_clock_archive(self, credit_clock):
         log.debug('')
@@ -354,9 +319,11 @@ class CreditEWallet():
         _supply = self.system_controller(
                 action='supply', credits=kwargs['credits']
                 )
-        _invoice_record_values = self.fetch_invoice_sheet_record_values(**kwargs)
         _invoice_record = self.invoice_sheet.credit_invoice_sheet_controller(
-                action='add', values=_invoice_record_values
+                action='add', reference=kwargs.get('reference'),
+                credits=kwargs['credits'], currency=kwargs.get('currency'),
+                cost=kwargs.get('cost'), seller_id=kwargs['seller_id'],
+                notes=kwargs.get('notes')
                 )
         return _supply
 
@@ -370,9 +337,12 @@ class CreditEWallet():
         _extract = self.system_controller(
                 action='extract', credits=kwargs['credits'],
                 )
-        _transfer_record_values = self.fetch_transfer_sheet_record_values(**kwargs)
         _transfer_record = self.transfer_sheet.credit_transfer_sheet_controller(
-                action='add', values=_transfer_record_values
+                action='add', reference=kwargs.get('reference'),
+                credits=kwargs['credits'],
+                transfer_type=kwargs.get('transfer_type'),
+                transfer_from=kwargs.get('transfer_from'),
+                transfer_to=kwargs['used_on'],
                 )
         return _extract
 

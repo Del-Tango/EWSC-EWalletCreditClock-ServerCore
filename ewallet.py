@@ -6,6 +6,7 @@ import logging
 import datetime
 import pysnooper
 from validate_email import validate_email
+from itertools import count
 
 from ewallet_login import EWalletLogin
 from base.res_user import ResUser
@@ -1435,7 +1436,6 @@ class EWallet():
         log.error('No user password found.')
         return False
 
-    # TODO : CLARIFY
     def error_no_contact_found(self):
         log.error('No contact found.')
         return False

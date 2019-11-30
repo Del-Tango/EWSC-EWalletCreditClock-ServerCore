@@ -16,7 +16,7 @@ class TimeSheetRecord():
 
     def __init__(self, **kwargs):
         self.seq = count()
-        self.record_id = next(self.seq)
+        self.record_id = kwargs.get('record_id') or next(self.seq)
         self.time_sheet_id = kwargs.get('time_sheet_id')
         self.reference = kwargs.get('reference')
         self.create_date = datetime.datetime.now()
@@ -113,12 +113,12 @@ class CreditClockTimeSheet():
 
     def __init__(self, **kwargs):
         self.seq = count()
-        self.time_sheet_id = next(self.seq)
+        self.time_sheet_id = kwargs.get('time_sheet_id') or next(self.seq)
         self.clock_id = kwargs.get('clock_id')
         self.reference = kwargs.get('reference')
         self.create_date = datetime.datetime.now()
         self.write_date = datetime.datetime.now()
-        self.records = {}
+        self.records = kwargs.get('records') or {}
 
     def fetch_time_sheet_id(self):
         log.debug('')
@@ -153,6 +153,17 @@ class CreditClockTimeSheet():
                 'create_date': self.create_date,
                 'write_date': self.write_date,
                 'records': self.records,
+                }
+        return _values
+
+    def fetch_time_record_creation_values(self, **kwargs):
+        log.debug('')
+        _values = {
+                'record_id': kwargs.get('record_id'),
+                'time_sheet_id': self.time_sheet_id,
+                'reference': kwargs.get('reference'),
+                'credit_clock': kwargs.get('credit_clock'),
+                'time_spent': kwargs.get('time_spent'),
                 }
         return _values
 
@@ -271,11 +282,8 @@ class CreditClockTimeSheet():
 
     def action_add_time_sheet_record(self, **kwargs):
         log.debug('')
-        _record = TimeSheetRecord(
-            time_sheet_id = self.time_sheet_id,
-            reference=kwargs.get('reference'),
-            time_spent=kwargs.get('time_spent')
-        )
+        _values = self.fetch_time_record_creation_values(**kwargs)
+        _record = TimeSheetRecord(**_values)
         self.update_time_sheet_records(record=_record)
         return _record
 

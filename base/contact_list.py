@@ -15,7 +15,7 @@ class ContactListRecord():
 
     def __init__(self, **kwargs):
         self.seq = count()
-        self.record_id = next(self.seq)
+        self.record_id = kwargs.get('record_id') or next(self.seq)
         self.contact_list_id = kwargs.get('contact_list_id')
         self.create_date = datetime.datetime.now()
         self.write_date = datetime.datetime.now()
@@ -23,7 +23,7 @@ class ContactListRecord():
         self.user_email = kwargs.get('user_email')
         self.user_phone = kwargs.get('user_phone')
         self.notes = kwargs.get('notes')
-        self.reference = self.user_name
+        self.reference = kwargs.get('reference')
 
     def fetch_record_id(self):
         log.debug('')
@@ -74,12 +74,12 @@ class ContactList():
 
     def __init__(self, **kwargs):
         self.seq = count()
-        self.contact_list_id = next(self.seq)
+        self.contact_list_id = kwargs.get('contact_list_id') or next(self.seq)
         self.client_id = kwargs.get('client_id')
         self.reference = kwargs.get('reference')
         self.create_date = datetime.datetime.now()
         self.write_date = datetime.datetime.now()
-        self.records = {}
+        self.records = kwargs.get('records') or {}
 
     def fetch_contact_list_id(self):
         log.debug('')
@@ -218,10 +218,12 @@ class ContactList():
     def handle_load_contacts_from_database(self, **kwargs):
         log.debug('')
         _records = self.fetch_contact_list_records_from_database()
+        if not _records:
+            return self.warning_could_not_fetch_contact_records_from_database()
         _update = self.update_contact_list(
             update_type='rewrite', records=_records
         )
-        return _test_records
+        return _records
 
     def handle_load_contacts_from_args(self, **kwargs):
         log.debug('')
@@ -393,6 +395,10 @@ class ContactList():
 
     def error_no_contact_record_name_found(self):
         log.error('No contact list record name found.')
+        return False
+
+    def warning_could_not_fetch_contact_records_from_database(self):
+        log.warning('Could not fetch contact records from database.')
         return False
 
     def test_contact_list_record_generator(self, count):
