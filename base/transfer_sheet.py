@@ -3,7 +3,9 @@ import datetime
 import random
 import logging
 import pysnooper
+from itertools import count
 
+from .res_utils import ResUtils
 from .config import Config
 
 log_config = Config().log_config
@@ -14,7 +16,8 @@ class CreditTransferSheetRecord():
 
     # TODO - Refactor
     def __init__(self, **kwargs):
-        self.record_id = random.randint(10, 20)
+        self.seq = count()
+        self.record_id = next(self.seq)
         self.transfer_sheet_id = kwargs.get('transfer_sheet_id')
         self.reference = kwargs.get('reference')
         self.create_date = datetime.datetime.now()
@@ -69,7 +72,8 @@ class CreditTransferSheet():
 
     # TODO - Refactor
     def __init__(self, **kwargs):
-        self.transfer_sheet_id = random.randint(10, 20)
+        self.seq = count()
+        self.transfer_sheet_id = next(self.seq)
         self.wallet_id = kwargs.get('wallet_id')
         self.reference = kwargs.get('reference')
         self.create_date = datetime.datetime.now()

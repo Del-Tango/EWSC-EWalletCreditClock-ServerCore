@@ -1,10 +1,12 @@
 import datetime
 import random
 import logging
+from itertools import count
 
 from .res_utils import ResUtils
 from .credit_wallet import CreditEWallet
 from .contact_list import ContactList
+from .res_utils import ResUtils
 from .config import Config
 
 log_config = Config().log_config
@@ -21,7 +23,8 @@ class ResUser():
                     user_pass_hash=kwargs.get('user_pass_hash'),
                     )
             return
-        self.user_id = random.randint(10, 20)
+        self.seq = count()
+        self.user_id = next(self.seq)
         self.user_name = kwargs.get('user_name')
         self.user_create_date = kwargs.get('user_create_date') \
                 or datetime.datetime.now()
@@ -50,16 +53,6 @@ class ResUser():
         self.user_contact_list_archive = kwargs.get('user_contact_list_archive') \
                 or {self.user_contact_list.fetch_contact_list_id(),
                         self.user_contact_list}
-
-
-    # TODO - Uncalled
-    @classmethod
-    def sequencer():
-        log.debug('')
-        num = 0
-        while True:
-            yield num
-            num += 1
 
     def fetch_user_id(self):
         log.debug('')
@@ -101,9 +94,9 @@ class ResUser():
         log.debug('')
         return self.user_alias
 
-    def fetch_user_pass_archive(self):
+    def fetch_user_pass_hash_archive(self):
         log.debug('')
-        return self.user_pass_archive
+        return self.user_pass_hash_archive
 
     def fetch_user_credit_wallet_archive(self):
         log.debug('')
@@ -126,7 +119,7 @@ class ResUser():
                 'user_email': self.user_email,
                 'user_phone': self.user_phone,
                 'user_alias': self.user_alias,
-                'user_pass_archive': self.user_pass_archive,
+                'user_pass_hash_archive': self.user_pass_hash_archive,
                 'user_credit_wallet_archive': self.user_credit_wallet_archive,
                 'user_contact_list_archive': self.user_contact_list_archive,
                 }

@@ -3,9 +3,11 @@ import random
 import datetime
 import logging
 import pysnooper
+from itertools import count
 
 from .time_sheet import CreditClockTimeSheet
 from .conversion_sheet import CreditClockConversionSheet
+from .res_utils import ResUtils
 from .config import Config
 
 log_config = Config().log_config
@@ -18,7 +20,8 @@ class CreditClock():
 
     # TODO - Refactor - Has dummy data
     def __init__(self, **kwargs):
-        self.clock_id = random.randint(10, 20)
+        self.seq = count()
+        self.clock_id = next(self.seq)
         self.wallet_id = kwargs.get('wallet_id')
         self.reference = kwargs.get('reference')
         self.create_date = datetime.datetime.now()

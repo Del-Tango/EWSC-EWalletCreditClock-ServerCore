@@ -3,10 +3,12 @@ import datetime
 import random
 import logging
 import pysnooper
+from itertools import count
 
 from .credit_clock import CreditClock
 from .transfer_sheet import CreditTransferSheet
 from .invoice_sheet import CreditInvoiceSheet
+from .res_utils import ResUtils
 from .config import Config
 
 log_config = Config().log_config
@@ -18,7 +20,8 @@ class CreditEWallet():
     # TODO - Has dummy data
 #   @pysnooper.snoop()
     def __init__(self, **kwargs):
-        self.wallet_id = random.randint(10,20)
+        self.seq = count()
+        self.wallet_id = next(self.seq)
         self.client_id = kwargs.get('client_id')
         self.reference = kwargs.get('reference')
         self.create_date = datetime.datetime.now()

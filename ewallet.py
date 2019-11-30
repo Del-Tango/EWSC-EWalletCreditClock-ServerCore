@@ -14,18 +14,18 @@ from base.credit_wallet import CreditEWallet
 from base.contact_list import ContactList
 from base.config import Config
 
-config = Config(target_file='conf/ewallet.conf')
+config = Config()
 res_utils = ResUtils()
-log_config = Config().log_config
+log_config = config.log_config
 
 log = logging.getLogger(log_config['log_name'])
 log.setLevel(logging.DEBUG)
 file_handler = logging.FileHandler(
-        log_config['log_dir'] + '/' + log_config['file_main'], 'a'
+        log_config['log_dir'] + '/' + log_config['log_file'], 'a'
         )
 formatter = logging.Formatter(
-        log_config['record_format'],
-        log_config['date_format']
+        log_config['log_record_format'],
+        log_config['log_date_format']
         )
 logging.Formatter.converter = res_utils.fetch_now_eet
 file_handler.setFormatter(formatter)
@@ -742,6 +742,7 @@ class EWallet():
 
     def action_system_session_update(self, **kwargs):
         log.debug('')
+        kwargs.update({'session_active_user': self.session_active_user})
         _update = self.update_session_from_user(**kwargs)
         return _update or False
 
@@ -774,7 +775,7 @@ class EWallet():
                 )
         if not session_login:
             return self.warning_could_not_login()
-        self.update_session_from_user(session_active_user=session_login)
+        self.action_system_user_update(user=session_login)
         return session_login
 
     def handle_user_action_reset(self, **kwargs):
@@ -1638,7 +1639,7 @@ class EWallet():
                 )
         print('[ * ] View account')
         self.ewallet_controller(
-                controller='user', ctype='action', action='view', target='account'
+                controller='user', ctype='action', action='view', view='account'
                 )
         print('[ * ] Create second account')
         self.ewallet_controller(
@@ -1652,7 +1653,7 @@ class EWallet():
                 )
         print('[ * ] View account')
         self.ewallet_controller(
-                controller='user', ctype='action', action='view', target='account'
+                controller='user', ctype='action', action='view', view='account'
                 )
 
     def test_ewallet_system_controller(self):

@@ -2,8 +2,10 @@ import random
 import datetime
 import pysnooper
 import logging
+from itertools import count
 
 from .config import Config
+from .res_utils import ResUtils
 
 log_config = Config().log_config
 log = logging.getLogger(log_config['log_name'])
@@ -12,7 +14,8 @@ log = logging.getLogger(log_config['log_name'])
 class ContactListRecord():
 
     def __init__(self, **kwargs):
-        self.record_id = random.randint(10, 20)
+        self.seq = count()
+        self.record_id = next(self.seq)
         self.contact_list_id = kwargs.get('contact_list_id')
         self.create_date = datetime.datetime.now()
         self.write_date = datetime.datetime.now()
@@ -70,7 +73,8 @@ class ContactListRecord():
 class ContactList():
 
     def __init__(self, **kwargs):
-        self.contact_list_id = random.randint(10, 20)
+        self.seq = count()
+        self.contact_list_id = next(self.seq)
         self.client_id = kwargs.get('client_id')
         self.reference = kwargs.get('reference')
         self.create_date = datetime.datetime.now()

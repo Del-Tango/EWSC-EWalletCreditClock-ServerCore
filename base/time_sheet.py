@@ -3,7 +3,9 @@ import random
 import datetime
 import logging
 import pysnooper
+from itertools import count
 
+from .res_utils import ResUtils
 from .config import Config
 
 log_config = Config().log_config
@@ -13,7 +15,8 @@ log = logging.getLogger(log_config['log_name'])
 class TimeSheetRecord():
 
     def __init__(self, **kwargs):
-        self.record_id = random.randint(10, 20)
+        self.seq = count()
+        self.record_id = next(self.seq)
         self.time_sheet_id = kwargs.get('time_sheet_id')
         self.reference = kwargs.get('reference')
         self.create_date = datetime.datetime.now()
@@ -109,7 +112,8 @@ class TimeSheetRecord():
 class CreditClockTimeSheet():
 
     def __init__(self, **kwargs):
-        self.time_sheet_id = random.randint(10, 20)
+        self.seq = count()
+        self.time_sheet_id = next(self.seq)
         self.clock_id = kwargs.get('clock_id')
         self.reference = kwargs.get('reference')
         self.create_date = datetime.datetime.now()

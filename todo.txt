@@ -1,4 +1,4 @@
-# TODO - Ewallet Record Sequencer
+# TODO - BUG FIX - Ewallet Record Sequencer
 # TODO - EWallet Client
 # TODO - Replace creational dummy data with a value dict passed by **kwargs
 # TODO - Config file parser

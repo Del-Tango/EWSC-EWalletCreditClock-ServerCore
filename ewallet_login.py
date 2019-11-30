@@ -9,6 +9,7 @@ from validate_email import validate_email
 from base.res_user import ResUser
 from base.credit_wallet import CreditEWallet
 from base.contact_list import ContactList
+from base.res_utils import ResUtils
 from base.config import Config
 
 log_config = Config().log_config
