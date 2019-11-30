@@ -2,14 +2,34 @@ import time
 import datetime
 import random
 import hashlib
-from validate_email import validate_email
+import logging
+import datetime
 import pysnooper
+from validate_email import validate_email
 
-from . import EWalletLogin
+from ewallet_login import EWalletLogin
 from base.res_user import ResUser
+from base.res_utils import ResUtils
 from base.credit_wallet import CreditEWallet
 from base.contact_list import ContactList
-from base.system.config import Config
+from base.config import Config
+
+config = Config(target_file='conf/ewallet.conf')
+res_utils = ResUtils()
+log_config = Config().log_config
+
+log = logging.getLogger(log_config['log_name'])
+log.setLevel(logging.DEBUG)
+file_handler = logging.FileHandler(
+        log_config['log_dir'] + '/' + log_config['file_main'], 'a'
+        )
+formatter = logging.Formatter(
+        log_config['record_format'],
+        log_config['date_format']
+        )
+logging.Formatter.converter = res_utils.fetch_now_eet
+file_handler.setFormatter(formatter)
+log.addHandler(file_handler)
 
 
 # [ NOTE ]: Ewallet session manager.
@@ -22,45 +42,51 @@ class EWallet():
         self.user_account_archive = {}
 
     def fetch_user_by_id(self, **kwargs):
+        log.debug('')
         if not kwargs.get('code'):
-            return False
+            return self.error_no_user_id_found()
         return self.user_account_archive.get(kwargs['code'])
 
     def fetch_user_by_name(self, **kwargs):
+        log.debug('')
         if not kwargs.get('code'):
-            return False
+            return self.error_no_user_name_found()
         for item in self.user_account_archive:
             if self.user_account_archive[item].fetch_user_name() == kwargs['code']:
                 return self.user_account_archive[item]
-        return False
+        return self.warning_no_user_account_found('name', kwargs['code'])
 
     def fetch_user_by_email(self, **kwargs):
+        log.debug('')
         if not kwargs.get('code'):
-            return False
+            return self.error_no_user_email_found()
         for item in self.user_account_archive:
             if self.user_account_archive[item].fetch_user_email() == kwargs['code']:
                 return self.user_account_archive[item]
-        return False
+        return self.warning_no_user_account_found('email', kwargs['code'])
 
     def fetch_user_by_phone(self, **kwargs):
+        log.debug('')
         if not kwargs.get('code'):
-            return False
+            return self.error_no_user_phone_found()
         for item in self.user_account_archive:
             if self.user_account_archive[item].fetch_user_phone() == kwargs['code']:
                 return self.user_account_archive[item]
-        return False
+        return self.warning_no_user_account_found('phone', kwargs['code'])
 
     def fetch_user_by_alias(self, **kwargs):
+        log.debug('')
         if not kwargs.get('code'):
-            return False
+            return self.error_no_user_alias_found()
         for item in self.user_account_archive:
             if self.user_account_archive[item].fetch_user_alias() == kwargs['code']:
                 return self.user_account_archive[item]
-        return False
+        return self.warning_no_user_account_found('alias', kwargs['code'])
 
     def fetch_user(self, **kwargs):
+        log.debug('')
         if not kwargs.get('identifier'):
-            return False
+            return self.error_no_user_identifier_found()
         _handlers = {
                 'id': self.fetch_user_by_id,
                 'name': self.fetch_user_by_name,
@@ -71,11 +97,9 @@ class EWallet():
         return _handlers[kwargs['identifier']](**kwargs)
 
     def update_session_from_user(self, **kwargs):
-        global session_active_user
-        global session_credit_wallet
-        global session_contact_list
+        log.debug('')
         if not kwargs.get('session_active_user'):
-            return False
+            return self.error_no_session_active_user_found()
         self.active_user = kwargs['session_active_user']
         self.credit_wallet = self.active_user.fetch_user_credit_wallet()
         self.contact_list = self.active_user.fetch_user_contact_list()
@@ -83,9 +107,9 @@ class EWallet():
 
 #   @pysnooper.snoop()
     def update_user_account_archive(self, **kwargs):
-        global user_account_archive
+        log.debug('')
         if not kwargs.get('user'):
-            return False
+            return self.error_no_user_object_found()
         try:
             self.user_account_archive.update({
                 kwargs['user'].fetch_user_id(), kwargs['user']
@@ -96,8 +120,9 @@ class EWallet():
         return self.user_account_archive
 
     def action_reset_user_password(self, **kwargs):
+        log.debug('')
         if not self.session_active_user or not kwargs.get('user_pass'):
-            return False
+            return self.error_no_user_password_found()
         _pass_check_func = EWalletCreateAccount().check_user_pass
         _pass_hash_func = EWalletLogin().hash_password
         return self.session_active_user.user_controller(
@@ -108,32 +133,36 @@ class EWallet():
                 )
 
     def action_reset_user_email(self, **kwargs):
+        log.debug('')
         if not self.session_active_user or not kwargs.get('user_email'):
-            return False
+            return self.error_no_user_email_found()
         _email_check_func = EwalletCreateAccount().check_user_email
         return self.session_active_user.user_controller(
                 ctype='action', action='reset', target='field', field='user_email',
-                email=kwargs['user_email']
-                email_check_func=_email_check_func
+                email=kwargs['user_email'],
+                email_check_func=_email_check_func,
                 )
 
     def action_reset_user_alias(self, **kwargs):
+        log.debug('')
         if not self.session_active_user or not kwargs.get('user_alias'):
-            return False
+            return self.error_no_user_alias_found()
         return self.session_active_user.user_controller(
                 ctype='action', action='reset', target='field', field='user_alias',
                 alias=kwargs['user_alias']
                 )
 
     def action_reset_user_phone(self, **kwargs):
+        log.debug('')
         if not self.session_active_user or not kwargs.get('user_phone'):
-            return False
+            return self.error_no_user_phone_found()
         return self.session_active_user.user_controller(
                 ctype='action', action='reset', target='field', field='user_phone',
-                phone=kwargs['user_phone')
+                phone=kwargs['user_phone']
                 )
 
     def action_create_new_user_account(self, **kwargs):
+        log.debug('')
         session_create_account = EWalletLogin().ewallet_login_controller(
                 action='new_account',
                 user_name=kwargs.get('user_name'),
@@ -142,9 +171,9 @@ class EWallet():
                 user_archive=self.user_account_archive
                 )
         if not session_create_account:
-            return False
+            return self.warning_could_not_create_user_account(kwargs['user_name'])
         self.update_session_from_user(
-                active_user=session_create_account
+                session_active_user=session_create_account
                 )
         self.update_user_account_archive(
                 user=session_create_account
@@ -152,48 +181,71 @@ class EWallet():
         return session_create_account
 
     def action_create_new_credit_wallet(self, **kwargs):
+        log.debug('')
         if not self.session_active_user:
-            return False
+            return self.error_no_session_active_user_found()
         _new_wallet = self.session_active_user.user_controller(
                 ctype='action', action='create', target='credit_wallet',
                 reference=kwargs.get('reference'),
                 credits=kwargs.get('credits'),
                 )
-        return _new_wallet or False
+        if not _new_wallet:
+            return self.warning_could_not_create_credit_wallet(
+                self.session_active_user.fetch_user_name()
+                )
+        return _new_wallet
 
     def action_create_new_credit_clock(self, **kwargs):
+        log.debug('')
         if not self.session_active_user:
-            return False
+            return self.error_no_session_active_user_found()
         _new_clock = self.session_active_user.user_controller(
                 ctype='action', action='create', target='credit_clock',
                 reference=kwargs.get('reference'),
                 credit_clock=kwargs.get('credit_clock'),
                 )
-        return _new_clock or False
+        if not _new_clock:
+            return self.warning_could_not_create_credit_clock(
+                self.session_active_user.fetch_user_name()
+                )
+        return _new_clock
 
     def action_create_new_contact_list(self, **kwargs):
+        log.debug('')
         if not self.session_active_user:
-            return False
+            return self.error_no_session_active_user_found()
         _new_list = self.session_active_user.user_controller(
                 ctype='action', action='create', target='contact_list',
                 reference=kwargs.get('reference'),
                 )
-        return _new_list or False
+        if not _new_list:
+            return self.warning_could_not_create_contact_list(
+                self.session_active_user.fetch_user_name()
+                )
+        return _new_list
 
     def action_create_new_contact_record(self, **kwargs):
+        log.debug('')
         if not self.session_contact_list:
-            return False
+            return self.error_no_active_session_contact_list_found(
+                self.session_active_user.fetch_user_name()
+                )
         _new_record = self.session_contact_list.contact_list_controller(
                 action='create', user_name=kwargs.get('user_name'),
                 user_email=kwargs.get('user_email'),
                 user_phone=kwargs.get('user_phone'),
                 notes=kwargs.get('notes'),
                 )
-        return _new_record or False
+        if not _new_record:
+            return self.warning_could_not_create_contact_record(
+                self.session_active_user.fetch_user_name()
+                )
+        return _new_record
 
     def action_create_new_contact(self, **kwargs):
+        log.debug('')
         if not kwargs.get('contact'):
-            return False
+            return self.error_no_contact_found()
         _handlers = {
                 'list': self.action_create_new_contact_list,
                 'record': self.action_create_new_contact_record,
@@ -201,9 +253,14 @@ class EWallet():
         return _handlers[kwargs['contact']](**kwargs)
 
     def action_create_new_transfer(self, **kwargs):
-        if not session_credit_wallet or not kwargs.get('transfer_type') \
+        log.debug('')
+        if not self.session_credit_wallet or not kwargs.get('transfer_type') \
                 or not kwargs.get('partner_ewallet'):
-            return False
+            return self.error_handler_action_create_new_transfer(
+                    session_wallet=self.session_credit_wallet,
+                    transfer_type=kwargs.get('transfer_type'),
+                    partner_wallet=kwargs.get('partner_ewallet'),
+                    )
         return self.session_credit_wallet.user_controller(
                 action='transfer', transfer_type=kwargs['transfer_type'],
                 partner_ewallet=kwargs['partner_ewallet'],
@@ -214,120 +271,176 @@ class EWallet():
                 )
 
     def action_unlink_user_account(self, **kwargs):
-        global user_account_archive
+        log.debug('')
         if not self.user_account_archive or not kwargs.get('user_id'):
-            return False
+            return self.error_handler_action_unlink_user_account(
+                    archive=self.user_account_archive,
+                    user_id=kwargs.get('user_id'),
+                    )
         _user = self.fetch_user(identifier='id', code=kwargs['user_id'])
-        return False if not _user \
-                else self.user_account_archive.pop(kwargs['user_id'])
+        if not _user:
+            self.warning_could_not_fetch_user_by_id(kwargs['user_id'])
+        return self.user_account_archive.pop(kwargs['user_id'])
 
     def action_unlink_credit_wallet(self, **kwargs):
+        log.debug('')
         if not self.session_active_user or not kwargs.get('wallet_id'):
-            return False
+            return self.error_handler_action_unlink_credit_wallet(
+                    session_user=self.session_active_user,
+                    wallet_id=kwargs.get('wallet_id'),
+                    )
         return self.session_active_user.user_controller(
                 ctype='action', action='unlink', target='credit_wallet',
                 wallet_id=kwargs['wallet_id'],
                 )
 
     def action_unlink_contact_list(self, **kwargs):
+        log.debug('')
         if not self.session_active_user or not kwargs.get('list_id'):
-            return False
+            return self.error_handler_action_unlink_contact_list(
+                    session_user=self.session_active_user,
+                    list_id=kwargs.get('list_id'),
+                    )
         return self.session_active_user.user_controller(
                 ctype='action', action='unlink', target='contact_list',
                 list_id=kwargs['list_id']
                 )
 
     def action_unlink_contact_record(self, **kwargs):
+        log.debug('')
         if not self.session_contact_list or not kwargs.get('record_id'):
-            return False
+            return self.error_handler_action_unlink_contact_record(
+                    contact_list=self.session_contact_list,
+                    record_id=kwargs.get('record_id'),
+                    )
         return self.session_contact_list.contact_list_controller(
                 action='update', update_type='remove',
                 record_id=kwargs['record_id'],
                 )
 
     def action_unlink_invoice_list(self, **kwargs):
+        log.debug('')
         if not self.session_credit_wallet or not kwargs.get('list_id'):
-            return False
+            return self.error_handler_action_unlink_invoice_list(
+                    credit_wallet=self.session_credit_wallet,
+                    list_id=kwargs.get('list_id'),
+                    )
         return self.session_credit_wallet.main_controller(
                 controller='system', action='unlink_sheet', sheet='invoice',
                 sheet_id=kwargs['list_id'],
                 )
 
     def action_unlink_invoice_record(self, **kwargs):
+        log.debug('')
         if not self.session_credit_wallet or not kwargs.get('record_id'):
-            return False
+            return self.error_handler_action_unlink_invoice_record(
+                    credit_wallet=self.session_credit_wallet,
+                    record_id=kwargs.get('record_id'),
+                    )
         _invoice_list = self.session_credit_wallet.fetch_invoice_sheet()
-        return False if not _invoice_list \
-                else _invoice_list.credit_invoice_sheet_controller(
-                        action='remove', record_id=kwargs['record_id'],
-                        )
+        if not _invoice_list:
+            return self.warning_could_not_fetch_credit_wallet_invoice_sheet()
+        return _invoice_list.credit_invoice_sheet_controller(
+                action='remove', record_id=kwargs['record_id'],
+                )
 
     def action_unlink_transfer_list(self, **kwargs):
+        log.debug('')
         if not self.session_credit_wallet or not kwargs.get('list_id'):
-            return False
+            return self.error_handler_action_unlink_transfer_list(
+                    credit_wallet=self.session_credit_wallet,
+                    list_id=kwargs.get('list_id'),
+                    )
         return self.session_credit_wallet.main_controller(
                 controller='system', action='unlink_sheet', sheet='transfer',
                 sheet_id=kwargs['list_id'],
                 )
 
     def action_unlink_transfer_record(self, **kwargs):
-        if not self.session_credit_wallet or not kwargs.get('list_id'):
-            return False
+        log.debug('')
+        if not self.session_credit_wallet or not kwargs.get('record_id'):
+            return self.error_handler_action_unlink_transfer_record(
+                    credit_wallet=self.session_credit_wallet,
+                    record_id=kwargs.get('record_id'),
+                    )
         _transfer_list = self.session_credit_wallet.fetch_transfer_sheet()
-        return False if not _transfer_list \
-                else _transfer_list.credit_transfer_sheet_controller(
-                        action='remove', record_id=kwargs['record_id'],
-                        )
+        if not _transfer_list:
+            return self.warning_could_not_fetch_credit_wallet_transfer_sheet()
+        return _transfer_list.credit_transfer_sheet_controller(
+                action='remove', record_id=kwargs['record_id'],
+                )
 
     def action_unlink_time_list(self, **kwargs):
+        log.debug('')
         if not self.session_credit_wallet or not kwargs.get('list_id'):
-            return False
+            log.error('No active session credit wallet or credit clock time list id found.')
+            return self.error_handler_action_unlink_time_list(
+                    credit_wallet=self.session_credit_wallet,
+                    list_id=kwargs.get('list_id'),
+                    )
         _credit_clock = self.session_credit_wallet.fetch_credit_ewallet_credit_clock()
         if not _credit_clock:
-            return False
+            return self.warning_could_not_fetch_credit_clock()
         return _credit_clock.main_controller(
                 controller='system', action='unlink', unlink='sheet',
                 sheet_type='time', sheet_id=kwargs['list_id']
                 )
 
     def action_unlink_time_record(self, **kwargs):
+        log.debug('')
         if not self.session_credit_wallet or not kwargs.get('record_id'):
-            return False
+            log.error('No active session credit wallet or time record id found.')
+            return self.error_handler_action_unlink_time_record(
+                    credit_wallet=self.session_credit_wallet,
+                    record_id=kwargs.get('record_id'),
+                    )
         _credit_clock = self.session_credit_wallet.fetch_credit_ewallet_credit_clock()
         if not _credit_clock:
-            return False
+            return self.warning_could_not_fetch_credit_clock()
         _time_list = _credit_clock.fetch_credit_clock_time_sheet()
-        return False if not _time_list \
-                else _time_list.credit_clock_time_sheet_controller(
-                        action='remove', record_id=kwargs['record_id']
-                        )
+        if not _time_list:
+            return self.warning_could_not_fetch_time_sheet()
+        return _time_list.credit_clock_time_sheet_controller(
+                action='remove', record_id=kwargs['record_id']
+                )
 
     def action_unlink_conversion_list(self, **kwargs):
+        log.debug('')
         if not self.session_credit_wallet or not kwargs.get('list_id'):
-            return False
+            return self.error_handler_action_unlink_conversion_list(
+                    credit_wallet=self.session_credit_wallet,
+                    list_id=kwargs.get('list_id'),
+                    )
         _credit_clock = self.session_credit_wallet.fetch_credit_ewallet_credit_clock()
         if not _credit_clock:
-            return False
+            return self.warning_could_not_fetch_credit_clock()
         return _credit_clock.main_controller(
                 controller='system', action='unlink', unlink='sheet',
                 sheet_type='conversion', sheet_id=kwargs['list_id']
                 )
 
     def action_unlink_conversion_record(self, **kwargs):
+        log.debug('')
         if not self.session_credit_wallet or not kwargs.get('record_id'):
-            return False
+            log.error('No active session credit wallet or conversion record id found.')
+            return self.error_handler_action_unlink_conversion_record(
+                    credit_wallet=self.session_credit_wallet,
+                    record_id=kwargs.get('record_id'),
+                    )
         _credit_clock = self.session_credit_wallet.fetch_credit_ewallet_credit_clock()
         if not _credit_clock:
-            return False
+            return self.warning_could_not_fetch_credit_clock()
         _conversion_list = _credit_clock.fetch_credit_clock_conversion_sheet()
-        return False if not _conversion_list \
-                else _conversion_list.credit_clock_conversion_sheet_controller(
-                        action='remove', record_id=kwargs['record_id']
-                        )
+        if not _conversion_list:
+            return self.warning_could_not_fetch_conversion_sheet()
+        return _conversion_list.credit_clock_conversion_sheet_controller(
+                action='remove', record_id=kwargs['record_id']
+                )
 
     def action_unlink_contact(self, **kwargs):
+        log.debug('')
         if not kwargs.get('unlink'):
-            return False
+            return self.error_no_unlink_target_specified()
         _handlers = {
                 'list': self.action_unlink_contact_list,
                 'record': self.action_unlink_contact_record,
@@ -335,8 +448,9 @@ class EWallet():
         return _handlers[kwargs['unlink']](**kwargs)
 
     def action_unlink_invoice(self, **kwargs):
+        log.debug('')
         if not kwargs.get('unlink'):
-            return False
+            return self.error_no_unlink_target_specified()
         _handlers = {
                 'list': self.action_unlink_invoice_list,
                 'record': self.action_unlink_invoice_record,
@@ -344,8 +458,9 @@ class EWallet():
         return _handlers[kwargs['unlink']](**kwargs)
 
     def action_unlink_transfer(self, **kwargs):
+        log.debug('')
         if not kwargs.get('unlink'):
-            return False
+            return self.error_no_unlink_target_specified()
         _handlers = {
                 'list': self.action_unlink_transfer_list,
                 'record': self.action_unlink_transfer_record,
@@ -353,8 +468,9 @@ class EWallet():
         return _handlers[kwargs['unlink']](**kwargs)
 
     def action_unlink_time(self, **kwargs):
+        log.debug('')
         if not kwargs.get('unlink'):
-            return False
+            return self.error_no_unlink_target_specified()
         _handlers = {
                 'list': self.action_unlink_time_list,
                 'record': self.action_unlink_time_record,
@@ -362,8 +478,9 @@ class EWallet():
         return _handlers[kwargs['unlink']](**kwargs)
 
     def action_unlink_conversion(self, **kwargs):
+        log.debug('')
         if not kwargs.get('unlink'):
-            return False
+            return self.error_no_unlink_target_specified()
         _handlers = {
                 'list': self.action_unlink_conversion_list,
                 'record': self.action_unlink_conversion_record,
@@ -371,49 +488,60 @@ class EWallet():
         return _handlers[kwargs['unlink']](**kwargs)
 
     def action_view_user_account(self, **kwargs):
+        log.debug('')
         if not self.session_active_user:
-            return False
+            return self.error_no_session_active_user_found()
         res = self.session_active_user.fetch_user_values()
         print(res)
         return res
 
     def action_view_credit_wallet(self, **kwargs):
+        log.debug('')
         if not self.session_credit_wallet:
-            return False
+            return self.error_no_session_credit_wallet_found()
         res = self.session_credit_wallet.fetch_credit_ewallet_values()
         print(res)
         return res
 
     def action_view_credit_clock(self, **kwargs):
+        log.debug('')
         if not self.session_credit_wallet:
-            return False
+            return self.error_no_session_credit_wallet_found()
         _credit_clock = self.session_credit_wallet.fetch_credit_ewallet_credit_clock()
+        if not _credit_clock:
+            return self.warning_could_not_fetch_credit_clock()
         res = _credit_clock.fetch_credit_clock_values()
         print(res)
         return res
 
     def action_view_contact_list(self, **kwargs):
+        log.debug('')
         if not self.session_contact_list:
-            return False
+            return self.error_no_session_contact_list_found()
         res = self.session_contact_list.fetch_contact_list_values()
         print(res)
         return res
 
     def action_view_contact_record(self, **kwargs):
+        log.debug('')
         if not self.session_contact_list or not kwargs.get('record_id'):
-            return False
+            return self.error_handler_action_view_contact_record(
+                    contact_list=self.session_contact_list,
+                    record_id=kwargs.get('record_id'),
+                    )
         _record = self.session_contact_list.fetch_contact_list_record_by_id(
                 code=kwargs['record_id']
                 )
         if not _record:
-            return False
+            return self.warning_could_not_fetch_contact_record()
         res = _record.fetch_record_values()
         print(res)
         return res
 
     def action_view_contact(self, **kwargs):
+        log.debug('')
         if not kwargs.get('contact'):
-            return False
+            return self.error_no_contact_target_specified()
         _handlers = {
                 'list': self.action_view_contact_list,
                 'record': self.action_view_contact_record,
@@ -421,29 +549,39 @@ class EWallet():
         return _handlers[kwargs['contact']](**kwargs)
 
     def action_view_invoice_list(self, **kwargs):
+        log.debug('')
         if not self.session_credit_wallet:
-            return False
+            return self.error_no_session_credit_wallet_found()
         _invoice_sheet = self.session_credit_wallet.fetch_credit_ewallet_invoice_sheet()
+        if not _invoice_sheet:
+            return self.warning_could_not_fetch_invoice_sheet()
         res = _invoice_sheet.fetch_invoice_sheet_values()
         print(res)
         return res
 
     def action_view_invoice_record(self, **kwargs):
+        log.debug('')
         if not self.session_credit_wallet or not kwargs.get('record_id'):
-            return False
+            return self.error_handler_action_view_invoice_record(
+                    credit_wallet=self.session_credit_wallet,
+                    record_id=kwargs.get('record_id'),
+                    )
         _invoice_sheet = self.session_credit_wallet.fetch_credit_ewallet_invoice_sheet()
+        if not _invoice_sheet:
+            return self.warning_could_not_fetch_invoice_sheet()
         _record = _invoice_sheet.fetch_credit_invoice_records(
                 search_by='id', code=kwargs['record_id']
                 )
         if not _record:
-            return False
+            return self.warning_could_not_fetch_invoice_sheet_record()
         res = _record.fetch_record_values()
         print(res)
         return res
 
     def action_view_invoice(self, **kwargs):
+        log.debug('')
         if not kwargs.get('invoice'):
-            return False
+            return self.error_no_invoice_target_specified()
         _handlers = {
                 'list': self.action_view_invoice_list,
                 'record': self.action_view_invoice_record,
@@ -451,91 +589,111 @@ class EWallet():
         return _handlers[kwargs['invoice']](**kwargs)
 
     def action_view_transfer_list(self, **kwargs):
+        log.debug('')
         if not self.session_credit_wallet:
-            return False
+            return self.error_no_session_credit_wallet_found()
         _transfer_sheet = self.session_credit_wallet.fetch_credit_ewallet_transfer_sheet()
+        if not _transfer_sheet:
+            return self.warning_could_not_fetch_transfer_sheet()
         res = _transfer_sheet.fetch_transfer_sheet_values()
         print(res)
         return res
 
     def action_view_transfer_record(self, **kwargs):
+        log.debug('')
         if not self.session_credit_wallet or not kwargs.get('record_id'):
-            return False
+            return self.error_handler_action_view_transfer_record(
+                    credit_wallet=self.session_credit_wallet,
+                    record_id=kwargs.get('record_id'),
+                    )
         _transfer_sheet = self.session_credit_wallet.fetch_credit_ewallet_transfer_sheet()
+        if not _transfer_sheet:
+            return self.warning_could_not_fetch_transfer_sheet()
         _record = _transfer_sheet.fetch_transfer_sheet_records(
                 search_by='id', code=kwargs['record_id']
                 )
         if not _record:
-            return False
+            return self.warning_could_not_fetch_transfer_sheet_record()
         res = _record.fetch_record_values()
         print(res)
         return res
 
     def action_view_time_list(self, **kwargs):
+        log.debug('')
         if not self.session_credit_wallet:
-            return False
+            return self.error_no_session_credit_wallet_found()
         _credit_clock = self.session_credit_wallet.fetch_credit_ewallet_credit_clock()
         if not _credit_clock:
-            return False
+            return self.warning_could_not_fetch_credit_clock()
         _time_sheet = _credit_clock.fetch_credit_clock_time_sheet()
         if not _time_sheet:
-            return False
+            return self.warning_could_not_fetch_time_sheet()
         res = _time_sheet.fetch_credit_clock_time_sheet_values()
         print(res)
         return res
 
     def action_view_time_record(self, **kwargs):
+        log.debug('')
         if not self.session_credit_wallet or not kwargs.get('record_id'):
-            return False
+            return self.error_handler_action_view_time_record(
+                    credit_wallet=self.session_credit_wallet,
+                    record_id=kwargs.get('record_id'),
+                    )
         _credit_clock = self.session_credit_wallet.fetch_ewallet_credit_clock()
         if not _credit_clock:
-            return False
+            return self.warning_could_not_fetch_credit_clock()
         _time_sheet = _credit_clock.fetch_credit_clock_time_sheet()
         if not _time_sheet:
-            return False
-        _record = _time_sheet.fetch_time_sheet_records(
+            return self.warning_could_not_fetch_time_sheet()
+        _record = _time_sheet.fetch_time_sheet_record(
                 search_by='id', code=kwargs['record_id']
                 )
         if not _record:
-            return False
+            return self.warning_could_not_fetch_time_sheet_record()
         res = _record.fetch_record_values()
         print(res)
         return res
 
     def action_view_conversion_list(self, **kwargs):
+        log.debug('')
         if not self.session_credit_wallet:
-            return False
+            return self.error_no_session_credit_wallet_found()
         _credit_clock = self.session_credit_wallet.fetch_ewallet_credit_clock()
         if not _credit_clock:
-            return False
+            return self.warning_could_not_fetch_credit_clock()
         _conversion_list = _credit_clock.fetch_credit_clock_conversion_sheet()
         if not _conversion_list:
-            return False
+            return self.warning_could_not_fetch_conversion_sheet()
         res = _conversion_list.fetch_credit_clock_conversion_sheet_values()
         print(res)
         return res
 
     def action_view_conversion_record(self, **kwargs):
+        log.debug('')
         if not self.session_credit_wallet or not kwargs.get('record_id'):
-            return False
+            return self.error_handler_action_view_conversion_record(
+                    credit_wallet=self.session_credit_wallet,
+                    record_id=kwargs.get('record_id'),
+                    )
         _credit_clock = self.session_credit_wallet.fetch_ewallet_credit_clock()
         if not _credit_clock:
-            return False
+            return self.warning_could_not_fetch_credit_clock()
         _conversion_list = _credit_clock.fetch_credit_clock_conversion_sheet()
         if not _conversion_list:
-            return False
-        _record = _conversion_list.fetch_conversion_sheet_records(
+            return self.warning_could_not_fetch_conversion_sheet()
+        _record = _conversion_list.fetch_conversion_sheet_record(
                 search_by='id', code=kwargs['record_id']
                 )
         if not _record:
-            return False
+            return self.warning_could_not_fetch_conversion_record()
         res = _record.fetch_record_values()
         print(res)
         return res
 
     def action_view_transfer(self, **kwargs):
+        log.debug('')
         if not kwargs.get('transfer'):
-            return False
+            return self.error_no_transfer_view_target_specified()
         _handlers = {
                 'list': self.action_view_transfer_list,
                 'record': self.action_view_transfer_record,
@@ -543,8 +701,9 @@ class EWallet():
         return _handlers[kwargs['transfer']](**kwargs)
 
     def action_view_time(self, **kwargs):
+        log.debug('')
         if not kwargs.get('time'):
-            return False
+            return self.error_no_time_view_target_specified()
         _handlers = {
                 'list': self.action_view_time_list,
                 'record': self.action_view_time_record,
@@ -552,8 +711,9 @@ class EWallet():
         return _handlers[kwargs['time']](**kwargs)
 
     def action_view_conversion(self, **kwars):
+        log.debug('')
         if not kwargs.get('conversion'):
-            return False
+            return self.error_no_conversion_view_target_specified()
         _handlers = {
                 'list': self.action_view_conversion_list,
                 'record': self.action_view_conversion_record,
@@ -570,23 +730,25 @@ class EWallet():
 
     # [ NOTE ]: Allows multiple logged in users to switch.
     def action_system_user_update(self, **kwargs):
-        global session_active_user
+        log.debug('')
         if not kwargs.get('user'):
-            return False
+            return self.error_no_user_specified()
         user_id = kwargs['user'].fetch_user_id()
         if user_id not in self.user_account_archive.keys():
-            return False
+            return self.warning_user_not_in_session_archive()
         self.session_active_user = kwargs['user']
         self.update_session_from_user(session_active_user=kwargs['user'])
         return self.session_active_user
 
     def action_system_session_update(self, **kwargs):
+        log.debug('')
         _update = self.update_session_from_user(**kwargs)
         return _update or False
 
     def handle_system_action_update(self, **kwargs):
+        log.debug('')
         if not kwargs.get('target'):
-            return False
+            return self.error_no_system_update_target_specified()
         _handlers = {
                 'user': self.action_system_user_update,
                 'session': self.action_system_session_update,
@@ -594,8 +756,9 @@ class EWallet():
         return _handlers[kwargs['target']](**kwargs)
 
     def handle_system_action_check(self, **kwargs):
+        log.debug('')
         if not kwargs.get('target'):
-            return False
+            return self.error_no_system_check_target_specified()
         _handlers = {
                 'user': self.action_system_user_check,
                 'session': self.action_system_session_check,
@@ -603,19 +766,21 @@ class EWallet():
         return _handlers[kwargs['target']](**kwargs)
 
     def handle_user_action_login(self, **kwargs):
+        log.debug('')
         session_login = EWalletLogin().ewallet_login_controller(
                 action='login', user_name=kwargs.get('user_name'),
                 user_pass=kwargs.get('user_pass'),
                 user_archive=self.user_account_archive
                 )
         if not session_login:
-            return False
-        self.update_session_from_user(active_user=session_login)
+            return self.warning_could_not_login()
+        self.update_session_from_user(session_active_user=session_login)
         return session_login
 
     def handle_user_action_reset(self, **kwargs):
+        log.debug('')
         if not kwargs.get('target'):
-            return False
+            return self.error_no_user_reset_target_specified()
         _handlers = {
                 'user_alias': self.action_reset_user_alias,
                 'user_pass': self.action_reset_user_password,
@@ -625,8 +790,9 @@ class EWallet():
         return _handlers[kwargs['target']](**kwargs)
 
     def handle_user_action_create(self, **kwargs):
+        log.debug('')
         if not kwargs.get('create'):
-            return False
+            return self.error_no_user_create_target_specified()
         _handlers = {
                 'account': self.action_create_new_user_account,
                 'credit_wallet': self.action_create_new_credit_wallet,
@@ -637,28 +803,31 @@ class EWallet():
         return _handlers[kwargs['create']](**kwargs)
 
     def action_start_credit_clock_timer(self, **kwargs):
+        log.debug('')
         if not self.session_credit_wallet:
-            return False
+            return self.error_no_session_credit_wallet_found()
         _credit_clock = self.session_credit_wallet.fetch_credit_ewallet_credit_clock()
         if not _credit_clock:
-            return False
+            return self.warning_could_not_fetch_credit_clock()
         return _credit_clock.main_controller(
                 controller='user', action='start'
                 )
 
     def action_stop_credit_clock_timer(self, **kwargs):
+        log.debug('')
         if not self.session_credit_wallet:
-            return False
+            return self.error_no_session_credit_wallet_found()
         _credit_clock = self.session_credit_wallet.fetch_credit_ewallet_credit_clock()
         if not _credit_clock:
-            return False
+            return self.warning_could_not_fetch_credit_clock()
         return _credit_clock.main_controller(
                 controller='user', action='stop'
                 )
 
     def handle_user_action_time(self, **kwargs):
+        log.debug('')
         if not kwargs.get('timer'):
-            return False
+            return self.error_no_timer_action_specified()
         _handlers = {
                 'start': self.action_start_credit_clock_timer,
                 'stop': self.action_stop_credit_clock_timer,
@@ -666,8 +835,9 @@ class EWallet():
         return _handlers[kwargs['timer']](**kwargs)
 
     def handle_user_action_view(self, **kwargs):
+        log.debug('')
         if not kwargs.get('view'):
-            return False
+            return self.error_no_view_target_specified()
         _handlers = {
                 'account': self.action_view_user_account,
                 'credit_wallet': self.action_view_credit_wallet,
@@ -681,8 +851,9 @@ class EWallet():
         return _handlers[kwargs['view']](**kwargs)
 
     def handle_user_action_unlink(self, **kwargs):
+        log.debug('')
         if not kwargs.get('unlink'):
-            return False
+            return self.error_no_unlink_target_specified()
         _handlers = {
                 'account': self.action_unlink_user_account,
                 'credit_wallet': self.action_unlink_credit_wallet,
@@ -720,8 +891,9 @@ class EWallet():
         pass
 
     def ewallet_user_action_controller(self, **kwargs):
+        log.debug('')
         if not kwargs.get('action'):
-            return False
+            return self.error_no_user_action_specified()
         _handlers = {
                 'login': self.handle_user_action_login,
                 'create': self.handle_user_action_create,
@@ -733,8 +905,9 @@ class EWallet():
         return _handlers[kwargs['action']](**kwargs)
 
     def ewallet_user_event_controller(self, **kwargs):
+        log.debug('')
         if not kwargs.get('event'):
-            return False
+            return self.error_no_user_event_specified()
         _handlers = {
                 'signal': self.handle_user_event_signal,
                 'notification': self.handle_user_event_notification,
@@ -743,8 +916,9 @@ class EWallet():
         return _handlers[kwargs['event']](**kwargs)
 
     def ewallet_system_event_controller(self, **kwargs):
+        log.debug('')
         if not kwargs.get('event'):
-            return False
+            return self.error_no_system_event_specified()
         _handlers = {
                 'signal': self.handle_system_event_signal,
                 'notification': self.handle_system_event_notification,
@@ -753,8 +927,9 @@ class EWallet():
         return _handlers[kwargs['event']](**kwargs)
 
     def ewallet_system_action_controller(self, **kwargs):
+        log.debug('')
         if not kwargs.get('action'):
-            return False
+            return self.error_no_system_action_specified()
         _handlers = {
                 'check': self.handle_system_action_check,
                 'update': self.handle_system_action_update,
@@ -762,8 +937,9 @@ class EWallet():
         return _handlers[kwargs['action']](**kwargs)
 
     def ewallet_system_controller(self, **kwargs):
+        log.debug('')
         if not kwargs.get('ctype'):
-            return False
+            return self.error_no_system_controller_type_specified()
         _handlers = {
                 'action': self.ewallet_system_action_controller,
                 'event': self.ewallet_system_event_controller,
@@ -771,8 +947,9 @@ class EWallet():
         return _handlers[kwargs['ctype']](**kwargs)
 
     def ewallet_user_controller(self, **kwargs):
+        log.debug('')
         if not kwargs.get('ctype'):
-            return False
+            return self.error_no_user_controller_type_specified()
         _handlers = {
                 'action': self.ewallet_user_action_controller,
                 'event': self.ewallet_user_event_controller,
@@ -781,14 +958,671 @@ class EWallet():
 
     # [ NOTE ]: Main
     def ewallet_controller(self, **kwargs):
+        log.debug('')
         if not kwargs.get('controller'):
-            return False
+            return self.error_no_ewallet_controller_specified()
         _controllers = {
                 'system': self.ewallet_system_controller,
                 'user': self.ewallet_user_controller,
                 'test': self.test_ewallet,
                 }
         return _controllers[kwargs['controller']](**kwargs)
+
+    def error_handler_action_create_new_transfer(self, **kwargs):
+        _reasons_and_handlers = {
+                'reasons': {
+                    'session_wallet': kwargs.get('session_wallet'),
+                    'transfer_type': kwargs.get('transfer_type'),
+                    'partner_wallet': kwargs.get('partner_wallet'),
+                    },
+                'handlers': {
+                    'session_wallet': self.error_no_session_credit_wallet_found,
+                    'transfer_type': self.error_no_transfer_type_found,
+                    'partner_wallet': self.error_no_partner_credit_wallet_found,
+                    }
+                }
+        for item in _reasons_and_handlers['reasons']:
+            if not _reasons_and_handlers['reasons'][item]:
+                return _reasons_and_handlers['handlers'][item]()
+        return False
+
+    def error_handler_action_unlink_user_account(self, **kwargs):
+        _reasons_and_handlers = {
+                'reasons': {
+                    'archive': kwargs.get('archive'),
+                    'user_id': kwargs.get('user_id'),
+                    },
+                'handlers': {
+                    'archive': self.error_empty_session_user_account_archive,
+                    'user_id': self.error_no_user_id_found,
+                    },
+                }
+        for item in _reasons_and_handlers['reasons']:
+            if not _reasons_and_handlers['reasons'][item]:
+                return _reasons_and_handlers['handlers'][item]
+        return False
+
+    def error_handler_action_unlink_credit_wallet(self, **kwargs):
+        _reasons_and_handlers = {
+                'reasons': {
+                    'session_user': kwargs.get('session_user'),
+                    'wallet_id': kwargs.get('wallet_id'),
+                    },
+                'handlers': {
+                    'session_user': self.error_no_active_session_user_found,
+                    'wallet_id': self.error_no_wallet_id_found,
+                    },
+                }
+        for item in _reasons_and_handlers['reasons']:
+            if not _reasons_and_handlers['reasons'][item]:
+                return _reasons_and_handlers['handlers'][item]()
+        return False
+
+    def error_handler_action_unlink_contact_list(self, **kwargs):
+        _reasons_and_handlers = {
+                'reasons': {
+                    'session_user': kwargs.get('session_user'),
+                    'list_id': kwargs.get('list_id'),
+                    },
+                'handlers': {
+                    'session_user': self.error_no_active_session_user_found,
+                    'list_id': self.error_no_contact_list_id_found,
+                    },
+                }
+        for item in _reasons_and_handlers['reasons']:
+            if not _reasons_and_handlers['reasons'][item]:
+                return _reasons_and_handlers['handlers'][item]()
+        return False
+
+    def error_handler_action_unlink_contact_record(self, **kwargs):
+        _reasons_and_handlers = {
+                'reasons': {
+                    'contact_list': kwargs.get('contact_list'),
+                    'record_id': kwargs.get('record_id'),
+                    },
+                'handlers': {
+                    'contact_list': self.error_no_session_contact_list_found,
+                    'record_id': self.error_no_contact_record_id_found,
+                    },
+                }
+        for item in _reasons_and_handlers['reasons']:
+            if not _reasons_and_handlers['reasons'][item]:
+                return _reasons_and_handlers['handlers'][item]()
+        return False
+
+    def error_handler_action_unlink_invoice_list(self, **kwargs):
+        _reasons_and_handlers = {
+                'reasons': {
+                    'credit_wallet': kwargs.get('credit_wallet'),
+                    'list_id': kwargs.get('list_id'),
+                    },
+                'handlers': {
+                    'credit_wallet': self.error_no_session_credit_wallet_found,
+                    'list_id': self.error_no_invoice_list_id_found,
+                    },
+                }
+        for item in _reasons_and_handlers['reasons']:
+            if not _reasons_and_handlers['reasons'][item]:
+                return _reasons_and_handlers['handlers'][item]()
+        return False
+
+    def error_handler_action_unlink_invoice_record(self, **kwargs):
+        _reasons_and_handlers = {
+                'reasons': {
+                    'credit_wallet': kwargs.get('credit_wallet'),
+                    'record_id': kwargs.get('record_id'),
+                    },
+                'handlers': {
+                    'credit_wallet': self.error_no_session_credit_wallet_found,
+                    'record_id': self.error_no_invoice_record_id_found,
+                    },
+                }
+        for item in _reasons_and_handlers['reasons']:
+            if not _reasons_and_handlers['reasons'][item]:
+                return _reasons_and_handlers['handlers'][item]()
+        return False
+
+    def error_handler_action_unlink_transfer_list(self, **kwargs):
+        _reasons_and_handlers = {
+                'reasons': {
+                    'credit_wallet': kwargs.get('credit_wallet'),
+                    'list_id': kwargs.get('list_id'),
+                    },
+                'handlers': {
+                    'credit_wallet': self.error_no_session_credit_wallet_found,
+                    'list_id': self.error_no_transfer_sheet_id_found,
+                    },
+                }
+        for item in _reasons_and_handlers['reasons']:
+            if not _reasons_and_handlers['reasons'][item]:
+                return _reasons_and_handlers['handlers'][item]()
+        return False
+
+    def error_handler_action_unlink_transfer_record(self, **kwargs):
+        _reasons_and_handlers = {
+                'reasons': {
+                    'credit_wallet': kwargs.get('credit_wallet'),
+                    'record_id': kwargs.get('record_id'),
+                    },
+                'handlers': {
+                    'credit_wallet': self.error_no_session_credit_wallet_found,
+                    'record_id': self.error_no_transfer_record_id_found,
+                    },
+                }
+        for item in _reasons_and_handlers['reasons']:
+            if not _reasons_and_handlers['reasons'][item]:
+                return _reasons_and_handlers['handlers'][item]()
+        return False
+
+    def error_handler_action_unlink_time_list(self, **kwargs):
+        _reasons_and_handlers = {
+                'reasons': {
+                    'credit_wallet': kwargs.get('credit_clock'),
+                    'list_id': kwargs.get('list_id'),
+                    },
+                'handlers': {
+                    'credit_wallet': self.error_no_session_credit_wallet_found,
+                    'list_id': self.error_no_time_sheet_id_found,
+                    },
+                }
+        for item in _reasons_and_handlers['reasons']:
+            if not _reasons_and_handlers['reasons'][item]:
+                return _reasons_and_handlers['handlers'][item]()
+        return False
+
+    def error_handler_action_unlink_time_record(self, **kwargs):
+        _reasons_and_handlers = {
+                'reasons': {
+                    'credit_wallet': kwargs.get('credit_wallet'),
+                    'record_id': kwargs.get('record_id'),
+                    },
+                'handlers': {
+                    'credit_wallet': self.error_no_session_credit_wallet_found,
+                    'record_id': self.error_no_time_sheet_record_id_found,
+                    },
+                }
+        for item in _reasons_and_handlers['reasons']:
+            if not _reasons_and_handlers['reasons'][item]:
+                return _reasons_and_handlers['handlers'][item]()
+        return False
+
+    def error_handler_action_unlink_conversion_list(self, **kwargs):
+        _reasons_and_handlers = {
+                'reasons': {
+                    'credit_wallet': kwargs.get('credit_wallet'),
+                    'list_id': kwargs.get('list_id'),
+                    },
+                'handlers': {
+                    'credit_wallet': self.error_no_session_credit_wallet_found,
+                    'list_id': self.error_no_conversion_sheet_id_found,
+                    },
+                }
+        for item in _reasons_and_handlers['reasons']:
+            if not _reasons_and_handlers['reasons'][item]:
+                return _reasons_and_handlers['handlers'][item]()
+        return False
+
+    def error_handler_action_unlink_conversion_record(self, **kwargs):
+        _reasons_and_handlers = {
+                'reasons': {
+                    'credit_wallet': kwargs.get('credit_wallet'),
+                    'record_id': kwargs.get('record_id'),
+                    },
+                'handlers': {
+                    'credit_wallet': self.error_no_session_credit_wallet_found,
+                    'record_id': self.error_no_conversion_record_id_found,
+                    },
+                }
+        for item in _reasons_and_handlers['reasons']:
+            if not _reasons_and_handlers['reasons'][item]:
+                return _reasons_and_handlers['handlers'][item]()
+        return False
+
+    def error_handler_action_view_contact_record(self, **kwargs):
+        _reasons_and_handlers = {
+                'reasons': {
+                    'contact_list': kwargs.get('contact_list'),
+                    'record_id': kwargs.get('record_id'),
+                    },
+                'handlers': {
+                    'contact_list': self.error_no_session_contact_list_found,
+                    'record_id': self.error_no_contact_record_id_found,
+                    },
+                }
+        for item in _reasons_and_handlers['reasons']:
+            if not _reasons_and_handlers['reasons'][item]:
+                return _reasons_and_handlers['handlers'][item]()
+        return False
+
+    def error_handler_action_view_invoice_record(self, **kwargs):
+        _reasons_and_handlers = {
+                'reasons': {
+                    'credit_wallet': kwargs.get('credit_wallet'),
+                    'record_id': kwargs.get('record_id'),
+                    },
+                'handlers': {
+                    'credit_wallet': self.error_no_session_credit_wallet_found,
+                    'record_id': self.error_no_invoice_record_id_found,
+                    },
+                }
+        for item in _reasons_and_handlers['reasons']:
+            if not _reasons_and_handlers['reasons'][item]:
+                return _reasons_and_handlers['handlers'][item]()
+        return False
+
+    def error_handler_action_view_transfer_record(self, **kwargs):
+        _reasons_and_handlers = {
+                'reasons': {
+                    'credit_wallet': kwargs.get('credit_wallet'),
+                    'record_id': kwargs.get('record_id'),
+                    },
+                'handlers': {
+                    'credit_wallet': self.error_no_session_credit_wallet_found,
+                    'record_id': self.error_no_transfer_record_id_found,
+                    },
+                }
+        for item in _reasons_and_handlers['reasons']:
+            if not _reasons_and_handlers['reasons'][item]:
+                return _reasons_and_handlers['handlers'][item]()
+        return False
+
+    def error_handler_action_view_time_record(self, **kwargs):
+        _reasons_and_handlers = {
+                'reasons': {
+                    'credit_wallet': kwargs.get('credit_wallet'),
+                    'record_id': kwargs.get('record_id'),
+                    },
+                'handlers': {
+                    'credit_wallet': self.error_no_session_credit_wallet_found,
+                    'record_id': self.error_no_time_record_id_found,
+                    },
+                }
+        for item in _reasons_and_handlers['reasons']:
+            if not _reasons_and_handlers['reasons'][item]:
+                return _reasons_and_handlers['handlers'][item]()
+        return False
+
+    def error_handler_action_view_conversion_record(self, **kwargs):
+        _reasons_and_handlers = {
+                'reasons': {
+                    'credit_wallet': kwargs.get('credit_wallet'),
+                    'record_id': kwargs.get('record_id'),
+                    },
+                'handlers': {
+                    'credit_wallet': self.error_no_session_credit_wallet_found,
+                    'record_id': self.error_no_conversion_record_id_found,
+                    },
+                }
+        for item in _reasons_and_handlers['reasons']:
+            if not _reasons_and_handlers['reasons'][item]:
+                return_reasons_and_handlers['handlers'][item]()
+        return False
+
+    def error_no_transfer_view_target_specified(self):
+        log.error('No transfer view target specified.')
+        return False
+
+    def error_no_time_view_target_specified(self):
+        log.error('No time view target specified.')
+        return False
+
+    def error_no_conversion_view_target_specified(self):
+        log.error('No conversion view target specified.')
+        return False
+
+    def error_no_user_action_specified(self):
+        log.error('No user action specified.')
+        return False
+
+    def error_no_user_event_specified(self):
+        log.error('No user event specified.')
+        return False
+
+    def error_no_system_event_specified(self):
+        log.error('No system event specified.')
+        return False
+
+    def error_no_system_action_specified(self):
+        log.error('No system action specified.')
+        return False
+
+    def error_no_system_controller_type_specified(self):
+        log.error('No system controller type specified.')
+        return False
+
+    def error_no_user_controller_type_specified(self):
+        log.error('No user controller type specified.')
+        return False
+
+    def error_no_ewallet_controller_specified(self):
+        log.error('No ewallet controller specified.')
+        return False
+
+    def error_no_timer_action_specified(self):
+        log.error('No timer action specified.')
+        return False
+
+    def error_no_user_reset_target_specified(self):
+        log.error('No user reset target specified.')
+        return False
+
+    def error_no_user_create_target_specified(self):
+        log.error('No user create target specified.')
+        return False
+
+    def error_no_system_update_target_specified(self):
+        log.error('No system update target specified.')
+        return False
+
+    def error_no_system_check_target_specified(self):
+        log.error('No system check target specified.')
+        return False
+
+    def error_no_user_specified(self):
+        log.error('No user specified.')
+        return False
+
+    def error_no_view_target_specified(self):
+        log.error('No view target specified.')
+        return False
+
+    def error_no_transfer_target_specified(self):
+        log.error('No transfer target specified.')
+        return False
+
+    def error_no_time_target_specified(self):
+        log.error('No time target specified.')
+        return False
+
+    def error_no_conversion_target_specified(self):
+        log.error('No conversion target specified.')
+        return False
+
+    def error_no_conversion_record_id_found(self):
+        log.error('No conversion record id found.')
+        return False
+
+    def error_no_time_record_id_found(self):
+        log.error('No time sheet record id found.')
+        return False
+
+    def error_no_transfer_record_id_found(self):
+        log.error('No transfer record_id_found.')
+        return False
+
+    def error_no_invoice_target_specified(self):
+        log.error('No invoice target specified.')
+        return False
+
+    def error_no_contact_target_specified(self):
+        log.error('No contact target specified.')
+        return False
+
+    def error_no_unlink_target_specified(self):
+        log.error('No unlink target specified.')
+        return False
+
+    def error_no_conversion_sheet_id_found(self):
+        log.error('No conversion sheet id found.')
+        return False
+
+    def error_no_time_sheet_record_id_found(self):
+        log.error('No time sheet record id found.')
+        return False
+
+    def error_no_time_sheet_id_found(self):
+        log.error('No time sheet id found.')
+        return False
+
+    def error_no_transfer_record_id_found(self):
+        log.error('No transfer record id found.')
+        return False
+
+    def error_no_transfer_sheet_id_found(self):
+        log.error('No transfer sheet id found.')
+        return False
+
+    def error_no_invoice_record_id_found(self):
+        log.error('No invoice record id found.')
+        return False
+
+    def error_no_invoice_list_id_found(self):
+        log.error('No invoice list id found.')
+        return False
+
+    def error_no_session_contact_list_found(self):
+        log.error('No active session contact list found.')
+        return False
+
+    def error_no_contact_record_id_found(self):
+        log.error('No contact record id found.')
+        return False
+
+    def error_no_user_id_found(self):
+        log.error('No user id found.')
+        return False
+
+    def error_no_user_name_found(self):
+        log.error('No user name found.')
+        return False
+
+    def error_no_user_email_found(self):
+        log.error('No user email found.')
+        return False
+
+    def error_no_user_phone_found(self):
+        log.error('No user phone found.')
+        return False
+
+    def error_no_user_alias_found(self):
+        log.error('No user alias found.')
+        return False
+
+    def error_no_user_identifier_found(self):
+        log.error('No user identifier found.')
+        return False
+
+    def error_no_session_active_user_found(self):
+        log.error('No session active user found.')
+        return False
+
+    def error_no_user_object_found(self):
+        log.error('No user object found.')
+        return False
+
+    def error_no_user_password_found(self):
+        log.error('No user password found.')
+        return False
+
+    # TODO : CLARIFY
+    def error_no_contact_found(self):
+        log.error('No contact found.')
+        return False
+
+    def error_no_session_credit_wallet_found(self):
+        log.error('No session credit wallet found.')
+        return False
+
+    def error_no_transfer_type_found(self):
+        log.error('No transfer type found.')
+        return False
+
+    def error_no_partner_credit_wallet_found(self):
+        log.error('No partner credit wallet found.')
+        return False
+
+    def error_no_active_session_contact_list_found(self, user_name):
+        log.error(
+                'No active session contact list found for user %s', user_name
+                )
+        return False
+
+    def error_empty_session_user_account_archive(self):
+        log.error('Session user account archive is empty.')
+        return False
+
+    def error_no_wallet_id_found(self):
+        log.error('No wallet id found.')
+        return False
+
+    def error_no_contact_list_id_found(self):
+        log.error('No contact list id found.')
+        return False
+
+    def warning_could_not_login(self):
+        log.warning(
+                'Something went wrong. '
+                'Login subroutine failure.'
+                )
+        return False
+
+    def warning_could_not_fetch_conversion_record(self):
+        log.warning(
+                'Something went wrong. '
+                'Could not fetch conversion sheet record.'
+                )
+        return False
+
+    def warning_user_not_in_session_archive(self):
+        log.error('User account not found in session user archive.')
+        return False
+
+    def warning_could_not_fetch_conversion_sheet(self):
+        log.warning(
+                'Something went wrong. '
+                'Could not fetch credit clock conversion sheet.'
+                )
+        return False
+
+    def warning_could_not_fetch_time_sheet_record(self):
+        log.warning(
+                'Something went wrong. '
+                'Could not fetch time sheet record.'
+                )
+        return False
+
+    def warning_could_not_fetch_time_sheet(self):
+        log.warning(
+                'Something went wrong. '
+                'Could not fetch time sheet.'
+                )
+        return False
+
+    def warning_could_not_fetch_transfer_sheet_record(self):
+        log.warning(
+                'Something went wrong. '
+                'Could not fetch transfer sheet record.'
+                )
+        return False
+
+    def warning_could_not_fetch_transfer_sheet(self):
+        log.warning(
+                'Something went wrong. '
+                'Could not fetch credit wallet transfer sheet.'
+                )
+        return False
+
+    def warning_could_not_fetch_invoice_sheet_record(self):
+        log.warning(
+                'Something went wrong. '
+                'Could not fetch invoice sheet record.'
+                )
+        return False
+
+    def warning_could_not_fetch_invoice_sheet(self):
+        log.warning(
+                'Something went wrong. '
+                'Could not fetch credit wallet invoice sheet.'
+                )
+        return False
+
+    def warning_could_not_fetch_contact_record(self):
+        log.warning(
+                'Something went wrong. '
+                'Could not fetch contact record.'
+                )
+        return False
+
+    def warning_could_not_fetch_conversion_sheet(self):
+        log.warning(
+                'Something went wrong. '
+                'Could not fetch credit clock conversion sheet.'
+                )
+        return False
+
+    def warning_could_not_fetch_time_sheet(self):
+        log.warning(
+                'Something went wrong. '
+                'Could not fetch credit clock time sheet.'
+                )
+        return False
+
+    def warning_could_not_fetch_credit_clock(self):
+        log.warning(
+                'Something went wrong. '
+                'Could not fetch credit clock.'
+                )
+        return False
+
+    def warning_could_not_fetch_credit_wallet_transfer_sheet(self):
+        log.warning(
+                'Something went wrong. '
+                'Could not fetch credit wallet transfer sheet.'
+                )
+        return False
+
+    def warning_could_not_fetch_credit_wallet_invoice_sheet(self):
+        log.warning(
+                'Something went wrong. '
+                'Could not fetch credit wallet invoice sheet.'
+                )
+        return False
+
+    def warning_no_user_acount_found(self, search_code, code):
+        log.warning('No user account found by %s %s.', search_code, code)
+        return False
+
+    def warning_could_not_create_user_account(self, user_name):
+        log.warning(
+                'Something went wrong. '
+                'Could not create new user account for %s.', user_name
+                )
+        return False
+
+    def warning_could_not_create_credit_wallet(self, user_name):
+        log.warning(
+                'Something went wrong. '
+                'Could not create new credit wallet for user %s.', user_name
+                )
+        return False
+
+    def warning_could_not_create_credit_clock(self, user_name):
+        log.warning(
+                'Something went wrong. '
+                'Could not create new credit clock for user %s.', user_name
+                )
+        return False
+
+    def warning_could_not_create_contact_list(self, user_name):
+        log.warning(
+                'Something went wrong. '
+                'Could not create new contact list for user %s.', user_name
+                )
+        return False
+
+    def warning_could_not_create_contact_record(self, user_name):
+        log.warning(
+                'Something went wrong. '
+                'Could not create new contact record for %s contact list.', user_name
+                )
+        return False
+
+    def warning_could_not_fetch_user_by_id(self, user_id):
+        log.warning(
+                'Something went wrong. '
+                'Could not fetch user by id %s.', user_id
+                )
+        return False
 
     def test_ewallet_user_controller(self):
         print('[ TEST ] User.')

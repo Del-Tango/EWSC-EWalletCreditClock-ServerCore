@@ -1,11 +1,18 @@
 import time
 import random
 import datetime
+import logging
 import pysnooper
+
+from .config import Config
+
+log_config = Config().log_config
+log = logging.getLogger(log_config['log_name'])
 
 
 class CreditClockConversionSheetRecord():
 
+    # TODO - Has dummy data
     def __init__(self, **kwargs):
         self.record_id = random.randint(10, 20)
         self.conversion_sheet_id = kwargs.get('conversion_sheet_id')
@@ -17,30 +24,39 @@ class CreditClockConversionSheetRecord():
         self.credits = kwargs.get('credits')
 
     def fetch_record_id(self):
+        log.debug('')
         return self.record_id
 
     def fetch_conversion_sheet_id(self):
+        log.debug('')
         return self.conversion_sheet_id
 
     def fetch_reference(self):
+        log.debug('')
         return self.reference
 
     def fetch_create_date(self):
+        log.debug('')
         return self.create_date
 
     def fetch_write_date(self):
+        log.debug('')
         return self.write_date
 
     def fetch_conversion_type(self):
+        log.debug('')
         return self.conversion_type
 
     def fetch_minutes(self):
+        log.debug('')
         return self.minutes
 
     def fetch_credits(self):
+        log.debug('')
         return self.credits
 
     def fetch_record_data(self):
+        log.debug('')
         _values = {
                 'id': self.record_id,
                 'conversion_sheet_id': self.conversion_sheet_id,
@@ -54,50 +70,75 @@ class CreditClockConversionSheetRecord():
         return _values
 
     def set_conversion_sheet_id(self, **kwargs):
-        global conversion_sheet_id
+        log.debug('')
         if not kwargs.get('conversion_sheet_id'):
-            return False
+            return self.error_no_conversion_sheet_id_found()
         self.conversion_sheet_id = kwargs['conversion_sheet_id']
         return True
 
     def set_reference(self, **kwargs):
-        global reference
+        log.debug('')
         if not kwargs.get('reference'):
-            return False
+            return self.error_no_reference_found()
         self.reference = kwargs['reference']
         return True
 
     def set_write_date(self, **kwargs):
-        global write_date
+        log.debug('')
         if not kwargs.get('write_date'):
-            return False
+            return self.error_no_write_date_found()
         self.write_date = kwargs['write_date']
         return True
 
     def set_conversion_type(self, **kwargs):
-        global conversion_type
+        log.debug('')
         if not kwargs.get('conversion_type'):
-            return False
+            return self.error_no_conversion_type_found()
         self.conversion_type = kwargs['conversion_type']
         return True
 
     def set_minutes(self, **kwargs):
-        global minutes
+        log.debug('')
         if not kwargs.get('minutes'):
-            return False
+            return self.error_no_minutes_found()
         self.minutes = kwargs['minutes']
         return True
 
     def set_credits(self, **kwargs):
-        global credits
+        log.debug('')
         if not kwargs.get('credits'):
-            return False
+            return self.error_no_credits_found()
         self.credits = kwargs['credits']
         return True
 
     def update_write_date(self):
+        log.debug('')
         _write_date = datetime.datetime.now()
         return self.set_write_date(write_date=_write_date)
+
+    def error_no_credits_found(self):
+        log.error('No credits found.')
+        return False
+
+    def error_no_conversion_sheet_id_found(self):
+        log.error('No conversion sheet id found.')
+        return False
+
+    def error_no_reference_found(self):
+        log.error('No reference found.')
+        return False
+
+    def error_no_write_date_found(self):
+        log.error('No write date found.')
+        return False
+
+    def error_no_conversion_type_found(self):
+        log.error('No conversion type found.')
+        return False
+
+    def error_no_minutes_found(self):
+        log.error('No minutes found.')
+        return False
 
 
 class CreditClockConversionSheet():
@@ -111,24 +152,31 @@ class CreditClockConversionSheet():
         self.records = {}
 
     def fetch_conversion_sheet_id(self):
+        log.debug('')
         return self.conversion_sheet_id
 
     def fetch_conversion_sheet_clock_id(self):
+        log.debug('')
         return self.clock_id
 
     def fetch_conversion_sheet_reference(self):
+        log.debug('')
         return self.reference
 
     def fetch_conversion_sheet_records(self):
+        log.debug('')
         return self.records
 
     def fetch_conversion_sheet_create_date(self):
+        log.debug('')
         return self.create_date
 
     def fetch_conversion_sheet_write_date(self):
+        log.debug('')
         return self.write_date
 
     def fetch_conversion_sheet_values(self):
+        log.debug('')
         _values = {
                 'id': self.conversion_sheet_id,
                 'clock_id': self.clock_id,
@@ -140,60 +188,91 @@ class CreditClockConversionSheet():
         return _values
 
     def fetch_conversion_sheet_record_by_id(self, **kwargs):
+        log.debug('')
         if not kwargs.get('code'):
-            return False
-        return self.records.get(kwargs['code'])
+            return self.error_no_conversion_record_id_found()
+        _record = self.records.get(kwargs['code'])
+        if not _record:
+            return self.warning_could_not_fetch_conversion_record(
+                    'id', kwargs['code']
+                    )
+        return _record
 
     def fetch_conversion_sheet_record_by_ref(self, **kwargs):
+        log.debug('')
         if not kwargs.get('code'):
-            return False
+            return self.error_no_conversion_record_reference_found()
         for item in self.records:
             if self.records[item].fetch_record_reference() == kwargs['code']:
                 return self.records[item]
-        return False
+        return self.warning_could_not_fetch_conversion_record(
+                'reference', kwargs['code']
+                )
 
     def fetch_conversion_sheet_records_by_date(self, **kwargs):
+        log.debug('')
         if not kwargs.get('code'):
-            return False
+            return self.error_no_conversion_record_date_found()
         _records = [
                 self.records[item] for item in self.records
                 if self.records[item].fetch_record_create_date() == kwargs['code']
                 ]
-        return _records or False
+        if not _records:
+            return self.warning_could_not_fetch_conversion_record(
+                    'date', kwargs['code']
+                    )
+        return _records
 
     def fetch_conversion_sheet_records_by_credits(self, **kwargs):
+        log.debug('')
         if not kwargs.get('code'):
-            return False
+            return self.error_no_conversion_record_credits_found()
         _records = [
                 self.records[item] for item in self.records
                 if self.records[item].fetch_record_credits() == kwargs['code']
                 ]
-        return _records or False
+        if not _records:
+            return self.warning_could_not_fetch_conversion_records(
+                    'credits'. kwargs['code']
+                    )
+        return _records
 
     def fetch_conversion_sheet_records_by_minutes(self, **kwargs):
+        log.debug('')
         if not kwargs.get('code'):
-            return False
+            return self.error_no_conversion_record_minutes_found()
         _records = [
                 self.records[item] for item in self.records
                 if self.records[item].fetch_record_minutes() == kwargs['code']
                 ]
-        return _records or False
+        if not _records:
+            return self.warning_could_not_fetch_conversion_records(
+                    'minutes', kwargs['code']
+                    )
+        return _records
 
     def fetch_conversion_sheet_records_by_type(self, **kwargs):
+        log.debug('')
         if not kwargs.get('code'):
-            return False
+            return self.error_no_conversion_record_type_found()
         _records = [
                 self.records[item] for item in self.records
                 if self.records[item].fetch_record_conversion_type() == kwargs['code']
                 ]
-        return _records or False
+        if not _records:
+            return self.warning_could_not_fetch_conversion_records(
+                    'type', kwargs['code']
+                    )
+        return _records
 
     def fetch_conversion_sheet_records(self, **kwargs):
+        log.debug('')
         return self.records.values()
 
     def fetch_conversion_sheet_record(self, **kwargs):
+        log.debug('')
         if not self.records or not kwargs.get('identifier'):
-            return False
+            return self.error_no_conversion_sheet_record_identifier_specified()
         _handlers = {
                 'id': self.fetch_conversion_sheet_record_by_id,
                 'reference': self.fetch_conversion_sheet_record_by_ref,
@@ -206,61 +285,62 @@ class CreditClockConversionSheet():
         return _handlers[kwargs['identifier']](**kwargs)
 
     def set_clock_id(self, **kwargs):
-        global clock_id
+        log.debug('')
         if not kwargs.get('clock_id'):
-            return False
+            return self.error_no_clock_id_found()
         self.clock_id = kwargs['clock_id']
         return True
 
     def set_reference(self, **kwargs):
-        global reference
+        log.debug('')
         if not kwargs.get('reference'):
-            return False
+            return self.error_no_reference_found()
         self.reference = kwargs['reference']
         return True
 
     def set_write_date(self, **kwargs):
-        global write_date
+        log.debug('')
         if not kwargs.get('write_date'):
-            return False
+            return self.error_no_write_date_found()
         self.write_date = kwargs['write_date']
         return True
 
     def set_records(self, **kwargs):
-        global records
+        log.debug('')
         if not kwargs.get('records'):
-            return False
+            return self.error_no_records_found()
         self.records = kwargs['records']
         return True
 
     def update_write_date(self):
+        log.debug('')
         _write_date = datetime.datetime.now()
         return self.set_write_date(write_date=_write_date)
 
     def update_conversion_sheet_records(self, **kwargs):
-        global records
+        log.debug('')
         if not kwargs.get('record'):
-            return False
+            return self.error_no_conversion_record_found()
         self.records.update({
             kwargs['record'].fetch_record_id(), kwargs['record']
             })
         return self.records
 
-    # TODO - Has dummy data
-    def add_conversion_sheet_record(self, values):
-        global records
+    def add_conversion_sheet_record(self, **kwargs):
+        log.debug('')
         _record = CreditClockConversionSheetRecord(
                     conversion_sheet_id=self.conversion_sheet_id,
-                    reference='First Conversion Sheet Record',
-                    conversion_type=values.get('conversion_type'),
-                    minutes=values.get('minutes'),
-                    credits=values.get('credits'),
+                    reference=kwargs.get('reference'),
+                    conversion_type=kwargs.get('conversion_type'),
+                    minutes=kwargs.get('minutes'),
+                    credits=kwargs.get('credits'),
                 )
-        _record_id = _record.fetch_record_id()
-        self.records.update({_record_id: _record})
+        self.update_conversion_sheet_records(record=_record)
         return _record
 
+    # TODO - Refactor
     def display_conversion_sheet_records(self):
+        log.debug('')
         print('Conversion Sheet {} Records:'.format(self.reference))
         for k, v in self.records.items():
             print('{}: {} - {}'.format(
@@ -269,6 +349,7 @@ class CreditClockConversionSheet():
         return self.records
 
     def action_add_conversion_sheet_record(self, **kwargs):
+        log.debug('')
         _record = CreditClockConversionSheetRecord(
                 conversion_sheet_id=self.conversion_sheet_id,
                 reference=kwargs.get('reference'),
@@ -280,37 +361,55 @@ class CreditClockConversionSheet():
         return _record
 
     def action_remove_conversion_sheet_record(self, **kwargs):
-        global records
+        log.debug('')
         if not kwargs.get('record_id'):
-            return False
+            return self.error_no_conversion_record_id_found()
         _record = self.fetch_conversion_sheet_record(
                 identifier='id', code=kwargs['record_id']
                 )
-        return False if not _record \
-                else self.records.pop(kwargs['record_id'])
+        if not _record:
+            return self.warning_could_not_fetch_conversion_record(
+                    'id', kwargs['record_id']
+                    )
+        return self.records.pop(kwargs['record_id'])
 
     def interogate_conversion_sheet_records_by_id(self, **kwargs):
+        log.debug('')
         if not kwargs.get('code'):
-            return False
+            return self.error_no_conversion_record_id_found()
         _record = self.fetch_conversion_sheet_record(
                 identifier='id', code=kwargs['code'],
                 )
+        if not _record:
+            return self.warning_could_not_fetch_conversion_record(
+                    'id', kwargs['code']
+                    )
         return _record or False
 
     def interogate_conversion_sheet_records_by_ref(self, **kwargs):
+        log.debug('')
         if not kwargs.get('code'):
-            return False
+            return self.error_no_conversion_record_reference_found()
         _records = self.fetch_conversion_sheet_record(
                 identifier='reference', code=kwargs['code']
                 )
-        return _records or False
+        if not _record:
+            return self.warning_could_not_fetch_conversion_record(
+                    'reference', kwargs['code']
+                    )
+        return _records
 
     def search_conversion_sheet_records_by_date(self, **kwargs):
+        log.debug('')
         if not kwargs.get('code'):
-            return False
+            return self.error_no_conversion_record_date_found()
         _records = self.fetch_conversion_sheet_record(
                 identifier='date', code=kwargs['code']
                 )
+        if not _records:
+            return self.warning_could_not_fetch_conversion_record(
+                    'date', kwargs['code']
+                    )
         return _records or False
 
     # TODO
@@ -321,14 +420,18 @@ class CreditClockConversionSheet():
     def search_conversion_sheet_records_after_date(self, **kwargs):
         pass
 
-
     def search_conversion_sheet_records_by_minutes(self, **kwargs):
+        log.debug('')
         if not kwargs.get('code'):
-            return False
+            return self.error_no_conversion_record_minutes_found()
         _records = self.fetch_conversion_sheet_record(
                 identifier='minutes', code=kwargs['code']
                 )
-        return _records or False
+        if not _records:
+            return self.warning_could_not_fetch_conversion_record(
+                    'minutes', kwargs['code']
+                    )
+        return _records
 
     # TODO
     def search_conversion_sheet_records_lesser_minutes(self, **kwargs):
@@ -339,13 +442,17 @@ class CreditClockConversionSheet():
         pass
 
     def search_conversion_sheet_records_by_credits(self, **kwargs):
+        log.debug('')
         if not kwargs.get('code'):
-            return False
+            return self.error_no_conversion_record_credits_found()
         _records = self.fetch_conversion_sheet_record(
                 identifier='credits', code=kwargs['code']
                 )
-        return _records or False
-
+        if not _records:
+            return self.warning_could_not_fetch_conversion_record(
+                    'credits', kwargs['code']
+                    )
+        return _records
     # TODO
     def search_conversion_sheet_records_lesser_credits(self, **kwargs):
         pass
@@ -355,8 +462,9 @@ class CreditClockConversionSheet():
         pass
 
     def interogate_conversion_sheet_records_by_date(self, **kwargs):
+        log.debug('')
         if not kwargs.get('date'):
-            return False
+            return self.error_no_conversion_record_date_found()
         _handlers = {
                 'date': self.search_conversion_sheet_records_by_date,
                 'before': self.search_conversion_sheet_records_before_date,
@@ -365,8 +473,9 @@ class CreditClockConversionSheet():
         return _handlers[kwargs['date']](**kwargs)
 
     def interogate_conversion_sheet_records_by_minutes(self, **kwargs):
+        log.debug('')
         if not kwargs.get('minutes'):
-            return False
+            return self.error_no_conversion_record_minutes_found()
         _handlers = {
                 'minutes': self.search_conversion_sheet_records_by_minutes,
                 'less': self.search_conversion_sheet_records_lesser_minutes,
@@ -375,8 +484,9 @@ class CreditClockConversionSheet():
         return _handlers[kwargs['minutes']](**kwargs)
 
     def interogate_conversion_sheet_records_by_credits(self, **kwargs):
+        log.debug('')
         if not kwargs.get('credits'):
-            return False
+            return self.error_no_conversion_record_credits_found()
         _handlers = {
                 'credits': self.search_conversion_sheet_records_by_credits,
                 'less': self.search_conversion_sheet_records_lesser_credits,
@@ -385,19 +495,22 @@ class CreditClockConversionSheet():
         return _handlers[kwargs['credits']](**kwargs)
 
     def interogate_conversion_sheet_records_by_type(self, **kwargs):
+        log.debug('')
         if not kwargs.get('conversion_type'):
-            return False
+            return self.error_no_conversion_record_conversion_type_found()
         _records = self.fetch_conversion_sheet_records(
                 identifier='conversion_type', code=kwargs['conversion_type']
                 )
+        if not _records:
+            return self.warning_could_not_fetch_conversion_record(
+                    'conversion_type', kwargs['code']
+                    )
         return _records or False
 
-    def interogate_conversion_sheet_records(self, **kwargs):
-        return self.fetch_conversion_sheet_record(identifier='all')
-
     def action_interogate_conversion_sheet_records(self, **kwargs):
+        log.debug('')
         if not kwargs.get('search_by'):
-            return False
+            return self.error_no_conversion_reecords_interogation_target_specified()
         _handlers = {
                 'id': self.interogate_conversion_sheet_records_by_id,
                 'reference': self.interogate_conversion_sheet_records_by_ref,
@@ -410,11 +523,13 @@ class CreditClockConversionSheet():
         return _handlers[kwargs['search_by']](**kwargs)
 
     def action_clear_conversion_sheet_records(self, **kwargs):
+        log.debug('')
         return self.set_conversion_sheet_records(records={})
 
     def credit_clock_conversion_sheet_controller(self, **kwargs):
+        log.debug('')
         if not kwargs.get('action'):
-            return False
+            return self.error_no_conversion_sheet_controller_action_specified()
         _handlers = {
                 'add': self.action_add_conversion_sheet_record,
                 'remove': self.action_remove_conversion_sheet_record,
@@ -422,4 +537,76 @@ class CreditClockConversionSheet():
                 'clear': self.action_clear_conversion_sheet_records,
                 }
         return _handlers[kwargs['action']](**kwargs)
+
+    def error_no_conversion_record_conversion_type_found(self):
+        log.error('No conversion record conversion type found.')
+        return False
+
+    def error_no_conversion_records_interogation_target_specified(self):
+        log.error('No conversion records interogation target specified.')
+        return False
+
+    def error_no_conversion_sheet_controller_action_specified(self):
+        log.error('No conversion sheet controller action specified.')
+        return False
+
+    def interogate_conversion_sheet_records(self, **kwargs):
+        return self.fetch_conversion_sheet_record(identifier='all')
+
+    def error_no_records_found(self):
+        log.error('No records found.')
+        return False
+
+    def error_no_conversion_record_found(self):
+        log.error('No conversion record found.')
+        return False
+
+    def error_no_clock_id_found(self):
+        log.error('No clock id found.')
+        return False
+
+    def error_no_reference_found(self):
+        log.error('No reference found.')
+        return False
+
+    def error_no_write_date_found(self):
+        log.error('No write date found.')
+        return False
+
+    def error_no_conversion_record_type_found(self):
+        log.error('No conversion record type found.')
+        return False
+
+    def error_no_conversion_sheet_record_identifier_specified(self):
+        log.error('No conversion sheet record identified specified.')
+        return False
+
+    def error_no_conversion_record_credits_found(self):
+        log.error('No conversion record credits found.')
+        return False
+
+    def error_no_conversion_record_minutes_found(self):
+        log.error('No conversion record minutes found.')
+        return False
+
+    def error_no_conversion_record_id_found(self):
+        log.error('No conversion record id found.')
+        return False
+
+    def error_no_conversion_record_reference_found(self):
+        log.error('No conversion record reference found.')
+        return False
+
+    def error_no_conversion_record_date_found(self):
+        log.error('No conversion record date found.')
+        return False
+
+    def warning_could_not_fetch_conversion_record(self, search_code, code):
+        log.warning(
+                'Something went wrong. '
+                'Could not fetch conversion record by %s %s.', search_code, code
+                )
+        return False
+
+
 

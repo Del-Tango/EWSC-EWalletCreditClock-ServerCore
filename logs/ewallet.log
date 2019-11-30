@@ -1,0 +1,327 @@
+2019-11-27 00:43:18 [DEBUG] - __init__ - 
+2019-11-27 00:44:04 [DEBUG] - __init__ - 
+2019-11-27 00:45:12 [DEBUG] - __init__ - 
+2019-11-30 02:13:54 [DEBUG] - __init__ - 
+2019-11-30 02:13:54 [DEBUG] - action_create_new_user_account - 
+2019-11-30 02:37:42 [DEBUG] - __init__ - 
+2019-11-30 02:37:42 [DEBUG] - action_create_new_user_account - 
+2019-11-30 02:42:15 [DEBUG] - __init__ - 
+2019-11-30 02:42:15 [DEBUG] - action_create_new_user_account - 
+2019-11-30 02:42:35 [DEBUG] - __init__ - 
+2019-11-30 02:42:35 [DEBUG] - action_create_new_user_account - 
+2019-11-30 02:42:35 [DEBUG] - update_session_from_user - 
+2019-11-30 02:42:35 [ERROR] - error_no_session_active_user_found - No session active user found.
+2019-11-30 02:42:35 [DEBUG] - update_user_account_archive - 
+2019-11-30 02:42:35 [DEBUG] - update_session_from_user - 
+2019-11-30 02:42:35 [ERROR] - error_no_session_active_user_found - No session active user found.
+2019-11-30 02:42:35 [ERROR] - error_no_view_target_specified - No view target specified.
+2019-11-30 02:42:35 [DEBUG] - action_create_new_user_account - 
+2019-11-30 02:42:35 [DEBUG] - update_session_from_user - 
+2019-11-30 02:42:35 [ERROR] - error_no_session_active_user_found - No session active user found.
+2019-11-30 02:42:35 [DEBUG] - update_user_account_archive - 
+2019-11-30 02:42:35 [DEBUG] - update_session_from_user - 
+2019-11-30 02:42:35 [ERROR] - error_no_session_active_user_found - No session active user found.
+2019-11-30 02:42:35 [ERROR] - error_no_view_target_specified - No view target specified.
+2019-11-30 02:42:35 [DEBUG] - update_session_from_user - 
+2019-11-30 02:42:35 [ERROR] - error_no_session_active_user_found - No session active user found.
+2019-11-30 03:16:44 [DEBUG] - action_create_new_user_account - 
+2019-11-30 03:16:44 [DEBUG] - update_session_from_user - 
+2019-11-30 03:16:44 [ERROR] - error_no_session_active_user_found - No session active user found.
+2019-11-30 03:16:44 [DEBUG] - update_user_account_archive - 
+2019-11-30 03:16:44 [DEBUG] - update_session_from_user - 
+2019-11-30 03:16:44 [ERROR] - error_no_session_active_user_found - No session active user found.
+2019-11-30 03:16:44 [ERROR] - error_no_view_target_specified - No view target specified.
+2019-11-30 03:16:44 [DEBUG] - action_create_new_user_account - 
+2019-11-30 03:16:44 [DEBUG] - update_session_from_user - 
+2019-11-30 03:16:44 [ERROR] - error_no_session_active_user_found - No session active user found.
+2019-11-30 03:16:44 [DEBUG] - update_user_account_archive - 
+2019-11-30 03:16:44 [DEBUG] - update_session_from_user - 
+2019-11-30 03:16:44 [ERROR] - error_no_session_active_user_found - No session active user found.
+2019-11-30 03:16:44 [ERROR] - error_no_view_target_specified - No view target specified.
+2019-11-30 03:16:44 [DEBUG] - update_session_from_user - 
+2019-11-30 03:16:44 [ERROR] - error_no_session_active_user_found - No session active user found.
+2019-11-30 04:14:06 [DEBUG] - action_create_new_user_account - 
+2019-11-30 04:14:40 [DEBUG] - action_create_new_user_account - 
+2019-11-30 04:14:40 [DEBUG] - update_session_from_user - 
+2019-11-30 04:14:40 [ERROR] - error_no_session_active_user_found - No session active user found.
+2019-11-30 04:14:40 [DEBUG] - update_user_account_archive - 
+2019-11-30 04:14:40 [DEBUG] - update_session_from_user - 
+2019-11-30 04:14:40 [ERROR] - error_no_session_active_user_found - No session active user found.
+2019-11-30 04:14:40 [ERROR] - error_no_view_target_specified - No view target specified.
+2019-11-30 04:14:40 [DEBUG] - action_create_new_user_account - 
+2019-11-30 04:14:40 [DEBUG] - update_session_from_user - 
+2019-11-30 04:14:40 [ERROR] - error_no_session_active_user_found - No session active user found.
+2019-11-30 04:14:40 [DEBUG] - update_user_account_archive - 
+2019-11-30 04:14:40 [DEBUG] - update_session_from_user - 
+2019-11-30 04:14:40 [ERROR] - error_no_session_active_user_found - No session active user found.
+2019-11-30 04:14:40 [ERROR] - error_no_view_target_specified - No view target specified.
+2019-11-30 04:14:40 [DEBUG] - update_session_from_user - 
+2019-11-30 04:14:40 [ERROR] - error_no_session_active_user_found - No session active user found.
+2019-11-30 05:18:27 [DEBUG] - action_create_new_user_account - 
+2019-11-30 05:18:27 [DEBUG] - update_session_from_user - 
+2019-11-30 05:18:27 [ERROR] - error_no_session_active_user_found - No session active user found.
+2019-11-30 05:18:27 [DEBUG] - update_user_account_archive - 
+2019-11-30 05:18:27 [DEBUG] - update_session_from_user - 
+2019-11-30 05:18:27 [ERROR] - error_no_session_active_user_found - No session active user found.
+2019-11-30 05:18:27 [ERROR] - error_no_view_target_specified - No view target specified.
+2019-11-30 05:18:27 [DEBUG] - action_create_new_user_account - 
+2019-11-30 05:18:27 [DEBUG] - update_session_from_user - 
+2019-11-30 05:18:27 [ERROR] - error_no_session_active_user_found - No session active user found.
+2019-11-30 05:18:27 [DEBUG] - update_user_account_archive - 
+2019-11-30 05:18:27 [DEBUG] - update_session_from_user - 
+2019-11-30 05:18:27 [ERROR] - error_no_session_active_user_found - No session active user found.
+2019-11-30 05:18:27 [ERROR] - error_no_view_target_specified - No view target specified.
+2019-11-30 05:18:27 [DEBUG] - update_session_from_user - 
+2019-11-30 05:18:27 [ERROR] - error_no_session_active_user_found - No session active user found.
+2019-11-30 06:55:40 [DEBUG] - action_create_new_user_account - 
+2019-11-30 06:55:40 [DEBUG] - update_session_from_user - 
+2019-11-30 06:55:40 [ERROR] - error_no_session_active_user_found - No session active user found.
+2019-11-30 06:55:40 [DEBUG] - update_user_account_archive - 
+2019-11-30 06:55:40 [DEBUG] - update_session_from_user - 
+2019-11-30 06:55:40 [ERROR] - error_no_session_active_user_found - No session active user found.
+2019-11-30 06:55:40 [ERROR] - error_no_view_target_specified - No view target specified.
+2019-11-30 06:55:40 [DEBUG] - action_create_new_user_account - 
+2019-11-30 06:55:40 [DEBUG] - update_session_from_user - 
+2019-11-30 06:55:40 [ERROR] - error_no_session_active_user_found - No session active user found.
+2019-11-30 06:55:40 [DEBUG] - update_user_account_archive - 
+2019-11-30 06:55:40 [DEBUG] - update_session_from_user - 
+2019-11-30 06:55:40 [ERROR] - error_no_session_active_user_found - No session active user found.
+2019-11-30 06:55:40 [ERROR] - error_no_view_target_specified - No view target specified.
+2019-11-30 06:55:40 [DEBUG] - update_session_from_user - 
+2019-11-30 06:55:40 [ERROR] - error_no_session_active_user_found - No session active user found.
+2019-11-30 06:59:47 [ DEBUG ] - action_create_new_user_account - 
+2019-11-30 06:59:47 [ DEBUG ] - update_session_from_user - 
+2019-11-30 06:59:47 [ ERROR ] - error_no_session_active_user_found - No session active user found.
+2019-11-30 06:59:47 [ DEBUG ] - update_user_account_archive - 
+2019-11-30 06:59:47 [ DEBUG ] - update_session_from_user - 
+2019-11-30 06:59:47 [ ERROR ] - error_no_session_active_user_found - No session active user found.
+2019-11-30 06:59:47 [ ERROR ] - error_no_view_target_specified - No view target specified.
+2019-11-30 06:59:47 [ DEBUG ] - action_create_new_user_account - 
+2019-11-30 06:59:47 [ DEBUG ] - update_session_from_user - 
+2019-11-30 06:59:47 [ ERROR ] - error_no_session_active_user_found - No session active user found.
+2019-11-30 06:59:47 [ DEBUG ] - update_user_account_archive - 
+2019-11-30 06:59:47 [ DEBUG ] - update_session_from_user - 
+2019-11-30 06:59:47 [ ERROR ] - error_no_session_active_user_found - No session active user found.
+2019-11-30 06:59:47 [ ERROR ] - error_no_view_target_specified - No view target specified.
+2019-11-30 06:59:47 [ DEBUG ] - update_session_from_user - 
+2019-11-30 06:59:47 [ ERROR ] - error_no_session_active_user_found - No session active user found.
+2019-11-30 16:05:34 [ DEBUG ] - ewallet_controller - 
+2019-11-30 16:05:34 [ DEBUG ] - ewallet_controller - 
+2019-11-30 16:05:34 [ DEBUG ] - ewallet_user_controller - 
+2019-11-30 16:05:34 [ DEBUG ] - ewallet_user_action_controller - 
+2019-11-30 16:05:34 [ DEBUG ] - handle_user_action_create - 
+2019-11-30 16:05:34 [ DEBUG ] - action_create_new_user_account - 
+2019-11-30 16:05:34 [ DEBUG ] - ewallet_login_controller - 
+2019-11-30 16:05:34 [ DEBUG ] - action_create_new_account - 
+2019-11-30 16:05:34 [ DEBUG ] - action_create_new_user - 
+2019-11-30 16:05:34 [ DEBUG ] - perform_new_user_checks - 
+2019-11-30 16:05:34 [ DEBUG ] - check_user_name_ensure_one - 
+2019-11-30 16:05:34 [ DEBUG ] - check_user_pass - 
+2019-11-30 16:05:34 [ DEBUG ] - check_user_pass_length - 
+2019-11-30 16:05:34 [ DEBUG ] - check_user_pass_characters - 
+2019-11-30 16:05:34 [ DEBUG ] - check_user_pass_letters - 
+2019-11-30 16:05:34 [ DEBUG ] - check_user_pass_numbers - 
+2019-11-30 16:05:34 [ DEBUG ] - check_user_pass_symbols - 
+2019-11-30 16:05:34 [ DEBUG ] - check_user_email - 
+2019-11-30 16:05:34 [ DEBUG ] - check_user_email_is_valid - 
+2019-11-30 16:05:34 [ DEBUG ] - create_res_user - 
+2019-11-30 16:05:34 [ DEBUG ] - hash_password - 
+2019-11-30 16:05:34 [ DEBUG ] - fetch_time_sheet_id - 
+2019-11-30 16:05:34 [ DEBUG ] - fetch_conversion_sheet_id - 
+2019-11-30 16:05:34 [ DEBUG ] - fetch_credit_clock_id - 
+2019-11-30 16:05:34 [ DEBUG ] - fetch_transfer_sheet_id - 
+2019-11-30 16:05:34 [ DEBUG ] - fetch_invoice_sheet_id - 
+2019-11-30 16:05:34 [ DEBUG ] - fetch_credit_ewallet_id - 
+2019-11-30 16:05:34 [ DEBUG ] - fetch_contact_list_id - 
+2019-11-30 16:05:34 [ DEBUG ] - update_session_from_user - 
+2019-11-30 16:05:34 [ ERROR ] - error_no_session_active_user_found - No session active user found.
+2019-11-30 16:05:34 [ DEBUG ] - update_user_account_archive - 
+2019-11-30 16:05:34 [ DEBUG ] - fetch_user_id - 
+2019-11-30 16:05:34 [ DEBUG ] - fetch_user_id - 
+2019-11-30 16:05:34 [ DEBUG ] - ewallet_controller - 
+2019-11-30 16:05:34 [ DEBUG ] - ewallet_user_controller - 
+2019-11-30 16:05:34 [ DEBUG ] - ewallet_user_action_controller - 
+2019-11-30 16:05:34 [ DEBUG ] - handle_user_action_login - 
+2019-11-30 16:05:34 [ DEBUG ] - ewallet_login_controller - 
+2019-11-30 16:05:34 [ DEBUG ] - action_login - 
+2019-11-30 16:05:34 [ DEBUG ] - authenticate_user - 
+2019-11-30 16:05:34 [ DEBUG ] - check_user_name_exists - 
+2019-11-30 16:05:34 [ DEBUG ] - fetch_user_pass_hash - 
+2019-11-30 16:05:34 [ DEBUG ] - check_user_pass_hash - 
+2019-11-30 16:05:34 [ DEBUG ] - hash_password - 
+2019-11-30 16:05:34 [ DEBUG ] - update_session_from_user - 
+2019-11-30 16:05:34 [ ERROR ] - error_no_session_active_user_found - No session active user found.
+2019-11-30 16:05:34 [ DEBUG ] - ewallet_controller - 
+2019-11-30 16:05:34 [ DEBUG ] - ewallet_user_controller - 
+2019-11-30 16:05:34 [ DEBUG ] - ewallet_user_action_controller - 
+2019-11-30 16:05:34 [ DEBUG ] - handle_user_action_view - 
+2019-11-30 16:05:34 [ ERROR ] - error_no_view_target_specified - No view target specified.
+2019-11-30 16:05:34 [ DEBUG ] - ewallet_controller - 
+2019-11-30 16:05:34 [ DEBUG ] - ewallet_user_controller - 
+2019-11-30 16:05:34 [ DEBUG ] - ewallet_user_action_controller - 
+2019-11-30 16:05:34 [ DEBUG ] - handle_user_action_create - 
+2019-11-30 16:05:34 [ DEBUG ] - action_create_new_user_account - 
+2019-11-30 16:05:34 [ DEBUG ] - ewallet_login_controller - 
+2019-11-30 16:05:34 [ DEBUG ] - action_create_new_account - 
+2019-11-30 16:05:34 [ DEBUG ] - action_create_new_user - 
+2019-11-30 16:05:34 [ DEBUG ] - perform_new_user_checks - 
+2019-11-30 16:05:34 [ DEBUG ] - check_user_name_ensure_one - 
+2019-11-30 16:05:34 [ DEBUG ] - check_user_pass - 
+2019-11-30 16:05:34 [ DEBUG ] - check_user_pass_length - 
+2019-11-30 16:05:34 [ DEBUG ] - check_user_pass_characters - 
+2019-11-30 16:05:34 [ DEBUG ] - check_user_pass_letters - 
+2019-11-30 16:05:34 [ DEBUG ] - check_user_pass_numbers - 
+2019-11-30 16:05:34 [ DEBUG ] - check_user_pass_symbols - 
+2019-11-30 16:05:34 [ DEBUG ] - check_user_email - 
+2019-11-30 16:05:34 [ DEBUG ] - check_user_email_is_valid - 
+2019-11-30 16:05:34 [ DEBUG ] - create_res_user - 
+2019-11-30 16:05:34 [ DEBUG ] - hash_password - 
+2019-11-30 16:05:34 [ DEBUG ] - fetch_time_sheet_id - 
+2019-11-30 16:05:34 [ DEBUG ] - fetch_conversion_sheet_id - 
+2019-11-30 16:05:34 [ DEBUG ] - fetch_credit_clock_id - 
+2019-11-30 16:05:34 [ DEBUG ] - fetch_transfer_sheet_id - 
+2019-11-30 16:05:34 [ DEBUG ] - fetch_invoice_sheet_id - 
+2019-11-30 16:05:34 [ DEBUG ] - fetch_credit_ewallet_id - 
+2019-11-30 16:05:34 [ DEBUG ] - fetch_contact_list_id - 
+2019-11-30 16:05:34 [ DEBUG ] - update_session_from_user - 
+2019-11-30 16:05:34 [ ERROR ] - error_no_session_active_user_found - No session active user found.
+2019-11-30 16:05:34 [ DEBUG ] - update_user_account_archive - 
+2019-11-30 16:05:34 [ DEBUG ] - fetch_user_id - 
+2019-11-30 16:05:34 [ DEBUG ] - fetch_user_id - 
+2019-11-30 16:05:34 [ DEBUG ] - ewallet_controller - 
+2019-11-30 16:05:34 [ DEBUG ] - ewallet_user_controller - 
+2019-11-30 16:05:34 [ DEBUG ] - ewallet_user_action_controller - 
+2019-11-30 16:05:34 [ DEBUG ] - handle_user_action_login - 
+2019-11-30 16:05:34 [ DEBUG ] - ewallet_login_controller - 
+2019-11-30 16:05:34 [ DEBUG ] - action_login - 
+2019-11-30 16:05:34 [ DEBUG ] - authenticate_user - 
+2019-11-30 16:05:34 [ DEBUG ] - check_user_name_exists - 
+2019-11-30 16:05:34 [ DEBUG ] - fetch_user_pass_hash - 
+2019-11-30 16:05:34 [ DEBUG ] - check_user_pass_hash - 
+2019-11-30 16:05:34 [ DEBUG ] - hash_password - 
+2019-11-30 16:05:34 [ DEBUG ] - update_session_from_user - 
+2019-11-30 16:05:34 [ ERROR ] - error_no_session_active_user_found - No session active user found.
+2019-11-30 16:05:34 [ DEBUG ] - ewallet_controller - 
+2019-11-30 16:05:34 [ DEBUG ] - ewallet_user_controller - 
+2019-11-30 16:05:34 [ DEBUG ] - ewallet_user_action_controller - 
+2019-11-30 16:05:34 [ DEBUG ] - handle_user_action_view - 
+2019-11-30 16:05:34 [ ERROR ] - error_no_view_target_specified - No view target specified.
+2019-11-30 16:05:34 [ DEBUG ] - ewallet_controller - 
+2019-11-30 16:05:34 [ DEBUG ] - ewallet_system_controller - 
+2019-11-30 16:05:34 [ DEBUG ] - ewallet_system_action_controller - 
+2019-11-30 16:05:34 [ DEBUG ] - handle_system_action_update - 
+2019-11-30 16:05:34 [ DEBUG ] - action_system_session_update - 
+2019-11-30 16:05:34 [ DEBUG ] - update_session_from_user - 
+2019-11-30 16:05:34 [ ERROR ] - error_no_session_active_user_found - No session active user found.
+2019-11-30 16:09:15 [ DEBUG ] - ewallet_controller - 
+2019-11-30 16:09:15 [ DEBUG ] - ewallet_controller - 
+2019-11-30 16:09:15 [ DEBUG ] - ewallet_user_controller - 
+2019-11-30 16:09:15 [ DEBUG ] - ewallet_user_action_controller - 
+2019-11-30 16:09:15 [ DEBUG ] - handle_user_action_create - 
+2019-11-30 16:09:15 [ DEBUG ] - action_create_new_user_account - 
+2019-11-30 16:09:15 [ DEBUG ] - ewallet_login_controller - 
+2019-11-30 16:09:15 [ DEBUG ] - action_create_new_account - 
+2019-11-30 16:09:15 [ DEBUG ] - action_create_new_user - 
+2019-11-30 16:09:15 [ DEBUG ] - perform_new_user_checks - 
+2019-11-30 16:09:15 [ DEBUG ] - check_user_name_ensure_one - 
+2019-11-30 16:09:15 [ DEBUG ] - check_user_pass - 
+2019-11-30 16:09:15 [ DEBUG ] - check_user_pass_length - 
+2019-11-30 16:09:15 [ DEBUG ] - check_user_pass_characters - 
+2019-11-30 16:09:15 [ DEBUG ] - check_user_pass_letters - 
+2019-11-30 16:09:15 [ DEBUG ] - check_user_pass_numbers - 
+2019-11-30 16:09:15 [ DEBUG ] - check_user_pass_symbols - 
+2019-11-30 16:09:15 [ DEBUG ] - check_user_email - 
+2019-11-30 16:09:15 [ DEBUG ] - check_user_email_is_valid - 
+2019-11-30 16:09:15 [ DEBUG ] - create_res_user - 
+2019-11-30 16:09:15 [ DEBUG ] - hash_password - 
+2019-11-30 16:09:15 [ DEBUG ] - fetch_time_sheet_id - 
+2019-11-30 16:09:15 [ DEBUG ] - fetch_conversion_sheet_id - 
+2019-11-30 16:09:15 [ DEBUG ] - fetch_credit_clock_id - 
+2019-11-30 16:09:15 [ DEBUG ] - fetch_transfer_sheet_id - 
+2019-11-30 16:09:15 [ DEBUG ] - fetch_invoice_sheet_id - 
+2019-11-30 16:09:15 [ DEBUG ] - fetch_credit_ewallet_id - 
+2019-11-30 16:09:15 [ DEBUG ] - fetch_contact_list_id - 
+2019-11-30 16:09:15 [ DEBUG ] - update_session_from_user - 
+2019-11-30 16:09:15 [ DEBUG ] - fetch_user_credit_wallet - 
+2019-11-30 16:09:15 [ DEBUG ] - fetch_user_contact_list - 
+2019-11-30 16:09:15 [ DEBUG ] - update_user_account_archive - 
+2019-11-30 16:09:15 [ DEBUG ] - fetch_user_id - 
+2019-11-30 16:09:15 [ DEBUG ] - fetch_user_id - 
+2019-11-30 16:09:15 [ DEBUG ] - ewallet_controller - 
+2019-11-30 16:09:15 [ DEBUG ] - ewallet_user_controller - 
+2019-11-30 16:09:15 [ DEBUG ] - ewallet_user_action_controller - 
+2019-11-30 16:09:15 [ DEBUG ] - handle_user_action_login - 
+2019-11-30 16:09:15 [ DEBUG ] - ewallet_login_controller - 
+2019-11-30 16:09:15 [ DEBUG ] - action_login - 
+2019-11-30 16:09:15 [ DEBUG ] - authenticate_user - 
+2019-11-30 16:09:15 [ DEBUG ] - check_user_name_exists - 
+2019-11-30 16:09:15 [ DEBUG ] - fetch_user_pass_hash - 
+2019-11-30 16:09:15 [ DEBUG ] - check_user_pass_hash - 
+2019-11-30 16:09:15 [ DEBUG ] - hash_password - 
+2019-11-30 16:09:15 [ DEBUG ] - update_session_from_user - 
+2019-11-30 16:09:15 [ DEBUG ] - fetch_user_credit_wallet - 
+2019-11-30 16:09:15 [ DEBUG ] - fetch_user_contact_list - 
+2019-11-30 16:09:15 [ DEBUG ] - ewallet_controller - 
+2019-11-30 16:09:15 [ DEBUG ] - ewallet_user_controller - 
+2019-11-30 16:09:15 [ DEBUG ] - ewallet_user_action_controller - 
+2019-11-30 16:09:15 [ DEBUG ] - handle_user_action_view - 
+2019-11-30 16:09:15 [ ERROR ] - error_no_view_target_specified - No view target specified.
+2019-11-30 16:09:15 [ DEBUG ] - ewallet_controller - 
+2019-11-30 16:09:15 [ DEBUG ] - ewallet_user_controller - 
+2019-11-30 16:09:15 [ DEBUG ] - ewallet_user_action_controller - 
+2019-11-30 16:09:15 [ DEBUG ] - handle_user_action_create - 
+2019-11-30 16:09:15 [ DEBUG ] - action_create_new_user_account - 
+2019-11-30 16:09:15 [ DEBUG ] - ewallet_login_controller - 
+2019-11-30 16:09:15 [ DEBUG ] - action_create_new_account - 
+2019-11-30 16:09:15 [ DEBUG ] - action_create_new_user - 
+2019-11-30 16:09:15 [ DEBUG ] - perform_new_user_checks - 
+2019-11-30 16:09:15 [ DEBUG ] - check_user_name_ensure_one - 
+2019-11-30 16:09:15 [ DEBUG ] - check_user_pass - 
+2019-11-30 16:09:15 [ DEBUG ] - check_user_pass_length - 
+2019-11-30 16:09:15 [ DEBUG ] - check_user_pass_characters - 
+2019-11-30 16:09:15 [ DEBUG ] - check_user_pass_letters - 
+2019-11-30 16:09:15 [ DEBUG ] - check_user_pass_numbers - 
+2019-11-30 16:09:15 [ DEBUG ] - check_user_pass_symbols - 
+2019-11-30 16:09:15 [ DEBUG ] - check_user_email - 
+2019-11-30 16:09:15 [ DEBUG ] - check_user_email_is_valid - 
+2019-11-30 16:09:15 [ DEBUG ] - create_res_user - 
+2019-11-30 16:09:15 [ DEBUG ] - hash_password - 
+2019-11-30 16:09:15 [ DEBUG ] - fetch_time_sheet_id - 
+2019-11-30 16:09:15 [ DEBUG ] - fetch_conversion_sheet_id - 
+2019-11-30 16:09:15 [ DEBUG ] - fetch_credit_clock_id - 
+2019-11-30 16:09:15 [ DEBUG ] - fetch_transfer_sheet_id - 
+2019-11-30 16:09:15 [ DEBUG ] - fetch_invoice_sheet_id - 
+2019-11-30 16:09:15 [ DEBUG ] - fetch_credit_ewallet_id - 
+2019-11-30 16:09:15 [ DEBUG ] - fetch_contact_list_id - 
+2019-11-30 16:09:15 [ DEBUG ] - update_session_from_user - 
+2019-11-30 16:09:15 [ DEBUG ] - fetch_user_credit_wallet - 
+2019-11-30 16:09:15 [ DEBUG ] - fetch_user_contact_list - 
+2019-11-30 16:09:15 [ DEBUG ] - update_user_account_archive - 
+2019-11-30 16:09:15 [ DEBUG ] - fetch_user_id - 
+2019-11-30 16:09:15 [ DEBUG ] - fetch_user_id - 
+2019-11-30 16:09:15 [ DEBUG ] - ewallet_controller - 
+2019-11-30 16:09:15 [ DEBUG ] - ewallet_user_controller - 
+2019-11-30 16:09:15 [ DEBUG ] - ewallet_user_action_controller - 
+2019-11-30 16:09:15 [ DEBUG ] - handle_user_action_login - 
+2019-11-30 16:09:15 [ DEBUG ] - ewallet_login_controller - 
+2019-11-30 16:09:15 [ DEBUG ] - action_login - 
+2019-11-30 16:09:15 [ DEBUG ] - authenticate_user - 
+2019-11-30 16:09:15 [ DEBUG ] - check_user_name_exists - 
+2019-11-30 16:09:15 [ DEBUG ] - fetch_user_pass_hash - 
+2019-11-30 16:09:15 [ DEBUG ] - check_user_pass_hash - 
+2019-11-30 16:09:15 [ DEBUG ] - hash_password - 
+2019-11-30 16:09:15 [ DEBUG ] - update_session_from_user - 
+2019-11-30 16:09:15 [ DEBUG ] - fetch_user_credit_wallet - 
+2019-11-30 16:09:15 [ DEBUG ] - fetch_user_contact_list - 
+2019-11-30 16:09:15 [ DEBUG ] - ewallet_controller - 
+2019-11-30 16:09:15 [ DEBUG ] - ewallet_user_controller - 
+2019-11-30 16:09:15 [ DEBUG ] - ewallet_user_action_controller - 
+2019-11-30 16:09:15 [ DEBUG ] - handle_user_action_view - 
+2019-11-30 16:09:15 [ ERROR ] - error_no_view_target_specified - No view target specified.
+2019-11-30 16:09:15 [ DEBUG ] - ewallet_controller - 
+2019-11-30 16:09:15 [ DEBUG ] - ewallet_system_controller - 
+2019-11-30 16:09:15 [ DEBUG ] - ewallet_system_action_controller - 
+2019-11-30 16:09:15 [ DEBUG ] - handle_system_action_update - 
+2019-11-30 16:09:15 [ DEBUG ] - action_system_session_update - 
+2019-11-30 16:09:15 [ DEBUG ] - update_session_from_user - 
+2019-11-30 16:09:15 [ ERROR ] - error_no_session_active_user_found - No session active user found.

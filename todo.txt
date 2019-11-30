@@ -1,8 +1,8 @@
+# TODO - Ewallet Record Sequencer
 # TODO - EWallet Client
 # TODO - Replace creational dummy data with a value dict passed by **kwargs
 # TODO - Config file parser
 # TODO - Persistent storage with SQLAlchemy ORM
-# TODO - Add logs
 # TODO - Client user account management
 # TODO - Client user account security
 # TODO - EWallet Client Interface
