@@ -64,10 +64,87 @@ class ContactListRecord():
                 }
         return _values
 
+    def set_record_id(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('record_id'):
+            return self.error_no_record_id_found()
+        self.record_id = kwargs['record_id']
+        return True
+
+    def set_contact_list_id(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('contact_list_id'):
+            return self.error_no_contact_list_id_found()
+        self.contact_list_id = kwargs['contact_list_id']
+        return True
+
+    def set_user_name(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('user_name'):
+            return self.error_no_user_name_found()
+        self.user_name = kwargs['user_name')
+        return True
+
+    def set_user_email(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('user_email'):
+            return self.error_no_user_email_found()
+        self.user_name = kwargs['user_email']
+        return True
+
+    def set_user_phone(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('user_phone'):
+            return self.error_no_user_phone_found()
+        self.user_phone = kwargs['user_phone']
+        return True
+
+    def set_notes(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('notes'):
+            return self.error_no_notes_found()
+        self.notes = kwargs['notes']
+        return True
+
+    def set_reference(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('reference'):
+            return self.error_no_reference_found()
+        self.reference = kwargs['reference']
+        return True
+
     def update_write_date(self):
         log.debug('')
         self.write_date = datetime.datetime.now()
         return self.write_date
+
+    def error_no_record_id_found(self):
+        log.error('No record id found.')
+        return False
+
+    def error_no_contact_list_id_found(self):
+        log.error('No contact list id found.')
+        return False
+
+    def error_no_user_name_found(self):
+        log.error('No user name found.')
+        return False
+
+    def error_no_user_email_found(self):
+        log.error('No user email found.')
+        return False
+
+    def error_no_user_phone_found(self):
+        log.error('No user phone found.')
+        return False
+
+    def error_no_notes_found(self):
+        log.error('No notes found.')
+        return False
+
+    def error_no_reference_found(self):
+        log.error('No reference found.')
+        return False
 
 
 class ContactList():
@@ -128,6 +205,8 @@ class ContactList():
         for k, v in self.records.items():
             if v.fetch_record_id() == kwargs['code']:
                 _records.append(v)
+        if _records:
+            log.info('Successfully fetched contact record by id.')
         return _records
 
     def fetch_contact_list_record_by_ref(self, **kwargs):
@@ -138,6 +217,8 @@ class ContactList():
         for k, v in self.records.items():
             if v.fetch_record_reference() == kwargs['code']:
                 _records.append(v)
+        if _records:
+            log.info('Successfully fetched contact records by reference.')
         return _records
 
     def fetch_contact_list_record_by_name(self, **kwargs):
@@ -148,6 +229,8 @@ class ContactList():
         for k, v in self.records.items():
             if v.fetch_record_user_name() == kwargs['code']:
                 _records.append(v)
+        if _records:
+            log.info('Successfully fetched contact records by name.')
         return _records
 
     def fetch_contact_list_record_by_email(self, **kwargs):
@@ -158,6 +241,8 @@ class ContactList():
         for k, v in self.records.items():
             if v.fetch_record_user_email() == kwargs['code']:
                 _records.append(v)
+        if _records:
+            log.info('Successfully fetched contact records by email.')
         return _records
 
     def fetch_contact_list_record_by_phone(self, **kwargs):
@@ -168,6 +253,8 @@ class ContactList():
         for k, v in self.records.items():
             if v.fetch_record_user_phone() == kwargs['code']:
                 _records.append(v)
+        if _records:
+            log.info('Successfully fetched contact records by phone.')
         return _records
 
     def fetch_contact_list_records(self, **kwargs):
@@ -183,6 +270,34 @@ class ContactList():
                 }
         return _handlers[kwargs['search_by']](**kwargs)
 
+    def set_contact_list_id(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('contact_list_id'):
+            return self.error_no_contact_list_id_found()
+        self.contact_list_id = kwargs['contact_list_id']
+        return True
+
+    def set_client_id(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('client_id'):
+            return self.error_no_client_id_found()
+        self.client_id = kwargs['client_id']
+        return True
+
+    def set_reference(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('reference'):
+            return self.error_no_reference_found()
+        self.reference = kwargs['reference']
+        return True
+
+    def set_records(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('records'):
+            return self.error_no_records_found()
+        self.records = kwargs['records']
+        return True
+
     def handle_update_contact_list_rewrite(self, **kwargs):
         log.debug('')
         if not kwargs.get('records'):
@@ -190,8 +305,9 @@ class ContactList():
         self.records = {}
         _new_records = kwargs['records']
         for item in _new_records:
-            _record_id = item.fetch_record_id()
-            self.records.update({_record_id: item})
+            self.records.update({item.fetch_record_id(): item})
+        if self.records:
+            log.info('Successfully updated contact list.')
         return self.records
 
     def handle_update_contact_list_append(self, **kwargs):
@@ -202,17 +318,21 @@ class ContactList():
         for item in _new_records:
             _record_id = item.fetch_record_id()
             self.records.update({_record_id: item})
+        if self.records:
+            log.info('Successfully updated contact list.')
         return self.records
 
     def handle_update_contact_list_remove(self, **kwargs):
         log.debug('')
         if not kwargs.get('record_id'):
             return self.error_no_contact_record_id_found()
+        log.info('Successfully removed contact record.')
         return self.records.pop(kwargs['record_id'])
 
     def handle_update_contact_list_clear(self, **kwargs):
         log.debug('')
         self.records = {}
+        log.info('Successfully cleared all contact list records.')
         return self.records
 
     def handle_load_contacts_from_database(self, **kwargs):
@@ -223,6 +343,8 @@ class ContactList():
         _update = self.update_contact_list(
             update_type='rewrite', records=_records
         )
+        if _update:
+            log.info('Successfully loaded contacts from database.')
         return _records
 
     def handle_load_contacts_from_args(self, **kwargs):
@@ -230,6 +352,8 @@ class ContactList():
         _update = self.update_contact_list(
             update_type='rewrite', records=kwargs.get('records')
         )
+        if _update:
+            log.info('Successfully loaded contacts from args.')
         return kwargs.get('records')
 
     def handle_display_contact_list_records_to_terminal(self, **kwargs):
@@ -348,6 +472,22 @@ class ContactList():
                 'interogate': self.interogate_contact_list,
                 }
         return _handlers[kwargs['action']](**kwargs)
+
+    def error_no_contact_list_id_found(self):
+        log.error('No contact list id found.')
+        return False
+
+    def error_no_client_id_found(self):
+        log.error('No client id found.')
+        return False
+
+    def error_no_reference_found(self):
+        log.error('No reference found.')
+        return False
+
+    def error_no_records_found(self):
+        log.error('No records found.')
+        return False
 
     def error_no_contact_list_interogation_type_specified(self):
         log.error('No contact list interogation type specified.')

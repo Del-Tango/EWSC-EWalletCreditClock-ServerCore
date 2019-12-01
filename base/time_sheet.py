@@ -176,36 +176,43 @@ class CreditClockTimeSheet():
             return self.warning_could_not_fetch_time_record(
                     'id', kwargs['code']
                     )
+        log.info('Successfully fetched time record by id.')
         return _record
 
+    # TODO - Refactor for multiple records
     def fetch_time_sheet_record_by_ref(self, **kwargs):
         log.debug('')
         if not kwargs.get('code'):
             return self.error_no_time_record_reference_found()
         for item in self.records:
             if self.records[item].fetch_record_reference() == kwargs['code']:
+                log.info('Successfully fetched time record by reference.')
                 return self.records[item]
         return self.warning_could_not_fetch_time_record(
                 'reference', kwargs['code']
                 )
 
+    # TODO - Refactor for multiple records
     def fetch_time_sheet_record_by_date(self, **kwargs):
         log.debug('')
         if not kwargs.get('code'):
             return self.error_no_time_record_date_found()
         for item in self.records:
             if self.records[item].fetch_record_create_date() == kwargs['code']:
+                log.info('Successfully fetched time record by date.')
                 return self.records[item]
         return self.warning_could_not_fetch_time_record(
                 'date', kwargs['code']
                 )
 
+    # TODO - Refactor for multiple records
     def fetch_time_sheet_record_by_time(self, **kwargs):
         log.debug('')
         if not kwargs.get('code'):
             return self.error_no_time_record_time_found()
         for item in self.records:
             if self.record[item].fetch_record_time_spent() == kwargs['code']:
+                log.info('Successfully fetched time record by time.')
                 return self.records[item]
         return self.warning_could_not_fetch_time_record(
                 'time', kwargs['code']
@@ -263,6 +270,7 @@ class CreditClockTimeSheet():
         self.records.update({
             kwargs['record'].fetch_record_id(), kwargs['record']
             })
+        log.info('Successfully update time sheet records.')
         return self.records
 
     def update_write_date(self):
@@ -285,12 +293,14 @@ class CreditClockTimeSheet():
         _values = self.fetch_time_record_creation_values(**kwargs)
         _record = TimeSheetRecord(**_values)
         self.update_time_sheet_records(record=_record)
+        log.info('Successfully added new time record.')
         return _record
 
     def action_remove_time_sheet_record(self, **kwargs):
         log.debug('')
         if not kwargs.get('record_id'):
             return self.error_no_time_record_id_found()
+        log.info('Attempting to fetch time record...')
         _record = self.fetch_time_sheet_record(
                 identifier='id', code=kwargs['record_id']
                 )
@@ -298,7 +308,10 @@ class CreditClockTimeSheet():
             return self.warning_could_not_fetch_time_record(
                     'id', kwargs['record_id']
                     )
-        return self.records.pop(kwargs['record_id'])
+        _unlink = self.records.pop(kwargs['record_id'])
+        if _unlink:
+            log.info('Successfully removed time record by id.')
+        return _unlink
 
     def action_interogate_time_sheet_records_by_id(self, **kwargs):
         log.debug('')
@@ -387,7 +400,9 @@ class CreditClockTimeSheet():
 
     def action_clear_time_sheet_records(self, **kwargs):
         log.debug('')
-        return self.set_time_sheet_records(records={})
+        _clear = self.set_time_sheet_records(records={})
+        log.info('Successfully cleared all time sheet records.')
+        return _clear
 
     def credit_clock_time_sheet_controller(self, **kwargs):
         log.debug('')

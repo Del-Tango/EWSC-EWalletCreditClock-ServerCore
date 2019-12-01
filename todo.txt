@@ -1,7 +1,8 @@
-# TODO - Replace creational dummy data with a value dict passed by **kwargs
+# TODO - Add full test cases
 # TODO - Persistent storage with SQLAlchemy ORM
 # TODO - BUG FIX - Ewallet Record Sequencer
 # TODO - EWallet Client
+# TODO - Add ACL permission sheets
 # TODO - Client user account security
 # TODO - EWallet Client Interface
 # TODO - EWallet report an issue system

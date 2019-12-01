@@ -106,12 +106,14 @@ class CreditEWallet():
         _transfer_sheet = self.transfer_sheet_archive.get(code)
         if not _transfer_sheet:
             return self.warning_could_not_fetch_transfer_sheet('id', code)
+        log.info('Successfully fetched credit transfer sheet by id.')
         return _transfer_sheet
 
     def fetch_credit_wallet_transfer_sheet_by_ref(self, code):
         log.debug('')
         for item in self.transfer_sheet_archive:
             if self.transfer_sheet_archive[item].reference == code:
+                log.info('Successfully fetched transfer sheet by reference.')
                 return self.transfer_sheet_archive[item]
         return self.warning_could_not_Fetch_transfer_sheet('reference', code)
 
@@ -124,12 +126,14 @@ class CreditEWallet():
         _invoice_sheet = self.invoice_sheet_archive.get(code)
         if not _invoice_sheet:
             return self.warning_could_not_fetch_invoice_sheet('id', code)
+        log.info('Successfully fetched invoice sheet by id.')
         return _invoice_sheet
 
     def fetch_credit_wallet_invoice_sheet_by_ref(self, code):
         log.debug('')
         for item in self.invoice_sheet_archive:
             if self.invoice_sheet_archive[item].reference == code:
+                log.info('Successfully fetched invoice sheet by reference.')
                 return self.invoice_sheet_archive[item]
         return self.warning_could_not_fetch_invoice_sheet('reference', code)
 
@@ -142,6 +146,7 @@ class CreditEWallet():
         _clock = self.credit_clock_archive.get(code)
         if not _clock:
             return self.warning_could_not_fetch_credit_clock('id', code)
+        log.info('Successfully fetched credit clock by id.')
         return _clock
 
     def fetch_credit_wallet_clock_by_ref(self, code):
@@ -150,6 +155,7 @@ class CreditEWallet():
             return self.error_empty_credit_clock_archive()
         for item in self.credit_clock_archive:
             if self.credit_clock_archive[item].fetch_credit_clock_reference() == code:
+                log.info('Successfully fetched credit clock by reference.')
                 return self.credit_clock_archive[item]
         return self.warning_could_not_fetch_credit_clock('reference', code)
 
@@ -190,6 +196,76 @@ class CreditEWallet():
                 }
         return _handlers[kwargs['identifier']](code=kwargs.get(code))
 
+    def set_wallet_id(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('wallet_id'):
+            return self.error_no_wallet_id_found()
+        self.wallet_id = kwargs['wallet_id']
+        return True
+
+    def set_client_id(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('client_id'):
+            return self.error_no_client_id_found()
+        self.client_id = kwargs['client_id']
+        return True
+
+    def set_reference(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('reference'):
+            return self.error_no_reference_found()
+        self.reference = kwargs['reference']
+        return True
+
+    def set_credits(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('credits'):
+            return self.error_no_credits_found()
+        self.credits = kwargs['credits']
+        return True
+
+    def set_credit_clock(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('credit_clock'):
+            return self.error_no_credit_clock_found()
+        self.credit_clock = kwargs['credit_clock']
+        return False
+
+    def set_credit_clock_archive(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('credit_clock_archive'):
+            return self.error_no_credit_clock_archive_found()
+        self.credit_clock_archive = kwargs['credit_clock_archive']
+        return True
+
+    def set_transfer_sheet(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('transfer_sheet'):
+            return self.error_no_transfer_sheet_found()
+        self.transfer_sheet = kwargs['transfer_sheet']
+        return True
+
+    def set_transfer_sheet_archive(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('transfer_sheet_archive'):
+            return self.error_no_transfer_sheet_archive_found()
+        self.transfer_sheet_archive = kwargs['transfer_sheet_archive']
+        return True
+
+    def set_invoice_sheet(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('invoice_sheet'):
+            return self.error_no_invoice_sheet_found()
+        self.invoice_sheet = kwargs['invoice_sheet']
+        return True
+
+    def set_invoice_sheet_archive(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('invoice_sheet_archive'):
+            return self.error_no_invoice_sheet_archive_found()
+        self.invoice_sheet_archive = kwargs['invoice_sheet_archive']
+        return True
+
     def update_write_date(self):
         log.debug('')
         self.write_date = datetime.datetime.now()
@@ -201,6 +277,7 @@ class CreditEWallet():
             credit_clock.fetch_credit_clock_id():
             credit_clock,
             })
+        log.info('Successfully updated credit clock archive.')
         return self.credit_clock_archive
 
     def update_invoice_sheet_archive(self, invoice_sheet):
@@ -209,6 +286,7 @@ class CreditEWallet():
             invoice_sheet.fetch_invoice_sheet_id():
             invoice_sheet
             })
+        log.info('Successfully updated invoice sheet archive.')
         return self.invoice_sheet_archive
 
     def update_transfer_sheet_archive(self, transfer_sheet):
@@ -217,6 +295,7 @@ class CreditEWallet():
             transfer_sheet.fetch_transfer_sheet_id():
             transfer_sheet
             })
+        log.info('Successfully updated transfer sheet archive.')
         return self.transfer_sheet_archive
 
     def handle_switch_credit_wallet_transfer_sheet_by_ref(self, code):
@@ -225,6 +304,7 @@ class CreditEWallet():
                 identifier='reference', code=code
                 )
         self.transfer_sheet = _new_transfer_sheet
+        log.info('Successfully switched transfer sheet by reference.')
         return _new_transfer_sheet
 
     def handle_switch_credit_wallet_transfer_sheet_by_id(self, code):
@@ -233,6 +313,7 @@ class CreditEWallet():
                 identifier='id', code=code
                 )
         self.transfer_sheet = _new_transfer_sheet
+        log.info('Successfully switched transfer sheet by id.')
         return _new_transfer_sheet
 
     def handle_switch_credit_wallet_invoice_sheet_by_ref(self, code):
@@ -241,6 +322,7 @@ class CreditEWallet():
                 identifier='ref', code=code
                 )
         self.invoice_sheet = _new_invoice_sheet
+        log.info('Successfully switched invoice sheet by reference.')
         return _new_invoice_sheet
 
     def handle_switch_credit_wallet_invoice_sheet_by_id(self, code):
@@ -249,6 +331,7 @@ class CreditEWallet():
                 identifier='id', code=code
                 )
         self.invoice_sheet = _new_invoice_sheet
+        log.info('Successfully switched invoice sheet by id.')
         return _new_invoice_sheet
 
     def handle_switch_credit_wallet_clock_by_id(self, code):
@@ -257,6 +340,7 @@ class CreditEWallet():
                 identifier='id', code=code
                 )
         self.credit_clock = _new_credit_clock
+        log.info('Successfully switched credit clock by id.')
         return _new_credit_clock
 
     def supply_credits(self, **kwargs):
@@ -264,6 +348,7 @@ class CreditEWallet():
         if not kwargs.get('credits'):
             return self.error_no_credits_found()
         self.credits += kwargs['credits']
+        log.info('Successfully supplied wallet with credits.')
         return self.credits
 
     def extract_credits(self, **kwargs):
@@ -271,6 +356,7 @@ class CreditEWallet():
         if not kwargs.get('credits'):
             return self.error_no_credits_found()
         self.credits -= kwargs['credits']
+        log.info('Successfully extracted credits from wallet.')
         return self.credits
 
     def convert_credits_to_minutes(self, **kwargs):
@@ -284,6 +370,7 @@ class CreditEWallet():
                 )
         _credit_clock.update_write_date()
         self.system_controller(action='extract', credits=kwargs['credits'])
+        log.info('Successfully converted credits to minutes.')
         return _convert
 
     def convert_minutes_to_credits(self, **kwargs):
@@ -297,6 +384,7 @@ class CreditEWallet():
                 )
         self.update_write_date()
         self.system_controller(action='supply', credits=kwargs['minutes'])
+        log.info('Successfully converted minutes to credits.')
         return _convert
 
     def convert_credits(self, **kwargs):
@@ -316,9 +404,11 @@ class CreditEWallet():
                     credits=kwargs.get('credits'),
                     seller_id=kwargs.get('seller_id')
                     )
+        log.info('Attempting to supply wallet with credits...')
         _supply = self.system_controller(
                 action='supply', credits=kwargs['credits']
                 )
+        log.info('Creating invoice record...')
         _invoice_record = self.invoice_sheet.credit_invoice_sheet_controller(
                 action='add', reference=kwargs.get('reference'),
                 credits=kwargs['credits'], currency=kwargs.get('currency'),
@@ -334,9 +424,11 @@ class CreditEWallet():
                     credits=kwargs.get('credits'),
                     used_on=kwargs.get('used_on'),
                     )
+        log.info('Attempting to extract credits from wallet...')
         _extract = self.system_controller(
                 action='extract', credits=kwargs['credits'],
                 )
+        log.info('Creating transfer record...')
         _transfer_record = self.transfer_sheet.credit_transfer_sheet_controller(
                 action='add', reference=kwargs.get('reference'),
                 credits=kwargs['credits'],
@@ -353,6 +445,7 @@ class CreditEWallet():
                     transfer_record=kwargs.get('transfer_record'),
                     partner_ewallet=kwargs.get('partner_ewallet'),
                     )
+        log.info('Attempting to share transfer record...')
         _share = kwargs['partner_ewallet'].transfer_sheet.credit_transfer_sheet_controller(
                 action='append', records=[kwargs['transfer_record']]
                 )
@@ -366,18 +459,22 @@ class CreditEWallet():
                     credits=kwargs.get('credits'),
                     partner_ewallet=kwargs.get('partner_ewallet'),
                     )
+        log.info('Extracting credits from partner ewallet...')
         _source_extract = kwargs['partner_ewallet'].system_controller(
                 action='extract', credits=kwargs['credits']
                 )
+        log.info('Supplying wallet with credits...')
         _destination_supply = self.system_controller(
                 action='supply', credits=kwargs['credits']
                 )
+        log.info('Creating transfer record...')
         _transfer_record = self.transfer_sheet.credit_transfer_sheet_controller(
                 action='add', reference=kwargs.get('reference'),
                 transfer_type=kwargs.get('transfer_type'),
                 transfer_from=kwargs.get('transfer_from'),
                 transfer_to=self.client_id, credits=kwargs['credits']
                 )
+        log.info('Attempting transfer record share with partner...')
         self.share_transfer_record(
                 partner_ewallet=kwargs['partner_ewallet'],
                 transfer_records=[_transfer_record],
@@ -392,17 +489,21 @@ class CreditEWallet():
                     credits=kwargs.get('credits'),
                     partner_ewallet=kwargs.get('partner_ewallet'),
                     )
+        log.info('Extracting credits from wallet...')
         _source_extract = self.system_controller(
                 action='extract', credits=kwargs['credits']
                 )
+        log.info('Supplying partner wallet with credits...')
         _destination_supply = kwargs['partner_ewallet'].system_controller(
                 action='supply', credits=kwargs['credits']
                 )
+        log.info('Creating transfer record...')
         _transfer_record = self.transfer_sheet.credit_transfer_sheet_controller(
                 action='add', reference=kwargs.get('reference'),
                 transfer_type=kwargs.get('transfer_type'), transfer_from=self.client_id,
                 transfer_to=kwargs.get('transfer_to'), credits=kwargs['credits']
                 )
+        log.info('Attempting transfer record share with partner...')
         self.share_transfer_record(
                 partner_ewallet=kwargs['partner_ewallet'],
                 transfer_record=_transfer_record,
@@ -514,28 +615,28 @@ class CreditEWallet():
                 }
         return _handlers[kwargs['identifier']](kwargs['code'])
 
-    # TODO - Has dummy data
     def create_transfer_sheet(self, **kwargs):
         log.debug('')
         _transfer_sheet = CreditTransferSheet(
                 wallet_id=self.wallet_id,
-                reference='Second Credit Transfer Sheet',
+                reference=kwargs.get('reference'),
                 )
         self.transfer_sheet_archive.update({
             _transfer_sheet.fetch_transfer_sheet_id(): _transfer_sheet
             })
+        log.info('Successfully created transfer sheet.')
         return _transfer_sheet
 
-    # TODO - Has dummy data
     def create_invoice_sheet(self, **kwargs):
         log.debug('')
         _invoice_sheet = CreditInvoiceSheet(
                 wallet_id=self.wallet_id,
-                reference='Second Credit Invoice Sheet',
+                reference=kwargs.get('reference'),
                 )
         self.invoice_sheet_archive.update({
             _invoice_sheet.fetch_invoice_sheet_id(): _invoice_sheet
             })
+        log.info('Successfully created invoice sheet.')
         return _invoice_sheet
 
     def switch_credit_wallet_sheet(self, **kwargs):
@@ -575,29 +676,42 @@ class CreditEWallet():
                 credit_clock=kwargs.get('credit_clock') or float(),
                 )
         self.update_credit_clock_archive(_new_credit_clock)
+        log.info('Successfully created new credit clock.')
         return _new_credit_clock
 
     def unlink_transfer_sheet(self, **kwargs):
         log.debug('')
         if not kwargs.get('sheet_id'):
             return self.error_transfer_sheet_id_not_found()
+        log.info('Attempting to fetch transfer sheet...')
         _transfer_sheet = self.fetch_transfer_sheet(
                 identifier='id', code=kwargs['sheet_id']
                 )
         if not _transfer_sheet:
-            return self.warning_could_not_fetch_transfer_sheet('id', kwargs['sheet_id'])
-        return self.transfer_sheet_archive.pop(kwargs['sheet_id'])
+            return self.warning_could_not_fetch_transfer_sheet(
+                    'id', kwargs['sheet_id']
+                    )
+        _unlink = self.transfer_sheet_archive.pop(kwargs['sheet_id'])
+        if _unlink:
+            log.info('Successfully removed transfer sheet.')
+        return _unlink
 
     def unlink_invoice_sheet(self, **kwargs):
         log.debug('')
         if not kwargs.get('sheet_id'):
             return self.error_no_invoice_sheet_id_found()
+        log.info('Attempting to fetch invoice sheet.')
         _invoice_sheet = self.fetch_invoice_sheet(
                 identifier='id', code=kwargs['sheet_id']
                 )
         if not _invoice_sheet:
-            return self.warning_could_not_fetch_invoice_sheet('id', kwargs['sheet_id'])
-        return self.invoice_sheet_archive.pop(kwargs['sheet_id'])
+            return self.warning_could_not_fetch_invoice_sheet(
+                    'id', kwargs['sheet_id']
+                    )
+        _unlink = self.invoice_sheet_archive.pop(kwargs['sheet_id'])
+        if _unlink:
+            log.info('Successfully removed invoice sheet.')
+        return _unlink
 
     def unlink_sheet(self, **kwargs):
         log.debug('')
@@ -613,12 +727,18 @@ class CreditEWallet():
         log.debug('')
         if not kwargs.get('clock_id'):
             return self.error_no_credit_clock_id_found()
+        log.info('Attempting to fetch credit clock...')
         _clock = self.fetch_credit_wallet_clock(
                 identifier='id', code=kwargs['clock_id']
                 )
         if not _clock:
-            return self.warning_could_not_fetch_credit_clock('id', kwargs['clock_id'])
-        return self.credit_clock_archive.pop(kwargs['clock_id'])
+            return self.warning_could_not_fetch_credit_clock(
+                    'id', kwargs['clock_id']
+                    )
+        _unlink = self.credit_clock_archive.pop(kwargs['clock_id'])
+        if _unlink:
+            log.info('Successfully removed credit clock.')
+        return _unlink
 
     def system_controller(self, **kwargs):
         log.debug('')
@@ -760,6 +880,46 @@ class CreditEWallet():
         for item in _reasons_and_handlers['reasons']:
             if not _reasons_and_handlers['reasons'][item]:
                 return _reasons_and_handlers['handlers'][item]()
+        return False
+
+    def error_no_wallet_id_found(self):
+        log.error('No wallet id found.')
+        return False
+
+    def error_no_client_id_found(self):
+        log.error('No client id found.')
+        return False
+
+    def error_no_reference_found(self):
+        log.error('No reference found.')
+        return False
+
+    def error_no_credits_found(self):
+        log.error('No credits found.')
+        return False
+
+    def error_no_credit_clock_found(self):
+        log.error('No credit clock found.')
+        return False
+
+    def error_no_credit_clock_archive_found(self):
+        log.error('No credit clock archive found.')
+        return False
+
+    def error_no_transfer_sheet_found(self):
+        log.error('No transfer sheet found.')
+        return False
+
+    def error_no_transfer_sheet_archive_found(self):
+        log.error('No transfer sheet archive found.')
+        return False
+
+    def error_no_invoice_sheet_found(self):
+        log.error('No invoice sheet found.')
+        return False
+
+    def error_no_invoice_sheet_archive_found(self):
+        log.error('No invoice sheet archive found.')
         return False
 
     def error_no_invoice_sheet_identifier_found(self):

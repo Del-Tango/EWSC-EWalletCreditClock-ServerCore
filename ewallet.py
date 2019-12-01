@@ -46,6 +46,7 @@ class EWallet():
         log.debug('')
         if not kwargs.get('code'):
             return self.error_no_user_id_found()
+        log.info('Successfully fetched user by id.')
         return self.user_account_archive.get(kwargs['code'])
 
     def fetch_user_by_name(self, **kwargs):
@@ -54,6 +55,7 @@ class EWallet():
             return self.error_no_user_name_found()
         for item in self.user_account_archive:
             if self.user_account_archive[item].fetch_user_name() == kwargs['code']:
+                log.info('Successfully fetched user by name.')
                 return self.user_account_archive[item]
         return self.warning_no_user_account_found('name', kwargs['code'])
 
@@ -63,6 +65,7 @@ class EWallet():
             return self.error_no_user_email_found()
         for item in self.user_account_archive:
             if self.user_account_archive[item].fetch_user_email() == kwargs['code']:
+                log.info('Successfully fetched user by email.')
                 return self.user_account_archive[item]
         return self.warning_no_user_account_found('email', kwargs['code'])
 
@@ -72,6 +75,7 @@ class EWallet():
             return self.error_no_user_phone_found()
         for item in self.user_account_archive:
             if self.user_account_archive[item].fetch_user_phone() == kwargs['code']:
+                log.info('Successfully fetched user by phone.')
                 return self.user_account_archive[item]
         return self.warning_no_user_account_found('phone', kwargs['code'])
 
@@ -81,6 +85,7 @@ class EWallet():
             return self.error_no_user_alias_found()
         for item in self.user_account_archive:
             if self.user_account_archive[item].fetch_user_alias() == kwargs['code']:
+                log.info('Successfully fetched user by alias.')
                 return self.user_account_archive[item]
         return self.warning_no_user_account_found('alias', kwargs['code'])
 
@@ -104,6 +109,7 @@ class EWallet():
         self.active_user = kwargs['session_active_user']
         self.credit_wallet = self.active_user.fetch_user_credit_wallet()
         self.contact_list = self.active_user.fetch_user_contact_list()
+        log.info('Successfully updated ewallet session from current active user.')
         return True
 
 #   @pysnooper.snoop()
@@ -118,6 +124,7 @@ class EWallet():
         except TypeError:
             self.user_account_archive[
                     kwargs['user'].fetch_user_id()] = kwargs['user']
+        log.info('Successfully updated session user account archive.')
         return self.user_account_archive
 
     def action_reset_user_password(self, **kwargs):
@@ -173,6 +180,7 @@ class EWallet():
                 )
         if not session_create_account:
             return self.warning_could_not_create_user_account(kwargs['user_name'])
+        log.info('Successfully created new user account.')
         self.update_session_from_user(
                 session_active_user=session_create_account
                 )
@@ -194,6 +202,7 @@ class EWallet():
             return self.warning_could_not_create_credit_wallet(
                 self.session_active_user.fetch_user_name()
                 )
+        log.info('Successfully created new credit wallet.')
         return _new_wallet
 
     def action_create_new_credit_clock(self, **kwargs):
@@ -209,6 +218,7 @@ class EWallet():
             return self.warning_could_not_create_credit_clock(
                 self.session_active_user.fetch_user_name()
                 )
+        log.info('Successfully created new credit clock.')
         return _new_clock
 
     def action_create_new_contact_list(self, **kwargs):
@@ -223,6 +233,7 @@ class EWallet():
             return self.warning_could_not_create_contact_list(
                 self.session_active_user.fetch_user_name()
                 )
+        log.info('Successfully created new contact list.')
         return _new_list
 
     def action_create_new_contact_record(self, **kwargs):
@@ -241,6 +252,7 @@ class EWallet():
             return self.warning_could_not_create_contact_record(
                 self.session_active_user.fetch_user_name()
                 )
+        log.info('Successfully created new contact record.')
         return _new_record
 
     def action_create_new_contact(self, **kwargs):
@@ -364,6 +376,7 @@ class EWallet():
                     credit_wallet=self.session_credit_wallet,
                     record_id=kwargs.get('record_id'),
                     )
+        log.info('Attempting to fetch active transfer sheet...')
         _transfer_list = self.session_credit_wallet.fetch_transfer_sheet()
         if not _transfer_list:
             return self.warning_could_not_fetch_credit_wallet_transfer_sheet()
@@ -374,11 +387,11 @@ class EWallet():
     def action_unlink_time_list(self, **kwargs):
         log.debug('')
         if not self.session_credit_wallet or not kwargs.get('list_id'):
-            log.error('No active session credit wallet or credit clock time list id found.')
             return self.error_handler_action_unlink_time_list(
                     credit_wallet=self.session_credit_wallet,
                     list_id=kwargs.get('list_id'),
                     )
+        log.info('Attempting to fetch active credit clock...')
         _credit_clock = self.session_credit_wallet.fetch_credit_ewallet_credit_clock()
         if not _credit_clock:
             return self.warning_could_not_fetch_credit_clock()
@@ -395,9 +408,11 @@ class EWallet():
                     credit_wallet=self.session_credit_wallet,
                     record_id=kwargs.get('record_id'),
                     )
+        log.info('Attempting to fetch active credit clock...')
         _credit_clock = self.session_credit_wallet.fetch_credit_ewallet_credit_clock()
         if not _credit_clock:
             return self.warning_could_not_fetch_credit_clock()
+        log.info('Attempting to fetch active time sheet...')
         _time_list = _credit_clock.fetch_credit_clock_time_sheet()
         if not _time_list:
             return self.warning_could_not_fetch_time_sheet()
@@ -412,6 +427,7 @@ class EWallet():
                     credit_wallet=self.session_credit_wallet,
                     list_id=kwargs.get('list_id'),
                     )
+        log.info('Attempting to fetch active credit clock...')
         _credit_clock = self.session_credit_wallet.fetch_credit_ewallet_credit_clock()
         if not _credit_clock:
             return self.warning_could_not_fetch_credit_clock()
@@ -423,14 +439,15 @@ class EWallet():
     def action_unlink_conversion_record(self, **kwargs):
         log.debug('')
         if not self.session_credit_wallet or not kwargs.get('record_id'):
-            log.error('No active session credit wallet or conversion record id found.')
             return self.error_handler_action_unlink_conversion_record(
                     credit_wallet=self.session_credit_wallet,
                     record_id=kwargs.get('record_id'),
                     )
+        log.info('Attempting to fetch active credit clock...')
         _credit_clock = self.session_credit_wallet.fetch_credit_ewallet_credit_clock()
         if not _credit_clock:
             return self.warning_could_not_fetch_credit_clock()
+        log.info('Attempting to fetch active conversion sheet...')
         _conversion_list = _credit_clock.fetch_credit_clock_conversion_sheet()
         if not _conversion_list:
             return self.warning_could_not_fetch_conversion_sheet()
@@ -493,7 +510,7 @@ class EWallet():
         if not self.session_active_user:
             return self.error_no_session_active_user_found()
         res = self.session_active_user.fetch_user_values()
-        print(res)
+        log.debug(res)
         return res
 
     def action_view_credit_wallet(self, **kwargs):
@@ -501,18 +518,19 @@ class EWallet():
         if not self.session_credit_wallet:
             return self.error_no_session_credit_wallet_found()
         res = self.session_credit_wallet.fetch_credit_ewallet_values()
-        print(res)
+        log.debug(res)
         return res
 
     def action_view_credit_clock(self, **kwargs):
         log.debug('')
         if not self.session_credit_wallet:
             return self.error_no_session_credit_wallet_found()
+        log.info('Attempting to fetch active credit clock...')
         _credit_clock = self.session_credit_wallet.fetch_credit_ewallet_credit_clock()
         if not _credit_clock:
             return self.warning_could_not_fetch_credit_clock()
         res = _credit_clock.fetch_credit_clock_values()
-        print(res)
+        log.debug(res)
         return res
 
     def action_view_contact_list(self, **kwargs):
@@ -520,7 +538,7 @@ class EWallet():
         if not self.session_contact_list:
             return self.error_no_session_contact_list_found()
         res = self.session_contact_list.fetch_contact_list_values()
-        print(res)
+        log.debug(res)
         return res
 
     def action_view_contact_record(self, **kwargs):
@@ -530,13 +548,14 @@ class EWallet():
                     contact_list=self.session_contact_list,
                     record_id=kwargs.get('record_id'),
                     )
+        log.info('Attempting to fetch contact record by id...')
         _record = self.session_contact_list.fetch_contact_list_record_by_id(
                 code=kwargs['record_id']
                 )
         if not _record:
             return self.warning_could_not_fetch_contact_record()
         res = _record.fetch_record_values()
-        print(res)
+        log.debug(res)
         return res
 
     def action_view_contact(self, **kwargs):
@@ -553,11 +572,12 @@ class EWallet():
         log.debug('')
         if not self.session_credit_wallet:
             return self.error_no_session_credit_wallet_found()
+        log.info('Attempting to fetch active invoice sheet...')
         _invoice_sheet = self.session_credit_wallet.fetch_credit_ewallet_invoice_sheet()
         if not _invoice_sheet:
             return self.warning_could_not_fetch_invoice_sheet()
         res = _invoice_sheet.fetch_invoice_sheet_values()
-        print(res)
+        log.debug(res)
         return res
 
     def action_view_invoice_record(self, **kwargs):
@@ -567,16 +587,18 @@ class EWallet():
                     credit_wallet=self.session_credit_wallet,
                     record_id=kwargs.get('record_id'),
                     )
+        log.info('Attempting to fetch active invoice sheet...')
         _invoice_sheet = self.session_credit_wallet.fetch_credit_ewallet_invoice_sheet()
         if not _invoice_sheet:
             return self.warning_could_not_fetch_invoice_sheet()
+        log.info('Attempting to fetch invoice record by id...')
         _record = _invoice_sheet.fetch_credit_invoice_records(
                 search_by='id', code=kwargs['record_id']
                 )
         if not _record:
             return self.warning_could_not_fetch_invoice_sheet_record()
         res = _record.fetch_record_values()
-        print(res)
+        log.debug(res)
         return res
 
     def action_view_invoice(self, **kwargs):
@@ -593,11 +615,12 @@ class EWallet():
         log.debug('')
         if not self.session_credit_wallet:
             return self.error_no_session_credit_wallet_found()
+        log.info('Attempting to fetch active transfer sheet...')
         _transfer_sheet = self.session_credit_wallet.fetch_credit_ewallet_transfer_sheet()
         if not _transfer_sheet:
             return self.warning_could_not_fetch_transfer_sheet()
         res = _transfer_sheet.fetch_transfer_sheet_values()
-        print(res)
+        log.debug(res)
         return res
 
     def action_view_transfer_record(self, **kwargs):
@@ -607,30 +630,34 @@ class EWallet():
                     credit_wallet=self.session_credit_wallet,
                     record_id=kwargs.get('record_id'),
                     )
+        log.info('Attempting to fetch active transfer sheet...')
         _transfer_sheet = self.session_credit_wallet.fetch_credit_ewallet_transfer_sheet()
         if not _transfer_sheet:
             return self.warning_could_not_fetch_transfer_sheet()
+        log.info('Attempting to fetch transfer record by id...')
         _record = _transfer_sheet.fetch_transfer_sheet_records(
                 search_by='id', code=kwargs['record_id']
                 )
         if not _record:
             return self.warning_could_not_fetch_transfer_sheet_record()
         res = _record.fetch_record_values()
-        print(res)
+        log.debug(res)
         return res
 
     def action_view_time_list(self, **kwargs):
         log.debug('')
         if not self.session_credit_wallet:
             return self.error_no_session_credit_wallet_found()
+        log.info('Attempting to fetch active credit clock...')
         _credit_clock = self.session_credit_wallet.fetch_credit_ewallet_credit_clock()
         if not _credit_clock:
             return self.warning_could_not_fetch_credit_clock()
+        log.info('Attempting to fetch active time sheet...')
         _time_sheet = _credit_clock.fetch_credit_clock_time_sheet()
         if not _time_sheet:
             return self.warning_could_not_fetch_time_sheet()
         res = _time_sheet.fetch_credit_clock_time_sheet_values()
-        print(res)
+        log.debug(res)
         return res
 
     def action_view_time_record(self, **kwargs):
@@ -640,33 +667,38 @@ class EWallet():
                     credit_wallet=self.session_credit_wallet,
                     record_id=kwargs.get('record_id'),
                     )
+        log.info('Attempting to fetch active credit clock...')
         _credit_clock = self.session_credit_wallet.fetch_ewallet_credit_clock()
         if not _credit_clock:
             return self.warning_could_not_fetch_credit_clock()
+        log.info('Attempting to fetch active time sheet...')
         _time_sheet = _credit_clock.fetch_credit_clock_time_sheet()
         if not _time_sheet:
             return self.warning_could_not_fetch_time_sheet()
+        log.info('Attempting to fetch time record...')
         _record = _time_sheet.fetch_time_sheet_record(
                 search_by='id', code=kwargs['record_id']
                 )
         if not _record:
             return self.warning_could_not_fetch_time_sheet_record()
         res = _record.fetch_record_values()
-        print(res)
+        log.debug(res)
         return res
 
     def action_view_conversion_list(self, **kwargs):
         log.debug('')
         if not self.session_credit_wallet:
             return self.error_no_session_credit_wallet_found()
+        log.info('Attempting to fetch active credit clock...')
         _credit_clock = self.session_credit_wallet.fetch_ewallet_credit_clock()
         if not _credit_clock:
             return self.warning_could_not_fetch_credit_clock()
+        log.info('Attempting to fetch active conversion sheet...')
         _conversion_list = _credit_clock.fetch_credit_clock_conversion_sheet()
         if not _conversion_list:
             return self.warning_could_not_fetch_conversion_sheet()
         res = _conversion_list.fetch_credit_clock_conversion_sheet_values()
-        print(res)
+        log.debug(res)
         return res
 
     def action_view_conversion_record(self, **kwargs):
@@ -676,19 +708,22 @@ class EWallet():
                     credit_wallet=self.session_credit_wallet,
                     record_id=kwargs.get('record_id'),
                     )
+        log.info('Attempting to fetch active credit clock...')
         _credit_clock = self.session_credit_wallet.fetch_ewallet_credit_clock()
         if not _credit_clock:
             return self.warning_could_not_fetch_credit_clock()
+        log.info('Attempting to fetch active conversion sheet...')
         _conversion_list = _credit_clock.fetch_credit_clock_conversion_sheet()
         if not _conversion_list:
             return self.warning_could_not_fetch_conversion_sheet()
+        log.info('Attempting to fetch conversion record by id...')
         _record = _conversion_list.fetch_conversion_sheet_record(
                 search_by='id', code=kwargs['record_id']
                 )
         if not _record:
             return self.warning_could_not_fetch_conversion_record()
         res = _record.fetch_record_values()
-        print(res)
+        log.debug(res)
         return res
 
     def action_view_transfer(self, **kwargs):
@@ -776,6 +811,7 @@ class EWallet():
                 )
         if not session_login:
             return self.warning_could_not_login()
+        log.info('User successfully loged in.')
         self.action_system_user_update(user=session_login)
         return session_login
 
@@ -808,6 +844,7 @@ class EWallet():
         log.debug('')
         if not self.session_credit_wallet:
             return self.error_no_session_credit_wallet_found()
+        log.info('Attempting to fetch active credit clock...')
         _credit_clock = self.session_credit_wallet.fetch_credit_ewallet_credit_clock()
         if not _credit_clock:
             return self.warning_could_not_fetch_credit_clock()
@@ -819,6 +856,7 @@ class EWallet():
         log.debug('')
         if not self.session_credit_wallet:
             return self.error_no_session_credit_wallet_found()
+        log.info('Attempting to fetch active credit clock...')
         _credit_clock = self.session_credit_wallet.fetch_credit_ewallet_credit_clock()
         if not _credit_clock:
             return self.warning_could_not_fetch_credit_clock()

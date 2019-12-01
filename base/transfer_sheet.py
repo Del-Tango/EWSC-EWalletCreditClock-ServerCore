@@ -62,10 +62,87 @@ class CreditTransferSheetRecord():
                 }
         return _values
 
+    def set_record_id(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('record_id'):
+            return self.error_no_record_id_found()
+        self.record_id = kwargs['record_id']
+        return True
+
+    def set_transfer_sheet_id(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('transfer_sheet_id'):
+            return self.error_no_transfer_sheet_id_found()
+        self.transfer_sheet_id = kwargs['transfer_sheet_id']
+        return True
+
+    def set_reference(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('reference'):
+            return self.error_no_reference_found()
+        self.reference = kwargs['reference']
+        return True
+
+    def set_transfer_type(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('transfer_type'):
+            return self.error_no_transfer_type_found()
+        self.transfer_type = kwargs['transfer_type']
+        return True
+
+    def set_transfer_from(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('transfer_from'):
+            return self.error_no_transfer_from_found()
+        self.transfer_from = kwargs['transfer_from']
+        return True
+
+    def set_transfer_to(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('transfer_to'):
+            return self.error_no_transfer_to_found()
+        self.transfer_to = kwargs['transfer_to']
+        return True
+
+    def set_credits(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('credits'):
+            return self.error_no_credits_found()
+        self.credits = kwargs['credits']
+        return True
+
     def update_write_date(self):
         log.debug('')
         self.write_date = datetime.datetime.now()
         return self.write_date
+
+    def error_no_record_id_found(self):
+        log.error('No record id found.')
+        return False
+
+    def error_no_transfer_sheet_id_found(self):
+        log.error('No transfer sheet id found.')
+        return False
+
+    def error_no_reference_found(self):
+        log.error('No reference found.')
+        return False
+
+    def error_no_transfer_type_found(self):
+        log.error('No transfer type found.')
+        return False
+
+    def error_no_transfer_from_found(self):
+        log.error('No transfer source found.')
+        return False
+
+    def error_no_transfer_to_found(self):
+        log.error('No transfer destination found.')
+        return False
+
+    def error_no_credits_found(self):
+        log.error('No credits found.')
+        return False
 
 
 class CreditTransferSheet():
@@ -130,6 +207,7 @@ class CreditTransferSheet():
             return self.warning_could_not_fetch_transfer_record(
                     'id', kwargs['code']
                     )
+        log.info('Successfully fetched transfer record by id.')
         return _record
 
     def fetch_transfer_sheet_record_by_ref(self, **kwargs):
@@ -144,7 +222,8 @@ class CreditTransferSheet():
             return self.warning_could_not_fetch_transfer_record(
                     'reference', kwargs['code']
                     )
-        return False
+        log.info('Successfully fetched transfer records by reference.')
+        return _records
 
     def fetch_transfer_sheet_record_by_date(self, **kwargs):
         log.debug('')
@@ -158,6 +237,7 @@ class CreditTransferSheet():
             return self.warning_could_not_fetch_transfer_record(
                     'date', kwargs['code']
                     )
+        log.info('Successfully fetched transfer records by date.')
         return _records
 
     def fetch_transfer_sheet_record_by_src(self, **kwargs):
@@ -172,6 +252,7 @@ class CreditTransferSheet():
             return self.warning_could_not_fetch_transfer_record(
                     'src', kwargs['code']
                     )
+        log.info('Successfully fetched transfer records by transfer source.')
         return _records
 
     def fetch_transfer_sheet_record_by_dst(self, **kwargs):
@@ -186,6 +267,7 @@ class CreditTransferSheet():
             return self.warning_could_not_fetch_transfer_record(
                     'dst', kwargs['code']
                     )
+        log.info('Successfully fethced transfer records by transfer destination.')
         return _records
 
     # TODO - Refactor
@@ -208,6 +290,34 @@ class CreditTransferSheet():
                 }
         return _handlers[kwargs['search_by']](**kwargs)
 
+    def set_transfer_sheet_id(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('transfer_sheet_id'):
+            return self.error_no_transfer_sheet_id_found()
+        self.transfer_sheet_id = kwargs['transfer_sheet_id']
+        return True
+
+    def set_wallet_id(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('wallet_id'):
+            return self.error_no_wallet_id_found()
+        self.wallet_id = kwargs['wallet_id']
+        return True
+
+    def set_reference(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('reference'):
+            return self.error_no_reference_found()
+        self.reference = kwargs['reference']
+        return True
+
+    def set_records(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('records'):
+            return self.error_no_records_found()
+        self.records = kwargs['records']
+        return True
+
     def update_write_date(self):
         log.debug('')
         self.write_date = datetime.datetime.now()
@@ -218,6 +328,7 @@ class CreditTransferSheet():
         self.records.update({
             record.fetch_record_id(): record
             })
+        log.info('Successfully updated transfer sheet records.')
         return self.records
 
     def add_transfer_sheet_record(self, **kwargs):
@@ -230,20 +341,30 @@ class CreditTransferSheet():
         _values = self.fetch_transfer_record_creation_values(**kwargs)
         _record = CreditTransferSheetRecord(**_values)
         _update = self.update_records(_record)
+        log.info('Successfully added new transfer record.')
         return _record
 
     def remove_transfer_sheet_record(self, **kwargs):
         log.debug('')
         if not kwargs.get('record_id'):
             return self.error_no_transfer_record_id_found()
-        return self.records.pop(kwargs['record_id'])
+        _unlink = self.records.pop(kwargs['record_id'])
+        if _unlink:
+            log.info('Successfully removed transfer sheet record.')
+        return _unlink
+
+    def update_records(self, record):
+        log.debug('')
+        self.records.update({record.fetch_record_id(): record})
+        return self.records
 
     def append_transfer_sheet_record(self, **kwargs):
         log.debug('')
         if not kwargs.get('records'):
             return self.error_no_transfer_records_found()
         for item in kwargs['records']:
-            self.records.update({item.fetch_record_id(): item})
+            self.update_records(item)
+        log.info('Successfully appended transfer records.')
         return self.records
 
     def interogate_transfer_sheet_records(self, **kwargs):
@@ -255,9 +376,9 @@ class CreditTransferSheet():
     def clear_transfer_sheet_records(self, **kwargs):
         log.debug('')
         self.records = {}
+        log.info('Successfully cleared transfer sheet records.')
         return self.records
 
-    # TODO - Refactor
     def credit_transfer_sheet_controller(self, **kwargs):
         log.debug('')
         if not kwargs.get('action'):
@@ -303,11 +424,27 @@ class CreditTransferSheet():
                 return _reasons_and_handlers['handlers'][item]()
         return False
 
+    def error_no_transfer_sheet_id_found(self):
+        log.error('No transfer sheet id found.')
+        return False
+
+    def error_no_wallet_id_found(self):
+        log.error('No wallet id found.')
+        return False
+
+    def error_no_reference_found(self):
+        log.error('No reference found.')
+        return False
+
+    def error_no_records_found(self):
+        log.error('No records found.')
+        return False
+
     def error_no_transfer_type_found(self):
         log.error('No transfer type found.')
         return False
 
-    def error_no_tranfer_records_found(self):
+    def error_no_transfer_records_found(self):
         log.error('No transfer records found.')
         return False
 

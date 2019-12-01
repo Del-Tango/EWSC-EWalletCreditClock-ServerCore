@@ -14,8 +14,6 @@ log_config = Config().log_config
 log = logging.getLogger(log_config['log_name'])
 
 
-# TODO - Create conversion sheet from controller
-# TODO - Create time sheet from controller
 class CreditClock():
 
     def __init__(self, **kwargs):
@@ -101,6 +99,7 @@ class CreditClock():
         _time_sheet = self.time_sheet_archive.get(code)
         if not _time_sheet:
             return self.warning_could_not_fetch_time_sheet('id', code)
+        log.info('Successfully fetched time sheet by id.')
         return _time_sheet
 
     def fetch_credit_clock_time_sheet_by_ref(self, code):
@@ -108,6 +107,7 @@ class CreditClock():
         for item in self.time_sheet_archive:
             if self.time_sheet_archive[item].reference == code:
                 return self.time_sheet_archive[item]
+        log.info('Successfullt fethced time sheet by reference.')
         return self.warning_could_not_fetch_time_sheet('reference', code)
 
     def fetch_credit_clock_time_sheets(self, *args, **kwargs):
@@ -119,6 +119,7 @@ class CreditClock():
         _conversion_sheet = self.conversion_sheet_archive.get(code)
         if not _conversion_sheet:
             return self.warning_could_not_fetch_conversion_sheet('id', code)
+        log.info('Successfully fetched conversion sheet by id.')
         return _conversion_sheet
 
     def fetch_credit_clock_conversion_sheet_by_ref(self, code):
@@ -126,6 +127,7 @@ class CreditClock():
         for item in self.conversion_sheet_archive:
             if self.conversion_sheet_archive[item].reference == code:
                 return self.conversion_sheet_archive[item]
+        log.info('Successfully fethced conversion sheet by reference.')
         return self.warning_could_not_fetch_conversion_sheet('reference', code)
 
     def fetch_credit_clock_conversion_sheets(self, *args, **kwargs):
@@ -208,6 +210,7 @@ class CreditClock():
         if not kwargs.get('start_time'):
             return self.error_no_start_time_found()
         self.start_time = kwargs['start_time']
+        log.info('Credit Clock timer started.')
         return True
 
     def set_stop_time(self, **kwargs):
@@ -215,6 +218,7 @@ class CreditClock():
         if not kwargs.get('stop_time'):
             return self.error_no_stop_time_found()
         self.stop_time = kwargs['stop_time']
+        log.info('Credit Clock timer stoped.')
         return True
 
     def update_write_date(self):
@@ -230,6 +234,7 @@ class CreditClock():
         self.time_sheet_archive.update({
             kwargs['time_sheet'].fetch_time_sheet_id(), kwargs['time_sheet']
             })
+        log.info('Successfully updated credit clock time sheet archive.')
         return self.time_sheet_archive
 
     def update_conversion_sheet_archive(self, **kwargs):
@@ -240,6 +245,7 @@ class CreditClock():
             kwargs['conversion_sheet'].fetch_conversion_sheet_id(),
             kwargs['conversion_sheet'],
             })
+        log.info('Successfully updated credit clock conversion sheet archive.')
         return self.conversion_sheet_archive
 
     def handle_switch_credit_clock_time_sheet_by_id(self, code):
@@ -250,6 +256,7 @@ class CreditClock():
         if not _new_time_sheet:
             return self.warning_could_not_fetch_time_sheet('id', code)
         self.set_time_sheet(time_sheet=_new_time_sheet)
+        log.info('Successfully switched credit clock time sheet by id.')
         return _new_time_sheet
 
     def handle_switch_credit_clock_time_sheet_by_ref(self, code):
@@ -260,6 +267,7 @@ class CreditClock():
         if not _new_time_sheet:
             return self.warning_could_not_fetch_time_sheet('reference', code)
         self.set_time_sheet(time_sheet=_new_time_sheet)
+        log.info('Successfully switched credit clock time sheet by reference.')
         return _new_time_sheet
 
     def handle_switch_credit_clock_conversion_sheet_by_id(self, code):
@@ -270,6 +278,7 @@ class CreditClock():
         if not _new_conversion_sheet:
             return self.warning_could_not_fetch_conversion_sheet('id', code)
         self.set_conversion_sheet(conversion_sheet=_new_conversion_sheet)
+        log.info('Successfully switch credit clock conversion sheet by id.')
         return _new_conversion_sheet
 
     def handle_switch_credit_clock_conversion_sheet_by_ref(self, code):
@@ -280,6 +289,7 @@ class CreditClock():
         if not _new_conversion_sheet:
             return self.warning_could_not_fetch_conversion_sheet('reference', code)
         self.set_conversion_sheet(conversion_sheet=_new_conversion_sheet)
+        log.info('Successfully switched credit clock conversion sheet by reference.')
         return _new_conversion_sheet
 
     def switch_credit_clock_conversion_sheet(self, **kwargs):
@@ -327,6 +337,7 @@ class CreditClock():
         self.update_time_sheet_archive(
                 time_sheet=_time_sheet
                 )
+        log.info('Successfully created new credit clock time sheet.')
         return _time_sheet
 
     def create_credit_clock_time_record(self, **kwargs):
@@ -338,6 +349,8 @@ class CreditClock():
                 time_spent=kwargs.get('time_spent'),
                 credit_clock=self.credit_clock
                 )
+        if _record:
+            log.info('Successfully created new credit clock time record.')
         return _record or False
 
     def create_credit_clock_conversion_sheet(self, **kwargs):
@@ -347,6 +360,7 @@ class CreditClock():
         self.update_conversion_sheet_archive(
                 conversion_sheet=_conversion_sheet
                 )
+        log.info('Successfully created new credit clock conversion sheet.')
         return _conversion_sheet
 
     def create_credit_clock_conversion_record(self, **kwargs):
@@ -358,11 +372,15 @@ class CreditClock():
                 conversion_type=kwargs.get('conversion_type'),
                 minutes=kwargs.get('minutes'), credits=kwargs.get('credits')
                 )
+        if _records:
+            log.info('Successfully created new credit clock conversion record.')
+        return _record or False
 
     def reset_timer(self):
         log.debug('')
         self.start_time = False
         self.end_time = False
+        log.info('Credit Clock timer reset.')
 
     def convert_time_to_minutes(self, start_time, end_time):
         log.debug('')
@@ -418,6 +436,7 @@ class CreditClock():
     def start_timer(self, **kwargs):
         log.debug('')
         self.start_time = time.time()
+        log.info('Credit Clock timer started.')
         return self.start_time
 
     def stop_timer(self, **kwargs):
@@ -426,16 +445,19 @@ class CreditClock():
         self.compute_time()
         self.add_credit_clock_time_record(self.time_sheet)
         self.time_sheet.update_write_date()
+        log.info('Credit Clock timer stoped.')
         return self.end_time
 
     def extract_credit_clock_minutes(self, **kwargs):
         log.debug('')
         self.credit_clock = round((self.credit_clock - kwargs.get('clock_credits')), 2)
+        log.info('Successfully extracted credit clock minutes.')
         return self.credit_clock
 
     def supply_credit_clock_minutes(self, **kwargs):
         log.debug('')
         self.credit_clock = round((self.credit_clock + kwargs.get('clock_credits')), 2)
+        log.info('Successfully supplied credit clock minutes.')
         return self.credit_clock
 
     # TODO - Refactor
@@ -448,10 +470,12 @@ class CreditClock():
             self.extract_credit_clock_minutes(
                     clock_credits=(self.credit_clock - kwargs['minutes'] + _remainder)
                     )
+            log.info('Not enough minutes to convert to credits. Converted remainder.')
             return _remainder
         _extract = self.extract_credit_clock_minutes(
                 clock_credits=kwargs['minutes']
                 )
+        log.info('Successfully converted minutes to credits.')
         return _extract
 
     def convert_credits_to_minutes(self, **kwargs):
@@ -461,6 +485,7 @@ class CreditClock():
         _supply = self.supply_credit_clock_minutes(
                 clock_credits=kwargs['credits']
                 )
+        log.info('Successfully converted credits to minutes.')
         return _supply
 
     def credit_converter(self, **kwargs):
@@ -518,6 +543,7 @@ class CreditClock():
             return self.warning_could_not_fetch_time_sheet(
                     'id', kwargs['sheet_id']
                     )
+        log.info('Successfully removed credit clock time sheet.')
         return self.time_sheet_archive.pop(kwargs['sheet_id'])
 
     def unlink_credit_clock_conversion_sheet(self, **kwargs):
@@ -531,23 +557,30 @@ class CreditClock():
             return self.warning_could_not_fetch_conversion_sheet(
                     'id', kwargs['sheet_id']
                     )
+        log.info('Successfully removed credit clock conversion sheet.')
         return self.conversion_sheet_archive.pop(kwargs['sheet_id'])
 
     def unlink_credit_clock_time_sheet_record(self, **kwargs):
         log.debug('')
         if not kwargs.get('record_id'):
             return self.error_no_time_sheet_record_id_found()
-        return self.time_sheet.credit_clock_time_sheet_controller(
+        _unlink = self.time_sheet.credit_clock_time_sheet_controller(
                 action='remove', record_id=kwargs['record_id']
                 )
+        if _unlink:
+            log.info('Successfully removed credit clock time record.')
+        return _unlink
 
     def unlink_credit_clock_conversion_sheet_record(self, **kwargs):
         log.debug('')
         if not kwargs.get('record_id'):
             return self.error_no_conversion_sheet_record_id_found()
-        return self.conversion_sheet.credit_clock_conversion_sheet_controller(
+        _unlink = self.conversion_sheet.credit_clock_conversion_sheet_controller(
                 action='remove', record_id=kwargs['record_id']
                 )
+        if _unlink:
+            log.info('Successfully removed credit clock conversion record.')
+        return False
 
     def unlink_credit_clock_sheet(self, **kwargs):
         log.debug('')

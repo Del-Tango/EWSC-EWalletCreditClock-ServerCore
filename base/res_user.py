@@ -127,11 +127,17 @@ class ResUser():
 
     def fetch_credit_wallet_by_id(self, credit_wallet_id):
         log.debug('')
-        return self.user_credit_wallet_archive.get(credit_wallet_id)
+        _record = self.user_credit_wallet_archive.get(credit_wallet_id)
+        if _record:
+            log.info('Successfully fetched credit wallet by id.')
+        return _record
 
     def fetch_contact_list_by_id(self, contact_list_id):
         log.debug('')
-        return self.user_contact_list_archive.get(contact_list_id)
+        _contact_list = self.user_contact_list_archive.get(contact_list_id)
+        if _contact_list:
+            log.info('Successfully fetched contact list by id.')
+        return _contact_list
 
     def set_user_pass(self, **kwargs):
         log.debug('')
@@ -142,11 +148,14 @@ class ResUser():
                     pass_check_func=kwargs.get('pass_check_func'),
                     pass_hash_func=kwargs.get('pass_hash_func'),
                     )
+        log.info('Performing user password checks...')
         _check = kwargs['pass_check_func'](kwargs['password'])
         if not _check:
             return _create_user.error_invalid_user_pass()
+        log.info('Password coresponds with security standards. Hashing...')
         _pass_hash = kwargs['pass_hash_func'](kwargs['password'])
         self.user_pass = _pass_hash
+        log.info('Successfully set user password.')
         return True
 
     def set_user_alias(self, **kwargs):
@@ -154,6 +163,7 @@ class ResUser():
         if not kwargs.get('alias'):
             return self.error_no_user_alias_found()
         self.user_alias = kwargs['alias']
+        log.info('Successfully set user alias.')
         return True
 
     def set_user_phone(self, **kwargs):
@@ -161,6 +171,7 @@ class ResUser():
         if not kwargs.get('phone'):
             return self.no_user_phone_found()
         self.user_phone = kwargs['phone']
+        log.info('Successfully set user phone.')
         return True
 
     def set_user_email(self, **kwargs):
@@ -170,10 +181,15 @@ class ResUser():
                     email=kwargs.get('email'),
                     email_check_func=kwargs.get('email_check_func'),
                     )
+        log.info('Performing user email validation checks...')
         _check = kwargs['email_check_func'](kwargs['email'], severity=1)
         if not _check:
-            return _create_user.error_invalid_user_email(user_email=kwargs['email'])
+            return _create_user.error_invalid_user_email(
+                    user_email=kwargs['email']
+                    )
+        log.info('User email validated.')
         self.user_email = kwargs['email']
+        log.info('Successfully set user email.')
         return True
 
     def set_user_credit_wallet(self, **kwargs):
@@ -181,6 +197,7 @@ class ResUser():
         if not kwargs.get('credit_wallet'):
             return self.error_no_credit_wallet_found()
         self.user_credit_wallet = kwargs['credit_wallet']
+        log.info('Successfully set user credit wallet.')
         return True
 
     def set_user_contact_list(self, **kwargs):
@@ -188,6 +205,7 @@ class ResUser():
         if not kwargs.get('contact_list'):
             return self.error_no_contact_list_found()
         self.user_contact_list = kwargs['contact_list']
+        log.info('Successfully set user contact list.')
         return True
 
     def set_user_name(self, **kwargs):
@@ -195,6 +213,7 @@ class ResUser():
         if not kwargs.get('name'):
             return self.error_no_user_name_found()
         self.user_name = kwargs['name']
+        log.info('Successfully set user name.')
         return True
 
     def set_user_credit_wallet(self, **kwargs):
@@ -202,13 +221,7 @@ class ResUser():
         if not kwargs.get('wallet'):
             return self.error_no_credit_wallet_found()
         self.user_credit_wallet = kwargs['wallet']
-        return True
-
-    def set_user_contact_list(self, **kwargs):
-        log.debug('')
-        if not kwargs.get('contact_list'):
-            return self.error_no_contact_list_found()
-        self.user_contact_list = kwargs['contact_list']
+        log.info('Successfully set user credit wallet.')
         return True
 
     def set_user_pass_hash_archive(self, **kwargs):
@@ -216,6 +229,7 @@ class ResUser():
         if not kwargs.get('archive'):
             return self.error_no_user_pass_hash_archive_found()
         self.user_pass_hash_archive = kwargs['archive'] or {}
+        log.info('Successfully set user password hash archive.')
         return True
 
     def set_user_credit_wallet_archive(self, **kwargs):
@@ -223,6 +237,7 @@ class ResUser():
         if not kwargs.get('archive'):
             return self.error_no_user_credit_wallet_archive_found()
         self.user_credit_wallet_archive = kwargs['archive'] or {}
+        log.info('Successfully set user credit wallet archive.')
         return True
 
     def set_user_contact_list_archive(self, **kwargs):
@@ -230,6 +245,7 @@ class ResUser():
         if not kwargs.get('archive'):
             return self.error_no_user_contact_list_archive_found()
         self.user_contact_list_archive = kwargs['archive'] or {}
+        log.info('Successfully set user contact list archive.')
         return True
 
     def update_user_credit_wallet_archive(self, credit_wallet):
@@ -238,6 +254,7 @@ class ResUser():
             credit_wallet.fetch_credit_wallet_id():
             credit_wallet
             })
+        log.info('Successfully updated user credit wallet archive.')
         return self.user_credit_wallet_archive
 
     def update_user_contact_list_archive(self, contact_list):
@@ -246,8 +263,10 @@ class ResUser():
             contact_list.fetch_contact_list_id():
             contact_list
             })
-        return self.update_user_contact_list_archive
+        log.info('Successfully updated user contact list archive.')
+        return self.user_contact_list_archive
 
+    # TODO - Refactor - User main system controller
     def action_create_credit_wallet(self, **kwargs):
         log.debug('')
         _new_credit_wallet = credit_wallet.CreditEWallet(
@@ -256,6 +275,7 @@ class ResUser():
                 credits=kwargs.get('credits') or int(),
                 )
         self.update_user_credit_wallet_archive(_new_credit_wallet)
+        log.info('Successfully created new user credit wallet.')
         return _new_credit_wallet
 
     def action_create_credit_clock(self, **kwargs):
@@ -265,6 +285,7 @@ class ResUser():
                 reference=kwargs.get('reference'),
                 credit_clock=kwargs.get('credit_clock'),
                 )
+        log.info('Successfully created new user credit clock.')
         return _new_credit_clock
 
     def action_create_contact_list(self, **kwargs):
@@ -274,46 +295,60 @@ class ResUser():
                 reference=kwargs.get('reference') or str(),
                 )
         self.update_user_contact_list_archive(_new_contact_list)
+        log.info('Successfully created new user contact list.')
         return _new_contact_list
 
     def action_switch_credit_wallet(self, **kwargs):
         log.debug('')
         if not kwargs.get('wallet_id'):
             return self.error_no_wallet_id_found()
+        log.info('Attempting to fetch user credit wallet...')
         _wallet = self.fetch_user_credit_wallet_by_id(kwargs['wallet_id'])
         if not _wallet:
             return self.warning_could_not_fetch_credit_wallet()
-        return self.set_user_credit_wallet(_wallet)
+        _switch = self.set_user_credit_wallet(_wallet)
+        if _switch:
+            log.info('Successfully switched credit wallet by id.')
+        return _switch
 
     def action_switch_credit_clock(self, **kwargs):
         log.debug('')
         if not kwargs.get('clock_id'):
             return self.error_no_clock_id_found()
-        _clock = self.user_credit_wallet.main_controller(
+        _clock_switch = self.user_credit_wallet.main_controller(
                 controller='user', action='switch_clock',
                 clock_id=kwargs['clock_id']
                 )
-        if not _clock:
+        if not _clock_switch:
             return self.warning_could_not_fetch_credit_clock()
-        return _clock
+        log.info('Successfully switched user credit clock.')
+        return _clock_switch
 
     def action_switch_contact_list(self, **kwargs):
         log.debug('')
         if not kwargs.get('list_id'):
             return self.error_no_contact_list_id_found()
+        log.info('Attempting to fetch user contact list...')
         _list = self.fetch_user_contact_list_by_id(kwargs['list_id'])
         if not _list:
             return self.warning_could_not_fetch_contact_list()
-        return self.set_user_contact_list(_list)
+        _switch = self.set_user_contact_list(_list)
+        if _switch:
+            log.info('Successfully switched user contact list.')
+        return _switch
 
     def action_unlink_credit_wallet(self, **kwargs):
         log.debug('')
         if not kwargs.get('wallet_id'):
             return self.error_no_wallet_id_found()
+        log.info('Attempting to fetch user credit wallet...')
         _wallet = self.fetch_credit_wallet_by_id(kwargs['wallet_id'])
         if not _wallet:
             return self.warning_could_not_fetch_credit_wallet()
-        return self.user_credit_wallet_archive.pop(kwargs['wallet_id'])
+        _unlink = self.user_credit_wallet_archive.pop(kwargs['wallet_id'])
+        if _unlink:
+            log.info('Successfully removed user credit wallet by id.')
+        return _unlink
 
     def action_unlink_credit_clock(self, **kwargs):
         log.debug('')
@@ -328,10 +363,14 @@ class ResUser():
         log.debug('')
         if not kwargs.get('list_id'):
             return self.error_no_contact_list_id_found()
+        log.info('Attempting to fetch user contact list...')
         _contact_list = self.fetch_contact_list_by_id(kwargs['list_id'])
         if not _contact_list:
             return self.warning_could_not_fetch_contact_list()
-        return self.user_contact_list_archive.pop(kwargs['list_id'])
+        _unlink = self.user_contact_list_archive.pop(kwargs['list_id'])
+        if _unlink:
+            log.info('Successfully removed user contact list by id.')
+        return _unlink
 
     def handle_user_action_create(self, **kwargs):
         log.debug('')

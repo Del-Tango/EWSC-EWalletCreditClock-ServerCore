@@ -200,6 +200,7 @@ class CreditClockConversionSheet():
                 'credits': kwargs.get('credits'),
                 }
         return _values
+
     def fetch_conversion_sheet_record_by_id(self, **kwargs):
         log.debug('')
         if not kwargs.get('code'):
@@ -209,6 +210,7 @@ class CreditClockConversionSheet():
             return self.warning_could_not_fetch_conversion_record(
                     'id', kwargs['code']
                     )
+        log.info('Successfully fetched conversion record by id.')
         return _record
 
     def fetch_conversion_sheet_record_by_ref(self, **kwargs):
@@ -217,6 +219,7 @@ class CreditClockConversionSheet():
             return self.error_no_conversion_record_reference_found()
         for item in self.records:
             if self.records[item].fetch_record_reference() == kwargs['code']:
+                log.info('Successfully fetched conversion records by reference.')
                 return self.records[item]
         return self.warning_could_not_fetch_conversion_record(
                 'reference', kwargs['code']
@@ -234,6 +237,7 @@ class CreditClockConversionSheet():
             return self.warning_could_not_fetch_conversion_record(
                     'date', kwargs['code']
                     )
+        log.info('Successfully fetched conversion records by date.')
         return _records
 
     def fetch_conversion_sheet_records_by_credits(self, **kwargs):
@@ -248,6 +252,7 @@ class CreditClockConversionSheet():
             return self.warning_could_not_fetch_conversion_records(
                     'credits'. kwargs['code']
                     )
+        log.info('Successfully fetched conversion records by credits.')
         return _records
 
     def fetch_conversion_sheet_records_by_minutes(self, **kwargs):
@@ -262,6 +267,7 @@ class CreditClockConversionSheet():
             return self.warning_could_not_fetch_conversion_records(
                     'minutes', kwargs['code']
                     )
+        log.info('Successfully fetched conversion records by minutes.')
         return _records
 
     def fetch_conversion_sheet_records_by_type(self, **kwargs):
@@ -276,6 +282,7 @@ class CreditClockConversionSheet():
             return self.warning_could_not_fetch_conversion_records(
                     'type', kwargs['code']
                     )
+        log.info('Successfully fetched conversion records by type.')
         return _records
 
     def fetch_conversion_sheet_records(self, **kwargs):
@@ -337,6 +344,7 @@ class CreditClockConversionSheet():
         self.records.update({
             kwargs['record'].fetch_record_id(), kwargs['record']
             })
+        log.info('Successfully updated conversion sheet records.')
         return self.records
 
     def add_conversion_sheet_record(self, **kwargs):
@@ -344,6 +352,7 @@ class CreditClockConversionSheet():
         _values = self.fetch_conversion_record_creation_values(**kwargs)
         _record = CreditClockConversionSheetRecord(**_values)
         self.update_conversion_sheet_records(record=_record)
+        log.info('Successfully added conversion record to sheet.')
         return _record
 
     # TODO - Refactor
@@ -379,6 +388,7 @@ class CreditClockConversionSheet():
             return self.warning_could_not_fetch_conversion_record(
                     'id', kwargs['record_id']
                     )
+        log.info('Successfully removed conversion record.')
         return self.records.pop(kwargs['record_id'])
 
     def interogate_conversion_sheet_records_by_id(self, **kwargs):

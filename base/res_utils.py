@@ -9,6 +9,7 @@ log_config = Config().log_config
 log = logging.getLogger(log_config['log_name'])
 
 
+# TODO
 class ResUtils():
 
     def fetch_now_eet(*args, **kwargs):
