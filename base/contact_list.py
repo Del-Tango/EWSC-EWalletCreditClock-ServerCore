@@ -82,7 +82,7 @@ class ContactListRecord():
         log.debug('')
         if not kwargs.get('user_name'):
             return self.error_no_user_name_found()
-        self.user_name = kwargs['user_name')
+        self.user_name = kwargs['user_name']
         return True
 
     def set_user_email(self, **kwargs):
