@@ -4,47 +4,62 @@ import datetime
 import logging
 import pysnooper
 from itertools import count
+from sqlalchemy import Table, Column, String, Integer, Float, ForeignKey, Date, DateTime
+from sqlalchemy.orm import relationship
 
 from .time_sheet import CreditClockTimeSheet
 from .conversion_sheet import CreditClockConversionSheet
-from .res_utils import ResUtils
+from .res_utils import ResUtils, Base
 from .config import Config
 
 log_config = Config().log_config
 log = logging.getLogger(log_config['log_name'])
 
 
-class CreditClock():
+class CreditClock(Base):
+    __tablename__ = 'credit_clock'
+
+    clock_id = Column(Integer, primary_key=True)
+    reference = Column(String)
+    create_date = Column(DateTime)
+    write_date = Column(DateTime)
+    credit_clock = Column(Float)
+    time_spent = Column(Float)
+    start_time = Column(Float)
+    end_time = Column(Float)
+    wallet_id = Column(Integer, ForeignKey('credit_ewallet.wallet_id'))
+    time_sheet_id = Column(
+       Integer, ForeignKey('credit_clock_time_sheet.time_sheet_id')
+       )
+    conversion_sheet_id = Column(
+       Integer, ForeignKey('credit_clock_conversion_sheet.conversion_sheet_id')
+       )
+    time_sheet_archive = relationship(
+       'CreditClockTimeSheet', #back_populates='clock',
+       foreign_keys=time_sheet_id
+       )
+    conversion_sheet_archive = relationship(
+       'CreditClockConversionSheet', #back_populates='clock',
+       foreign_keys=conversion_sheet_id
+       )
+    wallet = relationship(
+       'CreditEWallet', #back_populates='credit_clock_archive',
+       foreign_keys=wallet_id
+       )
+    time_sheet = relationship(
+       'CreditClockTimeSheet', #back_populates='clock',
+       foreign_keys=time_sheet_id
+       )
+    conversion_sheet = relationship(
+       'CreditClockConversionSheet', #back_populates='clock',
+       foreign_keys=conversion_sheet_id
+       )
 
     def __init__(self, **kwargs):
-        self.seq = count()
-        self.clock_id = kwargs.get('clock_id') or next(self.seq)
-        self.wallet_id = kwargs.get('wallet_id')
-        self.reference = kwargs.get('reference')
         self.create_date = datetime.datetime.now()
         self.write_date = datetime.datetime.now()
-        self.credit_clock = kwargs.get('credit_clock') or 0
-        self.time_sheet = kwargs.get('time_sheet') or CreditClockTimeSheet(
-                reference='Default Time Sheet', clock_id=self.clock_id
-                )
-        self.time_sheet_archive = kwargs.get('time_sheet_archive') or {
-                self.time_sheet.fetch_time_sheet_id(): self.time_sheet
-                }
-        self.conversion_sheet = kwargs.get('conversion_sheet') \
-                or CreditClockConversionSheet(
-                reference='First Clock Conversion Sheet',
-                clock_id=self.clock_id
-                )
-        self.conversion_sheet_archive = kwargs.get('conversion_sheet_archive') \
-                or {
-                self.conversion_sheet.fetch_conversion_sheet_id():
-                self.conversion_sheet
-                }
-        self.time_spent = kwargs.get('time_spent') or None
-        self.start_time = None
-        self.end_time = None
 
-    def fetch_credit_clock_id(self):
+    def fetch_credit_id(self):
         log.debug('')
         return self.clock_id
 

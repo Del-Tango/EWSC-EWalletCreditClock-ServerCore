@@ -4,55 +4,71 @@ import random
 import logging
 import pysnooper
 from itertools import count
+from sqlalchemy import Table, Column, String, Integer, Float, ForeignKey, Date, DateTime
+from sqlalchemy.orm import relationship
 
 from .credit_clock import CreditClock
 from .transfer_sheet import CreditTransferSheet
 from .invoice_sheet import CreditInvoiceSheet
-from .res_utils import ResUtils
+from .res_utils import ResUtils, Base
 from .config import Config
 
 log_config = Config().log_config
 log = logging.getLogger(log_config['log_name'])
 
 
-class CreditEWallet():
+class CreditEWallet(Base):
+    __tablename__ = 'credit_ewallet'
+
+    wallet_id = Column(Integer, primary_key=True)
+    client_id = Column(Integer, ForeignKey('res_user.user_id'))
+    reference = Column(String)
+    create_date = Column(DateTime)
+    write_date = Column(DateTime)
+    credits = Column(Integer)
+    credit_clock_id = Column(
+       Integer, ForeignKey('credit_clock.clock_id')
+       )
+    transfer_sheet_id = Column(
+       Integer, ForeignKey('credit_transfer_sheet.transfer_sheet_id')
+       )
+    invoice_sheet_id = Column(
+       Integer, ForeignKey('credit_invoice_sheet.invoice_sheet_id')
+       )
+
+    client = relationship(
+       'ResUser', #back_populates='user_credit_wallet_archive',
+       foreign_keys=client_id
+       )
+    credit_clock = relationship(
+       'CreditClock', #back_populates='wallet',
+       foreign_keys=credit_clock_id
+       )
+    transfer_sheet = relationship(
+       'CreditTransferSheet', #back_populates='wallet',
+       foreign_keys=transfer_sheet_id
+       )
+    invoice_sheet = relationship(
+       'CreditInvoiceSheet', #back_populates='wallet',
+       foreign_keys=invoice_sheet_id
+       )
+
+    credit_clock_archive = relationship(
+       'CreditClock', foreign_keys=credit_clock_id,
+       )
+    transfer_sheet_archive = relationship(
+       'CreditTransferSheet', foreign_keys=transfer_sheet_id,
+       )
+    invoice_sheet_archive = relationship(
+       'CreditInvoiceSheet', foreign_keys=invoice_sheet_id,
+       )
 
 #   @pysnooper.snoop()
     def __init__(self, **kwargs):
-        self.seq = count()
-        self.wallet_id = kwargs.get('wallet_id') or next(self.seq)
-        self.client_id = kwargs.get('client_id')
-        self.reference = kwargs.get('reference')
         self.create_date = datetime.datetime.now()
         self.write_date = datetime.datetime.now()
-        self.credits = kwargs.get('credits') or 0
-        self.credit_clock = kwargs.get('credit_clock') or CreditClock(
-                wallet_id=self.wallet_id,
-                reference='Default Credit Clock',
-                credit_clock=0.0
-                )
-        self.credit_clock_archive = kwargs.get('credit_clock_archive') or {
-                self.credit_clock.fetch_credit_clock_id():
-                self.credit_clock
-                }
-        self.transfer_sheet = kwargs.get('transfer_sheet') \
-                or CreditTransferSheet(
-                wallet_id=self.wallet_id,
-                reference='Default Credit Transfer Sheet'
-                )
-        self.transfer_sheet_archive = kwargs.get('transfer_sheet_archive') or {
-                self.transfer_sheet.fetch_transfer_sheet_id():
-                self.transfer_sheet
-                }
-        self.invoice_sheet = kwargs.get('invoice_sheet') or CreditInvoiceSheet(
-                wallet_id=self.wallet_id,
-                reference='Default Credit Invoice Sheet',
-                )
-        self.invoice_sheet_archive = kwargs.get('invoice_sheet_archive') or {
-                self.invoice_sheet.fetch_invoice_sheet_id(): self.invoice_sheet
-                }
 
-    def fetch_credit_ewallet_id(self):
+    def fetch_credit_eid(self):
         log.debug('')
         return self.wallet_id
 
@@ -196,11 +212,11 @@ class CreditEWallet():
                 }
         return _handlers[kwargs['identifier']](code=kwargs.get(code))
 
-    def set_wallet_id(self, **kwargs):
+    def set_id(self, **kwargs):
         log.debug('')
-        if not kwargs.get('wallet_id'):
-            return self.error_no_wallet_id_found()
-        self.wallet_id = kwargs['wallet_id']
+        if not kwargs.get('id'):
+            return self.error_no_id_found()
+        self.wallet_id = kwargs['id']
         return True
 
     def set_client_id(self, **kwargs):
@@ -618,7 +634,7 @@ class CreditEWallet():
     def create_transfer_sheet(self, **kwargs):
         log.debug('')
         _transfer_sheet = CreditTransferSheet(
-                wallet_id=self.wallet_id,
+                id=self.wallet_id,
                 reference=kwargs.get('reference'),
                 )
         self.transfer_sheet_archive.update({
@@ -630,7 +646,7 @@ class CreditEWallet():
     def create_invoice_sheet(self, **kwargs):
         log.debug('')
         _invoice_sheet = CreditInvoiceSheet(
-                wallet_id=self.wallet_id,
+                id=self.wallet_id,
                 reference=kwargs.get('reference'),
                 )
         self.invoice_sheet_archive.update({
@@ -882,7 +898,7 @@ class CreditEWallet():
                 return _reasons_and_handlers['handlers'][item]()
         return False
 
-    def error_no_wallet_id_found(self):
+    def error_no_id_found(self):
         log.error('No wallet id found.')
         return False
 

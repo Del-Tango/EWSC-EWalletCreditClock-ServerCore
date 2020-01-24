@@ -3,27 +3,40 @@ import datetime
 import pysnooper
 import logging
 from itertools import count
+from sqlalchemy import Table, Column, String, Integer, Float, ForeignKey, Date, DateTime
+from sqlalchemy.orm import relationship
 
 from .config import Config
-from .res_utils import ResUtils
+from .res_utils import ResUtils, Base
 
 log_config = Config().log_config
 log = logging.getLogger(log_config['log_name'])
 
 
-class ContactListRecord():
+class ContactListRecord(Base):
+    __tablename__ = 'contact_list_record'
+
+    record_id = Column(Integer, primary_key=True)
+    contact_list_id = Column(
+            Integer, ForeignKey('contact_list.contact_list_id')
+            )
+    create_date = Column(DateTime)
+    write_date = Column(DateTime)
+    user_id = Column(Integer, ForeignKey('res_user.user_id'))
+    user_name = Column(String)
+    user_email = Column(String)
+    user_phone = Column(String)
+    notes = Column(String)
+    reference = Column(String)
+    user = relationship('ResUser', foreign_keys=user_id)
+    contact_list = relationship(
+            'ContactList', back_populates='records',
+            foreign_keys=contact_list_id
+            )
 
     def __init__(self, **kwargs):
-        self.seq = count()
-        self.record_id = kwargs.get('record_id') or next(self.seq)
-        self.contact_list_id = kwargs.get('contact_list_id')
         self.create_date = datetime.datetime.now()
         self.write_date = datetime.datetime.now()
-        self.user_name = kwargs.get('user_name')
-        self.user_email = kwargs.get('user_email')
-        self.user_phone = kwargs.get('user_phone')
-        self.notes = kwargs.get('notes')
-        self.reference = kwargs.get('reference')
 
     def fetch_record_id(self):
         log.debug('')
@@ -52,7 +65,7 @@ class ContactListRecord():
     def fetch_record_values(self):
         log.debug('')
         _values = {
-                'id': self.record_id,
+                'record_id': self.record_id,
                 'contact_list_id': self.contact_list_id,
                 'reference': self.reference,
                 'create_date': self.create_date,
@@ -147,16 +160,25 @@ class ContactListRecord():
         return False
 
 
-class ContactList():
+class ContactList(Base):
+    __tablename__ = 'contact_list'
+
+    contact_list_id = Column(Integer, primary_key=True)
+    client_id = Column(Integer, ForeignKey('res_user.user_id'))
+    reference = Column(String)
+    create_date = Column(DateTime)
+    write_date = Column(DateTime)
+    client = relationship(
+            'ResUser', back_populates='user_contact_list_archive',
+            foreign_keys=client_id
+            )
+    records = relationship(
+            'ContactListRecord', back_populates='contact_list'
+            )
 
     def __init__(self, **kwargs):
-        self.seq = count()
-        self.contact_list_id = kwargs.get('contact_list_id') or next(self.seq)
-        self.client_id = kwargs.get('client_id')
-        self.reference = kwargs.get('reference')
         self.create_date = datetime.datetime.now()
         self.write_date = datetime.datetime.now()
-        self.records = kwargs.get('records') or {}
 
     def fetch_contact_list_id(self):
         log.debug('')

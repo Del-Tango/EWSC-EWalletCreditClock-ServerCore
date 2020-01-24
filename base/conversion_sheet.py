@@ -4,26 +4,37 @@ import datetime
 import logging
 import pysnooper
 from itertools import count
+from sqlalchemy import Table, Column, String, Integer, Float, ForeignKey, Date, DateTime
+from sqlalchemy.orm import relationship
 
-from .res_utils import ResUtils
+from .res_utils import ResUtils, Base
 from .config import Config
 
 log_config = Config().log_config
 log = logging.getLogger(log_config['log_name'])
 
 
-class CreditClockConversionSheetRecord():
+class CreditClockConversionSheetRecord(Base):
+    __tablename__ = 'conversion_sheet_record'
+
+    record_id = Column(Integer, primary_key=True)
+    conversion_sheet_id = Column(
+       Integer, ForeignKey('credit_clock_conversion_sheet.conversion_sheet_id')
+       )
+    reference = Column(String)
+    create_date = Column(DateTime)
+    write_date = Column(DateTime)
+    conversion_type = Column(String)
+    minutes = Column(Float)
+    credits = Column(Integer)
+    conversion_sheet = relationship(
+            'CreditClockConversionSheet', back_populates='records',
+            foreign_keys=conversion_sheet_id
+            )
 
     def __init__(self, **kwargs):
-        self.seq = count()
-        self.record_id = kwargs.geet('record_id') or next(self.seq)
-        self.conversion_sheet_id = kwargs.get('conversion_sheet_id')
-        self.reference = kwargs.get('reference')
         self.create_date = datetime.datetime.now()
         self.write_date = datetime.datetime.now()
-        self.conversion_type = kwargs.get('conversion_type')
-        self.minutes = kwargs.get('minutes')
-        self.credits = kwargs.get('credits')
 
     def fetch_record_id(self):
         log.debug('')
@@ -143,16 +154,26 @@ class CreditClockConversionSheetRecord():
         return False
 
 
-class CreditClockConversionSheet():
+class CreditClockConversionSheet(Base):
+    __tablename__ = 'credit_clock_conversion_sheet'
+
+    conversion_sheet_id = Column(Integer, primary_key=True)
+    clock_id = Column(Integer, ForeignKey('credit_clock.clock_id'))
+    reference = Column(String)
+    create_date = Column(DateTime)
+    write_date = Column(DateTime)
+    clock = relationship(
+            'CreditClock', back_populates='conversion_sheet_archive',
+            foreign_keys=clock_id
+            )
+    records = relationship(
+            'CreditClockConversionSheetRecord',
+            back_populates='conversion_sheet'
+            )
 
     def __init__(self, **kwargs):
-        self.seq = count()
-        self.conversion_sheet_id = kwargs.get('conversion_sheet_id') or next(self.seq)
-        self.clock_id = kwargs.get('clock_id')
-        self.reference = kwargs.get('reference')
         self.create_date = datetime.datetime.now()
         self.write_date = datetime.datetime.now()
-        self.records = kwargs.get('records') or {}
 
     def fetch_conversion_sheet_id(self):
         log.debug('')

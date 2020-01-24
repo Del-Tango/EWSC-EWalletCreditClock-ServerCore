@@ -5,18 +5,23 @@ import hashlib
 import logging
 import pysnooper
 from validate_email import validate_email
+from sqlalchemy import Table, Column, String, Integer, Float, ForeignKey, Date, DateTime
+from sqlalchemy.orm import relationship
 
 from base.res_user import ResUser
 from base.credit_wallet import CreditEWallet
 from base.contact_list import ContactList
-from base.res_utils import ResUtils
+from base.res_utils import ResUtils, Base
 from base.config import Config
 
 log_config = Config().log_config
 log = logging.getLogger(log_config['log_name'])
 
 
-class EWalletLogin():
+class EWalletLogin(Base):
+    __tablename__ = 'ewallet_login'
+
+    login_id = Column(Integer, primary_key=True)
 
     def hash_password(self, password):
         log.debug('')

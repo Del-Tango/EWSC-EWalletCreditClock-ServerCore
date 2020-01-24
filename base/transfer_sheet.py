@@ -4,28 +4,43 @@ import random
 import logging
 import pysnooper
 from itertools import count
+from sqlalchemy import Table, Column, String, Integer, Float, ForeignKey, Date, DateTime
+from sqlalchemy.orm import relationship
 
-from .res_utils import ResUtils
+from .res_utils import ResUtils, Base
 from .config import Config
 
 log_config = Config().log_config
 log = logging.getLogger(log_config['log_name'])
 
 
-class CreditTransferSheetRecord():
+class CreditTransferSheetRecord(Base):
+    __tablename__ = 'transfer_sheet_record'
 
-    # TODO - Refactor
+    record_id = Column(Integer, primary_key=True)
+    reference = Column(String)
+    create_date = Column(DateTime)
+    write_date = Column(DateTime)
+    transfer_type = Column(String)
+    transfer_from = Column(Integer, ForeignKey('res_user.user_id'))
+    transfer_to = Column(Integer, ForeignKey('res_user.user_id'))
+    credits = Column(Integer)
+    transfer_sheet_id = Column(
+        Integer, ForeignKey('credit_transfer_sheet.transfer_sheet_id')
+        )
+    transfer_sheet = relationship(
+        'CreditTransferSheet', foreign_keys=transfer_sheet_id
+        )
+    user_from = relationship(
+        'ResUser', foreign_keys=transfer_from
+        )
+    user_to = relationship(
+        'ResUser', foreign_keys=transfer_to
+        )
+
     def __init__(self, **kwargs):
-        self.seq = count()
-        self.record_id = kwargs.get('record_id') or next(self.seq)
-        self.transfer_sheet_id = kwargs.get('transfer_sheet_id')
-        self.reference = kwargs.get('reference')
         self.create_date = datetime.datetime.now()
         self.write_date = datetime.datetime.now()
-        self.transfer_type = kwargs.get('transfer_type')
-        self.transfer_from = kwargs.get('transfer_from')
-        self.transfer_to = kwargs.get('transfer_to')
-        self.credits = kwargs.get('credits') or 0
 
     def fetch_record_id(self):
         log.debug('')
@@ -145,17 +160,25 @@ class CreditTransferSheetRecord():
         return False
 
 
-class CreditTransferSheet():
+class CreditTransferSheet(Base):
+    __tablename__ = 'credit_transfer_sheet'
 
-    # TODO - Refactor
+    transfer_sheet_id = Column(Integer, primary_key=True)
+    wallet_id = Column(Integer, ForeignKey('credit_ewallet.wallet_id'))
+    reference = Column(String)
+    create_date = Column(DateTime)
+    write_date = Column(DateTime)
+    wallet = relationship(
+        'CreditEWallet', back_populates='transfer_sheet_archive',
+        foreign_keys=wallet_id
+        )
+    records = relationship(
+        'CreditTransferSheetRecord', back_populates='transfer_sheet'
+        )
+
     def __init__(self, **kwargs):
-        self.seq = count()
-        self.transfer_sheet_id = kwargs.get('transfer_sheet_id') or next(self.seq)
-        self.wallet_id = kwargs.get('wallet_id')
-        self.reference = kwargs.get('reference')
         self.create_date = datetime.datetime.now()
         self.write_date = datetime.datetime.now()
-        self.records = kwargs.get('records') or {}
 
     def fetch_transfer_sheet_id(self):
         log.debug('')

@@ -1,3 +1,15 @@
+from validate_email import validate_email
+from itertools import count
+from sqlalchemy import Table, Column, String, Integer, ForeignKey, Date
+from sqlalchemy.orm import relationship
+
+from ewallet_login import EWalletLogin
+from base.res_user import ResUser
+from base.res_utils import ResUtils, Base
+from base.credit_wallet import CreditEWallet
+from base.contact_list import ContactList
+from base.config import Config
+
 import time
 import datetime
 import random
@@ -5,42 +17,68 @@ import hashlib
 import logging
 import datetime
 import pysnooper
-from validate_email import validate_email
-from itertools import count
-
-from ewallet_login import EWalletLogin
-from base.res_user import ResUser
-from base.res_utils import ResUtils
-from base.credit_wallet import CreditEWallet
-from base.contact_list import ContactList
-from base.config import Config
+import threading
 
 config = Config()
 res_utils = ResUtils()
-log_config = config.log_config
 
-log = logging.getLogger(log_config['log_name'])
-log.setLevel(logging.DEBUG)
-file_handler = logging.FileHandler(
+def log_init():
+    log_config = config.log_config
+
+    log = logging.getLogger(log_config['log_name'])
+    log.setLevel(logging.DEBUG)
+    file_handler = logging.FileHandler(
         log_config['log_dir'] + '/' + log_config['log_file'], 'a'
         )
-formatter = logging.Formatter(
+    formatter = logging.Formatter(
         log_config['log_record_format'],
         log_config['log_date_format']
         )
-logging.Formatter.converter = res_utils.fetch_now_eet
-file_handler.setFormatter(formatter)
-log.addHandler(file_handler)
+    logging.Formatter.converter = res_utils.fetch_now_eet
+    file_handler.setFormatter(formatter)
+    log.addHandler(file_handler)
+    return log
+
+log = log_init()
 
 
-# [ NOTE ]: Ewallet session manager.
-class EWallet():
+# [ NOTE ]: Ewallet session.
+class EWallet(Base):
+    __tablename__ = 'ewallet'
 
+    id = Column(Integer, primary_key=True, nullable=False, autoincrement=True)
+    name = Column(String)
+    create_date = Column(Date)
+    session = res_utils.session_factory()
+    session_credit_wallet = Column(
+       Integer, ForeignKey('credit_ewallet.wallet_id')
+       )
+    session_contact_list = Column(
+       Integer, ForeignKey('contact_list.contact_list_id')
+       )
+    session_active_user = Column(
+       Integer, ForeignKey('res_user.user_id')
+       )
+    contact_list = relationship(
+       'ContactList', backref='active_session',
+       foreign_keys=session_contact_list
+       )
+    credit_wallet = relationship(
+       'CreditEWallet', backref='active_session',
+       foreign_keys=session_credit_wallet
+       )
+    active_user = relationship(
+       'ResUser', backref='active_session',
+       foreign_keys=session_active_user
+       )
+    user_account_archive = relationship(
+       'ResUser',#foreign_keys=session_active_user
+       )
+
+    @pysnooper.snoop(config.log_config['log_dir'] + '/' + config.log_config['log_file'])
     def __init__(self, **kwargs):
-        self.session_credit_wallet = kwargs.get('session_credit_wallet')
-        self.session_contact_list = kwargs.get('session_contact_list')
-        self.session_active_user = kwargs.get('session_active_user')
-        self.user_account_archive = {}
+        self.create_date = datetime.datetime.now()
+        self.write_date = datetime.datetime.now()
 
     def fetch_user_by_id(self, **kwargs):
         log.debug('')
@@ -94,12 +132,12 @@ class EWallet():
         if not kwargs.get('identifier'):
             return self.error_no_user_identifier_found()
         _handlers = {
-                'id': self.fetch_user_by_id,
-                'name': self.fetch_user_by_name,
-                'email': self.fetch_user_by_email,
-                'phone': self.fetch_user_by_phone,
-                'alias': self.fetch_user_by_alias,
-                }
+            'id': self.fetch_user_by_id,
+            'name': self.fetch_user_by_name,
+            'email': self.fetch_user_by_email,
+            'phone': self.fetch_user_by_phone,
+            'alias': self.fetch_user_by_alias,
+            }
         return _handlers[kwargs['identifier']](**kwargs)
 
     def update_session_from_user(self, **kwargs):
@@ -265,6 +303,7 @@ class EWallet():
                 }
         return _handlers[kwargs['contact']](**kwargs)
 
+    # TODO - FIX ME
     def action_create_new_transfer(self, **kwargs):
         log.debug('')
         if not self.session_credit_wallet or not kwargs.get('transfer_type') \
@@ -1492,8 +1531,8 @@ class EWallet():
 
     def error_no_active_session_contact_list_found(self, user_name):
         log.error(
-                'No active session contact list found for user %s', user_name
-                )
+            'No active session contact list found for user %s', user_name
+            )
         return False
 
     def error_empty_session_user_account_archive(self):
@@ -1713,4 +1752,11 @@ ewallet.ewallet_controller(controller='test')
 ################################################################################
 # CODE DUMP
 ################################################################################
+
+#   ewallet_session_user_ref = Table(
+#           'ewallet_session_user_ref', Base.metadata,
+#           Column('ewallet_session_id', Integer, ForeignKey('ewallet.id')),
+#           Column('res_user_id', Integer, ForeignKey('res_user.user_id'))
+#           )
+
 

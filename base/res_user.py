@@ -2,59 +2,79 @@ import datetime
 import random
 import logging
 from itertools import count
+from sqlalchemy import Table, Column, String, Integer, Float, ForeignKey, Date, DateTime
+from sqlalchemy.orm import relationship
 
 from .res_utils import ResUtils
 from .credit_wallet import CreditEWallet
 from .contact_list import ContactList
-from .res_utils import ResUtils
+from .res_utils import ResUtils, Base
 from .config import Config
 
 log_config = Config().log_config
 log = logging.getLogger(log_config['log_name'])
 
 
-class ResUser():
+class ResUserPassHashArchive(Base):
+    __tablename__ = 'res_user_hash_archive'
 
-    # TODO - Has dummy data
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, ForeignKey('res_user.user_id'))
+    user_pass_hash = Column(String)
+    create_date = Column(DateTime)
+    write_date = Column(DateTime)
+    user = relationship(
+       'ResUser', back_populates='user_pass_hash_archive',
+       foreign_keys=user_id
+       )
+
     def __init__(self, **kwargs):
-        if not kwargs.get('user_name') or not kwargs.get('user_pass_hash'):
-            self.error_handler_init(
-                    user_name=kwargs.get('user_name'),
-                    user_pass_hash=kwargs.get('user_pass_hash'),
-                    )
-            return
-        self.seq = count()
-        self.user_id = next(self.seq)
-        self.user_name = kwargs.get('user_name')
-        self.user_create_date = kwargs.get('user_create_date') \
-                or datetime.datetime.now()
-        self.user_write_date = kwargs.get('user_write_date') \
-                or datetime.datetime.now()
-        self.user_credit_wallet = kwargs.get('user_credit_wallet') \
-                or CreditEWallet(
-                        client_id=self.user_id,
-                        reference='First Credit Wallet',
-                        credits=0
-                    )
-        self.user_contact_list = kwargs.get('user_contact_list_id') \
-                or ContactList(
-                        client_id=self.user_id,
-                        reference='First Contact List',
-                        )
-        self.user_pass_hash = kwargs.get('user_pass_hash')
-        self.user_email = kwargs.get('user_email')
-        self.user_phone = kwargs.get('user_phone') or None
-        self.user_alias = kwargs.get('user_alias') or None
-        self.user_pass_hash_archive = kwargs.get('user_pass_hash_archive') \
-                or {self.user_pass_hash: self.user_write_date}
-        self.user_credit_wallet_archive = kwargs.get('user_credit_wallet_archive') \
-                or {self.user_credit_wallet.fetch_credit_ewallet_id(),
-                        self.user_credit_wallet}
-        self.user_contact_list_archive = kwargs.get('user_contact_list_archive') \
-                or {self.user_contact_list.fetch_contact_list_id(),
-                        self.user_contact_list}
+        self.create_date = datetime.datetime.now()
+        self.write_date = datetime.datetime.now()
 
-    def fetch_user_id(self):
+
+class ResUser(Base):
+    __tablename__ = 'res_user'
+
+    user_id = Column(Integer, primary_key=True)
+    user_name = Column(String)
+    user_create_date = Column(DateTime)
+    user_write_date = Column(DateTime)
+    user_pass_hash = Column(String)
+    user_email = Column(String)
+    user_phone = Column(String)
+    user_alias = Column(String)
+    user_credit_wallet_id = Column(
+       Integer, ForeignKey('credit_ewallet.wallet_id')
+       )
+    user_contact_list_id = Column(
+       Integer, ForeignKey('contact_list.contact_list_id')
+       )
+
+    user_contact_list = relationship(
+       'ContactList', foreign_keys=user_contact_list_id
+       )
+    user_credit_wallet = relationship(
+       'CreditEWallet', foreign_keys=user_credit_wallet_id
+       )
+
+    user_pass_hash_archive = relationship(
+       'ResUserPassHashArchive', back_populates='user'
+       )
+    user_credit_wallet_archive = relationship(
+       'CreditEWallet', #back_populates='client',
+       foreign_keys=user_credit_wallet_id,
+       )
+    user_contact_list_archive = relationship(
+       'ContactList', #back_populates='user',
+       foreign_keys=user_contact_list_id,
+       )
+
+    def __init__(self, **kwargs):
+        self.user_create_date = datetime.datetime.now()
+        self.user_write_date = datetime.datetime.now()
+
+    def fetch_id(self):
         log.debug('')
         return self.user_id
 
@@ -106,10 +126,15 @@ class ResUser():
         log.debug('')
         return self.user_contact_list_archive
 
+    def fetch_user_credit_wallet_transfer_sheet(self):
+        log.debug('')
+        _credit_wallet = self.fetch_user_credit_wallet()
+        return _credit_wallet.transfer_sheet
+
     def fetch_user_values(self):
         log.debug('')
         _values = {
-                'user_id': self.user_id,
+                'id': self.user_id,
                 'user_name': self.user_name,
                 'user_create_date': self.user_create_date,
                 'user_write_date': self.user_write_date,
@@ -372,6 +397,34 @@ class ResUser():
             log.info('Successfully removed user contact list by id.')
         return _unlink
 
+    def action_create_incomming_credit_transfer(self, **kwargs):
+        log.debug('')
+        _transfer_sheet = self.fetch_user_credit_wallet_transfer_sheet()
+        if not _transfer_sheet:
+            return self.error_no_credit_wallet_transfer_sheet_found(
+                    wallet=self.user_credit_wallet
+                    )
+        return _transfer_sheet.credit_transfer_sheet_controller(**kwargs)
+
+    def action_create_outgoing_credit_transfer(self, **kwargs):
+        log.debug('')
+        _transfer_sheet = self.fetch_user_credit_wallet_transfer_sheet()
+        if not _transfer_sheet:
+            return self.error_no_credit_wallet_transfer_sheet_found(
+                    wallet=self.user_credit_wallet
+                    )
+        return _transfer_sheet.credit_transfer_sheet_controller(**kwargs)
+
+    def action_create_credit_transfer(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('atype'):
+            return self.error_no_credit_transfer_type_specified()
+        _handlers = {
+                'incomming': self.action_create_incomming_credit_transfer,
+                'outgoing': self.action_create_outgoing_credit_transfer,
+                }
+        return _handlers[kwargs['atype']](**kwargs)
+
     def handle_user_action_create(self, **kwargs):
         log.debug('')
         if not kwargs.get('target'):
@@ -380,6 +433,7 @@ class ResUser():
                 'credit_wallet': self.action_create_credit_wallet,
                 'credit_clock': self.action_create_credit_clock,
                 'contact_list': self.action_create_contact_list,
+                'credit_transfer': self.action_create_credit_transfer,
                 }
         return _handlers[kwargs['target']](**kwargs)
 
@@ -536,8 +590,20 @@ class ResUser():
                 return _reasons_and_handlers['handlers'][item]()
         return False
 
+    def error_no_credit_transfer_type_specified(self):
+        log.error('No credit transfer type specified.')
+        return False
+
     def error_no_user_controller_type_specified(self):
         log.error('No user controller type specified.')
+        return False
+
+    def error_no_credit_wallet_transfer_sheet_found(self, wallet=None):
+        log.error(
+                'No active transfer sheet found for credit wallet {}.'.format(
+                    wallet.reference
+                    )
+                )
         return False
 
     def error_no_wallet_id_found(self):

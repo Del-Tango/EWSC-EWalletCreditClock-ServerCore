@@ -4,24 +4,37 @@ import datetime
 import logging
 import pysnooper
 from itertools import count
+from sqlalchemy import Table, Column, String, Integer, Float, ForeignKey, Date, DateTime
+from sqlalchemy.orm import relationship
 
-from .res_utils import ResUtils
+from .res_utils import ResUtils, Base
 from .config import Config
 
 log_config = Config().log_config
 log = logging.getLogger(log_config['log_name'])
 
 
-class TimeSheetRecord():
+class TimeSheetRecord(Base):
+    __tablename__ = 'time_sheet_record'
+
+    record_id = Column(
+       Integer, primary_key=True, nullable=False, autoincrement=True
+       )
+    reference = Column(String)
+    create_date = Column(DateTime)
+    write_date = Column(DateTime)
+    time_spent = Column(Float)
+    time_sheet_id = Column(Integer, ForeignKey(
+       'credit_clock_time_sheet.time_sheet_id'
+       ))
+    time_sheet = relationship(
+       'CreditClockTimeSheet', back_populates='records',
+       foreign_keys=time_sheet_id
+       )
 
     def __init__(self, **kwargs):
-        self.seq = count()
-        self.record_id = kwargs.get('record_id') or next(self.seq)
-        self.time_sheet_id = kwargs.get('time_sheet_id')
-        self.reference = kwargs.get('reference')
         self.create_date = datetime.datetime.now()
         self.write_date = datetime.datetime.now()
-        self.time_spent = kwargs.get('time_spent')
 
     def fetch_record_id(self):
         log.debug('')
@@ -50,7 +63,7 @@ class TimeSheetRecord():
     def fetch_record_data(self):
         log.debug('')
         _values = {
-                'id': self.record_id,
+                'record_id': self.record_id,
                 'time_sheet_id': self.time_sheet_id,
                 'reference': self.reference,
                 'create_date': self.create_date,
@@ -109,16 +122,24 @@ class TimeSheetRecord():
         return False
 
 
-class CreditClockTimeSheet():
+class CreditClockTimeSheet(Base):
+    __tablename__ = 'credit_clock_time_sheet'
+
+    time_sheet_id = Column(Integer, primary_key=True)
+    clock_id = Column(Integer, ForeignKey('credit_clock.clock_id'))
+    reference = Column(String)
+    create_date = Column(DateTime)
+    write_date = Column(DateTime)
+    clock = relationship(
+        'CreditClock',
+#       back_populates='time_sheet_archive',
+        foreign_keys=clock_id
+        )
+    records = relationship('TimeSheetRecord', back_populates='time_sheet')
 
     def __init__(self, **kwargs):
-        self.seq = count()
-        self.time_sheet_id = kwargs.get('time_sheet_id') or next(self.seq)
-        self.clock_id = kwargs.get('clock_id')
-        self.reference = kwargs.get('reference')
         self.create_date = datetime.datetime.now()
         self.write_date = datetime.datetime.now()
-        self.records = kwargs.get('records') or {}
 
     def fetch_time_sheet_id(self):
         log.debug('')
@@ -147,7 +168,7 @@ class CreditClockTimeSheet():
     def fetch_time_sheet_values(self):
         log.debug('')
         _values = {
-                'id': self.time_sheet_id,
+                'time_sheet_id': self.time_sheet_id,
                 'clock_id': self.clock_id,
                 'reference': self.reference,
                 'create_date': self.create_date,

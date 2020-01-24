@@ -4,28 +4,38 @@ import random
 import logging
 import pysnooper
 from itertools import count
+from sqlalchemy import Table, Column, String, Integer, Float, ForeignKey, Date, DateTime
+from sqlalchemy.orm import relationship
 
-from .res_utils import ResUtils
+from .res_utils import ResUtils, Base
 from .config import Config
 
 log_config = Config().log_config
+res_utils = ResUtils()
 log = logging.getLogger(log_config['log_name'])
 
 
-class CreditInvoiceSheetRecord():
+class CreditInvoiceSheetRecord(Base):
+    __tablename__ = 'invoice_sheet_record'
+
+    record_id = Column(Integer, primary_key=True)
+    invoice_sheet_id = Column(
+       Integer, ForeignKey('credit_invoice_sheet.invoice_sheet_id')
+       )
+    reference = Column(String)
+    create_date = Column(DateTime)
+    write_date = Column(DateTime)
+    credits = Column(Integer)
+    currency = Column(String)
+    cost = Column(Float)
+    seller_id = Column(Integer, ForeignKey('res_user.user_id'))
+    seller = relationship('ResUser', foreign_keys=seller_id)
+    invoice_sheet = relationship('CreditInvoiceSheet', foreign_keys=invoice_sheet_id)
+    notes = Column(String)
 
     def __init__(self, **kwargs):
-        self.seq = count()
-        self.record_id = kwargs.get('record_id') or next(self.seq)
-        self.invoice_sheet_id = kwargs.get('invoice_sheet_id')
-        self.reference = kwargs.get('reference')
         self.create_date = datetime.datetime.now()
         self.write_date = datetime.datetime.now()
-        self.credits = kwargs.get('credits')
-        self.currency = kwargs.get('currency')
-        self.cost = kwargs.get('cost')
-        self.seller_id = kwargs.get('seller_id')
-        self.notes = kwargs.get('notes')
 
     def fetch_record_id(self):
         log.debug('')
@@ -153,16 +163,25 @@ class CreditInvoiceSheetRecord():
         return False
 
 
-class CreditInvoiceSheet():
+class CreditInvoiceSheet(Base):
+    __tablename__ = 'credit_invoice_sheet'
+
+    invoice_sheet_id = Column(Integer, primary_key=True)
+    wallet_id = Column(Integer, ForeignKey('credit_ewallet.wallet_id'))
+    reference = Column(String)
+    create_date = Column(DateTime)
+    write_date = Column(DateTime)
+    wallet = relationship(
+            'CreditEWallet', back_populates='invoice_sheet_archive',
+            foreign_keys=wallet_id
+            )
+    records = relationship(
+            'CreditInvoiceSheetRecord', back_populates='invoice_sheet'
+            )
 
     def __init__(self, **kwargs):
-        self.seq = count()
-        self.invoice_sheet_id = kwargs.get('invoice_sheet_id') or next(self.seq)
-        self.wallet_id = kwargs.get('wallet_id')
-        self.reference = kwargs.get('reference')
         self.create_date = datetime.datetime.now()
         self.write_date = datetime.datetime.now()
-        self.records = kwargs.get('records') or {}
 
     def fetch_invoice_sheet_id(self):
         log.debug('')

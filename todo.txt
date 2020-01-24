@@ -1,5 +1,7 @@
-# TODO - Add full test cases
+
 # TODO - Persistent storage with SQLAlchemy ORM
+# TODO - Add full test cases
+# TODO - PEP8-it
 # TODO - BUG FIX - Ewallet Record Sequencer
 # TODO - EWallet Client
 # TODO - Add ACL permission sheets
