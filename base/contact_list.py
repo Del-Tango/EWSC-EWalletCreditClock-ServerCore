@@ -18,8 +18,8 @@ class ContactListRecord(Base):
 
     record_id = Column(Integer, primary_key=True)
     contact_list_id = Column(
-            Integer, ForeignKey('contact_list.contact_list_id')
-            )
+        Integer, ForeignKey('contact_list.contact_list_id')
+        )
     create_date = Column(DateTime)
     write_date = Column(DateTime)
     user_id = Column(Integer, ForeignKey('res_user.user_id'))
@@ -28,11 +28,6 @@ class ContactListRecord(Base):
     user_phone = Column(String)
     notes = Column(String)
     reference = Column(String)
-    user = relationship('ResUser', foreign_keys=user_id)
-    contact_list = relationship(
-            'ContactList', back_populates='records',
-            foreign_keys=contact_list_id
-            )
 
     def __init__(self, **kwargs):
         self.create_date = datetime.datetime.now()
@@ -168,13 +163,14 @@ class ContactList(Base):
     reference = Column(String)
     create_date = Column(DateTime)
     write_date = Column(DateTime)
+    active_session_id = Column(Integer, ForeignKey('ewallet.id'))
+    active_session = relationship('EWallet', back_populates='contact_list')
+    # O2O
     client = relationship(
-            'ResUser', back_populates='user_contact_list_archive',
-            foreign_keys=client_id
-            )
-    records = relationship(
-            'ContactListRecord', back_populates='contact_list'
-            )
+        'ResUser', back_populates='user_contact_list', foreign_keys=[client_id]
+        )
+    # O2M
+    records = relationship('ContactListRecord')
 
     def __init__(self, **kwargs):
         self.create_date = datetime.datetime.now()
@@ -219,6 +215,7 @@ class ContactList(Base):
         self.write_date = datetime.datetime.now()
         return self.write_date
 
+    # TODO
     def fetch_contact_list_record_by_id(self, **kwargs):
         log.debug('')
         if not kwargs.get('code'):
@@ -279,7 +276,7 @@ class ContactList(Base):
             log.info('Successfully fetched contact records by phone.')
         return _records
 
-    def fetch_contact_list_records(self, **kwargs):
+    def fetch_contact_list_record(self, **kwargs):
         log.debug('')
         if not kwargs.get('search_by'):
             return self.error_no_contact_record_search_identifier_found()
@@ -638,3 +635,7 @@ class ContactList(Base):
 # CODE DUMP
 # ==============================================================================
 
+# O2O
+#   active_session = relationship('EWallet', back_populates="contact_list", foreign_keys=[active_session_id])
+    # M2O
+#   user = relationship('ResUser')

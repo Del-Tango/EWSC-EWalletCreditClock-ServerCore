@@ -23,10 +23,6 @@ class ResUserPassHashArchive(Base):
     user_pass_hash = Column(String)
     create_date = Column(DateTime)
     write_date = Column(DateTime)
-    user = relationship(
-       'ResUser', back_populates='user_pass_hash_archive',
-       foreign_keys=user_id
-       )
 
     def __init__(self, **kwargs):
         self.create_date = datetime.datetime.now()
@@ -44,37 +40,33 @@ class ResUser(Base):
     user_email = Column(String)
     user_phone = Column(String)
     user_alias = Column(String)
-    user_credit_wallet_id = Column(
-       Integer, ForeignKey('credit_ewallet.wallet_id')
+    user_state_code = Column(Integer)
+    user_state_name = Column(String)
+    active_session_id = Column(Integer, ForeignKey('ewallet.id'))
+    # O2O
+    active_session = relationship(
+       'EWallet', back_populates='active_user'
        )
-    user_contact_list_id = Column(
-       Integer, ForeignKey('contact_list.contact_list_id')
-       )
-
+    # O2O
     user_contact_list = relationship(
-       'ContactList', foreign_keys=user_contact_list_id
+       'ContactList', uselist=False, back_populates='client',
        )
+    # O2O
     user_credit_wallet = relationship(
-       'CreditEWallet', foreign_keys=user_credit_wallet_id
+       'CreditEWallet', uselist=False, back_populates='client',
        )
-
-    user_pass_hash_archive = relationship(
-       'ResUserPassHashArchive', back_populates='user'
-       )
-    user_credit_wallet_archive = relationship(
-       'CreditEWallet', #back_populates='client',
-       foreign_keys=user_credit_wallet_id,
-       )
-    user_contact_list_archive = relationship(
-       'ContactList', #back_populates='user',
-       foreign_keys=user_contact_list_id,
-       )
+    # O2M
+    user_pass_hash_archive = relationship('ResUserPassHashArchive')
+    # O2M
+    user_credit_wallet_archive = relationship('CreditEWallet')
+    # O2M
+    user_contact_list_archive = relationship('ContactList')
 
     def __init__(self, **kwargs):
         self.user_create_date = datetime.datetime.now()
         self.user_write_date = datetime.datetime.now()
 
-    def fetch_id(self):
+    def fetch_user_id(self):
         log.debug('')
         return self.user_id
 
@@ -114,6 +106,10 @@ class ResUser(Base):
         log.debug('')
         return self.user_alias
 
+    def fetch_user_state(self):
+        log.debug('')
+        return self.user_state
+
     def fetch_user_pass_hash_archive(self):
         log.debug('')
         return self.user_pass_hash_archive
@@ -125,11 +121,6 @@ class ResUser(Base):
     def fetch_user_contact_list_archive(self):
         log.debug('')
         return self.user_contact_list_archive
-
-    def fetch_user_credit_wallet_transfer_sheet(self):
-        log.debug('')
-        _credit_wallet = self.fetch_user_credit_wallet()
-        return _credit_wallet.transfer_sheet
 
     def fetch_user_values(self):
         log.debug('')
@@ -144,6 +135,7 @@ class ResUser(Base):
                 'user_email': self.user_email,
                 'user_phone': self.user_phone,
                 'user_alias': self.user_alias,
+                'user_state': self.user_state,
                 'user_pass_hash_archive': self.user_pass_hash_archive,
                 'user_credit_wallet_archive': self.user_credit_wallet_archive,
                 'user_contact_list_archive': self.user_contact_list_archive,
@@ -163,6 +155,20 @@ class ResUser(Base):
         if _contact_list:
             log.info('Successfully fetched contact list by id.')
         return _contact_list
+
+    def fetch_user_state_code_map(self):
+        log.debug('')
+        _state_map = {
+                'code': {
+                    0: 'LoggedOut',
+                    1: 'LoggedIn',
+                    },
+                'name': {
+                    'LoggedOut': 0,
+                    'LoggedIn': 1,
+                    }
+                }
+        return _state_map
 
     def set_user_pass(self, **kwargs):
         log.debug('')
@@ -190,6 +196,55 @@ class ResUser(Base):
         self.user_alias = kwargs['alias']
         log.info('Successfully set user alias.')
         return True
+
+    def set_user_state_code(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('state_code'):
+            return self.error_no_state_code_found()
+        self.user_state_code = kwargs['state_code']
+        return True
+
+    def set_user_state_name(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('state_name'):
+            return self.error_no_state_name_found()
+        self.user_state_name = kwargs['state_name']
+        return True
+
+    def set_user_state(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('set_by'):
+            return self.error_no_set_by_parameter_specified()
+        _handlers = {
+                'converters': {
+                    'code': self.convert_user_state_code_to_name,
+                    'name': self.convert_user_state_name_to_code,
+                    },
+                'setters': {
+                    'code': self.set_user_state_code,
+                    'name': self.set_uset_state_name,
+                    }
+                }
+        _value_fetch = _handlers['converters'][kwargs['set_by']](**kwargs)
+        _field_code = kwargs.get('code') if kwargs['set_by'] == 'code' \
+                            else _value_fetch
+        _field_name = kwargs.get('name') if kwargs['set_by'] == 'name' \
+                            else _value_fetch
+        _setter_values = {
+                'field_names': {
+                    'code': 'state_code',
+                    'name': 'state_name',
+                    },
+                'field_values': {
+                    'code': _field_code,
+                    'name': _field_name,
+                    }
+                }
+        for item in _handlers['setters']:
+            _field_name = _setter_values['field_names'][item]
+            _field_values = _setter_values['field_values'][item]
+            _set_state = _handlers['setters'][item](_field_name=_field_values)
+        return _value_fetch
 
     def set_user_phone(self, **kwargs):
         log.debug('')
@@ -290,6 +345,18 @@ class ResUser(Base):
             })
         log.info('Successfully updated user contact list archive.')
         return self.user_contact_list_archive
+
+    def convert_user_state_code_to_name(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('code'):
+            return self.error_no_state_code_found()
+        return self.fetch_user_state_code_map()['code'][kwargs['code']]
+
+    def convert_user_state_name_to_code(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('name'):
+            return self.error_no_state_name_found()
+        return self.fetch_user_state_code_map()['name'][kwargs['name']]
 
     # TODO - Refactor - User main system controller
     def action_create_credit_wallet(self, **kwargs):
@@ -397,34 +464,6 @@ class ResUser(Base):
             log.info('Successfully removed user contact list by id.')
         return _unlink
 
-    def action_create_incomming_credit_transfer(self, **kwargs):
-        log.debug('')
-        _transfer_sheet = self.fetch_user_credit_wallet_transfer_sheet()
-        if not _transfer_sheet:
-            return self.error_no_credit_wallet_transfer_sheet_found(
-                    wallet=self.user_credit_wallet
-                    )
-        return _transfer_sheet.credit_transfer_sheet_controller(**kwargs)
-
-    def action_create_outgoing_credit_transfer(self, **kwargs):
-        log.debug('')
-        _transfer_sheet = self.fetch_user_credit_wallet_transfer_sheet()
-        if not _transfer_sheet:
-            return self.error_no_credit_wallet_transfer_sheet_found(
-                    wallet=self.user_credit_wallet
-                    )
-        return _transfer_sheet.credit_transfer_sheet_controller(**kwargs)
-
-    def action_create_credit_transfer(self, **kwargs):
-        log.debug('')
-        if not kwargs.get('atype'):
-            return self.error_no_credit_transfer_type_specified()
-        _handlers = {
-                'incomming': self.action_create_incomming_credit_transfer,
-                'outgoing': self.action_create_outgoing_credit_transfer,
-                }
-        return _handlers[kwargs['atype']](**kwargs)
-
     def handle_user_action_create(self, **kwargs):
         log.debug('')
         if not kwargs.get('target'):
@@ -433,7 +472,6 @@ class ResUser(Base):
                 'credit_wallet': self.action_create_credit_wallet,
                 'credit_clock': self.action_create_credit_clock,
                 'contact_list': self.action_create_contact_list,
-                'credit_transfer': self.action_create_credit_transfer,
                 }
         return _handlers[kwargs['target']](**kwargs)
 
@@ -718,6 +756,18 @@ class ResUser(Base):
         log.error('No user controller event specified.')
         return False
 
+    def error_no_state_code_found(self):
+        log.error('No state code found.')
+        return False
+
+    def error_no_state_name_found(self):
+        log.error('No state name found.')
+        return False
+
+    def error_no_set_by_parameter_specified(self):
+        log.error('No set_by parameter specified.')
+        return False
+
     def warning_could_not_fetch_credit_wallet(self):
         log.warning(
                 'Something went wrong. '
@@ -738,4 +788,57 @@ class ResUser(Base):
                 'Could not fetch credit clock.'
                 )
         return False
+
+###############################################################################
+# CODE DUMP
+###############################################################################
+#   user_credit_wallet_id = Column(
+#      Integer, ForeignKey('credit_ewallet.wallet_id')
+#      )
+#   user_contact_list_id = Column(
+#      Integer, ForeignKey('contact_list.contact_list_id')
+#      )
+    # O2O
+#   active_session = relationship(
+#      'EWallet', back_populates='active_user',
+#      foreign_keys=[active_session_id]
+#      )
+#   user = relationship(
+#      'ResUser', back_populates='user_pass_hash_archive',
+#      foreign_keys=user_id
+#      )
+
+#   def fetch_user_credit_wallet_transfer_sheet(self):
+#       log.debug('')
+#       _credit_wallet = self.fetch_user_credit_wallet()
+#       return _credit_wallet.transfer_sheet
+
+#   def action_create_incomming_credit_transfer(self, **kwargs):
+#       log.debug('')
+#       _transfer_sheet = self.fetch_user_credit_wallet_transfer_sheet()
+#       if not _transfer_sheet:
+#           return self.error_no_credit_wallet_transfer_sheet_found(
+#                   wallet=self.user_credit_wallet
+#                   )
+#       return _transfer_sheet.credit_transfer_sheet_controller(**kwargs)
+
+#   def action_create_outgoing_credit_transfer(self, **kwargs):
+#       log.debug('')
+#       _transfer_sheet = self.fetch_user_credit_wallet_transfer_sheet()
+#       if not _transfer_sheet:
+#           return self.error_no_credit_wallet_transfer_sheet_found(
+#                   wallet=self.user_credit_wallet
+#                   )
+#       return _transfer_sheet.credit_transfer_sheet_controller(**kwargs)
+
+#   def action_create_credit_transfer(self, **kwargs):
+#       log.debug('')
+#       if not kwargs.get('atype'):
+#           return self.error_no_credit_transfer_type_specified()
+#       _handlers = {
+#               'incomming': self.action_create_incomming_credit_transfer,
+#               'outgoing': self.action_create_outgoing_credit_transfer,
+#               }
+#       return _handlers[kwargs['atype']](**kwargs)
+
 

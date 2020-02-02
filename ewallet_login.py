@@ -4,7 +4,7 @@ import random
 import hashlib
 import logging
 import pysnooper
-from validate_email import validate_email
+#from validate_email import validate_email
 from sqlalchemy import Table, Column, String, Integer, Float, ForeignKey, Date, DateTime
 from sqlalchemy.orm import relationship
 
@@ -27,12 +27,13 @@ class EWalletLogin(Base):
         log.debug('')
         return str(hashlib.sha256(password.encode()).hexdigest())
 
+    # TODO: Apply ORM
 #   @pysnooper.snoop()
     def check_user_name_exists(self, user_name, user_archive):
         log.debug('')
-        for item in user_archive:
-            if user_archive[item].user_name == user_name:
-                return user_archive[item]
+#       for item in user_archive:
+#           if user_archive[item].user_name == user_name:
+#               return user_archive[item]
         return False
 
 #   @pysnooper.snoop()
@@ -68,6 +69,9 @@ class EWalletLogin(Base):
         _authenticated_user = self.authenticate_user(**kwargs)
         if not _authenticated_user:
             return self.error_invalid_login_credentials()
+        _set_user_state = _authenticated_user.set_user_state(
+                set_by=code, code=1
+                )
         return _authenticated_user
 
     def action_create_new_account(self, **kwargs):
@@ -138,16 +142,18 @@ class EWalletLogin(Base):
 
 class EWalletCreateUser(EWalletLogin):
 
+    # TODO: Apply ORM
 #   @pysnooper.snoop()
     def check_user_name_ensure_one(self, user_name, user_archive):
         log.debug('')
         if not user_archive:
             return True
-        print(user_archive)
-        _existing_user_name = [
-                item for item in user_archive
-                if user_archive[item].user_name == user_name
-                ]
+
+        _existing_user_name = False
+#       _existing_user_name = [
+#               item for item in user_archive
+#               if user_archive[item].user_name == user_name
+#               ]
         if not _existing_user_name:
             return True
         return False
@@ -204,9 +210,11 @@ class EWalletCreateUser(EWalletLogin):
             return False
         return True
 
+    # TODO - FIX ME
     def check_user_email_is_valid(self, user_email):
         log.debug('')
-        return validate_email(user_email)
+#       return validate_email(user_email)
+        return True
 
     # [ NOTE ]: Requires pydns
     def check_user_email_host_has_smtp(self, user_email):
@@ -347,27 +355,4 @@ class EWalletCreateUser(EWalletLogin):
 ###############################################################################
 # CODE DUMP
 ###############################################################################
-
-#   # TODO: Uncalled
-#   def check_user_pass_strength(self, user_pass):
-#       _values = {'msg': str(), 'verdict': False}
-#       _strong_regex = '((?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[!@#$%^&*]).{8,30})'
-#       _weak_regex = '((\d*)([a-z]*)([A-Z]*)([!@#$%^&*]*).{8,30})'
-#       if len(user_pass) >= 8:
-#           if bool(re.match(_strong_regex, user_pass)) == True:
-#               _values.update({
-#                   'msg': 'The password is strong',
-#                   'verdict': True,
-#               })
-#           elif bool(re.match(_weak_regex, user_pass)) == True:
-#               _values.update({
-#                   'msg': 'Weak password.',
-#                   'verdict': True,
-#               })
-#       else:
-#           _values.update({
-#               'msg': 'Invalid password.',
-#               'verdict': False,
-#           })
-#       return _values
 

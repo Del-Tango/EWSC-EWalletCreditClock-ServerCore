@@ -29,8 +29,6 @@ class CreditInvoiceSheetRecord(Base):
     currency = Column(String)
     cost = Column(Float)
     seller_id = Column(Integer, ForeignKey('res_user.user_id'))
-    seller = relationship('ResUser', foreign_keys=seller_id)
-    invoice_sheet = relationship('CreditInvoiceSheet', foreign_keys=invoice_sheet_id)
     notes = Column(String)
 
     def __init__(self, **kwargs):
@@ -171,13 +169,10 @@ class CreditInvoiceSheet(Base):
     reference = Column(String)
     create_date = Column(DateTime)
     write_date = Column(DateTime)
-    wallet = relationship(
-            'CreditEWallet', back_populates='invoice_sheet_archive',
-            foreign_keys=wallet_id
-            )
-    records = relationship(
-            'CreditInvoiceSheetRecord', back_populates='invoice_sheet'
-            )
+    # O2O
+    wallet = relationship('CreditEWallet', back_populates='invoice_sheet')
+    # O2M
+    records = relationship('CreditInvoiceSheetRecord')
 
     def __init__(self, **kwargs):
         self.create_date = datetime.datetime.now()
@@ -501,3 +496,13 @@ class CreditInvoiceSheet(Base):
                 )
         return False
 
+###############################################################################
+# CODE DUMP
+###############################################################################
+
+#   # M2O
+#   seller = relationship('ResUser', foreign_keys=[seller_id])
+#   # M2O
+#   invoice_sheet = relationship(
+#           'CreditInvoiceSheet', foreign_keys=[invoice_sheet_id]
+#           )

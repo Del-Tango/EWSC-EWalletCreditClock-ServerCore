@@ -22,46 +22,33 @@ class CreditEWallet(Base):
 
     wallet_id = Column(Integer, primary_key=True)
     client_id = Column(Integer, ForeignKey('res_user.user_id'))
+    active_session_id = Column(Integer, ForeignKey('ewallet.id'))
     reference = Column(String)
     create_date = Column(DateTime)
     write_date = Column(DateTime)
     credits = Column(Integer)
-    credit_clock_id = Column(
-       Integer, ForeignKey('credit_clock.clock_id')
-       )
-    transfer_sheet_id = Column(
-       Integer, ForeignKey('credit_transfer_sheet.transfer_sheet_id')
-       )
-    invoice_sheet_id = Column(
-       Integer, ForeignKey('credit_invoice_sheet.invoice_sheet_id')
-       )
-
-    client = relationship(
-       'ResUser', #back_populates='user_credit_wallet_archive',
-       foreign_keys=client_id
-       )
+    # O2O
+    active_session = relationship('EWallet', back_populates='credit_wallet')
+    # O2O
+    client = relationship('ResUser', back_populates='user_credit_wallet')
+    # O2O
     credit_clock = relationship(
-       'CreditClock', #back_populates='wallet',
-       foreign_keys=credit_clock_id
+       'CreditClock', back_populates='wallet',
        )
+    # O2O
     transfer_sheet = relationship(
-       'CreditTransferSheet', #back_populates='wallet',
-       foreign_keys=transfer_sheet_id
+       'CreditTransferSheet', back_populates='wallet',
        )
+    # O2O
     invoice_sheet = relationship(
-       'CreditInvoiceSheet', #back_populates='wallet',
-       foreign_keys=invoice_sheet_id
+       'CreditInvoiceSheet', back_populates='wallet',
        )
-
-    credit_clock_archive = relationship(
-       'CreditClock', foreign_keys=credit_clock_id,
-       )
-    transfer_sheet_archive = relationship(
-       'CreditTransferSheet', foreign_keys=transfer_sheet_id,
-       )
-    invoice_sheet_archive = relationship(
-       'CreditInvoiceSheet', foreign_keys=invoice_sheet_id,
-       )
+    # O2M
+    credit_clock_archive = relationship('CreditClock')
+    # O2M
+    transfer_sheet_archive = relationship('CreditTransferSheet')
+    # O2M
+    invoice_sheet_archive = relationship('CreditInvoiceSheet')
 
 #   @pysnooper.snoop()
     def __init__(self, **kwargs):
@@ -462,6 +449,7 @@ class CreditEWallet(Base):
                     partner_ewallet=kwargs.get('partner_ewallet'),
                     )
         log.info('Attempting to share transfer record...')
+        _partner_transfer_sheet = kwargs['partner_ewallet'].fetch_credit_ewallet_transfer_sheet()
         _share = kwargs['partner_ewallet'].transfer_sheet.credit_transfer_sheet_controller(
                 action='append', records=[kwargs['transfer_record']]
                 )
@@ -1176,5 +1164,23 @@ class CreditEWallet(Base):
 #        )
 #credit_ewallet.main_controller(controller='test')
 
+###############################################################################
+# CODE DUMP
+###############################################################################
+
+#   credit_clock_id = Column(
+#      Integer, ForeignKey('credit_clock.clock_id')
+#      )
+#   transfer_sheet_id = Column(
+#      Integer, ForeignKey('credit_transfer_sheet.transfer_sheet_id')
+#      )
+#   invoice_sheet_id = Column(
+#      Integer, ForeignKey('credit_invoice_sheet.invoice_sheet_id')
+#      )
+
+#   # O2O
+#   active_session = relationship('EWallet', back_populates='credit_wallet')
+    # O2O
+#   client = relationship('ResUser', back_populates='user_credit_wallet')
 
 

@@ -28,15 +28,6 @@ class CreditTransferSheetRecord(Base):
     transfer_sheet_id = Column(
         Integer, ForeignKey('credit_transfer_sheet.transfer_sheet_id')
         )
-    transfer_sheet = relationship(
-        'CreditTransferSheet', foreign_keys=transfer_sheet_id
-        )
-    user_from = relationship(
-        'ResUser', foreign_keys=transfer_from
-        )
-    user_to = relationship(
-        'ResUser', foreign_keys=transfer_to
-        )
 
     def __init__(self, **kwargs):
         self.create_date = datetime.datetime.now()
@@ -168,13 +159,10 @@ class CreditTransferSheet(Base):
     reference = Column(String)
     create_date = Column(DateTime)
     write_date = Column(DateTime)
-    wallet = relationship(
-        'CreditEWallet', back_populates='transfer_sheet_archive',
-        foreign_keys=wallet_id
-        )
-    records = relationship(
-        'CreditTransferSheetRecord', back_populates='transfer_sheet'
-        )
+    # O2O
+    wallet = relationship('CreditEWallet', back_populates='transfer_sheet')
+    # O2M
+    records = relationship('CreditTransferSheetRecord')
 
     def __init__(self, **kwargs):
         self.create_date = datetime.datetime.now()
@@ -354,6 +342,11 @@ class CreditTransferSheet(Base):
         log.info('Successfully updated transfer sheet records.')
         return self.records
 
+    def create_transfer_sheet_record(self, values={}):
+        log.debug('')
+        _record = CreditTransferSheetRecord(**values)
+        return _record
+
     def add_transfer_sheet_record(self, **kwargs):
         log.debug('')
         if not kwargs.get('transfer_type') or not kwargs.get('credits'):
@@ -362,7 +355,7 @@ class CreditTransferSheet(Base):
                     credits=kwargs.get('credits'),
                     )
         _values = self.fetch_transfer_record_creation_values(**kwargs)
-        _record = CreditTransferSheetRecord(**_values)
+        _record = self.create_transfer_sheet_record(values=_values)
         _update = self.update_records(_record)
         log.info('Successfully added new transfer record.')
         return _record
@@ -514,7 +507,17 @@ class CreditTransferSheet(Base):
         return False
 
 
+###############################################################################
+# CODE DUMP
+###############################################################################
 
-
+    # M2O
+#   transfer_sheet = relationship(
+#       'CreditTransferSheet', foreign_keys=[transfer_sheet_id]
+#       )
+#   # M2O
+#   user_from = relationship('ResUser', foreign_keys=[transfer_from])
+#   # M2O
+#   user_to = relationship('ResUser', foreign_keys=[transfer_to])
 
 

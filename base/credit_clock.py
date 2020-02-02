@@ -20,6 +20,7 @@ class CreditClock(Base):
     __tablename__ = 'credit_clock'
 
     clock_id = Column(Integer, primary_key=True)
+    wallet_id = Column(Integer, ForeignKey('credit_ewallet.wallet_id'))
     reference = Column(String)
     create_date = Column(DateTime)
     write_date = Column(DateTime)
@@ -27,33 +28,18 @@ class CreditClock(Base):
     time_spent = Column(Float)
     start_time = Column(Float)
     end_time = Column(Float)
-    wallet_id = Column(Integer, ForeignKey('credit_ewallet.wallet_id'))
-    time_sheet_id = Column(
-       Integer, ForeignKey('credit_clock_time_sheet.time_sheet_id')
-       )
-    conversion_sheet_id = Column(
-       Integer, ForeignKey('credit_clock_conversion_sheet.conversion_sheet_id')
-       )
-    time_sheet_archive = relationship(
-       'CreditClockTimeSheet', #back_populates='clock',
-       foreign_keys=time_sheet_id
-       )
-    conversion_sheet_archive = relationship(
-       'CreditClockConversionSheet', #back_populates='clock',
-       foreign_keys=conversion_sheet_id
-       )
-    wallet = relationship(
-       'CreditEWallet', #back_populates='credit_clock_archive',
-       foreign_keys=wallet_id
-       )
-    time_sheet = relationship(
-       'CreditClockTimeSheet', #back_populates='clock',
-       foreign_keys=time_sheet_id
-       )
+    # O2O
+    wallet = relationship('CreditEWallet', back_populates='credit_clock')
+    # O2O
+    time_sheet = relationship('CreditClockTimeSheet', back_populates='clock')
+    # O2O
     conversion_sheet = relationship(
-       'CreditClockConversionSheet', #back_populates='clock',
-       foreign_keys=conversion_sheet_id
+       'CreditClockConversionSheet', back_populates='clock',
        )
+    # O2M
+    time_sheet_archive = relationship('CreditClockTimeSheet')
+    # O2M
+    conversion_sheet_archive = relationship('CreditClockConversionSheet')
 
     def __init__(self, **kwargs):
         self.create_date = datetime.datetime.now()
@@ -396,6 +382,7 @@ class CreditClock(Base):
         self.start_time = False
         self.end_time = False
         log.info('Credit Clock timer reset.')
+        return True
 
     def convert_time_to_minutes(self, start_time, end_time):
         log.debug('')
@@ -458,7 +445,7 @@ class CreditClock(Base):
         log.debug('')
         self.end_time = time.time()
         self.compute_time()
-        self.add_credit_clock_time_record(self.time_sheet)
+        self.create_credit_clock_time_record(self.time_sheet)
         self.time_sheet.update_write_date()
         log.info('Credit Clock timer stoped.')
         return self.end_time
@@ -490,15 +477,52 @@ class CreditClock(Base):
         _extract = self.extract_credit_clock_minutes(
                 clock_credits=kwargs['minutes']
                 )
+        _supply = self.supply_ewallet_credits(
+                ewallet=kwargs['ewallet'],
+                credits=kwargs['minutes'],
+                )
         log.info('Successfully converted minutes to credits.')
         return _extract
 
+
+
+
+
+
+    def error_no_ewallet_found(self):
+        log.error('No ewallet found.')
+        return False
+
+    def error_no_credits_specified(self):
+        log.error('No credits specified.')
+        return False
+
+    def supply_ewallet_credits(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('ewallet'):
+            return self.error_no_ewallet_found()
+        if not kwargs.get('credits'):
+            return self.error_no_credits_specified()
+        return kwargs['ewallet'].supply_credits(credits=kwargs['credits'])
+
+    def extract_ewallet_credits(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('ewallet'):
+            return self.error_no_ewallet_found()
+        if not kwargs.get('credits'):
+            return self.error_no_credits_specified()
+        return kwargs['ewallet'].extract_credits(credits=kwargs['credits'])
+
     def convert_credits_to_minutes(self, **kwargs):
         log.debug('')
-        if not kwargs.get('credits'):
+        if not kwargs.get('credits') or not kwargs.get('wallet'):
             return self.error_no_credits_found()
         _supply = self.supply_credit_clock_minutes(
                 clock_credits=kwargs['credits']
+                )
+        _extract = self.extract_ewallet_credits(
+                credits=kwargs['credits'],
+                ewallet=kwargs['ewallet'],
                 )
         log.info('Successfully converted credits to minutes.')
         return _supply
@@ -511,7 +535,7 @@ class CreditClock(Base):
                 'to_minutes': self.convert_credits_to_minutes,
                 'to_credits': self.convert_minutes_to_credits,
                 }
-        self.add_credit_clock_conversion_record(self.conversion_sheet)
+        self.create_credit_clock_conversion_record(self.conversion_sheet)
         return _handlers[kwargs['conversion']](**kwargs)
 
     def interogate_credit_clock(self, **kwargs):
@@ -915,4 +939,14 @@ class CreditClock(Base):
 #clock = CreditClock(reference='First Credit Clock Ever', credit_clock=100)
 #clock.main_controller(controller='test')
 
+###############################################################################
+# CODE DUMP
+###############################################################################
+
+#   time_sheet_id = Column(
+#      Integer, ForeignKey('credit_clock_time_sheet.time_sheet_id')
+#      )
+#   conversion_sheet_id = Column(
+#      Integer, ForeignKey('credit_clock_conversion_sheet.conversion_sheet_id')
+#      )
 

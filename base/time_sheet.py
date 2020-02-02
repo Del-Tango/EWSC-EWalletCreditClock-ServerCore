@@ -24,12 +24,8 @@ class TimeSheetRecord(Base):
     create_date = Column(DateTime)
     write_date = Column(DateTime)
     time_spent = Column(Float)
-    time_sheet_id = Column(Integer, ForeignKey(
-       'credit_clock_time_sheet.time_sheet_id'
-       ))
-    time_sheet = relationship(
-       'CreditClockTimeSheet', back_populates='records',
-       foreign_keys=time_sheet_id
+    time_sheet_id = Column(
+       Integer, ForeignKey('credit_clock_time_sheet.time_sheet_id')
        )
 
     def __init__(self, **kwargs):
@@ -130,12 +126,10 @@ class CreditClockTimeSheet(Base):
     reference = Column(String)
     create_date = Column(DateTime)
     write_date = Column(DateTime)
-    clock = relationship(
-        'CreditClock',
-#       back_populates='time_sheet_archive',
-        foreign_keys=clock_id
-        )
-    records = relationship('TimeSheetRecord', back_populates='time_sheet')
+    # O2O
+    clock = relationship('CreditClock', back_populates='time_sheet')
+    # O2M
+    records = relationship('TimeSheetRecord')
 
     def __init__(self, **kwargs):
         self.create_date = datetime.datetime.now()
@@ -188,6 +182,7 @@ class CreditClockTimeSheet(Base):
                 }
         return _values
 
+    # TODO
     def fetch_time_sheet_record_by_id(self, **kwargs):
         log.debug('')
         if not kwargs.get('code'):
@@ -245,7 +240,7 @@ class CreditClockTimeSheet(Base):
 
     def fetch_time_sheet_record(self, **kwargs):
         log.debug('')
-        if not kwargs.get('identifier'):
+        if not kwargs.get('search_by'):
             return self.error_no_time_record_identifier_specified()
         _handlers = {
                 'id': self.fetch_time_sheet_record_by_id,
@@ -254,7 +249,7 @@ class CreditClockTimeSheet(Base):
                 'time': self.fetch_time_sheet_record_by_time,
                 'all': self.fetch_time_sheet_records,
                 }
-        return _handlers[kwargs['identifier']](**kwargs)
+        return _handlers[kwargs['search_by']](**kwargs)
 
     def set_time_sheet_id(self, **kwargs):
         log.debug('')
@@ -484,4 +479,9 @@ class CreditClockTimeSheet(Base):
                 )
         return False
 
+###############################################################################
+# CODE DUMP
+###############################################################################
 
+#   # M2O
+#   time_sheet = relationship('CreditClockTimeSheet')

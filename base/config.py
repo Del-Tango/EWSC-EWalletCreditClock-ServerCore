@@ -12,7 +12,9 @@ class Config():
                 'log_dir': 'logs',
                 'log_level': 'DEBUG',
                 'log_file': 'ewallet.log',
-                'log_record_format': '[ %(asctime)s ] %(name)s [ %(levelname)s ] - %(filename)s - %(lineno)d: %(funcName)s - %(message)s',
+                'log_record_format': '[ %(asctime)s ] %(name)s ' \
+                    '[ %(levelname)-9s ] - %(filename)s - %(lineno)d: ' \
+                    '%(funcName)s - %(message)s',
                 'log_date_format': "%Y-%m-%d %H:%M:%S",
                 }
         self.client_config = {

@@ -27,10 +27,6 @@ class CreditClockConversionSheetRecord(Base):
     conversion_type = Column(String)
     minutes = Column(Float)
     credits = Column(Integer)
-    conversion_sheet = relationship(
-            'CreditClockConversionSheet', back_populates='records',
-            foreign_keys=conversion_sheet_id
-            )
 
     def __init__(self, **kwargs):
         self.create_date = datetime.datetime.now()
@@ -162,14 +158,10 @@ class CreditClockConversionSheet(Base):
     reference = Column(String)
     create_date = Column(DateTime)
     write_date = Column(DateTime)
-    clock = relationship(
-            'CreditClock', back_populates='conversion_sheet_archive',
-            foreign_keys=clock_id
-            )
-    records = relationship(
-            'CreditClockConversionSheetRecord',
-            back_populates='conversion_sheet'
-            )
+    # O2O
+    clock = relationship('CreditClock', back_populates='conversion_sheet')
+    # O2M
+    records = relationship('CreditClockConversionSheetRecord')
 
     def __init__(self, **kwargs):
         self.create_date = datetime.datetime.now()
@@ -312,7 +304,7 @@ class CreditClockConversionSheet(Base):
 
     def fetch_conversion_sheet_record(self, **kwargs):
         log.debug('')
-        if not self.records or not kwargs.get('identifier'):
+        if not self.records or not kwargs.get('search_by'):
             return self.error_no_conversion_sheet_record_identifier_specified()
         _handlers = {
                 'id': self.fetch_conversion_sheet_record_by_id,
@@ -647,5 +639,9 @@ class CreditClockConversionSheet(Base):
                 )
         return False
 
+###############################################################################
+# CODE DUMP
+###############################################################################
 
-
+    # M2O
+#   conversion_sheet = relationship('CreditClockConversionSheet')
