@@ -1,6 +1,7 @@
 import datetime
 import random
 import logging
+import pysnooper
 from itertools import count
 from sqlalchemy import Table, Column, String, Integer, Float, ForeignKey, Date, DateTime
 from sqlalchemy.orm import relationship
@@ -49,11 +50,11 @@ class ResUser(Base):
        )
     # O2O
     user_contact_list = relationship(
-       'ContactList', uselist=False, back_populates='client',
+       'ContactList', back_populates='client',
        )
     # O2O
     user_credit_wallet = relationship(
-       'CreditEWallet', uselist=False, back_populates='client',
+       'CreditEWallet', back_populates='client',
        )
     # O2M
     user_pass_hash_archive = relationship('ResUserPassHashArchive')
@@ -62,9 +63,23 @@ class ResUser(Base):
     # O2M
     user_contact_list_archive = relationship('ContactList')
 
+    @pysnooper.snoop('logs/ewallet.log')
     def __init__(self, **kwargs):
         self.user_create_date = datetime.datetime.now()
         self.user_write_date = datetime.datetime.now()
+
+        self.user_name = kwargs.get('user_name')
+        self.user_credit_wallet = kwargs.get('user_credit_wallet') or []
+        self.user_contact_list = kwargs.get('user_contact_list') or []
+        self.user_pass_hash = kwargs.get('user_pass_hash')
+        self.user_email = kwargs.get('user_email')
+        self.user_phone = kwargs.get('user_phone')
+        self.user_alias = kwargs.get('user_alias')
+        self.user_state_code = kwargs.get('user_state_code')
+        self.user_state_name = kwargs.get('user_state_name')
+        self.user_pass_hash_archive = kwargs.get('user_pass_hash_archive') or []
+        self.user_credit_wallet_archive = kwargs.get('user_credit_wallet_archive') or []
+        self.user_contact_list_archive = kwargs.get('user_contact_list_archive') or []
 
     def fetch_user_id(self):
         log.debug('')
@@ -135,7 +150,8 @@ class ResUser(Base):
                 'user_email': self.user_email,
                 'user_phone': self.user_phone,
                 'user_alias': self.user_alias,
-                'user_state': self.user_state,
+                'user_state_code': self.user_state_code,
+                'user_state_name': self.user_state_name,
                 'user_pass_hash_archive': self.user_pass_hash_archive,
                 'user_credit_wallet_archive': self.user_credit_wallet_archive,
                 'user_contact_list_archive': self.user_contact_list_archive,
@@ -222,11 +238,11 @@ class ResUser(Base):
                     },
                 'setters': {
                     'code': self.set_user_state_code,
-                    'name': self.set_uset_state_name,
+                    'name': self.set_user_state_name,
                     }
                 }
         _value_fetch = _handlers['converters'][kwargs['set_by']](**kwargs)
-        _field_code = kwargs.get('code') if kwargs['set_by'] == 'code' \
+        _field_code = kwargs.get('state_code') if kwargs['set_by'] == 'code' \
                             else _value_fetch
         _field_name = kwargs.get('name') if kwargs['set_by'] == 'name' \
                             else _value_fetch

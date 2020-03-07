@@ -49,7 +49,7 @@ class EWallet(Base):
     id = Column(Integer, primary_key=True, nullable=False, autoincrement=True)
     name = Column(String)
     create_date = Column(Date)
-    session = res_utils.session_factory()
+    session = None
     # O2O
     contact_list = relationship(
        'ContactList', back_populates='active_session',
@@ -69,8 +69,14 @@ class EWallet(Base):
             config.log_config['log_dir'] + '/' + config.log_config['log_file']
             )
     def __init__(self, **kwargs):
+        self.name = kwargs.get('name')
+        self.session = kwargs.get('session') or res_utils.session_factory()
         self.create_date = datetime.datetime.now()
         self.write_date = datetime.datetime.now()
+        self.contact_list = kwargs.get('contact_list') or []
+        self.credit_wallet = kwargs.get('credit_wallet') or []
+        self.active_user = kwargs.get('active_user') or []
+        self.user_account_archive = kwargs.get('user_account_archive') or []
 
     def fetch_user_by_id(self, **kwargs):
         log.debug('')
@@ -150,48 +156,93 @@ class EWallet(Base):
             return False
         return self.user_account_archive[0]
 
-    def clear_active_session_user_data(self, **kwargs):
+    def set_session_active_user(self, active_user):
         log.debug('')
-        self.active_user = None
-        self.credit_wallet = None
-        self.contact_list = None
+        self.active_user.append(active_user)
+        return self.active_user
+
+    def set_session_credit_wallet(self, credit_wallet):
+        log.debug('')
+        self.credit_wallet.append(credit_wallet)
+        return self.credit_wallet
+
+    def set_session_contact_list(self, contact_list):
+        log.debug('')
+        self.contact_list.append(contact_list)
+        return self.contact_list
+
+    def set_session_data(self, data_dct):
+        log.debug('')
+        _handlers = {
+                'active_user': self.set_session_active_user,
+                'credit_wallet': self.set_session_credit_wallet,
+                'contact_list': self.set_session_contact_list,
+                }
+        for item in data_dct:
+            if item in _handlers and data_dct[item]:
+                _handlers[item](data_dct[item])
+        return data_dct
+
+    def clear_session_active_user(self):
+        log.debug('')
+        self.active_user = []
         return True
 
-    # TODO: Apply ORM
+    def clear_session_credit_wallet(self):
+        log.debug('')
+        self.credit_wallet = []
+        return True
+
+    def clear_session_contact_list(self):
+        log.debug('')
+        self.contact_list = []
+        return True
+
+    def clear_active_session_user_data(self, data_dct):
+        log.debug('')
+        _handlers = {
+                'active_user': self.clear_session_active_user,
+                'credit_wallet': self.clear_session_credit_wallet,
+                'contact_list': self.clear_session_contact_list,
+                }
+        for item in data_dct:
+            if item in _handlers and data_dct[item]:
+                _handlers[item]()
+        return data_dct
+
     def update_session_from_user(self, **kwargs):
         log.debug('')
         if not kwargs.get('session_active_user'):
             return self.error_no_session_active_user_found()
-#       self.active_user = kwargs['session_active_user']
-#       self.credit_wallet = self.active_user.fetch_user_credit_wallet()
-#       self.contact_list = self.active_user.fetch_user_contact_list()
+        _user = kwargs['session_active_user']
+        _session_data = {
+                'active_user': _user,
+                'credit_wallet': _user.fetch_user_credit_wallet(),
+                'contact_list': _user.fetch_user_contact_list(),
+                }
+        _set_data = self.set_session_data(_session_data)
         log.info('Successfully updated ewallet session from current active user.')
         return True
 
-    # TODO: Apply ORM
 #   @pysnooper.snoop()
     def update_user_account_archive(self, **kwargs):
         log.debug('')
         if not kwargs.get('user'):
             return self.error_no_user_object_found()
-
-#       try:
-#           self.user_account_archive.update({
-#               kwargs['user'].fetch_user_id(), kwargs['user']
-#               })
-#       except TypeError:
-#           self.user_account_archive[
-#                   kwargs['user'].fetch_user_id()] = kwargs['user']
-        log.info('Successfully updated session user account archive.')
+        self.user_account_archive.append(kwargs['user'])
+        log.info(
+                'Successfully updated session user account archive with user {}.' \
+                .format(kwargs['user'].fetch_user_name())
+                )
         return self.user_account_archive
 
     def action_reset_user_password(self, **kwargs):
         log.debug('')
-        if not self.session_active_user or not kwargs.get('user_pass'):
+        if not self.active_user or not kwargs.get('user_pass'):
             return self.error_no_user_password_found()
         _pass_check_func = EWalletCreateAccount().check_user_pass
         _pass_hash_func = EWalletLogin().hash_password
-        return self.session_active_user.user_controller(
+        return self.active_user.user_controller(
                 ctype='action', action='reset', target='field', field='user_pass',
                 password=kwargs['user_pass'],
                 pass_check_func=_pass_check_func,
@@ -200,10 +251,10 @@ class EWallet(Base):
 
     def action_reset_user_email(self, **kwargs):
         log.debug('')
-        if not self.session_active_user or not kwargs.get('user_email'):
+        if not self.active_user or not kwargs.get('user_email'):
             return self.error_no_user_email_found()
         _email_check_func = EwalletCreateAccount().check_user_email
-        return self.session_active_user.user_controller(
+        return self.active_user.user_controller(
                 ctype='action', action='reset', target='field', field='user_email',
                 email=kwargs['user_email'],
                 email_check_func=_email_check_func,
@@ -211,22 +262,23 @@ class EWallet(Base):
 
     def action_reset_user_alias(self, **kwargs):
         log.debug('')
-        if not self.session_active_user or not kwargs.get('user_alias'):
+        if not self.active_user or not kwargs.get('user_alias'):
             return self.error_no_user_alias_found()
-        return self.session_active_user.user_controller(
+        return self.active_user.user_controller(
                 ctype='action', action='reset', target='field', field='user_alias',
                 alias=kwargs['user_alias']
                 )
 
     def action_reset_user_phone(self, **kwargs):
         log.debug('')
-        if not self.session_active_user or not kwargs.get('user_phone'):
+        if not self.active_user or not kwargs.get('user_phone'):
             return self.error_no_user_phone_found()
-        return self.session_active_user.user_controller(
+        return self.active_user.user_controller(
                 ctype='action', action='reset', target='field', field='user_phone',
                 phone=kwargs['user_phone']
                 )
 
+    # TODO - FIX ME
     def action_create_new_user_account(self, **kwargs):
         log.debug('')
         session_create_account = EWalletLogin().ewallet_login_controller(
@@ -234,17 +286,20 @@ class EWallet(Base):
                 user_name=kwargs.get('user_name'),
                 user_pass=kwargs.get('user_pass'),
                 user_email=kwargs.get('user_email'),
-                user_archive=self.user_account_archive
+#               user_archive=self.user_account_archive,
+                active_session=self.session,
                 )
         if not session_create_account:
             return self.warning_could_not_create_user_account(kwargs['user_name'])
+        self.session.add(session_create_account)
         log.info('Successfully created new user account.')
         self.update_session_from_user(
-                session_active_user=session_create_account
+                session_active_user=session_create_account,
                 )
         self.update_user_account_archive(
-                user=session_create_account
+                user=session_create_account,
                 )
+        self.session.commit()
         return session_create_account
 
     def action_create_new_conversion_credits_to_clock(self, **kwargs):
@@ -275,47 +330,47 @@ class EWallet(Base):
 
     def action_create_new_credit_wallet(self, **kwargs):
         log.debug('')
-        if not self.session_active_user:
+        if not self.active_user:
             return self.error_no_session_active_user_found()
-        _new_wallet = self.session_active_user.user_controller(
+        _new_wallet = self.active_user.user_controller(
                 ctype='action', action='create', target='credit_wallet',
                 reference=kwargs.get('reference'),
                 credits=kwargs.get('credits'),
                 )
         if not _new_wallet:
             return self.warning_could_not_create_credit_wallet(
-                self.session_active_user.fetch_user_name()
+                self.active_user.fetch_user_name()
                 )
         log.info('Successfully created new credit wallet.')
         return _new_wallet
 
     def action_create_new_credit_clock(self, **kwargs):
         log.debug('')
-        if not self.session_active_user:
+        if not self.active_user:
             return self.error_no_session_active_user_found()
-        _new_clock = self.session_active_user.user_controller(
+        _new_clock = self.active_user.user_controller(
                 ctype='action', action='create', target='credit_clock',
                 reference=kwargs.get('reference'),
                 credit_clock=kwargs.get('credit_clock'),
                 )
         if not _new_clock:
             return self.warning_could_not_create_credit_clock(
-                self.session_active_user.fetch_user_name()
+                self.active_user.fetch_user_name()
                 )
         log.info('Successfully created new credit clock.')
         return _new_clock
 
     def action_create_new_contact_list(self, **kwargs):
         log.debug('')
-        if not self.session_active_user:
+        if not self.active_user:
             return self.error_no_session_active_user_found()
-        _new_list = self.session_active_user.user_controller(
+        _new_list = self.active_user.user_controller(
                 ctype='action', action='create', target='contact_list',
                 reference=kwargs.get('reference'),
                 )
         if not _new_list:
             return self.warning_could_not_create_contact_list(
-                self.session_active_user.fetch_user_name()
+                self.active_user.fetch_user_name()
                 )
         log.info('Successfully created new contact list.')
         return _new_list
@@ -324,7 +379,7 @@ class EWallet(Base):
         log.debug('')
         if not self.session_contact_list:
             return self.error_no_active_session_contact_list_found(
-                self.session_active_user.fetch_user_name()
+                self.active_user.fetch_user_name()
                 )
         _new_record = self.session_contact_list.contact_list_controller(
                 action='create', user_name=kwargs.get('user_name'),
@@ -334,7 +389,7 @@ class EWallet(Base):
                 )
         if not _new_record:
             return self.warning_could_not_create_contact_record(
-                self.session_active_user.fetch_user_name()
+                self.active_user.fetch_user_name()
                 )
         log.info('Successfully created new contact record.')
         return _new_record
@@ -382,24 +437,24 @@ class EWallet(Base):
 
     def action_unlink_credit_wallet(self, **kwargs):
         log.debug('')
-        if not self.session_active_user or not kwargs.get('wallet_id'):
+        if not self.active_user or not kwargs.get('wallet_id'):
             return self.error_handler_action_unlink_credit_wallet(
-                    session_user=self.session_active_user,
+                    session_user=self.active_user,
                     wallet_id=kwargs.get('wallet_id'),
                     )
-        return self.session_active_user.user_controller(
+        return self.active_user.user_controller(
                 ctype='action', action='unlink', target='credit_wallet',
                 wallet_id=kwargs['wallet_id'],
                 )
 
     def action_unlink_contact_list(self, **kwargs):
         log.debug('')
-        if not self.session_active_user or not kwargs.get('list_id'):
+        if not self.active_user or not kwargs.get('list_id'):
             return self.error_handler_action_unlink_contact_list(
-                    session_user=self.session_active_user,
+                    session_user=self.active_user,
                     list_id=kwargs.get('list_id'),
                     )
-        return self.session_active_user.user_controller(
+        return self.active_user.user_controller(
                 ctype='action', action='unlink', target='contact_list',
                 list_id=kwargs['list_id']
                 )
@@ -594,7 +649,7 @@ class EWallet(Base):
         log.debug('')
         if not self.active_user:
             return self.error_no_session_active_user_found()
-        res = self.session_active_user.fetch_user_values()
+        res = self.active_user[0].fetch_user_values()
         log.debug(res)
         return res
 
@@ -860,28 +915,24 @@ class EWallet(Base):
         return True if not _search_user_for_session \
                 else _search_user_for_session
 
-    def set_session_active_user(self, **kwargs):
-        log.debug('')
-        if not kwargs.get('user'):
-            return self.error_no_user_found()
-        self.active_user = kwargs['user']
-        return self.active_user
-
+    # TODO - FIX ME
     # [ NOTE ]: Allows multiple logged in users to switch.
     def action_system_user_update(self, **kwargs):
         log.debug('')
         if not kwargs.get('user'):
             return self.error_no_user_specified()
-        user_id = kwargs['user'].fetch_user_id()
-        if user_id not in self.user_account_archive.keys():
+        if kwargs['user'] not in self.user_account_archive:
             return self.warning_user_not_in_session_archive()
-        _set_user = self.set_session_active_user(user=kwargs['user'])
+        _set_user = self.set_session_active_user(active_user=kwargs['user'])
         self.update_session_from_user(session_active_user=kwargs['user'])
         return self.active_user
 
+
+
+
     def action_system_session_update(self, **kwargs):
         log.debug('')
-        kwargs.update({'session_active_user': self.session_active_user})
+        kwargs.update({'session_active_user': self.active_user})
         _update = self.update_session_from_user(**kwargs)
         return _update or False
 
@@ -905,18 +956,29 @@ class EWallet(Base):
                 }
         return _handlers[kwargs['target']](**kwargs)
 
+
+
+    # TODO
     def handle_user_action_login(self, **kwargs):
         log.debug('')
-        session_login = EWalletLogin().ewallet_login_controller(
+        _login_record = EWalletLogin()
+        session_login = _login_record.ewallet_login_controller(
                 action='login', user_name=kwargs.get('user_name'),
                 user_pass=kwargs.get('user_pass'),
-                user_archive=self.user_account_archive
+                user_archive=self.user_account_archive,
+                active_session=self.session,
                 )
         if not session_login:
             return self.warning_could_not_login()
+        self.session.add(_login_record)
+        self.user_account_archive.append(session_login)
         log.info('User successfully loged in.')
         self.action_system_user_update(user=session_login)
+        self.session.commit()
         return session_login
+
+
+
 
     def handle_user_action_logout(self, **kwargs):
         log.debug('')
@@ -1810,24 +1872,24 @@ class EWallet(Base):
                 controller='user', ctype='action', action='login', user_name='test user',
                 user_pass='123abc@xxx'
                 )
-        print('[ * ] View account')
-        self.ewallet_controller(
-                controller='user', ctype='action', action='view', view='account'
-                )
-        print('[ * ] Create second account')
-        self.ewallet_controller(
-                controller='user', ctype='action', action='create', create='account',
-                user_name='user2', user_pass='123abc@xxx', user_email='example2@example.com'
-                )
-        print('[ * ] Second Login')
-        self.ewallet_controller(
-                controller='user', ctype='action', action='login', user_name='user2',
-                user_pass='123abc@xxx'
-                )
-        print('[ * ] View account')
-        self.ewallet_controller(
-                controller='user', ctype='action', action='view', view='account'
-                )
+#       print('[ * ] View account')
+#       self.ewallet_controller(
+#               controller='user', ctype='action', action='view', view='account'
+#               )
+#       print('[ * ] Create second account')
+#       self.ewallet_controller(
+#               controller='user', ctype='action', action='create', create='account',
+#               user_name='user2', user_pass='123abc@xxx', user_email='example2@example.com'
+#               )
+#       print('[ * ] Second Login')
+#       self.ewallet_controller(
+#               controller='user', ctype='action', action='login', user_name='user2',
+#               user_pass='123abc@xxx'
+#               )
+#       print('[ * ] View account')
+#       self.ewallet_controller(
+#               controller='user', ctype='action', action='view', view='account'
+#               )
 
     def test_ewallet_system_controller(self):
         print('[ TEST ] System.')
@@ -1840,16 +1902,20 @@ class EWallet(Base):
         print('Active user : {}'.format(self.active_user))
         print('Session Contact List : {}'.format(self.contact_list))
         print('Session Credit Wallet : {}'.format(self.credit_wallet))
-        print('User accountt archive : {}'.format(self.user_account_archive))
+        print('User account archive : {}'.format(self.user_account_archive))
 
 
     def test_ewallet(self, **kwargs):
-#       self.test_ewallet_user_controller()
+        self.test_ewallet_user_controller()
 #       self.test_ewallet_system_controller()
         self.test_orm()
 
 
-ewallet = EWallet()
+# TODO - Manage initialisation and sqlalchemy sessions
+Base.metadata.create_all(res_utils.engine)
+_working_session = res_utils.session_factory()
+
+ewallet = EWallet(session=_working_session)
 ewallet.ewallet_controller(controller='test')
 
 

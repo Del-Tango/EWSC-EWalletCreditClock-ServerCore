@@ -167,7 +167,7 @@ class ContactList(Base):
     active_session = relationship('EWallet', back_populates='contact_list')
     # O2O
     client = relationship(
-        'ResUser', back_populates='user_contact_list', foreign_keys=[client_id]
+        'ResUser', back_populates='user_contact_list'
         )
     # O2M
     records = relationship('ContactListRecord')

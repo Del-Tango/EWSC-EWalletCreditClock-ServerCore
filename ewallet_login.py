@@ -5,7 +5,8 @@ import hashlib
 import logging
 import pysnooper
 #from validate_email import validate_email
-from sqlalchemy import Table, Column, String, Integer, Float, ForeignKey, Date, DateTime
+from sqlalchemy import Table, Column, String, Integer, Float, Boolean, ForeignKey, Date, DateTime
+from sqlalchemy import orm
 from sqlalchemy.orm import relationship
 
 from base.res_user import ResUser
@@ -22,19 +23,75 @@ class EWalletLogin(Base):
     __tablename__ = 'ewallet_login'
 
     login_id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, ForeignKey('res_user.user_id'))
+    login_date = Column(DateTime, default=datetime.datetime.now())
+    login_status = Column(Boolean, server_default=u'false')
+
+    def __init__(self, *args, **kwargs):
+        self.user_id = kwargs.get('user_id') or None
+        self.login_status = kwargs.get('login_status') or None
+
+    def fetch_all_user_records(self, active_session=None):
+        log.debug('')
+        if not active_session:
+            return self.error_no_active_session_found()
+        _user_records = active_session.query(ResUser).all()
+        if not _user_records:
+            log.info('No user records found.')
+        return _user_records
+
+    def fetch_all_user_names(self, active_session=None):
+        log.debug('')
+        if not active_session:
+            return self.error_no_active_session_found()
+        _user_names = [
+                str(item.user_name) for item in self.fetch_all_user_records(
+                    active_session=active_session
+                )
+            ]
+        return _user_names
+
+    def fetch_user_by_name(self, user_name=None, active_session=None):
+        if not active_session:
+            return self.error_no_active_session_found()
+        _user = active_session.query(ResUser) \
+                .filter(ResUser.user_name==user_name) #\
+#               .one()
+        return _user or self.error_no_user_record_found_by_name(user_name)
+
+    def set_user_id(self, user_id):
+        log.debug('')
+        if not user_id:
+            return self.error_no_user_id_found()
+        self.user_id = user_id
+        return True
+
+    def set_login_status(self, login_status):
+        log.debug('')
+        if not isinstance(login_status, bool):
+            return self.error_invalid_login_status()
+        self.login_status = login_status
+        return True
+
+    def set_login_record_data(self, **kwargs):
+        log.debug('')
+        _values = {
+                'user_id': self.set_user_id(kwargs.get('user_id')),
+                'login_status': self.set_login_status(kwargs.get('login_status')),
+                }
+        return _values
 
     def hash_password(self, password):
         log.debug('')
         return str(hashlib.sha256(password.encode()).hexdigest())
 
-    # TODO: Apply ORM
 #   @pysnooper.snoop()
-    def check_user_name_exists(self, user_name, user_archive):
+    def check_user_name_exists(self, user_name, active_session):
         log.debug('')
-#       for item in user_archive:
-#           if user_archive[item].user_name == user_name:
-#               return user_archive[item]
-        return False
+        _user = self.fetch_user_by_name(
+                user_name, active_session=active_session
+                )
+        return _user or False
 
 #   @pysnooper.snoop()
     def check_user_pass_hash(self, user_pass, known_hash):
@@ -47,11 +104,14 @@ class EWalletLogin(Base):
 #   @pysnooper.snoop()
     def authenticate_user(self, **kwargs):
         log.debug('')
-        _user = self.check_user_name_exists(
-                kwargs['user_name'], user_archive=kwargs.get('user_archive')
+        _user_query = self.check_user_name_exists(
+                kwargs['user_name'], kwargs.get('active_session')
                 )
-        if not _user:
+        if not _user_query:
             return self.warning_user_name_not_found()
+        if _user_query.count() > 1:
+            self.warning_user_not_found_by_name(kwargs['user_name'])
+        _user = list(_user_query)[0]
         _pass_check = self.check_user_pass_hash(
                 kwargs['user_pass'], _user.fetch_user_pass_hash()
                 )
@@ -68,9 +128,16 @@ class EWalletLogin(Base):
                     )
         _authenticated_user = self.authenticate_user(**kwargs)
         if not _authenticated_user:
+            _set_login_data = self.set_login_record_data(
+                    login_status=False,
+                    )
             return self.error_invalid_login_credentials()
+        _set_login_data = self.set_login_record_data(
+                user_id=_authenticated_user.user_id,
+                login_status=True,
+                )
         _set_user_state = _authenticated_user.set_user_state(
-                set_by=code, code=1
+                set_by='code', state_code=1
                 )
         return _authenticated_user
 
@@ -108,6 +175,10 @@ class EWalletLogin(Base):
                 return _reasons_and_handlers['handlers'][item]()
         return False
 
+    def error_no_active_session_found(self):
+        log.error('No active user found.')
+        return False
+
     def error_no_user_name_found(self):
         log.error('No user name found.')
         return False
@@ -122,6 +193,18 @@ class EWalletLogin(Base):
 
     def error_invalid_login_credentials(self):
         log.error('Invalid login credentials.')
+        return False
+
+    def error_no_user_record_found_by_name(self, user_name):
+        log.error('No user record found by name {}.'.format(user_name))
+        return False
+
+    def error_no_user_id_found(self):
+        log.error('No user id found.')
+        return False
+
+    def error_invalid_login_status(self):
+        log.error('Invalid login status. Defaults to False.')
         return False
 
     def warning_could_not_create_new_user_account(self):
@@ -139,21 +222,49 @@ class EWalletLogin(Base):
         log.warning('User password is incorrect.')
         return False
 
+    def warning_user_not_found_by_name(self, user_name):
+        log.warning('No user found by name {}.'.format(user_name))
+        return False
+
+    def warning_multiple_user_accounts_found(self, **kwargs):
+        log.warning(
+                'Multiple user accounts found for user name {}. '
+                'Fetching first.'.format(kwargs.get('user_name'))
+                )
+        return False
+
+
 
 class EWalletCreateUser(EWalletLogin):
 
-    # TODO: Apply ORM
-#   @pysnooper.snoop()
-    def check_user_name_ensure_one(self, user_name, user_archive):
+    def fetch_all_user_records(self, active_session=None):
         log.debug('')
-        if not user_archive:
-            return True
+        if not active_session:
+            return self.error_no_active_session_found()
+        _user_records = active_session.query(ResUser).all()
+        if not _user_records:
+            log.info('No user records found.')
+        return _user_records
 
-        _existing_user_name = False
-#       _existing_user_name = [
-#               item for item in user_archive
-#               if user_archive[item].user_name == user_name
-#               ]
+    def fetch_all_user_names(self, active_session=None):
+        log.debug('')
+        if not active_session:
+            return self.error_no_active_session_found()
+        _user_names = [
+                str(item.user_name) for item in self.fetch_all_user_records(
+                    active_session=active_session
+                )
+            ]
+        return _user_names
+
+#   @pysnooper.snoop()
+    def check_user_name_ensure_one(self, user_name, user_names):
+        log.debug('')
+        if not user_names:
+            return True
+        _existing_user_name = [
+                item for item in user_names if user_name == item
+                ]
         if not _existing_user_name:
             return True
         return False
@@ -241,9 +352,12 @@ class EWalletCreateUser(EWalletLogin):
 
     def perform_new_user_checks(self, **kwargs):
         log.debug('')
+        _user_names = self.fetch_all_user_names(
+                active_session=kwargs.get('active_session')
+                )
         _checks = {
                 'user_name': self.check_user_name_ensure_one(
-                    kwargs['user_name'], kwargs.get('user_archive')
+                    kwargs['user_name'], _user_names
                     ),
                 'user_pass': self.check_user_pass(
                     kwargs['user_pass']
@@ -254,8 +368,12 @@ class EWalletCreateUser(EWalletLogin):
                 }
         return _checks
 
+#   @pysnooper.snoop('logs/ewallet.log')
     def create_res_user(self, **kwargs):
         log.debug('')
+        if not kwargs.get('active_session'):
+            log.error('No session found.')
+            return False
         _new_user = ResUser(
                 user_name=kwargs['user_name'],
                 user_pass_hash=self.hash_password(kwargs['user_pass']),
@@ -263,6 +381,7 @@ class EWalletCreateUser(EWalletLogin):
                 user_phone=kwargs.get('user_phone'),
                 user_alias=kwargs.get('user_alias'),
                 )
+        kwargs['active_session'].add(_new_user)
         return _new_user
 
     def action_create_new_user(self, **kwargs):
@@ -318,6 +437,10 @@ class EWalletCreateUser(EWalletLogin):
 
     def error_invalid_user_email_check_severity(self):
         log.error('Invalid user email check severity.')
+        return False
+
+    def error_no_active_session_found(self):
+        log.error('No active session found.')
         return False
 
     def warning_duplicate_user_name(self):
