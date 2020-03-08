@@ -97,11 +97,15 @@ class ResUser(Base):
 
     def fetch_user_credit_wallet(self):
         log.debug('')
-        return self.user_credit_wallet
+        if not len(self.user_credit_wallet):
+            return self.error_no_user_credit_wallet_found()
+        return self.user_credit_wallet[0]
 
     def fetch_user_contact_list(self):
         log.debug('')
-        return self.user_contact_list
+        if not len(self.user_contact_list):
+            return self.error_no_user_contact_list_found()
+        return self.user_contact_list[0]
 
     def fetch_user_pass_hash(self):
         log.debug('')
@@ -142,8 +146,8 @@ class ResUser(Base):
                 'user_name': self.user_name,
                 'user_create_date': self.user_create_date,
                 'user_write_date': self.user_write_date,
-                'user_credit_wallet': self.user_credit_wallet,
-                'user_contact_list': self.user_contact_list,
+                'user_credit_wallet': self.fetch_user_credit_wallet(),
+                'user_contact_list': self.fetch_user_contact_list(),
                 'user_pass_hash': self.user_pass_hash,
                 'user_email': self.user_email,
                 'user_phone': self.user_phone,

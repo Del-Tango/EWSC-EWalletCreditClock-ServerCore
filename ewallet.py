@@ -444,20 +444,24 @@ class EWallet(Base):
     # TODO - FIX ME
     def action_create_new_transfer(self, **kwargs):
         log.debug('')
-        if not self.credit_wallet or not kwargs.get('transfer_type') \
-                or not kwargs.get('partner_ewallet'):
+        if not self.credit_wallet or not kwargs.get('active_session') or \
+                not kwargs.get('transfer_type') or \
+                not kwargs.get('partner_ewallet'):
             return self.error_handler_action_create_new_transfer(
                     session_wallet=self.credit_wallet,
                     transfer_type=kwargs.get('transfer_type'),
                     partner_wallet=kwargs.get('partner_ewallet'),
+                    active_session=kwargs.get('active_session'),
                     )
-        return self.credit_wallet.user_controller(
+        _credit_wallet = self.fetch_active_session_credit_wallet()
+        return False if not _credit_wallet else _credit_wallet.user_controller(
                 action='transfer', transfer_type=kwargs['transfer_type'],
                 partner_ewallet=kwargs['partner_ewallet'],
                 credits=kwargs['credits'] or 0,
                 reference=kwargs.get('reference'),
                 transfer_from=kwargs.get('transfer_from'),
                 transfer_to=kwargs.get('transfer_to'),
+                active_session=kwargs['active_session']
                 )
 
     def action_unlink_user_account(self, **kwargs):
@@ -1947,6 +1951,24 @@ class EWallet(Base):
                 )
         self.test_orm()
         print(str(_second_login) + '\n')
+        print('[ * ] Supply credits')
+        _supply_credits = self.ewallet_controller(
+                controller='user', ctype='action', action='create', create='transfer',
+                transfer_type='incomming',
+                partner_ewallet=self.fetch_active_session_credit_wallet(),
+                credits=10, reference='First Credit Supply',
+                transfer_to=self.fetch_active_session_user().fetch_user_id(), active_session=self.session
+                )
+        print(str(_supply_credits) + '\n')
+        print('[ * ] Extract credits')
+        _extract_credits = self.ewallet_controller(
+                controller='user', ctype='action', action='create', create='transfer',
+                transfer_type='outgoing',
+                partner_ewallet=self.fetch_active_session_credit_wallet(),
+                credits=10, reference='First Credit Extract',
+                transfer_to=self.fetch_active_session_user().fetch_user_id(), active_session=self.session
+                )
+        print(str(_extract_credits) + '\n')
         print('[ * ] Second view account')
         _second_view_account = self.ewallet_controller(
                 controller='user', ctype='action', action='view', view='account'

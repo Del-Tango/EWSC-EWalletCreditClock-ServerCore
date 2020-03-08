@@ -213,8 +213,8 @@ class CreditTransferSheet(Base):
                 'transfer_sheet_id': self.transfer_sheet_id,
                 'transfer_type': kwargs.get('transfer_type'),
                 'transfer_from': kwargs.get('transfer_from'),
-                'transfer_to': kwargs('transfer_to'),
-                'credits': kwargs('credits'),
+                'transfer_to': kwargs.get('transfer_to'),
+                'credits': kwargs.get('credits'),
                 }
         return _values
 
@@ -380,7 +380,7 @@ class CreditTransferSheet(Base):
 
     def update_records(self, record):
         log.debug('')
-        self.records.update({record.fetch_record_id(): record})
+        self.records.append(record)
         return self.records
 
     def append_transfer_sheet_record(self, **kwargs):

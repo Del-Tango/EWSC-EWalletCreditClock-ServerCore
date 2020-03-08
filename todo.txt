@@ -1,7 +1,6 @@
 # TODO - Persistent storage with SQLAlchemy ORM
 - session cleanup
 - system action view session
-- set user write date
 # TODO - Remove redundant error handlers
 # TODO - Add full test cases
 # TODO - Manage initialisation and sqlalchemy sessions

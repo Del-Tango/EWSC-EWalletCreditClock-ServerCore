@@ -57,6 +57,7 @@ class CreditEWallet(Base):
             return
         self.create_date = datetime.datetime.now()
         self.write_date = datetime.datetime.now()
+
         _credit_clock = kwargs.get('credit_clock') or \
                 self.system_controller(
                     action='create_clock', reference='Credit Clock',
@@ -76,7 +77,7 @@ class CreditEWallet(Base):
                 )
 
         self.active_session_id = kwargs.get('active_session_id')
-        self.reference = kwargs.get('reference') or 'Credit EWallet'
+        self.reference = kwargs.get('reference')
         self.credits = kwargs.get('credits')
         self.credit_clock = [_credit_clock]
         self.transfer_sheet = [_transfer_sheet]
@@ -89,7 +90,7 @@ class CreditEWallet(Base):
                 [_invoice_sheet]
 
 
-    def fetch_credit_eid(self):
+    def fetch_credit_ewallet_id(self):
         log.debug('')
         return self.wallet_id
 
@@ -111,11 +112,15 @@ class CreditEWallet(Base):
 
     def fetch_credit_ewallet_credit_clock(self):
         log.debug('')
-        return self.credit_clock
+        if not len(self.credit_clock):
+            return self.error_no_credit_ewallet_credit_clock_found()
+        return self.credit_clock[0]
 
     def fetch_credit_ewallet_transfer_sheet(self):
         log.debug('')
-        return self.transfer_sheet
+        if not len(self.transfer_sheet):
+            return self.error_no_credit_ewallet_transfer_sheet_found()
+        return self.transfer_sheet[0]
 
     def fetch_credit_ewallet_invoice_sheet(self):
         log.debug('')
@@ -475,7 +480,7 @@ class CreditEWallet(Base):
                     )
         log.info('Attempting to share transfer record...')
         _partner_transfer_sheet = kwargs['partner_ewallet'].fetch_credit_ewallet_transfer_sheet()
-        _share = kwargs['partner_ewallet'].transfer_sheet.credit_transfer_sheet_controller(
+        _share = _partner_transfer_sheet.credit_transfer_sheet_controller(
                 action='append', records=[kwargs['transfer_record']]
                 )
         return _share
@@ -497,7 +502,8 @@ class CreditEWallet(Base):
                 action='supply', credits=kwargs['credits']
                 )
         log.info('Creating transfer record...')
-        _transfer_record = self.transfer_sheet.credit_transfer_sheet_controller(
+        _transfer_sheet = self.fetch_credit_ewallet_transfer_sheet()
+        _transfer_record = _transfer_sheet.credit_transfer_sheet_controller(
                 action='add', reference=kwargs.get('reference'),
                 transfer_type=kwargs.get('transfer_type'),
                 transfer_from=kwargs.get('transfer_from'),
@@ -527,7 +533,8 @@ class CreditEWallet(Base):
                 action='supply', credits=kwargs['credits']
                 )
         log.info('Creating transfer record...')
-        _transfer_record = self.transfer_sheet.credit_transfer_sheet_controller(
+        _transfer_sheet = self.fetch_credit_ewallet_transfer_sheet()
+        _transfer_record = _transfer_sheet.credit_transfer_sheet_controller(
                 action='add', reference=kwargs.get('reference'),
                 transfer_type=kwargs.get('transfer_type'), transfer_from=self.client_id,
                 transfer_to=kwargs.get('transfer_to'), credits=kwargs['credits']
@@ -812,7 +819,7 @@ class CreditEWallet(Base):
                 }
         _handle = _handlers[kwargs['action']](**kwargs)
         if _handle and kwargs['action'] != 'interogate':
-            self.update_write_date()
+            self.set_write_date()
         return _handle
 
     def main_controller(self, **kwargs):
