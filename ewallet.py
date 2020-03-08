@@ -796,10 +796,11 @@ class EWallet(Base):
 
     def action_view_transfer_list(self, **kwargs):
         log.debug('')
-        if not self.session_credit_wallet:
+        _credit_wallet = self.fetch_active_session_credit_wallet()
+        if not _credit_wallet:
             return self.error_no_session_credit_wallet_found()
         log.info('Attempting to fetch active transfer sheet...')
-        _transfer_sheet = self.session_credit_wallet.fetch_credit_ewallet_transfer_sheet()
+        _transfer_sheet = _credit_wallet.fetch_credit_ewallet_transfer_sheet()
         if not _transfer_sheet:
             return self.warning_could_not_fetch_transfer_sheet()
         res = _transfer_sheet.fetch_transfer_sheet_values()
@@ -1966,6 +1967,12 @@ class EWallet(Base):
                 controller='user', ctype='action', action='view', view='credit_wallet',
                 )
         print(str(_view_credit_wallet) + '\n')
+        print('[ * ] View Transfer Sheet')
+        _view_transfer_sheet = self.ewallet_controller(
+                controller='user', ctype='action', action='view', view='transfer',
+                transfer='list'
+                )
+        print(str(_view_transfer_sheet) + '\n')
         print('[ * ] Extract credits')
         _extract_credits = self.ewallet_controller(
                 controller='user', ctype='action', action='create', create='transfer',

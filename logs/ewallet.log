@@ -34980,3 +34980,1207 @@ Return value:.. [<base.contact_list.ContactList object at 0xb6ba6f2c>]
 [ 2020-03-08 08:31:29 ] EWallet [ ERROR ] - ewallet.py - 1697: error_no_session_active_user_found - No session active user found.
 [ 2020-03-08 08:31:29 ] EWallet [ DEBUG ] - ewallet.py - 253: update_session_from_user - 
 [ 2020-03-08 08:31:29 ] EWallet [ ERROR ] - ewallet.py - 1697: error_no_session_active_user_found - No session active user found.
+[ 2020-03-08 08:36:53 ] EWallet [ DEBUG ] - ewallet.py - 1232: ewallet_controller - 
+[ 2020-03-08 08:36:53 ] EWallet [ DEBUG ] - ewallet.py - 1232: ewallet_controller - 
+[ 2020-03-08 08:36:53 ] EWallet [ DEBUG ] - ewallet.py - 1221: ewallet_user_controller - 
+[ 2020-03-08 08:36:53 ] EWallet [ DEBUG ] - ewallet.py - 1164: ewallet_user_action_controller - 
+[ 2020-03-08 08:36:53 ] EWallet [ DEBUG ] - ewallet.py - 1060: handle_user_action_create - 
+[ 2020-03-08 08:36:53 ] EWallet [ DEBUG ] - ewallet.py - 321: action_create_new_user_account - 
+[ 2020-03-08 08:36:53 ] EWallet [ DEBUG ] - ewallet_login.py - 156: ewallet_login_controller - 
+[ 2020-03-08 08:36:53 ] EWallet [ DEBUG ] - ewallet_login.py - 148: action_create_new_account - 
+[ 2020-03-08 08:36:53 ] EWallet [ DEBUG ] - ewallet_login.py - 399: action_create_new_user - 
+[ 2020-03-08 08:36:53 ] EWallet [ DEBUG ] - ewallet_login.py - 357: perform_new_user_checks - 
+[ 2020-03-08 08:36:53 ] EWallet [ DEBUG ] - ewallet_login.py - 253: fetch_all_user_names - 
+[ 2020-03-08 08:36:53 ] EWallet [ DEBUG ] - ewallet_login.py - 244: fetch_all_user_records - 
+[ 2020-03-08 08:36:53 ] EWallet [ DEBUG ] - ewallet_login.py - 265: check_user_name_ensure_one - 
+[ 2020-03-08 08:36:53 ] EWallet [ DEBUG ] - ewallet_login.py - 318: check_user_pass - 
+[ 2020-03-08 08:36:53 ] EWallet [ DEBUG ] - ewallet_login.py - 276: check_user_pass_length - 
+[ 2020-03-08 08:36:53 ] EWallet [ DEBUG ] - ewallet_login.py - 307: check_user_pass_characters - 
+[ 2020-03-08 08:36:53 ] EWallet [ DEBUG ] - ewallet_login.py - 282: check_user_pass_letters - 
+[ 2020-03-08 08:36:53 ] EWallet [ DEBUG ] - ewallet_login.py - 291: check_user_pass_numbers - 
+[ 2020-03-08 08:36:53 ] EWallet [ DEBUG ] - ewallet_login.py - 299: check_user_pass_symbols - 
+[ 2020-03-08 08:36:53 ] EWallet [ DEBUG ] - ewallet_login.py - 344: check_user_email - 
+[ 2020-03-08 08:36:53 ] EWallet [ DEBUG ] - ewallet_login.py - 329: check_user_email_is_valid - 
+[ 2020-03-08 08:36:53 ] EWallet [ WARNING ] - ewallet_login.py - 458: warning_duplicate_user_name - Invalid user name. Already taken.
+[ 2020-03-08 08:36:53 ] EWallet [ WARNING ] - ewallet_login.py - 215: warning_could_not_create_new_user_account - Something went wrong. Could not create new user account.
+[ 2020-03-08 08:36:53 ] EWallet [ WARNING ] - ewallet.py - 1883: warning_could_not_create_user_account - Something went wrong. Could not create new user account for test user.
+[ 2020-03-08 08:36:53 ] EWallet [ DEBUG ] - ewallet.py - 1232: ewallet_controller - 
+[ 2020-03-08 08:36:53 ] EWallet [ DEBUG ] - ewallet.py - 1221: ewallet_user_controller - 
+[ 2020-03-08 08:36:53 ] EWallet [ DEBUG ] - ewallet.py - 1164: ewallet_user_action_controller - 
+[ 2020-03-08 08:36:53 ] EWallet [ DEBUG ] - ewallet.py - 1007: handle_user_action_login - 
+[ 2020-03-08 08:36:53 ] EWallet [ DEBUG ] - ewallet_login.py - 156: ewallet_login_controller - 
+[ 2020-03-08 08:36:53 ] EWallet [ DEBUG ] - ewallet_login.py - 126: action_login - 
+[ 2020-03-08 08:36:53 ] EWallet [ DEBUG ] - ewallet_login.py - 106: authenticate_user - 
+[ 2020-03-08 08:36:53 ] EWallet [ DEBUG ] - ewallet_login.py - 90: check_user_name_exists - 
+[ 2020-03-08 08:36:53 ] EWallet [ DEBUG ] - res_user.py - 111: fetch_user_pass_hash - 
+[ 2020-03-08 08:36:53 ] EWallet [ DEBUG ] - ewallet_login.py - 98: check_user_pass_hash - 
+[ 2020-03-08 08:36:53 ] EWallet [ DEBUG ] - ewallet_login.py - 85: hash_password - 
+[ 2020-03-08 08:36:53 ] EWallet [ DEBUG ] - ewallet_login.py - 77: set_login_record_data - 
+[ 2020-03-08 08:36:53 ] EWallet [ DEBUG ] - ewallet_login.py - 63: set_user_id - 
+[ 2020-03-08 08:36:53 ] EWallet [ DEBUG ] - ewallet_login.py - 70: set_login_status - 
+[ 2020-03-08 08:36:53 ] EWallet [ DEBUG ] - res_user.py - 249: set_user_state - 
+[ 2020-03-08 08:36:53 ] EWallet [ DEBUG ] - res_user.py - 393: convert_user_state_code_to_name - 
+[ 2020-03-08 08:36:53 ] EWallet [ DEBUG ] - res_user.py - 178: fetch_user_state_code_map - 
+[ 2020-03-08 08:36:53 ] EWallet [ DEBUG ] - res_user.py - 232: set_user_state_code - 
+[ 2020-03-08 08:36:53 ] EWallet [ DEBUG ] - res_user.py - 192: set_user_write_date - 
+[ 2020-03-08 08:36:53 ] EWallet [ DEBUG ] - res_user.py - 240: set_user_state_name - 
+[ 2020-03-08 08:36:53 ] EWallet [ DEBUG ] - res_user.py - 192: set_user_write_date - 
+[ 2020-03-08 08:36:53 ] EWallet [ DEBUG ] - ewallet.py - 967: action_system_user_update - 
+[ 2020-03-08 08:36:53 ] EWallet [ DEBUG ] - ewallet.py - 189: set_session_active_user - 
+[ 2020-03-08 08:36:53 ] EWallet [ DEBUG ] - ewallet.py - 253: update_session_from_user - 
+[ 2020-03-08 08:36:53 ] EWallet [ DEBUG ] - res_user.py - 99: fetch_user_credit_wallet - 
+[ 2020-03-08 08:36:53 ] EWallet [ DEBUG ] - res_user.py - 105: fetch_user_contact_list - 
+[ 2020-03-08 08:36:53 ] EWallet [ DEBUG ] - ewallet.py - 208: set_session_data - 
+[ 2020-03-08 08:36:53 ] EWallet [ DEBUG ] - ewallet.py - 189: set_session_active_user - 
+[ 2020-03-08 08:36:53 ] EWallet [ DEBUG ] - ewallet.py - 196: set_session_credit_wallet - 
+[ 2020-03-08 08:36:53 ] EWallet [ DEBUG ] - ewallet.py - 202: set_session_contact_list - 
+[ 2020-03-08 08:36:53 ] EWallet [ INFO ] - ewallet.py - 263: update_session_from_user - Successfully updated ewallet session from current active user.
+[ 2020-03-08 08:36:53 ] EWallet [ INFO ] - ewallet.py - 1021: handle_user_action_login - User successfully loged in.
+[ 2020-03-08 08:36:53 ] EWallet [ DEBUG ] - ewallet.py - 1232: ewallet_controller - 
+[ 2020-03-08 08:36:53 ] EWallet [ DEBUG ] - ewallet.py - 1221: ewallet_user_controller - 
+[ 2020-03-08 08:36:53 ] EWallet [ DEBUG ] - ewallet.py - 1164: ewallet_user_action_controller - 
+[ 2020-03-08 08:36:53 ] EWallet [ DEBUG ] - ewallet.py - 1108: handle_user_action_view - 
+[ 2020-03-08 08:36:53 ] EWallet [ DEBUG ] - ewallet.py - 690: action_view_user_account - 
+[ 2020-03-08 08:36:53 ] EWallet [ DEBUG ] - res_user.py - 143: fetch_user_values - 
+[ 2020-03-08 08:36:53 ] EWallet [ DEBUG ] - res_user.py - 99: fetch_user_credit_wallet - 
+[ 2020-03-08 08:36:53 ] EWallet [ DEBUG ] - res_user.py - 105: fetch_user_contact_list - 
+[ 2020-03-08 08:36:53 ] EWallet [ DEBUG ] - ewallet.py - 694: action_view_user_account - {'id': 1, 'user_name': 'test user', 'user_create_date': datetime.datetime(2020, 3, 8, 7, 10, 0, 896769), 'user_write_date': datetime.datetime(2020, 3, 8, 8, 36, 53, 489701), 'user_credit_wallet': <base.credit_wallet.CreditEWallet object at 0xb6bbf90c>, 'user_contact_list': <base.contact_list.ContactList object at 0xb6c0a0ac>, 'user_pass_hash': '062bce6d67fb682e60680b8d715be64854c93ebed0627487c95422c2db032761', 'user_email': 'example@example.com', 'user_phone': None, 'user_alias': None, 'user_state_code': 1, 'user_state_name': 'LoggedIn', 'user_pass_hash_archive': [<base.res_user_pass_hash_archive.ResUserPassHashArchive object at 0xb6b5c38c>], 'user_credit_wallet_archive': [<base.credit_wallet.CreditEWallet object at 0xb6bbf90c>], 'user_contact_list_archive': [<base.contact_list.ContactList object at 0xb6c0a0ac>]}
+[ 2020-03-08 08:36:53 ] EWallet [ DEBUG ] - ewallet.py - 1232: ewallet_controller - 
+[ 2020-03-08 08:36:53 ] EWallet [ DEBUG ] - ewallet.py - 1221: ewallet_user_controller - 
+[ 2020-03-08 08:36:53 ] EWallet [ DEBUG ] - ewallet.py - 1164: ewallet_user_action_controller - 
+[ 2020-03-08 08:36:53 ] EWallet [ DEBUG ] - ewallet.py - 1060: handle_user_action_create - 
+[ 2020-03-08 08:36:53 ] EWallet [ DEBUG ] - ewallet.py - 321: action_create_new_user_account - 
+[ 2020-03-08 08:36:53 ] EWallet [ DEBUG ] - ewallet_login.py - 156: ewallet_login_controller - 
+[ 2020-03-08 08:36:53 ] EWallet [ DEBUG ] - ewallet_login.py - 148: action_create_new_account - 
+[ 2020-03-08 08:36:53 ] EWallet [ DEBUG ] - ewallet_login.py - 399: action_create_new_user - 
+[ 2020-03-08 08:36:53 ] EWallet [ DEBUG ] - ewallet_login.py - 357: perform_new_user_checks - 
+[ 2020-03-08 08:36:53 ] EWallet [ DEBUG ] - ewallet_login.py - 253: fetch_all_user_names - 
+[ 2020-03-08 08:36:53 ] EWallet [ DEBUG ] - ewallet_login.py - 244: fetch_all_user_records - 
+[ 2020-03-08 08:36:53 ] EWallet [ DEBUG ] - ewallet_login.py - 265: check_user_name_ensure_one - 
+[ 2020-03-08 08:36:53 ] EWallet [ DEBUG ] - ewallet_login.py - 318: check_user_pass - 
+[ 2020-03-08 08:36:53 ] EWallet [ DEBUG ] - ewallet_login.py - 276: check_user_pass_length - 
+[ 2020-03-08 08:36:53 ] EWallet [ DEBUG ] - ewallet_login.py - 307: check_user_pass_characters - 
+[ 2020-03-08 08:36:53 ] EWallet [ DEBUG ] - ewallet_login.py - 282: check_user_pass_letters - 
+[ 2020-03-08 08:36:53 ] EWallet [ DEBUG ] - ewallet_login.py - 291: check_user_pass_numbers - 
+[ 2020-03-08 08:36:53 ] EWallet [ DEBUG ] - ewallet_login.py - 299: check_user_pass_symbols - 
+[ 2020-03-08 08:36:53 ] EWallet [ DEBUG ] - ewallet_login.py - 344: check_user_email - 
+[ 2020-03-08 08:36:53 ] EWallet [ DEBUG ] - ewallet_login.py - 329: check_user_email_is_valid - 
+[ 2020-03-08 08:36:53 ] EWallet [ WARNING ] - ewallet_login.py - 458: warning_duplicate_user_name - Invalid user name. Already taken.
+[ 2020-03-08 08:36:53 ] EWallet [ WARNING ] - ewallet_login.py - 215: warning_could_not_create_new_user_account - Something went wrong. Could not create new user account.
+[ 2020-03-08 08:36:53 ] EWallet [ WARNING ] - ewallet.py - 1883: warning_could_not_create_user_account - Something went wrong. Could not create new user account for user2.
+[ 2020-03-08 08:36:53 ] EWallet [ DEBUG ] - ewallet.py - 1232: ewallet_controller - 
+[ 2020-03-08 08:36:53 ] EWallet [ DEBUG ] - ewallet.py - 1221: ewallet_user_controller - 
+[ 2020-03-08 08:36:53 ] EWallet [ DEBUG ] - ewallet.py - 1164: ewallet_user_action_controller - 
+[ 2020-03-08 08:36:53 ] EWallet [ DEBUG ] - ewallet.py - 1007: handle_user_action_login - 
+[ 2020-03-08 08:36:53 ] EWallet [ DEBUG ] - ewallet_login.py - 156: ewallet_login_controller - 
+[ 2020-03-08 08:36:53 ] EWallet [ DEBUG ] - ewallet_login.py - 126: action_login - 
+[ 2020-03-08 08:36:53 ] EWallet [ DEBUG ] - ewallet_login.py - 106: authenticate_user - 
+[ 2020-03-08 08:36:53 ] EWallet [ DEBUG ] - ewallet_login.py - 90: check_user_name_exists - 
+[ 2020-03-08 08:36:53 ] EWallet [ DEBUG ] - res_user.py - 111: fetch_user_pass_hash - 
+[ 2020-03-08 08:36:53 ] EWallet [ DEBUG ] - ewallet_login.py - 98: check_user_pass_hash - 
+[ 2020-03-08 08:36:53 ] EWallet [ DEBUG ] - ewallet_login.py - 85: hash_password - 
+[ 2020-03-08 08:36:53 ] EWallet [ DEBUG ] - ewallet_login.py - 77: set_login_record_data - 
+[ 2020-03-08 08:36:53 ] EWallet [ DEBUG ] - ewallet_login.py - 63: set_user_id - 
+[ 2020-03-08 08:36:53 ] EWallet [ DEBUG ] - ewallet_login.py - 70: set_login_status - 
+[ 2020-03-08 08:36:53 ] EWallet [ DEBUG ] - res_user.py - 249: set_user_state - 
+[ 2020-03-08 08:36:53 ] EWallet [ DEBUG ] - res_user.py - 393: convert_user_state_code_to_name - 
+[ 2020-03-08 08:36:53 ] EWallet [ DEBUG ] - res_user.py - 178: fetch_user_state_code_map - 
+[ 2020-03-08 08:36:53 ] EWallet [ DEBUG ] - res_user.py - 232: set_user_state_code - 
+[ 2020-03-08 08:36:53 ] EWallet [ DEBUG ] - res_user.py - 192: set_user_write_date - 
+[ 2020-03-08 08:36:53 ] EWallet [ DEBUG ] - res_user.py - 240: set_user_state_name - 
+[ 2020-03-08 08:36:53 ] EWallet [ DEBUG ] - res_user.py - 192: set_user_write_date - 
+[ 2020-03-08 08:36:53 ] EWallet [ DEBUG ] - ewallet.py - 967: action_system_user_update - 
+[ 2020-03-08 08:36:53 ] EWallet [ DEBUG ] - ewallet.py - 189: set_session_active_user - 
+[ 2020-03-08 08:36:53 ] EWallet [ DEBUG ] - ewallet.py - 253: update_session_from_user - 
+[ 2020-03-08 08:36:53 ] EWallet [ DEBUG ] - res_user.py - 99: fetch_user_credit_wallet - 
+[ 2020-03-08 08:36:53 ] EWallet [ DEBUG ] - res_user.py - 105: fetch_user_contact_list - 
+[ 2020-03-08 08:36:53 ] EWallet [ DEBUG ] - ewallet.py - 208: set_session_data - 
+[ 2020-03-08 08:36:53 ] EWallet [ DEBUG ] - ewallet.py - 189: set_session_active_user - 
+[ 2020-03-08 08:36:53 ] EWallet [ DEBUG ] - ewallet.py - 196: set_session_credit_wallet - 
+[ 2020-03-08 08:36:53 ] EWallet [ DEBUG ] - ewallet.py - 202: set_session_contact_list - 
+[ 2020-03-08 08:36:53 ] EWallet [ INFO ] - ewallet.py - 263: update_session_from_user - Successfully updated ewallet session from current active user.
+[ 2020-03-08 08:36:53 ] EWallet [ INFO ] - ewallet.py - 1021: handle_user_action_login - User successfully loged in.
+[ 2020-03-08 08:36:53 ] EWallet [ DEBUG ] - ewallet.py - 163: fetch_active_session_credit_wallet - 
+[ 2020-03-08 08:36:53 ] EWallet [ DEBUG ] - ewallet.py - 157: fetch_active_session_user - 
+[ 2020-03-08 08:36:53 ] EWallet [ DEBUG ] - res_user.py - 83: fetch_user_id - 
+[ 2020-03-08 08:36:53 ] EWallet [ DEBUG ] - ewallet.py - 1232: ewallet_controller - 
+[ 2020-03-08 08:36:53 ] EWallet [ DEBUG ] - ewallet.py - 1221: ewallet_user_controller - 
+[ 2020-03-08 08:36:53 ] EWallet [ DEBUG ] - ewallet.py - 1164: ewallet_user_action_controller - 
+[ 2020-03-08 08:36:53 ] EWallet [ DEBUG ] - ewallet.py - 1060: handle_user_action_create - 
+[ 2020-03-08 08:36:53 ] EWallet [ DEBUG ] - ewallet.py - 446: action_create_new_transfer - 
+[ 2020-03-08 08:36:53 ] EWallet [ DEBUG ] - ewallet.py - 163: fetch_active_session_credit_wallet - 
+[ 2020-03-08 08:36:53 ] EWallet [ DEBUG ] - credit_wallet.py - 775: user_controller - 
+[ 2020-03-08 08:36:53 ] EWallet [ DEBUG ] - credit_wallet.py - 556: transfer_credits - 
+[ 2020-03-08 08:36:53 ] EWallet [ DEBUG ] - credit_wallet.py - 490: transfer_credits_incomming - 
+[ 2020-03-08 08:36:53 ] EWallet [ INFO ] - credit_wallet.py - 496: transfer_credits_incomming - Extracting credits from partner ewallet...
+[ 2020-03-08 08:36:53 ] EWallet [ DEBUG ] - credit_wallet.py - 757: system_controller - 
+[ 2020-03-08 08:36:53 ] EWallet [ DEBUG ] - credit_wallet.py - 388: extract_credits - 
+[ 2020-03-08 08:36:53 ] EWallet [ INFO ] - credit_wallet.py - 392: extract_credits - Successfully extracted credits from wallet.
+[ 2020-03-08 08:36:53 ] EWallet [ DEBUG ] - credit_wallet.py - 312: set_write_date - 
+[ 2020-03-08 08:36:53 ] EWallet [ INFO ] - credit_wallet.py - 500: transfer_credits_incomming - Supplying wallet with credits...
+[ 2020-03-08 08:36:53 ] EWallet [ DEBUG ] - credit_wallet.py - 757: system_controller - 
+[ 2020-03-08 08:36:53 ] EWallet [ DEBUG ] - credit_wallet.py - 380: supply_credits - 
+[ 2020-03-08 08:36:53 ] EWallet [ INFO ] - credit_wallet.py - 384: supply_credits - Successfully supplied wallet with credits.
+[ 2020-03-08 08:36:53 ] EWallet [ INFO ] - credit_wallet.py - 504: transfer_credits_incomming - Creating transfer record...
+[ 2020-03-08 08:36:53 ] EWallet [ DEBUG ] - credit_wallet.py - 120: fetch_credit_ewallet_transfer_sheet - 
+[ 2020-03-08 08:36:53 ] EWallet [ DEBUG ] - transfer_sheet.py - 408: credit_transfer_sheet_controller - 
+[ 2020-03-08 08:36:53 ] EWallet [ DEBUG ] - transfer_sheet.py - 360: add_transfer_sheet_record - 
+[ 2020-03-08 08:36:53 ] EWallet [ DEBUG ] - transfer_sheet.py - 210: fetch_transfer_record_creation_values - 
+[ 2020-03-08 08:36:53 ] EWallet [ DEBUG ] - transfer_sheet.py - 355: create_transfer_sheet_record - 
+[ 2020-03-08 08:36:53 ] EWallet [ DEBUG ] - transfer_sheet.py - 382: update_records - 
+[ 2020-03-08 08:36:53 ] EWallet [ INFO ] - transfer_sheet.py - 369: add_transfer_sheet_record - Successfully added new transfer record.
+[ 2020-03-08 08:36:53 ] EWallet [ DEBUG ] - transfer_sheet.py - 342: update_write_date - 
+[ 2020-03-08 08:36:53 ] EWallet [ INFO ] - credit_wallet.py - 513: transfer_credits_incomming - Attempting transfer record share with partner...
+[ 2020-03-08 08:36:53 ] EWallet [ DEBUG ] - credit_wallet.py - 475: share_transfer_record - 
+[ 2020-03-08 08:36:53 ] EWallet [ ERROR ] - credit_wallet.py - 955: error_no_transfer_record_found - No transfer record found.
+[ 2020-03-08 08:36:53 ] EWallet [ DEBUG ] - ewallet.py - 1232: ewallet_controller - 
+[ 2020-03-08 08:36:53 ] EWallet [ DEBUG ] - ewallet.py - 1221: ewallet_user_controller - 
+[ 2020-03-08 08:36:53 ] EWallet [ DEBUG ] - ewallet.py - 1164: ewallet_user_action_controller - 
+[ 2020-03-08 08:36:53 ] EWallet [ DEBUG ] - ewallet.py - 1108: handle_user_action_view - 
+[ 2020-03-08 08:36:53 ] EWallet [ DEBUG ] - ewallet.py - 698: action_view_credit_wallet - 
+[ 2020-03-08 08:36:53 ] EWallet [ DEBUG ] - ewallet.py - 163: fetch_active_session_credit_wallet - 
+[ 2020-03-08 08:36:53 ] EWallet [ DEBUG ] - credit_wallet.py - 131: fetch_credit_ewallet_values - 
+[ 2020-03-08 08:36:53 ] EWallet [ DEBUG ] - ewallet.py - 703: action_view_credit_wallet - {'id': 2, 'client_id': 2, 'reference': 'Credit Wallet', 'create_date': datetime.datetime(2020, 3, 8, 7, 10, 1, 950455), 'write_date': datetime.datetime(2020, 3, 8, 8, 36, 53, 735055), 'credits': 0, 'credit_clock': [<base.credit_clock.CreditClock object at 0xb6b7e02c>], 'credit_clock_archive': [<base.credit_clock.CreditClock object at 0xb6b7e02c>], 'transfer_sheet': [<base.transfer_sheet.CreditTransferSheet object at 0xb6b8160c>], 'transfer_sheet_archive': [<base.transfer_sheet.CreditTransferSheet object at 0xb6b8160c>]}
+[ 2020-03-08 08:36:53 ] EWallet [ DEBUG ] - ewallet.py - 163: fetch_active_session_credit_wallet - 
+[ 2020-03-08 08:36:53 ] EWallet [ DEBUG ] - ewallet.py - 157: fetch_active_session_user - 
+[ 2020-03-08 08:36:53 ] EWallet [ DEBUG ] - res_user.py - 83: fetch_user_id - 
+[ 2020-03-08 08:36:53 ] EWallet [ DEBUG ] - ewallet.py - 1232: ewallet_controller - 
+[ 2020-03-08 08:36:53 ] EWallet [ DEBUG ] - ewallet.py - 1221: ewallet_user_controller - 
+[ 2020-03-08 08:36:53 ] EWallet [ DEBUG ] - ewallet.py - 1164: ewallet_user_action_controller - 
+[ 2020-03-08 08:36:53 ] EWallet [ DEBUG ] - ewallet.py - 1060: handle_user_action_create - 
+[ 2020-03-08 08:36:53 ] EWallet [ DEBUG ] - ewallet.py - 446: action_create_new_transfer - 
+[ 2020-03-08 08:36:53 ] EWallet [ DEBUG ] - ewallet.py - 163: fetch_active_session_credit_wallet - 
+[ 2020-03-08 08:36:53 ] EWallet [ DEBUG ] - credit_wallet.py - 775: user_controller - 
+[ 2020-03-08 08:36:53 ] EWallet [ DEBUG ] - credit_wallet.py - 556: transfer_credits - 
+[ 2020-03-08 08:36:53 ] EWallet [ DEBUG ] - credit_wallet.py - 523: transfer_credits_outgoing - 
+[ 2020-03-08 08:36:53 ] EWallet [ INFO ] - credit_wallet.py - 531: transfer_credits_outgoing - Extracting credits from wallet...
+[ 2020-03-08 08:36:53 ] EWallet [ DEBUG ] - credit_wallet.py - 757: system_controller - 
+[ 2020-03-08 08:36:53 ] EWallet [ DEBUG ] - credit_wallet.py - 388: extract_credits - 
+[ 2020-03-08 08:36:53 ] EWallet [ INFO ] - credit_wallet.py - 392: extract_credits - Successfully extracted credits from wallet.
+[ 2020-03-08 08:36:53 ] EWallet [ DEBUG ] - credit_wallet.py - 312: set_write_date - 
+[ 2020-03-08 08:36:53 ] EWallet [ INFO ] - credit_wallet.py - 535: transfer_credits_outgoing - Supplying partner wallet with credits...
+[ 2020-03-08 08:36:53 ] EWallet [ DEBUG ] - credit_wallet.py - 757: system_controller - 
+[ 2020-03-08 08:36:53 ] EWallet [ DEBUG ] - credit_wallet.py - 380: supply_credits - 
+[ 2020-03-08 08:36:53 ] EWallet [ INFO ] - credit_wallet.py - 384: supply_credits - Successfully supplied wallet with credits.
+[ 2020-03-08 08:36:53 ] EWallet [ INFO ] - credit_wallet.py - 539: transfer_credits_outgoing - Creating transfer record...
+[ 2020-03-08 08:36:53 ] EWallet [ DEBUG ] - credit_wallet.py - 120: fetch_credit_ewallet_transfer_sheet - 
+[ 2020-03-08 08:36:53 ] EWallet [ DEBUG ] - transfer_sheet.py - 408: credit_transfer_sheet_controller - 
+[ 2020-03-08 08:36:53 ] EWallet [ DEBUG ] - transfer_sheet.py - 360: add_transfer_sheet_record - 
+[ 2020-03-08 08:36:53 ] EWallet [ DEBUG ] - transfer_sheet.py - 210: fetch_transfer_record_creation_values - 
+[ 2020-03-08 08:36:53 ] EWallet [ DEBUG ] - transfer_sheet.py - 355: create_transfer_sheet_record - 
+[ 2020-03-08 08:36:53 ] EWallet [ DEBUG ] - transfer_sheet.py - 382: update_records - 
+[ 2020-03-08 08:36:53 ] EWallet [ INFO ] - transfer_sheet.py - 369: add_transfer_sheet_record - Successfully added new transfer record.
+[ 2020-03-08 08:36:53 ] EWallet [ DEBUG ] - transfer_sheet.py - 342: update_write_date - 
+[ 2020-03-08 08:36:53 ] EWallet [ INFO ] - credit_wallet.py - 547: transfer_credits_outgoing - Attempting transfer record share with partner...
+[ 2020-03-08 08:36:53 ] EWallet [ DEBUG ] - credit_wallet.py - 475: share_transfer_record - 
+[ 2020-03-08 08:36:53 ] EWallet [ INFO ] - credit_wallet.py - 481: share_transfer_record - Attempting to share transfer record...
+[ 2020-03-08 08:36:53 ] EWallet [ DEBUG ] - credit_wallet.py - 120: fetch_credit_ewallet_transfer_sheet - 
+[ 2020-03-08 08:36:53 ] EWallet [ DEBUG ] - transfer_sheet.py - 408: credit_transfer_sheet_controller - 
+[ 2020-03-08 08:36:53 ] EWallet [ DEBUG ] - transfer_sheet.py - 387: append_transfer_sheet_record - 
+[ 2020-03-08 08:36:53 ] EWallet [ DEBUG ] - transfer_sheet.py - 382: update_records - 
+[ 2020-03-08 08:36:53 ] EWallet [ INFO ] - transfer_sheet.py - 392: append_transfer_sheet_record - Successfully appended transfer records.
+[ 2020-03-08 08:36:53 ] EWallet [ DEBUG ] - transfer_sheet.py - 342: update_write_date - 
+[ 2020-03-08 08:36:54 ] EWallet [ DEBUG ] - credit_wallet.py - 312: set_write_date - 
+[ 2020-03-08 08:36:54 ] EWallet [ DEBUG ] - ewallet.py - 1232: ewallet_controller - 
+[ 2020-03-08 08:36:54 ] EWallet [ DEBUG ] - ewallet.py - 1221: ewallet_user_controller - 
+[ 2020-03-08 08:36:54 ] EWallet [ DEBUG ] - ewallet.py - 1164: ewallet_user_action_controller - 
+[ 2020-03-08 08:36:54 ] EWallet [ DEBUG ] - ewallet.py - 1108: handle_user_action_view - 
+[ 2020-03-08 08:36:54 ] EWallet [ DEBUG ] - ewallet.py - 690: action_view_user_account - 
+[ 2020-03-08 08:36:54 ] EWallet [ DEBUG ] - res_user.py - 143: fetch_user_values - 
+[ 2020-03-08 08:36:54 ] EWallet [ DEBUG ] - res_user.py - 99: fetch_user_credit_wallet - 
+[ 2020-03-08 08:36:54 ] EWallet [ DEBUG ] - res_user.py - 105: fetch_user_contact_list - 
+[ 2020-03-08 08:36:54 ] EWallet [ DEBUG ] - ewallet.py - 694: action_view_user_account - {'id': 2, 'user_name': 'user2', 'user_create_date': datetime.datetime(2020, 3, 8, 7, 10, 1, 947708), 'user_write_date': datetime.datetime(2020, 3, 8, 8, 36, 53, 642602), 'user_credit_wallet': <base.credit_wallet.CreditEWallet object at 0xb6b8662c>, 'user_contact_list': <base.contact_list.ContactList object at 0xb6b86d4c>, 'user_pass_hash': '062bce6d67fb682e60680b8d715be64854c93ebed0627487c95422c2db032761', 'user_email': 'example2@example.com', 'user_phone': None, 'user_alias': None, 'user_state_code': 1, 'user_state_name': 'LoggedIn', 'user_pass_hash_archive': [<base.res_user_pass_hash_archive.ResUserPassHashArchive object at 0xb6b86c2c>], 'user_credit_wallet_archive': [<base.credit_wallet.CreditEWallet object at 0xb6b8662c>], 'user_contact_list_archive': [<base.contact_list.ContactList object at 0xb6b86d4c>]}
+[ 2020-03-08 08:36:54 ] EWallet [ DEBUG ] - ewallet.py - 1232: ewallet_controller - 
+[ 2020-03-08 08:36:54 ] EWallet [ DEBUG ] - ewallet.py - 1211: ewallet_system_controller - 
+[ 2020-03-08 08:36:54 ] EWallet [ DEBUG ] - ewallet.py - 1201: ewallet_system_action_controller - 
+[ 2020-03-08 08:36:54 ] EWallet [ DEBUG ] - ewallet.py - 983: handle_system_action_update - 
+[ 2020-03-08 08:36:54 ] EWallet [ DEBUG ] - ewallet.py - 977: action_system_session_update - 
+[ 2020-03-08 08:36:54 ] EWallet [ DEBUG ] - ewallet.py - 157: fetch_active_session_user - 
+[ 2020-03-08 08:36:54 ] EWallet [ DEBUG ] - ewallet.py - 253: update_session_from_user - 
+[ 2020-03-08 08:36:54 ] EWallet [ DEBUG ] - res_user.py - 99: fetch_user_credit_wallet - 
+[ 2020-03-08 08:36:54 ] EWallet [ DEBUG ] - res_user.py - 105: fetch_user_contact_list - 
+[ 2020-03-08 08:36:54 ] EWallet [ DEBUG ] - ewallet.py - 208: set_session_data - 
+[ 2020-03-08 08:36:54 ] EWallet [ DEBUG ] - ewallet.py - 189: set_session_active_user - 
+[ 2020-03-08 08:36:54 ] EWallet [ DEBUG ] - ewallet.py - 196: set_session_credit_wallet - 
+[ 2020-03-08 08:36:54 ] EWallet [ DEBUG ] - ewallet.py - 202: set_session_contact_list - 
+[ 2020-03-08 08:36:54 ] EWallet [ INFO ] - ewallet.py - 263: update_session_from_user - Successfully updated ewallet session from current active user.
+[ 2020-03-08 08:36:54 ] EWallet [ DEBUG ] - ewallet.py - 1232: ewallet_controller - 
+[ 2020-03-08 08:36:54 ] EWallet [ DEBUG ] - ewallet.py - 1221: ewallet_user_controller - 
+[ 2020-03-08 08:36:54 ] EWallet [ DEBUG ] - ewallet.py - 1164: ewallet_user_action_controller - 
+[ 2020-03-08 08:36:54 ] EWallet [ DEBUG ] - ewallet.py - 1029: handle_user_action_logout - 
+[ 2020-03-08 08:36:54 ] EWallet [ DEBUG ] - ewallet.py - 157: fetch_active_session_user - 
+[ 2020-03-08 08:36:54 ] EWallet [ DEBUG ] - ewallet.py - 952: action_system_user_logout - 
+[ 2020-03-08 08:36:54 ] EWallet [ DEBUG ] - ewallet.py - 157: fetch_active_session_user - 
+[ 2020-03-08 08:36:54 ] EWallet [ DEBUG ] - res_user.py - 249: set_user_state - 
+[ 2020-03-08 08:36:54 ] EWallet [ DEBUG ] - res_user.py - 393: convert_user_state_code_to_name - 
+[ 2020-03-08 08:36:54 ] EWallet [ DEBUG ] - res_user.py - 178: fetch_user_state_code_map - 
+[ 2020-03-08 08:36:54 ] EWallet [ DEBUG ] - res_user.py - 232: set_user_state_code - 
+[ 2020-03-08 08:36:54 ] EWallet [ DEBUG ] - res_user.py - 192: set_user_write_date - 
+[ 2020-03-08 08:36:54 ] EWallet [ DEBUG ] - res_user.py - 240: set_user_state_name - 
+[ 2020-03-08 08:36:54 ] EWallet [ DEBUG ] - res_user.py - 192: set_user_write_date - 
+[ 2020-03-08 08:36:54 ] EWallet [ DEBUG ] - ewallet.py - 178: fetch_next_active_session_user - 
+[ 2020-03-08 08:36:54 ] EWallet [ DEBUG ] - ewallet.py - 240: clear_active_session_user_data - 
+[ 2020-03-08 08:36:54 ] EWallet [ DEBUG ] - ewallet.py - 225: clear_session_credit_wallet - 
+[ 2020-03-08 08:36:54 ] EWallet [ DEBUG ] - ewallet.py - 230: clear_session_contact_list - 
+[ 2020-03-08 08:36:54 ] EWallet [ DEBUG ] - res_user.py - 83: fetch_user_id - 
+[ 2020-03-08 08:36:54 ] EWallet [ DEBUG ] - ewallet.py - 967: action_system_user_update - 
+[ 2020-03-08 08:36:54 ] EWallet [ DEBUG ] - ewallet.py - 189: set_session_active_user - 
+[ 2020-03-08 08:36:54 ] EWallet [ DEBUG ] - ewallet.py - 253: update_session_from_user - 
+[ 2020-03-08 08:36:54 ] EWallet [ DEBUG ] - res_user.py - 99: fetch_user_credit_wallet - 
+[ 2020-03-08 08:36:54 ] EWallet [ DEBUG ] - res_user.py - 105: fetch_user_contact_list - 
+[ 2020-03-08 08:36:54 ] EWallet [ DEBUG ] - ewallet.py - 208: set_session_data - 
+[ 2020-03-08 08:36:54 ] EWallet [ DEBUG ] - ewallet.py - 189: set_session_active_user - 
+[ 2020-03-08 08:36:54 ] EWallet [ DEBUG ] - ewallet.py - 196: set_session_credit_wallet - 
+[ 2020-03-08 08:36:54 ] EWallet [ DEBUG ] - ewallet.py - 202: set_session_contact_list - 
+[ 2020-03-08 08:36:54 ] EWallet [ INFO ] - ewallet.py - 263: update_session_from_user - Successfully updated ewallet session from current active user.
+[ 2020-03-08 08:36:54 ] EWallet [ INFO ] - ewallet.py - 1044: handle_user_action_logout - User successfully loged out.
+[ 2020-03-08 08:36:54 ] EWallet [ DEBUG ] - ewallet.py - 1232: ewallet_controller - 
+[ 2020-03-08 08:36:54 ] EWallet [ DEBUG ] - ewallet.py - 1221: ewallet_user_controller - 
+[ 2020-03-08 08:36:54 ] EWallet [ DEBUG ] - ewallet.py - 1164: ewallet_user_action_controller - 
+[ 2020-03-08 08:36:54 ] EWallet [ DEBUG ] - ewallet.py - 1029: handle_user_action_logout - 
+[ 2020-03-08 08:36:54 ] EWallet [ DEBUG ] - ewallet.py - 157: fetch_active_session_user - 
+[ 2020-03-08 08:36:54 ] EWallet [ DEBUG ] - ewallet.py - 952: action_system_user_logout - 
+[ 2020-03-08 08:36:54 ] EWallet [ DEBUG ] - ewallet.py - 157: fetch_active_session_user - 
+[ 2020-03-08 08:36:54 ] EWallet [ DEBUG ] - res_user.py - 249: set_user_state - 
+[ 2020-03-08 08:36:54 ] EWallet [ DEBUG ] - res_user.py - 393: convert_user_state_code_to_name - 
+[ 2020-03-08 08:36:54 ] EWallet [ DEBUG ] - res_user.py - 178: fetch_user_state_code_map - 
+[ 2020-03-08 08:36:54 ] EWallet [ DEBUG ] - res_user.py - 232: set_user_state_code - 
+[ 2020-03-08 08:36:54 ] EWallet [ DEBUG ] - res_user.py - 192: set_user_write_date - 
+[ 2020-03-08 08:36:54 ] EWallet [ DEBUG ] - res_user.py - 240: set_user_state_name - 
+[ 2020-03-08 08:36:54 ] EWallet [ DEBUG ] - res_user.py - 192: set_user_write_date - 
+[ 2020-03-08 08:36:54 ] EWallet [ DEBUG ] - ewallet.py - 178: fetch_next_active_session_user - 
+[ 2020-03-08 08:36:54 ] EWallet [ DEBUG ] - ewallet.py - 240: clear_active_session_user_data - 
+[ 2020-03-08 08:36:54 ] EWallet [ DEBUG ] - ewallet.py - 220: clear_session_active_user - 
+[ 2020-03-08 08:36:54 ] EWallet [ DEBUG ] - ewallet.py - 225: clear_session_credit_wallet - 
+[ 2020-03-08 08:36:54 ] EWallet [ DEBUG ] - ewallet.py - 230: clear_session_contact_list - 
+[ 2020-03-08 08:36:54 ] EWallet [ DEBUG ] - res_user.py - 83: fetch_user_id - 
+[ 2020-03-08 08:36:54 ] EWallet [ INFO ] - ewallet.py - 1044: handle_user_action_logout - User successfully loged out.
+[ 2020-03-08 08:36:54 ] EWallet [ DEBUG ] - ewallet.py - 1232: ewallet_controller - 
+[ 2020-03-08 08:36:54 ] EWallet [ DEBUG ] - ewallet.py - 1211: ewallet_system_controller - 
+[ 2020-03-08 08:36:54 ] EWallet [ DEBUG ] - ewallet.py - 1201: ewallet_system_action_controller - 
+[ 2020-03-08 08:36:54 ] EWallet [ DEBUG ] - ewallet.py - 983: handle_system_action_update - 
+[ 2020-03-08 08:36:54 ] EWallet [ DEBUG ] - ewallet.py - 977: action_system_session_update - 
+[ 2020-03-08 08:36:54 ] EWallet [ DEBUG ] - ewallet.py - 157: fetch_active_session_user - 
+[ 2020-03-08 08:36:54 ] EWallet [ ERROR ] - ewallet.py - 1697: error_no_session_active_user_found - No session active user found.
+[ 2020-03-08 08:36:54 ] EWallet [ DEBUG ] - ewallet.py - 253: update_session_from_user - 
+[ 2020-03-08 08:36:54 ] EWallet [ ERROR ] - ewallet.py - 1697: error_no_session_active_user_found - No session active user found.
+[ 2020-03-08 08:38:15 ] EWallet [ DEBUG ] - ewallet.py - 1232: ewallet_controller - 
+[ 2020-03-08 08:38:15 ] EWallet [ DEBUG ] - ewallet.py - 1232: ewallet_controller - 
+[ 2020-03-08 08:38:15 ] EWallet [ DEBUG ] - ewallet.py - 1221: ewallet_user_controller - 
+[ 2020-03-08 08:38:15 ] EWallet [ DEBUG ] - ewallet.py - 1164: ewallet_user_action_controller - 
+[ 2020-03-08 08:38:15 ] EWallet [ DEBUG ] - ewallet.py - 1060: handle_user_action_create - 
+[ 2020-03-08 08:38:15 ] EWallet [ DEBUG ] - ewallet.py - 321: action_create_new_user_account - 
+[ 2020-03-08 08:38:15 ] EWallet [ DEBUG ] - ewallet_login.py - 156: ewallet_login_controller - 
+[ 2020-03-08 08:38:15 ] EWallet [ DEBUG ] - ewallet_login.py - 148: action_create_new_account - 
+[ 2020-03-08 08:38:15 ] EWallet [ DEBUG ] - ewallet_login.py - 399: action_create_new_user - 
+[ 2020-03-08 08:38:15 ] EWallet [ DEBUG ] - ewallet_login.py - 357: perform_new_user_checks - 
+[ 2020-03-08 08:38:15 ] EWallet [ DEBUG ] - ewallet_login.py - 253: fetch_all_user_names - 
+[ 2020-03-08 08:38:15 ] EWallet [ DEBUG ] - ewallet_login.py - 244: fetch_all_user_records - 
+[ 2020-03-08 08:38:15 ] EWallet [ DEBUG ] - ewallet_login.py - 265: check_user_name_ensure_one - 
+[ 2020-03-08 08:38:15 ] EWallet [ DEBUG ] - ewallet_login.py - 318: check_user_pass - 
+[ 2020-03-08 08:38:15 ] EWallet [ DEBUG ] - ewallet_login.py - 276: check_user_pass_length - 
+[ 2020-03-08 08:38:15 ] EWallet [ DEBUG ] - ewallet_login.py - 307: check_user_pass_characters - 
+[ 2020-03-08 08:38:15 ] EWallet [ DEBUG ] - ewallet_login.py - 282: check_user_pass_letters - 
+[ 2020-03-08 08:38:15 ] EWallet [ DEBUG ] - ewallet_login.py - 291: check_user_pass_numbers - 
+[ 2020-03-08 08:38:15 ] EWallet [ DEBUG ] - ewallet_login.py - 299: check_user_pass_symbols - 
+[ 2020-03-08 08:38:15 ] EWallet [ DEBUG ] - ewallet_login.py - 344: check_user_email - 
+[ 2020-03-08 08:38:15 ] EWallet [ DEBUG ] - ewallet_login.py - 329: check_user_email_is_valid - 
+[ 2020-03-08 08:38:15 ] EWallet [ WARNING ] - ewallet_login.py - 458: warning_duplicate_user_name - Invalid user name. Already taken.
+[ 2020-03-08 08:38:15 ] EWallet [ WARNING ] - ewallet_login.py - 215: warning_could_not_create_new_user_account - Something went wrong. Could not create new user account.
+[ 2020-03-08 08:38:15 ] EWallet [ WARNING ] - ewallet.py - 1883: warning_could_not_create_user_account - Something went wrong. Could not create new user account for test user.
+[ 2020-03-08 08:38:15 ] EWallet [ DEBUG ] - ewallet.py - 1232: ewallet_controller - 
+[ 2020-03-08 08:38:15 ] EWallet [ DEBUG ] - ewallet.py - 1221: ewallet_user_controller - 
+[ 2020-03-08 08:38:15 ] EWallet [ DEBUG ] - ewallet.py - 1164: ewallet_user_action_controller - 
+[ 2020-03-08 08:38:15 ] EWallet [ DEBUG ] - ewallet.py - 1007: handle_user_action_login - 
+[ 2020-03-08 08:38:15 ] EWallet [ DEBUG ] - ewallet_login.py - 156: ewallet_login_controller - 
+[ 2020-03-08 08:38:15 ] EWallet [ DEBUG ] - ewallet_login.py - 126: action_login - 
+[ 2020-03-08 08:38:15 ] EWallet [ DEBUG ] - ewallet_login.py - 106: authenticate_user - 
+[ 2020-03-08 08:38:15 ] EWallet [ DEBUG ] - ewallet_login.py - 90: check_user_name_exists - 
+[ 2020-03-08 08:38:15 ] EWallet [ DEBUG ] - res_user.py - 111: fetch_user_pass_hash - 
+[ 2020-03-08 08:38:15 ] EWallet [ DEBUG ] - ewallet_login.py - 98: check_user_pass_hash - 
+[ 2020-03-08 08:38:15 ] EWallet [ DEBUG ] - ewallet_login.py - 85: hash_password - 
+[ 2020-03-08 08:38:15 ] EWallet [ DEBUG ] - ewallet_login.py - 77: set_login_record_data - 
+[ 2020-03-08 08:38:15 ] EWallet [ DEBUG ] - ewallet_login.py - 63: set_user_id - 
+[ 2020-03-08 08:38:15 ] EWallet [ DEBUG ] - ewallet_login.py - 70: set_login_status - 
+[ 2020-03-08 08:38:15 ] EWallet [ DEBUG ] - res_user.py - 249: set_user_state - 
+[ 2020-03-08 08:38:15 ] EWallet [ DEBUG ] - res_user.py - 393: convert_user_state_code_to_name - 
+[ 2020-03-08 08:38:15 ] EWallet [ DEBUG ] - res_user.py - 178: fetch_user_state_code_map - 
+[ 2020-03-08 08:38:15 ] EWallet [ DEBUG ] - res_user.py - 232: set_user_state_code - 
+[ 2020-03-08 08:38:15 ] EWallet [ DEBUG ] - res_user.py - 192: set_user_write_date - 
+[ 2020-03-08 08:38:15 ] EWallet [ DEBUG ] - res_user.py - 240: set_user_state_name - 
+[ 2020-03-08 08:38:15 ] EWallet [ DEBUG ] - res_user.py - 192: set_user_write_date - 
+[ 2020-03-08 08:38:15 ] EWallet [ DEBUG ] - ewallet.py - 967: action_system_user_update - 
+[ 2020-03-08 08:38:15 ] EWallet [ DEBUG ] - ewallet.py - 189: set_session_active_user - 
+[ 2020-03-08 08:38:15 ] EWallet [ DEBUG ] - ewallet.py - 253: update_session_from_user - 
+[ 2020-03-08 08:38:15 ] EWallet [ DEBUG ] - res_user.py - 99: fetch_user_credit_wallet - 
+[ 2020-03-08 08:38:15 ] EWallet [ DEBUG ] - res_user.py - 105: fetch_user_contact_list - 
+[ 2020-03-08 08:38:15 ] EWallet [ DEBUG ] - ewallet.py - 208: set_session_data - 
+[ 2020-03-08 08:38:15 ] EWallet [ DEBUG ] - ewallet.py - 189: set_session_active_user - 
+[ 2020-03-08 08:38:15 ] EWallet [ DEBUG ] - ewallet.py - 196: set_session_credit_wallet - 
+[ 2020-03-08 08:38:15 ] EWallet [ DEBUG ] - ewallet.py - 202: set_session_contact_list - 
+[ 2020-03-08 08:38:15 ] EWallet [ INFO ] - ewallet.py - 263: update_session_from_user - Successfully updated ewallet session from current active user.
+[ 2020-03-08 08:38:15 ] EWallet [ INFO ] - ewallet.py - 1021: handle_user_action_login - User successfully loged in.
+[ 2020-03-08 08:38:15 ] EWallet [ DEBUG ] - ewallet.py - 1232: ewallet_controller - 
+[ 2020-03-08 08:38:15 ] EWallet [ DEBUG ] - ewallet.py - 1221: ewallet_user_controller - 
+[ 2020-03-08 08:38:15 ] EWallet [ DEBUG ] - ewallet.py - 1164: ewallet_user_action_controller - 
+[ 2020-03-08 08:38:15 ] EWallet [ DEBUG ] - ewallet.py - 1108: handle_user_action_view - 
+[ 2020-03-08 08:38:15 ] EWallet [ DEBUG ] - ewallet.py - 690: action_view_user_account - 
+[ 2020-03-08 08:38:15 ] EWallet [ DEBUG ] - res_user.py - 143: fetch_user_values - 
+[ 2020-03-08 08:38:15 ] EWallet [ DEBUG ] - res_user.py - 99: fetch_user_credit_wallet - 
+[ 2020-03-08 08:38:15 ] EWallet [ DEBUG ] - res_user.py - 105: fetch_user_contact_list - 
+[ 2020-03-08 08:38:15 ] EWallet [ DEBUG ] - ewallet.py - 694: action_view_user_account - {'id': 1, 'user_name': 'test user', 'user_create_date': datetime.datetime(2020, 3, 8, 7, 10, 0, 896769), 'user_write_date': datetime.datetime(2020, 3, 8, 8, 38, 15, 844085), 'user_credit_wallet': <base.credit_wallet.CreditEWallet object at 0xb6bd596c>, 'user_contact_list': <base.contact_list.ContactList object at 0xb6bd9f4c>, 'user_pass_hash': '062bce6d67fb682e60680b8d715be64854c93ebed0627487c95422c2db032761', 'user_email': 'example@example.com', 'user_phone': None, 'user_alias': None, 'user_state_code': 1, 'user_state_name': 'LoggedIn', 'user_pass_hash_archive': [<base.res_user_pass_hash_archive.ResUserPassHashArchive object at 0xb6b7242c>], 'user_credit_wallet_archive': [<base.credit_wallet.CreditEWallet object at 0xb6bd596c>], 'user_contact_list_archive': [<base.contact_list.ContactList object at 0xb6bd9f4c>]}
+[ 2020-03-08 08:38:15 ] EWallet [ DEBUG ] - ewallet.py - 1232: ewallet_controller - 
+[ 2020-03-08 08:38:15 ] EWallet [ DEBUG ] - ewallet.py - 1221: ewallet_user_controller - 
+[ 2020-03-08 08:38:15 ] EWallet [ DEBUG ] - ewallet.py - 1164: ewallet_user_action_controller - 
+[ 2020-03-08 08:38:15 ] EWallet [ DEBUG ] - ewallet.py - 1060: handle_user_action_create - 
+[ 2020-03-08 08:38:15 ] EWallet [ DEBUG ] - ewallet.py - 321: action_create_new_user_account - 
+[ 2020-03-08 08:38:15 ] EWallet [ DEBUG ] - ewallet_login.py - 156: ewallet_login_controller - 
+[ 2020-03-08 08:38:15 ] EWallet [ DEBUG ] - ewallet_login.py - 148: action_create_new_account - 
+[ 2020-03-08 08:38:15 ] EWallet [ DEBUG ] - ewallet_login.py - 399: action_create_new_user - 
+[ 2020-03-08 08:38:15 ] EWallet [ DEBUG ] - ewallet_login.py - 357: perform_new_user_checks - 
+[ 2020-03-08 08:38:15 ] EWallet [ DEBUG ] - ewallet_login.py - 253: fetch_all_user_names - 
+[ 2020-03-08 08:38:15 ] EWallet [ DEBUG ] - ewallet_login.py - 244: fetch_all_user_records - 
+[ 2020-03-08 08:38:15 ] EWallet [ DEBUG ] - ewallet_login.py - 265: check_user_name_ensure_one - 
+[ 2020-03-08 08:38:15 ] EWallet [ DEBUG ] - ewallet_login.py - 318: check_user_pass - 
+[ 2020-03-08 08:38:15 ] EWallet [ DEBUG ] - ewallet_login.py - 276: check_user_pass_length - 
+[ 2020-03-08 08:38:15 ] EWallet [ DEBUG ] - ewallet_login.py - 307: check_user_pass_characters - 
+[ 2020-03-08 08:38:15 ] EWallet [ DEBUG ] - ewallet_login.py - 282: check_user_pass_letters - 
+[ 2020-03-08 08:38:15 ] EWallet [ DEBUG ] - ewallet_login.py - 291: check_user_pass_numbers - 
+[ 2020-03-08 08:38:15 ] EWallet [ DEBUG ] - ewallet_login.py - 299: check_user_pass_symbols - 
+[ 2020-03-08 08:38:15 ] EWallet [ DEBUG ] - ewallet_login.py - 344: check_user_email - 
+[ 2020-03-08 08:38:15 ] EWallet [ DEBUG ] - ewallet_login.py - 329: check_user_email_is_valid - 
+[ 2020-03-08 08:38:15 ] EWallet [ WARNING ] - ewallet_login.py - 458: warning_duplicate_user_name - Invalid user name. Already taken.
+[ 2020-03-08 08:38:15 ] EWallet [ WARNING ] - ewallet_login.py - 215: warning_could_not_create_new_user_account - Something went wrong. Could not create new user account.
+[ 2020-03-08 08:38:15 ] EWallet [ WARNING ] - ewallet.py - 1883: warning_could_not_create_user_account - Something went wrong. Could not create new user account for user2.
+[ 2020-03-08 08:38:15 ] EWallet [ DEBUG ] - ewallet.py - 1232: ewallet_controller - 
+[ 2020-03-08 08:38:15 ] EWallet [ DEBUG ] - ewallet.py - 1221: ewallet_user_controller - 
+[ 2020-03-08 08:38:15 ] EWallet [ DEBUG ] - ewallet.py - 1164: ewallet_user_action_controller - 
+[ 2020-03-08 08:38:15 ] EWallet [ DEBUG ] - ewallet.py - 1007: handle_user_action_login - 
+[ 2020-03-08 08:38:15 ] EWallet [ DEBUG ] - ewallet_login.py - 156: ewallet_login_controller - 
+[ 2020-03-08 08:38:15 ] EWallet [ DEBUG ] - ewallet_login.py - 126: action_login - 
+[ 2020-03-08 08:38:15 ] EWallet [ DEBUG ] - ewallet_login.py - 106: authenticate_user - 
+[ 2020-03-08 08:38:15 ] EWallet [ DEBUG ] - ewallet_login.py - 90: check_user_name_exists - 
+[ 2020-03-08 08:38:15 ] EWallet [ DEBUG ] - res_user.py - 111: fetch_user_pass_hash - 
+[ 2020-03-08 08:38:15 ] EWallet [ DEBUG ] - ewallet_login.py - 98: check_user_pass_hash - 
+[ 2020-03-08 08:38:15 ] EWallet [ DEBUG ] - ewallet_login.py - 85: hash_password - 
+[ 2020-03-08 08:38:15 ] EWallet [ DEBUG ] - ewallet_login.py - 77: set_login_record_data - 
+[ 2020-03-08 08:38:15 ] EWallet [ DEBUG ] - ewallet_login.py - 63: set_user_id - 
+[ 2020-03-08 08:38:15 ] EWallet [ DEBUG ] - ewallet_login.py - 70: set_login_status - 
+[ 2020-03-08 08:38:15 ] EWallet [ DEBUG ] - res_user.py - 249: set_user_state - 
+[ 2020-03-08 08:38:15 ] EWallet [ DEBUG ] - res_user.py - 393: convert_user_state_code_to_name - 
+[ 2020-03-08 08:38:15 ] EWallet [ DEBUG ] - res_user.py - 178: fetch_user_state_code_map - 
+[ 2020-03-08 08:38:15 ] EWallet [ DEBUG ] - res_user.py - 232: set_user_state_code - 
+[ 2020-03-08 08:38:15 ] EWallet [ DEBUG ] - res_user.py - 192: set_user_write_date - 
+[ 2020-03-08 08:38:15 ] EWallet [ DEBUG ] - res_user.py - 240: set_user_state_name - 
+[ 2020-03-08 08:38:15 ] EWallet [ DEBUG ] - res_user.py - 192: set_user_write_date - 
+[ 2020-03-08 08:38:15 ] EWallet [ DEBUG ] - ewallet.py - 967: action_system_user_update - 
+[ 2020-03-08 08:38:15 ] EWallet [ DEBUG ] - ewallet.py - 189: set_session_active_user - 
+[ 2020-03-08 08:38:15 ] EWallet [ DEBUG ] - ewallet.py - 253: update_session_from_user - 
+[ 2020-03-08 08:38:15 ] EWallet [ DEBUG ] - res_user.py - 99: fetch_user_credit_wallet - 
+[ 2020-03-08 08:38:15 ] EWallet [ DEBUG ] - res_user.py - 105: fetch_user_contact_list - 
+[ 2020-03-08 08:38:15 ] EWallet [ DEBUG ] - ewallet.py - 208: set_session_data - 
+[ 2020-03-08 08:38:15 ] EWallet [ DEBUG ] - ewallet.py - 189: set_session_active_user - 
+[ 2020-03-08 08:38:15 ] EWallet [ DEBUG ] - ewallet.py - 196: set_session_credit_wallet - 
+[ 2020-03-08 08:38:16 ] EWallet [ DEBUG ] - ewallet.py - 202: set_session_contact_list - 
+[ 2020-03-08 08:38:16 ] EWallet [ INFO ] - ewallet.py - 263: update_session_from_user - Successfully updated ewallet session from current active user.
+[ 2020-03-08 08:38:16 ] EWallet [ INFO ] - ewallet.py - 1021: handle_user_action_login - User successfully loged in.
+[ 2020-03-08 08:38:16 ] EWallet [ DEBUG ] - ewallet.py - 163: fetch_active_session_credit_wallet - 
+[ 2020-03-08 08:38:16 ] EWallet [ DEBUG ] - ewallet.py - 157: fetch_active_session_user - 
+[ 2020-03-08 08:38:16 ] EWallet [ DEBUG ] - res_user.py - 83: fetch_user_id - 
+[ 2020-03-08 08:38:16 ] EWallet [ DEBUG ] - ewallet.py - 1232: ewallet_controller - 
+[ 2020-03-08 08:38:16 ] EWallet [ DEBUG ] - ewallet.py - 1221: ewallet_user_controller - 
+[ 2020-03-08 08:38:16 ] EWallet [ DEBUG ] - ewallet.py - 1164: ewallet_user_action_controller - 
+[ 2020-03-08 08:38:16 ] EWallet [ DEBUG ] - ewallet.py - 1060: handle_user_action_create - 
+[ 2020-03-08 08:38:16 ] EWallet [ DEBUG ] - ewallet.py - 446: action_create_new_transfer - 
+[ 2020-03-08 08:38:16 ] EWallet [ DEBUG ] - ewallet.py - 163: fetch_active_session_credit_wallet - 
+[ 2020-03-08 08:38:16 ] EWallet [ DEBUG ] - credit_wallet.py - 775: user_controller - 
+[ 2020-03-08 08:38:16 ] EWallet [ DEBUG ] - credit_wallet.py - 556: transfer_credits - 
+[ 2020-03-08 08:38:16 ] EWallet [ DEBUG ] - credit_wallet.py - 490: transfer_credits_incomming - 
+[ 2020-03-08 08:38:16 ] EWallet [ INFO ] - credit_wallet.py - 496: transfer_credits_incomming - Extracting credits from partner ewallet...
+[ 2020-03-08 08:38:16 ] EWallet [ DEBUG ] - credit_wallet.py - 757: system_controller - 
+[ 2020-03-08 08:38:16 ] EWallet [ DEBUG ] - credit_wallet.py - 388: extract_credits - 
+[ 2020-03-08 08:38:16 ] EWallet [ INFO ] - credit_wallet.py - 392: extract_credits - Successfully extracted credits from wallet.
+[ 2020-03-08 08:38:16 ] EWallet [ DEBUG ] - credit_wallet.py - 312: set_write_date - 
+[ 2020-03-08 08:38:16 ] EWallet [ INFO ] - credit_wallet.py - 500: transfer_credits_incomming - Supplying wallet with credits...
+[ 2020-03-08 08:38:16 ] EWallet [ DEBUG ] - credit_wallet.py - 757: system_controller - 
+[ 2020-03-08 08:38:16 ] EWallet [ DEBUG ] - credit_wallet.py - 380: supply_credits - 
+[ 2020-03-08 08:38:16 ] EWallet [ INFO ] - credit_wallet.py - 384: supply_credits - Successfully supplied wallet with credits.
+[ 2020-03-08 08:38:16 ] EWallet [ INFO ] - credit_wallet.py - 504: transfer_credits_incomming - Creating transfer record...
+[ 2020-03-08 08:38:16 ] EWallet [ DEBUG ] - credit_wallet.py - 120: fetch_credit_ewallet_transfer_sheet - 
+[ 2020-03-08 08:38:16 ] EWallet [ DEBUG ] - transfer_sheet.py - 408: credit_transfer_sheet_controller - 
+[ 2020-03-08 08:38:16 ] EWallet [ DEBUG ] - transfer_sheet.py - 360: add_transfer_sheet_record - 
+[ 2020-03-08 08:38:16 ] EWallet [ DEBUG ] - transfer_sheet.py - 210: fetch_transfer_record_creation_values - 
+[ 2020-03-08 08:38:16 ] EWallet [ DEBUG ] - transfer_sheet.py - 355: create_transfer_sheet_record - 
+[ 2020-03-08 08:38:16 ] EWallet [ DEBUG ] - transfer_sheet.py - 382: update_records - 
+[ 2020-03-08 08:38:16 ] EWallet [ INFO ] - transfer_sheet.py - 369: add_transfer_sheet_record - Successfully added new transfer record.
+[ 2020-03-08 08:38:16 ] EWallet [ DEBUG ] - transfer_sheet.py - 342: update_write_date - 
+[ 2020-03-08 08:38:16 ] EWallet [ INFO ] - credit_wallet.py - 513: transfer_credits_incomming - Attempting transfer record share with partner...
+[ 2020-03-08 08:38:16 ] EWallet [ DEBUG ] - credit_wallet.py - 475: share_transfer_record - 
+[ 2020-03-08 08:38:16 ] EWallet [ ERROR ] - credit_wallet.py - 955: error_no_transfer_record_found - No transfer record found.
+[ 2020-03-08 08:38:16 ] EWallet [ DEBUG ] - ewallet.py - 1232: ewallet_controller - 
+[ 2020-03-08 08:38:16 ] EWallet [ DEBUG ] - ewallet.py - 1221: ewallet_user_controller - 
+[ 2020-03-08 08:38:16 ] EWallet [ DEBUG ] - ewallet.py - 1164: ewallet_user_action_controller - 
+[ 2020-03-08 08:38:16 ] EWallet [ DEBUG ] - ewallet.py - 1108: handle_user_action_view - 
+[ 2020-03-08 08:38:16 ] EWallet [ DEBUG ] - ewallet.py - 698: action_view_credit_wallet - 
+[ 2020-03-08 08:38:16 ] EWallet [ DEBUG ] - ewallet.py - 163: fetch_active_session_credit_wallet - 
+[ 2020-03-08 08:38:16 ] EWallet [ DEBUG ] - credit_wallet.py - 131: fetch_credit_ewallet_values - 
+[ 2020-03-08 08:38:16 ] EWallet [ DEBUG ] - ewallet.py - 703: action_view_credit_wallet - {'id': 2, 'client_id': 2, 'reference': 'Credit Wallet', 'create_date': datetime.datetime(2020, 3, 8, 7, 10, 1, 950455), 'write_date': datetime.datetime(2020, 3, 8, 8, 38, 16, 82310), 'credits': 0, 'credit_clock': [<base.credit_clock.CreditClock object at 0xb6b970ec>], 'credit_clock_archive': [<base.credit_clock.CreditClock object at 0xb6b970ec>], 'transfer_sheet': [<base.transfer_sheet.CreditTransferSheet object at 0xb6b9212c>], 'transfer_sheet_archive': [<base.transfer_sheet.CreditTransferSheet object at 0xb6b9212c>]}
+[ 2020-03-08 08:38:16 ] EWallet [ DEBUG ] - ewallet.py - 163: fetch_active_session_credit_wallet - 
+[ 2020-03-08 08:38:16 ] EWallet [ DEBUG ] - ewallet.py - 157: fetch_active_session_user - 
+[ 2020-03-08 08:38:16 ] EWallet [ DEBUG ] - res_user.py - 83: fetch_user_id - 
+[ 2020-03-08 08:38:16 ] EWallet [ DEBUG ] - ewallet.py - 1232: ewallet_controller - 
+[ 2020-03-08 08:38:16 ] EWallet [ DEBUG ] - ewallet.py - 1221: ewallet_user_controller - 
+[ 2020-03-08 08:38:16 ] EWallet [ DEBUG ] - ewallet.py - 1164: ewallet_user_action_controller - 
+[ 2020-03-08 08:38:16 ] EWallet [ DEBUG ] - ewallet.py - 1060: handle_user_action_create - 
+[ 2020-03-08 08:38:16 ] EWallet [ DEBUG ] - ewallet.py - 446: action_create_new_transfer - 
+[ 2020-03-08 08:38:16 ] EWallet [ DEBUG ] - ewallet.py - 163: fetch_active_session_credit_wallet - 
+[ 2020-03-08 08:38:16 ] EWallet [ DEBUG ] - credit_wallet.py - 775: user_controller - 
+[ 2020-03-08 08:38:16 ] EWallet [ DEBUG ] - credit_wallet.py - 556: transfer_credits - 
+[ 2020-03-08 08:38:16 ] EWallet [ DEBUG ] - credit_wallet.py - 523: transfer_credits_outgoing - 
+[ 2020-03-08 08:38:16 ] EWallet [ INFO ] - credit_wallet.py - 531: transfer_credits_outgoing - Extracting credits from wallet...
+[ 2020-03-08 08:38:16 ] EWallet [ DEBUG ] - credit_wallet.py - 757: system_controller - 
+[ 2020-03-08 08:38:16 ] EWallet [ DEBUG ] - credit_wallet.py - 388: extract_credits - 
+[ 2020-03-08 08:38:16 ] EWallet [ INFO ] - credit_wallet.py - 392: extract_credits - Successfully extracted credits from wallet.
+[ 2020-03-08 08:38:16 ] EWallet [ DEBUG ] - credit_wallet.py - 312: set_write_date - 
+[ 2020-03-08 08:38:16 ] EWallet [ INFO ] - credit_wallet.py - 535: transfer_credits_outgoing - Supplying partner wallet with credits...
+[ 2020-03-08 08:38:16 ] EWallet [ DEBUG ] - credit_wallet.py - 757: system_controller - 
+[ 2020-03-08 08:38:16 ] EWallet [ DEBUG ] - credit_wallet.py - 380: supply_credits - 
+[ 2020-03-08 08:38:16 ] EWallet [ INFO ] - credit_wallet.py - 384: supply_credits - Successfully supplied wallet with credits.
+[ 2020-03-08 08:38:16 ] EWallet [ INFO ] - credit_wallet.py - 539: transfer_credits_outgoing - Creating transfer record...
+[ 2020-03-08 08:38:16 ] EWallet [ DEBUG ] - credit_wallet.py - 120: fetch_credit_ewallet_transfer_sheet - 
+[ 2020-03-08 08:38:16 ] EWallet [ DEBUG ] - transfer_sheet.py - 408: credit_transfer_sheet_controller - 
+[ 2020-03-08 08:38:16 ] EWallet [ DEBUG ] - transfer_sheet.py - 360: add_transfer_sheet_record - 
+[ 2020-03-08 08:38:16 ] EWallet [ DEBUG ] - transfer_sheet.py - 210: fetch_transfer_record_creation_values - 
+[ 2020-03-08 08:38:16 ] EWallet [ DEBUG ] - transfer_sheet.py - 355: create_transfer_sheet_record - 
+[ 2020-03-08 08:38:16 ] EWallet [ DEBUG ] - transfer_sheet.py - 382: update_records - 
+[ 2020-03-08 08:38:16 ] EWallet [ INFO ] - transfer_sheet.py - 369: add_transfer_sheet_record - Successfully added new transfer record.
+[ 2020-03-08 08:38:16 ] EWallet [ DEBUG ] - transfer_sheet.py - 342: update_write_date - 
+[ 2020-03-08 08:38:16 ] EWallet [ INFO ] - credit_wallet.py - 547: transfer_credits_outgoing - Attempting transfer record share with partner...
+[ 2020-03-08 08:38:16 ] EWallet [ DEBUG ] - credit_wallet.py - 475: share_transfer_record - 
+[ 2020-03-08 08:38:16 ] EWallet [ INFO ] - credit_wallet.py - 481: share_transfer_record - Attempting to share transfer record...
+[ 2020-03-08 08:38:16 ] EWallet [ DEBUG ] - credit_wallet.py - 120: fetch_credit_ewallet_transfer_sheet - 
+[ 2020-03-08 08:38:16 ] EWallet [ DEBUG ] - transfer_sheet.py - 408: credit_transfer_sheet_controller - 
+[ 2020-03-08 08:38:16 ] EWallet [ DEBUG ] - transfer_sheet.py - 387: append_transfer_sheet_record - 
+[ 2020-03-08 08:38:16 ] EWallet [ DEBUG ] - transfer_sheet.py - 382: update_records - 
+[ 2020-03-08 08:38:16 ] EWallet [ INFO ] - transfer_sheet.py - 392: append_transfer_sheet_record - Successfully appended transfer records.
+[ 2020-03-08 08:38:16 ] EWallet [ DEBUG ] - transfer_sheet.py - 342: update_write_date - 
+[ 2020-03-08 08:38:16 ] EWallet [ DEBUG ] - credit_wallet.py - 312: set_write_date - 
+[ 2020-03-08 08:38:16 ] EWallet [ DEBUG ] - ewallet.py - 1232: ewallet_controller - 
+[ 2020-03-08 08:38:16 ] EWallet [ DEBUG ] - ewallet.py - 1221: ewallet_user_controller - 
+[ 2020-03-08 08:38:16 ] EWallet [ DEBUG ] - ewallet.py - 1164: ewallet_user_action_controller - 
+[ 2020-03-08 08:38:16 ] EWallet [ DEBUG ] - ewallet.py - 1108: handle_user_action_view - 
+[ 2020-03-08 08:38:16 ] EWallet [ DEBUG ] - ewallet.py - 698: action_view_credit_wallet - 
+[ 2020-03-08 08:38:16 ] EWallet [ DEBUG ] - ewallet.py - 163: fetch_active_session_credit_wallet - 
+[ 2020-03-08 08:38:16 ] EWallet [ DEBUG ] - credit_wallet.py - 131: fetch_credit_ewallet_values - 
+[ 2020-03-08 08:38:16 ] EWallet [ DEBUG ] - ewallet.py - 703: action_view_credit_wallet - {'id': 2, 'client_id': 2, 'reference': 'Credit Wallet', 'create_date': datetime.datetime(2020, 3, 8, 7, 10, 1, 950455), 'write_date': datetime.datetime(2020, 3, 8, 8, 38, 16, 308815), 'credits': 0, 'credit_clock': [<base.credit_clock.CreditClock object at 0xb6b970ec>], 'credit_clock_archive': [<base.credit_clock.CreditClock object at 0xb6b970ec>], 'transfer_sheet': [<base.transfer_sheet.CreditTransferSheet object at 0xb6b9212c>], 'transfer_sheet_archive': [<base.transfer_sheet.CreditTransferSheet object at 0xb6b9212c>]}
+[ 2020-03-08 08:38:16 ] EWallet [ DEBUG ] - ewallet.py - 1232: ewallet_controller - 
+[ 2020-03-08 08:38:16 ] EWallet [ DEBUG ] - ewallet.py - 1221: ewallet_user_controller - 
+[ 2020-03-08 08:38:16 ] EWallet [ DEBUG ] - ewallet.py - 1164: ewallet_user_action_controller - 
+[ 2020-03-08 08:38:16 ] EWallet [ DEBUG ] - ewallet.py - 1108: handle_user_action_view - 
+[ 2020-03-08 08:38:16 ] EWallet [ DEBUG ] - ewallet.py - 690: action_view_user_account - 
+[ 2020-03-08 08:38:16 ] EWallet [ DEBUG ] - res_user.py - 143: fetch_user_values - 
+[ 2020-03-08 08:38:16 ] EWallet [ DEBUG ] - res_user.py - 99: fetch_user_credit_wallet - 
+[ 2020-03-08 08:38:16 ] EWallet [ DEBUG ] - res_user.py - 105: fetch_user_contact_list - 
+[ 2020-03-08 08:38:16 ] EWallet [ DEBUG ] - ewallet.py - 694: action_view_user_account - {'id': 2, 'user_name': 'user2', 'user_create_date': datetime.datetime(2020, 3, 8, 7, 10, 1, 947708), 'user_write_date': datetime.datetime(2020, 3, 8, 8, 38, 15, 989470), 'user_credit_wallet': <base.credit_wallet.CreditEWallet object at 0xb6b9dd6c>, 'user_contact_list': <base.contact_list.ContactList object at 0xb6b9df2c>, 'user_pass_hash': '062bce6d67fb682e60680b8d715be64854c93ebed0627487c95422c2db032761', 'user_email': 'example2@example.com', 'user_phone': None, 'user_alias': None, 'user_state_code': 1, 'user_state_name': 'LoggedIn', 'user_pass_hash_archive': [<base.res_user_pass_hash_archive.ResUserPassHashArchive object at 0xb6b9de6c>], 'user_credit_wallet_archive': [<base.credit_wallet.CreditEWallet object at 0xb6b9dd6c>], 'user_contact_list_archive': [<base.contact_list.ContactList object at 0xb6b9df2c>]}
+[ 2020-03-08 08:38:16 ] EWallet [ DEBUG ] - ewallet.py - 1232: ewallet_controller - 
+[ 2020-03-08 08:38:16 ] EWallet [ DEBUG ] - ewallet.py - 1211: ewallet_system_controller - 
+[ 2020-03-08 08:38:16 ] EWallet [ DEBUG ] - ewallet.py - 1201: ewallet_system_action_controller - 
+[ 2020-03-08 08:38:16 ] EWallet [ DEBUG ] - ewallet.py - 983: handle_system_action_update - 
+[ 2020-03-08 08:38:16 ] EWallet [ DEBUG ] - ewallet.py - 977: action_system_session_update - 
+[ 2020-03-08 08:38:16 ] EWallet [ DEBUG ] - ewallet.py - 157: fetch_active_session_user - 
+[ 2020-03-08 08:38:16 ] EWallet [ DEBUG ] - ewallet.py - 253: update_session_from_user - 
+[ 2020-03-08 08:38:16 ] EWallet [ DEBUG ] - res_user.py - 99: fetch_user_credit_wallet - 
+[ 2020-03-08 08:38:16 ] EWallet [ DEBUG ] - res_user.py - 105: fetch_user_contact_list - 
+[ 2020-03-08 08:38:16 ] EWallet [ DEBUG ] - ewallet.py - 208: set_session_data - 
+[ 2020-03-08 08:38:16 ] EWallet [ DEBUG ] - ewallet.py - 189: set_session_active_user - 
+[ 2020-03-08 08:38:16 ] EWallet [ DEBUG ] - ewallet.py - 196: set_session_credit_wallet - 
+[ 2020-03-08 08:38:16 ] EWallet [ DEBUG ] - ewallet.py - 202: set_session_contact_list - 
+[ 2020-03-08 08:38:16 ] EWallet [ INFO ] - ewallet.py - 263: update_session_from_user - Successfully updated ewallet session from current active user.
+[ 2020-03-08 08:38:16 ] EWallet [ DEBUG ] - ewallet.py - 1232: ewallet_controller - 
+[ 2020-03-08 08:38:16 ] EWallet [ DEBUG ] - ewallet.py - 1221: ewallet_user_controller - 
+[ 2020-03-08 08:38:16 ] EWallet [ DEBUG ] - ewallet.py - 1164: ewallet_user_action_controller - 
+[ 2020-03-08 08:38:16 ] EWallet [ DEBUG ] - ewallet.py - 1029: handle_user_action_logout - 
+[ 2020-03-08 08:38:16 ] EWallet [ DEBUG ] - ewallet.py - 157: fetch_active_session_user - 
+[ 2020-03-08 08:38:16 ] EWallet [ DEBUG ] - ewallet.py - 952: action_system_user_logout - 
+[ 2020-03-08 08:38:16 ] EWallet [ DEBUG ] - ewallet.py - 157: fetch_active_session_user - 
+[ 2020-03-08 08:38:16 ] EWallet [ DEBUG ] - res_user.py - 249: set_user_state - 
+[ 2020-03-08 08:38:16 ] EWallet [ DEBUG ] - res_user.py - 393: convert_user_state_code_to_name - 
+[ 2020-03-08 08:38:16 ] EWallet [ DEBUG ] - res_user.py - 178: fetch_user_state_code_map - 
+[ 2020-03-08 08:38:16 ] EWallet [ DEBUG ] - res_user.py - 232: set_user_state_code - 
+[ 2020-03-08 08:38:16 ] EWallet [ DEBUG ] - res_user.py - 192: set_user_write_date - 
+[ 2020-03-08 08:38:16 ] EWallet [ DEBUG ] - res_user.py - 240: set_user_state_name - 
+[ 2020-03-08 08:38:16 ] EWallet [ DEBUG ] - res_user.py - 192: set_user_write_date - 
+[ 2020-03-08 08:38:16 ] EWallet [ DEBUG ] - ewallet.py - 178: fetch_next_active_session_user - 
+[ 2020-03-08 08:38:16 ] EWallet [ DEBUG ] - ewallet.py - 240: clear_active_session_user_data - 
+[ 2020-03-08 08:38:16 ] EWallet [ DEBUG ] - ewallet.py - 225: clear_session_credit_wallet - 
+[ 2020-03-08 08:38:16 ] EWallet [ DEBUG ] - ewallet.py - 230: clear_session_contact_list - 
+[ 2020-03-08 08:38:16 ] EWallet [ DEBUG ] - res_user.py - 83: fetch_user_id - 
+[ 2020-03-08 08:38:16 ] EWallet [ DEBUG ] - ewallet.py - 967: action_system_user_update - 
+[ 2020-03-08 08:38:16 ] EWallet [ DEBUG ] - ewallet.py - 189: set_session_active_user - 
+[ 2020-03-08 08:38:16 ] EWallet [ DEBUG ] - ewallet.py - 253: update_session_from_user - 
+[ 2020-03-08 08:38:16 ] EWallet [ DEBUG ] - res_user.py - 99: fetch_user_credit_wallet - 
+[ 2020-03-08 08:38:16 ] EWallet [ DEBUG ] - res_user.py - 105: fetch_user_contact_list - 
+[ 2020-03-08 08:38:16 ] EWallet [ DEBUG ] - ewallet.py - 208: set_session_data - 
+[ 2020-03-08 08:38:16 ] EWallet [ DEBUG ] - ewallet.py - 189: set_session_active_user - 
+[ 2020-03-08 08:38:16 ] EWallet [ DEBUG ] - ewallet.py - 196: set_session_credit_wallet - 
+[ 2020-03-08 08:38:16 ] EWallet [ DEBUG ] - ewallet.py - 202: set_session_contact_list - 
+[ 2020-03-08 08:38:16 ] EWallet [ INFO ] - ewallet.py - 263: update_session_from_user - Successfully updated ewallet session from current active user.
+[ 2020-03-08 08:38:16 ] EWallet [ INFO ] - ewallet.py - 1044: handle_user_action_logout - User successfully loged out.
+[ 2020-03-08 08:38:16 ] EWallet [ DEBUG ] - ewallet.py - 1232: ewallet_controller - 
+[ 2020-03-08 08:38:16 ] EWallet [ DEBUG ] - ewallet.py - 1221: ewallet_user_controller - 
+[ 2020-03-08 08:38:16 ] EWallet [ DEBUG ] - ewallet.py - 1164: ewallet_user_action_controller - 
+[ 2020-03-08 08:38:16 ] EWallet [ DEBUG ] - ewallet.py - 1029: handle_user_action_logout - 
+[ 2020-03-08 08:38:16 ] EWallet [ DEBUG ] - ewallet.py - 157: fetch_active_session_user - 
+[ 2020-03-08 08:38:16 ] EWallet [ DEBUG ] - ewallet.py - 952: action_system_user_logout - 
+[ 2020-03-08 08:38:16 ] EWallet [ DEBUG ] - ewallet.py - 157: fetch_active_session_user - 
+[ 2020-03-08 08:38:16 ] EWallet [ DEBUG ] - res_user.py - 249: set_user_state - 
+[ 2020-03-08 08:38:16 ] EWallet [ DEBUG ] - res_user.py - 393: convert_user_state_code_to_name - 
+[ 2020-03-08 08:38:16 ] EWallet [ DEBUG ] - res_user.py - 178: fetch_user_state_code_map - 
+[ 2020-03-08 08:38:16 ] EWallet [ DEBUG ] - res_user.py - 232: set_user_state_code - 
+[ 2020-03-08 08:38:16 ] EWallet [ DEBUG ] - res_user.py - 192: set_user_write_date - 
+[ 2020-03-08 08:38:16 ] EWallet [ DEBUG ] - res_user.py - 240: set_user_state_name - 
+[ 2020-03-08 08:38:16 ] EWallet [ DEBUG ] - res_user.py - 192: set_user_write_date - 
+[ 2020-03-08 08:38:16 ] EWallet [ DEBUG ] - ewallet.py - 178: fetch_next_active_session_user - 
+[ 2020-03-08 08:38:16 ] EWallet [ DEBUG ] - ewallet.py - 240: clear_active_session_user_data - 
+[ 2020-03-08 08:38:16 ] EWallet [ DEBUG ] - ewallet.py - 220: clear_session_active_user - 
+[ 2020-03-08 08:38:16 ] EWallet [ DEBUG ] - ewallet.py - 225: clear_session_credit_wallet - 
+[ 2020-03-08 08:38:16 ] EWallet [ DEBUG ] - ewallet.py - 230: clear_session_contact_list - 
+[ 2020-03-08 08:38:16 ] EWallet [ DEBUG ] - res_user.py - 83: fetch_user_id - 
+[ 2020-03-08 08:38:16 ] EWallet [ INFO ] - ewallet.py - 1044: handle_user_action_logout - User successfully loged out.
+[ 2020-03-08 08:38:16 ] EWallet [ DEBUG ] - ewallet.py - 1232: ewallet_controller - 
+[ 2020-03-08 08:38:16 ] EWallet [ DEBUG ] - ewallet.py - 1211: ewallet_system_controller - 
+[ 2020-03-08 08:38:16 ] EWallet [ DEBUG ] - ewallet.py - 1201: ewallet_system_action_controller - 
+[ 2020-03-08 08:38:16 ] EWallet [ DEBUG ] - ewallet.py - 983: handle_system_action_update - 
+[ 2020-03-08 08:38:16 ] EWallet [ DEBUG ] - ewallet.py - 977: action_system_session_update - 
+[ 2020-03-08 08:38:16 ] EWallet [ DEBUG ] - ewallet.py - 157: fetch_active_session_user - 
+[ 2020-03-08 08:38:16 ] EWallet [ ERROR ] - ewallet.py - 1697: error_no_session_active_user_found - No session active user found.
+[ 2020-03-08 08:38:16 ] EWallet [ DEBUG ] - ewallet.py - 253: update_session_from_user - 
+[ 2020-03-08 08:38:16 ] EWallet [ ERROR ] - ewallet.py - 1697: error_no_session_active_user_found - No session active user found.
+[ 2020-03-08 08:43:09 ] EWallet [ DEBUG ] - ewallet.py - 1232: ewallet_controller - 
+[ 2020-03-08 08:43:09 ] EWallet [ DEBUG ] - ewallet.py - 1232: ewallet_controller - 
+[ 2020-03-08 08:43:09 ] EWallet [ DEBUG ] - ewallet.py - 1221: ewallet_user_controller - 
+[ 2020-03-08 08:43:09 ] EWallet [ DEBUG ] - ewallet.py - 1164: ewallet_user_action_controller - 
+[ 2020-03-08 08:43:09 ] EWallet [ DEBUG ] - ewallet.py - 1060: handle_user_action_create - 
+[ 2020-03-08 08:43:09 ] EWallet [ DEBUG ] - ewallet.py - 321: action_create_new_user_account - 
+[ 2020-03-08 08:43:09 ] EWallet [ DEBUG ] - ewallet_login.py - 156: ewallet_login_controller - 
+[ 2020-03-08 08:43:09 ] EWallet [ DEBUG ] - ewallet_login.py - 148: action_create_new_account - 
+[ 2020-03-08 08:43:09 ] EWallet [ DEBUG ] - ewallet_login.py - 399: action_create_new_user - 
+[ 2020-03-08 08:43:09 ] EWallet [ DEBUG ] - ewallet_login.py - 357: perform_new_user_checks - 
+[ 2020-03-08 08:43:09 ] EWallet [ DEBUG ] - ewallet_login.py - 253: fetch_all_user_names - 
+[ 2020-03-08 08:43:09 ] EWallet [ DEBUG ] - ewallet_login.py - 244: fetch_all_user_records - 
+[ 2020-03-08 08:43:09 ] EWallet [ DEBUG ] - ewallet_login.py - 265: check_user_name_ensure_one - 
+[ 2020-03-08 08:43:09 ] EWallet [ DEBUG ] - ewallet_login.py - 318: check_user_pass - 
+[ 2020-03-08 08:43:09 ] EWallet [ DEBUG ] - ewallet_login.py - 276: check_user_pass_length - 
+[ 2020-03-08 08:43:09 ] EWallet [ DEBUG ] - ewallet_login.py - 307: check_user_pass_characters - 
+[ 2020-03-08 08:43:09 ] EWallet [ DEBUG ] - ewallet_login.py - 282: check_user_pass_letters - 
+[ 2020-03-08 08:43:09 ] EWallet [ DEBUG ] - ewallet_login.py - 291: check_user_pass_numbers - 
+[ 2020-03-08 08:43:09 ] EWallet [ DEBUG ] - ewallet_login.py - 299: check_user_pass_symbols - 
+[ 2020-03-08 08:43:09 ] EWallet [ DEBUG ] - ewallet_login.py - 344: check_user_email - 
+[ 2020-03-08 08:43:09 ] EWallet [ DEBUG ] - ewallet_login.py - 329: check_user_email_is_valid - 
+[ 2020-03-08 08:43:09 ] EWallet [ WARNING ] - ewallet_login.py - 458: warning_duplicate_user_name - Invalid user name. Already taken.
+[ 2020-03-08 08:43:09 ] EWallet [ WARNING ] - ewallet_login.py - 215: warning_could_not_create_new_user_account - Something went wrong. Could not create new user account.
+[ 2020-03-08 08:43:09 ] EWallet [ WARNING ] - ewallet.py - 1883: warning_could_not_create_user_account - Something went wrong. Could not create new user account for test user.
+[ 2020-03-08 08:43:09 ] EWallet [ DEBUG ] - ewallet.py - 1232: ewallet_controller - 
+[ 2020-03-08 08:43:09 ] EWallet [ DEBUG ] - ewallet.py - 1221: ewallet_user_controller - 
+[ 2020-03-08 08:43:09 ] EWallet [ DEBUG ] - ewallet.py - 1164: ewallet_user_action_controller - 
+[ 2020-03-08 08:43:09 ] EWallet [ DEBUG ] - ewallet.py - 1007: handle_user_action_login - 
+[ 2020-03-08 08:43:09 ] EWallet [ DEBUG ] - ewallet_login.py - 156: ewallet_login_controller - 
+[ 2020-03-08 08:43:09 ] EWallet [ DEBUG ] - ewallet_login.py - 126: action_login - 
+[ 2020-03-08 08:43:09 ] EWallet [ DEBUG ] - ewallet_login.py - 106: authenticate_user - 
+[ 2020-03-08 08:43:09 ] EWallet [ DEBUG ] - ewallet_login.py - 90: check_user_name_exists - 
+[ 2020-03-08 08:43:09 ] EWallet [ DEBUG ] - res_user.py - 111: fetch_user_pass_hash - 
+[ 2020-03-08 08:43:09 ] EWallet [ DEBUG ] - ewallet_login.py - 98: check_user_pass_hash - 
+[ 2020-03-08 08:43:09 ] EWallet [ DEBUG ] - ewallet_login.py - 85: hash_password - 
+[ 2020-03-08 08:43:09 ] EWallet [ DEBUG ] - ewallet_login.py - 77: set_login_record_data - 
+[ 2020-03-08 08:43:09 ] EWallet [ DEBUG ] - ewallet_login.py - 63: set_user_id - 
+[ 2020-03-08 08:43:09 ] EWallet [ DEBUG ] - ewallet_login.py - 70: set_login_status - 
+[ 2020-03-08 08:43:09 ] EWallet [ DEBUG ] - res_user.py - 249: set_user_state - 
+[ 2020-03-08 08:43:09 ] EWallet [ DEBUG ] - res_user.py - 393: convert_user_state_code_to_name - 
+[ 2020-03-08 08:43:09 ] EWallet [ DEBUG ] - res_user.py - 178: fetch_user_state_code_map - 
+[ 2020-03-08 08:43:09 ] EWallet [ DEBUG ] - res_user.py - 232: set_user_state_code - 
+[ 2020-03-08 08:43:09 ] EWallet [ DEBUG ] - res_user.py - 192: set_user_write_date - 
+[ 2020-03-08 08:43:09 ] EWallet [ DEBUG ] - res_user.py - 240: set_user_state_name - 
+[ 2020-03-08 08:43:09 ] EWallet [ DEBUG ] - res_user.py - 192: set_user_write_date - 
+[ 2020-03-08 08:43:09 ] EWallet [ DEBUG ] - ewallet.py - 967: action_system_user_update - 
+[ 2020-03-08 08:43:09 ] EWallet [ DEBUG ] - ewallet.py - 189: set_session_active_user - 
+[ 2020-03-08 08:43:09 ] EWallet [ DEBUG ] - ewallet.py - 253: update_session_from_user - 
+[ 2020-03-08 08:43:09 ] EWallet [ DEBUG ] - res_user.py - 99: fetch_user_credit_wallet - 
+[ 2020-03-08 08:43:09 ] EWallet [ DEBUG ] - res_user.py - 105: fetch_user_contact_list - 
+[ 2020-03-08 08:43:09 ] EWallet [ DEBUG ] - ewallet.py - 208: set_session_data - 
+[ 2020-03-08 08:43:09 ] EWallet [ DEBUG ] - ewallet.py - 189: set_session_active_user - 
+[ 2020-03-08 08:43:09 ] EWallet [ DEBUG ] - ewallet.py - 196: set_session_credit_wallet - 
+[ 2020-03-08 08:43:09 ] EWallet [ DEBUG ] - ewallet.py - 202: set_session_contact_list - 
+[ 2020-03-08 08:43:10 ] EWallet [ INFO ] - ewallet.py - 263: update_session_from_user - Successfully updated ewallet session from current active user.
+[ 2020-03-08 08:43:10 ] EWallet [ INFO ] - ewallet.py - 1021: handle_user_action_login - User successfully loged in.
+[ 2020-03-08 08:43:10 ] EWallet [ DEBUG ] - ewallet.py - 1232: ewallet_controller - 
+[ 2020-03-08 08:43:10 ] EWallet [ DEBUG ] - ewallet.py - 1221: ewallet_user_controller - 
+[ 2020-03-08 08:43:10 ] EWallet [ DEBUG ] - ewallet.py - 1164: ewallet_user_action_controller - 
+[ 2020-03-08 08:43:10 ] EWallet [ DEBUG ] - ewallet.py - 1108: handle_user_action_view - 
+[ 2020-03-08 08:43:10 ] EWallet [ DEBUG ] - ewallet.py - 690: action_view_user_account - 
+[ 2020-03-08 08:43:10 ] EWallet [ DEBUG ] - res_user.py - 143: fetch_user_values - 
+[ 2020-03-08 08:43:10 ] EWallet [ DEBUG ] - res_user.py - 99: fetch_user_credit_wallet - 
+[ 2020-03-08 08:43:10 ] EWallet [ DEBUG ] - res_user.py - 105: fetch_user_contact_list - 
+[ 2020-03-08 08:43:10 ] EWallet [ DEBUG ] - ewallet.py - 694: action_view_user_account - {'id': 1, 'user_name': 'test user', 'user_create_date': datetime.datetime(2020, 3, 8, 7, 10, 0, 896769), 'user_write_date': datetime.datetime(2020, 3, 8, 8, 43, 9, 971200), 'user_credit_wallet': <base.credit_wallet.CreditEWallet object at 0xb6bb192c>, 'user_contact_list': <base.contact_list.ContactList object at 0xb6c2456c>, 'user_pass_hash': '062bce6d67fb682e60680b8d715be64854c93ebed0627487c95422c2db032761', 'user_email': 'example@example.com', 'user_phone': None, 'user_alias': None, 'user_state_code': 1, 'user_state_name': 'LoggedIn', 'user_pass_hash_archive': [<base.res_user_pass_hash_archive.ResUserPassHashArchive object at 0xb6bb83ac>], 'user_credit_wallet_archive': [<base.credit_wallet.CreditEWallet object at 0xb6bb192c>], 'user_contact_list_archive': [<base.contact_list.ContactList object at 0xb6c2456c>]}
+[ 2020-03-08 08:43:10 ] EWallet [ DEBUG ] - ewallet.py - 1232: ewallet_controller - 
+[ 2020-03-08 08:43:10 ] EWallet [ DEBUG ] - ewallet.py - 1221: ewallet_user_controller - 
+[ 2020-03-08 08:43:10 ] EWallet [ DEBUG ] - ewallet.py - 1164: ewallet_user_action_controller - 
+[ 2020-03-08 08:43:10 ] EWallet [ DEBUG ] - ewallet.py - 1060: handle_user_action_create - 
+[ 2020-03-08 08:43:10 ] EWallet [ DEBUG ] - ewallet.py - 321: action_create_new_user_account - 
+[ 2020-03-08 08:43:10 ] EWallet [ DEBUG ] - ewallet_login.py - 156: ewallet_login_controller - 
+[ 2020-03-08 08:43:10 ] EWallet [ DEBUG ] - ewallet_login.py - 148: action_create_new_account - 
+[ 2020-03-08 08:43:10 ] EWallet [ DEBUG ] - ewallet_login.py - 399: action_create_new_user - 
+[ 2020-03-08 08:43:10 ] EWallet [ DEBUG ] - ewallet_login.py - 357: perform_new_user_checks - 
+[ 2020-03-08 08:43:10 ] EWallet [ DEBUG ] - ewallet_login.py - 253: fetch_all_user_names - 
+[ 2020-03-08 08:43:10 ] EWallet [ DEBUG ] - ewallet_login.py - 244: fetch_all_user_records - 
+[ 2020-03-08 08:43:10 ] EWallet [ DEBUG ] - ewallet_login.py - 265: check_user_name_ensure_one - 
+[ 2020-03-08 08:43:10 ] EWallet [ DEBUG ] - ewallet_login.py - 318: check_user_pass - 
+[ 2020-03-08 08:43:10 ] EWallet [ DEBUG ] - ewallet_login.py - 276: check_user_pass_length - 
+[ 2020-03-08 08:43:10 ] EWallet [ DEBUG ] - ewallet_login.py - 307: check_user_pass_characters - 
+[ 2020-03-08 08:43:10 ] EWallet [ DEBUG ] - ewallet_login.py - 282: check_user_pass_letters - 
+[ 2020-03-08 08:43:10 ] EWallet [ DEBUG ] - ewallet_login.py - 291: check_user_pass_numbers - 
+[ 2020-03-08 08:43:10 ] EWallet [ DEBUG ] - ewallet_login.py - 299: check_user_pass_symbols - 
+[ 2020-03-08 08:43:10 ] EWallet [ DEBUG ] - ewallet_login.py - 344: check_user_email - 
+[ 2020-03-08 08:43:10 ] EWallet [ DEBUG ] - ewallet_login.py - 329: check_user_email_is_valid - 
+[ 2020-03-08 08:43:10 ] EWallet [ WARNING ] - ewallet_login.py - 458: warning_duplicate_user_name - Invalid user name. Already taken.
+[ 2020-03-08 08:43:10 ] EWallet [ WARNING ] - ewallet_login.py - 215: warning_could_not_create_new_user_account - Something went wrong. Could not create new user account.
+[ 2020-03-08 08:43:10 ] EWallet [ WARNING ] - ewallet.py - 1883: warning_could_not_create_user_account - Something went wrong. Could not create new user account for user2.
+[ 2020-03-08 08:43:10 ] EWallet [ DEBUG ] - ewallet.py - 1232: ewallet_controller - 
+[ 2020-03-08 08:43:10 ] EWallet [ DEBUG ] - ewallet.py - 1221: ewallet_user_controller - 
+[ 2020-03-08 08:43:10 ] EWallet [ DEBUG ] - ewallet.py - 1164: ewallet_user_action_controller - 
+[ 2020-03-08 08:43:10 ] EWallet [ DEBUG ] - ewallet.py - 1007: handle_user_action_login - 
+[ 2020-03-08 08:43:10 ] EWallet [ DEBUG ] - ewallet_login.py - 156: ewallet_login_controller - 
+[ 2020-03-08 08:43:10 ] EWallet [ DEBUG ] - ewallet_login.py - 126: action_login - 
+[ 2020-03-08 08:43:10 ] EWallet [ DEBUG ] - ewallet_login.py - 106: authenticate_user - 
+[ 2020-03-08 08:43:10 ] EWallet [ DEBUG ] - ewallet_login.py - 90: check_user_name_exists - 
+[ 2020-03-08 08:43:10 ] EWallet [ DEBUG ] - res_user.py - 111: fetch_user_pass_hash - 
+[ 2020-03-08 08:43:10 ] EWallet [ DEBUG ] - ewallet_login.py - 98: check_user_pass_hash - 
+[ 2020-03-08 08:43:10 ] EWallet [ DEBUG ] - ewallet_login.py - 85: hash_password - 
+[ 2020-03-08 08:43:10 ] EWallet [ DEBUG ] - ewallet_login.py - 77: set_login_record_data - 
+[ 2020-03-08 08:43:10 ] EWallet [ DEBUG ] - ewallet_login.py - 63: set_user_id - 
+[ 2020-03-08 08:43:10 ] EWallet [ DEBUG ] - ewallet_login.py - 70: set_login_status - 
+[ 2020-03-08 08:43:10 ] EWallet [ DEBUG ] - res_user.py - 249: set_user_state - 
+[ 2020-03-08 08:43:10 ] EWallet [ DEBUG ] - res_user.py - 393: convert_user_state_code_to_name - 
+[ 2020-03-08 08:43:10 ] EWallet [ DEBUG ] - res_user.py - 178: fetch_user_state_code_map - 
+[ 2020-03-08 08:43:10 ] EWallet [ DEBUG ] - res_user.py - 232: set_user_state_code - 
+[ 2020-03-08 08:43:10 ] EWallet [ DEBUG ] - res_user.py - 192: set_user_write_date - 
+[ 2020-03-08 08:43:10 ] EWallet [ DEBUG ] - res_user.py - 240: set_user_state_name - 
+[ 2020-03-08 08:43:10 ] EWallet [ DEBUG ] - res_user.py - 192: set_user_write_date - 
+[ 2020-03-08 08:43:10 ] EWallet [ DEBUG ] - ewallet.py - 967: action_system_user_update - 
+[ 2020-03-08 08:43:10 ] EWallet [ DEBUG ] - ewallet.py - 189: set_session_active_user - 
+[ 2020-03-08 08:43:10 ] EWallet [ DEBUG ] - ewallet.py - 253: update_session_from_user - 
+[ 2020-03-08 08:43:10 ] EWallet [ DEBUG ] - res_user.py - 99: fetch_user_credit_wallet - 
+[ 2020-03-08 08:43:10 ] EWallet [ DEBUG ] - res_user.py - 105: fetch_user_contact_list - 
+[ 2020-03-08 08:43:10 ] EWallet [ DEBUG ] - ewallet.py - 208: set_session_data - 
+[ 2020-03-08 08:43:10 ] EWallet [ DEBUG ] - ewallet.py - 189: set_session_active_user - 
+[ 2020-03-08 08:43:10 ] EWallet [ DEBUG ] - ewallet.py - 196: set_session_credit_wallet - 
+[ 2020-03-08 08:43:10 ] EWallet [ DEBUG ] - ewallet.py - 202: set_session_contact_list - 
+[ 2020-03-08 08:43:10 ] EWallet [ INFO ] - ewallet.py - 263: update_session_from_user - Successfully updated ewallet session from current active user.
+[ 2020-03-08 08:43:10 ] EWallet [ INFO ] - ewallet.py - 1021: handle_user_action_login - User successfully loged in.
+[ 2020-03-08 08:43:10 ] EWallet [ DEBUG ] - ewallet.py - 163: fetch_active_session_credit_wallet - 
+[ 2020-03-08 08:43:10 ] EWallet [ DEBUG ] - ewallet.py - 157: fetch_active_session_user - 
+[ 2020-03-08 08:43:10 ] EWallet [ DEBUG ] - res_user.py - 83: fetch_user_id - 
+[ 2020-03-08 08:43:10 ] EWallet [ DEBUG ] - ewallet.py - 1232: ewallet_controller - 
+[ 2020-03-08 08:43:10 ] EWallet [ DEBUG ] - ewallet.py - 1221: ewallet_user_controller - 
+[ 2020-03-08 08:43:10 ] EWallet [ DEBUG ] - ewallet.py - 1164: ewallet_user_action_controller - 
+[ 2020-03-08 08:43:10 ] EWallet [ DEBUG ] - ewallet.py - 1060: handle_user_action_create - 
+[ 2020-03-08 08:43:10 ] EWallet [ DEBUG ] - ewallet.py - 446: action_create_new_transfer - 
+[ 2020-03-08 08:43:10 ] EWallet [ DEBUG ] - ewallet.py - 163: fetch_active_session_credit_wallet - 
+[ 2020-03-08 08:43:10 ] EWallet [ DEBUG ] - credit_wallet.py - 775: user_controller - 
+[ 2020-03-08 08:43:10 ] EWallet [ DEBUG ] - credit_wallet.py - 556: transfer_credits - 
+[ 2020-03-08 08:43:10 ] EWallet [ DEBUG ] - credit_wallet.py - 490: transfer_credits_incomming - 
+[ 2020-03-08 08:43:10 ] EWallet [ INFO ] - credit_wallet.py - 496: transfer_credits_incomming - Extracting credits from partner ewallet...
+[ 2020-03-08 08:43:10 ] EWallet [ DEBUG ] - credit_wallet.py - 757: system_controller - 
+[ 2020-03-08 08:43:10 ] EWallet [ DEBUG ] - credit_wallet.py - 388: extract_credits - 
+[ 2020-03-08 08:43:10 ] EWallet [ INFO ] - credit_wallet.py - 392: extract_credits - Successfully extracted credits from wallet.
+[ 2020-03-08 08:43:10 ] EWallet [ DEBUG ] - credit_wallet.py - 312: set_write_date - 
+[ 2020-03-08 08:43:10 ] EWallet [ INFO ] - credit_wallet.py - 500: transfer_credits_incomming - Supplying wallet with credits...
+[ 2020-03-08 08:43:10 ] EWallet [ DEBUG ] - credit_wallet.py - 757: system_controller - 
+[ 2020-03-08 08:43:10 ] EWallet [ DEBUG ] - credit_wallet.py - 380: supply_credits - 
+[ 2020-03-08 08:43:10 ] EWallet [ INFO ] - credit_wallet.py - 384: supply_credits - Successfully supplied wallet with credits.
+[ 2020-03-08 08:43:10 ] EWallet [ INFO ] - credit_wallet.py - 504: transfer_credits_incomming - Creating transfer record...
+[ 2020-03-08 08:43:10 ] EWallet [ DEBUG ] - credit_wallet.py - 120: fetch_credit_ewallet_transfer_sheet - 
+[ 2020-03-08 08:43:10 ] EWallet [ DEBUG ] - transfer_sheet.py - 408: credit_transfer_sheet_controller - 
+[ 2020-03-08 08:43:10 ] EWallet [ DEBUG ] - transfer_sheet.py - 360: add_transfer_sheet_record - 
+[ 2020-03-08 08:43:10 ] EWallet [ DEBUG ] - transfer_sheet.py - 210: fetch_transfer_record_creation_values - 
+[ 2020-03-08 08:43:10 ] EWallet [ DEBUG ] - transfer_sheet.py - 355: create_transfer_sheet_record - 
+[ 2020-03-08 08:43:10 ] EWallet [ DEBUG ] - transfer_sheet.py - 382: update_records - 
+[ 2020-03-08 08:43:10 ] EWallet [ INFO ] - transfer_sheet.py - 369: add_transfer_sheet_record - Successfully added new transfer record.
+[ 2020-03-08 08:43:10 ] EWallet [ DEBUG ] - transfer_sheet.py - 342: update_write_date - 
+[ 2020-03-08 08:43:10 ] EWallet [ INFO ] - credit_wallet.py - 513: transfer_credits_incomming - Attempting transfer record share with partner...
+[ 2020-03-08 08:43:10 ] EWallet [ DEBUG ] - credit_wallet.py - 475: share_transfer_record - 
+[ 2020-03-08 08:43:10 ] EWallet [ ERROR ] - credit_wallet.py - 955: error_no_transfer_record_found - No transfer record found.
+[ 2020-03-08 08:43:10 ] EWallet [ DEBUG ] - ewallet.py - 1232: ewallet_controller - 
+[ 2020-03-08 08:43:10 ] EWallet [ DEBUG ] - ewallet.py - 1221: ewallet_user_controller - 
+[ 2020-03-08 08:43:10 ] EWallet [ DEBUG ] - ewallet.py - 1164: ewallet_user_action_controller - 
+[ 2020-03-08 08:43:10 ] EWallet [ DEBUG ] - ewallet.py - 1108: handle_user_action_view - 
+[ 2020-03-08 08:43:10 ] EWallet [ DEBUG ] - ewallet.py - 698: action_view_credit_wallet - 
+[ 2020-03-08 08:43:10 ] EWallet [ DEBUG ] - ewallet.py - 163: fetch_active_session_credit_wallet - 
+[ 2020-03-08 08:43:10 ] EWallet [ DEBUG ] - credit_wallet.py - 131: fetch_credit_ewallet_values - 
+[ 2020-03-08 08:43:10 ] EWallet [ DEBUG ] - ewallet.py - 703: action_view_credit_wallet - {'id': 2, 'client_id': 2, 'reference': 'Credit Wallet', 'create_date': datetime.datetime(2020, 3, 8, 7, 10, 1, 950455), 'write_date': datetime.datetime(2020, 3, 8, 8, 43, 10, 227063), 'credits': 0, 'credit_clock': [<base.credit_clock.CreditClock object at 0xb6bd50ec>], 'credit_clock_archive': [<base.credit_clock.CreditClock object at 0xb6bd50ec>], 'transfer_sheet': [<base.transfer_sheet.CreditTransferSheet object at 0xb6bdd4cc>], 'transfer_sheet_archive': [<base.transfer_sheet.CreditTransferSheet object at 0xb6bdd4cc>]}
+[ 2020-03-08 08:43:10 ] EWallet [ DEBUG ] - ewallet.py - 1232: ewallet_controller - 
+[ 2020-03-08 08:43:10 ] EWallet [ DEBUG ] - ewallet.py - 1221: ewallet_user_controller - 
+[ 2020-03-08 08:43:10 ] EWallet [ DEBUG ] - ewallet.py - 1164: ewallet_user_action_controller - 
+[ 2020-03-08 08:43:10 ] EWallet [ DEBUG ] - ewallet.py - 1108: handle_user_action_view - 
+[ 2020-03-08 08:43:10 ] EWallet [ DEBUG ] - ewallet.py - 913: action_view_transfer - 
+[ 2020-03-08 08:43:37 ] EWallet [ DEBUG ] - ewallet.py - 1232: ewallet_controller - 
+[ 2020-03-08 08:43:37 ] EWallet [ DEBUG ] - ewallet.py - 1232: ewallet_controller - 
+[ 2020-03-08 08:43:37 ] EWallet [ DEBUG ] - ewallet.py - 1221: ewallet_user_controller - 
+[ 2020-03-08 08:43:37 ] EWallet [ DEBUG ] - ewallet.py - 1164: ewallet_user_action_controller - 
+[ 2020-03-08 08:43:37 ] EWallet [ DEBUG ] - ewallet.py - 1060: handle_user_action_create - 
+[ 2020-03-08 08:43:37 ] EWallet [ DEBUG ] - ewallet.py - 321: action_create_new_user_account - 
+[ 2020-03-08 08:43:37 ] EWallet [ DEBUG ] - ewallet_login.py - 156: ewallet_login_controller - 
+[ 2020-03-08 08:43:37 ] EWallet [ DEBUG ] - ewallet_login.py - 148: action_create_new_account - 
+[ 2020-03-08 08:43:37 ] EWallet [ DEBUG ] - ewallet_login.py - 399: action_create_new_user - 
+[ 2020-03-08 08:43:37 ] EWallet [ DEBUG ] - ewallet_login.py - 357: perform_new_user_checks - 
+[ 2020-03-08 08:43:37 ] EWallet [ DEBUG ] - ewallet_login.py - 253: fetch_all_user_names - 
+[ 2020-03-08 08:43:37 ] EWallet [ DEBUG ] - ewallet_login.py - 244: fetch_all_user_records - 
+[ 2020-03-08 08:43:37 ] EWallet [ DEBUG ] - ewallet_login.py - 265: check_user_name_ensure_one - 
+[ 2020-03-08 08:43:37 ] EWallet [ DEBUG ] - ewallet_login.py - 318: check_user_pass - 
+[ 2020-03-08 08:43:37 ] EWallet [ DEBUG ] - ewallet_login.py - 276: check_user_pass_length - 
+[ 2020-03-08 08:43:37 ] EWallet [ DEBUG ] - ewallet_login.py - 307: check_user_pass_characters - 
+[ 2020-03-08 08:43:37 ] EWallet [ DEBUG ] - ewallet_login.py - 282: check_user_pass_letters - 
+[ 2020-03-08 08:43:37 ] EWallet [ DEBUG ] - ewallet_login.py - 291: check_user_pass_numbers - 
+[ 2020-03-08 08:43:37 ] EWallet [ DEBUG ] - ewallet_login.py - 299: check_user_pass_symbols - 
+[ 2020-03-08 08:43:37 ] EWallet [ DEBUG ] - ewallet_login.py - 344: check_user_email - 
+[ 2020-03-08 08:43:37 ] EWallet [ DEBUG ] - ewallet_login.py - 329: check_user_email_is_valid - 
+[ 2020-03-08 08:43:37 ] EWallet [ WARNING ] - ewallet_login.py - 458: warning_duplicate_user_name - Invalid user name. Already taken.
+[ 2020-03-08 08:43:37 ] EWallet [ WARNING ] - ewallet_login.py - 215: warning_could_not_create_new_user_account - Something went wrong. Could not create new user account.
+[ 2020-03-08 08:43:37 ] EWallet [ WARNING ] - ewallet.py - 1883: warning_could_not_create_user_account - Something went wrong. Could not create new user account for test user.
+[ 2020-03-08 08:43:37 ] EWallet [ DEBUG ] - ewallet.py - 1232: ewallet_controller - 
+[ 2020-03-08 08:43:37 ] EWallet [ DEBUG ] - ewallet.py - 1221: ewallet_user_controller - 
+[ 2020-03-08 08:43:37 ] EWallet [ DEBUG ] - ewallet.py - 1164: ewallet_user_action_controller - 
+[ 2020-03-08 08:43:37 ] EWallet [ DEBUG ] - ewallet.py - 1007: handle_user_action_login - 
+[ 2020-03-08 08:43:37 ] EWallet [ DEBUG ] - ewallet_login.py - 156: ewallet_login_controller - 
+[ 2020-03-08 08:43:37 ] EWallet [ DEBUG ] - ewallet_login.py - 126: action_login - 
+[ 2020-03-08 08:43:37 ] EWallet [ DEBUG ] - ewallet_login.py - 106: authenticate_user - 
+[ 2020-03-08 08:43:37 ] EWallet [ DEBUG ] - ewallet_login.py - 90: check_user_name_exists - 
+[ 2020-03-08 08:43:37 ] EWallet [ DEBUG ] - res_user.py - 111: fetch_user_pass_hash - 
+[ 2020-03-08 08:43:37 ] EWallet [ DEBUG ] - ewallet_login.py - 98: check_user_pass_hash - 
+[ 2020-03-08 08:43:37 ] EWallet [ DEBUG ] - ewallet_login.py - 85: hash_password - 
+[ 2020-03-08 08:43:37 ] EWallet [ DEBUG ] - ewallet_login.py - 77: set_login_record_data - 
+[ 2020-03-08 08:43:37 ] EWallet [ DEBUG ] - ewallet_login.py - 63: set_user_id - 
+[ 2020-03-08 08:43:37 ] EWallet [ DEBUG ] - ewallet_login.py - 70: set_login_status - 
+[ 2020-03-08 08:43:37 ] EWallet [ DEBUG ] - res_user.py - 249: set_user_state - 
+[ 2020-03-08 08:43:37 ] EWallet [ DEBUG ] - res_user.py - 393: convert_user_state_code_to_name - 
+[ 2020-03-08 08:43:37 ] EWallet [ DEBUG ] - res_user.py - 178: fetch_user_state_code_map - 
+[ 2020-03-08 08:43:37 ] EWallet [ DEBUG ] - res_user.py - 232: set_user_state_code - 
+[ 2020-03-08 08:43:37 ] EWallet [ DEBUG ] - res_user.py - 192: set_user_write_date - 
+[ 2020-03-08 08:43:37 ] EWallet [ DEBUG ] - res_user.py - 240: set_user_state_name - 
+[ 2020-03-08 08:43:37 ] EWallet [ DEBUG ] - res_user.py - 192: set_user_write_date - 
+[ 2020-03-08 08:43:37 ] EWallet [ DEBUG ] - ewallet.py - 967: action_system_user_update - 
+[ 2020-03-08 08:43:37 ] EWallet [ DEBUG ] - ewallet.py - 189: set_session_active_user - 
+[ 2020-03-08 08:43:37 ] EWallet [ DEBUG ] - ewallet.py - 253: update_session_from_user - 
+[ 2020-03-08 08:43:37 ] EWallet [ DEBUG ] - res_user.py - 99: fetch_user_credit_wallet - 
+[ 2020-03-08 08:43:37 ] EWallet [ DEBUG ] - res_user.py - 105: fetch_user_contact_list - 
+[ 2020-03-08 08:43:37 ] EWallet [ DEBUG ] - ewallet.py - 208: set_session_data - 
+[ 2020-03-08 08:43:37 ] EWallet [ DEBUG ] - ewallet.py - 189: set_session_active_user - 
+[ 2020-03-08 08:43:37 ] EWallet [ DEBUG ] - ewallet.py - 196: set_session_credit_wallet - 
+[ 2020-03-08 08:43:37 ] EWallet [ DEBUG ] - ewallet.py - 202: set_session_contact_list - 
+[ 2020-03-08 08:43:37 ] EWallet [ INFO ] - ewallet.py - 263: update_session_from_user - Successfully updated ewallet session from current active user.
+[ 2020-03-08 08:43:37 ] EWallet [ INFO ] - ewallet.py - 1021: handle_user_action_login - User successfully loged in.
+[ 2020-03-08 08:43:37 ] EWallet [ DEBUG ] - ewallet.py - 1232: ewallet_controller - 
+[ 2020-03-08 08:43:37 ] EWallet [ DEBUG ] - ewallet.py - 1221: ewallet_user_controller - 
+[ 2020-03-08 08:43:37 ] EWallet [ DEBUG ] - ewallet.py - 1164: ewallet_user_action_controller - 
+[ 2020-03-08 08:43:37 ] EWallet [ DEBUG ] - ewallet.py - 1108: handle_user_action_view - 
+[ 2020-03-08 08:43:37 ] EWallet [ DEBUG ] - ewallet.py - 690: action_view_user_account - 
+[ 2020-03-08 08:43:37 ] EWallet [ DEBUG ] - res_user.py - 143: fetch_user_values - 
+[ 2020-03-08 08:43:37 ] EWallet [ DEBUG ] - res_user.py - 99: fetch_user_credit_wallet - 
+[ 2020-03-08 08:43:37 ] EWallet [ DEBUG ] - res_user.py - 105: fetch_user_contact_list - 
+[ 2020-03-08 08:43:37 ] EWallet [ DEBUG ] - ewallet.py - 694: action_view_user_account - {'id': 1, 'user_name': 'test user', 'user_create_date': datetime.datetime(2020, 3, 8, 7, 10, 0, 896769), 'user_write_date': datetime.datetime(2020, 3, 8, 8, 43, 37, 396985), 'user_credit_wallet': <base.credit_wallet.CreditEWallet object at 0xb6ce188c>, 'user_contact_list': <base.contact_list.ContactList object at 0xb6c2078c>, 'user_pass_hash': '062bce6d67fb682e60680b8d715be64854c93ebed0627487c95422c2db032761', 'user_email': 'example@example.com', 'user_phone': None, 'user_alias': None, 'user_state_code': 1, 'user_state_name': 'LoggedIn', 'user_pass_hash_archive': [<base.res_user_pass_hash_archive.ResUserPassHashArchive object at 0xb6bb640c>], 'user_credit_wallet_archive': [<base.credit_wallet.CreditEWallet object at 0xb6ce188c>], 'user_contact_list_archive': [<base.contact_list.ContactList object at 0xb6c2078c>]}
+[ 2020-03-08 08:43:37 ] EWallet [ DEBUG ] - ewallet.py - 1232: ewallet_controller - 
+[ 2020-03-08 08:43:37 ] EWallet [ DEBUG ] - ewallet.py - 1221: ewallet_user_controller - 
+[ 2020-03-08 08:43:37 ] EWallet [ DEBUG ] - ewallet.py - 1164: ewallet_user_action_controller - 
+[ 2020-03-08 08:43:37 ] EWallet [ DEBUG ] - ewallet.py - 1060: handle_user_action_create - 
+[ 2020-03-08 08:43:37 ] EWallet [ DEBUG ] - ewallet.py - 321: action_create_new_user_account - 
+[ 2020-03-08 08:43:37 ] EWallet [ DEBUG ] - ewallet_login.py - 156: ewallet_login_controller - 
+[ 2020-03-08 08:43:37 ] EWallet [ DEBUG ] - ewallet_login.py - 148: action_create_new_account - 
+[ 2020-03-08 08:43:37 ] EWallet [ DEBUG ] - ewallet_login.py - 399: action_create_new_user - 
+[ 2020-03-08 08:43:37 ] EWallet [ DEBUG ] - ewallet_login.py - 357: perform_new_user_checks - 
+[ 2020-03-08 08:43:37 ] EWallet [ DEBUG ] - ewallet_login.py - 253: fetch_all_user_names - 
+[ 2020-03-08 08:43:37 ] EWallet [ DEBUG ] - ewallet_login.py - 244: fetch_all_user_records - 
+[ 2020-03-08 08:43:37 ] EWallet [ DEBUG ] - ewallet_login.py - 265: check_user_name_ensure_one - 
+[ 2020-03-08 08:43:37 ] EWallet [ DEBUG ] - ewallet_login.py - 318: check_user_pass - 
+[ 2020-03-08 08:43:37 ] EWallet [ DEBUG ] - ewallet_login.py - 276: check_user_pass_length - 
+[ 2020-03-08 08:43:37 ] EWallet [ DEBUG ] - ewallet_login.py - 307: check_user_pass_characters - 
+[ 2020-03-08 08:43:37 ] EWallet [ DEBUG ] - ewallet_login.py - 282: check_user_pass_letters - 
+[ 2020-03-08 08:43:37 ] EWallet [ DEBUG ] - ewallet_login.py - 291: check_user_pass_numbers - 
+[ 2020-03-08 08:43:37 ] EWallet [ DEBUG ] - ewallet_login.py - 299: check_user_pass_symbols - 
+[ 2020-03-08 08:43:37 ] EWallet [ DEBUG ] - ewallet_login.py - 344: check_user_email - 
+[ 2020-03-08 08:43:37 ] EWallet [ DEBUG ] - ewallet_login.py - 329: check_user_email_is_valid - 
+[ 2020-03-08 08:43:37 ] EWallet [ WARNING ] - ewallet_login.py - 458: warning_duplicate_user_name - Invalid user name. Already taken.
+[ 2020-03-08 08:43:37 ] EWallet [ WARNING ] - ewallet_login.py - 215: warning_could_not_create_new_user_account - Something went wrong. Could not create new user account.
+[ 2020-03-08 08:43:37 ] EWallet [ WARNING ] - ewallet.py - 1883: warning_could_not_create_user_account - Something went wrong. Could not create new user account for user2.
+[ 2020-03-08 08:43:37 ] EWallet [ DEBUG ] - ewallet.py - 1232: ewallet_controller - 
+[ 2020-03-08 08:43:37 ] EWallet [ DEBUG ] - ewallet.py - 1221: ewallet_user_controller - 
+[ 2020-03-08 08:43:37 ] EWallet [ DEBUG ] - ewallet.py - 1164: ewallet_user_action_controller - 
+[ 2020-03-08 08:43:37 ] EWallet [ DEBUG ] - ewallet.py - 1007: handle_user_action_login - 
+[ 2020-03-08 08:43:37 ] EWallet [ DEBUG ] - ewallet_login.py - 156: ewallet_login_controller - 
+[ 2020-03-08 08:43:37 ] EWallet [ DEBUG ] - ewallet_login.py - 126: action_login - 
+[ 2020-03-08 08:43:37 ] EWallet [ DEBUG ] - ewallet_login.py - 106: authenticate_user - 
+[ 2020-03-08 08:43:37 ] EWallet [ DEBUG ] - ewallet_login.py - 90: check_user_name_exists - 
+[ 2020-03-08 08:43:37 ] EWallet [ DEBUG ] - res_user.py - 111: fetch_user_pass_hash - 
+[ 2020-03-08 08:43:37 ] EWallet [ DEBUG ] - ewallet_login.py - 98: check_user_pass_hash - 
+[ 2020-03-08 08:43:37 ] EWallet [ DEBUG ] - ewallet_login.py - 85: hash_password - 
+[ 2020-03-08 08:43:37 ] EWallet [ DEBUG ] - ewallet_login.py - 77: set_login_record_data - 
+[ 2020-03-08 08:43:37 ] EWallet [ DEBUG ] - ewallet_login.py - 63: set_user_id - 
+[ 2020-03-08 08:43:37 ] EWallet [ DEBUG ] - ewallet_login.py - 70: set_login_status - 
+[ 2020-03-08 08:43:37 ] EWallet [ DEBUG ] - res_user.py - 249: set_user_state - 
+[ 2020-03-08 08:43:37 ] EWallet [ DEBUG ] - res_user.py - 393: convert_user_state_code_to_name - 
+[ 2020-03-08 08:43:37 ] EWallet [ DEBUG ] - res_user.py - 178: fetch_user_state_code_map - 
+[ 2020-03-08 08:43:37 ] EWallet [ DEBUG ] - res_user.py - 232: set_user_state_code - 
+[ 2020-03-08 08:43:37 ] EWallet [ DEBUG ] - res_user.py - 192: set_user_write_date - 
+[ 2020-03-08 08:43:37 ] EWallet [ DEBUG ] - res_user.py - 240: set_user_state_name - 
+[ 2020-03-08 08:43:37 ] EWallet [ DEBUG ] - res_user.py - 192: set_user_write_date - 
+[ 2020-03-08 08:43:37 ] EWallet [ DEBUG ] - ewallet.py - 967: action_system_user_update - 
+[ 2020-03-08 08:43:37 ] EWallet [ DEBUG ] - ewallet.py - 189: set_session_active_user - 
+[ 2020-03-08 08:43:37 ] EWallet [ DEBUG ] - ewallet.py - 253: update_session_from_user - 
+[ 2020-03-08 08:43:37 ] EWallet [ DEBUG ] - res_user.py - 99: fetch_user_credit_wallet - 
+[ 2020-03-08 08:43:37 ] EWallet [ DEBUG ] - res_user.py - 105: fetch_user_contact_list - 
+[ 2020-03-08 08:43:37 ] EWallet [ DEBUG ] - ewallet.py - 208: set_session_data - 
+[ 2020-03-08 08:43:37 ] EWallet [ DEBUG ] - ewallet.py - 189: set_session_active_user - 
+[ 2020-03-08 08:43:37 ] EWallet [ DEBUG ] - ewallet.py - 196: set_session_credit_wallet - 
+[ 2020-03-08 08:43:37 ] EWallet [ DEBUG ] - ewallet.py - 202: set_session_contact_list - 
+[ 2020-03-08 08:43:37 ] EWallet [ INFO ] - ewallet.py - 263: update_session_from_user - Successfully updated ewallet session from current active user.
+[ 2020-03-08 08:43:37 ] EWallet [ INFO ] - ewallet.py - 1021: handle_user_action_login - User successfully loged in.
+[ 2020-03-08 08:43:37 ] EWallet [ DEBUG ] - ewallet.py - 163: fetch_active_session_credit_wallet - 
+[ 2020-03-08 08:43:37 ] EWallet [ DEBUG ] - ewallet.py - 157: fetch_active_session_user - 
+[ 2020-03-08 08:43:37 ] EWallet [ DEBUG ] - res_user.py - 83: fetch_user_id - 
+[ 2020-03-08 08:43:37 ] EWallet [ DEBUG ] - ewallet.py - 1232: ewallet_controller - 
+[ 2020-03-08 08:43:37 ] EWallet [ DEBUG ] - ewallet.py - 1221: ewallet_user_controller - 
+[ 2020-03-08 08:43:37 ] EWallet [ DEBUG ] - ewallet.py - 1164: ewallet_user_action_controller - 
+[ 2020-03-08 08:43:37 ] EWallet [ DEBUG ] - ewallet.py - 1060: handle_user_action_create - 
+[ 2020-03-08 08:43:37 ] EWallet [ DEBUG ] - ewallet.py - 446: action_create_new_transfer - 
+[ 2020-03-08 08:43:37 ] EWallet [ DEBUG ] - ewallet.py - 163: fetch_active_session_credit_wallet - 
+[ 2020-03-08 08:43:37 ] EWallet [ DEBUG ] - credit_wallet.py - 775: user_controller - 
+[ 2020-03-08 08:43:37 ] EWallet [ DEBUG ] - credit_wallet.py - 556: transfer_credits - 
+[ 2020-03-08 08:43:37 ] EWallet [ DEBUG ] - credit_wallet.py - 490: transfer_credits_incomming - 
+[ 2020-03-08 08:43:37 ] EWallet [ INFO ] - credit_wallet.py - 496: transfer_credits_incomming - Extracting credits from partner ewallet...
+[ 2020-03-08 08:43:37 ] EWallet [ DEBUG ] - credit_wallet.py - 757: system_controller - 
+[ 2020-03-08 08:43:37 ] EWallet [ DEBUG ] - credit_wallet.py - 388: extract_credits - 
+[ 2020-03-08 08:43:37 ] EWallet [ INFO ] - credit_wallet.py - 392: extract_credits - Successfully extracted credits from wallet.
+[ 2020-03-08 08:43:37 ] EWallet [ DEBUG ] - credit_wallet.py - 312: set_write_date - 
+[ 2020-03-08 08:43:37 ] EWallet [ INFO ] - credit_wallet.py - 500: transfer_credits_incomming - Supplying wallet with credits...
+[ 2020-03-08 08:43:37 ] EWallet [ DEBUG ] - credit_wallet.py - 757: system_controller - 
+[ 2020-03-08 08:43:37 ] EWallet [ DEBUG ] - credit_wallet.py - 380: supply_credits - 
+[ 2020-03-08 08:43:37 ] EWallet [ INFO ] - credit_wallet.py - 384: supply_credits - Successfully supplied wallet with credits.
+[ 2020-03-08 08:43:37 ] EWallet [ INFO ] - credit_wallet.py - 504: transfer_credits_incomming - Creating transfer record...
+[ 2020-03-08 08:43:37 ] EWallet [ DEBUG ] - credit_wallet.py - 120: fetch_credit_ewallet_transfer_sheet - 
+[ 2020-03-08 08:43:37 ] EWallet [ DEBUG ] - transfer_sheet.py - 408: credit_transfer_sheet_controller - 
+[ 2020-03-08 08:43:37 ] EWallet [ DEBUG ] - transfer_sheet.py - 360: add_transfer_sheet_record - 
+[ 2020-03-08 08:43:37 ] EWallet [ DEBUG ] - transfer_sheet.py - 210: fetch_transfer_record_creation_values - 
+[ 2020-03-08 08:43:37 ] EWallet [ DEBUG ] - transfer_sheet.py - 355: create_transfer_sheet_record - 
+[ 2020-03-08 08:43:37 ] EWallet [ DEBUG ] - transfer_sheet.py - 382: update_records - 
+[ 2020-03-08 08:43:37 ] EWallet [ INFO ] - transfer_sheet.py - 369: add_transfer_sheet_record - Successfully added new transfer record.
+[ 2020-03-08 08:43:37 ] EWallet [ DEBUG ] - transfer_sheet.py - 342: update_write_date - 
+[ 2020-03-08 08:43:37 ] EWallet [ INFO ] - credit_wallet.py - 513: transfer_credits_incomming - Attempting transfer record share with partner...
+[ 2020-03-08 08:43:37 ] EWallet [ DEBUG ] - credit_wallet.py - 475: share_transfer_record - 
+[ 2020-03-08 08:43:37 ] EWallet [ ERROR ] - credit_wallet.py - 955: error_no_transfer_record_found - No transfer record found.
+[ 2020-03-08 08:43:37 ] EWallet [ DEBUG ] - ewallet.py - 1232: ewallet_controller - 
+[ 2020-03-08 08:43:37 ] EWallet [ DEBUG ] - ewallet.py - 1221: ewallet_user_controller - 
+[ 2020-03-08 08:43:37 ] EWallet [ DEBUG ] - ewallet.py - 1164: ewallet_user_action_controller - 
+[ 2020-03-08 08:43:37 ] EWallet [ DEBUG ] - ewallet.py - 1108: handle_user_action_view - 
+[ 2020-03-08 08:43:37 ] EWallet [ DEBUG ] - ewallet.py - 698: action_view_credit_wallet - 
+[ 2020-03-08 08:43:37 ] EWallet [ DEBUG ] - ewallet.py - 163: fetch_active_session_credit_wallet - 
+[ 2020-03-08 08:43:37 ] EWallet [ DEBUG ] - credit_wallet.py - 131: fetch_credit_ewallet_values - 
+[ 2020-03-08 08:43:37 ] EWallet [ DEBUG ] - ewallet.py - 703: action_view_credit_wallet - {'id': 2, 'client_id': 2, 'reference': 'Credit Wallet', 'create_date': datetime.datetime(2020, 3, 8, 7, 10, 1, 950455), 'write_date': datetime.datetime(2020, 3, 8, 8, 43, 37, 651172), 'credits': 0, 'credit_clock': [<base.credit_clock.CreditClock object at 0xb6bd810c>], 'credit_clock_archive': [<base.credit_clock.CreditClock object at 0xb6bd810c>], 'transfer_sheet': [<base.transfer_sheet.CreditTransferSheet object at 0xb6bd30ec>], 'transfer_sheet_archive': [<base.transfer_sheet.CreditTransferSheet object at 0xb6bd30ec>]}
+[ 2020-03-08 08:43:37 ] EWallet [ DEBUG ] - ewallet.py - 1232: ewallet_controller - 
+[ 2020-03-08 08:43:37 ] EWallet [ DEBUG ] - ewallet.py - 1221: ewallet_user_controller - 
+[ 2020-03-08 08:43:37 ] EWallet [ DEBUG ] - ewallet.py - 1164: ewallet_user_action_controller - 
+[ 2020-03-08 08:43:37 ] EWallet [ DEBUG ] - ewallet.py - 1108: handle_user_action_view - 
+[ 2020-03-08 08:43:37 ] EWallet [ DEBUG ] - ewallet.py - 913: action_view_transfer - 
+[ 2020-03-08 08:43:37 ] EWallet [ DEBUG ] - ewallet.py - 798: action_view_transfer_list - 
+[ 2020-03-08 08:44:41 ] EWallet [ DEBUG ] - ewallet.py - 1233: ewallet_controller - 
+[ 2020-03-08 08:44:41 ] EWallet [ DEBUG ] - ewallet.py - 1233: ewallet_controller - 
+[ 2020-03-08 08:44:41 ] EWallet [ DEBUG ] - ewallet.py - 1222: ewallet_user_controller - 
+[ 2020-03-08 08:44:41 ] EWallet [ DEBUG ] - ewallet.py - 1165: ewallet_user_action_controller - 
+[ 2020-03-08 08:44:41 ] EWallet [ DEBUG ] - ewallet.py - 1061: handle_user_action_create - 
+[ 2020-03-08 08:44:41 ] EWallet [ DEBUG ] - ewallet.py - 321: action_create_new_user_account - 
+[ 2020-03-08 08:44:41 ] EWallet [ DEBUG ] - ewallet_login.py - 156: ewallet_login_controller - 
+[ 2020-03-08 08:44:41 ] EWallet [ DEBUG ] - ewallet_login.py - 148: action_create_new_account - 
+[ 2020-03-08 08:44:41 ] EWallet [ DEBUG ] - ewallet_login.py - 399: action_create_new_user - 
+[ 2020-03-08 08:44:41 ] EWallet [ DEBUG ] - ewallet_login.py - 357: perform_new_user_checks - 
+[ 2020-03-08 08:44:41 ] EWallet [ DEBUG ] - ewallet_login.py - 253: fetch_all_user_names - 
+[ 2020-03-08 08:44:41 ] EWallet [ DEBUG ] - ewallet_login.py - 244: fetch_all_user_records - 
+[ 2020-03-08 08:44:41 ] EWallet [ DEBUG ] - ewallet_login.py - 265: check_user_name_ensure_one - 
+[ 2020-03-08 08:44:41 ] EWallet [ DEBUG ] - ewallet_login.py - 318: check_user_pass - 
+[ 2020-03-08 08:44:41 ] EWallet [ DEBUG ] - ewallet_login.py - 276: check_user_pass_length - 
+[ 2020-03-08 08:44:41 ] EWallet [ DEBUG ] - ewallet_login.py - 307: check_user_pass_characters - 
+[ 2020-03-08 08:44:41 ] EWallet [ DEBUG ] - ewallet_login.py - 282: check_user_pass_letters - 
+[ 2020-03-08 08:44:41 ] EWallet [ DEBUG ] - ewallet_login.py - 291: check_user_pass_numbers - 
+[ 2020-03-08 08:44:41 ] EWallet [ DEBUG ] - ewallet_login.py - 299: check_user_pass_symbols - 
+[ 2020-03-08 08:44:41 ] EWallet [ DEBUG ] - ewallet_login.py - 344: check_user_email - 
+[ 2020-03-08 08:44:41 ] EWallet [ DEBUG ] - ewallet_login.py - 329: check_user_email_is_valid - 
+[ 2020-03-08 08:44:41 ] EWallet [ WARNING ] - ewallet_login.py - 458: warning_duplicate_user_name - Invalid user name. Already taken.
+[ 2020-03-08 08:44:41 ] EWallet [ WARNING ] - ewallet_login.py - 215: warning_could_not_create_new_user_account - Something went wrong. Could not create new user account.
+[ 2020-03-08 08:44:41 ] EWallet [ WARNING ] - ewallet.py - 1884: warning_could_not_create_user_account - Something went wrong. Could not create new user account for test user.
+[ 2020-03-08 08:44:41 ] EWallet [ DEBUG ] - ewallet.py - 1233: ewallet_controller - 
+[ 2020-03-08 08:44:41 ] EWallet [ DEBUG ] - ewallet.py - 1222: ewallet_user_controller - 
+[ 2020-03-08 08:44:41 ] EWallet [ DEBUG ] - ewallet.py - 1165: ewallet_user_action_controller - 
+[ 2020-03-08 08:44:41 ] EWallet [ DEBUG ] - ewallet.py - 1008: handle_user_action_login - 
+[ 2020-03-08 08:44:41 ] EWallet [ DEBUG ] - ewallet_login.py - 156: ewallet_login_controller - 
+[ 2020-03-08 08:44:41 ] EWallet [ DEBUG ] - ewallet_login.py - 126: action_login - 
+[ 2020-03-08 08:44:41 ] EWallet [ DEBUG ] - ewallet_login.py - 106: authenticate_user - 
+[ 2020-03-08 08:44:41 ] EWallet [ DEBUG ] - ewallet_login.py - 90: check_user_name_exists - 
+[ 2020-03-08 08:44:41 ] EWallet [ DEBUG ] - res_user.py - 111: fetch_user_pass_hash - 
+[ 2020-03-08 08:44:41 ] EWallet [ DEBUG ] - ewallet_login.py - 98: check_user_pass_hash - 
+[ 2020-03-08 08:44:41 ] EWallet [ DEBUG ] - ewallet_login.py - 85: hash_password - 
+[ 2020-03-08 08:44:41 ] EWallet [ DEBUG ] - ewallet_login.py - 77: set_login_record_data - 
+[ 2020-03-08 08:44:41 ] EWallet [ DEBUG ] - ewallet_login.py - 63: set_user_id - 
+[ 2020-03-08 08:44:41 ] EWallet [ DEBUG ] - ewallet_login.py - 70: set_login_status - 
+[ 2020-03-08 08:44:41 ] EWallet [ DEBUG ] - res_user.py - 249: set_user_state - 
+[ 2020-03-08 08:44:41 ] EWallet [ DEBUG ] - res_user.py - 393: convert_user_state_code_to_name - 
+[ 2020-03-08 08:44:41 ] EWallet [ DEBUG ] - res_user.py - 178: fetch_user_state_code_map - 
+[ 2020-03-08 08:44:41 ] EWallet [ DEBUG ] - res_user.py - 232: set_user_state_code - 
+[ 2020-03-08 08:44:41 ] EWallet [ DEBUG ] - res_user.py - 192: set_user_write_date - 
+[ 2020-03-08 08:44:41 ] EWallet [ DEBUG ] - res_user.py - 240: set_user_state_name - 
+[ 2020-03-08 08:44:41 ] EWallet [ DEBUG ] - res_user.py - 192: set_user_write_date - 
+[ 2020-03-08 08:44:41 ] EWallet [ DEBUG ] - ewallet.py - 968: action_system_user_update - 
+[ 2020-03-08 08:44:41 ] EWallet [ DEBUG ] - ewallet.py - 189: set_session_active_user - 
+[ 2020-03-08 08:44:41 ] EWallet [ DEBUG ] - ewallet.py - 253: update_session_from_user - 
+[ 2020-03-08 08:44:41 ] EWallet [ DEBUG ] - res_user.py - 99: fetch_user_credit_wallet - 
+[ 2020-03-08 08:44:41 ] EWallet [ DEBUG ] - res_user.py - 105: fetch_user_contact_list - 
+[ 2020-03-08 08:44:41 ] EWallet [ DEBUG ] - ewallet.py - 208: set_session_data - 
+[ 2020-03-08 08:44:41 ] EWallet [ DEBUG ] - ewallet.py - 189: set_session_active_user - 
+[ 2020-03-08 08:44:41 ] EWallet [ DEBUG ] - ewallet.py - 196: set_session_credit_wallet - 
+[ 2020-03-08 08:44:41 ] EWallet [ DEBUG ] - ewallet.py - 202: set_session_contact_list - 
+[ 2020-03-08 08:44:42 ] EWallet [ INFO ] - ewallet.py - 263: update_session_from_user - Successfully updated ewallet session from current active user.
+[ 2020-03-08 08:44:42 ] EWallet [ INFO ] - ewallet.py - 1022: handle_user_action_login - User successfully loged in.
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - ewallet.py - 1233: ewallet_controller - 
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - ewallet.py - 1222: ewallet_user_controller - 
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - ewallet.py - 1165: ewallet_user_action_controller - 
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - ewallet.py - 1109: handle_user_action_view - 
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - ewallet.py - 690: action_view_user_account - 
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - res_user.py - 143: fetch_user_values - 
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - res_user.py - 99: fetch_user_credit_wallet - 
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - res_user.py - 105: fetch_user_contact_list - 
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - ewallet.py - 694: action_view_user_account - {'id': 1, 'user_name': 'test user', 'user_create_date': datetime.datetime(2020, 3, 8, 7, 10, 0, 896769), 'user_write_date': datetime.datetime(2020, 3, 8, 8, 44, 41, 966160), 'user_credit_wallet': <base.credit_wallet.CreditEWallet object at 0xb6b3698c>, 'user_contact_list': <base.contact_list.ContactList object at 0xb6bacf6c>, 'user_pass_hash': '062bce6d67fb682e60680b8d715be64854c93ebed0627487c95422c2db032761', 'user_email': 'example@example.com', 'user_phone': None, 'user_alias': None, 'user_state_code': 1, 'user_state_name': 'LoggedIn', 'user_pass_hash_archive': [<base.res_user_pass_hash_archive.ResUserPassHashArchive object at 0xb6b3d3cc>], 'user_credit_wallet_archive': [<base.credit_wallet.CreditEWallet object at 0xb6b3698c>], 'user_contact_list_archive': [<base.contact_list.ContactList object at 0xb6bacf6c>]}
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - ewallet.py - 1233: ewallet_controller - 
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - ewallet.py - 1222: ewallet_user_controller - 
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - ewallet.py - 1165: ewallet_user_action_controller - 
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - ewallet.py - 1061: handle_user_action_create - 
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - ewallet.py - 321: action_create_new_user_account - 
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - ewallet_login.py - 156: ewallet_login_controller - 
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - ewallet_login.py - 148: action_create_new_account - 
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - ewallet_login.py - 399: action_create_new_user - 
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - ewallet_login.py - 357: perform_new_user_checks - 
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - ewallet_login.py - 253: fetch_all_user_names - 
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - ewallet_login.py - 244: fetch_all_user_records - 
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - ewallet_login.py - 265: check_user_name_ensure_one - 
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - ewallet_login.py - 318: check_user_pass - 
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - ewallet_login.py - 276: check_user_pass_length - 
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - ewallet_login.py - 307: check_user_pass_characters - 
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - ewallet_login.py - 282: check_user_pass_letters - 
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - ewallet_login.py - 291: check_user_pass_numbers - 
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - ewallet_login.py - 299: check_user_pass_symbols - 
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - ewallet_login.py - 344: check_user_email - 
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - ewallet_login.py - 329: check_user_email_is_valid - 
+[ 2020-03-08 08:44:42 ] EWallet [ WARNING ] - ewallet_login.py - 458: warning_duplicate_user_name - Invalid user name. Already taken.
+[ 2020-03-08 08:44:42 ] EWallet [ WARNING ] - ewallet_login.py - 215: warning_could_not_create_new_user_account - Something went wrong. Could not create new user account.
+[ 2020-03-08 08:44:42 ] EWallet [ WARNING ] - ewallet.py - 1884: warning_could_not_create_user_account - Something went wrong. Could not create new user account for user2.
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - ewallet.py - 1233: ewallet_controller - 
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - ewallet.py - 1222: ewallet_user_controller - 
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - ewallet.py - 1165: ewallet_user_action_controller - 
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - ewallet.py - 1008: handle_user_action_login - 
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - ewallet_login.py - 156: ewallet_login_controller - 
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - ewallet_login.py - 126: action_login - 
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - ewallet_login.py - 106: authenticate_user - 
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - ewallet_login.py - 90: check_user_name_exists - 
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - res_user.py - 111: fetch_user_pass_hash - 
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - ewallet_login.py - 98: check_user_pass_hash - 
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - ewallet_login.py - 85: hash_password - 
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - ewallet_login.py - 77: set_login_record_data - 
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - ewallet_login.py - 63: set_user_id - 
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - ewallet_login.py - 70: set_login_status - 
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - res_user.py - 249: set_user_state - 
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - res_user.py - 393: convert_user_state_code_to_name - 
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - res_user.py - 178: fetch_user_state_code_map - 
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - res_user.py - 232: set_user_state_code - 
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - res_user.py - 192: set_user_write_date - 
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - res_user.py - 240: set_user_state_name - 
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - res_user.py - 192: set_user_write_date - 
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - ewallet.py - 968: action_system_user_update - 
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - ewallet.py - 189: set_session_active_user - 
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - ewallet.py - 253: update_session_from_user - 
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - res_user.py - 99: fetch_user_credit_wallet - 
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - res_user.py - 105: fetch_user_contact_list - 
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - ewallet.py - 208: set_session_data - 
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - ewallet.py - 189: set_session_active_user - 
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - ewallet.py - 196: set_session_credit_wallet - 
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - ewallet.py - 202: set_session_contact_list - 
+[ 2020-03-08 08:44:42 ] EWallet [ INFO ] - ewallet.py - 263: update_session_from_user - Successfully updated ewallet session from current active user.
+[ 2020-03-08 08:44:42 ] EWallet [ INFO ] - ewallet.py - 1022: handle_user_action_login - User successfully loged in.
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - ewallet.py - 163: fetch_active_session_credit_wallet - 
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - ewallet.py - 157: fetch_active_session_user - 
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - res_user.py - 83: fetch_user_id - 
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - ewallet.py - 1233: ewallet_controller - 
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - ewallet.py - 1222: ewallet_user_controller - 
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - ewallet.py - 1165: ewallet_user_action_controller - 
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - ewallet.py - 1061: handle_user_action_create - 
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - ewallet.py - 446: action_create_new_transfer - 
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - ewallet.py - 163: fetch_active_session_credit_wallet - 
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - credit_wallet.py - 775: user_controller - 
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - credit_wallet.py - 556: transfer_credits - 
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - credit_wallet.py - 490: transfer_credits_incomming - 
+[ 2020-03-08 08:44:42 ] EWallet [ INFO ] - credit_wallet.py - 496: transfer_credits_incomming - Extracting credits from partner ewallet...
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - credit_wallet.py - 757: system_controller - 
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - credit_wallet.py - 388: extract_credits - 
+[ 2020-03-08 08:44:42 ] EWallet [ INFO ] - credit_wallet.py - 392: extract_credits - Successfully extracted credits from wallet.
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - credit_wallet.py - 312: set_write_date - 
+[ 2020-03-08 08:44:42 ] EWallet [ INFO ] - credit_wallet.py - 500: transfer_credits_incomming - Supplying wallet with credits...
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - credit_wallet.py - 757: system_controller - 
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - credit_wallet.py - 380: supply_credits - 
+[ 2020-03-08 08:44:42 ] EWallet [ INFO ] - credit_wallet.py - 384: supply_credits - Successfully supplied wallet with credits.
+[ 2020-03-08 08:44:42 ] EWallet [ INFO ] - credit_wallet.py - 504: transfer_credits_incomming - Creating transfer record...
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - credit_wallet.py - 120: fetch_credit_ewallet_transfer_sheet - 
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - transfer_sheet.py - 408: credit_transfer_sheet_controller - 
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - transfer_sheet.py - 360: add_transfer_sheet_record - 
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - transfer_sheet.py - 210: fetch_transfer_record_creation_values - 
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - transfer_sheet.py - 355: create_transfer_sheet_record - 
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - transfer_sheet.py - 382: update_records - 
+[ 2020-03-08 08:44:42 ] EWallet [ INFO ] - transfer_sheet.py - 369: add_transfer_sheet_record - Successfully added new transfer record.
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - transfer_sheet.py - 342: update_write_date - 
+[ 2020-03-08 08:44:42 ] EWallet [ INFO ] - credit_wallet.py - 513: transfer_credits_incomming - Attempting transfer record share with partner...
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - credit_wallet.py - 475: share_transfer_record - 
+[ 2020-03-08 08:44:42 ] EWallet [ ERROR ] - credit_wallet.py - 955: error_no_transfer_record_found - No transfer record found.
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - ewallet.py - 1233: ewallet_controller - 
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - ewallet.py - 1222: ewallet_user_controller - 
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - ewallet.py - 1165: ewallet_user_action_controller - 
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - ewallet.py - 1109: handle_user_action_view - 
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - ewallet.py - 698: action_view_credit_wallet - 
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - ewallet.py - 163: fetch_active_session_credit_wallet - 
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - credit_wallet.py - 131: fetch_credit_ewallet_values - 
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - ewallet.py - 703: action_view_credit_wallet - {'id': 2, 'client_id': 2, 'reference': 'Credit Wallet', 'create_date': datetime.datetime(2020, 3, 8, 7, 10, 1, 950455), 'write_date': datetime.datetime(2020, 3, 8, 8, 44, 42, 208078), 'credits': 0, 'credit_clock': [<base.credit_clock.CreditClock object at 0xb6b62f2c>], 'credit_clock_archive': [<base.credit_clock.CreditClock object at 0xb6b62f2c>], 'transfer_sheet': [<base.transfer_sheet.CreditTransferSheet object at 0xb6b5b0cc>], 'transfer_sheet_archive': [<base.transfer_sheet.CreditTransferSheet object at 0xb6b5b0cc>]}
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - ewallet.py - 1233: ewallet_controller - 
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - ewallet.py - 1222: ewallet_user_controller - 
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - ewallet.py - 1165: ewallet_user_action_controller - 
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - ewallet.py - 1109: handle_user_action_view - 
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - ewallet.py - 914: action_view_transfer - 
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - ewallet.py - 798: action_view_transfer_list - 
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - ewallet.py - 163: fetch_active_session_credit_wallet - 
+[ 2020-03-08 08:44:42 ] EWallet [ INFO ] - ewallet.py - 802: action_view_transfer_list - Attempting to fetch active transfer sheet...
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - credit_wallet.py - 120: fetch_credit_ewallet_transfer_sheet - 
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - transfer_sheet.py - 197: fetch_transfer_sheet_values - 
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - ewallet.py - 807: action_view_transfer_list - {'id': 2, 'wallet_id': 2, 'reference': 'Transfer Sheet', 'create_date': datetime.datetime(2020, 3, 8, 7, 10, 2, 230671), 'write_date': datetime.datetime(2020, 3, 8, 8, 44, 42, 222147), 'records': [<base.transfer_sheet.CreditTransferSheetRecord object at 0xb6b5b9ec>, <base.transfer_sheet.CreditTransferSheetRecord object at 0xb6b5bd0c>, <base.transfer_sheet.CreditTransferSheetRecord object at 0xb6b5bd4c>, <base.transfer_sheet.CreditTransferSheetRecord object at 0xb6b5bd8c>, <base.transfer_sheet.CreditTransferSheetRecord object at 0xb6b5bdcc>, <base.transfer_sheet.CreditTransferSheetRecord object at 0xb6b5be4c>, <base.transfer_sheet.CreditTransferSheetRecord object at 0xb6b5beac>, <base.transfer_sheet.CreditTransferSheetRecord object at 0xb6b5bf0c>, <base.transfer_sheet.CreditTransferSheetRecord object at 0xb6b5bf6c>, <base.transfer_sheet.CreditTransferSheetRecord object at 0xb6b5bfac>, <base.transfer_sheet.CreditTransferSheetRecord object at 0xb6b6902c>, <base.transfer_sheet.CreditTransferSheetRecord object at 0xb6b6908c>, <base.transfer_sheet.CreditTransferSheetRecord object at 0xb6b690ec>, <base.transfer_sheet.CreditTransferSheetRecord object at 0xb6b6914c>, <base.transfer_sheet.CreditTransferSheetRecord object at 0xb6b691ac>, <base.transfer_sheet.CreditTransferSheetRecord object at 0xb6b6920c>, <base.transfer_sheet.CreditTransferSheetRecord object at 0xb6b6926c>, <base.transfer_sheet.CreditTransferSheetRecord object at 0xb6b692cc>, <base.transfer_sheet.CreditTransferSheetRecord object at 0xb6b6932c>, <base.transfer_sheet.CreditTransferSheetRecord object at 0xb6b6938c>, <base.transfer_sheet.CreditTransferSheetRecord object at 0xb6b693ec>, <base.transfer_sheet.CreditTransferSheetRecord object at 0xb6b6944c>]}
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - ewallet.py - 163: fetch_active_session_credit_wallet - 
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - ewallet.py - 157: fetch_active_session_user - 
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - res_user.py - 83: fetch_user_id - 
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - ewallet.py - 1233: ewallet_controller - 
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - ewallet.py - 1222: ewallet_user_controller - 
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - ewallet.py - 1165: ewallet_user_action_controller - 
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - ewallet.py - 1061: handle_user_action_create - 
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - ewallet.py - 446: action_create_new_transfer - 
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - ewallet.py - 163: fetch_active_session_credit_wallet - 
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - credit_wallet.py - 775: user_controller - 
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - credit_wallet.py - 556: transfer_credits - 
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - credit_wallet.py - 523: transfer_credits_outgoing - 
+[ 2020-03-08 08:44:42 ] EWallet [ INFO ] - credit_wallet.py - 531: transfer_credits_outgoing - Extracting credits from wallet...
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - credit_wallet.py - 757: system_controller - 
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - credit_wallet.py - 388: extract_credits - 
+[ 2020-03-08 08:44:42 ] EWallet [ INFO ] - credit_wallet.py - 392: extract_credits - Successfully extracted credits from wallet.
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - credit_wallet.py - 312: set_write_date - 
+[ 2020-03-08 08:44:42 ] EWallet [ INFO ] - credit_wallet.py - 535: transfer_credits_outgoing - Supplying partner wallet with credits...
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - credit_wallet.py - 757: system_controller - 
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - credit_wallet.py - 380: supply_credits - 
+[ 2020-03-08 08:44:42 ] EWallet [ INFO ] - credit_wallet.py - 384: supply_credits - Successfully supplied wallet with credits.
+[ 2020-03-08 08:44:42 ] EWallet [ INFO ] - credit_wallet.py - 539: transfer_credits_outgoing - Creating transfer record...
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - credit_wallet.py - 120: fetch_credit_ewallet_transfer_sheet - 
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - transfer_sheet.py - 408: credit_transfer_sheet_controller - 
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - transfer_sheet.py - 360: add_transfer_sheet_record - 
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - transfer_sheet.py - 210: fetch_transfer_record_creation_values - 
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - transfer_sheet.py - 355: create_transfer_sheet_record - 
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - transfer_sheet.py - 382: update_records - 
+[ 2020-03-08 08:44:42 ] EWallet [ INFO ] - transfer_sheet.py - 369: add_transfer_sheet_record - Successfully added new transfer record.
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - transfer_sheet.py - 342: update_write_date - 
+[ 2020-03-08 08:44:42 ] EWallet [ INFO ] - credit_wallet.py - 547: transfer_credits_outgoing - Attempting transfer record share with partner...
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - credit_wallet.py - 475: share_transfer_record - 
+[ 2020-03-08 08:44:42 ] EWallet [ INFO ] - credit_wallet.py - 481: share_transfer_record - Attempting to share transfer record...
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - credit_wallet.py - 120: fetch_credit_ewallet_transfer_sheet - 
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - transfer_sheet.py - 408: credit_transfer_sheet_controller - 
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - transfer_sheet.py - 387: append_transfer_sheet_record - 
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - transfer_sheet.py - 382: update_records - 
+[ 2020-03-08 08:44:42 ] EWallet [ INFO ] - transfer_sheet.py - 392: append_transfer_sheet_record - Successfully appended transfer records.
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - transfer_sheet.py - 342: update_write_date - 
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - credit_wallet.py - 312: set_write_date - 
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - ewallet.py - 1233: ewallet_controller - 
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - ewallet.py - 1222: ewallet_user_controller - 
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - ewallet.py - 1165: ewallet_user_action_controller - 
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - ewallet.py - 1109: handle_user_action_view - 
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - ewallet.py - 690: action_view_user_account - 
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - res_user.py - 143: fetch_user_values - 
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - res_user.py - 99: fetch_user_credit_wallet - 
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - res_user.py - 105: fetch_user_contact_list - 
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - ewallet.py - 694: action_view_user_account - {'id': 2, 'user_name': 'user2', 'user_create_date': datetime.datetime(2020, 3, 8, 7, 10, 1, 947708), 'user_write_date': datetime.datetime(2020, 3, 8, 8, 44, 42, 115963), 'user_credit_wallet': <base.credit_wallet.CreditEWallet object at 0xb6b5bbac>, 'user_contact_list': <base.contact_list.ContactList object at 0xb6b694cc>, 'user_pass_hash': '062bce6d67fb682e60680b8d715be64854c93ebed0627487c95422c2db032761', 'user_email': 'example2@example.com', 'user_phone': None, 'user_alias': None, 'user_state_code': 1, 'user_state_name': 'LoggedIn', 'user_pass_hash_archive': [<base.res_user_pass_hash_archive.ResUserPassHashArchive object at 0xb6b5798c>], 'user_credit_wallet_archive': [<base.credit_wallet.CreditEWallet object at 0xb6b5bbac>], 'user_contact_list_archive': [<base.contact_list.ContactList object at 0xb6b694cc>]}
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - ewallet.py - 1233: ewallet_controller - 
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - ewallet.py - 1212: ewallet_system_controller - 
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - ewallet.py - 1202: ewallet_system_action_controller - 
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - ewallet.py - 984: handle_system_action_update - 
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - ewallet.py - 978: action_system_session_update - 
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - ewallet.py - 157: fetch_active_session_user - 
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - ewallet.py - 253: update_session_from_user - 
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - res_user.py - 99: fetch_user_credit_wallet - 
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - res_user.py - 105: fetch_user_contact_list - 
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - ewallet.py - 208: set_session_data - 
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - ewallet.py - 189: set_session_active_user - 
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - ewallet.py - 196: set_session_credit_wallet - 
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - ewallet.py - 202: set_session_contact_list - 
+[ 2020-03-08 08:44:42 ] EWallet [ INFO ] - ewallet.py - 263: update_session_from_user - Successfully updated ewallet session from current active user.
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - ewallet.py - 1233: ewallet_controller - 
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - ewallet.py - 1222: ewallet_user_controller - 
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - ewallet.py - 1165: ewallet_user_action_controller - 
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - ewallet.py - 1030: handle_user_action_logout - 
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - ewallet.py - 157: fetch_active_session_user - 
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - ewallet.py - 953: action_system_user_logout - 
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - ewallet.py - 157: fetch_active_session_user - 
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - res_user.py - 249: set_user_state - 
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - res_user.py - 393: convert_user_state_code_to_name - 
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - res_user.py - 178: fetch_user_state_code_map - 
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - res_user.py - 232: set_user_state_code - 
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - res_user.py - 192: set_user_write_date - 
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - res_user.py - 240: set_user_state_name - 
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - res_user.py - 192: set_user_write_date - 
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - ewallet.py - 178: fetch_next_active_session_user - 
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - ewallet.py - 240: clear_active_session_user_data - 
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - ewallet.py - 225: clear_session_credit_wallet - 
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - ewallet.py - 230: clear_session_contact_list - 
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - res_user.py - 83: fetch_user_id - 
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - ewallet.py - 968: action_system_user_update - 
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - ewallet.py - 189: set_session_active_user - 
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - ewallet.py - 253: update_session_from_user - 
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - res_user.py - 99: fetch_user_credit_wallet - 
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - res_user.py - 105: fetch_user_contact_list - 
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - ewallet.py - 208: set_session_data - 
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - ewallet.py - 189: set_session_active_user - 
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - ewallet.py - 196: set_session_credit_wallet - 
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - ewallet.py - 202: set_session_contact_list - 
+[ 2020-03-08 08:44:42 ] EWallet [ INFO ] - ewallet.py - 263: update_session_from_user - Successfully updated ewallet session from current active user.
+[ 2020-03-08 08:44:42 ] EWallet [ INFO ] - ewallet.py - 1045: handle_user_action_logout - User successfully loged out.
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - ewallet.py - 1233: ewallet_controller - 
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - ewallet.py - 1222: ewallet_user_controller - 
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - ewallet.py - 1165: ewallet_user_action_controller - 
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - ewallet.py - 1030: handle_user_action_logout - 
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - ewallet.py - 157: fetch_active_session_user - 
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - ewallet.py - 953: action_system_user_logout - 
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - ewallet.py - 157: fetch_active_session_user - 
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - res_user.py - 249: set_user_state - 
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - res_user.py - 393: convert_user_state_code_to_name - 
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - res_user.py - 178: fetch_user_state_code_map - 
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - res_user.py - 232: set_user_state_code - 
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - res_user.py - 192: set_user_write_date - 
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - res_user.py - 240: set_user_state_name - 
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - res_user.py - 192: set_user_write_date - 
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - ewallet.py - 178: fetch_next_active_session_user - 
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - ewallet.py - 240: clear_active_session_user_data - 
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - ewallet.py - 220: clear_session_active_user - 
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - ewallet.py - 225: clear_session_credit_wallet - 
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - ewallet.py - 230: clear_session_contact_list - 
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - res_user.py - 83: fetch_user_id - 
+[ 2020-03-08 08:44:42 ] EWallet [ INFO ] - ewallet.py - 1045: handle_user_action_logout - User successfully loged out.
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - ewallet.py - 1233: ewallet_controller - 
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - ewallet.py - 1212: ewallet_system_controller - 
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - ewallet.py - 1202: ewallet_system_action_controller - 
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - ewallet.py - 984: handle_system_action_update - 
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - ewallet.py - 978: action_system_session_update - 
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - ewallet.py - 157: fetch_active_session_user - 
+[ 2020-03-08 08:44:42 ] EWallet [ ERROR ] - ewallet.py - 1698: error_no_session_active_user_found - No session active user found.
+[ 2020-03-08 08:44:42 ] EWallet [ DEBUG ] - ewallet.py - 253: update_session_from_user - 
+[ 2020-03-08 08:44:42 ] EWallet [ ERROR ] - ewallet.py - 1698: error_no_session_active_user_found - No session active user found.
