@@ -169,8 +169,7 @@ class EWallet(Base):
         log.debug('')
         _credit_wallet = self.fetch_active_session_credit_wallet()
         if not _credit_wallet:
-            return False
-#           return self.error_could_not_fetch_active_session_credit_wallet()
+            return self.error_could_not_fetch_active_session_credit_wallet()
         _credit_clock = _credit_wallet.fetch_credit_ewallet_credit_clock()
         return _credit_clock or False
 
@@ -818,18 +817,19 @@ class EWallet(Base):
 
     def action_view_transfer_record(self, **kwargs):
         log.debug('')
-        if not self.session_credit_wallet or not kwargs.get('record_id'):
+        _credit_wallet = self.fetch_active_session_credit_wallet()
+        if not _credit_wallet or not kwargs.get('record_id'):
             return self.error_handler_action_view_transfer_record(
                     credit_wallet=self.session_credit_wallet,
                     record_id=kwargs.get('record_id'),
                     )
         log.info('Attempting to fetch active transfer sheet...')
-        _transfer_sheet = self.session_credit_wallet.fetch_credit_ewallet_transfer_sheet()
+        _transfer_sheet = _credit_wallet.fetch_credit_ewallet_transfer_sheet()
         if not _transfer_sheet:
             return self.warning_could_not_fetch_transfer_sheet()
         log.info('Attempting to fetch transfer record by id...')
         _record = _transfer_sheet.fetch_transfer_sheet_records(
-                search_by='id', code=kwargs['record_id']
+                search_by='id', code=kwargs['record_id'], active_session=self.session
                 )
         if not _record:
             return self.warning_could_not_fetch_transfer_sheet_record()
@@ -1981,6 +1981,12 @@ class EWallet(Base):
                 transfer='list'
                 )
         print(str(_view_transfer_sheet) + '\n')
+        print('[ * ] View Transfer Sheet Record')
+        _view_transfer_sheet_record = self.ewallet_controller(
+                controller='user', ctype='action', action='view', view='transfer',
+                transfer='record', record_id=1
+                )
+        print(str(_view_transfer_sheet_record) + '\n')
         print('[ * ] View Invoice Sheet')
         _view_invoice_sheet = self.ewallet_controller(
                 controller='user', ctype='action', action='view', view='invoice',

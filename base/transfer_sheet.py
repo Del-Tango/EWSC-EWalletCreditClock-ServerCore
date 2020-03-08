@@ -222,7 +222,17 @@ class CreditTransferSheet(Base):
         log.debug('')
         if not kwargs.get('code'):
             return self.error_no_transfer_record_id_found()
-        _record = self.records.get(kwargs['code'])
+        if kwargs.get('active_session'):
+            _match = list(
+                    kwargs['active_session'].query(CreditTransferSheetRecord) \
+                            .filter_by(record_id=kwargs['code'])
+            )
+        else:
+            _match = [
+                    item for item in self.records
+                    if item.fetch_record_id() is kwargs['code']
+                    ]
+        _record = False if not _match else _match[0]
         if not _record:
             return self.warning_could_not_fetch_transfer_record(
                     'id', kwargs['code']
