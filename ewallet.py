@@ -76,9 +76,9 @@ class EWallet(Base):
     # M2M
     user_account_archive = relationship('ResUser', secondary='session_user')
 
-    @pysnooper.snoop(
-            config.log_config['log_dir'] + '/' + config.log_config['log_file']
-            )
+#   @pysnooper.snoop(
+#           config.log_config['log_dir'] + '/' + config.log_config['log_file']
+#           )
     def __init__(self, **kwargs):
         self.name = kwargs.get('name')
         self.session = kwargs.get('session') or res_utils.session_factory()

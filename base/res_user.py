@@ -175,18 +175,10 @@ class ResUser(Base):
                 }
         return _state_map
 
-    def error_no_user_pass_hash_found(self):
-        log.error('No user pass hash found.')
-        return False
-
-    def create_user_pass_hash_record(self, **kwargs):
-        if not kwargs.get('pass_hash'):
-            return self.error_no_user_pass_hash_found()
-        _pass_hash_record = ResUserPassHashArchive(
-                user_id=kwargs.get('user_id') or self.fetch_user_id(),
-                user_pass_hash=kwargs['pass_hash'],
-                )
-        return _pass_hash_record
+    def set_user_write_date(self):
+        log.debug('')
+        self.user_write_date = datetime.datetime.now()
+        return True
 
     def set_user_pass(self, **kwargs):
         log.debug('')
@@ -209,6 +201,7 @@ class ResUser(Base):
         self.user_pass = _pass_hash
         kwargs['active_session'].add(_hash_record)
         kwargs['active_session'].commit()
+        self.set_user_write_date()
         log.info('Successfully set user password.')
         return True
 
@@ -218,13 +211,16 @@ class ResUser(Base):
             return self.error_no_user_alias_found()
         self.user_alias = kwargs['alias']
         log.info('Successfully set user alias.')
+        self.set_user_write_date()
         return True
 
+#   @pysnooper.snoop('logs/ewallet.log')
     def set_user_state_code(self, **kwargs):
         log.debug('')
-        if not kwargs.get('state_code'):
+        if kwargs.get('state_code') not in [0, 1]:
             return self.error_no_state_code_found()
         self.user_state_code = kwargs['state_code']
+        self.set_user_write_date()
         return True
 
     def set_user_state_name(self, **kwargs):
@@ -232,8 +228,10 @@ class ResUser(Base):
         if not kwargs.get('state_name'):
             return self.error_no_state_name_found()
         self.user_state_name = kwargs['state_name']
+        self.set_user_write_date()
         return True
 
+#   @pysnooper.snoop('logs/ewallet.log')
     def set_user_state(self, **kwargs):
         log.debug('')
         if not kwargs.get('set_by'):
@@ -248,7 +246,9 @@ class ResUser(Base):
                     'name': self.set_user_state_name,
                     }
                 }
-        _value_fetch = _handlers['converters'][kwargs['set_by']](**kwargs)
+        _value_fetch = _handlers['converters'][kwargs['set_by']](
+                **{kwargs['set_by']: kwargs.get('code') or kwargs.get('name')}, **kwargs
+                )
         _field_code = kwargs.get('state_code') if kwargs['set_by'] == 'code' \
                             else _value_fetch
         _field_name = kwargs.get('name') if kwargs['set_by'] == 'name' \
@@ -266,7 +266,9 @@ class ResUser(Base):
         for item in _handlers['setters']:
             _field_name = _setter_values['field_names'][item]
             _field_values = _setter_values['field_values'][item]
-            _set_state = _handlers['setters'][item](_field_name=_field_values)
+            _set_state = _handlers['setters'][item](
+                    **{_field_name: _field_values}
+                    )
         return _value_fetch
 
     def set_user_phone(self, **kwargs):
@@ -274,6 +276,7 @@ class ResUser(Base):
         if not kwargs.get('phone'):
             return self.no_user_phone_found()
         self.user_phone = kwargs['phone']
+        self.set_user_write_date()
         log.info('Successfully set user phone.')
         return True
 
@@ -292,6 +295,7 @@ class ResUser(Base):
                     )
         log.info('User email validated.')
         self.user_email = kwargs['email']
+        self.set_user_write_date()
         log.info('Successfully set user email.')
         return True
 
@@ -300,6 +304,7 @@ class ResUser(Base):
         if not kwargs.get('credit_wallet'):
             return self.error_no_credit_wallet_found()
         self.user_credit_wallet = kwargs['credit_wallet']
+        self.set_user_write_date()
         log.info('Successfully set user credit wallet.')
         return True
 
@@ -308,6 +313,7 @@ class ResUser(Base):
         if not kwargs.get('contact_list'):
             return self.error_no_contact_list_found()
         self.user_contact_list = kwargs['contact_list']
+        self.set_user_write_date()
         log.info('Successfully set user contact list.')
         return True
 
@@ -316,6 +322,7 @@ class ResUser(Base):
         if not kwargs.get('name'):
             return self.error_no_user_name_found()
         self.user_name = kwargs['name']
+        self.set_user_write_date()
         log.info('Successfully set user name.')
         return True
 
@@ -324,6 +331,7 @@ class ResUser(Base):
         if not kwargs.get('wallet'):
             return self.error_no_credit_wallet_found()
         self.user_credit_wallet = kwargs['wallet']
+        self.set_user_write_date()
         log.info('Successfully set user credit wallet.')
         return True
 
@@ -332,6 +340,7 @@ class ResUser(Base):
         if not kwargs.get('archive'):
             return self.error_no_user_pass_hash_archive_found()
         self.user_pass_hash_archive = kwargs['archive'] or {}
+        self.set_user_write_date()
         log.info('Successfully set user password hash archive.')
         return True
 
@@ -340,6 +349,7 @@ class ResUser(Base):
         if not kwargs.get('archive'):
             return self.error_no_user_credit_wallet_archive_found()
         self.user_credit_wallet_archive = kwargs['archive'] or {}
+        self.set_user_write_date()
         log.info('Successfully set user credit wallet archive.')
         return True
 
@@ -348,6 +358,7 @@ class ResUser(Base):
         if not kwargs.get('archive'):
             return self.error_no_user_contact_list_archive_found()
         self.user_contact_list_archive = kwargs['archive'] or {}
+        self.set_user_write_date()
         log.info('Successfully set user contact list archive.')
         return True
 
@@ -369,17 +380,29 @@ class ResUser(Base):
         log.info('Successfully updated user contact list archive.')
         return self.user_contact_list_archive
 
+#   @pysnooper.snoop('logs/ewallet.log')
     def convert_user_state_code_to_name(self, **kwargs):
         log.debug('')
-        if not kwargs.get('code'):
+        if kwargs.get('state_code') not in [0, 1]:
             return self.error_no_state_code_found()
-        return self.fetch_user_state_code_map()['code'][kwargs['code']]
+        return self.fetch_user_state_code_map()['code'].get(
+                kwargs['state_code']
+                )
+
+    def create_user_pass_hash_record(self, **kwargs):
+        if not kwargs.get('pass_hash'):
+            return self.error_no_user_pass_hash_found()
+        _pass_hash_record = ResUserPassHashArchive(
+                user_id=kwargs.get('user_id') or self.fetch_user_id(),
+                user_pass_hash=kwargs['pass_hash'],
+                )
+        return _pass_hash_record
 
     def convert_user_state_name_to_code(self, **kwargs):
         log.debug('')
         if not kwargs.get('name'):
             return self.error_no_state_name_found()
-        return self.fetch_user_state_code_map()['name'][kwargs['name']]
+        return self.fetch_user_state_code_map()['name'].get(kwargs['name'])
 
     # TODO - Refactor - User main system controller
     def action_create_credit_wallet(self, **kwargs):
@@ -789,6 +812,10 @@ class ResUser(Base):
 
     def error_no_set_by_parameter_specified(self):
         log.error('No set_by parameter specified.')
+        return False
+
+    def error_no_user_pass_hash_found(self):
+        log.error('No user pass hash found.')
         return False
 
     def warning_could_not_fetch_credit_wallet(self):
