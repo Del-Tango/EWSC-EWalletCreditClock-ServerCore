@@ -31,6 +31,11 @@ class CreditClockConversionSheetRecord(Base):
     def __init__(self, **kwargs):
         self.create_date = datetime.datetime.now()
         self.write_date = datetime.datetime.now()
+        self.conversion_sheet_id = kwargs.get('conversion_sheet_id')
+        self.reference = kwargs.get('reference') or 'Conversion Sheet Record'
+        self.conversion_type = kwargs.get('conversion_type')
+        self.minutes = kwargs.get('minutes')
+        self.credits = kwargs.get('credits')
 
     def fetch_record_id(self):
         log.debug('')
@@ -166,6 +171,9 @@ class CreditClockConversionSheet(Base):
     def __init__(self, **kwargs):
         self.create_date = datetime.datetime.now()
         self.write_date = datetime.datetime.now()
+        self.clock_id = kwargs.get('clock_id')
+        self.reference = kwargs.get('reference') or 'Conversion Sheet'
+        self.records = kwargs.get('records') or []
 
     def fetch_conversion_sheet_id(self):
         log.debug('')

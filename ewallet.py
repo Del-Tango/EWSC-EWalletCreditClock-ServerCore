@@ -42,7 +42,9 @@ def log_init():
 
 log = log_init()
 
-# [ NOTE ]: Many2many table for user sessions.
+'''
+    [ NOTE ]: Many2many table for user sessions.
+'''
 class SessionUser(Base):
     __tablename__ = 'session_user'
     id = Column(Integer, primary_key=True)
@@ -52,8 +54,9 @@ class SessionUser(Base):
     user = relationship('ResUser', backref=backref('session_user', cascade='all, delete-orphan'))
     session = relationship('EWallet', backref=backref('session_user', cascade='all, delete-orphan'))
 
-
-# [ NOTE ]: Ewallet session.
+'''
+    [ NOTE ]: Ewallet session.
+'''
 class EWallet(Base):
     __tablename__ = 'ewallet'
 
@@ -184,17 +187,21 @@ class EWallet(Base):
 
     def set_session_active_user(self, active_user):
         log.debug('')
-        self.active_user = [active_user]
+        self.active_user = active_user if isinstance(active_user, list) \
+                else [active_user]
         return self.active_user
 
+#   @pysnooper.snoop('logs/ewallet.log')
     def set_session_credit_wallet(self, credit_wallet):
         log.debug('')
-        self.credit_wallet = [credit_wallet]
+        self.credit_wallet = credit_wallet if isinstance(credit_wallet, list) \
+                else [credit_wallet]
         return self.credit_wallet
 
     def set_session_contact_list(self, contact_list):
         log.debug('')
-        self.contact_list = [contact_list]
+        self.contact_list = contact_list if isinstance(contact_list, list) \
+                else [contact_list]
         return self.contact_list
 
     def set_session_data(self, data_dct):
@@ -935,7 +942,7 @@ class EWallet(Base):
     def action_system_session_check(self, **kwargs):
         pass
 
-    @pysnooper.snoop('logs/ewallet.log')
+#   @pysnooper.snoop('logs/ewallet.log')
     def action_system_user_logout(self, **kwargs):
         log.debug('')
         _user = self.fetch_active_session_user()
@@ -1004,9 +1011,9 @@ class EWallet(Base):
             return self.warning_could_not_login()
         self.session.add(_login_record)
         self.user_account_archive.append(session_login)
-        log.info('User successfully loged in.')
         self.action_system_user_update(user=session_login)
         self.session.commit()
+        log.info('User successfully loged in.')
         return session_login
 
     '''
@@ -1990,6 +1997,9 @@ Base.metadata.create_all(res_utils.engine)
 _working_session = res_utils.session_factory()
 
 ewallet = EWallet(session=_working_session)
+_working_session.add(ewallet)
+_working_session.commit()
+
 ewallet.ewallet_controller(controller='test')
 
 

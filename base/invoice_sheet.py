@@ -34,6 +34,13 @@ class CreditInvoiceSheetRecord(Base):
     def __init__(self, **kwargs):
         self.create_date = datetime.datetime.now()
         self.write_date = datetime.datetime.now()
+        self.invoice_sheet_id = kwargs.get('invoice_sheet_id')
+        self.reference = kwargs.get('reference') or 'Invoice Sheet Record'
+        self.credits = kwargs.get('credits') or 0
+        self.currency = kwargs.get('currency')
+        self.cost = kwargs.get('cost')
+        self.seller_id = kwargs.get('seller_id')
+        self.notes = kwargs.get('notes')
 
     def fetch_record_id(self):
         log.debug('')
@@ -177,6 +184,9 @@ class CreditInvoiceSheet(Base):
     def __init__(self, **kwargs):
         self.create_date = datetime.datetime.now()
         self.write_date = datetime.datetime.now()
+        self.wallet_id = kwargs.get('wallet_id')
+        self.reference = kwargs.get('reference') or 'Invoice Sheet'
+        self.records = kwargs.get('records') or []
 
     def fetch_invoice_sheet_id(self):
         log.debug('')

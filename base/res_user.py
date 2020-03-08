@@ -52,14 +52,21 @@ class ResUser(Base):
     # O2M
     user_contact_list_archive = relationship('ContactList')
 
-    @pysnooper.snoop('logs/ewallet.log')
+#   @pysnooper.snoop('logs/ewallet.log')
     def __init__(self, **kwargs):
         self.user_create_date = datetime.datetime.now()
         self.user_write_date = datetime.datetime.now()
-
+        _user_credit_wallet = kwargs.get('user_credit_wallet') or \
+                self.user_action_controller(
+                    action='create', target='credit_wallet', **kwargs
+                )
+        _user_contact_list = kwargs.get('user_contact_list') or \
+                self.user_action_controller(
+                    action='create', target='contact_list', **kwargs
+                )
         self.user_name = kwargs.get('user_name')
-        self.user_credit_wallet = kwargs.get('user_credit_wallet') or []
-        self.user_contact_list = kwargs.get('user_contact_list') or []
+        self.user_credit_wallet = [_user_credit_wallet]
+        self.user_contact_list = [_user_contact_list]
         self.user_pass_hash = kwargs.get('user_pass_hash')
         self.user_email = kwargs.get('user_email')
         self.user_phone = kwargs.get('user_phone')
@@ -67,8 +74,10 @@ class ResUser(Base):
         self.user_state_code = kwargs.get('user_state_code')
         self.user_state_name = kwargs.get('user_state_name')
         self.user_pass_hash_archive = kwargs.get('user_pass_hash_archive') or []
-        self.user_credit_wallet_archive = kwargs.get('user_credit_wallet_archive') or []
-        self.user_contact_list_archive = kwargs.get('user_contact_list_archive') or []
+        self.user_credit_wallet_archive = kwargs.get('user_credit_wallet_archive') or \
+                [_user_credit_wallet]
+        self.user_contact_list_archive = kwargs.get('user_contact_list_archive') or \
+                [_user_contact_list]
 
     def fetch_user_id(self):
         log.debug('')
@@ -364,19 +373,14 @@ class ResUser(Base):
 
     def update_user_credit_wallet_archive(self, credit_wallet):
         log.debug('')
-        self.user_credit_wallet_archive.update({
-            credit_wallet.fetch_credit_wallet_id():
-            credit_wallet
-            })
+        self.user_credit_wallet_archive.append(credit_wallet)
         log.info('Successfully updated user credit wallet archive.')
         return self.user_credit_wallet_archive
 
+    @pysnooper.snoop('logs/ewallet.log')
     def update_user_contact_list_archive(self, contact_list):
         log.debug('')
-        self.user_contact_list_archive.update({
-            contact_list.fetch_contact_list_id():
-            contact_list
-            })
+        self.user_contact_list_archive.append(contact_list)
         log.info('Successfully updated user contact list archive.')
         return self.user_contact_list_archive
 
@@ -405,14 +409,20 @@ class ResUser(Base):
         return self.fetch_user_state_code_map()['name'].get(kwargs['name'])
 
     # TODO - Refactor - User main system controller
+    @pysnooper.snoop('logs/ewallet.log')
     def action_create_credit_wallet(self, **kwargs):
         log.debug('')
-        _new_credit_wallet = credit_wallet.CreditEWallet(
+        if not kwargs.get('active_session'):
+            return self.error_no_active_session_found()
+        _new_credit_wallet = CreditEWallet(
                 client_id=self.user_id,
-                reference=kwargs.get('reference') or str(),
-                credits=kwargs.get('credits') or int(),
+                reference=kwargs.get('reference') or 'Credit Wallet',
+                credits=kwargs.get('credits') or 0,
+                active_session=kwargs['active_session'],
                 )
+        kwargs['active_session'].add(_new_credit_wallet)
         self.update_user_credit_wallet_archive(_new_credit_wallet)
+        kwargs['active_session'].commit()
         log.info('Successfully created new user credit wallet.')
         return _new_credit_wallet
 
@@ -428,11 +438,15 @@ class ResUser(Base):
 
     def action_create_contact_list(self, **kwargs):
         log.debug('')
-        _new_contact_list = contact_list.ContactList(
+        if not kwargs.get('active_session'):
+            return self.error_no_active_session_found()
+        _new_contact_list = ContactList(
                 client_id=self.user_id,
-                reference=kwargs.get('reference') or str(),
+                reference=kwargs.get('reference') or 'Contact List',
                 )
+        kwargs['active_session'].add(_new_contact_list)
         self.update_user_contact_list_archive(_new_contact_list)
+        kwargs['active_session'].commit()
         log.info('Successfully created new user contact list.')
         return _new_contact_list
 
@@ -816,6 +830,10 @@ class ResUser(Base):
 
     def error_no_user_pass_hash_found(self):
         log.error('No user pass hash found.')
+        return False
+
+    def error_no_active_session_found(self):
+        log.error('No active session found.')
         return False
 
     def warning_could_not_fetch_credit_wallet(self):

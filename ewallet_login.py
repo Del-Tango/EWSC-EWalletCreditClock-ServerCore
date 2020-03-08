@@ -384,6 +384,7 @@ class EWalletCreateUser(EWalletLogin):
                 user_email=kwargs['user_email'],
                 user_phone=kwargs.get('user_phone'),
                 user_alias=kwargs.get('user_alias'),
+                active_session=kwargs['active_session'],
                 )
         kwargs['active_session'].add(_new_user)
         kwargs['active_session'].commit()

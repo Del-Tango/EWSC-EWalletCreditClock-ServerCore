@@ -32,6 +32,12 @@ class CreditTransferSheetRecord(Base):
     def __init__(self, **kwargs):
         self.create_date = datetime.datetime.now()
         self.write_date = datetime.datetime.now()
+        self.reference = kwargs.get('reference') or 'Transfer Sheet Records'
+        self.transfer_type = kwargs.get('transfer_type')
+        self.transfer_from = kwargs.get('transfer_from')
+        self.transfer_to = kwargs.get('transfer_to')
+        self.credits = kwargs.get('credits') or 0
+        self.transfer_sheet_id = kwargs.get('transfer_sheet_id')
 
     def fetch_record_id(self):
         log.debug('')
@@ -167,6 +173,9 @@ class CreditTransferSheet(Base):
     def __init__(self, **kwargs):
         self.create_date = datetime.datetime.now()
         self.write_date = datetime.datetime.now()
+        self.wallet_id = kwargs.get('wallet_id')
+        self.reference = kwargs.get('reference') or 'Transfer Sheet'
+        self.records = kwargs.get('records') or []
 
     def fetch_transfer_sheet_id(self):
         log.debug('')

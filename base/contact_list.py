@@ -32,6 +32,13 @@ class ContactListRecord(Base):
     def __init__(self, **kwargs):
         self.create_date = datetime.datetime.now()
         self.write_date = datetime.datetime.now()
+        self.contact_list_id = kwargs.get('contact_list_id')
+        self.user_id = kwargs.get('user_id')
+        self.user_name = kwargs.get('user_name')
+        self.user_email = kwargs.get('user_email')
+        self.user_phone = kwargs.get('user_phone')
+        self.notes = kwargs.get('notes')
+        self.reference = kwargs.get('reference') or 'Contact List Record'
 
     def fetch_record_id(self):
         log.debug('')
@@ -175,6 +182,10 @@ class ContactList(Base):
     def __init__(self, **kwargs):
         self.create_date = datetime.datetime.now()
         self.write_date = datetime.datetime.now()
+        self.client_id = kwargs.get('client_id')
+        self.reference = kwargs.get('reference') or 'Contact List'
+        self.active_session_id = kwargs.get('active_session_id')
+        self.records = kwargs.get('records') or []
 
     def fetch_contact_list_id(self):
         log.debug('')

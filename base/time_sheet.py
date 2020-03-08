@@ -31,6 +31,9 @@ class TimeSheetRecord(Base):
     def __init__(self, **kwargs):
         self.create_date = datetime.datetime.now()
         self.write_date = datetime.datetime.now()
+        self.reference = kwargs.get('reference') or 'Time Sheet Record'
+        self.time_spent = kwargs.get('time_spent')
+        self.time_sheet_id = kwargs.get('time_sheet_id')
 
     def fetch_record_id(self):
         log.debug('')
@@ -134,6 +137,9 @@ class CreditClockTimeSheet(Base):
     def __init__(self, **kwargs):
         self.create_date = datetime.datetime.now()
         self.write_date = datetime.datetime.now()
+        self.clock_id = kwargs.get('clock_id')
+        self.reference = kwargs.get('reference') or 'Time Sheet'
+        self.records = kwargs.get('records') or []
 
     def fetch_time_sheet_id(self):
         log.debug('')

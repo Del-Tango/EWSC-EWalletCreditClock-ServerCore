@@ -41,9 +41,39 @@ class CreditClock(Base):
     # O2M
     conversion_sheet_archive = relationship('CreditClockConversionSheet')
 
+    def error_no_active_session_found(self):
+        log.error('No active session found.')
+        return False
+
     def __init__(self, **kwargs):
+        if not kwargs.get('active_session'):
+            self.error_no_active_session_found()
+            return
         self.create_date = datetime.datetime.now()
         self.write_date = datetime.datetime.now()
+        _time_sheet = kwargs.get('time_sheet') or \
+                self.system_controller(
+                    action='create', create='sheet', sheet_type='time',
+                    active_session=kwargs['active_session']
+                )
+        _conversion_sheet = kwargs.get('conversion_sheet') or \
+                self.system_controller(
+                    action='create', create='sheet', sheet_type='conversion',
+                    active_session=kwargs['active_session']
+                )
+        self.wallet_id = kwargs.get('wallet_id')
+        self.reference = kwargs.get('reference') or 'Credit Clock'
+        self.credit_clock = kwargs.get('credit_clock')
+        self.time_spent = kwargs.get('time_spent')
+        self.start_time = kwargs.get('start_time')
+        self.end_time = kwargs.get('end_time')
+        self.time_sheet = [_time_sheet]
+        self.conversion_sheet = [_conversion_sheet]
+        self.time_sheet_archive = kwargs.get('time_sheet_archive') or \
+                [_time_sheet]
+        self.conversion_sheet_archive = kwargs.get('conversion_sheet_archive') or \
+                [_conversion_sheet]
+
 
     def fetch_credit_id(self):
         log.debug('')
@@ -228,24 +258,15 @@ class CreditClock(Base):
                 write_date=datetime.datetime.now()
                 )
 
-    def update_time_sheet_archive(self, **kwargs):
+    def update_time_sheet_archive(self, time_sheet):
         log.debug('')
-        if not kwargs.get('time_sheet'):
-            return self.error_no_time_sheet_found()
-        self.time_sheet_archive.update({
-            kwargs['time_sheet'].fetch_time_sheet_id(), kwargs['time_sheet']
-            })
+        self.time_sheet_archive.append(time_sheet)
         log.info('Successfully updated credit clock time sheet archive.')
         return self.time_sheet_archive
 
-    def update_conversion_sheet_archive(self, **kwargs):
+    def update_conversion_sheet_archive(self, conversion_sheet):
         log.debug('')
-        if not kwargs.get('conversion_sheet'):
-            return self.error_no_conversion_sheet_found()
-        self.conversion_sheet_archive.update({
-            kwargs['conversion_sheet'].fetch_conversion_sheet_id(),
-            kwargs['conversion_sheet'],
-            })
+        self.conversion_sheet_archive.append(conversion_sheet)
         log.info('Successfully updated credit clock conversion sheet archive.')
         return self.conversion_sheet_archive
 
@@ -333,11 +354,13 @@ class CreditClock(Base):
 
     def create_credit_clock_time_sheet(self, **kwargs):
         log.debug('')
+        if not kwargs.get('active_session'):
+            return self.error_no_active_session_found()
         _values = self.fetch_time_sheet_creation_values(**kwargs)
         _time_sheet = CreditClockTimeSheet(**_values)
-        self.update_time_sheet_archive(
-                time_sheet=_time_sheet
-                )
+        kwargs['active_session'].add(_time_sheet)
+        _update_archive = self.update_time_sheet_archive(_time_sheet)
+        kwargs['active_session'].commit()
         log.info('Successfully created new credit clock time sheet.')
         return _time_sheet
 
@@ -356,11 +379,13 @@ class CreditClock(Base):
 
     def create_credit_clock_conversion_sheet(self, **kwargs):
         log.debug('')
+        if not kwargs.get('active_session'):
+            return self.error_no_active_session_found()
         _values = self.fetch_conversion_sheet_creation_values(**kwargs)
         _conversion_sheet = CreditClockConversionSheet(**_values)
-        self.update_conversion_sheet_archive(
-                conversion_sheet=_conversion_sheet
-                )
+        kwargs['active_session'].add(_conversion_sheet)
+        _update_archive = self.update_conversion_sheet_archive(_conversion_sheet)
+        kwargs['active_session'].commit()
         log.info('Successfully created new credit clock conversion sheet.')
         return _conversion_sheet
 

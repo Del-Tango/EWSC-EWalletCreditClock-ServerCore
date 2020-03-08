@@ -52,8 +52,42 @@ class CreditEWallet(Base):
 
 #   @pysnooper.snoop()
     def __init__(self, **kwargs):
+        if not kwargs.get('active_session'):
+            self.error_no_active_session_found()
+            return
         self.create_date = datetime.datetime.now()
         self.write_date = datetime.datetime.now()
+        _credit_clock = kwargs.get('credit_clock') or \
+                self.system_controller(
+                    action='create_clock', reference='Credit Clock',
+                    credit_clock=0.0, active_session=kwargs['active_session']
+                )
+        _transfer_sheet = kwargs.get('transfer_sheet') or \
+                self.system_controller(
+                    action='create_sheet', sheet='transfer',
+                    reference='Transfer Sheet',
+                    active_session=kwargs['active_session']
+                )
+        _invoice_sheet = kwargs.get('invoice_sheet') or \
+                self.system_controller(
+                    action='create_sheet', sheet='invoice',
+                    reference='Invoice Sheet',
+                    active_session=kwargs['active_session']
+                )
+
+        self.active_session_id = kwargs.get('active_session_id')
+        self.reference = kwargs.get('reference') or 'Credit EWallet'
+        self.credits = kwargs.get('credits')
+        self.credit_clock = [_credit_clock]
+        self.transfer_sheet = [_transfer_sheet]
+        self.invoice_sheet = [_invoice_sheet]
+        self.credit_clock_archive = kwargs.get('credit_clock_archive') or \
+                [_credit_clock]
+        self.transfer_sheet_archive = kwargs.get('transfer_sheet_archive') or \
+                [_transfer_sheet]
+        self.invoice_sheet_archive = kwargs.get('invoice_sheet_archive') or \
+                [_invoice_sheet]
+
 
     def fetch_credit_eid(self):
         log.debug('')
@@ -269,35 +303,26 @@ class CreditEWallet(Base):
         self.invoice_sheet_archive = kwargs['invoice_sheet_archive']
         return True
 
-    def update_write_date(self):
+    def set_write_date(self):
         log.debug('')
         self.write_date = datetime.datetime.now()
         return self.write_date
 
     def update_credit_clock_archive(self, credit_clock):
         log.debug('')
-        self.credit_clock_archive.update({
-            credit_clock.fetch_credit_clock_id():
-            credit_clock,
-            })
+        self.credit_clock_archive.append(credit_clock)
         log.info('Successfully updated credit clock archive.')
         return self.credit_clock_archive
 
     def update_invoice_sheet_archive(self, invoice_sheet):
         log.debug('')
-        self.invoice_sheet_archive.update({
-            invoice_sheet.fetch_invoice_sheet_id():
-            invoice_sheet
-            })
+        self.invoice_sheet_archive.append(invoice_sheet)
         log.info('Successfully updated invoice sheet archive.')
         return self.invoice_sheet_archive
 
     def update_transfer_sheet_archive(self, transfer_sheet):
         log.debug('')
-        self.transfer_sheet_archive.update({
-            transfer_sheet.fetch_transfer_sheet_id():
-            transfer_sheet
-            })
+        self.transfer_sheet_archive.append(transfer_sheet)
         log.info('Successfully updated transfer sheet archive.')
         return self.transfer_sheet_archive
 
@@ -621,25 +646,31 @@ class CreditEWallet(Base):
 
     def create_transfer_sheet(self, **kwargs):
         log.debug('')
+        if not kwargs.get('active_session'):
+            return self.error_no_active_session_found()
         _transfer_sheet = CreditTransferSheet(
                 id=self.wallet_id,
                 reference=kwargs.get('reference'),
+                active_session=kwargs['active_session'],
                 )
-        self.transfer_sheet_archive.update({
-            _transfer_sheet.fetch_transfer_sheet_id(): _transfer_sheet
-            })
+        kwargs['active_session'].add(_transfer_sheet)
+        _update_archive = self.update_transfer_sheet_archive(_transfer_sheet)
+        kwargs['active_session'].commit()
         log.info('Successfully created transfer sheet.')
         return _transfer_sheet
 
     def create_invoice_sheet(self, **kwargs):
         log.debug('')
+        if not kwargs.get('active_session'):
+            return self.error_no_active_session_found()
         _invoice_sheet = CreditInvoiceSheet(
                 id=self.wallet_id,
                 reference=kwargs.get('reference'),
+                active_session=kwargs['active_session'],
                 )
-        self.invoice_sheet_archive.update({
-            _invoice_sheet.fetch_invoice_sheet_id(): _invoice_sheet
-            })
+        kwargs['active_session'].add(_invoice_sheet)
+        _update_archive = self.update_invoice_sheet_archive(_invoice_sheet)
+        kwargs['active_session'].commit()
         log.info('Successfully created invoice sheet.')
         return _invoice_sheet
 
@@ -674,12 +705,17 @@ class CreditEWallet(Base):
 
     def create_clock(self, **kwargs):
         log.debug('')
+        if not kwargs.get('active_session'):
+            return self.error_no_active_session_found()
         _new_credit_clock = CreditClock(
                 wallet_id=self.wallet_id,
-                reference=kwargs.get('reference') or str(),
-                credit_clock=kwargs.get('credit_clock') or float(),
+                reference=kwargs.get('reference') or 'Credit Clock',
+                credit_clock=kwargs.get('credit_clock') or 0.0,
+                active_session=kwargs['active_session']
                 )
+        kwargs['active_session'].add(_new_credit_clock)
         self.update_credit_clock_archive(_new_credit_clock)
+        kwargs['active_session'].commit()
         log.info('Successfully created new credit clock.')
         return _new_credit_clock
 
@@ -759,7 +795,7 @@ class CreditEWallet(Base):
                 }
         _handle = _handlers[kwargs['action']](**kwargs)
         if _handle:
-            self.update_write_date()
+            self.set_write_date()
         return _handle
 
     def user_controller(self, **kwargs):
@@ -1032,6 +1068,10 @@ class CreditEWallet(Base):
 
     def error_no_controller_type_specified(self):
         log.error('No controller type specified.')
+        return False
+
+    def error_no_active_session_found(self):
+        log.error('No active session found.')
         return False
 
     def warning_could_not_fetch_credit_clock(self, search_code, code):
