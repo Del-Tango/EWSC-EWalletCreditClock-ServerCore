@@ -9,25 +9,12 @@ from sqlalchemy.orm import relationship
 from .res_utils import ResUtils
 from .credit_wallet import CreditEWallet
 from .contact_list import ContactList
+from .res_user_pass_hash_archive import ResUserPassHashArchive
 from .res_utils import ResUtils, Base
 from .config import Config
 
 log_config = Config().log_config
 log = logging.getLogger(log_config['log_name'])
-
-
-class ResUserPassHashArchive(Base):
-    __tablename__ = 'res_user_hash_archive'
-
-    id = Column(Integer, primary_key=True)
-    user_id = Column(Integer, ForeignKey('res_user.user_id'))
-    user_pass_hash = Column(String)
-    create_date = Column(DateTime)
-    write_date = Column(DateTime)
-
-    def __init__(self, **kwargs):
-        self.create_date = datetime.datetime.now()
-        self.write_date = datetime.datetime.now()
 
 
 class ResUser(Base):
@@ -188,6 +175,19 @@ class ResUser(Base):
                 }
         return _state_map
 
+    def error_no_user_pass_hash_found(self):
+        log.error('No user pass hash found.')
+        return False
+
+    def create_user_pass_hash_record(self, **kwargs):
+        if not kwargs.get('pass_hash'):
+            return self.error_no_user_pass_hash_found()
+        _pass_hash_record = ResUserPassHashArchive(
+                user_id=kwargs.get('user_id') or self.fetch_user_id(),
+                user_pass_hash=kwargs['pass_hash'],
+                )
+        return _pass_hash_record
+
     def set_user_pass(self, **kwargs):
         log.debug('')
         if not kwargs.get('password') or not kwargs.get('pass_check_func') \
@@ -203,7 +203,12 @@ class ResUser(Base):
             return _create_user.error_invalid_user_pass()
         log.info('Password coresponds with security standards. Hashing...')
         _pass_hash = kwargs['pass_hash_func'](kwargs['password'])
+        _hash_record = self.create_user_pass_hash_record(
+                pass_hash=_pass_hash, **kwargs
+                )
         self.user_pass = _pass_hash
+        kwargs['active_session'].add(_hash_record)
+        kwargs['active_session'].commit()
         log.info('Successfully set user password.')
         return True
 

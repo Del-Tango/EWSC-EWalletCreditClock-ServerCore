@@ -1,7 +1,7 @@
 #from validate_email import validate_email
 from itertools import count
 from sqlalchemy import Table, Column, String, Integer, ForeignKey, Date, DateTime
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import relationship, backref
 
 from ewallet_login import EWalletLogin
 from ewallet_logout import EWalletLogout
@@ -49,8 +49,8 @@ class SessionUser(Base):
     session_id = Column(Integer, ForeignKey('ewallet.id'))
     user_id = Column(Integer, ForeignKey('res_user.user_id'))
     datetime = Column(DateTime, default=datetime.datetime.now())
-    user = relationship('ResUser', backref='session_user')
-    session = relationship('EWallet', backref='session_user')
+    user = relationship('ResUser', backref=backref('session_user', cascade='all, delete-orphan'))
+    session = relationship('EWallet', backref=backref('session_user', cascade='all, delete-orphan'))
 
 
 # [ NOTE ]: Ewallet session.
@@ -987,6 +987,9 @@ class EWallet(Base):
                 }
         return _handlers[kwargs['target']](**kwargs)
 
+    '''
+        [ RETURN ]: Loged in user if login action succesful, else False.
+    '''
 #   @pysnooper.snoop('logs/ewallet.log')
     def handle_user_action_login(self, **kwargs):
         log.debug('')
@@ -1006,6 +1009,10 @@ class EWallet(Base):
         self.session.commit()
         return session_login
 
+    '''
+        [ RETURN ]: True if no other users loged in. If loged in users found in
+        user account archive, returns next.
+    '''
     def handle_user_action_logout(self, **kwargs):
         log.debug('')
         _user = self.fetch_active_session_user()
@@ -1020,9 +1027,6 @@ class EWallet(Base):
             return self.warning_could_not_logout()
         _update_next = False if isinstance(_session_logout, bool) \
                 else self.action_system_user_update(user=_session_logout)
-        # TODO - When closing session
-#           self.session.delete(self)
-#           self.session.flush()
         self.user_account_archive.remove(_user)
         self.session.commit()
         log.info('User successfully loged out.')

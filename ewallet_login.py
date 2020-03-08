@@ -377,14 +377,21 @@ class EWalletCreateUser(EWalletLogin):
         if not kwargs.get('active_session'):
             log.error('No session found.')
             return False
+        _pass_hash = self.hash_password(kwargs['user_pass'])
         _new_user = ResUser(
                 user_name=kwargs['user_name'],
-                user_pass_hash=self.hash_password(kwargs['user_pass']),
+                user_pass_hash=_pass_hash,
                 user_email=kwargs['user_email'],
                 user_phone=kwargs.get('user_phone'),
                 user_alias=kwargs.get('user_alias'),
                 )
         kwargs['active_session'].add(_new_user)
+        kwargs['active_session'].commit()
+        _pass_hash_record = _new_user.create_user_pass_hash_record(
+                pass_hash=_pass_hash,
+                )
+        kwargs['active_session'].add(_pass_hash_record)
+        kwargs['active_session'].commit()
         return _new_user
 
     def action_create_new_user(self, **kwargs):

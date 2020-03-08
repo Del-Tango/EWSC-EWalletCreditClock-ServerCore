@@ -1,5 +1,6 @@
 # TODO - Persistent storage with SQLAlchemy ORM
 - session cleanup
+- system action view session
 - add user pass hash to archive
 - set user write date
 # TODO - Remove redundant error handlers
