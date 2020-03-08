@@ -95,7 +95,9 @@ class CreditClock(Base):
 
     def fetch_credit_clock_conversion_sheet(self):
         log.debug('')
-        return self.conversion_sheet
+        if not len(self.conversion_sheet):
+            return self.error_no_credit_clock_conversion_sheet_found()
+        return self.conversion_sheet[0]
 
     def fetch_credit_clock_values():
         log.debug('')
@@ -163,7 +165,7 @@ class CreditClock(Base):
         log.info('Successfully fethced conversion sheet by reference.')
         return self.warning_could_not_fetch_conversion_sheet('reference', code)
 
-    def fetch_credit_clock_conversion_sheets(self, *args, **kwargs):
+    def fetch_credit_clock_conversion_sheets(_byself, *args, **kwargs):
         log.debug('')
         return self.conversion_sheet_archive.values()
 

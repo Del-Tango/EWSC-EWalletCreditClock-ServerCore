@@ -873,9 +873,10 @@ class EWallet(Base):
 
     def action_view_conversion_list(self, **kwargs):
         log.debug('')
-        if not self.session_credit_wallet:
-            return self.error_no_session_credit_wallet_found()
-        log.info('Attempting to fetch active credit clock...')
+#       _credit_wallet = self.fetch_active_session_credit_wallet()
+#       if not _credit_wallet:
+#           return self.error_no_session_credit_wallet_found()
+#       log.info('Attempting to fetch active credit clock...')
         _credit_clock = self.fetch_active_session_credit_clock()
         if not _credit_clock:
             return self.warning_could_not_fetch_credit_clock()
@@ -932,7 +933,7 @@ class EWallet(Base):
                 }
         return _handlers[kwargs['time']](**kwargs)
 
-    def action_view_conversion(self, **kwars):
+    def action_view_conversion(self, **kwargs):
         log.debug('')
         if not kwargs.get('conversion'):
             return self.error_no_conversion_view_target_specified()
@@ -1987,6 +1988,12 @@ class EWallet(Base):
                 time='list'
                 )
         print(str(_view_time_sheet) + '\n')
+        print('[ * ] View Conversion Sheet')
+        _view_conversion_sheet = self.ewallet_controller(
+                controller='user', ctype='action', action='view', view='conversion',
+                conversion='list'
+                )
+        print(str(_view_conversion_sheet) + '\n')
         print('[ * ] Extract credits')
         _extract_credits = self.ewallet_controller(
                 controller='user', ctype='action', action='create', create='transfer',
