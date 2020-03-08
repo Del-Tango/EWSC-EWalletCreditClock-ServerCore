@@ -831,10 +831,11 @@ class EWallet(Base):
 
     def action_view_time_list(self, **kwargs):
         log.debug('')
-        if not self.credit_wallet:
+        _credit_wallet = self.fetch_active_session_credit_wallet()
+        if not _credit_wallet:
             return self.error_no_session_credit_wallet_found()
         log.info('Attempting to fetch active credit clock...')
-        _credit_clock = self.credit_wallet.fetch_credit_ewallet_credit_clock()
+        _credit_clock = _credit_wallet.fetch_credit_ewallet_credit_clock()
         if not _credit_clock:
             return self.warning_could_not_fetch_credit_clock()
         log.info('Attempting to fetch active time sheet...')
@@ -1980,6 +1981,12 @@ class EWallet(Base):
                 invoice='list'
                 )
         print(str(_view_invoice_sheet) + '\n')
+        print('[ * ] View Time Sheet')
+        _view_time_sheet = self.ewallet_controller(
+                controller='user', ctype='action', action='view', view='time',
+                time='list'
+                )
+        print(str(_view_time_sheet) + '\n')
         print('[ * ] Extract credits')
         _extract_credits = self.ewallet_controller(
                 controller='user', ctype='action', action='create', create='transfer',

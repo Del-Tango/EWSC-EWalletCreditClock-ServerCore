@@ -62,7 +62,7 @@ class CreditClock(Base):
                     active_session=kwargs['active_session']
                 )
         self.wallet_id = kwargs.get('wallet_id')
-        self.reference = kwargs.get('reference') or 'Credit Clock'
+        self.reference = kwargs.get('reference')
         self.credit_clock = kwargs.get('credit_clock')
         self.time_spent = kwargs.get('time_spent')
         self.start_time = kwargs.get('start_time')
@@ -89,7 +89,9 @@ class CreditClock(Base):
 
     def fetch_credit_clock_time_sheet(self):
         log.debug('')
-        return self.time_sheet
+        if not len(self.time_sheet):
+            return self.error_no_credit_clock_time_sheet_found()
+        return self.time_sheet[0]
 
     def fetch_credit_clock_conversion_sheet(self):
         log.debug('')
@@ -165,7 +167,7 @@ class CreditClock(Base):
         log.debug('')
         return self.conversion_sheet_archive.values()
 
-    def fetch_credit_clock_conversion_sheet(self, **kwargs):
+    def fetch_credit_clock_conversion_sheet_by(self, **kwargs):
         log.debug('')
         if not kwargs.get('identifier'):
             return self.error_no_conversion_sheet_identifier_specified()
@@ -176,7 +178,7 @@ class CreditClock(Base):
                 }
         return _handlers[kwargs['identifier']](kwargs.get('code'))
 
-    def fetch_credit_clock_time_sheet(self, **kwargs):
+    def fetch_credit_clock_time_sheet_by(self, **kwargs):
         log.debug('')
         if not kwargs.get('identifier'):
             return self.error_no_time_sheet_identifier_specified()
