@@ -124,7 +124,9 @@ class CreditEWallet(Base):
 
     def fetch_credit_ewallet_invoice_sheet(self):
         log.debug('')
-        return self.invoice_sheet
+        if not len(self.invoice_sheet):
+            return self.error_no_credit_ewallet_invoice_sheet_found()
+        return self.invoice_sheet[0]
 
 #   @pysnooper.snoop()
     def fetch_credit_ewallet_values(self):
