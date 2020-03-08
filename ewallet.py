@@ -696,9 +696,10 @@ class EWallet(Base):
 
     def action_view_credit_wallet(self, **kwargs):
         log.debug('')
-        if not self.session_credit_wallet:
+        _credit_wallet = self.fetch_active_session_credit_wallet()
+        if not _credit_wallet:
             return self.error_no_session_credit_wallet_found()
-        res = self.session_credit_wallet.fetch_credit_ewallet_values()
+        res = _credit_wallet.fetch_credit_ewallet_values()
         log.debug(res)
         return res
 
@@ -974,7 +975,7 @@ class EWallet(Base):
 
     def action_system_session_update(self, **kwargs):
         log.debug('')
-        kwargs.update({'session_active_user': self.active_user})
+        kwargs.update({'session_active_user': self.fetch_active_session_user()})
         _update = self.update_session_from_user(**kwargs)
         return _update or False
 
@@ -1960,6 +1961,11 @@ class EWallet(Base):
                 transfer_to=self.fetch_active_session_user().fetch_user_id(), active_session=self.session
                 )
         print(str(_supply_credits) + '\n')
+        print('[ * ] View Credit Wallet')
+        _view_credit_wallet = self.ewallet_controller(
+                controller='user', ctype='action', action='view', view='credit_wallet',
+                )
+        print(str(_view_credit_wallet) + '\n')
         print('[ * ] Extract credits')
         _extract_credits = self.ewallet_controller(
                 controller='user', ctype='action', action='create', create='transfer',
@@ -1974,6 +1980,12 @@ class EWallet(Base):
                 controller='user', ctype='action', action='view', view='account'
                 )
         print(str(_second_view_account) + '\n')
+        print('[ TEST ] System.')
+        print('[ * ] Update session')
+        _update_session = self.ewallet_controller(
+                controller='system', ctype='action', action='update', target='session'
+                )
+        print(str(_update_session) + '\n')
         print('[ * ] Logout')
         _logout = self.ewallet_controller(
                 controller='user', ctype='action', action='logout',
@@ -1984,22 +1996,14 @@ class EWallet(Base):
                 controller='user', ctype='action', action='logout',
                 )
         print(str(_second_logout) + '\n')
-#       print('[ * ] Second Login')
-#       self.ewallet_controller(
-#               controller='user', ctype='action', action='login', user_name='user2',
-#               user_pass='123abc@xxx'
-#               )
-#       print('[ * ] View account')
-#       self.ewallet_controller(
-#               controller='user', ctype='action', action='view', view='account'
-#               )
 
     def test_ewallet_system_controller(self):
         print('[ TEST ] System.')
         print('[ * ] Update session')
-        self.ewallet_controller(
+        _update_session = self.ewallet_controller(
                 controller='system', ctype='action', action='update', target='session'
                 )
+        print(str(_update_session) + '\n')
 
     def test_orm(self):
         print('Active user : {}'.format(self.active_user))
@@ -2010,11 +2014,11 @@ class EWallet(Base):
 
     def test_ewallet(self, **kwargs):
         self.test_ewallet_user_controller()
-#       self.test_ewallet_system_controller()
+        self.test_ewallet_system_controller()
         self.test_orm()
 
 
-# TODO - Manage initialisation and sqlalchemy sessions
+# TODO - Manage initialisation and sqlalchemy sessions (add session manager)
 Base.metadata.create_all(res_utils.engine)
 _working_session = res_utils.session_factory()
 

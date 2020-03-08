@@ -509,20 +509,24 @@ class CreditEWallet(Base):
                 transfer_from=kwargs.get('transfer_from'),
                 transfer_to=self.client_id, credits=kwargs['credits']
                 )
+        kwargs['active_session'].add(_transfer_record)
         log.info('Attempting transfer record share with partner...')
         self.share_transfer_record(
                 partner_ewallet=kwargs['partner_ewallet'],
                 transfer_records=[_transfer_record],
                 )
+        kwargs['active_session'].commit()
         return _destination_supply
 
 #   @pysnooper.snoop()
     def transfer_credits_outgoing(self, **kwargs):
         log.debug('')
-        if not kwargs.get('credits') or not kwargs.get('partner_ewallet'):
+        if not kwargs.get('active_session') or not kwargs.get('credits') or \
+                not kwargs.get('partner_ewallet'):
             return self.error_handler_transfer_credits(
                     credits=kwargs.get('credits'),
                     partner_ewallet=kwargs.get('partner_ewallet'),
+                    active_session=kwargs.get('active_session'),
                     )
         log.info('Extracting credits from wallet...')
         _source_extract = self.system_controller(
@@ -539,11 +543,13 @@ class CreditEWallet(Base):
                 transfer_type=kwargs.get('transfer_type'), transfer_from=self.client_id,
                 transfer_to=kwargs.get('transfer_to'), credits=kwargs['credits']
                 )
+        kwargs['active_session'].add(_transfer_record)
         log.info('Attempting transfer record share with partner...')
         self.share_transfer_record(
                 partner_ewallet=kwargs['partner_ewallet'],
                 transfer_record=_transfer_record,
                 )
+        kwargs['active_session'].commit()
         return _source_extract
 
     def transfer_credits(self, **kwargs):
@@ -554,47 +560,7 @@ class CreditEWallet(Base):
                 'incomming': self.transfer_credits_incomming,
                 'outgoing': self.transfer_credits_outgoing,
                 }
-        _handle = _handlers[kwargs['transfer_type']](**kwargs)
-        return _handle
-
-    # TODO - Refactor
-    def display_credit_wallet_credits(self, **kwargs):
-        log.debug('')
-        print('Credit Wallet {} Credits: {}'.format(
-            self.reference, self.credits
-            ))
-        return self.credits
-
-    # TODO - Refactor
-#   @pysnooper.snoop()
-    def display_credit_wallet_transfer_sheets(self, **kwargs):
-        log.debug('')
-        for k, v in self.transfer_sheet_archive.items():
-            print('{}: {} - {}'.format(
-               v.fetch_transfer_sheet_create_date(), k,
-               v.fetch_transfer_sheet_reference()
-               ))
-        return self.transfer_sheet_archive
-
-    # TODO - Refactor
-    def display_credit_wallet_transfer_records(self, **kwargs):
-        log.debug('')
-        return self.transfer_sheet.display_transfer_sheet_records()
-
-    # TODO - Refactor
-    def display_credit_wallet_invoice_sheets(self, **kwargs):
-        log.debug('')
-        for k, v in self.invoice_sheet_archive.items():
-            print('{}: {} - {}'.format(
-                v.fetch_invoice_sheet_create_date(), k,
-                v.fetch_invoice_sheet_reference(),
-                ))
-        return self.invoice_sheet_archive
-
-    # TODO - Refactor
-    def display_credit_wallet_invoice_records(self, **kwargs):
-        log.debug('')
-        return self.invoice_sheet.display_credit_invoice_sheet_records()
+        return _handlers[kwargs['transfer_type']](**kwargs)
 
     def interogate_credit_wallet(self, **kwargs):
         log.debug('')
@@ -1229,5 +1195,45 @@ class CreditEWallet(Base):
 #   active_session = relationship('EWallet', back_populates='credit_wallet')
     # O2O
 #   client = relationship('ResUser', back_populates='user_credit_wallet')
+
+
+#   # TODO - Refactor
+#   def display_credit_wallet_credits(self, **kwargs):
+#       log.debug('')
+#       print('Credit Wallet {} Credits: {}'.format(
+#           self.reference, self.credits
+#           ))
+#       return self.credits
+
+#   # TODO - Refactor
+#   @pysnooper.snoop()
+#   def display_credit_wallet_transfer_sheets(self, **kwargs):
+#       log.debug('')
+#       for k, v in self.transfer_sheet_archive.items():
+#           print('{}: {} - {}'.format(
+#              v.fetch_transfer_sheet_create_date(), k,
+#              v.fetch_transfer_sheet_reference()
+#              ))
+#       return self.transfer_sheet_archive
+
+#   # TODO - Refactor
+#   def display_credit_wallet_transfer_records(self, **kwargs):
+#       log.debug('')
+#       return self.transfer_sheet.display_transfer_sheet_records()
+
+#   # TODO - Refactor
+#   def display_credit_wallet_invoice_sheets(self, **kwargs):
+#       log.debug('')
+#       for k, v in self.invoice_sheet_archive.items():
+#           print('{}: {} - {}'.format(
+#               v.fetch_invoice_sheet_create_date(), k,
+#               v.fetch_invoice_sheet_reference(),
+#               ))
+#       return self.invoice_sheet_archive
+
+#   # TODO - Refactor
+#   def display_credit_wallet_invoice_records(self, **kwargs):
+#       log.debug('')
+#       return self.invoice_sheet.display_credit_invoice_sheet_records()
 
 

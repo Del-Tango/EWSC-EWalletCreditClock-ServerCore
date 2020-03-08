@@ -1,5 +1,10 @@
 # TODO - Persistent storage with SQLAlchemy ORM
 - session cleanup
+- orm contact list record creation
+- orm transfer record creation
+- orm conversion record creation
+- orm time record creation
+- orm invoice record creation
 - system action view session
 # TODO - Remove redundant error handlers
 # TODO - Add full test cases
