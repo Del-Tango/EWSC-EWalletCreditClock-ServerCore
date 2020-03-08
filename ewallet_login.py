@@ -111,7 +111,10 @@ class EWalletLogin(Base):
             return self.warning_user_name_not_found()
         if _user_query.count() > 1:
             self.warning_user_not_found_by_name(kwargs['user_name'])
-        _user = list(_user_query)[0]
+        try:
+            _user = list(_user_query)[0]
+        except:
+            return self.warning_user_name_not_found()
         _pass_check = self.check_user_pass_hash(
                 kwargs['user_pass'], _user.fetch_user_pass_hash()
                 )

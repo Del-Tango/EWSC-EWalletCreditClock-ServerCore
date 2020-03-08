@@ -1,6 +1,7 @@
-# TODO - Correct ORM relationships
 # TODO - Persistent storage with SQLAlchemy ORM
-- user action logout
+- fix user account archive
+- add user pass hash to archive
+- set user write date
 # TODO - Remove redundant error handlers
 # TODO - Add full test cases
 # TODO - PEP8-it

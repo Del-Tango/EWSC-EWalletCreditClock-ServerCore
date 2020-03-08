@@ -1,6 +1,6 @@
 #from validate_email import validate_email
 from itertools import count
-from sqlalchemy import Table, Column, String, Integer, ForeignKey, Date
+from sqlalchemy import Table, Column, String, Integer, ForeignKey, Date, DateTime
 from sqlalchemy.orm import relationship
 
 from ewallet_login import EWalletLogin
@@ -42,6 +42,16 @@ def log_init():
 
 log = log_init()
 
+# [ NOTE ]: Many2many table for user sessions.
+class SessionUser(Base):
+    __tablename__ = 'session_user'
+    id = Column(Integer, primary_key=True)
+    session_id = Column(Integer, ForeignKey('ewallet.id'))
+    user_id = Column(Integer, ForeignKey('res_user.user_id'))
+    datetime = Column(DateTime, default=datetime.datetime.now())
+    user = relationship('ResUser', backref='session_user')
+    session = relationship('EWallet', backref='session_user')
+
 
 # [ NOTE ]: Ewallet session.
 class EWallet(Base):
@@ -63,8 +73,8 @@ class EWallet(Base):
     active_user = relationship(
        'ResUser', back_populates='active_session',
        )
-    # O2M
-    user_account_archive = relationship('ResUser')
+    # M2M
+    user_account_archive = relationship('ResUser', secondary='session_user')
 
     @pysnooper.snoop(
             config.log_config['log_dir'] + '/' + config.log_config['log_file']
@@ -173,17 +183,17 @@ class EWallet(Base):
 
     def set_session_active_user(self, active_user):
         log.debug('')
-        self.active_user.append(active_user)
+        self.active_user = [active_user]
         return self.active_user
 
     def set_session_credit_wallet(self, credit_wallet):
         log.debug('')
-        self.credit_wallet.append(credit_wallet)
+        self.credit_wallet = [credit_wallet]
         return self.credit_wallet
 
     def set_session_contact_list(self, contact_list):
         log.debug('')
-        self.contact_list.append(contact_list)
+        self.contact_list = [contact_list]
         return self.contact_list
 
     def set_session_data(self, data_dct):
@@ -299,7 +309,6 @@ class EWallet(Base):
                 phone=kwargs['user_phone']
                 )
 
-    # TODO - FIX ME
     def action_create_new_user_account(self, **kwargs):
         log.debug('')
         session_create_account = EWalletLogin().ewallet_login_controller(
@@ -307,18 +316,17 @@ class EWallet(Base):
                 user_name=kwargs.get('user_name'),
                 user_pass=kwargs.get('user_pass'),
                 user_email=kwargs.get('user_email'),
-#               user_archive=self.user_account_archive,
                 active_session=self.session,
                 )
         if not session_create_account:
             return self.warning_could_not_create_user_account(kwargs['user_name'])
         self.session.add(session_create_account)
         log.info('Successfully created new user account.')
-        self.update_session_from_user(
-                session_active_user=session_create_account,
-                )
         self.update_user_account_archive(
                 user=session_create_account,
+                )
+        self.update_session_from_user(
+                session_active_user=session_create_account,
                 )
         self.session.commit()
         return session_create_account
@@ -976,6 +984,7 @@ class EWallet(Base):
                 }
         return _handlers[kwargs['target']](**kwargs)
 
+    @pysnooper.snoop('logs/ewallet.log')
     def handle_user_action_login(self, **kwargs):
         log.debug('')
         _login_record = EWalletLogin()
@@ -1893,28 +1902,46 @@ class EWallet(Base):
     def test_ewallet_user_controller(self):
         print('[ TEST ] User.')
         print('[ * ] Create account')
-        self.ewallet_controller(
+        _create = self.ewallet_controller(
                 controller='user', ctype='action', action='create', create='account',
                 user_name='test user', user_pass='123abc@xxx', user_email='example@example.com'
                 )
+        print(str(_create) + '\n')
         print('[ * ] Login')
-        self.ewallet_controller(
+        _login = self.ewallet_controller(
                 controller='user', ctype='action', action='login', user_name='test user',
                 user_pass='123abc@xxx'
                 )
+        self.test_orm()
+        print(str(_login) + '\n')
+        print('[ * ] View account')
+        _view_account = self.ewallet_controller(
+                controller='user', ctype='action', action='view', view='account'
+                )
+        print(str(_view_account) + '\n')
+        print('[ * ] Create second account')
+        _create_second = self.ewallet_controller(
+                controller='user', ctype='action', action='create', create='account',
+                user_name='user2', user_pass='123abc@xxx', user_email='example2@example.com'
+                )
+        print(str(_create_second) + '\n')
+        print('[ * ] Second Login')
+        _second_login = self.ewallet_controller(
+                controller='user', ctype='action', action='login', user_name='user2',
+                user_pass='123abc@xxx'
+                )
+        self.test_orm()
+        print(str(_second_login) + '\n')
+        print('[ * ] Second view account')
+        _second_view_account = self.ewallet_controller(
+                controller='user', ctype='action', action='view', view='account'
+                )
+        print(str(_second_view_account) + '\n')
         print('[ * ] Logout')
-        self.ewallet_controller(
+        _logout = self.ewallet_controller(
                 controller='user', ctype='action', action='logout',
                 )
-#       print('[ * ] View account')
-#       self.ewallet_controller(
-#               controller='user', ctype='action', action='view', view='account'
-#               )
-#       print('[ * ] Create second account')
-#       self.ewallet_controller(
-#               controller='user', ctype='action', action='create', create='account',
-#               user_name='user2', user_pass='123abc@xxx', user_email='example2@example.com'
-#               )
+        print(str(_logout) + '\n')
 #       print('[ * ] Second Login')
 #       self.ewallet_controller(
 #               controller='user', ctype='action', action='login', user_name='user2',

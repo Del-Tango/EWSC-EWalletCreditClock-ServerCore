@@ -56,6 +56,8 @@ class ResUser(Base):
     user_credit_wallet = relationship(
        'CreditEWallet', back_populates='client',
        )
+    # M2M
+    user_session_archive = relationship('EWallet', secondary='session_user')
     # O2M
     user_pass_hash_archive = relationship('ResUserPassHashArchive')
     # O2M
