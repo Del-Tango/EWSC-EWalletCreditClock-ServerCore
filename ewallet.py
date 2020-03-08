@@ -175,11 +175,12 @@ class EWallet(Base):
         log.debug('')
         if not len(self.user_account_archive):
             return self.error_empty_session_user_account_archive()
+        _active_user = kwargs.get('active_user')
         _filtered = [
                 item for item in self.user_account_archive
-                if item is not self.active_user
+                if item is not _active_user
                 ]
-        return _filtered[0]
+        return [] if not _filtered else _filtered[0]
 
     def set_session_active_user(self, active_user):
         log.debug('')
@@ -934,16 +935,18 @@ class EWallet(Base):
     def action_system_session_check(self, **kwargs):
         pass
 
+    @pysnooper.snoop('logs/ewallet.log')
     def action_system_user_logout(self, **kwargs):
         log.debug('')
         _user = self.fetch_active_session_user()
         _set_user_state = _user.set_user_state(
                 set_by='code', state_code=0
                 )
+        _search_user_for_session = self.fetch_next_active_session_user(active_user=_user)
         _clear_user_data = self.clear_active_session_user_data({
-            'active_user':True, 'credit_wallet':True, 'contact_list':True,
+            'active_user':True if not _search_user_for_session else False,
+            'credit_wallet':True, 'contact_list':True,
             })
-        _search_user_for_session = self.fetch_next_active_session_user()
         return True if not _search_user_for_session \
                 else _search_user_for_session
 
@@ -984,7 +987,7 @@ class EWallet(Base):
                 }
         return _handlers[kwargs['target']](**kwargs)
 
-    @pysnooper.snoop('logs/ewallet.log')
+#   @pysnooper.snoop('logs/ewallet.log')
     def handle_user_action_login(self, **kwargs):
         log.debug('')
         _login_record = EWalletLogin()
@@ -1015,14 +1018,15 @@ class EWallet(Base):
         if not _session_logout:
             self.session.rollback()
             return self.warning_could_not_logout()
-        if not isinstance(_session_logout, bool):
-            _update_next = self.action_system_user_update(user=_session_logout)
-        else:
-            self.session.delete(self)
-            self.session.flush()
+        _update_next = False if isinstance(_session_logout, bool) \
+                else self.action_system_user_update(user=_session_logout)
+        # TODO - When closing session
+#           self.session.delete(self)
+#           self.session.flush()
+        self.user_account_archive.remove(_user)
         self.session.commit()
         log.info('User successfully loged out.')
-        return True
+        return _update_next or True
 
     def handle_user_action_reset(self, **kwargs):
         log.debug('')
@@ -1942,6 +1946,11 @@ class EWallet(Base):
                 controller='user', ctype='action', action='logout',
                 )
         print(str(_logout) + '\n')
+        print('[ * ] Second Logout')
+        _second_logout = self.ewallet_controller(
+                controller='user', ctype='action', action='logout',
+                )
+        print(str(_second_logout) + '\n')
 #       print('[ * ] Second Login')
 #       self.ewallet_controller(
 #               controller='user', ctype='action', action='login', user_name='user2',
