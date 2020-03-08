@@ -4,6 +4,7 @@ from sqlalchemy import Table, Column, String, Integer, ForeignKey, Date
 from sqlalchemy.orm import relationship
 
 from ewallet_login import EWalletLogin
+from ewallet_logout import EWalletLogout
 from base.res_user import ResUser
 from base.res_utils import ResUtils, Base
 from base.credit_wallet import CreditEWallet
@@ -78,13 +79,14 @@ class EWallet(Base):
         self.active_user = kwargs.get('active_user') or []
         self.user_account_archive = kwargs.get('user_account_archive') or []
 
+    # TODO - Apply ORM
     def fetch_user_by_id(self, **kwargs):
         log.debug('')
         if not kwargs.get('code'):
             return self.error_no_user_id_found()
         log.info('Successfully fetched user by id.')
         return self.user_account_archive.get(kwargs['code'])
-
+    # TODO - Apply ORM
     def fetch_user_by_name(self, **kwargs):
         log.debug('')
         if not kwargs.get('code'):
@@ -94,7 +96,7 @@ class EWallet(Base):
                 log.info('Successfully fetched user by name.')
                 return self.user_account_archive[item]
         return self.warning_no_user_account_found('name', kwargs['code'])
-
+    # TODO - Apply ORM
     def fetch_user_by_email(self, **kwargs):
         log.debug('')
         if not kwargs.get('code'):
@@ -104,7 +106,7 @@ class EWallet(Base):
                 log.info('Successfully fetched user by email.')
                 return self.user_account_archive[item]
         return self.warning_no_user_account_found('email', kwargs['code'])
-
+    # TODO - Apply ORM
     def fetch_user_by_phone(self, **kwargs):
         log.debug('')
         if not kwargs.get('code'):
@@ -114,7 +116,7 @@ class EWallet(Base):
                 log.info('Successfully fetched user by phone.')
                 return self.user_account_archive[item]
         return self.warning_no_user_account_found('phone', kwargs['code'])
-
+    # TODO - Apply ORM
     def fetch_user_by_alias(self, **kwargs):
         log.debug('')
         if not kwargs.get('code'):
@@ -138,23 +140,36 @@ class EWallet(Base):
             }
         return _handlers[kwargs['identifier']](**kwargs)
 
+    def fetch_active_session_user(self):
+        log.debug('')
+        if not len(self.active_user):
+            return self.error_no_session_active_user_found()
+        return self.active_user[0]
+
     def fetch_active_session_credit_wallet(self):
         log.debug('')
-        return self.credit_wallet
+        if not len(self.credit_wallet):
+            return self.error_no_session_credit_wallet_found()
+        return self.credit_wallet[0]
 
     def fetch_active_session_credit_clock(self):
         log.debug('')
         _credit_wallet = self.fetch_active_session_credit_wallet()
         if not _credit_wallet:
-            return self.error_could_not_fetch_active_session_credit_wallet()
+            return False
+#           return self.error_could_not_fetch_active_session_credit_wallet()
         _credit_clock = _credit_wallet.fetch_credit_ewallet_credit_clock()
-        return False if not _credit_clock else _credit_clock
+        return _credit_clock or False
 
     def fetch_next_active_session_user(self, **kwargs):
         log.debug('')
         if not len(self.user_account_archive):
-            return False
-        return self.user_account_archive[0]
+            return self.error_empty_session_user_account_archive()
+        _filtered = [
+                item for item in self.user_account_archive
+                if item is not self.active_user
+                ]
+        return _filtered[0]
 
     def set_session_active_user(self, active_user):
         log.debug('')
@@ -198,12 +213,18 @@ class EWallet(Base):
         self.contact_list = []
         return True
 
+    def clear_session_user_account_archive(self):
+        log.debug('')
+        self.user_account_archive = []
+        return True
+
     def clear_active_session_user_data(self, data_dct):
         log.debug('')
         _handlers = {
                 'active_user': self.clear_session_active_user,
                 'credit_wallet': self.clear_session_credit_wallet,
                 'contact_list': self.clear_session_contact_list,
+                'user_account_archive': self.clear_session_user_account_archive,
                 }
         for item in data_dct:
             if item in _handlers and data_dct[item]:
@@ -907,15 +928,17 @@ class EWallet(Base):
 
     def action_system_user_logout(self, **kwargs):
         log.debug('')
-        _set_user_state = self.active_user.set_user_state(
-                set_by='code', code=0
+        _user = self.fetch_active_session_user()
+        _set_user_state = _user.set_user_state(
+                set_by='code', state_code=0
                 )
-        _clear_user_data = self.clear_active_session_user_data()
+        _clear_user_data = self.clear_active_session_user_data({
+            'active_user':True, 'credit_wallet':True, 'contact_list':True,
+            })
         _search_user_for_session = self.fetch_next_active_session_user()
         return True if not _search_user_for_session \
                 else _search_user_for_session
 
-    # TODO - FIX ME
     # [ NOTE ]: Allows multiple logged in users to switch.
     def action_system_user_update(self, **kwargs):
         log.debug('')
@@ -926,9 +949,6 @@ class EWallet(Base):
         _set_user = self.set_session_active_user(active_user=kwargs['user'])
         self.update_session_from_user(session_active_user=kwargs['user'])
         return self.active_user
-
-
-
 
     def action_system_session_update(self, **kwargs):
         log.debug('')
@@ -956,9 +976,6 @@ class EWallet(Base):
                 }
         return _handlers[kwargs['target']](**kwargs)
 
-
-
-    # TODO
     def handle_user_action_login(self, **kwargs):
         log.debug('')
         _login_record = EWalletLogin()
@@ -977,17 +994,26 @@ class EWallet(Base):
         self.session.commit()
         return session_login
 
-
-
-
     def handle_user_action_logout(self, **kwargs):
         log.debug('')
-        session_logout = self.action_system_user_logout()
-        if not session_logout:
+        _user = self.fetch_active_session_user()
+        _session_logout = self.action_system_user_logout()
+        _logout_record = EWalletLogout(
+                user_id=_user.fetch_user_id(),
+                logout_status=False if not _session_logout else True,
+                )
+        self.session.add(_logout_record)
+        if not _session_logout:
+            self.session.rollback()
             return self.warning_could_not_logout()
+        if not isinstance(_session_logout, bool):
+            _update_next = self.action_system_user_update(user=_session_logout)
+        else:
+            self.session.delete(self)
+            self.session.flush()
+        self.session.commit()
         log.info('User successfully loged out.')
-        return True if isinstance(session_logout, bool) \
-                else self.action_system_user_update(user=session_logout)
+        return True
 
     def handle_user_action_reset(self, **kwargs):
         log.debug('')
@@ -1676,6 +1702,10 @@ class EWallet(Base):
         log.error('Session user account archive is empty.')
         return False
 
+    def error_no_active_session_credit_clock_found(self):
+        log.error('No active session credit clock found.')
+        return False
+
     def error_no_wallet_id_found(self):
         log.error('No wallet id found.')
         return False
@@ -1871,6 +1901,10 @@ class EWallet(Base):
         self.ewallet_controller(
                 controller='user', ctype='action', action='login', user_name='test user',
                 user_pass='123abc@xxx'
+                )
+        print('[ * ] Logout')
+        self.ewallet_controller(
+                controller='user', ctype='action', action='logout',
                 )
 #       print('[ * ] View account')
 #       self.ewallet_controller(

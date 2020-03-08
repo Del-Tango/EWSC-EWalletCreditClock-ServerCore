@@ -29,7 +29,7 @@ class EWalletLogin(Base):
 
     def __init__(self, *args, **kwargs):
         self.user_id = kwargs.get('user_id') or None
-        self.login_status = kwargs.get('login_status') or None
+        self.login_status = kwargs.get('login_status') or False
 
     def fetch_all_user_records(self, active_session=None):
         log.debug('')

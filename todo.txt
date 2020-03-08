@@ -1,5 +1,7 @@
 # TODO - Correct ORM relationships
 # TODO - Persistent storage with SQLAlchemy ORM
+- user action logout
+# TODO - Remove redundant error handlers
 # TODO - Add full test cases
 # TODO - PEP8-it
 # TODO - BUG FIX - Ewallet Record Sequencer
