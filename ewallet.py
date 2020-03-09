@@ -831,7 +831,8 @@ class EWallet(Base):
             return self.warning_could_not_fetch_transfer_sheet()
         log.info('Attempting to fetch transfer record by id...')
         _record = _transfer_sheet.fetch_transfer_sheet_records(
-                search_by='id', code=kwargs['record_id'], active_session=self.session
+                search_by='id', code=kwargs['record_id'],
+                active_session=self.session
                 )
         if not _record:
             return self.warning_could_not_fetch_transfer_sheet_record()
@@ -874,7 +875,8 @@ class EWallet(Base):
             return self.warning_could_not_fetch_time_sheet()
         log.info('Attempting to fetch time record...')
         _record = _time_sheet.fetch_time_sheet_record(
-                search_by='id', code=kwargs['record_id']
+                search_by='id', code=kwargs['record_id'],
+                active_session=self.session
                 )
         if not _record:
             return self.warning_could_not_fetch_time_sheet_record()
@@ -897,13 +899,14 @@ class EWallet(Base):
 
     def action_view_conversion_record(self, **kwargs):
         log.debug('')
-        if not self.session_credit_wallet or not kwargs.get('record_id'):
+        _credit_wallet = self.fetch_active_session_credit_wallet()
+        if not _credit_wallet or not kwargs.get('record_id'):
             return self.error_handler_action_view_conversion_record(
-                    credit_wallet=self.session_credit_wallet,
+                    credit_wallet=_credit_wallet,
                     record_id=kwargs.get('record_id'),
                     )
         log.info('Attempting to fetch active credit clock...')
-        _credit_clock = self.session_credit_wallet.fetch_credit_ewallet_credit_clock()
+        _credit_clock = _credit_wallet.fetch_credit_ewallet_credit_clock()
         if not _credit_clock:
             return self.warning_could_not_fetch_credit_clock()
         log.info('Attempting to fetch active conversion sheet...')
@@ -912,7 +915,8 @@ class EWallet(Base):
             return self.warning_could_not_fetch_conversion_sheet()
         log.info('Attempting to fetch conversion record by id...')
         _record = _conversion_list.fetch_conversion_sheet_record(
-                search_by='id', code=kwargs['record_id']
+                search_by='id', code=kwargs['record_id'],
+                active_session=self.session
                 )
         if not _record:
             return self.warning_could_not_fetch_conversion_record()
@@ -2007,20 +2011,26 @@ class EWallet(Base):
                 time='list'
                 )
         print(str(_view_time_sheet) + '\n')
-
         print('[ * ] View Time Sheet Record')
         _view_time_sheet_record = self.ewallet_controller(
                 controller='user', ctype='action', action='view', view='time',
                 time='record', record_id=1
                 )
         print(str(_view_time_sheet_record) + '\n')
-
         print('[ * ] View Conversion Sheet')
         _view_conversion_sheet = self.ewallet_controller(
                 controller='user', ctype='action', action='view', view='conversion',
                 conversion='list'
                 )
         print(str(_view_conversion_sheet) + '\n')
+
+        print('[ * ] View Conversion Sheet Record')
+        _view_conversion_sheet_record = self.ewallet_controller(
+                controller='user', ctype='action', action='view', view='conversion',
+                conversion='record', record_id=1
+                )
+        print(str(_view_conversion_sheet_record) + '\n')
+
         print('[ * ] View Contact List')
         _view_contact_list = self.ewallet_controller(
                 controller='user', ctype='action', action='view', view='contact',
