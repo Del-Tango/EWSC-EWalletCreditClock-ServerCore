@@ -188,12 +188,21 @@ class CreditClockTimeSheet(Base):
                 }
         return _values
 
-    # TODO
     def fetch_time_sheet_record_by_id(self, **kwargs):
         log.debug('')
         if not kwargs.get('code'):
             return self.error_no_time_record_id_found()
-        _record = self.records.get(kwargs['code'])
+        if kwargs.get('active_session'):
+            _match = list(
+                    kwargs['active_session'].query(TimeSheetRecord) \
+                            .filter_by(record_id=kwargs['code'])
+            )
+        else:
+            _match = [
+                    item for item in self.records
+                    if item.fetch_record_id() is kwargs['code']
+                    ]
+        _record = False if not _match else _match[0]
         if not _record:
             return self.warning_could_not_fetch_time_record(
                     'id', kwargs['code']

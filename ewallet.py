@@ -2007,6 +2007,14 @@ class EWallet(Base):
                 time='list'
                 )
         print(str(_view_time_sheet) + '\n')
+
+        print('[ * ] View Time Sheet Record')
+        _view_time_sheet_record = self.ewallet_controller(
+                controller='user', ctype='action', action='view', view='time',
+                time='record', record_id=1
+                )
+        print(str(_view_time_sheet_record) + '\n')
+
         print('[ * ] View Conversion Sheet')
         _view_conversion_sheet = self.ewallet_controller(
                 controller='user', ctype='action', action='view', view='conversion',

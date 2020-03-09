@@ -3,7 +3,6 @@
 - orm convert credits to credit clock
 - orm start credit clock
 - orm stop credit clock
-- orm view conversion sheet records
 - orm view time sheet records
 - orm view contact sheet records
 - orm view invoice sheet records
