@@ -229,11 +229,23 @@ class CreditInvoiceSheet(Base):
                 }
         return _values
 
-    def fetch_credit_invoice_record_by_id(self, code):
+    def fetch_credit_invoice_record_by_id(self, **kwargs):
         log.debug('')
-        _record = self.records.get(code)
-        if not _records:
-            return self.warning_could_not_fetch_invoice_record('id', code)
+        if not kwargs.get('code'):
+            return self.error_no_invoice_record_id_found()
+        if kwargs.get('active_session'):
+            _match = list(
+                    kwargs['active_session'].query(CreditInvoiceSheetRecord) \
+                            .filter_by(record_id=kwargs['code'])
+            )
+        else:
+            _match = [
+                    item for item in self.records
+                    if item.fetch_record_id() is kwargs['code']
+                    ]
+        _record = False if not _match else _match[0]
+        if not _record:
+            return self.warning_could_not_fetch_invoice_record('id', kwargs['code'])
         log.info('Successfully fetched invoice record by id.')
         return _record
 
@@ -277,12 +289,12 @@ class CreditInvoiceSheet(Base):
         if not kwargs.get('search_by'):
             return self.error_no_invoice_record_search_identifier_specified()
         _handlers = {
-                'id': self.fetch_credit_invoice_records_by_id,
+                'id': self.fetch_credit_invoice_record_by_id,
                 'reference': self.fetch_credit_invoice_records_by_ref,
                 'date': self.fetch_credit_invoice_records_by_date,
                 'seller': self.fetch_credit_invoice_records_by_seller,
                 }
-        _handle = _handlers[kwargs['search_by']](kwargs.get('code'))
+        _handle = _handlers[kwargs['search_by']](**kwargs)
         return _handle
 
     def set_invoice_sheet_id(self, **kwargs):
@@ -497,6 +509,10 @@ class CreditInvoiceSheet(Base):
 
     def error_no_new_invoice_record_values_found(self):
         log.error('No new invoice record values found.')
+        return False
+
+    def error_no_active_session_found(self):
+        log.error('No active session found.')
         return False
 
     def warning_could_not_fetch_invoice_record(self, search_code, code):

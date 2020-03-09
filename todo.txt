@@ -1,5 +1,13 @@
 # TODO - Persistent storage with SQLAlchemy ORM
 - session cleanup
+- orm convert credits to credit clock
+- orm start credit clock
+- orm stop credit clock
+- orm view conversion sheet records
+- orm view time sheet records
+- orm view contact sheet records
+- orm view invoice sheet records
+- orm unlink account
 - orm contact list record creation
 - orm transfer record creation
 - orm conversion record creation
@@ -13,6 +21,7 @@
 # TODO - BUG FIX - Ewallet Record Sequencer
 # TODO - EWallet Client
 # TODO - Add ACL permission sheets
+# TODO - Deletion order with 30 day pending
 # TODO - Client user account security
 # TODO - EWallet Client Interface
 # TODO - EWallet report an issue system

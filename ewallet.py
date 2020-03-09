@@ -773,18 +773,20 @@ class EWallet(Base):
 
     def action_view_invoice_record(self, **kwargs):
         log.debug('')
-        if not self.session_credit_wallet or not kwargs.get('record_id'):
+        _credit_wallet = self.fetch_active_session_credit_wallet()
+        if not _credit_wallet or not kwargs.get('record_id'):
             return self.error_handler_action_view_invoice_record(
-                    credit_wallet=self.session_credit_wallet,
+                    credit_wallet=_credit_wallet,
                     record_id=kwargs.get('record_id'),
                     )
         log.info('Attempting to fetch active invoice sheet...')
-        _invoice_sheet = self.session_credit_wallet.fetch_credit_ewallet_invoice_sheet()
+        _invoice_sheet = _credit_wallet.fetch_credit_ewallet_invoice_sheet()
         if not _invoice_sheet:
             return self.warning_could_not_fetch_invoice_sheet()
         log.info('Attempting to fetch invoice record by id...')
         _record = _invoice_sheet.fetch_credit_invoice_records(
-                search_by='id', code=kwargs['record_id']
+                search_by='id', code=kwargs['record_id'],
+                active_session=self.session
                 )
         if not _record:
             return self.warning_could_not_fetch_invoice_sheet_record()
@@ -1993,6 +1995,12 @@ class EWallet(Base):
                 invoice='list'
                 )
         print(str(_view_invoice_sheet) + '\n')
+        print('[ * ] View Invoice Sheet Record')
+        _view_invoice_sheet_record = self.ewallet_controller(
+                controller='user', ctype='action', action='view', view='invoice',
+                invoice='record', record_id=1
+                )
+        print(str(_view_invoice_sheet_record) + '\n')
         print('[ * ] View Time Sheet')
         _view_time_sheet = self.ewallet_controller(
                 controller='user', ctype='action', action='view', view='time',
@@ -2017,7 +2025,8 @@ class EWallet(Base):
                 transfer_type='outgoing',
                 partner_ewallet=self.fetch_active_session_credit_wallet(),
                 credits=10, reference='First Credit Extract',
-                transfer_to=self.fetch_active_session_user().fetch_user_id(), active_session=self.session
+                transfer_to=self.fetch_active_session_user().fetch_user_id(),
+                active_session=self.session
                 )
         print(str(_extract_credits) + '\n')
         print('[ * ] Second view account')
