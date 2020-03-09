@@ -732,15 +732,16 @@ class EWallet(Base):
 
     def action_view_contact_record(self, **kwargs):
         log.debug('')
-        if not self.contact_list or not kwargs.get('record_id'):
+        _contact_list = self.fetch_active_session_contact_list()
+        if not _contact_list or not kwargs.get('record_id'):
             return self.error_handler_action_view_contact_record(
-                    contact_list=self.contact_list,
+                    contact_list=_contact_list,
                     record_id=kwargs.get('record_id'),
                     )
         log.info('Attempting to fetch contact record by id...')
-        _record = self.contact_list.fetch_contact_list_record(
+        _record = _contact_list.fetch_contact_list_record(
                 search_by='id' if not kwargs.get('search_by') else kwargs['search_by'],
-                code=kwargs['record_id']
+                code=kwargs['record_id'], active_session=self.session
                 )
         if not _record:
             return self.warning_could_not_fetch_contact_record()
@@ -2023,20 +2024,24 @@ class EWallet(Base):
                 conversion='list'
                 )
         print(str(_view_conversion_sheet) + '\n')
-
         print('[ * ] View Conversion Sheet Record')
         _view_conversion_sheet_record = self.ewallet_controller(
                 controller='user', ctype='action', action='view', view='conversion',
                 conversion='record', record_id=1
                 )
         print(str(_view_conversion_sheet_record) + '\n')
-
         print('[ * ] View Contact List')
         _view_contact_list = self.ewallet_controller(
                 controller='user', ctype='action', action='view', view='contact',
                 contact='list'
                 )
         print(str(_view_conversion_sheet) + '\n')
+        print('[ * ] View Contact List Record')
+        _view_contact_sheet_record = self.ewallet_controller(
+                controller='user', ctype='action', action='view', view='contact',
+                contact='record', record_id=1
+                )
+        print(str(_view_conversion_sheet_record) + '\n')
         print('[ * ] Extract credits')
         _extract_credits = self.ewallet_controller(
                 controller='user', ctype='action', action='create', create='transfer',

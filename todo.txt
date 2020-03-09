@@ -3,9 +3,7 @@
 - orm convert credits to credit clock
 - orm start credit clock
 - orm stop credit clock
-- orm view time sheet records
 - orm view contact sheet records
-- orm view invoice sheet records
 - orm unlink account
 - orm contact list record creation
 - orm transfer record creation

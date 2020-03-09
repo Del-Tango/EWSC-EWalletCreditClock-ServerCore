@@ -226,18 +226,24 @@ class ContactList(Base):
         self.write_date = datetime.datetime.now()
         return self.write_date
 
-    # TODO
     def fetch_contact_list_record_by_id(self, **kwargs):
         log.debug('')
         if not kwargs.get('code'):
             return self.error_no_contact_record_id_found()
-        _records = []
-        for k, v in self.records.items():
-            if v.fetch_record_id() == kwargs['code']:
-                _records.append(v)
-        if _records:
+        if kwargs.get('active_session'):
+            _match = list(
+                    kwargs['active_session'].query(ContactListRecord) \
+                            .filter_by(record_id=kwargs['code'])
+            )
+        else:
+            _match = [
+                    item for item in self.records
+                    if item.fetch_record_id() is kwargs['code']
+                    ]
+        _record = False if not _match else _match[0]
+        if _record:
             log.info('Successfully fetched contact record by id.')
-        return _records
+        return _record
 
     def fetch_contact_list_record_by_ref(self, **kwargs):
         log.debug('')
