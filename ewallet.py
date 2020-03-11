@@ -446,28 +446,67 @@ class EWallet(Base):
                 }
         return _handlers[kwargs['contact']](**kwargs)
 
+    def error_no_transfer_type_specified(self):
+        log.error('No transfer type specified.')
+        return False
+
+    # TODO
+    @pysnooper.snoop('logs/ewallet.log')
+    def action_create_new_transfer_type_supply(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('partner_account'):
+            return self.error_handler_create_new_transfer(
+                    partner_account=kwargs.get('partner_account'),
+                    )
+#       return kwargs['partner_account']
+        kwargs.pop('ctype')
+        _credit_request = kwargs['partner_account'].user_controller(
+                ctype='event', event='request', request='credits', **kwargs
+                )
+        kwargs['active_session'].commit()
+        return _credit_request
+
+
+    # TODO
+    def action_create_new_transfer_type_pay(self, **kwargs):
+        log.debug('')
+
+    # TODO
+    def action_create_new_transfer_type_transfer(self, **kwargs):
+        log.debug('')
+
+
     # TODO - FIX ME
     def action_create_new_transfer(self, **kwargs):
         log.debug('')
-        if not self.credit_wallet or not kwargs.get('active_session') or \
-                not kwargs.get('transfer_type') or \
-                not kwargs.get('partner_ewallet'):
-            return self.error_handler_action_create_new_transfer(
-                    session_wallet=self.credit_wallet,
-                    transfer_type=kwargs.get('transfer_type'),
-                    partner_wallet=kwargs.get('partner_ewallet'),
-                    active_session=kwargs.get('active_session'),
-                    )
-        _credit_wallet = self.fetch_active_session_credit_wallet()
-        return False if not _credit_wallet else _credit_wallet.user_controller(
-                action='transfer', transfer_type=kwargs['transfer_type'],
-                partner_ewallet=kwargs['partner_ewallet'],
-                credits=kwargs['credits'] or 0,
-                reference=kwargs.get('reference'),
-                transfer_from=kwargs.get('transfer_from'),
-                transfer_to=kwargs.get('transfer_to'),
-                active_session=kwargs['active_session']
-                )
+        if not kwargs.get('ttype'):
+            return self.error_no_transfer_type_specified()
+        _handlers = {
+                'supply': self.action_create_new_transfer_type_supply,
+                'pay': self.action_create_new_transfer_type_pay,
+                'transfer': self.action_create_new_transfer_type_transfer,
+                }
+        return _handlers[kwargs['ttype']](**kwargs)
+
+#       if not self.credit_wallet or not kwargs.get('active_session') or \
+#               not kwargs.get('transfer_type') or \
+#               not kwargs.get('partner_ewallet'):
+#           return self.error_handler_action_create_new_transfer(
+#                   session_wallet=self.credit_wallet,
+#                   transfer_type=kwargs.get('transfer_type'),
+#                   partner_wallet=kwargs.get('partner_ewallet'),
+#                   active_session=kwargs.get('active_session'),
+#                   )
+#       _credit_wallet = self.fetch_active_session_credit_wallet()
+#       return False if not _credit_wallet else _credit_wallet.user_controller(
+#               action='transfer', transfer_type=kwargs['transfer_type'],
+#               partner_ewallet=kwargs['partner_ewallet'],
+#               credits=kwargs['credits'] or 0,
+#               reference=kwargs.get('reference'),
+#               transfer_from=kwargs.get('transfer_from'),
+#               transfer_to=kwargs.get('transfer_to'),
+#               active_session=kwargs['active_session']
+#               )
 
     def action_unlink_user_account(self, **kwargs):
         log.debug('')
@@ -735,14 +774,14 @@ class EWallet(Base):
         _contact_list = self.fetch_active_session_contact_list()
         if not _contact_list or not kwargs.get('record_id'):
             return self.error_handler_action_view_contact_record(
-                    contact_list=_contact_list,
-                    record_id=kwargs.get('record_id'),
-                    )
+                contact_list=_contact_list,
+                record_id=kwargs.get('record_id'),
+            )
         log.info('Attempting to fetch contact record by id...')
         _record = _contact_list.fetch_contact_list_record(
-                search_by='id' if not kwargs.get('search_by') else kwargs['search_by'],
-                code=kwargs['record_id'], active_session=self.session
-                )
+            search_by='id' if not kwargs.get('search_by') else kwargs['search_by'],
+            code=kwargs['record_id'], active_session=self.session
+        )
         if not _record:
             return self.warning_could_not_fetch_contact_record()
         res = _record.fetch_record_values()
@@ -978,7 +1017,9 @@ class EWallet(Base):
         return True if not _search_user_for_session \
                 else _search_user_for_session
 
-    # [ NOTE ]: Allows multiple logged in users to switch.
+    '''
+        [ NOTE ]: Allows multiple logged in users to switch.
+    '''
     def action_system_user_update(self, **kwargs):
         log.debug('')
         if not kwargs.get('user'):
@@ -987,7 +1028,7 @@ class EWallet(Base):
             return self.warning_user_not_in_session_archive()
         _set_user = self.set_session_active_user(active_user=kwargs['user'])
         self.update_session_from_user(session_active_user=kwargs['user'])
-        return self.active_user
+        return self.active_user[0]
 
     def action_system_session_update(self, **kwargs):
         log.debug('')
@@ -1000,9 +1041,9 @@ class EWallet(Base):
         if not kwargs.get('target'):
             return self.error_no_system_update_target_specified()
         _handlers = {
-                'user': self.action_system_user_update,
-                'session': self.action_system_session_update,
-                }
+            'user': self.action_system_user_update,
+            'session': self.action_system_session_update,
+        }
         return _handlers[kwargs['target']](**kwargs)
 
     def handle_system_action_check(self, **kwargs):
@@ -1125,15 +1166,15 @@ class EWallet(Base):
         if not kwargs.get('view'):
             return self.error_no_view_target_specified()
         _handlers = {
-                'account': self.action_view_user_account,
-                'credit_wallet': self.action_view_credit_wallet,
-                'credit_clock': self.action_view_credit_clock,
-                'contact': self.action_view_contact,
-                'invoice': self.action_view_invoice,
-                'transfer': self.action_view_transfer,
-                'time': self.action_view_time,
-                'conversion': self.action_view_conversion,
-                }
+            'account': self.action_view_user_account,
+            'credit_wallet': self.action_view_credit_wallet,
+            'credit_clock': self.action_view_credit_clock,
+            'contact': self.action_view_contact,
+            'invoice': self.action_view_invoice,
+            'transfer': self.action_view_transfer,
+            'time': self.action_view_time,
+            'conversion': self.action_view_conversion,
+        }
         return _handlers[kwargs['view']](**kwargs)
 
     def handle_user_action_unlink(self, **kwargs):
@@ -1141,54 +1182,114 @@ class EWallet(Base):
         if not kwargs.get('unlink'):
             return self.error_no_unlink_target_specified()
         _handlers = {
-                'account': self.action_unlink_user_account,
-                'credit_wallet': self.action_unlink_credit_wallet,
-                'credit_clock': self.action_unlink_credit_clock,
-                'contact': self.action_unlink_contact,
-                'invoice': self.action_unlink_invoice,
-                'transfer': self.action_unlink_transfer,
-                'time': self.action_unlink_time,
-                'conversion': self.action_unlink_conversion,
-                }
+            'account': self.action_unlink_user_account,
+            'credit_wallet': self.action_unlink_credit_wallet,
+            'credit_clock': self.action_unlink_credit_clock,
+            'contact': self.action_unlink_contact,
+            'invoice': self.action_unlink_invoice,
+            'transfer': self.action_unlink_transfer,
+            'time': self.action_unlink_time,
+            'conversion': self.action_unlink_conversion,
+        }
         return _handlers[kwargs['unlink']](**kwargs)
 
     # TODO
     def handle_user_event_signal(self, **kwargs):
         pass
-
-    # TODO
     def handle_user_event_notification(self, **kwargs):
         pass
-
-    # TODO
     def handle_user_event_request(self, **kwargs):
         pass
-
-    # TODO
     def handle_system_event_signal(self, **kwargs):
         pass
-
-    # TODO
     def handle_system_event_notification(self, **kwargs):
         pass
-
-    # TODO
     def handle_system_event_request(self, **kwargs):
         pass
+    def action_send_invoice_record(self, **kwargs):
+        pass
+    def action_send_invoice_sheet(self, **kwargs):
+        pass
+    def action_send_transfer_record(self, **kwargs):
+        pass
+    def action_send_transfer_sheet(self, **kwargs):
+        pass
+    def action_receive_invoice_record(self, **kwargs):
+        pass
+    def action_receive_invoice_sheet(self, **kwargs):
+        pass
+    def action_receive_transfer_record(self, **kwargs):
+        pass
+    def action_receive_transfer_sheet(self, **kwargs):
+        pass
+
+    def handle_system_action_send_invoice(self, **kwargs):
+        if not kwargs.get('invoice'):
+            return self.error_no_invoice_target_specified()
+        _handlers = {
+            'record': self.action_send_invoice_record,
+            'list': self.action_send_invoice_sheet,
+        }
+        return _handlers[kwargs['invoice']](**kwargs)
+
+    def handle_system_action_send_transfer(self, **kwargs):
+        if not kwargs.get('transfer'):
+            return self.error_no_transfer_target_specified()
+        _handlers = {
+            'record': self.action_send_transfer_record,
+            'list': self.action_send_transfer_sheet,
+        }
+        return _handlers[kwargs['transfer']](**kwargs)
+
+    def handle_system_action_receive_invoice(self, **kwargs):
+        if not kwargs.get('invoice'):
+            return self.error_no_invoice_target_specified()
+        _handlers = {
+            'record': self.action_receive_invoice_record,
+            'list': self.action_receive_invoice_sheet,
+        }
+        return _handlers[kwargs['invoice']](**kwargs)
+
+    def handle_system_action_receive_transfer(self, **kwargs):
+        if not kwargs.get('transfer'):
+            return self.error_no_transfer_target_specified()
+        _handlers = {
+            'record': self.action_receive_transfer_record,
+            'list': self.action_receive_transfer_sheet,
+        }
+        return _handlers[kwargs['transfer']](**kwargs)
+
+    def handle_system_action_send(self, **kwargs):
+        if not kwargs.get('send'):
+            return self.error_no_system_action_specified()
+        _handlers = {
+            'invoice': self.handle_system_action_send_invoice,
+            'transfer': self.handle_system_action_send_transfer,
+        }
+        return _handlers[kwargs['send']](**kwargs)
+
+    def handle_system_action_receive(self, **kwargs):
+        if not kwargs.get('receive'):
+            return self.error_no_system_action_specified()
+        _handlers = {
+            'invoice': self.handle_system_action_receive_invoice,
+            'transfer': self.handle_system_action_receive_transfer,
+        }
+        return _handlers[kwargs['send']](**kwargs)
 
     def ewallet_user_action_controller(self, **kwargs):
         log.debug('')
         if not kwargs.get('action'):
             return self.error_no_user_action_specified()
         _handlers = {
-                'login': self.handle_user_action_login,
-                'logout': self.handle_user_action_logout,
-                'create': self.handle_user_action_create,
-                'time': self.handle_user_action_time,
-                'reset': self.handle_user_action_reset,
-                'view': self.handle_user_action_view,
-                'unlink': self.handle_user_action_unlink,
-                }
+            'login': self.handle_user_action_login,
+            'logout': self.handle_user_action_logout,
+            'create': self.handle_user_action_create,
+            'time': self.handle_user_action_time,
+            'reset': self.handle_user_action_reset,
+            'view': self.handle_user_action_view,
+            'unlink': self.handle_user_action_unlink,
+        }
         return _handlers[kwargs['action']](**kwargs)
 
     def ewallet_user_event_controller(self, **kwargs):
@@ -1196,10 +1297,10 @@ class EWallet(Base):
         if not kwargs.get('event'):
             return self.error_no_user_event_specified()
         _handlers = {
-                'signal': self.handle_user_event_signal,
-                'notification': self.handle_user_event_notification,
-                'request': self.handle_user_event_request,
-                }
+            'signal': self.handle_user_event_signal,
+            'notification': self.handle_user_event_notification,
+            'request': self.handle_user_event_request,
+        }
         return _handlers[kwargs['event']](**kwargs)
 
     def ewallet_system_event_controller(self, **kwargs):
@@ -1207,10 +1308,10 @@ class EWallet(Base):
         if not kwargs.get('event'):
             return self.error_no_system_event_specified()
         _handlers = {
-                'signal': self.handle_system_event_signal,
-                'notification': self.handle_system_event_notification,
-                'request': self.handle_system_event_request,
-                }
+            'signal': self.handle_system_event_signal,
+            'notification': self.handle_system_event_notification,
+            'request': self.handle_system_event_request,
+        }
         return _handlers[kwargs['event']](**kwargs)
 
     def ewallet_system_action_controller(self, **kwargs):
@@ -1218,9 +1319,11 @@ class EWallet(Base):
         if not kwargs.get('action'):
             return self.error_no_system_action_specified()
         _handlers = {
-                'check': self.handle_system_action_check,
-                'update': self.handle_system_action_update,
-                }
+            'check': self.handle_system_action_check,
+            'update': self.handle_system_action_update,
+            'send': self.handle_system_action_send,
+            'receive': self.handle_system_action_receive,
+        }
         return _handlers[kwargs['action']](**kwargs)
 
     def ewallet_system_controller(self, **kwargs):
@@ -1228,9 +1331,9 @@ class EWallet(Base):
         if not kwargs.get('ctype'):
             return self.error_no_system_controller_type_specified()
         _handlers = {
-                'action': self.ewallet_system_action_controller,
-                'event': self.ewallet_system_event_controller,
-                }
+            'action': self.ewallet_system_action_controller,
+            'event': self.ewallet_system_event_controller,
+        }
         return _handlers[kwargs['ctype']](**kwargs)
 
     def ewallet_user_controller(self, **kwargs):
@@ -1238,9 +1341,9 @@ class EWallet(Base):
         if not kwargs.get('ctype'):
             return self.error_no_user_controller_type_specified()
         _handlers = {
-                'action': self.ewallet_user_action_controller,
-                'event': self.ewallet_user_event_controller,
-                }
+            'action': self.ewallet_user_action_controller,
+            'event': self.ewallet_user_event_controller,
+        }
         return _handlers[kwargs['ctype']](**kwargs)
 
     # [ NOTE ]: Main
@@ -1249,23 +1352,25 @@ class EWallet(Base):
         if not kwargs.get('controller'):
             return self.error_no_ewallet_controller_specified()
         _controllers = {
-                'system': self.ewallet_system_controller,
-                'user': self.ewallet_user_controller,
-                'test': self.test_ewallet,
-                }
+            'system': self.ewallet_system_controller,
+            'user': self.ewallet_user_controller,
+            'test': self.test_ewallet,
+        }
         return _controllers[kwargs['controller']](**kwargs)
 
     def error_handler_action_create_new_transfer(self, **kwargs):
         _reasons_and_handlers = {
                 'reasons': {
-                    'session_wallet': kwargs.get('session_wallet'),
-                    'transfer_type': kwargs.get('transfer_type'),
-                    'partner_wallet': kwargs.get('partner_wallet'),
+                    'partner_account': kwargs.get('partner_account'),
+#                   'session_wallet': kwargs.get('session_wallet'),
+#                   'transfer_type': kwargs.get('transfer_type'),
+#                   'partner_wallet': kwargs.get('partner_wallet'),
                     },
                 'handlers': {
-                    'session_wallet': self.error_no_session_credit_wallet_found,
-                    'transfer_type': self.error_no_transfer_type_found,
-                    'partner_wallet': self.error_no_partner_credit_wallet_found,
+                    'partner_account': self.error_no_partner_account_found,
+#                   'session_wallet': self.error_no_session_credit_wallet_found,
+#                   'transfer_type': self.error_no_transfer_type_found,
+#                   'partner_wallet': self.error_no_partner_credit_wallet_found,
                     }
                 }
         for item in _reasons_and_handlers['reasons']:
@@ -1543,6 +1648,10 @@ class EWallet(Base):
         for item in _reasons_and_handlers['reasons']:
             if not _reasons_and_handlers['reasons'][item]:
                 return_reasons_and_handlers['handlers'][item]()
+        return False
+
+    def error_no_partner_account_found(self):
+        log.error('No partner account found.')
         return False
 
     def error_no_transfer_view_target_specified(self):
@@ -1935,113 +2044,168 @@ class EWallet(Base):
                 )
         return False
 
-    def test_ewallet_user_controller(self):
-        print('[ TEST ] User.')
+
+
+    def test_create_account(self):
         print('[ * ] Create account')
         _create = self.ewallet_controller(
                 controller='user', ctype='action', action='create', create='account',
                 user_name='test user', user_pass='123abc@xxx', user_email='example@example.com'
                 )
         print(str(_create) + '\n')
+        return _create
+
+    def test_login_account(self):
         print('[ * ] Login')
         _login = self.ewallet_controller(
                 controller='user', ctype='action', action='login', user_name='test user',
                 user_pass='123abc@xxx'
                 )
-        self.test_orm()
         print(str(_login) + '\n')
+        return _login
+
+    def test_view_account(self):
         print('[ * ] View account')
         _view_account = self.ewallet_controller(
                 controller='user', ctype='action', action='view', view='account'
                 )
         print(str(_view_account) + '\n')
+        return _view_account
+
+    def test_create_second_account(self):
         print('[ * ] Create second account')
         _create_second = self.ewallet_controller(
                 controller='user', ctype='action', action='create', create='account',
                 user_name='user2', user_pass='123abc@xxx', user_email='example2@example.com'
                 )
         print(str(_create_second) + '\n')
+        return _create_second
+
+    def test_second_login(self):
         print('[ * ] Second Login')
         _second_login = self.ewallet_controller(
                 controller='user', ctype='action', action='login', user_name='user2',
                 user_pass='123abc@xxx'
                 )
-        self.test_orm()
         print(str(_second_login) + '\n')
+        return _second_login
+
+    def test_supply_credits(self):
         print('[ * ] Supply credits')
         _supply_credits = self.ewallet_controller(
                 controller='user', ctype='action', action='create', create='transfer',
-                transfer_type='incomming',
-                partner_ewallet=self.fetch_active_session_credit_wallet(),
-                credits=10, reference='First Credit Supply',
-                transfer_to=self.fetch_active_session_user().fetch_user_id(), active_session=self.session
+                ttype='supply', partner_account=self.fetch_active_session_user(),
+                active_session=self.session, credits=10, currency='RON', cost=4.36,
+                notes='Test Notes - Action Supply'
                 )
+#       _supply_credits = self.ewallet_controller(
+#               controller='user', ctype='action', action='create', create='transfer',
+#               transfer_type='incomming',
+#               partner_ewallet=self.fetch_active_session_credit_wallet(),
+#               credits=10, reference='First Credit Supply',
+#               transfer_to=self.fetch_active_session_user().fetch_user_id(), active_session=self.session
+#               )
         print(str(_supply_credits) + '\n')
+        return _supply_credits
+
+    def test_view_credit_wallet(self):
         print('[ * ] View Credit Wallet')
         _view_credit_wallet = self.ewallet_controller(
                 controller='user', ctype='action', action='view', view='credit_wallet',
                 )
         print(str(_view_credit_wallet) + '\n')
+        return _view_credit_wallet
+
+    def test_view_transfer_sheet(self):
         print('[ * ] View Transfer Sheet')
         _view_transfer_sheet = self.ewallet_controller(
                 controller='user', ctype='action', action='view', view='transfer',
                 transfer='list'
                 )
         print(str(_view_transfer_sheet) + '\n')
+        return _view_transfer_sheet
+
+    def test_view_transfer_sheet_record(self):
         print('[ * ] View Transfer Sheet Record')
         _view_transfer_sheet_record = self.ewallet_controller(
                 controller='user', ctype='action', action='view', view='transfer',
                 transfer='record', record_id=1
                 )
         print(str(_view_transfer_sheet_record) + '\n')
+        return _view_transfer_sheet_record
+
+    def test_view_invoice_sheet(self):
         print('[ * ] View Invoice Sheet')
         _view_invoice_sheet = self.ewallet_controller(
                 controller='user', ctype='action', action='view', view='invoice',
                 invoice='list'
                 )
         print(str(_view_invoice_sheet) + '\n')
+        return _view_invoice_sheet
+
+    def test_view_invoice_sheet_record(self):
         print('[ * ] View Invoice Sheet Record')
         _view_invoice_sheet_record = self.ewallet_controller(
                 controller='user', ctype='action', action='view', view='invoice',
                 invoice='record', record_id=1
                 )
         print(str(_view_invoice_sheet_record) + '\n')
+        return _view_invoice_sheet_record
+
+    def test_view_time_sheet(self):
         print('[ * ] View Time Sheet')
         _view_time_sheet = self.ewallet_controller(
                 controller='user', ctype='action', action='view', view='time',
                 time='list'
                 )
         print(str(_view_time_sheet) + '\n')
+        return _view_time_sheet
+
+    def test_view_time_sheet_record(self):
         print('[ * ] View Time Sheet Record')
         _view_time_sheet_record = self.ewallet_controller(
                 controller='user', ctype='action', action='view', view='time',
                 time='record', record_id=1
                 )
         print(str(_view_time_sheet_record) + '\n')
+
+    def test_view_conversion_sheet(self):
         print('[ * ] View Conversion Sheet')
         _view_conversion_sheet = self.ewallet_controller(
                 controller='user', ctype='action', action='view', view='conversion',
                 conversion='list'
                 )
         print(str(_view_conversion_sheet) + '\n')
+        return _view_conversion_sheet
+
+    def test_view_conversion_sheet_record(self):
         print('[ * ] View Conversion Sheet Record')
         _view_conversion_sheet_record = self.ewallet_controller(
                 controller='user', ctype='action', action='view', view='conversion',
                 conversion='record', record_id=1
                 )
         print(str(_view_conversion_sheet_record) + '\n')
+        return _view_conversion_sheet_record
+
+    def test_view_contact_list(self):
         print('[ * ] View Contact List')
         _view_contact_list = self.ewallet_controller(
                 controller='user', ctype='action', action='view', view='contact',
                 contact='list'
                 )
-        print(str(_view_conversion_sheet) + '\n')
+        print(str(_view_contact_list) + '\n')
+        return _view_contact_list
+
+    def test_view_contact_list_record(self):
         print('[ * ] View Contact List Record')
         _view_contact_sheet_record = self.ewallet_controller(
                 controller='user', ctype='action', action='view', view='contact',
                 contact='record', record_id=1
                 )
-        print(str(_view_conversion_sheet_record) + '\n')
+        print(str(_view_contact_sheet_record) + '\n')
+        return _view_contact_sheet_record
+
+    def test_extract_credits(self):
         print('[ * ] Extract credits')
         _extract_credits = self.ewallet_controller(
                 controller='user', ctype='action', action='create', create='transfer',
@@ -2052,27 +2216,51 @@ class EWallet(Base):
                 active_session=self.session
                 )
         print(str(_extract_credits) + '\n')
-        print('[ * ] Second view account')
-        _second_view_account = self.ewallet_controller(
-                controller='user', ctype='action', action='view', view='account'
-                )
-        print(str(_second_view_account) + '\n')
-        print('[ TEST ] System.')
-        print('[ * ] Update session')
-        _update_session = self.ewallet_controller(
-                controller='system', ctype='action', action='update', target='session'
-                )
-        print(str(_update_session) + '\n')
+        return _extract_credits
+
+    def test_logout(self):
         print('[ * ] Logout')
         _logout = self.ewallet_controller(
                 controller='user', ctype='action', action='logout',
                 )
         print(str(_logout) + '\n')
-        print('[ * ] Second Logout')
-        _second_logout = self.ewallet_controller(
-                controller='user', ctype='action', action='logout',
+        return _logout
+
+    def test_ewallet_user_controller(self):
+        print('[ TEST ] User.')
+        _create = self.test_create_account()
+        _login = self.test_login_account()
+        self.test_orm()
+        _view_account = self.test_view_account()
+        _create_second = self.test_create_second_account()
+        _second_login = self.test_second_login()
+        self.test_orm()
+        _supply_credits = self.test_supply_credits()
+        _view_credit_wallet = self.test_view_credit_wallet()
+        _view_transfer_sheet = self.test_view_transfer_sheet()
+        _view_transfer_sheet_record = self.test_view_transfer_sheet_record()
+        _view_invoice_sheet = self.test_view_invoice_sheet()
+        _view_invoice_sheet_record = self.test_view_invoice_sheet_record()
+        _view_time_sheet = self.test_view_time_sheet()
+        _view_time_sheet_record = self.test_view_time_sheet_record()
+        _view_conversion_sheet = self.test_view_conversion_sheet()
+        _view_conversion_sheet_record = self.test_view_conversion_sheet_record()
+        _view_contact_list = self.test_view_contact_list()
+        _view_contact_list_record = self.test_view_contact_list_record()
+        _extract_credits = self.test_extract_credits()
+        _second_view_account = self.test_view_account()
+        print('[ TEST ] System.')
+        _update_session = self.test_update_session()
+        _logout = self.test_logout()
+        _second_logout = self.test_logout()
+
+    def test_update_session(self):
+        print('[ * ] Update session')
+        _update_session = self.ewallet_controller(
+                controller='system', ctype='action', action='update', target='session'
                 )
-        print(str(_second_logout) + '\n')
+        print(str(_update_session) + '\n')
+        return _update_session
 
     def test_ewallet_system_controller(self):
         print('[ TEST ] System.')
@@ -2087,7 +2275,7 @@ class EWallet(Base):
         print('Session Contact List : {}'.format(self.contact_list))
         print('Session Credit Wallet : {}'.format(self.credit_wallet))
         print('User account archive : {}'.format(self.user_account_archive))
-
+        print('\n')
 
     def test_ewallet(self, **kwargs):
         self.test_ewallet_user_controller()

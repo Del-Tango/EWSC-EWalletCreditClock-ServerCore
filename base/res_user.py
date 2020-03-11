@@ -597,9 +597,110 @@ class ResUser(Base):
                 }
         return _handlers[kwargs['target']](**kwargs)
 
+
+
+
+
+
+
+
+
+
+
+    @pysnooper.snoop('logs/ewallet.log')
+    def action_extract_credits_from_wallet(self, **kwargs):
+        log.debug('')
+        _credit_wallet = kwargs.get('credit_wallet') or \
+                self.fetch_user_credit_wallet()
+        if not _credit_wallet:
+            return False
+        _extract = _credit_wallet.main_controller(
+                controller='system', action='extract',
+                credits=kwargs.get('credits') or 0
+                )
+        return True if _extract else False
+
+    @pysnooper.snoop('logs/ewallet.log')
+    def action_supply_credits_to_wallet(self, **kwargs):
+        log.debug('')
+        _credit_wallet = kwargs.get('credit_wallet') or \
+                self.fetch_user_credit_wallet()
+        if not _credit_wallet:
+            return False
+        _supply = _credit_wallet.main_controller(
+                controller='system', action='supply',
+                credits=kwargs.get('credits') or 0
+                )
+        return True if _supply else False
+
     # TODO
+    @pysnooper.snoop('logs/ewallet.log')
+    def handle_user_event_request_credits(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('partner_account'):
+            log.error('No partner account found.')
+            return False
+
+        _local_credit_wallet = self.fetch_user_credit_wallet()
+        _remote_credit_wallet = kwargs['partner_account'].fetch_user_credit_wallet()
+
+        if not _remote_credit_wallet:
+            log.warning(
+                'Could not fetch credit wallet for partner {}.'\
+                .format(kwargs['partner_account'].fetch_user_name())
+            )
+            return False
+
+        _extract_credits_from_local = self.action_extract_credits_from_wallet(**kwargs)
+        _supply_credits_to_remote = kwargs['partner_account'].action_supply_credits_to_wallet(**kwargs)
+
+        _local_transfer_sheet = _local_credit_wallet.fetch_credit_ewallet_transfer_sheet()
+        _local_invoice_sheet = _local_credit_wallet.fetch_credit_ewallet_invoice_sheet()
+        if not _local_transfer_sheet or not _local_invoice_sheet:
+            return False
+
+
+        kwargs.pop('action')
+        _create_transfer_record = _local_transfer_sheet.credit_transfer_sheet_controller(
+                action='add', transfer_type='outgoing', **kwargs,
+                )
+        _create_invoice_record = _local_invoice_sheet.credit_invoice_sheet_controller(
+                action='add', seller_id=self.fetch_user_id(),
+                transfer_record_id=_create_transfer_record.fetch_record_id(),
+                **kwargs,
+                )
+
+        kwargs['active_session'].add(_create_transfer_record)
+        kwargs['active_session'].add(_create_invoice_record)
+        _remote_transfer_sheet = _remote_credit_wallet.fetch_credit_ewallet_transfer_sheet()
+        _remote_invoice_sheet = _remote_credit_wallet.fetch_credit_ewallet_invoice_sheet()
+
+        if not _remote_transfer_sheet:
+            log.error('Could not fetch remote transfer sheet.')
+            return False
+
+        _share_transfer_record = _remote_transfer_sheet.credit_transfer_sheet_controller(
+                action='add', transfer_type='incoming', **kwargs
+                )
+        _share_invoice_record = _remote_invoice_sheet.credit_invoice_sheet_controller(
+                action='add', seller_id=self.fetch_user_id(),
+                transfer_record_id=_share_transfer_record.fetch_record_id(),
+                **kwargs
+                )
+        kwargs['active_session'].add(_share_transfer_record)
+        kwargs['active_session'].add(_share_invoice_record)
+        return True
+
+
+
     def handle_user_event_request(self, **kwargs):
-        pass
+        log.debug('')
+        if not kwargs.get('request'):
+            return self.error_no_user_event_request_specified()
+        _handlers = {
+            'credits': self.handle_user_event_request_credits,
+        }
+        return _handlers[kwargs['request']](**kwargs)
 
     # TODO
     def handle_user_event_notification(self, **kwargs):
@@ -838,6 +939,10 @@ class ResUser(Base):
 
     def error_no_active_session_found(self):
         log.error('No active session found.')
+        return False
+
+    def error_no_user_event_request_specified(self):
+        log.error('No user event request specified.')
         return False
 
     def warning_could_not_fetch_credit_wallet(self):

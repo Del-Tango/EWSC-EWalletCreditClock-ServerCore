@@ -32,7 +32,7 @@ class CreditTransferSheetRecord(Base):
     def __init__(self, **kwargs):
         self.create_date = datetime.datetime.now()
         self.write_date = datetime.datetime.now()
-        self.reference = kwargs.get('reference') or 'Transfer Sheet Records'
+        self.reference = kwargs.get('reference') or 'Transfer Sheet Record'
         self.transfer_type = kwargs.get('transfer_type')
         self.transfer_from = kwargs.get('transfer_from')
         self.transfer_to = kwargs.get('transfer_to')
@@ -210,7 +210,7 @@ class CreditTransferSheet(Base):
         log.debug('')
         _values = {
                 'reference': kwargs.get('reference'),
-                'transfer_sheet_id': self.transfer_sheet_id,
+                'transfer_sheet_id': self.fetch_transfer_sheet_id(),
                 'transfer_type': kwargs.get('transfer_type'),
                 'transfer_from': kwargs.get('transfer_from'),
                 'transfer_to': kwargs.get('transfer_to'),
@@ -224,14 +224,14 @@ class CreditTransferSheet(Base):
             return self.error_no_transfer_record_id_found()
         if kwargs.get('active_session'):
             _match = list(
-                    kwargs['active_session'].query(CreditTransferSheetRecord) \
-                            .filter_by(record_id=kwargs['code'])
+                kwargs['active_session'].query(CreditTransferSheetRecord) \
+                        .filter_by(record_id=kwargs['code'])
             )
         else:
             _match = [
-                    item for item in self.records
-                    if item.fetch_record_id() is kwargs['code']
-                    ]
+                item for item in self.records
+                if item.fetch_record_id() is kwargs['code']
+            ]
         _record = False if not _match else _match[0]
         if not _record:
             return self.warning_could_not_fetch_transfer_record(
@@ -361,8 +361,11 @@ class CreditTransferSheet(Base):
         log.info('Successfully updated transfer sheet records.')
         return self.records
 
-    def create_transfer_sheet_record(self, values={}):
+    def create_transfer_sheet_record(self, values=None):
         log.debug('')
+        if not values:
+            log.error('No transfer sheet record creation values found.')
+            return False
         _record = CreditTransferSheetRecord(**values)
         return _record
 
@@ -379,6 +382,7 @@ class CreditTransferSheet(Base):
         log.info('Successfully added new transfer record.')
         return _record
 
+    # TODO - Apply ORM
     def remove_transfer_sheet_record(self, **kwargs):
         log.debug('')
         if not kwargs.get('record_id'):
@@ -429,19 +433,6 @@ class CreditTransferSheet(Base):
         if _handle and kwargs['action'] != 'interogate':
             self.update_write_date()
         return _handle
-
-    # TODO - Refactor
-    def display_transfer_sheet_records(self, records=[]):
-        log.debug('')
-        if not records:
-            records = [item for item in self.records.values()]
-        print('Transfer Sheet {} Records:'.format(self.reference))
-        for item in records:
-            print('{}: {} - {}'.format(
-                item.fetch_record_create_date(), item.fetch_record_id(),
-                item.fetch_record_reference()
-                ))
-        return records
 
     def error_handler_add_transfer_sheet_record(self, **kwargs):
         _reasons_and_handlers = {
@@ -530,13 +521,16 @@ class CreditTransferSheet(Base):
 # CODE DUMP
 ###############################################################################
 
-    # M2O
-#   transfer_sheet = relationship(
-#       'CreditTransferSheet', foreign_keys=[transfer_sheet_id]
-#       )
-#   # M2O
-#   user_from = relationship('ResUser', foreign_keys=[transfer_from])
-#   # M2O
-#   user_to = relationship('ResUser', foreign_keys=[transfer_to])
-
+    # TODO - Refactor
+#   def display_transfer_sheet_records(self, records=[]):
+#       log.debug('')
+#       if not records:
+#           records = [item for item in self.records.values()]
+#       print('Transfer Sheet {} Records:'.format(self.reference))
+#       for item in records:
+#           print('{}: {} - {}'.format(
+#               item.fetch_record_create_date(), item.fetch_record_id(),
+#               item.fetch_record_reference()
+#               ))
+#       return records
 

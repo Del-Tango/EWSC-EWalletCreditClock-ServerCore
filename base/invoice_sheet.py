@@ -20,8 +20,11 @@ class CreditInvoiceSheetRecord(Base):
 
     record_id = Column(Integer, primary_key=True)
     invoice_sheet_id = Column(
-       Integer, ForeignKey('credit_invoice_sheet.invoice_sheet_id')
-       )
+        Integer, ForeignKey('credit_invoice_sheet.invoice_sheet_id')
+        )
+    transfer_record_id = Column(
+        Integer, ForeignKey('transfer_sheet_record.record_id')
+        )
     reference = Column(String)
     create_date = Column(DateTime)
     write_date = Column(DateTime)
@@ -35,6 +38,7 @@ class CreditInvoiceSheetRecord(Base):
         self.create_date = datetime.datetime.now()
         self.write_date = datetime.datetime.now()
         self.invoice_sheet_id = kwargs.get('invoice_sheet_id')
+        self.transfer_record_id = kwargs.get('transfer_record_id')
         self.reference = kwargs.get('reference') or 'Invoice Sheet Record'
         self.credits = kwargs.get('credits') or 0
         self.currency = kwargs.get('currency')
@@ -224,7 +228,7 @@ class CreditInvoiceSheet(Base):
                 'credits': kwargs.get('credits'),
                 'cost': kwargs.get('cost') or 0,
                 'currency': kwargs.get('currency') or 'RON',
-                'seller_id': kwargs('seller_id'),
+                'seller_id': kwargs.get('seller_id'),
                 'notes': kwargs.get('notes'),
                 }
         return _values
@@ -332,10 +336,7 @@ class CreditInvoiceSheet(Base):
 
     def update_records(self, record):
         log.debug('')
-        self.records.update({
-            record.fetch_record_id():
-            record
-            })
+        self.records.append(record)
         log.info('Successfully updated invoice sheet records.')
         return self.records
 
@@ -411,10 +412,9 @@ class CreditInvoiceSheet(Base):
 
     def clear_credit_invoice_sheet_records(self, **kwargs):
         log.debug('')
-        self.records = {}
+        self.records = []
         return self.records
 
-    # TODO - Refactor
     def credit_invoice_sheet_controller(self, **kwargs):
         log.debug('')
         if not kwargs.get('action'):
@@ -430,26 +430,26 @@ class CreditInvoiceSheet(Base):
             self.update_write_date()
         return _handle
 
-    # TODO - Refactor
-    def display_credit_invoice_sheet_records(self, records=[]):
-        log.debug('')
-        if not records:
-            records = [item for item in self.records.values()]
-        for item in records:
-            print('{}: {} - {}'.format(
-                item.fetch_record_create_date(), item.fetch_record_id(),
-                item.fetch_record_reference()
-                ))
-        return records
+#   # TODO - Refactor
+#   def display_credit_invoice_sheet_records(self, records=[]):
+#       log.debug('')
+#       if not records:
+#           records = [item for item in self.records.values()]
+#       for item in records:
+#           print('{}: {} - {}'.format(
+#               item.fetch_record_create_date(), item.fetch_record_id(),
+#               item.fetch_record_reference()
+#               ))
+#       return records
 
-    # TODO - Refactor
-    def display_credit_invoice_sheet_record_values(self, records=[]):
-        log.debug('')
-        if not records:
-            records = [item for item in self.records.values()]
-        for item in records:
-            print(item.fetch_record_values())
-        return records
+#   # TODO - Refactor
+#   def display_credit_invoice_sheet_record_values(self, records=[]):
+#       log.debug('')
+#       if not records:
+#           records = [item for item in self.records.values()]
+#       for item in records:
+#           print(item.fetch_record_values())
+#       return records
 
     def error_handler_add_credit_invoice_sheet_record(self, **kwargs):
         _reasons_and_handlers = {
@@ -526,9 +526,3 @@ class CreditInvoiceSheet(Base):
 # CODE DUMP
 ###############################################################################
 
-#   # M2O
-#   seller = relationship('ResUser', foreign_keys=[seller_id])
-#   # M2O
-#   invoice_sheet = relationship(
-#           'CreditInvoiceSheet', foreign_keys=[invoice_sheet_id]
-#           )

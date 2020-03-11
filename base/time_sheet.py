@@ -498,5 +498,3 @@ class CreditClockTimeSheet(Base):
 # CODE DUMP
 ###############################################################################
 
-#   # M2O
-#   time_sheet = relationship('CreditClockTimeSheet')
