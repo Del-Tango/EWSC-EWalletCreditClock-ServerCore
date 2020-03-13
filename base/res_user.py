@@ -528,6 +528,32 @@ class ResUser(Base):
             log.info('Successfully removed user contact list by id.')
         return _unlink
 
+#   @pysnooper.snoop('logs/ewallet.log')
+    def action_extract_credits_from_wallet(self, **kwargs):
+        log.debug('')
+        _credit_wallet = kwargs.get('credit_wallet') or \
+                self.fetch_user_credit_wallet()
+        if not _credit_wallet:
+            return False
+        _extract = _credit_wallet.main_controller(
+                controller='system', action='extract',
+                credits=kwargs.get('credits') or 0
+                )
+        return True if _extract else False
+
+#   @pysnooper.snoop('logs/ewallet.log')
+    def action_supply_credits_to_wallet(self, **kwargs):
+        log.debug('')
+        _credit_wallet = kwargs.get('credit_wallet') or \
+                self.fetch_user_credit_wallet()
+        if not _credit_wallet:
+            return False
+        _supply = _credit_wallet.main_controller(
+                controller='system', action='supply',
+                credits=kwargs.get('credits') or 0
+                )
+        return True if isinstance(_supply, int) else False
+
     def handle_user_action_create(self, **kwargs):
         log.debug('')
         if not kwargs.get('target'):
@@ -597,44 +623,8 @@ class ResUser(Base):
                 }
         return _handlers[kwargs['target']](**kwargs)
 
-
-
-
-
-
-
-
-
-
-
-    @pysnooper.snoop('logs/ewallet.log')
-    def action_extract_credits_from_wallet(self, **kwargs):
-        log.debug('')
-        _credit_wallet = kwargs.get('credit_wallet') or \
-                self.fetch_user_credit_wallet()
-        if not _credit_wallet:
-            return False
-        _extract = _credit_wallet.main_controller(
-                controller='system', action='extract',
-                credits=kwargs.get('credits') or 0
-                )
-        return True if _extract else False
-
-    @pysnooper.snoop('logs/ewallet.log')
-    def action_supply_credits_to_wallet(self, **kwargs):
-        log.debug('')
-        _credit_wallet = kwargs.get('credit_wallet') or \
-                self.fetch_user_credit_wallet()
-        if not _credit_wallet:
-            return False
-        _supply = _credit_wallet.main_controller(
-                controller='system', action='supply',
-                credits=kwargs.get('credits') or 0
-                )
-        return True if _supply else False
-
     # TODO
-    @pysnooper.snoop('logs/ewallet.log')
+#   @pysnooper.snoop('logs/ewallet.log')
     def handle_user_event_request_credits(self, **kwargs):
         log.debug('')
         if not kwargs.get('partner_account'):
@@ -690,8 +680,6 @@ class ResUser(Base):
         kwargs['active_session'].add(_share_transfer_record)
         kwargs['active_session'].add(_share_invoice_record)
         return True
-
-
 
     def handle_user_event_request(self, **kwargs):
         log.debug('')

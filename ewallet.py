@@ -23,6 +23,9 @@ import threading
 config = Config()
 res_utils = ResUtils()
 
+'''
+    [ NOTE ]: Setting up EWallet Session logger.
+'''
 def log_init():
     log_config = config.log_config
 
@@ -99,6 +102,7 @@ class EWallet(Base):
             return self.error_no_user_id_found()
         log.info('Successfully fetched user by id.')
         return self.user_account_archive.get(kwargs['code'])
+
     # TODO - Apply ORM
     def fetch_user_by_name(self, **kwargs):
         log.debug('')
@@ -109,6 +113,7 @@ class EWallet(Base):
                 log.info('Successfully fetched user by name.')
                 return self.user_account_archive[item]
         return self.warning_no_user_account_found('name', kwargs['code'])
+
     # TODO - Apply ORM
     def fetch_user_by_email(self, **kwargs):
         log.debug('')
@@ -119,6 +124,7 @@ class EWallet(Base):
                 log.info('Successfully fetched user by email.')
                 return self.user_account_archive[item]
         return self.warning_no_user_account_found('email', kwargs['code'])
+
     # TODO - Apply ORM
     def fetch_user_by_phone(self, **kwargs):
         log.debug('')
@@ -129,6 +135,7 @@ class EWallet(Base):
                 log.info('Successfully fetched user by phone.')
                 return self.user_account_archive[item]
         return self.warning_no_user_account_found('phone', kwargs['code'])
+
     # TODO - Apply ORM
     def fetch_user_by_alias(self, **kwargs):
         log.debug('')
@@ -152,6 +159,12 @@ class EWallet(Base):
             'alias': self.fetch_user_by_alias,
             }
         return _handlers[kwargs['identifier']](**kwargs)
+
+    def fetch_active_session(self):
+        log.debug('')
+        if not self.session:
+            return self.error_no_active_session_found()
+        return self.session
 
     def fetch_active_session_user(self):
         log.debug('')
@@ -178,6 +191,13 @@ class EWallet(Base):
         if not len(self.contact_list):
             return self.error_no_session_contact_list_found()
         return self.contact_list[0]
+
+    def fetch_credit_wallet_credits(self):
+        log.debug('')
+        _credit_wallet = self.fetch_active_session_credit_wallet()
+        return False if not _credit_wallet else _credit_wallet.main_controller(
+                controller='system', action='view'
+                )
 
     def fetch_next_active_session_user(self, **kwargs):
         log.debug('')
@@ -344,14 +364,39 @@ class EWallet(Base):
         self.session.commit()
         return session_create_account
 
+    # TODO
     def action_create_new_conversion_credits_to_clock(self, **kwargs):
         log.debug('')
-        _credit_clock = kwargs.get('credit_clock') or \
-                self.fetch_active_session_credit_clock()
-        if not _credit_clock:
-            return self.error_could_not_fetch_active_session_credit_clock()
-        return _credit_clock.main_controller(**kwargs)
+        _credit_wallet = kwargs.get('credit_ewallet') or \
+                self.fetch_active_session_credit_wallet()
+        if not _credit_wallet:
+            return self.error_could_not_fetch_active_session_credit_wallet()
+        _credits_before = self.fetch_credit_wallet_credits()
+        _active_session = kwargs.get('active_session') or self.fetch_active_session()
+        # TODO - Replace command chain adjustments with function in res_utils
+        kwargs.pop('controller')
+        kwargs.pop('action')
+        kwargs.pop('conversion')
+        try:
+            kwargs.pop('credit_ewallet')
+            kwargs.pop('active_session')
+        except KeyError:
+            log.warning(
+                'Could not pop tags credit_ewallet and active_session '
+                'from command chain.'
+            )
+        _convert = _credit_wallet.main_controller(
+                controller='system', action='convert', conversion='to_minutes',
+                credit_ewallet=_credit_wallet, active_session=_active_session,
+                **kwargs
+                )
+        if not _convert:
+            _active_session.rollback()
+            return self.error_could_not_convert_credits_to_minutes()
+        _active_session.commit()
+        return _convert
 
+    # TODO - Apply ORM
     def action_create_new_conversion_clock_to_credits(self, **kwargs):
         log.debug('')
         _credit_clock = kwargs.get('credit_clock') or \
@@ -446,26 +491,25 @@ class EWallet(Base):
                 }
         return _handlers[kwargs['contact']](**kwargs)
 
-    def error_no_transfer_type_specified(self):
-        log.error('No transfer type specified.')
-        return False
-
-    # TODO
-    @pysnooper.snoop('logs/ewallet.log')
+#   @pysnooper.snoop('logs/ewallet.log')
     def action_create_new_transfer_type_supply(self, **kwargs):
         log.debug('')
         if not kwargs.get('partner_account'):
             return self.error_handler_create_new_transfer(
                     partner_account=kwargs.get('partner_account'),
                     )
-#       return kwargs['partner_account']
         kwargs.pop('ctype')
+        _credits_before = self.fetch_credit_wallet_credits()
         _credit_request = kwargs['partner_account'].user_controller(
                 ctype='event', event='request', request='credits', **kwargs
                 )
-        kwargs['active_session'].commit()
-        return _credit_request
-
+        _credits_after = self.fetch_credit_wallet_credits()
+        if _credits_after is (_credits_before + kwargs.get('credits')):
+            kwargs['active_session'].commit()
+            return _credit_request
+        else:
+            kwargs['active_session'].rollback()
+            return False
 
     # TODO
     def action_create_new_transfer_type_pay(self, **kwargs):
@@ -1880,6 +1924,14 @@ class EWallet(Base):
         log.error('Could not fetch active session credit clock.')
         return False
 
+    def error_no_transfer_type_specified(self):
+        log.error('No transfer type specified.')
+        return False
+
+    def error_could_not_convert_credits_to_minutes(self):
+        log.error('Could not convert credits to minutes.')
+        return False
+
     def warning_could_not_login(self):
         log.warning(
                 'Something went wrong. '
@@ -2098,13 +2150,6 @@ class EWallet(Base):
                 active_session=self.session, credits=10, currency='RON', cost=4.36,
                 notes='Test Notes - Action Supply'
                 )
-#       _supply_credits = self.ewallet_controller(
-#               controller='user', ctype='action', action='create', create='transfer',
-#               transfer_type='incomming',
-#               partner_ewallet=self.fetch_active_session_credit_wallet(),
-#               credits=10, reference='First Credit Supply',
-#               transfer_to=self.fetch_active_session_user().fetch_user_id(), active_session=self.session
-#               )
         print(str(_supply_credits) + '\n')
         return _supply_credits
 
@@ -2151,6 +2196,15 @@ class EWallet(Base):
                 )
         print(str(_view_invoice_sheet_record) + '\n')
         return _view_invoice_sheet_record
+
+    # TODO
+    def action_convert_credits_to_clock(self):
+        print('[ * ] Convert Credits To Clock')
+        _convert_credits_to_clock = self.ewallet_controller(
+
+                )
+        print(str(_convert_credits_to_clock) + '\n')
+        return _convert_credits_to_clock
 
     def test_view_time_sheet(self):
         print('[ * ] View Time Sheet')
@@ -2208,8 +2262,8 @@ class EWallet(Base):
     def test_extract_credits(self):
         print('[ * ] Extract credits')
         _extract_credits = self.ewallet_controller(
-                controller='user', ctype='action', action='create', create='transfer',
-                transfer_type='outgoing',
+                controller='user', ctype='action', action='create',
+                create='transfer', transfer_type='outgoing',
                 partner_ewallet=self.fetch_active_session_credit_wallet(),
                 credits=10, reference='First Credit Extract',
                 transfer_to=self.fetch_active_session_user().fetch_user_id(),
@@ -2225,6 +2279,17 @@ class EWallet(Base):
                 )
         print(str(_logout) + '\n')
         return _logout
+
+    # TODO
+    def test_convert_credits_to_clock(self):
+        print('[ * ] Convert Credits To Clock')
+        _convert = self.ewallet_controller(
+                controller='user', ctype='action', action='create',
+                create='conversion', conversion='credits2clock', credits=3,
+
+                )
+        print(str(_convert) + '\n')
+        return _convert
 
     def test_ewallet_user_controller(self):
         print('[ TEST ] User.')
@@ -2243,6 +2308,7 @@ class EWallet(Base):
         _view_invoice_sheet_record = self.test_view_invoice_sheet_record()
         _view_time_sheet = self.test_view_time_sheet()
         _view_time_sheet_record = self.test_view_time_sheet_record()
+        _convert_credits = self.test_convert_credits_to_clock()
         _view_conversion_sheet = self.test_view_conversion_sheet()
         _view_conversion_sheet_record = self.test_view_conversion_sheet_record()
         _view_contact_list = self.test_view_contact_list()

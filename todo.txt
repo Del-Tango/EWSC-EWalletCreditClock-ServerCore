@@ -1,6 +1,4 @@
-# TODO - Refactor user action Supply (add invoice record, transfer record, link & share both)
-# TODO - Share invoice record
-# TODO - Share transfer record
+# TODO - Bug user action supply -> same partner_account
 # TODO - Persistent storage with SQLAlchemy ORM
 - session cleanup
 - orm convert credits to credit clock

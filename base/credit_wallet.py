@@ -205,7 +205,10 @@ class CreditEWallet(Base):
 
     def fetch_credit_wallet_clocks(self, **kwargs):
         log.debug('')
-        return self.credit_clock_archive.values()
+        _credit_clocks = self.credit_clock_archive
+        if not _credit_clocks:
+            self.error_could_not_fetch_credit_ewallet_credit_clock_archive()
+        return _credit_clocks
 
     def fetch_credit_wallet_transfer_sheet(self, **kwargs):
         log.debug('')
@@ -378,6 +381,11 @@ class CreditEWallet(Base):
         log.info('Successfully switched credit clock by id.')
         return _new_credit_clock
 
+    # TODO - Set up Access Controll List check
+    def view_credits(self, **kwargs):
+        log.debug('')
+        return self.fetch_credit_ewallet_credits()
+
     def supply_credits(self, **kwargs):
         log.debug('')
         if not kwargs.get('credits'):
@@ -390,22 +398,33 @@ class CreditEWallet(Base):
         log.debug('')
         if not kwargs.get('credits'):
             return self.error_no_credits_found()
-        self.credits -= kwargs['credits']
+        _credits = self.credits - kwargs['credits']
+        if self.credits is _credits:
+            return self.error_could_not_extract_credits()
+        self.credits = _credits
         log.info('Successfully extracted credits from wallet.')
         return self.credits
 
+#   @pysnooper.snoop('logs/ewallet.log')
     def convert_credits_to_minutes(self, **kwargs):
         log.debug('')
         if not kwargs.get('credits'):
             return self.error_no_credits_found()
-        _credit_clock = self.credit_clock
-        _convert = _credit_clock.system_controller(
-                action='convert', conversion='to_minutes',
-                credits=kwargs['credits']
+        _credit_clock = kwargs.get('credit_clock') or \
+                self.fetch_credit_ewallet_credit_clock()
+        if not _credit_clock:
+            return False
+        for item in ['controller', 'action', 'conversion']:
+            try:
+                kwargs.pop(item)
+            except KeyError:
+                continue
+        _convert = _credit_clock.main_controller(
+                controller='system', action='convert', conversion='to_minutes',
+                **kwargs
                 )
-        _credit_clock.update_write_date()
-        self.system_controller(action='extract', credits=kwargs['credits'])
-        log.info('Successfully converted credits to minutes.')
+        if not _convert:
+            kwargs['active_session'].rollback()
         return _convert
 
     def convert_minutes_to_credits(self, **kwargs):
@@ -760,6 +779,7 @@ class CreditEWallet(Base):
         if not kwargs.get('action'):
             return self.error_no_system_controller_action_specified()
         _handlers = {
+                'view': self.view_credits,
                 'supply': self.supply_credits,
                 'extract': self.extract_credits,
                 'convert': self.convert_credits,
@@ -1047,6 +1067,14 @@ class CreditEWallet(Base):
 
     def error_no_active_session_found(self):
         log.error('No active session found.')
+        return False
+
+    def error_could_not_fetch_credit_ewallet_credit_clock_archive(self):
+        log.error('Could not fetch credit ewallet credit clock archive.')
+        return False
+
+    def error_could_not_extract_credits(self):
+        log.error('Could not extract credits from credit wallet.')
         return False
 
     def warning_could_not_fetch_credit_clock(self, search_code, code):

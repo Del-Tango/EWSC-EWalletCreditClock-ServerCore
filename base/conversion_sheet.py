@@ -226,7 +226,16 @@ class CreditClockConversionSheet(Base):
         log.debug('')
         if not kwargs.get('code'):
             return self.error_no_conversion_record_id_found()
-        _record = self.records.get(kwargs['code'])
+        if kwargs.get('active_session'):
+            _match = list(kwargs['active_session'].query(
+                CreditClockConversionSheetRecord
+                ).filter_by(record_id=kwargs['code']))
+        else:
+            _match = [
+                    item for item in self.records
+                    if item.fetch_record_id() is kwargs['code']
+                    ]
+        _record = False if not _match else _match[0]
         if not _record:
             return self.warning_could_not_fetch_conversion_record(
                     'id', kwargs['code']
@@ -323,7 +332,7 @@ class CreditClockConversionSheet(Base):
                 'conversion_type': self.fetch_conversion_sheet_records_by_type,
                 'all': self.fetch_conversion_sheet_records,
                 }
-        return _handlers[kwargs['identifier']](**kwargs)
+        return _handlers[kwargs['search_by']](**kwargs)
 
     def set_clock_id(self, **kwargs):
         log.debug('')
@@ -362,9 +371,7 @@ class CreditClockConversionSheet(Base):
         log.debug('')
         if not kwargs.get('record'):
             return self.error_no_conversion_record_found()
-        self.records.update({
-            kwargs['record'].fetch_record_id(), kwargs['record']
-            })
+        self.records.append(kwargs['record'])
         log.info('Successfully updated conversion sheet records.')
         return self.records
 

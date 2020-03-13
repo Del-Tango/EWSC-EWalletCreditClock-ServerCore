@@ -393,16 +393,22 @@ class CreditClock(Base):
         log.info('Successfully created new credit clock conversion sheet.')
         return _conversion_sheet
 
+#   @pysnooper.snoop('logs/ewallet.log')
     def create_credit_clock_conversion_record(self, **kwargs):
         log.debug('')
+        _conversion_sheet = kwargs.get('conversion_sheet') or \
+                self.fetch_credit_clock_conversion_sheet()
         if not self.conversion_sheet:
             return self.error_no_credit_clock_conversion_sheet_found()
-        _record = self.conversion_sheet.credit_clock_conversion_sheet_controller(
+        if not kwargs.get('active_session'):
+            return self.error_no_active_session_found()
+        _record = _conversion_sheet.credit_clock_conversion_sheet_controller(
                 action='add', reference=kwargs.get('reference'),
                 conversion_type=kwargs.get('conversion_type'),
                 minutes=kwargs.get('minutes'), credits=kwargs.get('credits')
                 )
-        if _records:
+        if _record:
+            kwargs['active_session'].add(_record)
             log.info('Successfully created new credit clock conversion record.')
         return _record or False
 
@@ -425,44 +431,6 @@ class CreditClock(Base):
         self.system_controller(action='extract', clock_credits=self.time_spent)
         self.reset_timer()
         return self.credit_clock
-
-    # TODO - Refactor
-    def display_credit_clock(self, **kwargs):
-        log.debug('')
-        print('Credit Clock: {} min'.format(self.credit_clock))
-        return self.credit_clock
-
-    # TODO - Refactor
-    def display_time_sheets(self, **kwargs):
-        log.debug('')
-        print('Credit Clock {} Time Sheets:'.format(self.reference))
-        for k, v in self.time_sheet_archive.items():
-            print('{}: {} - {}'.format(
-                v.fetch_time_sheet_create_date(), k, v.fetch_time_sheet_reference())
-                )
-        return self.time_sheet_archive
-
-    # TODO - Refactor
-    def display_time_sheet_records(self, **kwargs):
-        log.debug('')
-        _time_sheet_records = self.time_sheet.display_time_sheet_records()
-        return _time_sheet_records
-
-    # TODO - Refactor
-    def display_conversion_sheets(self, **kwargs):
-        log.debug('')
-        print('Credit CLock {} Conversion Sheets:'.format(self.reference))
-        for k, v in self.conversion_sheet_archive.items():
-            print('{}: {} - {}'.format(
-                v.fetch_conversion_sheet_create_date(), k, v.fetch_conversion_sheet_reference())
-                )
-        return self.conversion_sheet_archive
-
-    # TODO - Refactor
-    def display_conversion_sheet_records(self, **kwargs):
-        log.debug('')
-        _conversion_sheet_records = self.conversion_sheet.display_conversion_sheet_records()
-        return _conversion_sheet_records
 
     def start_timer(self, **kwargs):
         log.debug('')
@@ -487,7 +455,12 @@ class CreditClock(Base):
 
     def supply_credit_clock_minutes(self, **kwargs):
         log.debug('')
-        self.credit_clock = round((self.credit_clock + kwargs.get('clock_credits')), 2)
+        if not kwargs.get('credits'):
+            return self.error_no_credits_found()
+        _minutes = round((self.credit_clock + kwargs['credits']), 2)
+        if _minutes is self.credit_clock:
+            return self.error_could_not_supply_credit_clock_with_minutes()
+        self.credit_clock = _minutes
         log.info('Successfully supplied credit clock minutes.')
         return self.credit_clock
 
@@ -513,19 +486,6 @@ class CreditClock(Base):
         log.info('Successfully converted minutes to credits.')
         return _extract
 
-
-
-
-
-
-    def error_no_ewallet_found(self):
-        log.error('No ewallet found.')
-        return False
-
-    def error_no_credits_specified(self):
-        log.error('No credits specified.')
-        return False
-
     def supply_ewallet_credits(self, **kwargs):
         log.debug('')
         if not kwargs.get('ewallet'):
@@ -534,28 +494,29 @@ class CreditClock(Base):
             return self.error_no_credits_specified()
         return kwargs['ewallet'].supply_credits(credits=kwargs['credits'])
 
+
+#   @pysnooper.snoop('logs/ewallet.log')
     def extract_ewallet_credits(self, **kwargs):
         log.debug('')
-        if not kwargs.get('ewallet'):
+        if not kwargs.get('credit_ewallet'):
             return self.error_no_ewallet_found()
         if not kwargs.get('credits'):
             return self.error_no_credits_specified()
-        return kwargs['ewallet'].extract_credits(credits=kwargs['credits'])
+        _extract = kwargs['credit_ewallet'].main_controller(
+                controller='system', action='extract', credits=kwargs['credits']
+                )
+        return _extract
 
+#   @pysnooper.snoop('logs/ewallet.log')
     def convert_credits_to_minutes(self, **kwargs):
         log.debug('')
-        if not kwargs.get('credits') or not kwargs.get('wallet'):
+        if not kwargs.get('credits') or not kwargs.get('credit_ewallet'):
             return self.error_no_credits_found()
-        _supply = self.supply_credit_clock_minutes(
-                clock_credits=kwargs['credits']
-                )
-        _extract = self.extract_ewallet_credits(
-                credits=kwargs['credits'],
-                ewallet=kwargs['ewallet'],
-                )
-        log.info('Successfully converted credits to minutes.')
-        return _supply
+        _supply_minutes = self.supply_credit_clock_minutes(**kwargs)
+        _extract_credits = self.extract_ewallet_credits(**kwargs)
+        return _supply_minutes
 
+    # TODO
     def credit_converter(self, **kwargs):
         log.debug('')
         if not kwargs.get('conversion'):
@@ -564,7 +525,12 @@ class CreditClock(Base):
                 'to_minutes': self.convert_credits_to_minutes,
                 'to_credits': self.convert_minutes_to_credits,
                 }
-        self.create_credit_clock_conversion_record(self.conversion_sheet)
+        _conversion_sheet = self.fetch_credit_clock_conversion_sheet()
+        if not _conversion_sheet:
+            return False
+        _conversion_record = self.create_credit_clock_conversion_record(
+                conversion_sheet=_conversion_sheet, **kwargs
+                )
         return _handlers[kwargs['conversion']](**kwargs)
 
     def interogate_credit_clock(self, **kwargs):
@@ -766,6 +732,14 @@ class CreditClock(Base):
                 return _reasons_and_handlers['handlers'][item]()
         return False
 
+    def error_no_ewallet_found(self):
+        log.error('No ewallet found.')
+        return False
+
+    def error_no_credits_specified(self):
+        log.error('No credits specified.')
+        return False
+
     def error_no_credit_clock_controller_type_specified(self):
         log.error('No credit clock controller type specified.')
         return False
@@ -904,6 +878,10 @@ class CreditClock(Base):
 
     def error_no_wallet_id_found(self):
         log.error('No wallet id found.')
+        return False
+
+    def error_could_not_supply_credit_clock_with_minutes(self):
+        log.error('Could not supply credit clock with minutes.')
         return False
 
     def warning_could_not_fetch_time_sheet(self, search_code, code):
