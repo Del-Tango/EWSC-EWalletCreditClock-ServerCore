@@ -1,6 +1,5 @@
-# TODO - Bug user action supply -> same partner_account
-# TODO - Bug user action stop timer -> time record has no end & used time
-# TODO - Bug user action stop timer -> clock end time is not cleared
+# TODO - Bug/? user action supply -> same partner_account
+# TODO - Add user action Clock Pause
 
 # TODO - Persistent storage with SQLAlchemy ORM
 - session cleanup

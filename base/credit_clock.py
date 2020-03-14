@@ -260,7 +260,7 @@ class CreditClock(Base):
 
     def fetch_credit_clock_states(self):
         log.debug('')
-        return ('active', 'inactive')
+        return ('active', 'inactive', 'pending')
 
     def fetch_credit_clock_conversion_record_creation_values(self, **kwargs):
         log.debug('')

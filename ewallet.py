@@ -307,6 +307,18 @@ class EWallet(Base):
                 )
         return self.user_account_archive
 
+    # UNLINKERS
+
+    def unlink_user_account(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('active_session'):
+            return self.error_no_active_session_found()
+        _user_id = kwargs.get('user_id') or \
+                self.fetch_active_session_user().fetch_user_ids()
+        return kwargs['active_session'].query(ResUser) \
+                .filter_by(user_id=_user_id) \
+                .delete()
+
     # ACTIONS
 
     def action_create_new_transfer(self, **kwargs):
@@ -989,18 +1001,24 @@ class EWallet(Base):
         log.debug('')
     def action_create_new_transfer_type_transfer(self, **kwargs):
         log.debug('')
+    def action_unlink_credit_clock(self, **kwargs):
+        log.debug('')
+        return False
 
+#   @pysnooper.snoop('logs/ewallet.log')
     def action_unlink_user_account(self, **kwargs):
         log.debug('')
-        if not self.user_account_archive or not kwargs.get('user_id'):
-            return self.error_handler_action_unlink_user_account(
-                    archive=self.user_account_archive,
-                    user_id=kwargs.get('user_id'),
-                    )
-        _user = self.fetch_user(identifier='id', code=kwargs['user_id'])
+        _user = kwargs.get('user') or self.fetch_active_session_user()
         if not _user:
-            self.warning_could_not_fetch_user_by_id(kwargs['user_id'])
-        return self.user_account_archive.pop(kwargs['user_id'])
+            return self.error_no_user_account_found()
+        _active_session = kwargs.get('active_session') or \
+                self.fetch_active_session()
+        _unlink = self.unlink_user_account(
+                user_id=_user.fetch_user_id(),
+                active_session=_active_session,
+                )
+        return True if _unlink else \
+                self.warning_could_not_unlink_user_account()
 
     def action_unlink_credit_wallet(self, **kwargs):
         log.debug('')
@@ -1360,7 +1378,11 @@ class EWallet(Base):
             return self.warning_could_not_logout()
         _update_next = False if isinstance(_session_logout, bool) \
                 else self.action_system_user_update(user=_session_logout)
-        self.user_account_archive.remove(_user)
+        try:
+            self.user_account_archive.remove(_user)
+        except:
+            self.session.rollback()
+            return self.error_could_not_remove_user_from_account_archive()
         self.session.commit()
         log.info('User successfully loged out.')
         return _update_next or True
@@ -1456,7 +1478,7 @@ class EWallet(Base):
         }
         return _controllers[kwargs['controller']](**kwargs)
 
-    # ERRORS
+    # ERROR HANDLERS
 
     def error_handler_action_create_new_transfer(self, **kwargs):
         _reasons_and_handlers = {
@@ -1750,6 +1772,16 @@ class EWallet(Base):
                 return_reasons_and_handlers['handlers'][item]()
         return False
 
+    # ERRORS
+
+    def error_could_not_remove_user_from_account_archive(self):
+        log.error('Could not remove user from account archive.')
+        return False
+
+    def error_no_user_account_found(self):
+        log.error('No user account found.')
+        return False
+
     def error_no_partner_account_found(self):
         log.error('No partner account found.')
         return False
@@ -2005,6 +2037,9 @@ class EWallet(Base):
         return False
 
     # WARNINGS
+
+    def warning_could_not_unlink_user_account(self):
+        log.warning('Something went wrong. Could not unlink user account.')
 
     def warning_could_not_login(self):
         log.warning(
@@ -2373,7 +2408,6 @@ class EWallet(Base):
         print(str(_start) + '\n')
         return _start
 
-    # TODO
     def test_stop_credit_clock(self):
         print('[ * ]: Stop Credit Clock')
         _stop = self.ewallet_controller(
@@ -2381,6 +2415,16 @@ class EWallet(Base):
                 )
         print(str(_stop) + '\n')
         return _stop
+
+    # TODO
+    def test_unlink_user_account(self):
+        print('[ * ]: Unlink User Account')
+        _unlink = self.ewallet_controller(
+                controller='user', ctype='action', action='unlink',
+                unlink='account',
+                )
+        print(str(_unlink) + '\n')
+        return _unlink
 
     def test_ewallet_user_controller(self):
         print('[ TEST ] User.')
@@ -2416,6 +2460,7 @@ class EWallet(Base):
         print('[ TEST ] System.')
         _update_session = self.test_update_session()
         _logout = self.test_logout()
+#       _unlink_account = self.test_unlink_user_account()
         _second_logout = self.test_logout()
 
     def test_update_session(self):
