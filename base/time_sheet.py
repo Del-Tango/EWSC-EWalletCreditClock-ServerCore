@@ -18,22 +18,30 @@ class TimeSheetRecord(Base):
     __tablename__ = 'time_sheet_record'
 
     record_id = Column(
-       Integer, primary_key=True, nullable=False, autoincrement=True
-       )
+        Integer, primary_key=True, nullable=False, autoincrement=True
+        )
     reference = Column(String)
     create_date = Column(DateTime)
     write_date = Column(DateTime)
+    time_start = Column(Float)
+    time_stop = Column(Float)
     time_spent = Column(Float)
     time_sheet_id = Column(
-       Integer, ForeignKey('credit_clock_time_sheet.time_sheet_id')
-       )
+        Integer, ForeignKey('credit_clock_time_sheet.time_sheet_id')
+        )
+    credit_clock_id = Column(
+        Integer, ForeignKey('credit_clock.clock_id')
+        )
 
     def __init__(self, **kwargs):
         self.create_date = datetime.datetime.now()
         self.write_date = datetime.datetime.now()
         self.reference = kwargs.get('reference') or 'Time Sheet Record'
+        self.time_start = kwargs.get('time_start')
+        self.time_stop = kwargs.get('time_stop')
         self.time_spent = kwargs.get('time_spent')
         self.time_sheet_id = kwargs.get('time_sheet_id')
+        self.credit_clock_id = kwargs.get('credit_clock_id')
 
     def fetch_record_id(self):
         log.debug('')
@@ -42,6 +50,9 @@ class TimeSheetRecord(Base):
     def fetch_time_sheet_id(self):
         log.debug('')
         return self.time_sheet_id
+
+    def fetch_credit_clock_id(self):
+        return self.credit_clock_id
 
     def fetch_create_date(self):
         log.debug('')
@@ -55,6 +66,14 @@ class TimeSheetRecord(Base):
         log.debug('')
         return self.reference
 
+    def fetch_time_start(self):
+        log.debug('')
+        return self.time_start
+
+    def fetch_time_stop(self):
+        log.debug('')
+        return self.time_stop
+
     def fetch_time_spent(self):
         log.debug('')
         return self.time_spent
@@ -67,6 +86,8 @@ class TimeSheetRecord(Base):
                 'reference': self.reference,
                 'create_date': self.create_date,
                 'write_date': self.write_date,
+                'time_start': self.time_start,
+                'time_stop': self.time_stop,
                 'time_spent': self.time_spent,
                 }
         return _values
@@ -92,17 +113,62 @@ class TimeSheetRecord(Base):
         self.write_date = kwargs['write_date']
         return True
 
+
+
+
+    def error_no_start_time_found(self):
+        log.error('No start time found.')
+        return False
+
+    def error_no_stop_time_found(self):
+        log.error('No stop time found.')
+        return False
+
+    def error_no_spent_time_found(self):
+        log.error('No spent time found.')
+        return False
+
+    def set_time_start(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('time_start'):
+            return self.error_no_start_time_found()
+        self.time_start = kwargs['time_start']
+        return True
+
+    def set_time_stop(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('time_stop'):
+            return self.error_no_stop_time_found()
+        self.time_stop = kwargs['time_stop']
+        return True
+
     def set_time_spent(self, **kwargs):
         log.debug('')
         if not kwargs.get('time_spent'):
-            return self.error_no_time_spent_found()
+            return self.error_no_spent_time_found()
         self.time_spent = kwargs['time_spent']
         return True
 
-    def update_write_date(self):
+    @pysnooper.snoop('logs/ewallet.log')
+    def update_record_values(self, values, **kwargs):
+        log.debug('')
+        _set = {
+                'time_start': self.set_time_start,
+                'time_stop': self.set_time_stop,
+                'time_spent': self.set_time_spent,
+                }
+        for field_name, field_value in values.items():
+            try:
+                _set[field_name](**{field_name: field_value})
+            except KeyError:
+                continue
+        self.update_write_date()
+        return True
+
+    def update_write_date(self, **kwargs):
         log.debug('')
         _write_date = datetime.datetime.now()
-        return self.set_write_date(write_date=_write_date)
+        return self.set_write_date(write_date=_write_date, **kwargs)
 
     def error_no_time_sheet_id_found(self):
         log.error('No time sheet id found.')

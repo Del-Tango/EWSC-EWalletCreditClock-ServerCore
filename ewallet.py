@@ -793,7 +793,7 @@ class EWallet(Base):
         if not _credit_wallet:
             return self.error_no_session_credit_wallet_found()
         res = _credit_wallet.fetch_credit_ewallet_values()
-        log.debug(res)
+        log.debug(str(res))
         return res
 
     def action_view_credit_clock(self, **kwargs):
@@ -1113,17 +1113,60 @@ class EWallet(Base):
         _active_session.commit()
         return _start
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    def error_could_not_stop_credit_clock_timer(self):
+        log.error('Could not stop credit clock timer.')
+        return False
+
     def action_stop_credit_clock_timer(self, **kwargs):
         log.debug('')
-        if not self.session_credit_wallet:
-            return self.error_no_session_credit_wallet_found()
-        log.info('Attempting to fetch active credit clock...')
-        _credit_clock = self.session_credit_wallet.fetch_credit_ewallet_credit_clock()
+        _credit_clock = kwargs.get('credit_clock') or \
+                self.fetch_active_session_credit_clock()
         if not _credit_clock:
             return self.warning_could_not_fetch_credit_clock()
-        return _credit_clock.main_controller(
-                controller='user', action='stop'
+        _active_session = kwargs.get('active_session') or self.session
+        if not _active_session:
+            return self.error_no_active_session_found()
+        # TODO - Command Chain Pop Util
+        for item in ['controller', 'action', 'active_session']:
+            try:
+                kwargs.pop(item)
+            except KeyError:
+                log.error(
+                        'Could not pop tag {} from command chain.'.format(item)
+                        )
+        _stop = _credit_clock.main_controller(
+                controller='user', action='stop',
+                active_session=_active_session, **kwargs
                 )
+        if not _stop:
+            _active_session.rollback()
+            return self.error_could_not_stop_credit_clock_timer()
+        _active_session.commit()
+        return _stop
+
+
+
+
+
+
+
+
+
+
 
     def handle_system_action_update(self, **kwargs):
         log.debug('')
@@ -2192,6 +2235,7 @@ class EWallet(Base):
         print(str(_supply_credits) + '\n')
         return _supply_credits
 
+    @pysnooper.snoop('logs/ewallet.py')
     def test_view_credit_wallet(self):
         print('[ * ] View Credit Wallet')
         _view_credit_wallet = self.ewallet_controller(
@@ -2365,6 +2409,11 @@ class EWallet(Base):
         _view_time_sheet_record = self.test_view_time_sheet_record()
         _convert_credits = self.test_convert_credits_to_clock()
         _start_clock = self.test_start_credit_clock()
+        for item in range(3):
+            print('Sleeping ...')
+            time.sleep(1)
+        print('\n')
+        _stop_clock = self.test_stop_credit_clock()
         _convert_clock = self.test_convert_clock_to_credits()
         _view_conversion_sheet = self.test_view_conversion_sheet()
         _view_conversion_sheet_record = self.test_view_conversion_sheet_record()
