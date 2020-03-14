@@ -117,6 +117,7 @@ class TimeSheetRecord(Base):
         self.write_date = kwargs['write_date']
         return True
 
+#   @pysnooper.snoop('logs/ewallet.log')
     def set_time_start(self, **kwargs):
         log.debug('')
         if not kwargs.get('time_start'):
@@ -124,6 +125,7 @@ class TimeSheetRecord(Base):
         self.time_start = kwargs['time_start']
         return True
 
+#   @pysnooper.snoop('logs/ewallet.log')
     def set_time_stop(self, **kwargs):
         log.debug('')
         if not kwargs.get('time_stop'):
@@ -131,6 +133,7 @@ class TimeSheetRecord(Base):
         self.time_stop = kwargs['time_stop']
         return True
 
+#   @pysnooper.snoop('logs/ewallet.log')
     def set_time_spent(self, **kwargs):
         log.debug('')
         if not kwargs.get('time_spent'):
@@ -152,7 +155,7 @@ class TimeSheetRecord(Base):
             try:
                 _set[field_name](**{field_name: field_value})
             except KeyError:
-                continue
+                log.warning('Invalid field name for actio update time sheet record values.')
         self.update_write_date()
         return True
 
@@ -401,10 +404,14 @@ class CreditClockTimeSheet(Base):
         log.info('Successfully cleared all time sheet records.')
         return _clear
 
+#   @pysnooper.snoop('logs/ewallet.log')
     def action_add_time_sheet_record(self, **kwargs):
         log.debug('')
+        if not kwargs.get('active_session'):
+            return self.error_no_active_session_found()
         _values = self.fetch_time_record_creation_values(**kwargs)
         _record = TimeSheetRecord(**_values)
+#       kwargs['active_session'].add(_record)
         _updated_records = self.update_time_sheet_records(_record)
         if _record:
             log.info('Successfully added new time record.')
@@ -451,14 +458,6 @@ class CreditClockTimeSheet(Base):
                 identifier='date', code=kwargs['code']
                 )
 
-    # TODO
-    def search_time_sheet_record_before_date(self, **kwargs):
-        pass
-
-    # TODO
-    def search_time_sheet_record_after_date(self, **kwargs):
-        pass
-
     def search_time_sheet_record_by_time(self, **kwargs):
         log.debug('')
         if not kwargs.get('code'):
@@ -468,10 +467,12 @@ class CreditClockTimeSheet(Base):
                 )
 
     # TODO
+    def search_time_sheet_record_before_date(self, **kwargs):
+        pass
+    def search_time_sheet_record_after_date(self, **kwargs):
+        pass
     def search_time_sheet_record_greater_time(self, **kwargs):
         pass
-
-    # TODO
     def search_time_sheet_record_lesser_time(self, **kwargs):
         pass
 
@@ -525,6 +526,10 @@ class CreditClockTimeSheet(Base):
         return _handlers[kwargs['action']](**kwargs)
 
     # ERRORS
+
+    def error_no_active_session_found(self):
+        log.error('No active session found.')
+        return False
 
     def error_no_time_sheet_controller_action_specified(self):
         log.error('No time sheet controller action specified.')

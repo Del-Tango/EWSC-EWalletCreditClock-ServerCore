@@ -309,6 +309,139 @@ class EWallet(Base):
 
     # ACTIONS
 
+    def action_create_new_transfer(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('ttype'):
+            return self.error_no_transfer_type_specified()
+        _handlers = {
+                'supply': self.action_create_new_transfer_type_supply,
+                'pay': self.action_create_new_transfer_type_pay,
+                'transfer': self.action_create_new_transfer_type_transfer,
+                }
+        return _handlers[kwargs['ttype']](**kwargs)
+
+    def action_unlink_contact(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('unlink'):
+            return self.error_no_unlink_target_specified()
+        _handlers = {
+                'list': self.action_unlink_contact_list,
+                'record': self.action_unlink_contact_record,
+                }
+        return _handlers[kwargs['unlink']](**kwargs)
+
+    def action_unlink_invoice(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('unlink'):
+            return self.error_no_unlink_target_specified()
+        _handlers = {
+                'list': self.action_unlink_invoice_list,
+                'record': self.action_unlink_invoice_record,
+                }
+        return _handlers[kwargs['unlink']](**kwargs)
+
+    def action_unlink_transfer(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('unlink'):
+            return self.error_no_unlink_target_specified()
+        _handlers = {
+                'list': self.action_unlink_transfer_list,
+                'record': self.action_unlink_transfer_record,
+                }
+        return _handlers[kwargs['unlink']](**kwargs)
+
+    def action_unlink_time(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('unlink'):
+            return self.error_no_unlink_target_specified()
+        _handlers = {
+                'list': self.action_unlink_time_list,
+                'record': self.action_unlink_time_record,
+                }
+        return _handlers[kwargs['unlink']](**kwargs)
+
+    def action_unlink_conversion(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('unlink'):
+            return self.error_no_unlink_target_specified()
+        _handlers = {
+                'list': self.action_unlink_conversion_list,
+                'record': self.action_unlink_conversion_record,
+                }
+        return _handlers[kwargs['unlink']](**kwargs)
+
+    def action_view_contact(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('contact'):
+            return self.error_no_contact_target_specified()
+        _handlers = {
+                'list': self.action_view_contact_list,
+                'record': self.action_view_contact_record,
+                }
+        return _handlers[kwargs['contact']](**kwargs)
+
+    def action_view_invoice(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('invoice'):
+            return self.error_no_invoice_target_specified()
+        _handlers = {
+                'list': self.action_view_invoice_list,
+                'record': self.action_view_invoice_record,
+                }
+        return _handlers[kwargs['invoice']](**kwargs)
+
+    def action_view_transfer(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('transfer'):
+            return self.error_no_transfer_view_target_specified()
+        _handlers = {
+                'list': self.action_view_transfer_list,
+                'record': self.action_view_transfer_record,
+                }
+        return _handlers[kwargs['transfer']](**kwargs)
+
+    def action_view_time(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('time'):
+            return self.error_no_time_view_target_specified()
+        _handlers = {
+                'list': self.action_view_time_list,
+                'record': self.action_view_time_record,
+                }
+        return _handlers[kwargs['time']](**kwargs)
+
+    def action_view_conversion(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('conversion'):
+            return self.error_no_conversion_view_target_specified()
+        _handlers = {
+                'list': self.action_view_conversion_list,
+                'record': self.action_view_conversion_record,
+                }
+        return _handlers[kwargs['conversion']](**kwargs)
+
+    # TODO
+    def action_system_user_check(self, **kwargs):
+        pass
+    def action_system_session_check(self, **kwargs):
+        pass
+    def action_send_invoice_record(self, **kwargs):
+        pass
+    def action_send_invoice_sheet(self, **kwargs):
+        pass
+    def action_send_transfer_record(self, **kwargs):
+        pass
+    def action_send_transfer_sheet(self, **kwargs):
+        pass
+    def action_receive_invoice_record(self, **kwargs):
+        pass
+    def action_receive_invoice_sheet(self, **kwargs):
+        pass
+    def action_receive_transfer_record(self, **kwargs):
+        pass
+    def action_receive_transfer_sheet(self, **kwargs):
+        pass
+
 #   @pysnooper.snoop('logs/ewallet.log')
     def action_system_user_logout(self, **kwargs):
         log.debug('')
@@ -353,6 +486,7 @@ class EWallet(Base):
         _active_session = kwargs.get('active_session') or self.session
         if not _active_session:
             return self.error_no_active_session_found()
+        _active_session.add(_credit_clock)
         # TODO - Command Chain Pop Util
         for item in ['controller', 'action', 'active_session']:
             try:
@@ -380,6 +514,7 @@ class EWallet(Base):
         _active_session = kwargs.get('active_session') or self.session
         if not _active_session:
             return self.error_no_active_session_found()
+        _active_session.add(_credit_clock)
         # TODO - Command Chain Pop Util
         for item in ['controller', 'action', 'active_session']:
             try:
@@ -852,8 +987,6 @@ class EWallet(Base):
     # TODO
     def action_create_new_transfer_type_pay(self, **kwargs):
         log.debug('')
-
-    # TODO
     def action_create_new_transfer_type_transfer(self, **kwargs):
         log.debug('')
 
@@ -1184,8 +1317,7 @@ class EWallet(Base):
         pass
     def handle_system_event_notification(self, **kwargs):
         pass
-
-   def handle_system_event_request(self, **kwargs):
+    def handle_system_event_request(self, **kwargs):
         pass
 
     '''
@@ -1234,142 +1366,6 @@ class EWallet(Base):
         return _update_next or True
 
     # CONTROLLERS
-
-    def action_create_new_transfer(self, **kwargs):
-        log.debug('')
-        if not kwargs.get('ttype'):
-            return self.error_no_transfer_type_specified()
-        _handlers = {
-                'supply': self.action_create_new_transfer_type_supply,
-                'pay': self.action_create_new_transfer_type_pay,
-                'transfer': self.action_create_new_transfer_type_transfer,
-                }
-        return _handlers[kwargs['ttype']](**kwargs)
-
-    def action_unlink_contact(self, **kwargs):
-        log.debug('')
-        if not kwargs.get('unlink'):
-            return self.error_no_unlink_target_specified()
-        _handlers = {
-                'list': self.action_unlink_contact_list,
-                'record': self.action_unlink_contact_record,
-                }
-        return _handlers[kwargs['unlink']](**kwargs)
-
-    def action_unlink_invoice(self, **kwargs):
-        log.debug('')
-        if not kwargs.get('unlink'):
-            return self.error_no_unlink_target_specified()
-        _handlers = {
-                'list': self.action_unlink_invoice_list,
-                'record': self.action_unlink_invoice_record,
-                }
-        return _handlers[kwargs['unlink']](**kwargs)
-
-    def action_unlink_transfer(self, **kwargs):
-        log.debug('')
-        if not kwargs.get('unlink'):
-            return self.error_no_unlink_target_specified()
-        _handlers = {
-                'list': self.action_unlink_transfer_list,
-                'record': self.action_unlink_transfer_record,
-                }
-        return _handlers[kwargs['unlink']](**kwargs)
-
-    def action_unlink_time(self, **kwargs):
-        log.debug('')
-        if not kwargs.get('unlink'):
-            return self.error_no_unlink_target_specified()
-        _handlers = {
-                'list': self.action_unlink_time_list,
-                'record': self.action_unlink_time_record,
-                }
-        return _handlers[kwargs['unlink']](**kwargs)
-
-    def action_unlink_conversion(self, **kwargs):
-        log.debug('')
-        if not kwargs.get('unlink'):
-            return self.error_no_unlink_target_specified()
-        _handlers = {
-                'list': self.action_unlink_conversion_list,
-                'record': self.action_unlink_conversion_record,
-                }
-        return _handlers[kwargs['unlink']](**kwargs)
-
-    def action_view_contact(self, **kwargs):
-        log.debug('')
-        if not kwargs.get('contact'):
-            return self.error_no_contact_target_specified()
-        _handlers = {
-                'list': self.action_view_contact_list,
-                'record': self.action_view_contact_record,
-                }
-        return _handlers[kwargs['contact']](**kwargs)
-
-    def action_view_invoice(self, **kwargs):
-        log.debug('')
-        if not kwargs.get('invoice'):
-            return self.error_no_invoice_target_specified()
-        _handlers = {
-                'list': self.action_view_invoice_list,
-                'record': self.action_view_invoice_record,
-                }
-        return _handlers[kwargs['invoice']](**kwargs)
-
-    def action_view_transfer(self, **kwargs):
-        log.debug('')
-        if not kwargs.get('transfer'):
-            return self.error_no_transfer_view_target_specified()
-        _handlers = {
-                'list': self.action_view_transfer_list,
-                'record': self.action_view_transfer_record,
-                }
-        return _handlers[kwargs['transfer']](**kwargs)
-
-    def action_view_time(self, **kwargs):
-        log.debug('')
-        if not kwargs.get('time'):
-            return self.error_no_time_view_target_specified()
-        _handlers = {
-                'list': self.action_view_time_list,
-                'record': self.action_view_time_record,
-                }
-        return _handlers[kwargs['time']](**kwargs)
-
-    def action_view_conversion(self, **kwargs):
-        log.debug('')
-        if not kwargs.get('conversion'):
-            return self.error_no_conversion_view_target_specified()
-        _handlers = {
-                'list': self.action_view_conversion_list,
-                'record': self.action_view_conversion_record,
-                }
-        return _handlers[kwargs['conversion']](**kwargs)
-
-    # TODO
-    def action_system_user_check(self, **kwargs):
-        pass
-
-    # TODO
-    def action_system_session_check(self, **kwargs):
-        pass
-
-    def action_send_invoice_record(self, **kwargs):
-        pass
-    def action_send_invoice_sheet(self, **kwargs):
-        pass
-    def action_send_transfer_record(self, **kwargs):
-        pass
-    def action_send_transfer_sheet(self, **kwargs):
-        pass
-    def action_receive_invoice_record(self, **kwargs):
-        pass
-    def action_receive_invoice_sheet(self, **kwargs):
-        pass
-    def action_receive_transfer_record(self, **kwargs):
-        pass
-    def action_receive_transfer_sheet(self, **kwargs):
-        pass
 
     def ewallet_user_action_controller(self, **kwargs):
         log.debug('')
@@ -1459,6 +1455,8 @@ class EWallet(Base):
             'test': self.test_ewallet,
         }
         return _controllers[kwargs['controller']](**kwargs)
+
+    # ERRORS
 
     def error_handler_action_create_new_transfer(self, **kwargs):
         _reasons_and_handlers = {
@@ -2006,6 +2004,8 @@ class EWallet(Base):
         log.error('Could not stop credit clock timer.')
         return False
 
+    # WARNINGS
+
     def warning_could_not_login(self):
         log.warning(
                 'Something went wrong. '
@@ -2169,6 +2169,8 @@ class EWallet(Base):
                 'Could not fetch user by id %s.', user_id
                 )
         return False
+
+    # TESTS
 
     def test_create_account(self):
         print('[ * ] Create account')

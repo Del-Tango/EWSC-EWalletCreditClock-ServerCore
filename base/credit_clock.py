@@ -43,10 +43,6 @@ class CreditClock(Base):
     # O2M
     conversion_sheet_archive = relationship('CreditClockConversionSheet')
 
-    def error_no_active_session_found(self):
-        log.error('No active session found.')
-        return False
-
     def __init__(self, **kwargs):
         if not kwargs.get('active_session'):
             self.error_no_active_session_found()
@@ -66,7 +62,7 @@ class CreditClock(Base):
         self.wallet_id = kwargs.get('wallet_id')
         self.reference = kwargs.get('reference')
         self.credit_clock = kwargs.get('credit_clock')
-        self.credit_clock_state = kwargs.get('credit_clock_state')
+        self.credit_clock_state = kwargs.get('credit_clock_state') or 'inactive'
         self.time_spent = kwargs.get('time_spent')
         self.start_time = kwargs.get('start_time')
         self.end_time = kwargs.get('end_time')
@@ -148,7 +144,16 @@ class CreditClock(Base):
     def fetch_credit_clock_start_time(self):
         log.debug('')
         return self.start_time or \
-                self.error_no_start_time_found()
+               self.error_no_start_time_found()
+
+    def fetch_active_time_record_start_time(self, **kwargs):
+        log.debug('')
+        _time_record = kwargs.get('time_record') or \
+                self.fetch_active_credit_clock_time_record()
+        if not _time_record:
+            return self.error_no_active_time_record_found()
+        _start_time = _time_record.fetch_time_start()
+        return _start_time or False
 
     def fetch_credit_clock_stop_time(self):
         log.debug('')
@@ -324,9 +329,10 @@ class CreditClock(Base):
         self.wallet = kwargs['wallet']
         return True
 
+#   @pysnooper.snoop('logs/ewallet.log')
     def set_credit_clock_time_start(self, **kwargs):
         log.debug('')
-        self.time_start = kwargs.get('time_start')
+        self.time_start = kwargs.get('time_start') or time.time()
         return True
 
     def set_credit_clock_time_stop(self, **kwargs):
@@ -406,14 +412,20 @@ class CreditClock(Base):
 
     # UPDATES
 
-    @pysnooper.snoop('logs/ewallet.log')
+#   @pysnooper.snoop('logs/ewallet.log')
     def update_credit_clock_time_sheet_record(self, values, **kwargs):
         log.debug('')
+        if not kwargs.get('active_session'):
+            return self.error_no_active_session_found()
         _time_record = kwargs.get('time_record') or \
                 self.fetch_active_credit_clock_time_record()
         if not _time_record:
             return self.error_no_active_time_record_found()
+        kwargs['active_session'].add(_time_record)
         _update = _time_record.update_record_values(values, **kwargs)
+
+        log.info('_update : {}'.format(_update))
+
         if not _update:
             self.error_could_not_update_active_time_record_values()
         return _update or False
@@ -484,7 +496,7 @@ class CreditClock(Base):
 
     # GENERIC
 
-    @pysnooper.snoop('logs/ewallet.log')
+#   @pysnooper.snoop('logs/ewallet.log')
     def clear_credit_clock_values(self, *args):
         log.debug('')
         _handlers = {
@@ -514,7 +526,7 @@ class CreditClock(Base):
                 self.warning_could_not_clear_credit_clock_field()
         return True
 
-    @pysnooper.snoop('logs/ewallet.log')
+#   @pysnooper.snoop('logs/ewallet.log')
     def validate_time_spent(self, **kwargs):
         log.debug('')
         if not kwargs.get('time_start') or not kwargs.get('time_stop'):
@@ -526,8 +538,6 @@ class CreditClock(Base):
         _time_spent_check = self.convert_time_to_minutes(
                 kwargs['time_start'], kwargs['time_stop']
                 )
-
-#       _time_spent_check = kwargs['time_stop'] - kwargs['time_start']
         _time_record = kwargs.get('time_record') or \
                 self.fetch_active_credit_clock_time_record()
         if not _time_record:
@@ -543,7 +553,9 @@ class CreditClock(Base):
 
     def compute_time_spent(self, **kwargs):
         log.debug('')
-        _start_time = kwargs.get('time_start') or self.fetch_credit_clock_start_time()
+        _start_time = kwargs.get('time_start') or \
+                self.fetch_credit_clock_start_time() or \
+                self.fetch_active_time_record_start_time()
         _stop_time = kwargs.get('time_stop') or self.fetch_credit_clock_stop_time()
         if not _start_time or not _stop_time:
             return self.error_could_not_compute_time_spent()
@@ -627,12 +639,13 @@ class CreditClock(Base):
                         'Could not pop tag {} from command chain.'.format(item)
                         )
         _record = _time_sheet.credit_clock_time_sheet_controller(
-                action='add', **creation_values
+                action='add', **creation_values,
+                active_session=kwargs['active_session']
                 )
         if not _record:
             kwargs['active_session'].rollback()
             return self.error_could_not_create_time_sheet_record()
-        kwargs['active_session'].add(_record)
+#       kwargs['active_session'].add(_record)
         log.info('Successfully created new credit clock time record.')
         return _record or False
 
@@ -670,7 +683,7 @@ class CreditClock(Base):
     '''
         [ RETURN ]: Start Time or False
     '''
-    @pysnooper.snoop('logs/ewallet.log')
+#   @pysnooper.snoop('logs/ewallet.log')
     def start_timer(self, **kwargs):
         log.debug('')
         if not kwargs.get('active_session'):
@@ -688,20 +701,21 @@ class CreditClock(Base):
                 )
         kwargs['active_session'].add(_time_sheet_record)
         _start = self.set_credit_clock_time_start(
-                time_start=_record_creation_values['time_start']
+                time_start=float(_record_creation_values['time_start'])
                 )
         if not _set_state or not _start:
             return self.error_could_not_start_credit_clock_timer()
         _set_active = self.set_credit_clock_active_time_record(
                 active_time_record=_time_sheet_record
                 )
+        kwargs['active_session'].commit()
         log.info('Credit Clock timer started.')
         return _record_creation_values['time_start']
 
     '''
         [ RETURN ]: Stop time or False.
     '''
-    @pysnooper.snoop('logs/ewallet.log')
+#   @pysnooper.snoop('logs/ewallet.log')
     def stop_timer(self, **kwargs):
         log.debug('')
         if not kwargs.get('active_session'):
@@ -709,34 +723,26 @@ class CreditClock(Base):
         _check_clock_state = self.check_clock_is_active()
         if not _check_clock_state:
             return self.error_illegal_credit_clock_state()
-        _fetch_start_time = self.fetch_credit_clock_start_time()
+        _fetch_start_time = self.fetch_credit_clock_start_time() or \
+                self.fetch_active_time_record_start_time()
         _stop_time = time.time()
         _set_stop_time = self.set_credit_clock_time_stop(time_stop=_stop_time)
         _compute_used_time = self.compute_time_spent(
                 time_start=_fetch_start_time, time_stop=_set_stop_time
                 )
-
-        log.info('_compute_used_time : {}'.format(_compute_used_time))
-
         _fetch_active_time_record = self.fetch_active_credit_clock_time_record(**kwargs)
         if not _fetch_active_time_record:
             return False
         _check_used_time = self.validate_time_spent(
                 time_start=_fetch_start_time,
-                time_stop=_set_stop_time,
+                time_stop=_stop_time,
                 time_spent=_compute_used_time,
                 time_record=_fetch_active_time_record,
                 )
-
-        log.info('_check_used_time : {}'.format(_check_used_time))
-
         _record_update_values = self.fetch_action_stop_time_record_update_values(
                 time_stop=_stop_time,
                 time_spent=_compute_used_time,
                 )
-
-        log.info('_record_update_values : {}'.format(_record_update_values))
-
         _update_record = self.update_credit_clock_time_sheet_record(
                 _record_update_values, time_record=_fetch_active_time_record,
                 **kwargs
@@ -1021,7 +1027,7 @@ class CreditClock(Base):
         _action_status = _handlers[kwargs.get('controller')](**kwargs)
         return _action_status
 
-    # ERRORS
+    # ERROR HANDLERS
 
     def error_handler_switch_credit_clock_conversion_sheet(self, **kwargs):
         _reasons_and_handlers = {
@@ -1053,6 +1059,16 @@ class CreditClock(Base):
         for item in _reasons_and_handlers['reasons']:
             if not _reasons_and_handlers['reasons'][item]:
                 return _reasons_and_handlers['handlers'][item]()
+        return False
+
+    # ERRORS
+
+    def error_no_active_session_found(self):
+        log.error('No active session found.')
+        return False
+
+    def error_no_credit_clock_state_found(self, **kwargs):
+        log.error('No credit clock state found.')
         return False
 
     def error_no_ewallet_found(self):
