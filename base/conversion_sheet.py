@@ -489,6 +489,7 @@ class CreditClockConversionSheet(Base):
                     'credits', kwargs['code']
                     )
         return _records
+
     # TODO
     def search_conversion_sheet_records_lesser_credits(self, **kwargs):
         pass

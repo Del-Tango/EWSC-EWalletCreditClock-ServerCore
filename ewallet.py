@@ -365,7 +365,6 @@ class EWallet(Base):
         self.session.commit()
         return session_create_account
 
-    # TODO
     def action_create_new_conversion_credits_to_clock(self, **kwargs):
         log.debug('')
         _credit_wallet = kwargs.get('credit_ewallet') or \
@@ -397,8 +396,7 @@ class EWallet(Base):
         _active_session.commit()
         return _convert
 
-    # TODO - Apply ORM
-    @pysnooper.snoop('logs/ewallet.log')
+#   @pysnooper.snoop('logs/ewallet.log')
     def action_create_new_conversion_clock_to_credits(self, **kwargs):
         log.debug('')
         _credit_wallet = kwargs.get('credit_ewallet') or \
@@ -1087,23 +1085,7 @@ class EWallet(Base):
         _update = self.update_session_from_user(**kwargs)
         return _update or False
 
-
-
-
-
-
-
-
-
-    def error_no_active_session_found(self):
-        log.error('No active session found.')
-        return False
-
-    def error_could_not_start_credit_clock_timer(self):
-        log.error('Could not start credit clock timer.')
-        return False
-
-    @pysnooper.snoop('logs/ewallet.log')
+#   @pysnooper.snoop('logs/ewallet.log')
     def action_start_credit_clock_timer(self, **kwargs):
         log.debug('')
         _credit_clock = kwargs.get('credit_clock') or \
@@ -1130,12 +1112,6 @@ class EWallet(Base):
             return self.error_could_not_start_credit_clock_timer()
         _active_session.commit()
         return _start
-
-
-
-
-
-
 
     def action_stop_credit_clock_timer(self, **kwargs):
         log.debug('')
@@ -1989,6 +1965,14 @@ class EWallet(Base):
         log.error('Could not convert minutes to credits.')
         return False
 
+    def error_no_active_session_found(self):
+        log.error('No active session found.')
+        return False
+
+    def error_could_not_start_credit_clock_timer(self):
+        log.error('Could not start credit clock timer.')
+        return False
+
     def warning_could_not_login(self):
         log.warning(
                 'Something went wrong. '
@@ -2152,8 +2136,6 @@ class EWallet(Base):
                 'Could not fetch user by id %s.', user_id
                 )
         return False
-
-
 
     def test_create_account(self):
         print('[ * ] Create account')
@@ -2347,14 +2329,22 @@ class EWallet(Base):
         print(str(_convert) + '\n')
         return _convert
 
-    # TODO
     def test_start_credit_clock(self):
-        print('[ * ]: Start credit clock')
+        print('[ * ]: Start Credit Clock')
         _start = self.ewallet_controller(
                 controller='user', ctype='action', action='time', timer='start'
                 )
         print(str(_start) + '\n')
         return _start
+
+    # TODO
+    def test_stop_credit_clock(self):
+        print('[ * ]: Stop Credit Clock')
+        _stop = self.ewallet_controller(
+                controller='user', ctype='action', action='time', timer='stop'
+                )
+        print(str(_stop) + '\n')
+        return _stop
 
     def test_ewallet_user_controller(self):
         print('[ TEST ] User.')

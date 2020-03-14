@@ -436,7 +436,6 @@ class CreditEWallet(Base):
             kwargs['active_session'].rollback()
         return _convert
 
-    # TODO
 #   @pysnooper.snoop('logs/ewallet.log')
     def convert_minutes_to_credits(self, **kwargs):
         log.debug('')
