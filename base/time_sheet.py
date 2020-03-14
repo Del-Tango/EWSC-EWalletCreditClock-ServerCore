@@ -43,6 +43,8 @@ class TimeSheetRecord(Base):
         self.time_sheet_id = kwargs.get('time_sheet_id')
         self.credit_clock_id = kwargs.get('credit_clock_id')
 
+    # FETCHERS
+
     def fetch_record_id(self):
         log.debug('')
         return self.record_id
@@ -92,6 +94,8 @@ class TimeSheetRecord(Base):
                 }
         return _values
 
+    # SETTERS
+
     def set_time_sheet_id(self, **kwargs):
         log.debug('')
         if not kwargs.get('time_sheet_id'):
@@ -112,21 +116,6 @@ class TimeSheetRecord(Base):
             return self.error_no_write_date_found()
         self.write_date = kwargs['write_date']
         return True
-
-
-
-
-    def error_no_start_time_found(self):
-        log.error('No start time found.')
-        return False
-
-    def error_no_stop_time_found(self):
-        log.error('No stop time found.')
-        return False
-
-    def error_no_spent_time_found(self):
-        log.error('No spent time found.')
-        return False
 
     def set_time_start(self, **kwargs):
         log.debug('')
@@ -149,7 +138,9 @@ class TimeSheetRecord(Base):
         self.time_spent = kwargs['time_spent']
         return True
 
-    @pysnooper.snoop('logs/ewallet.log')
+    # UPDATES
+
+#   @pysnooper.snoop('logs/ewallet.log')
     def update_record_values(self, values, **kwargs):
         log.debug('')
         _set = {
@@ -169,6 +160,20 @@ class TimeSheetRecord(Base):
         log.debug('')
         _write_date = datetime.datetime.now()
         return self.set_write_date(write_date=_write_date, **kwargs)
+
+    # ERRORS
+
+    def error_no_start_time_found(self):
+        log.error('No start time found.')
+        return False
+
+    def error_no_stop_time_found(self):
+        log.error('No stop time found.')
+        return False
+
+    def error_no_spent_time_found(self):
+        log.error('No spent time found.')
+        return False
 
     def error_no_time_sheet_id_found(self):
         log.error('No time sheet id found.')
@@ -206,6 +211,8 @@ class CreditClockTimeSheet(Base):
         self.clock_id = kwargs.get('clock_id')
         self.reference = kwargs.get('reference') or 'Time Sheet'
         self.records = kwargs.get('records') or []
+
+    # FETCHERS
 
     def fetch_time_sheet_id(self):
         log.debug('')
@@ -250,6 +257,8 @@ class CreditClockTimeSheet(Base):
                 'time_sheet_id': self.time_sheet_id,
                 'reference': kwargs.get('reference'),
                 'credit_clock': kwargs.get('credit_clock'),
+                'time_start': kwargs.get('time_start'),
+                'time_stop': kwargs.get('time_stop'),
                 'time_spent': kwargs.get('time_spent'),
                 }
         return _values
@@ -332,6 +341,8 @@ class CreditClockTimeSheet(Base):
                 }
         return _handlers[kwargs['search_by']](**kwargs)
 
+    # SETTERS
+
     def set_time_sheet_id(self, **kwargs):
         log.debug('')
         if not kwargs.get('sheet_id'):
@@ -366,6 +377,8 @@ class CreditClockTimeSheet(Base):
         self.write_date = _now
         return True
 
+    # UPDATES
+
     def update_time_sheet_records(self, record):
         log.debug('')
         self.records.append(record)
@@ -375,6 +388,18 @@ class CreditClockTimeSheet(Base):
     def update_write_date(self):
         log.debug('')
         return self.set_write_date(write_date=datetime.datetime.now())
+
+    # ACTIONS
+
+    def action_interogate_all_time_sheet_records(self, **kwargs):
+        log.debug('')
+        return self.fetch_time_sheet_records(identifier='all')
+
+    def action_clear_time_sheet_records(self, **kwargs):
+        log.debug('')
+        _clear = self.set_time_sheet_records(records={})
+        log.info('Successfully cleared all time sheet records.')
+        return _clear
 
     def action_add_time_sheet_record(self, **kwargs):
         log.debug('')
@@ -416,6 +441,8 @@ class CreditClockTimeSheet(Base):
                 identifier='reference', code=kwargs['code']
                 )
 
+    # GENERIC
+
     def search_time_sheet_record_by_date(self, **kwargs):
         log.debug('')
         if not kwargs.get('code'):
@@ -448,6 +475,8 @@ class CreditClockTimeSheet(Base):
     def search_time_sheet_record_lesser_time(self, **kwargs):
         pass
 
+    # CONTROLLERS
+
     def action_interogate_time_sheet_records_by_date(self, **kwargs):
         log.debug('')
         if not kwargs.get('date'):
@@ -470,10 +499,6 @@ class CreditClockTimeSheet(Base):
                 }
         return _handlers[kwargs['time']](**kwargs)
 
-    def action_interogate_all_time_sheet_records(self, **kwargs):
-        log.debug('')
-        return self.fetch_time_sheet_records(identifier='all')
-
     def action_interogate_time_sheet_records(self, **kwargs):
         log.debug('')
         if not kwargs.get('search_by'):
@@ -487,12 +512,6 @@ class CreditClockTimeSheet(Base):
                 }
         return _handlers[kwargs['search_by']](**kwargs)
 
-    def action_clear_time_sheet_records(self, **kwargs):
-        log.debug('')
-        _clear = self.set_time_sheet_records(records={})
-        log.info('Successfully cleared all time sheet records.')
-        return _clear
-
     def credit_clock_time_sheet_controller(self, **kwargs):
         log.debug('')
         if not kwargs.get('action'):
@@ -504,6 +523,8 @@ class CreditClockTimeSheet(Base):
                 'clear': self.action_clear_time_sheet_records,
                 }
         return _handlers[kwargs['action']](**kwargs)
+
+    # ERRORS
 
     def error_no_time_sheet_controller_action_specified(self):
         log.error('No time sheet controller action specified.')
@@ -544,6 +565,8 @@ class CreditClockTimeSheet(Base):
     def error_no_time_record_reference_found(self):
         log.error('No time record reference found.')
         return False
+
+    # WARNINGS
 
     def warning_could_not_fetch_time_record(self, search_code, code):
         log.warning(

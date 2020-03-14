@@ -78,6 +78,42 @@ class CreditClock(Base):
                 [_conversion_sheet]
 
 
+    # FETCHERS
+
+    def fetch_active_credit_clock_time_record(self, **kwargs):
+        log.debug('')
+        if not self.active_time_record:
+            return self.error_no_active_time_record_found()
+        return self.active_time_record[0]
+
+    def fetch_action_stop_time_record_update_values(self, **kwargs):
+        log.debug('')
+        _values = {
+                'time_stop': kwargs.get('time_stop'),
+                'time_spent': kwargs.get('time_spent'),
+                }
+        return _values
+
+    def fetch_credit_clock_clear_value_map(self):
+        _map = {
+                'wallet_id': None,
+                'reference': '',
+                'create_date': None,
+                'write_date': None,
+                'credit_clock': 0.0,
+                'credit_clock_state': '',
+                'time_spent': None,
+                'time_start': None,
+                'time_stop': None,
+                'wallet': [],
+                'time_sheet': [],
+                'active_time_record': [],
+                'conversion_sheet': [],
+                'time_sheet_archive': [],
+                'conversion_sheet_archive': [],
+                }
+        return _map
+
     def fetch_credit_id(self):
         log.debug('')
         return self.clock_id or \
@@ -108,23 +144,6 @@ class CreditClock(Base):
         log.debug('')
         return self.credit_clock_state or \
                self.error_no_state_found_for_credit_clock()
-
-
-
-
-
-
-    def error_no_start_time_found(self):
-        log.error('No start time found.')
-        return False
-
-    def error_no_stop_time_found(self):
-        log.error('No stop time found.')
-        return False
-
-    def error_no_spent_time_found(self):
-        log.error('No spent time found.')
-        return False
 
     def fetch_credit_clock_start_time(self):
         log.debug('')
@@ -238,15 +257,6 @@ class CreditClock(Base):
         log.debug('')
         return ('active', 'inactive')
 
-    def set_credit_clock_state(self, **kwargs):
-        log.debug('')
-        if not kwargs.get('clock_state'):
-            return self.error_no_credit_clock_state_specified()
-        if kwargs['clock_state'] not in self.fetch_credit_clock_states():
-            return self.warning_invalid_credit_clock_state()
-        self.credit_clock_state = kwargs['clock_state']
-        return True
-
     def fetch_credit_clock_conversion_record_creation_values(self, **kwargs):
         log.debug('')
         _values = {
@@ -272,7 +282,26 @@ class CreditClock(Base):
                 'time_sheet_id': kwargs.get('time_sheet_id'),
                 'credit_clock_id': kwargs.get('credit_clock_id'),
                 }
+        log.info('_values : {}'.format(_values))
         return _values
+
+    # SETTERS
+
+    def set_credit_clock_active_time_record(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('active_time_record'):
+            return self.error_no_credit_clock_active_time_record_found()
+        self.active_time_record.append(kwargs['active_time_record'])
+        return self.active_time_record or self.error_could_not_set_active_time_record()
+
+    def set_credit_clock_state(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('clock_state'):
+            return self.error_no_credit_clock_state_specified()
+        if kwargs['clock_state'] not in self.fetch_credit_clock_states():
+            return self.warning_invalid_credit_clock_state()
+        self.credit_clock_state = kwargs['clock_state']
+        return True
 
     def set_credit_clock_time_sheet_archive(self, **kwargs):
         log.debug('')
@@ -295,50 +324,19 @@ class CreditClock(Base):
         self.wallet = kwargs['wallet']
         return True
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-    def error_no_credit_clock_start_time_found(self):
-        log.error('No credit clock start time found.')
-        return False
-
-    def error_no_credit_clock_stop_time_found(self):
-        log.error('No credit clock stop time found.')
-        return False
-
-    def error_no_credit_clock_time_spent_found(self):
-        log.error('No credit clock time spent found.')
-        return False
-
     def set_credit_clock_time_start(self, **kwargs):
         log.debug('')
-        if not kwargs.get('time_start'):
-            return self.error_no_credit_clock_start_time_found()
-        self.time_start = kwargs['time_start']
+        self.time_start = kwargs.get('time_start')
         return True
 
     def set_credit_clock_time_stop(self, **kwargs):
         log.debug('')
-        if not kwargs.get('time_stop'):
-            return self.error_no_credit_clock_stop_time_found()
-        self.end_time = kwargs['time_stop']
+        self.end_time = kwargs.get('time_stop')
         return True
 
     def set_credit_clock_time_spent(self, **kwargs):
         log.debug('')
-        if not kwargs.get('time_spent'):
-            return self.error_no_credit_clock_time_spent_found()
-        self.time_spent = kwargs['time_spent']
+        self.time_spent = kwargs.get('time_spent')
         return True
 
     def set_credit_clock_wallet_id(self, **kwargs):
@@ -390,6 +388,36 @@ class CreditClock(Base):
         self.conversion_sheet = kwargs['conversion_sheet']
         return True
 
+    # CHECKERS
+
+    def check_clock_is_active(self, **kwargs):
+        log.debug('')
+        _state = self.fetch_credit_clock_state()
+        if not _state:
+            return self.error_no_credit_clock_state_found()
+        return True if _state == 'active' else False
+
+    def check_clock_is_inactive(self, **kwargs):
+        log.debug('')
+        _state = self.fetch_credit_clock_state()
+        if not _state:
+            return self.error_no_credit_clock_state_found()
+        return True if _state == 'inactive' else False
+
+    # UPDATES
+
+    @pysnooper.snoop('logs/ewallet.log')
+    def update_credit_clock_time_sheet_record(self, values, **kwargs):
+        log.debug('')
+        _time_record = kwargs.get('time_record') or \
+                self.fetch_active_credit_clock_time_record()
+        if not _time_record:
+            return self.error_no_active_time_record_found()
+        _update = _time_record.update_record_values(values, **kwargs)
+        if not _update:
+            self.error_could_not_update_active_time_record_values()
+        return _update or False
+
     def update_write_date(self):
         log.debug('')
         return self.set_credit_clock_write_date(
@@ -407,6 +435,8 @@ class CreditClock(Base):
         self.conversion_sheet_archive.append(conversion_sheet)
         log.info('Successfully updated credit clock conversion sheet archive.')
         return self.conversion_sheet_archive
+
+    # HANDLERS
 
     def handle_switch_credit_clock_time_sheet_by_id(self, code):
         log.debug('')
@@ -452,6 +482,82 @@ class CreditClock(Base):
         log.info('Successfully switched credit clock conversion sheet by reference.')
         return _new_conversion_sheet
 
+    # GENERIC
+
+    @pysnooper.snoop('logs/ewallet.log')
+    def clear_credit_clock_values(self, *args):
+        log.debug('')
+        _handlers = {
+                'wallet_id': self.set_credit_clock_wallet_id,
+                'reference': self.set_credit_clock_reference,
+                'create_date': self.set_credit_clock_create_date,
+                'write_date': self.set_credit_clock_write_date,
+                'credit_clock': self.set_credit_clock,
+                'credit_clock_state': self.set_credit_clock_state,
+                'time_spent': self.set_credit_clock_time_spent,
+                'time_start': self.set_credit_clock_time_start,
+                'time_stop': self.set_credit_clock_time_stop,
+                'wallet': self.set_credit_clock_wallet,
+                'time_sheet': self.set_credit_clock_time_sheet,
+                'active_time_record': self.set_credit_clock_active_time_record,
+                'conversion_sheet': self.set_credit_clock_conversion_sheet,
+                'time_sheet_archive': self.set_credit_clock_time_sheet_archive,
+                'conversion_sheet_archive': self.set_credit_clock_conversion_sheet_archive,
+        }
+        _clear_value_map = self.fetch_credit_clock_clear_value_map()
+        for item in args:
+            if item not in _handlers:
+                return self.error_invalid_field_for_credit_clock()
+            try:
+                _handlers[item](**{item: _clear_value_map[item]})
+            except KeyError:
+                self.warning_could_not_clear_credit_clock_field()
+        return True
+
+    @pysnooper.snoop('logs/ewallet.log')
+    def validate_time_spent(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('time_start') or not kwargs.get('time_stop'):
+            return self.error_no_start_or_stop_time_found()
+        _time_spent = kwargs.get('time_spent')
+        if not _time_spent:
+            self.error_no_time_spent_found()
+
+        _time_spent_check = self.convert_time_to_minutes(
+                kwargs['time_start'], kwargs['time_stop']
+                )
+
+#       _time_spent_check = kwargs['time_stop'] - kwargs['time_start']
+        _time_record = kwargs.get('time_record') or \
+                self.fetch_active_credit_clock_time_record()
+        if not _time_record:
+            return False
+        if _time_spent_check != _time_spent:
+            self.warning_computed_time_spent_wont_match_command_chain_value()
+        _recorded_start_time = _time_record.fetch_time_start()
+        if not _recorded_start_time:
+            return self.error_could_not_fetch_active_time_record_start_time()
+        if kwargs['time_start'] != _recorded_start_time:
+            return self.error_recorded_start_time_wont_match_command_chain_value()
+        return True
+
+    def compute_time_spent(self, **kwargs):
+        log.debug('')
+        _start_time = kwargs.get('time_start') or self.fetch_credit_clock_start_time()
+        _stop_time = kwargs.get('time_stop') or self.fetch_credit_clock_stop_time()
+        if not _start_time or not _stop_time:
+            return self.error_could_not_compute_time_spent()
+        _used_time = self.convert_time_to_minutes( _start_time, _stop_time)
+        _set_time_spent = self.set_credit_clock_time_spent(time_spent=_used_time)
+        _reset_timer = self.clear_credit_clock_values('time_start', 'time_stop')
+        return _used_time or self.error_identical_start_and_stop_time()
+
+    def convert_time_to_minutes(self, start_time, end_time):
+        log.debug('')
+        _seconds_spent = round((end_time - start_time), 2)
+        _minutes_spent = round((_seconds_spent / 60), 2)
+        return _minutes_spent
+
     def switch_credit_clock_conversion_sheet(self, **kwargs):
         log.debug('')
         if not kwargs.get('identifier') or not kwargs.get('code'):
@@ -489,6 +595,8 @@ class CreditClock(Base):
                     'conversion': self.switch_credit_clock_conversion_sheet,
                 }
         return _handlers[kwargs['sheet']](**kwargs)
+
+    # CREATORS
 
     def create_credit_clock_time_sheet(self, **kwargs):
         log.debug('')
@@ -557,30 +665,7 @@ class CreditClock(Base):
             log.info('Successfully created new credit clock conversion record.')
         return _record or False
 
-    def convert_time_to_minutes(self, start_time, end_time):
-        log.debug('')
-        _seconds_spent = round((end_time - start_time), 2)
-        _minutes_spent = round((_seconds_spent / 60), 2)
-        return _minutes_spent
-
-
-
-
-
-
-    def error_could_not_set_active_time_record(self):
-        log.error(
-                'Something went wrong. '
-                'Could not set credit clock active time record.'
-                )
-        return False
-
-    def set_credit_clock_active_time_record(self, **kwargs):
-        log.debug('')
-        if not kwargs.get('active_time_record'):
-            return self.error_no_credit_clock_active_time_record_found()
-        self.active_time_record.append(kwargs['active_time_record'])
-        return self.active_time_record or self.error_could_not_set_active_time_record()
+    # ACTIONS
 
     '''
         [ RETURN ]: Start Time or False
@@ -594,7 +679,10 @@ class CreditClock(Base):
         if not _check_state:
             return self.warning_illegal_credit_clock_state()
         _set_state = self.set_credit_clock_state(clock_state='active')
-        _record_creation_values = self.fetch_time_sheet_record_creation_values(**kwargs)
+        _start_time = time.time()
+        _record_creation_values = self.fetch_time_sheet_record_creation_values(
+                time_start=_start_time, **kwargs
+                )
         _time_sheet_record = self.create_credit_clock_time_record(
                 _record_creation_values, **kwargs
                 )
@@ -610,194 +698,14 @@ class CreditClock(Base):
         log.info('Credit Clock timer started.')
         return _record_creation_values['time_start']
 
-
-
-
-
-
-
-
-
-
-
-    def check_clock_is_active(self, **kwargs):
-        log.debug('')
-        _state = self.fetch_credit_clock_state()
-        if not _state:
-            return self.error_no_credit_clock_state_found()
-        return True if _state == 'active' else False
-
-    def check_clock_is_inactive(self, **kwargs):
-        log.debug('')
-        _state = self.fetch_credit_clock_state()
-        if not _state:
-            return self.error_no_credit_clock_state_found()
-        return True if _state == 'inactive' else False
-
-    def error_no_start_or_stop_time_found(self):
-        log.error('No start or stop time found.')
-        return False
-
-    def error_could_not_fetch_active_time_record_start_time(self):
-        log.error('Could not fetch active time record start time.')
-        return False
-
-    def error_recorded_start_time_wont_match_command_chain_value(self):
-        log.error('Recorded start time wont match command chain value.')
-        return False
-
-    def warning_computed_time_spent_wont_match_command_chain_value(self):
-        log.warning('Coputed time spent wont match command chain value.')
-        return False
-
-    def validate_time_spent(self, **kwargs):
-        log.debug('')
-        if not kwargs.get('time_start') or not kwargs.get('time_stop'):
-            return self.error_no_start_or_stop_time_found()
-        _time_spent = kwargs.get('time_spent')
-        if not _time_spent:
-            self.error_no_time_spent_found()
-        _time_spent_check = kwargs['time_stop'] - kwargs['time_start']
-        _time_record = kwargs.get('time_record') or \
-                self.fetch_active_credit_clock_time_record()
-        if not _time_record:
-            return False
-        if _time_spent_check != _time_spent:
-            self.warning_computed_time_spent_wont_match_command_chain_value()
-        _recorded_start_time = _time_record.fetch_time_start()
-        if not _recorded_start_time:
-            return self.error_could_not_fetch_active_time_record_start_time()
-        if kwargs['time_start'] != _recorded_start_time:
-            return self.error_recorded_start_time_wont_match_command_chain_value()
-        return True
-
-    def error_could_not_compute_time_spent(self):
-        log.error('Could not compute time spent.')
-        return False
-
-    def error_identical_start_and_stop_time(self):
-        log.error('Identical start and stop time values.')
-        return False
-
-    def error_no_active_time_record_found(self):
-        log.error('No active time record found.')
-        return False
-
-    def compute_time_spent(self, **kwargs):
-        log.debug('')
-        _start_time = kwargs.get('time_start') or self.fetch_credit_clock_start_time()
-        _stop_time = kwargs.get('time_stop') or self.fetch_credit_clock_stop_time()
-        if not _start_time or not _stop_time:
-            return self.error_could_not_compute_time_spent()
-        _used_time = _stop_time - _start_time
-        _set_time_spent = self.set_credit_clock_time_spent(time_spent=_used_time)
-        _reset_timer = self.clear_credit_clock_values('time_start', 'time_stop')
-        return _set_time_spent or self.error_identical_start_and_stop_time()
-
-    def fetch_active_credit_clock_time_record(self, **kwargs):
-        log.debug('')
-        if not self.active_time_record:
-            return self.error_no_active_time_record_found()
-        return self.active_time_record[0]
-
-    def fetch_action_stop_time_record_update_values(self, **kwargs):
-        log.debug('')
-        _values = {
-                'time_stop': float(kwargs.get('time_stop')),
-                'time_spent': float(kwargs.get('time_spent')),
-                }
-        return _values
-
-    def error_could_not_update_active_time_record_values(self):
-        log.error('Could not update active time record values.')
-        return False
-
-    def update_credit_clock_time_sheet_record(self, values, **kwargs):
-        log.debug('')
-        _time_record = kwargs.get('time_record') or \
-                self.fetch_active_credit_clock_time_record()
-        if not _time_record:
-            return self.error_no_active_time_record_found()
-        _update = _time_record.update_record_values(values, **kwargs)
-        if not _update:
-            self.error_could_not_update_active_time_record_values()
-        return _update or False
-
-    def warning_unsuccessful_credit_clock_time_sheet_record_update(self):
-        log.warning('Unsuccessful credit clock time sheet record update.')
-        return False
-
-    def error_inactive_time_record_state(self):
-        log.error('Inactive time record state.')
-        return False
-
-    def fetch_credit_clock_clear_value_map(self):
-        _map = {
-                'wallet_id': None,
-                'reference': '',
-                'create_date': None,
-                'write_date': None,
-                'credit_clock': 0.0,
-                'credit_clock_state': '',
-                'time_spent': None,
-                'start_time': None,
-                'end_time': None,
-                'wallet': [],
-                'time_sheet': [],
-                'active_time_record': [],
-                'conversion_sheet': [],
-                'time_sheet_archive': [],
-                'conversion_sheet_archive': [],
-                }
-        return _map
-
-    def error_invalid_field_for_credit_clock(self):
-        log.error('Invald field for credit clock.')
-        return False
-
-    def warning_could_not_clear_credit_clock_field(self):
-        log.warning('Could not clear credit clock field.')
-        return False
-
-    def clear_credit_clock_values(self, *args):
-        log.debug('')
-        _handlers = {
-                'wallet_id': self.set_credit_clock_wallet_id,
-                'reference': self.set_credit_clock_reference,
-                'create_date': self.set_credit_clock_create_date,
-                'write_date': self.set_credit_clock_write_date,
-                'credit_clock': self.set_credit_clock,
-                'credit_clock_state': self.set_credit_clock_state,
-                'time_spent': self.set_credit_clock_time_spent,
-                'start_time': self.set_credit_clock_time_start,
-                'end_time': self.set_credit_clock_time_stop,
-                'wallet': self.set_credit_clock_wallet,
-                'time_sheet': self.set_credit_clock_time_sheet,
-                'active_time_record': self.set_credit_clock_active_time_record,
-                'conversion_sheet': self.set_credit_clock_conversion_sheet,
-                'time_sheet_archive': self.set_credit_clock_time_sheet_archive,
-                'conversion_sheet_archive': self.set_credit_clock_conversion_sheet_archive,
-        }
-        _clear_value_map = self.fetch_credit_clock_clear_value_map()
-        for item in args:
-            if item not in _handlers:
-                return self.error_invalid_field_for_credit_clock()
-            try:
-                _handlers[item](**{item: _clear_value_map[item]})
-            except KeyError:
-                self.warning_could_not_clear_credit_clock_field()
-        return True
-
-    def error_illegal_credit_clock_state(self):
-        log.error('Illegal credit clock state.')
-        return False
-
-#   @pysnooper.snoop('logs/ewallet.log')
     '''
         [ RETURN ]: Stop time or False.
     '''
+    @pysnooper.snoop('logs/ewallet.log')
     def stop_timer(self, **kwargs):
         log.debug('')
+        if not kwargs.get('active_session'):
+            return self.error_no_active_session_found()
         _check_clock_state = self.check_clock_is_active()
         if not _check_clock_state:
             return self.error_illegal_credit_clock_state()
@@ -807,6 +715,9 @@ class CreditClock(Base):
         _compute_used_time = self.compute_time_spent(
                 time_start=_fetch_start_time, time_stop=_set_stop_time
                 )
+
+        log.info('_compute_used_time : {}'.format(_compute_used_time))
+
         _fetch_active_time_record = self.fetch_active_credit_clock_time_record(**kwargs)
         if not _fetch_active_time_record:
             return False
@@ -816,33 +727,26 @@ class CreditClock(Base):
                 time_spent=_compute_used_time,
                 time_record=_fetch_active_time_record,
                 )
+
+        log.info('_check_used_time : {}'.format(_check_used_time))
+
         _record_update_values = self.fetch_action_stop_time_record_update_values(
-                time_stop=_set_stop_time,
-                time_spent=_compute_used_time
+                time_stop=_stop_time,
+                time_spent=_compute_used_time,
                 )
+
+        log.info('_record_update_values : {}'.format(_record_update_values))
+
         _update_record = self.update_credit_clock_time_sheet_record(
                 _record_update_values, time_record=_fetch_active_time_record,
                 **kwargs
                 )
         if not _update_record:
             self.warning_unsuccessful_credit_clock_time_sheet_record_update()
+        kwargs['active_session'].add(_fetch_active_time_record)
         _set_inactive = self.set_credit_clock_state(clock_state='inactive')
-        _clear_values = self.clear_credit_clock_values('start_time', 'end_time')
+        _clear_values = self.clear_credit_clock_values('time_start', 'time_stop')
         return _stop_time
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
     def extract_credit_clock_minutes(self, **kwargs):
         log.debug('')
@@ -947,6 +851,8 @@ class CreditClock(Base):
                 )
         kwargs['active_session'].add(_conversion_record)
         return _handlers[kwargs['conversion']](**kwargs)
+
+    # CONTROLLERS
 
     def interogate_credit_clock(self, **kwargs):
         log.debug('')
@@ -1114,6 +1020,8 @@ class CreditClock(Base):
                 }
         _action_status = _handlers[kwargs.get('controller')](**kwargs)
         return _action_status
+
+    # ERRORS
 
     def error_handler_switch_credit_clock_conversion_sheet(self, **kwargs):
         _reasons_and_handlers = {
@@ -1319,6 +1227,91 @@ class CreditClock(Base):
         log.error('Could not start credit clock timer.')
         return False
 
+    def error_no_start_time_found(self):
+        log.error('No start time found.')
+        return False
+
+    def error_no_stop_time_found(self):
+        log.error('No stop time found.')
+        return False
+
+    def error_no_spent_time_found(self):
+        log.error('No spent time found.')
+        return False
+
+    def error_no_credit_clock_start_time_found(self):
+        log.error('No credit clock start time found.')
+        return False
+
+    def error_no_credit_clock_stop_time_found(self):
+        log.error('No credit clock stop time found.')
+        return False
+
+    def error_no_credit_clock_time_spent_found(self):
+        log.error('No credit clock time spent found.')
+        return False
+
+    def error_could_not_set_active_time_record(self):
+        log.error(
+                'Something went wrong. '
+                'Could not set credit clock active time record.'
+                )
+        return False
+
+    def error_no_start_or_stop_time_found(self):
+        log.error('No start or stop time found.')
+        return False
+
+    def error_could_not_fetch_active_time_record_start_time(self):
+        log.error('Could not fetch active time record start time.')
+        return False
+
+    def error_recorded_start_time_wont_match_command_chain_value(self):
+        log.error('Recorded start time wont match command chain value.')
+        return False
+
+    def error_could_not_compute_time_spent(self):
+        log.error('Could not compute time spent.')
+        return False
+
+    def error_identical_start_and_stop_time(self):
+        log.error('Identical start and stop time values.')
+        return False
+
+    def error_no_active_time_record_found(self):
+        log.error('No active time record found.')
+        return False
+
+    def error_could_not_update_active_time_record_values(self):
+        log.error('Could not update active time record values.')
+        return False
+
+    def error_inactive_time_record_state(self):
+        log.error('Inactive time record state.')
+        return False
+
+    def error_illegal_credit_clock_state(self):
+        log.error('Illegal credit clock state.')
+        return False
+
+    def error_invalid_field_for_credit_clock(self):
+        log.error('Invald field for credit clock.')
+        return False
+
+    # WARNINGS
+
+    def warning_could_not_clear_credit_clock_field(self):
+        log.warning('Could not clear credit clock field.')
+        return False
+
+    def warning_unsuccessful_credit_clock_time_sheet_record_update(self):
+        log.warning('Unsuccessful credit clock time sheet record update.')
+        return False
+
+    def warning_computed_time_spent_wont_match_command_chain_value(self):
+        log.warning('Coputed time spent wont match command chain value.')
+        return False
+
     def warning_illegal_credit_clock_state(self):
         log.warning('Illegal credit clock state.')
         return False
@@ -1340,6 +1333,8 @@ class CreditClock(Base):
                 'Could not fetch conversion sheet by %s %s.', search_code, code
                 )
         return False
+
+    # TESTS
 
     def test_interogation(self, **kwargs):
         print('[ TEST ]: Test interogation...')

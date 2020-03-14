@@ -1,8 +1,9 @@
 # TODO - Bug user action supply -> same partner_account
+# TODO - Bug user action stop timer -> time record has no end & used time
+# TODO - Bug user action stop timer -> clock end time is not cleared
+
 # TODO - Persistent storage with SQLAlchemy ORM
 - session cleanup
-- orm start credit clock
-- orm stop credit clock
 - orm unlink account
 - orm contact list record creation
 - orm transfer record creation
@@ -10,12 +11,20 @@
 - orm time record creation
 - orm invoice record creation
 - system action view session
+
 # TODO - Remove redundant error handlers
 # TODO - Add full test cases
 # TODO - Manage initialisation and sqlalchemy sessions
 # TODO - PEP8-it
 # TODO - BUG FIX - Ewallet Record Sequencer
+
+# TODO - EWallet session manager
+
 # TODO - EWallet Client
+
+# TODO - Ewallet REST Api
+# TODO - Ewallet python package
+
 # TODO - Add ACL permission sheets
 # TODO - Deletion order with 30 day pending
 # TODO - Client user account security
