@@ -383,16 +383,6 @@ class CreditClockConversionSheet(Base):
         log.info('Successfully added conversion record to sheet.')
         return _record
 
-    # TODO - Refactor
-    def display_conversion_sheet_records(self):
-        log.debug('')
-        print('Conversion Sheet {} Records:'.format(self.reference))
-        for k, v in self.records.items():
-            print('{}: {} - {}'.format(
-                v.fetch_create_date(), k, v.fetch_reference())
-                )
-        return self.records
-
     def action_add_conversion_sheet_record(self, **kwargs):
         log.debug('')
         _record = CreditClockConversionSheetRecord(

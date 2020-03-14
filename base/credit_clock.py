@@ -449,7 +449,12 @@ class CreditClock(Base):
 
     def extract_credit_clock_minutes(self, **kwargs):
         log.debug('')
-        self.credit_clock = round((self.credit_clock - kwargs.get('clock_credits')), 2)
+        if not kwargs.get('minutes'):
+            return self.error_no_minutes_found()
+        _minutes = round((self.credit_clock - kwargs.get('minutes')), 2)
+        if _minutes is self.credit_clock:
+            return self.error_could_not_extract_credit_clock_minutes()
+        self.credit_clock = _minutes
         log.info('Successfully extracted credit clock minutes.')
         return self.credit_clock
 
@@ -464,36 +469,16 @@ class CreditClock(Base):
         log.info('Successfully supplied credit clock minutes.')
         return self.credit_clock
 
-    # TODO - Refactor
-    def convert_minutes_to_credits(self, **kwargs):
-        log.debug('')
-        if not kwargs.get('minutes'):
-            return self.error_no_minutes_found()
-        if (self.credit_clock - kwargs['minutes']) < 0:
-            _remainder = abs(self.credit_clock - kwargs['minutes'])
-            self.extract_credit_clock_minutes(
-                    clock_credits=(self.credit_clock - kwargs['minutes'] + _remainder)
-                    )
-            log.info('Not enough minutes to convert to credits. Converted remainder.')
-            return _remainder
-        _extract = self.extract_credit_clock_minutes(
-                clock_credits=kwargs['minutes']
-                )
-        _supply = self.supply_ewallet_credits(
-                ewallet=kwargs['ewallet'],
-                credits=kwargs['minutes'],
-                )
-        log.info('Successfully converted minutes to credits.')
-        return _extract
-
     def supply_ewallet_credits(self, **kwargs):
         log.debug('')
-        if not kwargs.get('ewallet'):
+        if not kwargs.get('credit_ewallet'):
             return self.error_no_ewallet_found()
         if not kwargs.get('credits'):
             return self.error_no_credits_specified()
-        return kwargs['ewallet'].supply_credits(credits=kwargs['credits'])
-
+        _supply = kwargs['credit_ewallet'].main_controller(
+                controller='system', action='supply', credits=kwargs['credits']
+                )
+        return _supply
 
 #   @pysnooper.snoop('logs/ewallet.log')
     def extract_ewallet_credits(self, **kwargs):
@@ -516,21 +501,53 @@ class CreditClock(Base):
         _extract_credits = self.extract_ewallet_credits(**kwargs)
         return _supply_minutes
 
-    # TODO
+    '''
+        [ RETURN ]: Minutes left after subtraction or dictionary with error,
+        minutes found in command chain and remainder
+        (in case of insufficient time).
+    '''
+#   @pysnooper.snoop('logs/ewallet.log')
+    def convert_minutes_to_credits(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('minutes'):
+            return self.error_no_minutes_found()
+        if (self.credit_clock - kwargs['minutes']) < 0:
+            _remainder = abs(self.credit_clock - kwargs['minutes'])
+            _extract = self.extract_credit_clock_minutes(
+                    clock_credits=(self.credit_clock - kwargs['minutes'] + _remainder)
+                    )
+            log.warning('Not enough minutes to convert to credits. Converted remainder.')
+            return {
+                    'error': 'Insufficient time',
+                    'minutes': kwargs['minutes'],
+                    'remainder': _remainder
+                    }
+        _extract = self.extract_credit_clock_minutes(**kwargs)
+        _supply = self.supply_ewallet_credits(
+                credits=kwargs['minutes'], **kwargs
+                )
+        log.info('Successfully converted minutes to credits.')
+        return _extract
+
+    # TODO - Add conversion record data
     def credit_converter(self, **kwargs):
         log.debug('')
         if not kwargs.get('conversion'):
             return self.error_no_credit_conversion_type_specified()
+        if not kwargs.get('active_session'):
+            return self.error_no_active_session_found()
         _handlers = {
                 'to_minutes': self.convert_credits_to_minutes,
                 'to_credits': self.convert_minutes_to_credits,
                 }
         _conversion_sheet = self.fetch_credit_clock_conversion_sheet()
         if not _conversion_sheet:
+            kwargs['active_session'].rollback()
             return False
         _conversion_record = self.create_credit_clock_conversion_record(
                 conversion_sheet=_conversion_sheet, **kwargs
                 )
+        kwargs['active_session'].add(_conversion_record)
         return _handlers[kwargs['conversion']](**kwargs)
 
     def interogate_credit_clock(self, **kwargs):
@@ -882,6 +899,10 @@ class CreditClock(Base):
 
     def error_could_not_supply_credit_clock_with_minutes(self):
         log.error('Could not supply credit clock with minutes.')
+        return False
+
+    def error_could_not_extract_credit_clock_minutes(self):
+        log.error('Could not extract credit clock minutes.')
         return False
 
     def warning_could_not_fetch_time_sheet(self, search_code, code):

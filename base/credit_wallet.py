@@ -313,10 +313,16 @@ class CreditEWallet(Base):
         self.invoice_sheet_archive = kwargs['invoice_sheet_archive']
         return True
 
-    def set_write_date(self):
+    def set_write_date(self, **kwargs):
         log.debug('')
-        self.write_date = datetime.datetime.now()
+        if not kwargs.get('write_date'):
+            return self.error_no_write_date_found()
+        self.write_date = kwargs['write_date']
         return self.write_date
+
+    def update_write_date(self):
+        log.debug('')
+        return self.set_write_date(write_date=datetime.datetime.now())
 
     def update_credit_clock_archive(self, credit_clock):
         log.debug('')
@@ -390,7 +396,10 @@ class CreditEWallet(Base):
         log.debug('')
         if not kwargs.get('credits'):
             return self.error_no_credits_found()
-        self.credits += kwargs['credits']
+        _credits = self.credits + kwargs['credits']
+        if _credits is self.credits:
+            return self.error_could_not_supply_credits_to_credit_ewallet()
+        self.credits = _credits
         log.info('Successfully supplied wallet with credits.')
         return self.credits
 
@@ -427,17 +436,25 @@ class CreditEWallet(Base):
             kwargs['active_session'].rollback()
         return _convert
 
+    # TODO
+#   @pysnooper.snoop('logs/ewallet.log')
     def convert_minutes_to_credits(self, **kwargs):
         log.debug('')
         if not kwargs.get('minutes'):
             return self.error_no_minutes_found()
-        _credit_clock = self.credit_clock
-        _convert = _credit_clock.system_controller(
-                action='convert', conversion='to_credits',
-                minutes=kwargs['minutes']
+        _credit_clock = kwargs.get('credit_clock') or \
+                self.fetch_credit_ewallet_credit_clock()
+        # TODO - Command Chain Pop Util
+        for item in ['controller', 'action', 'conversion']:
+            try:
+                kwargs.pop(item)
+            except KeyError:
+                continue
+        _convert = _credit_clock.main_controller(
+                controller='system', action='convert', conversion='to_credits',
+                **kwargs
                 )
         self.update_write_date()
-        self.system_controller(action='supply', credits=kwargs['minutes'])
         log.info('Successfully converted minutes to credits.')
         return _convert
 
@@ -790,7 +807,7 @@ class CreditEWallet(Base):
                 }
         _handle = _handlers[kwargs['action']](**kwargs)
         if _handle:
-            self.set_write_date()
+            self.update_write_date()
         return _handle
 
     def user_controller(self, **kwargs):
@@ -807,7 +824,7 @@ class CreditEWallet(Base):
                 }
         _handle = _handlers[kwargs['action']](**kwargs)
         if _handle and kwargs['action'] != 'interogate':
-            self.set_write_date()
+            self.update_write_date()
         return _handle
 
     def main_controller(self, **kwargs):
@@ -1077,6 +1094,14 @@ class CreditEWallet(Base):
         log.error('Could not extract credits from credit wallet.')
         return False
 
+    def error_no_write_date_found(self):
+        log.error('No write date found.')
+        return False
+
+    def error_could_not_supply_credits_to_credit_ewallet():
+        log.error('Could not supply credits to credit ewallet.')
+        return False
+
     def warning_could_not_fetch_credit_clock(self, search_code, code):
         log.warning(
                 'Something went wrong. '
@@ -1210,60 +1235,4 @@ class CreditEWallet(Base):
 ###############################################################################
 # CODE DUMP
 ###############################################################################
-
-#   credit_clock_id = Column(
-#      Integer, ForeignKey('credit_clock.clock_id')
-#      )
-#   transfer_sheet_id = Column(
-#      Integer, ForeignKey('credit_transfer_sheet.transfer_sheet_id')
-#      )
-#   invoice_sheet_id = Column(
-#      Integer, ForeignKey('credit_invoice_sheet.invoice_sheet_id')
-#      )
-
-#   # O2O
-#   active_session = relationship('EWallet', back_populates='credit_wallet')
-    # O2O
-#   client = relationship('ResUser', back_populates='user_credit_wallet')
-
-
-#   # TODO - Refactor
-#   def display_credit_wallet_credits(self, **kwargs):
-#       log.debug('')
-#       print('Credit Wallet {} Credits: {}'.format(
-#           self.reference, self.credits
-#           ))
-#       return self.credits
-
-#   # TODO - Refactor
-#   @pysnooper.snoop()
-#   def display_credit_wallet_transfer_sheets(self, **kwargs):
-#       log.debug('')
-#       for k, v in self.transfer_sheet_archive.items():
-#           print('{}: {} - {}'.format(
-#              v.fetch_transfer_sheet_create_date(), k,
-#              v.fetch_transfer_sheet_reference()
-#              ))
-#       return self.transfer_sheet_archive
-
-#   # TODO - Refactor
-#   def display_credit_wallet_transfer_records(self, **kwargs):
-#       log.debug('')
-#       return self.transfer_sheet.display_transfer_sheet_records()
-
-#   # TODO - Refactor
-#   def display_credit_wallet_invoice_sheets(self, **kwargs):
-#       log.debug('')
-#       for k, v in self.invoice_sheet_archive.items():
-#           print('{}: {} - {}'.format(
-#               v.fetch_invoice_sheet_create_date(), k,
-#               v.fetch_invoice_sheet_reference(),
-#               ))
-#       return self.invoice_sheet_archive
-
-#   # TODO - Refactor
-#   def display_credit_wallet_invoice_records(self, **kwargs):
-#       log.debug('')
-#       return self.invoice_sheet.display_credit_invoice_sheet_records()
-
 

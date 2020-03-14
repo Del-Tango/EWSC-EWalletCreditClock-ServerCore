@@ -178,9 +178,10 @@ class EWallet(Base):
             return self.error_no_session_credit_wallet_found()
         return self.credit_wallet[0]
 
-    def fetch_active_session_credit_clock(self):
+    def fetch_active_session_credit_clock(self, **kwargs):
         log.debug('')
-        _credit_wallet = self.fetch_active_session_credit_wallet()
+        _credit_wallet = kwargs.get('credit_ewallet') or \
+                self.fetch_active_session_credit_wallet()
         if not _credit_wallet:
             return self.error_could_not_fetch_active_session_credit_wallet()
         _credit_clock = _credit_wallet.fetch_credit_ewallet_credit_clock()
@@ -397,13 +398,41 @@ class EWallet(Base):
         return _convert
 
     # TODO - Apply ORM
+    @pysnooper.snoop('logs/ewallet.log')
     def action_create_new_conversion_clock_to_credits(self, **kwargs):
         log.debug('')
+        _credit_wallet = kwargs.get('credit_ewallet') or \
+                self.fetch_active_session_credit_wallet()
         _credit_clock = kwargs.get('credit_clock') or \
-                self.fetch_active_session_credit_clock()
-        if not _credit_clock:
-            return self.error_could_not_fetch_active_session_credit_clock()
-        return _credit_clock.main_controller(**kwargs)
+            self.fetch_active_session_credit_clock(
+                credit_ewallet=_credit_wallet
+            )
+        if not _credit_wallet:
+            return self.error_could_not_fetch_active_session_credit_wallet()
+        _credits_before = self.fetch_credit_wallet_credits()
+        _active_session = kwargs.get('active_session') or self.fetch_active_session()
+        # TODO - Replace command chain adjustments with function in res_utils
+        kwargs.pop('controller')
+        kwargs.pop('action')
+        kwargs.pop('conversion')
+        try:
+            kwargs.pop('credit_ewallet')
+            kwargs.pop('active_session')
+        except KeyError:
+            log.warning(
+                'Could not pop tags credit_ewallet and active_session '
+                'from command chain.'
+            )
+        _convert = _credit_wallet.main_controller(
+                controller='system', action='convert', conversion='to_credits',
+                credit_ewallet=_credit_wallet, credit_clock=_credit_clock,
+                active_session=_active_session, **kwargs
+                )
+        if not _convert:
+            _active_session.rollback()
+            return self.error_could_not_convert_minutes_to_credits()
+        _active_session.commit()
+        return _convert
 
     def action_create_new_conversion(self, **kwargs):
         log.debug('')
@@ -519,8 +548,6 @@ class EWallet(Base):
     def action_create_new_transfer_type_transfer(self, **kwargs):
         log.debug('')
 
-
-    # TODO - FIX ME
     def action_create_new_transfer(self, **kwargs):
         log.debug('')
         if not kwargs.get('ttype'):
@@ -531,26 +558,6 @@ class EWallet(Base):
                 'transfer': self.action_create_new_transfer_type_transfer,
                 }
         return _handlers[kwargs['ttype']](**kwargs)
-
-#       if not self.credit_wallet or not kwargs.get('active_session') or \
-#               not kwargs.get('transfer_type') or \
-#               not kwargs.get('partner_ewallet'):
-#           return self.error_handler_action_create_new_transfer(
-#                   session_wallet=self.credit_wallet,
-#                   transfer_type=kwargs.get('transfer_type'),
-#                   partner_wallet=kwargs.get('partner_ewallet'),
-#                   active_session=kwargs.get('active_session'),
-#                   )
-#       _credit_wallet = self.fetch_active_session_credit_wallet()
-#       return False if not _credit_wallet else _credit_wallet.user_controller(
-#               action='transfer', transfer_type=kwargs['transfer_type'],
-#               partner_ewallet=kwargs['partner_ewallet'],
-#               credits=kwargs['credits'] or 0,
-#               reference=kwargs.get('reference'),
-#               transfer_from=kwargs.get('transfer_from'),
-#               transfer_to=kwargs.get('transfer_to'),
-#               active_session=kwargs['active_session']
-#               )
 
     def action_unlink_user_account(self, **kwargs):
         log.debug('')
@@ -1080,6 +1087,30 @@ class EWallet(Base):
         _update = self.update_session_from_user(**kwargs)
         return _update or False
 
+    def action_start_credit_clock_timer(self, **kwargs):
+        log.debug('')
+        if not self.credit_wallet:
+            return self.error_no_session_credit_wallet_found()
+        log.info('Attempting to fetch active credit clock...')
+        _credit_clock = self.credit_wallet.fetch_credit_ewallet_credit_clock()
+        if not _credit_clock:
+            return self.warning_could_not_fetch_credit_clock()
+        return _credit_clock.main_controller(
+                controller='user', action='start'
+                )
+
+    def action_stop_credit_clock_timer(self, **kwargs):
+        log.debug('')
+        if not self.session_credit_wallet:
+            return self.error_no_session_credit_wallet_found()
+        log.info('Attempting to fetch active credit clock...')
+        _credit_clock = self.session_credit_wallet.fetch_credit_ewallet_credit_clock()
+        if not _credit_clock:
+            return self.warning_could_not_fetch_credit_clock()
+        return _credit_clock.main_controller(
+                controller='user', action='stop'
+                )
+
     def handle_system_action_update(self, **kwargs):
         log.debug('')
         if not kwargs.get('target'):
@@ -1170,30 +1201,6 @@ class EWallet(Base):
                 'contact': self.action_create_new_contact,
                 }
         return _handlers[kwargs['create']](**kwargs)
-
-    def action_start_credit_clock_timer(self, **kwargs):
-        log.debug('')
-        if not self.credit_wallet:
-            return self.error_no_session_credit_wallet_found()
-        log.info('Attempting to fetch active credit clock...')
-        _credit_clock = self.credit_wallet.fetch_credit_ewallet_credit_clock()
-        if not _credit_clock:
-            return self.warning_could_not_fetch_credit_clock()
-        return _credit_clock.main_controller(
-                controller='user', action='start'
-                )
-
-    def action_stop_credit_clock_timer(self, **kwargs):
-        log.debug('')
-        if not self.session_credit_wallet:
-            return self.error_no_session_credit_wallet_found()
-        log.info('Attempting to fetch active credit clock...')
-        _credit_clock = self.session_credit_wallet.fetch_credit_ewallet_credit_clock()
-        if not _credit_clock:
-            return self.warning_could_not_fetch_credit_clock()
-        return _credit_clock.main_controller(
-                controller='user', action='stop'
-                )
 
     def handle_user_action_time(self, **kwargs):
         log.debug('')
@@ -1370,6 +1377,9 @@ class EWallet(Base):
         }
         return _handlers[kwargs['action']](**kwargs)
 
+    '''
+        [ NOTE ]: Low level command interface for system actions and events.
+    '''
     def ewallet_system_controller(self, **kwargs):
         log.debug('')
         if not kwargs.get('ctype'):
@@ -1380,6 +1390,9 @@ class EWallet(Base):
         }
         return _handlers[kwargs['ctype']](**kwargs)
 
+    '''
+        [ NOTE ]: High level command interface for user actions and events.
+    '''
     def ewallet_user_controller(self, **kwargs):
         log.debug('')
         if not kwargs.get('ctype'):
@@ -1390,7 +1403,9 @@ class EWallet(Base):
         }
         return _handlers[kwargs['ctype']](**kwargs)
 
-    # [ NOTE ]: Main
+    '''
+        [ NOTE ]: Main command interface for ewallet session.
+    '''
     def ewallet_controller(self, **kwargs):
         log.debug('')
         if not kwargs.get('controller'):
@@ -1932,6 +1947,10 @@ class EWallet(Base):
         log.error('Could not convert credits to minutes.')
         return False
 
+    def error_could_not_convert_minutes_to_credits(self):
+        log.error('Could not convert minutes to credits.')
+        return False
+
     def warning_could_not_login(self):
         log.warning(
                 'Something went wrong. '
@@ -2197,15 +2216,6 @@ class EWallet(Base):
         print(str(_view_invoice_sheet_record) + '\n')
         return _view_invoice_sheet_record
 
-    # TODO
-    def action_convert_credits_to_clock(self):
-        print('[ * ] Convert Credits To Clock')
-        _convert_credits_to_clock = self.ewallet_controller(
-
-                )
-        print(str(_convert_credits_to_clock) + '\n')
-        return _convert_credits_to_clock
-
     def test_view_time_sheet(self):
         print('[ * ] View Time Sheet')
         _view_time_sheet = self.ewallet_controller(
@@ -2280,13 +2290,21 @@ class EWallet(Base):
         print(str(_logout) + '\n')
         return _logout
 
-    # TODO
     def test_convert_credits_to_clock(self):
         print('[ * ] Convert Credits To Clock')
         _convert = self.ewallet_controller(
                 controller='user', ctype='action', action='create',
                 create='conversion', conversion='credits2clock', credits=3,
+                )
+        print(str(_convert) + '\n')
+        return _convert
 
+
+    def test_convert_clock_to_credits(self):
+        print('[ * ]: Convert Clock To Credits')
+        _convert = self.ewallet_controller(
+                controller='user', ctype='action', action='create',
+                create='conversion', conversion='clock2credits', minutes=1,
                 )
         print(str(_convert) + '\n')
         return _convert
@@ -2309,6 +2327,7 @@ class EWallet(Base):
         _view_time_sheet = self.test_view_time_sheet()
         _view_time_sheet_record = self.test_view_time_sheet_record()
         _convert_credits = self.test_convert_credits_to_clock()
+        _convert_clock = self.test_convert_clock_to_credits()
         _view_conversion_sheet = self.test_view_conversion_sheet()
         _view_conversion_sheet_record = self.test_view_conversion_sheet_record()
         _view_contact_list = self.test_view_contact_list()
