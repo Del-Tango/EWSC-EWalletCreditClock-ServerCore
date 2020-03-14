@@ -294,38 +294,30 @@ class CreditClockTimeSheet(Base):
         self.records = kwargs['records']
         return True
 
-    def update_time_sheet_records(self, **kwargs):
+    def set_write_date(self, **kwargs):
         log.debug('')
-        if not kwargs.get('record'):
-            return self.error_no_time_sheet_records_found()
-        self.records.update({
-            kwargs['record'].fetch_record_id(), kwargs['record']
-            })
+        _now = kwargs.get('write_date') or datetime.datetime.now()
+        self.write_date = _now
+        return True
+
+    def update_time_sheet_records(self, record):
+        log.debug('')
+        self.records.append(record)
         log.info('Successfully update time sheet records.')
         return self.records
 
     def update_write_date(self):
         log.debug('')
-        self.write_date = datetime.datetime.now()
-        return self.write_date
-
-    # TODO - Refactor
-    def display_time_sheet_records(self):
-        log.debug('')
-        print('Time Sheet {} Records:'.format(self.reference))
-        for k, v in self.records.items():
-            print('{}: {} - {}'.format(
-                v.fetch_create_date(), k, v.fetch_reference())
-                )
-        return self.records
+        return self.set_write_date(write_date=datetime.datetime.now())
 
     def action_add_time_sheet_record(self, **kwargs):
         log.debug('')
         _values = self.fetch_time_record_creation_values(**kwargs)
         _record = TimeSheetRecord(**_values)
-        self.update_time_sheet_records(record=_record)
-        log.info('Successfully added new time record.')
-        return _record
+        _updated_records = self.update_time_sheet_records(_record)
+        if _record:
+            log.info('Successfully added new time record.')
+        return _record or False
 
     def action_remove_time_sheet_record(self, **kwargs):
         log.debug('')

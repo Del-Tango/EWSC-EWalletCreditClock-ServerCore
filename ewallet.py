@@ -1087,17 +1087,55 @@ class EWallet(Base):
         _update = self.update_session_from_user(**kwargs)
         return _update or False
 
+
+
+
+
+
+
+
+
+    def error_no_active_session_found(self):
+        log.error('No active session found.')
+        return False
+
+    def error_could_not_start_credit_clock_timer(self):
+        log.error('Could not start credit clock timer.')
+        return False
+
+    @pysnooper.snoop('logs/ewallet.log')
     def action_start_credit_clock_timer(self, **kwargs):
         log.debug('')
-        if not self.credit_wallet:
-            return self.error_no_session_credit_wallet_found()
-        log.info('Attempting to fetch active credit clock...')
-        _credit_clock = self.credit_wallet.fetch_credit_ewallet_credit_clock()
+        _credit_clock = kwargs.get('credit_clock') or \
+                self.fetch_active_session_credit_clock()
         if not _credit_clock:
             return self.warning_could_not_fetch_credit_clock()
-        return _credit_clock.main_controller(
-                controller='user', action='start'
+        _active_session = kwargs.get('active_session') or self.session
+        if not _active_session:
+            return self.error_no_active_session_found()
+        # TODO - Command Chain Pop Util
+        for item in ['controller', 'action', 'active_session']:
+            try:
+                kwargs.pop(item)
+            except KeyError:
+                log.error(
+                        'Could not pop tag {} from command chain.'.format(item)
+                        )
+        _start = _credit_clock.main_controller(
+                controller='user', action='start',
+                active_session=_active_session, **kwargs
                 )
+        if not _start:
+            _active_session.rollback()
+            return self.error_could_not_start_credit_clock_timer()
+        _active_session.commit()
+        return _start
+
+
+
+
+
+
 
     def action_stop_credit_clock_timer(self, **kwargs):
         log.debug('')
@@ -2309,6 +2347,15 @@ class EWallet(Base):
         print(str(_convert) + '\n')
         return _convert
 
+    # TODO
+    def test_start_credit_clock(self):
+        print('[ * ]: Start credit clock')
+        _start = self.ewallet_controller(
+                controller='user', ctype='action', action='time', timer='start'
+                )
+        print(str(_start) + '\n')
+        return _start
+
     def test_ewallet_user_controller(self):
         print('[ TEST ] User.')
         _create = self.test_create_account()
@@ -2327,6 +2374,7 @@ class EWallet(Base):
         _view_time_sheet = self.test_view_time_sheet()
         _view_time_sheet_record = self.test_view_time_sheet_record()
         _convert_credits = self.test_convert_credits_to_clock()
+        _start_clock = self.test_start_credit_clock()
         _convert_clock = self.test_convert_clock_to_credits()
         _view_conversion_sheet = self.test_view_conversion_sheet()
         _view_conversion_sheet_record = self.test_view_conversion_sheet_record()

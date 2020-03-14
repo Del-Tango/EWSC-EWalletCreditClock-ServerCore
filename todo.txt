@@ -1,7 +1,6 @@
 # TODO - Bug user action supply -> same partner_account
 # TODO - Persistent storage with SQLAlchemy ORM
 - session cleanup
-- orm convert credits to credit clock
 - orm start credit clock
 - orm stop credit clock
 - orm unlink account
