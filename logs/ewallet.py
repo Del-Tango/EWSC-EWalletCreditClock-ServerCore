@@ -1084,3 +1084,713 @@ New var:....... _view_credit_wallet = {'id': 2, 'client_id': 2, 'reference': 'Cr
 21:19:53.340789 line      2272         return _view_credit_wallet
 21:19:53.340939 return    2272         return _view_credit_wallet
 Return value:.. {'id': 2, 'client_id': 2, 'reference': 'Credit W...sheet.CreditTransferSheet object at 0xb6baa7ac>]}
+Starting var:.. self = <__main__.EWallet object at 0xb6cca94c>
+21:42:02.765234 call      2332     def test_view_credit_wallet(self):
+21:42:02.767513 line      2333         print('[ * ] View Credit Wallet')
+21:42:02.767730 line      2334         _view_credit_wallet = self.ewallet_controller(
+21:42:02.767884 line      2335                 controller='user', ctype='action', action='view', view='credit_wallet',
+21:42:02.791916 exception 2335                 controller='user', ctype='action', action='view', view='credit_wallet',
+sqlalchemy.exc.OperationalError: (sqlite3.OperationalError) no such column: credit_clock.pending_t...credit_clock.wallet_id]
+[parameters: (2,)]
+(Background on this error at: http://sqlalche.me/e/e3q8)
+Call ended by exception
+Starting var:.. self = <__main__.EWallet object at 0xb6c65a4c>
+21:42:18.691314 call      2332     def test_view_credit_wallet(self):
+21:42:18.692691 line      2333         print('[ * ] View Credit Wallet')
+21:42:18.692938 line      2334         _view_credit_wallet = self.ewallet_controller(
+21:42:18.693067 line      2335                 controller='user', ctype='action', action='view', view='credit_wallet',
+New var:....... _view_credit_wallet = {'id': 2, 'client_id': 2, 'reference': 'Credit W...sheet.CreditTransferSheet object at 0xb6b1b46c>]}
+21:42:18.737197 line      2337         print(str(_view_credit_wallet) + '\n')
+21:42:18.737992 line      2338         return _view_credit_wallet
+21:42:18.738177 return    2338         return _view_credit_wallet
+Return value:.. {'id': 2, 'client_id': 2, 'reference': 'Credit W...sheet.CreditTransferSheet object at 0xb6b1b46c>]}
+Starting var:.. self = <__main__.EWallet object at 0xb6c90c2c>
+21:44:23.719374 call      2332     def test_view_credit_wallet(self):
+21:44:23.720807 line      2333         print('[ * ] View Credit Wallet')
+21:44:23.721203 line      2334         _view_credit_wallet = self.ewallet_controller(
+21:44:23.721494 line      2335                 controller='user', ctype='action', action='view', view='credit_wallet',
+New var:....... _view_credit_wallet = {'id': 2, 'client_id': 2, 'reference': 'Credit W...sheet.CreditTransferSheet object at 0xb6b0b64c>]}
+21:44:23.758444 line      2337         print(str(_view_credit_wallet) + '\n')
+21:44:23.758711 line      2338         return _view_credit_wallet
+21:44:23.758978 return    2338         return _view_credit_wallet
+Return value:.. {'id': 2, 'client_id': 2, 'reference': 'Credit W...sheet.CreditTransferSheet object at 0xb6b0b64c>]}
+Starting var:.. self = <__main__.EWallet object at 0xb6ca8b0c>
+21:50:17.663023 call      2332     def test_view_credit_wallet(self):
+21:50:17.664170 line      2333         print('[ * ] View Credit Wallet')
+21:50:17.664321 line      2334         _view_credit_wallet = self.ewallet_controller(
+21:50:17.664442 line      2335                 controller='user', ctype='action', action='view', view='credit_wallet',
+New var:....... _view_credit_wallet = {'id': 2, 'client_id': 2, 'reference': 'Credit W...sheet.CreditTransferSheet object at 0xb6b2694c>]}
+21:50:17.696326 line      2337         print(str(_view_credit_wallet) + '\n')
+21:50:17.696588 line      2338         return _view_credit_wallet
+21:50:17.696748 return    2338         return _view_credit_wallet
+Return value:.. {'id': 2, 'client_id': 2, 'reference': 'Credit W...sheet.CreditTransferSheet object at 0xb6b2694c>]}
+Starting var:.. self = <__main__.EWallet object at 0xb6cd7dac>
+22:12:55.441863 call      2332     def test_view_credit_wallet(self):
+22:12:55.443123 line      2333         print('[ * ] View Credit Wallet')
+22:12:55.443270 line      2334         _view_credit_wallet = self.ewallet_controller(
+22:12:55.443386 line      2335                 controller='user', ctype='action', action='view', view='credit_wallet',
+New var:....... _view_credit_wallet = {'id': 2, 'client_id': 2, 'reference': 'Credit W...sheet.CreditTransferSheet object at 0xb6ad486c>]}
+22:12:55.483714 line      2337         print(str(_view_credit_wallet) + '\n')
+22:12:55.483966 line      2338         return _view_credit_wallet
+22:12:55.484130 return    2338         return _view_credit_wallet
+Return value:.. {'id': 2, 'client_id': 2, 'reference': 'Credit W...sheet.CreditTransferSheet object at 0xb6ad486c>]}
+Starting var:.. self = <__main__.EWallet object at 0xb6d53dac>
+22:14:09.213381 call      2332     def test_view_credit_wallet(self):
+22:14:09.216269 line      2333         print('[ * ] View Credit Wallet')
+22:14:09.216454 line      2334         _view_credit_wallet = self.ewallet_controller(
+22:14:09.216574 line      2335                 controller='user', ctype='action', action='view', view='credit_wallet',
+New var:....... _view_credit_wallet = {'id': 2, 'client_id': 2, 'reference': 'Credit W...sheet.CreditTransferSheet object at 0xb6b5280c>]}
+22:14:09.257357 line      2337         print(str(_view_credit_wallet) + '\n')
+22:14:09.257592 line      2338         return _view_credit_wallet
+22:14:09.257754 return    2338         return _view_credit_wallet
+Return value:.. {'id': 2, 'client_id': 2, 'reference': 'Credit W...sheet.CreditTransferSheet object at 0xb6b5280c>]}
+Starting var:.. self = <__main__.EWallet object at 0xb6cc9bac>
+22:14:26.511631 call      2332     def test_view_credit_wallet(self):
+22:14:26.512991 line      2333         print('[ * ] View Credit Wallet')
+22:14:26.513195 line      2334         _view_credit_wallet = self.ewallet_controller(
+22:14:26.513334 line      2335                 controller='user', ctype='action', action='view', view='credit_wallet',
+New var:....... _view_credit_wallet = {'id': 2, 'client_id': 2, 'reference': 'Credit W...sheet.CreditTransferSheet object at 0xb6b855cc>]}
+22:14:26.550093 line      2337         print(str(_view_credit_wallet) + '\n')
+22:14:26.550347 line      2338         return _view_credit_wallet
+22:14:26.550603 return    2338         return _view_credit_wallet
+Return value:.. {'id': 2, 'client_id': 2, 'reference': 'Credit W...sheet.CreditTransferSheet object at 0xb6b855cc>]}
+Starting var:.. self = <__main__.EWallet object at 0xb6c38fcc>
+22:14:47.627387 call      2332     def test_view_credit_wallet(self):
+22:14:47.628596 line      2333         print('[ * ] View Credit Wallet')
+22:14:47.628751 line      2334         _view_credit_wallet = self.ewallet_controller(
+22:14:47.628872 line      2335                 controller='user', ctype='action', action='view', view='credit_wallet',
+New var:....... _view_credit_wallet = {'id': 2, 'client_id': 2, 'reference': 'Credit W...sheet.CreditTransferSheet object at 0xb6ab68ec>]}
+22:14:47.671244 line      2337         print(str(_view_credit_wallet) + '\n')
+22:14:47.671519 line      2338         return _view_credit_wallet
+22:14:47.671687 return    2338         return _view_credit_wallet
+Return value:.. {'id': 2, 'client_id': 2, 'reference': 'Credit W...sheet.CreditTransferSheet object at 0xb6ab68ec>]}
+Starting var:.. self = <__main__.EWallet object at 0xb6d66d6c>
+22:15:19.810534 call      2332     def test_view_credit_wallet(self):
+22:15:19.812078 line      2333         print('[ * ] View Credit Wallet')
+22:15:19.812273 line      2334         _view_credit_wallet = self.ewallet_controller(
+22:15:19.812541 line      2335                 controller='user', ctype='action', action='view', view='credit_wallet',
+New var:....... _view_credit_wallet = {'id': 2, 'client_id': 2, 'reference': 'Credit W...sheet.CreditTransferSheet object at 0xb6b6582c>]}
+22:15:19.860357 line      2337         print(str(_view_credit_wallet) + '\n')
+22:15:19.860698 line      2338         return _view_credit_wallet
+22:15:19.860975 return    2338         return _view_credit_wallet
+Return value:.. {'id': 2, 'client_id': 2, 'reference': 'Credit W...sheet.CreditTransferSheet object at 0xb6b6582c>]}
+Starting var:.. self = <__main__.EWallet object at 0xb6ce1dac>
+22:16:25.072913 call      2332     def test_view_credit_wallet(self):
+22:16:25.074451 line      2333         print('[ * ] View Credit Wallet')
+22:16:25.074609 line      2334         _view_credit_wallet = self.ewallet_controller(
+22:16:25.074723 line      2335                 controller='user', ctype='action', action='view', view='credit_wallet',
+New var:....... _view_credit_wallet = {'id': 2, 'client_id': 2, 'reference': 'Credit W...sheet.CreditTransferSheet object at 0xb6ae184c>]}
+22:16:25.117380 line      2337         print(str(_view_credit_wallet) + '\n')
+22:16:25.117615 line      2338         return _view_credit_wallet
+22:16:25.117787 return    2338         return _view_credit_wallet
+Return value:.. {'id': 2, 'client_id': 2, 'reference': 'Credit W...sheet.CreditTransferSheet object at 0xb6ae184c>]}
+Starting var:.. self = <__main__.EWallet object at 0xb6d63dcc>
+22:16:57.311927 call      2332     def test_view_credit_wallet(self):
+22:16:57.313203 line      2333         print('[ * ] View Credit Wallet')
+22:16:57.313360 line      2334         _view_credit_wallet = self.ewallet_controller(
+22:16:57.313476 line      2335                 controller='user', ctype='action', action='view', view='credit_wallet',
+New var:....... _view_credit_wallet = {'id': 2, 'client_id': 2, 'reference': 'Credit W...sheet.CreditTransferSheet object at 0xb6b248ec>]}
+22:16:57.363593 line      2337         print(str(_view_credit_wallet) + '\n')
+22:16:57.363854 line      2338         return _view_credit_wallet
+22:16:57.364036 return    2338         return _view_credit_wallet
+Return value:.. {'id': 2, 'client_id': 2, 'reference': 'Credit W...sheet.CreditTransferSheet object at 0xb6b248ec>]}
+Starting var:.. self = <__main__.EWallet object at 0xb6c9fb6c>
+22:17:44.706926 call      2332     def test_view_credit_wallet(self):
+22:17:44.708225 line      2333         print('[ * ] View Credit Wallet')
+22:17:44.708381 line      2334         _view_credit_wallet = self.ewallet_controller(
+22:17:44.708981 line      2335                 controller='user', ctype='action', action='view', view='credit_wallet',
+New var:....... _view_credit_wallet = {'id': 2, 'client_id': 2, 'reference': 'Credit W...sheet.CreditTransferSheet object at 0xb6b1d92c>]}
+22:17:44.752044 line      2337         print(str(_view_credit_wallet) + '\n')
+22:17:44.752279 line      2338         return _view_credit_wallet
+22:17:44.752444 return    2338         return _view_credit_wallet
+Return value:.. {'id': 2, 'client_id': 2, 'reference': 'Credit W...sheet.CreditTransferSheet object at 0xb6b1d92c>]}
+Starting var:.. self = <__main__.EWallet object at 0xb6c18b4c>
+22:19:37.555008 call      2332     def test_view_credit_wallet(self):
+22:19:37.556263 line      2333         print('[ * ] View Credit Wallet')
+22:19:37.556418 line      2334         _view_credit_wallet = self.ewallet_controller(
+22:19:37.556536 line      2335                 controller='user', ctype='action', action='view', view='credit_wallet',
+New var:....... _view_credit_wallet = {'id': 2, 'client_id': 2, 'reference': 'Credit W...sheet.CreditTransferSheet object at 0xb6a969ec>]}
+22:19:37.603929 line      2337         print(str(_view_credit_wallet) + '\n')
+22:19:37.604257 line      2338         return _view_credit_wallet
+22:19:37.604444 return    2338         return _view_credit_wallet
+Return value:.. {'id': 2, 'client_id': 2, 'reference': 'Credit W...sheet.CreditTransferSheet object at 0xb6a969ec>]}
+Starting var:.. self = <__main__.EWallet object at 0xb6ca2b6c>
+22:20:18.688373 call      2332     def test_view_credit_wallet(self):
+22:20:18.689685 line      2333         print('[ * ] View Credit Wallet')
+22:20:18.689842 line      2334         _view_credit_wallet = self.ewallet_controller(
+22:20:18.689958 line      2335                 controller='user', ctype='action', action='view', view='credit_wallet',
+New var:....... _view_credit_wallet = {'id': 2, 'client_id': 2, 'reference': 'Credit W...sheet.CreditTransferSheet object at 0xb6b2090c>]}
+22:20:18.730212 line      2337         print(str(_view_credit_wallet) + '\n')
+22:20:18.730445 line      2338         return _view_credit_wallet
+22:20:18.730601 return    2338         return _view_credit_wallet
+Return value:.. {'id': 2, 'client_id': 2, 'reference': 'Credit W...sheet.CreditTransferSheet object at 0xb6b2090c>]}
+Starting var:.. self = <__main__.EWallet object at 0xb6db5d4c>
+22:22:21.908843 call      2332     def test_view_credit_wallet(self):
+22:22:21.911209 line      2333         print('[ * ] View Credit Wallet')
+22:22:21.911389 line      2334         _view_credit_wallet = self.ewallet_controller(
+22:22:21.911512 line      2335                 controller='user', ctype='action', action='view', view='credit_wallet',
+New var:....... _view_credit_wallet = {'id': 2, 'client_id': 2, 'reference': 'Credit W...sheet.CreditTransferSheet object at 0xb6b7580c>]}
+22:22:21.957180 line      2337         print(str(_view_credit_wallet) + '\n')
+22:22:21.957434 line      2338         return _view_credit_wallet
+22:22:21.957689 return    2338         return _view_credit_wallet
+Return value:.. {'id': 2, 'client_id': 2, 'reference': 'Credit W...sheet.CreditTransferSheet object at 0xb6b7580c>]}
+Starting var:.. self = <__main__.EWallet object at 0xb6d61dec>
+22:23:08.061124 call      2332     def test_view_credit_wallet(self):
+22:23:08.062434 line      2333         print('[ * ] View Credit Wallet')
+22:23:08.062968 line      2334         _view_credit_wallet = self.ewallet_controller(
+22:23:08.063181 line      2335                 controller='user', ctype='action', action='view', view='credit_wallet',
+New var:....... _view_credit_wallet = {'id': 2, 'client_id': 2, 'reference': 'Credit W...sheet.CreditTransferSheet object at 0xb6b5f92c>]}
+22:23:08.108190 line      2337         print(str(_view_credit_wallet) + '\n')
+22:23:08.108425 line      2338         return _view_credit_wallet
+22:23:08.108586 return    2338         return _view_credit_wallet
+Return value:.. {'id': 2, 'client_id': 2, 'reference': 'Credit W...sheet.CreditTransferSheet object at 0xb6b5f92c>]}
+Starting var:.. self = <__main__.EWallet object at 0xb6d75d8c>
+22:25:40.000943 call      2332     def test_view_credit_wallet(self):
+22:25:40.003500 line      2333         print('[ * ] View Credit Wallet')
+22:25:40.004082 line      2334         _view_credit_wallet = self.ewallet_controller(
+22:25:40.004299 line      2335                 controller='user', ctype='action', action='view', view='credit_wallet',
+New var:....... _view_credit_wallet = {'id': 2, 'client_id': 2, 'reference': 'Credit W...sheet.CreditTransferSheet object at 0xb6b348ac>]}
+22:25:40.054021 line      2337         print(str(_view_credit_wallet) + '\n')
+22:25:40.054575 line      2338         return _view_credit_wallet
+22:25:40.054765 return    2338         return _view_credit_wallet
+Return value:.. {'id': 2, 'client_id': 2, 'reference': 'Credit W...sheet.CreditTransferSheet object at 0xb6b348ac>]}
+Starting var:.. self = <__main__.EWallet object at 0xb6daadec>
+22:29:04.346382 call      2332     def test_view_credit_wallet(self):
+22:29:04.347692 line      2333         print('[ * ] View Credit Wallet')
+22:29:04.347847 line      2334         _view_credit_wallet = self.ewallet_controller(
+22:29:04.347961 line      2335                 controller='user', ctype='action', action='view', view='credit_wallet',
+New var:....... _view_credit_wallet = {'id': 2, 'client_id': 2, 'reference': 'Credit W...sheet.CreditTransferSheet object at 0xb6b698ec>]}
+22:29:04.401394 line      2337         print(str(_view_credit_wallet) + '\n')
+22:29:04.401718 line      2338         return _view_credit_wallet
+22:29:04.401958 return    2338         return _view_credit_wallet
+Return value:.. {'id': 2, 'client_id': 2, 'reference': 'Credit W...sheet.CreditTransferSheet object at 0xb6b698ec>]}
+Starting var:.. self = <__main__.EWallet object at 0xb6d19dcc>
+22:30:09.262059 call      2332     def test_view_credit_wallet(self):
+22:30:09.263304 line      2333         print('[ * ] View Credit Wallet')
+22:30:09.263458 line      2334         _view_credit_wallet = self.ewallet_controller(
+22:30:09.263573 line      2335                 controller='user', ctype='action', action='view', view='credit_wallet',
+New var:....... _view_credit_wallet = {'id': 2, 'client_id': 2, 'reference': 'Credit W...sheet.CreditTransferSheet object at 0xb6b1788c>]}
+22:30:09.301645 line      2337         print(str(_view_credit_wallet) + '\n')
+22:30:09.301897 line      2338         return _view_credit_wallet
+22:30:09.302053 return    2338         return _view_credit_wallet
+Return value:.. {'id': 2, 'client_id': 2, 'reference': 'Credit W...sheet.CreditTransferSheet object at 0xb6b1788c>]}
+Starting var:.. self = <__main__.EWallet object at 0xb6cb1c6c>
+22:30:20.845538 call      2332     def test_view_credit_wallet(self):
+22:30:20.846667 line      2333         print('[ * ] View Credit Wallet')
+22:30:20.847402 line      2334         _view_credit_wallet = self.ewallet_controller(
+22:30:20.847597 line      2335                 controller='user', ctype='action', action='view', view='credit_wallet',
+New var:....... _view_credit_wallet = {'id': 2, 'client_id': 2, 'reference': 'Credit W...sheet.CreditTransferSheet object at 0xb6b2ea8c>]}
+22:30:20.887982 line      2337         print(str(_view_credit_wallet) + '\n')
+22:30:20.888557 line      2338         return _view_credit_wallet
+22:30:20.888759 return    2338         return _view_credit_wallet
+Return value:.. {'id': 2, 'client_id': 2, 'reference': 'Credit W...sheet.CreditTransferSheet object at 0xb6b2ea8c>]}
+Starting var:.. self = <__main__.EWallet object at 0xb6cd5bec>
+22:31:55.143044 call      2332     def test_view_credit_wallet(self):
+22:31:55.144980 line      2333         print('[ * ] View Credit Wallet')
+22:31:55.145376 line      2334         _view_credit_wallet = self.ewallet_controller(
+22:31:55.145518 line      2335                 controller='user', ctype='action', action='view', view='credit_wallet',
+New var:....... _view_credit_wallet = {'id': 2, 'client_id': 2, 'reference': 'Credit W...sheet.CreditTransferSheet object at 0xb6bd1a2c>]}
+22:31:55.189021 line      2337         print(str(_view_credit_wallet) + '\n')
+22:31:55.189521 line      2338         return _view_credit_wallet
+22:31:55.189744 return    2338         return _view_credit_wallet
+Return value:.. {'id': 2, 'client_id': 2, 'reference': 'Credit W...sheet.CreditTransferSheet object at 0xb6bd1a2c>]}
+Starting var:.. self = <__main__.EWallet object at 0xb6c50c0c>
+22:33:34.032626 call      2332     def test_view_credit_wallet(self):
+22:33:34.034150 line      2333         print('[ * ] View Credit Wallet')
+22:33:34.034933 line      2334         _view_credit_wallet = self.ewallet_controller(
+22:33:34.035209 line      2335                 controller='user', ctype='action', action='view', view='credit_wallet',
+New var:....... _view_credit_wallet = {'id': 2, 'client_id': 2, 'reference': 'Credit W...sheet.CreditTransferSheet object at 0xb6b4ca2c>]}
+22:33:34.083961 line      2337         print(str(_view_credit_wallet) + '\n')
+22:33:34.084677 line      2338         return _view_credit_wallet
+22:33:34.084919 return    2338         return _view_credit_wallet
+Return value:.. {'id': 2, 'client_id': 2, 'reference': 'Credit W...sheet.CreditTransferSheet object at 0xb6b4ca2c>]}
+Starting var:.. self = <__main__.EWallet object at 0xb6d14e0c>
+22:35:49.886447 call      2332     def test_view_credit_wallet(self):
+22:35:49.887706 line      2333         print('[ * ] View Credit Wallet')
+22:35:49.887893 line      2334         _view_credit_wallet = self.ewallet_controller(
+22:35:49.888022 line      2335                 controller='user', ctype='action', action='view', view='credit_wallet',
+New var:....... _view_credit_wallet = {'id': 2, 'client_id': 2, 'reference': 'Credit W...sheet.CreditTransferSheet object at 0xb6ad48cc>]}
+22:35:49.930963 line      2337         print(str(_view_credit_wallet) + '\n')
+22:35:49.931206 line      2338         return _view_credit_wallet
+22:35:49.931662 return    2338         return _view_credit_wallet
+Return value:.. {'id': 2, 'client_id': 2, 'reference': 'Credit W...sheet.CreditTransferSheet object at 0xb6ad48cc>]}
+Starting var:.. self = <__main__.EWallet object at 0xb6c26bcc>
+22:36:29.930125 call      2332     def test_view_credit_wallet(self):
+22:36:29.931349 line      2333         print('[ * ] View Credit Wallet')
+22:36:29.931878 line      2334         _view_credit_wallet = self.ewallet_controller(
+22:36:29.932127 line      2335                 controller='user', ctype='action', action='view', view='credit_wallet',
+New var:....... _view_credit_wallet = {'id': 2, 'client_id': 2, 'reference': 'Credit W...sheet.CreditTransferSheet object at 0xb6b239ec>]}
+22:36:29.970758 line      2337         print(str(_view_credit_wallet) + '\n')
+22:36:29.971014 line      2338         return _view_credit_wallet
+22:36:29.971177 return    2338         return _view_credit_wallet
+Return value:.. {'id': 2, 'client_id': 2, 'reference': 'Credit W...sheet.CreditTransferSheet object at 0xb6b239ec>]}
+Starting var:.. self = <__main__.EWallet object at 0xb6d2beac>
+22:38:29.122602 call      2332     def test_view_credit_wallet(self):
+22:38:29.124950 line      2333         print('[ * ] View Credit Wallet')
+22:38:29.125461 line      2334         _view_credit_wallet = self.ewallet_controller(
+22:38:29.125819 line      2335                 controller='user', ctype='action', action='view', view='credit_wallet',
+New var:....... _view_credit_wallet = {'id': 2, 'client_id': 2, 'reference': 'Credit W...sheet.CreditTransferSheet object at 0xb6b288cc>]}
+22:38:29.167854 line      2337         print(str(_view_credit_wallet) + '\n')
+22:38:29.168403 line      2338         return _view_credit_wallet
+22:38:29.168596 return    2338         return _view_credit_wallet
+Return value:.. {'id': 2, 'client_id': 2, 'reference': 'Credit W...sheet.CreditTransferSheet object at 0xb6b288cc>]}
+Starting var:.. self = <__main__.EWallet object at 0xb6cfaecc>
+22:41:44.784444 call      2332     def test_view_credit_wallet(self):
+22:41:44.785612 line      2333         print('[ * ] View Credit Wallet')
+22:41:44.786162 line      2334         _view_credit_wallet = self.ewallet_controller(
+22:41:44.787312 line      2335                 controller='user', ctype='action', action='view', view='credit_wallet',
+New var:....... _view_credit_wallet = {'id': 2, 'client_id': 2, 'reference': 'Credit W...sheet.CreditTransferSheet object at 0xb6af78ec>]}
+22:41:44.828976 line      2337         print(str(_view_credit_wallet) + '\n')
+22:41:44.829316 line      2338         return _view_credit_wallet
+22:41:44.829484 return    2338         return _view_credit_wallet
+Return value:.. {'id': 2, 'client_id': 2, 'reference': 'Credit W...sheet.CreditTransferSheet object at 0xb6af78ec>]}
+Starting var:.. self = <__main__.EWallet object at 0xb6d2feec>
+22:43:56.850517 call      2332     def test_view_credit_wallet(self):
+22:43:56.851996 line      2333         print('[ * ] View Credit Wallet')
+22:43:56.852319 line      2334         _view_credit_wallet = self.ewallet_controller(
+22:43:56.852464 line      2335                 controller='user', ctype='action', action='view', view='credit_wallet',
+New var:....... _view_credit_wallet = {'id': 2, 'client_id': 2, 'reference': 'Credit W...sheet.CreditTransferSheet object at 0xb6aed8ac>]}
+22:43:56.892818 line      2337         print(str(_view_credit_wallet) + '\n')
+22:43:56.893079 line      2338         return _view_credit_wallet
+22:43:56.893256 return    2338         return _view_credit_wallet
+Return value:.. {'id': 2, 'client_id': 2, 'reference': 'Credit W...sheet.CreditTransferSheet object at 0xb6aed8ac>]}
+Starting var:.. self = <__main__.EWallet object at 0xb6c62cac>
+22:44:39.137996 call      2332     def test_view_credit_wallet(self):
+22:44:39.139447 line      2333         print('[ * ] View Credit Wallet')
+22:44:39.139891 line      2334         _view_credit_wallet = self.ewallet_controller(
+22:44:39.140103 line      2335                 controller='user', ctype='action', action='view', view='credit_wallet',
+New var:....... _view_credit_wallet = {'id': 2, 'client_id': 2, 'reference': 'Credit W...sheet.CreditTransferSheet object at 0xb6b5f9ec>]}
+22:44:39.186206 line      2337         print(str(_view_credit_wallet) + '\n')
+22:44:39.186848 line      2338         return _view_credit_wallet
+22:44:39.187112 return    2338         return _view_credit_wallet
+Return value:.. {'id': 2, 'client_id': 2, 'reference': 'Credit W...sheet.CreditTransferSheet object at 0xb6b5f9ec>]}
+Starting var:.. self = <__main__.EWallet object at 0xb6d05f0c>
+22:46:10.504905 call      2332     def test_view_credit_wallet(self):
+22:46:10.509834 line      2333         print('[ * ] View Credit Wallet')
+22:46:10.510082 line      2334         _view_credit_wallet = self.ewallet_controller(
+22:46:10.510196 line      2335                 controller='user', ctype='action', action='view', view='credit_wallet',
+New var:....... _view_credit_wallet = {'id': 2, 'client_id': 2, 'reference': 'Credit W...sheet.CreditTransferSheet object at 0xb6af194c>]}
+22:46:10.586513 line      2337         print(str(_view_credit_wallet) + '\n')
+22:46:10.586799 line      2338         return _view_credit_wallet
+22:46:10.587241 return    2338         return _view_credit_wallet
+Return value:.. {'id': 2, 'client_id': 2, 'reference': 'Credit W...sheet.CreditTransferSheet object at 0xb6af194c>]}
+Starting var:.. self = <__main__.EWallet object at 0xb6d68f6c>
+22:46:52.774941 call      2332     def test_view_credit_wallet(self):
+22:46:52.776995 line      2333         print('[ * ] View Credit Wallet')
+22:46:52.777143 line      2334         _view_credit_wallet = self.ewallet_controller(
+22:46:52.777258 line      2335                 controller='user', ctype='action', action='view', view='credit_wallet',
+New var:....... _view_credit_wallet = {'id': 2, 'client_id': 2, 'reference': 'Credit W...sheet.CreditTransferSheet object at 0xb6b5498c>]}
+22:46:52.830267 line      2337         print(str(_view_credit_wallet) + '\n')
+22:46:52.830485 line      2338         return _view_credit_wallet
+22:46:52.830633 return    2338         return _view_credit_wallet
+Return value:.. {'id': 2, 'client_id': 2, 'reference': 'Credit W...sheet.CreditTransferSheet object at 0xb6b5498c>]}
+Starting var:.. self = <__main__.EWallet object at 0xb7383fcc>
+22:47:34.474846 call      2332     def test_view_credit_wallet(self):
+22:47:34.476095 line      2333         print('[ * ] View Credit Wallet')
+22:47:34.476245 line      2334         _view_credit_wallet = self.ewallet_controller(
+22:47:34.476530 line      2335                 controller='user', ctype='action', action='view', view='credit_wallet',
+New var:....... _view_credit_wallet = {'id': 2, 'client_id': 2, 'reference': 'Credit W...sheet.CreditTransferSheet object at 0xb6b638ac>]}
+22:47:34.529393 line      2337         print(str(_view_credit_wallet) + '\n')
+22:47:34.529666 line      2338         return _view_credit_wallet
+22:47:34.529840 return    2338         return _view_credit_wallet
+Return value:.. {'id': 2, 'client_id': 2, 'reference': 'Credit W...sheet.CreditTransferSheet object at 0xb6b638ac>]}
+Starting var:.. self = <__main__.EWallet object at 0xb6cacd2c>
+22:47:52.093861 call      2332     def test_view_credit_wallet(self):
+22:47:52.095082 line      2333         print('[ * ] View Credit Wallet')
+22:47:52.095384 line      2334         _view_credit_wallet = self.ewallet_controller(
+22:47:52.095521 line      2335                 controller='user', ctype='action', action='view', view='credit_wallet',
+New var:....... _view_credit_wallet = {'id': 2, 'client_id': 2, 'reference': 'Credit W...sheet.CreditTransferSheet object at 0xb6ba9a8c>]}
+22:47:52.136494 line      2337         print(str(_view_credit_wallet) + '\n')
+22:47:52.137260 line      2338         return _view_credit_wallet
+22:47:52.137454 return    2338         return _view_credit_wallet
+Return value:.. {'id': 2, 'client_id': 2, 'reference': 'Credit W...sheet.CreditTransferSheet object at 0xb6ba9a8c>]}
+Starting var:.. self = <__main__.EWallet object at 0xb6d54ecc>
+22:52:30.985481 call      2332     def test_view_credit_wallet(self):
+22:52:30.987008 line      2333         print('[ * ] View Credit Wallet')
+22:52:30.987162 line      2334         _view_credit_wallet = self.ewallet_controller(
+22:52:30.987276 line      2335                 controller='user', ctype='action', action='view', view='credit_wallet',
+New var:....... _view_credit_wallet = {'id': 2, 'client_id': 2, 'reference': 'Credit W...sheet.CreditTransferSheet object at 0xb6b0192c>]}
+22:52:31.038523 line      2337         print(str(_view_credit_wallet) + '\n')
+22:52:31.038799 line      2338         return _view_credit_wallet
+22:52:31.039037 return    2338         return _view_credit_wallet
+Return value:.. {'id': 2, 'client_id': 2, 'reference': 'Credit W...sheet.CreditTransferSheet object at 0xb6b0192c>]}
+Starting var:.. self = <__main__.EWallet object at 0xb6cbe60c>
+22:53:31.240924 call      2332     def test_view_credit_wallet(self):
+22:53:31.242433 line      2333         print('[ * ] View Credit Wallet')
+22:53:31.242583 line      2334         _view_credit_wallet = self.ewallet_controller(
+22:53:31.242734 line      2335                 controller='user', ctype='action', action='view', view='credit_wallet',
+New var:....... _view_credit_wallet = {'id': 2, 'client_id': 2, 'reference': 'Credit W...sheet.CreditTransferSheet object at 0xb6b29a0c>]}
+22:53:31.279254 line      2337         print(str(_view_credit_wallet) + '\n')
+22:53:31.279542 line      2338         return _view_credit_wallet
+22:53:31.279750 return    2338         return _view_credit_wallet
+Return value:.. {'id': 2, 'client_id': 2, 'reference': 'Credit W...sheet.CreditTransferSheet object at 0xb6b29a0c>]}
+Starting var:.. self = <__main__.EWallet object at 0xb6da97ec>
+22:57:14.611201 call      2332     def test_view_credit_wallet(self):
+22:57:14.612371 line      2333         print('[ * ] View Credit Wallet')
+22:57:14.612676 line      2334         _view_credit_wallet = self.ewallet_controller(
+22:57:14.612812 line      2335                 controller='user', ctype='action', action='view', view='credit_wallet',
+New var:....... _view_credit_wallet = {'id': 2, 'client_id': 2, 'reference': 'Credit W...sheet.CreditTransferSheet object at 0xb6b589ac>]}
+22:57:14.665744 line      2337         print(str(_view_credit_wallet) + '\n')
+22:57:14.666314 line      2338         return _view_credit_wallet
+22:57:14.666529 return    2338         return _view_credit_wallet
+Return value:.. {'id': 2, 'client_id': 2, 'reference': 'Credit W...sheet.CreditTransferSheet object at 0xb6b589ac>]}
+Starting var:.. self = <__main__.EWallet object at 0xb6cf7f0c>
+22:58:58.042766 call      2332     def test_view_credit_wallet(self):
+22:58:58.043995 line      2333         print('[ * ] View Credit Wallet')
+22:58:58.044447 line      2334         _view_credit_wallet = self.ewallet_controller(
+22:58:58.044672 line      2335                 controller='user', ctype='action', action='view', view='credit_wallet',
+New var:....... _view_credit_wallet = {'id': 2, 'client_id': 2, 'reference': 'Credit W...sheet.CreditTransferSheet object at 0xb6ae49ec>]}
+22:58:58.091494 line      2337         print(str(_view_credit_wallet) + '\n')
+22:58:58.092149 line      2338         return _view_credit_wallet
+22:58:58.092352 return    2338         return _view_credit_wallet
+Return value:.. {'id': 2, 'client_id': 2, 'reference': 'Credit W...sheet.CreditTransferSheet object at 0xb6ae49ec>]}
+Starting var:.. self = <__main__.EWallet object at 0xb6d4e5cc>
+23:00:43.946015 call      2332     def test_view_credit_wallet(self):
+23:00:43.947284 line      2333         print('[ * ] View Credit Wallet')
+23:00:43.947432 line      2334         _view_credit_wallet = self.ewallet_controller(
+23:00:43.947549 line      2335                 controller='user', ctype='action', action='view', view='credit_wallet',
+New var:....... _view_credit_wallet = {'id': 2, 'client_id': 2, 'reference': 'Credit W...sheet.CreditTransferSheet object at 0xb6afd9ac>]}
+23:00:43.985170 line      2337         print(str(_view_credit_wallet) + '\n')
+23:00:43.985403 line      2338         return _view_credit_wallet
+23:00:43.985559 return    2338         return _view_credit_wallet
+Return value:.. {'id': 2, 'client_id': 2, 'reference': 'Credit W...sheet.CreditTransferSheet object at 0xb6afd9ac>]}
+Starting var:.. self = <__main__.EWallet object at 0xb6d415ec>
+23:14:44.890273 call      2332     def test_view_credit_wallet(self):
+23:14:44.891415 line      2333         print('[ * ] View Credit Wallet')
+23:14:44.891546 line      2334         _view_credit_wallet = self.ewallet_controller(
+23:14:44.891650 line      2335                 controller='user', ctype='action', action='view', view='credit_wallet',
+New var:....... _view_credit_wallet = {'id': 2, 'client_id': 2, 'reference': 'Credit W...sheet.CreditTransferSheet object at 0xb6aebb8c>]}
+23:14:44.921727 line      2337         print(str(_view_credit_wallet) + '\n')
+23:14:44.921940 line      2338         return _view_credit_wallet
+23:14:44.922093 return    2338         return _view_credit_wallet
+Return value:.. {'id': 2, 'client_id': 2, 'reference': 'Credit W...sheet.CreditTransferSheet object at 0xb6aebb8c>]}
+Starting var:.. self = <__main__.EWallet object at 0xb6c47e2c>
+23:23:00.928201 call      2332     def test_view_credit_wallet(self):
+23:23:00.929362 line      2333         print('[ * ] View Credit Wallet')
+23:23:00.929507 line      2334         _view_credit_wallet = self.ewallet_controller(
+23:23:00.929621 line      2335                 controller='user', ctype='action', action='view', view='credit_wallet',
+New var:....... _view_credit_wallet = {'id': 2, 'client_id': 2, 'reference': 'Credit W...sheet.CreditTransferSheet object at 0xb6b43cec>]}
+23:23:00.968693 line      2337         print(str(_view_credit_wallet) + '\n')
+23:23:00.969045 line      2338         return _view_credit_wallet
+23:23:00.969318 return    2338         return _view_credit_wallet
+Return value:.. {'id': 2, 'client_id': 2, 'reference': 'Credit W...sheet.CreditTransferSheet object at 0xb6b43cec>]}
+Starting var:.. self = <__main__.EWallet object at 0xb6c74e8c>
+23:24:30.832475 call      2332     def test_view_credit_wallet(self):
+23:24:30.833758 line      2333         print('[ * ] View Credit Wallet')
+23:24:30.833913 line      2334         _view_credit_wallet = self.ewallet_controller(
+23:24:30.834027 line      2335                 controller='user', ctype='action', action='view', view='credit_wallet',
+New var:....... _view_credit_wallet = {'id': 2, 'client_id': 2, 'reference': 'Credit W...sheet.CreditTransferSheet object at 0xb6b70c0c>]}
+23:24:30.871431 line      2337         print(str(_view_credit_wallet) + '\n')
+23:24:30.871658 line      2338         return _view_credit_wallet
+23:24:30.871810 return    2338         return _view_credit_wallet
+Return value:.. {'id': 2, 'client_id': 2, 'reference': 'Credit W...sheet.CreditTransferSheet object at 0xb6b70c0c>]}
+Starting var:.. self = <__main__.EWallet object at 0xb6dd906c>
+23:25:10.993396 call      2332     def test_view_credit_wallet(self):
+23:25:10.996535 line      2333         print('[ * ] View Credit Wallet')
+23:25:10.996710 line      2334         _view_credit_wallet = self.ewallet_controller(
+23:25:10.996822 line      2335                 controller='user', ctype='action', action='view', view='credit_wallet',
+New var:....... _view_credit_wallet = {'id': 2, 'client_id': 2, 'reference': 'Credit W...sheet.CreditTransferSheet object at 0xb6b899ac>]}
+23:25:11.041972 line      2337         print(str(_view_credit_wallet) + '\n')
+23:25:11.042208 line      2338         return _view_credit_wallet
+23:25:11.042362 return    2338         return _view_credit_wallet
+Return value:.. {'id': 2, 'client_id': 2, 'reference': 'Credit W...sheet.CreditTransferSheet object at 0xb6b899ac>]}
+Starting var:.. self = <__main__.EWallet object at 0xb6d0c0ac>
+23:25:59.642801 call      2332     def test_view_credit_wallet(self):
+23:25:59.644845 line      2333         print('[ * ] View Credit Wallet')
+23:25:59.645679 line      2334         _view_credit_wallet = self.ewallet_controller(
+23:25:59.645948 line      2335                 controller='user', ctype='action', action='view', view='credit_wallet',
+New var:....... _view_credit_wallet = {'id': 2, 'client_id': 2, 'reference': 'Credit W...sheet.CreditTransferSheet object at 0xb6abb9ec>]}
+23:25:59.700794 line      2337         print(str(_view_credit_wallet) + '\n')
+23:25:59.703117 line      2338         return _view_credit_wallet
+23:25:59.703430 return    2338         return _view_credit_wallet
+Return value:.. {'id': 2, 'client_id': 2, 'reference': 'Credit W...sheet.CreditTransferSheet object at 0xb6abb9ec>]}
+Starting var:.. self = <__main__.EWallet object at 0xb6d930ac>
+23:27:12.999281 call      2332     def test_view_credit_wallet(self):
+23:27:13.001494 line      2333         print('[ * ] View Credit Wallet')
+23:27:13.001640 line      2334         _view_credit_wallet = self.ewallet_controller(
+23:27:13.001755 line      2335                 controller='user', ctype='action', action='view', view='credit_wallet',
+New var:....... _view_credit_wallet = {'id': 2, 'client_id': 2, 'reference': 'Credit W...sheet.CreditTransferSheet object at 0xb6b85a0c>]}
+23:27:13.045883 line      2337         print(str(_view_credit_wallet) + '\n')
+23:27:13.046154 line      2338         return _view_credit_wallet
+23:27:13.046346 return    2338         return _view_credit_wallet
+Return value:.. {'id': 2, 'client_id': 2, 'reference': 'Credit W...sheet.CreditTransferSheet object at 0xb6b85a0c>]}
+Starting var:.. self = <__main__.EWallet object at 0xb6c871ec>
+23:31:39.837307 call      2332     def test_view_credit_wallet(self):
+23:31:39.838898 line      2333         print('[ * ] View Credit Wallet')
+23:31:39.839136 line      2334         _view_credit_wallet = self.ewallet_controller(
+23:31:39.839271 line      2335                 controller='user', ctype='action', action='view', view='credit_wallet',
+New var:....... _view_credit_wallet = {'id': 2, 'client_id': 2, 'reference': 'Credit W...sheet.CreditTransferSheet object at 0xb6af8b8c>]}
+23:31:39.871320 line      2337         print(str(_view_credit_wallet) + '\n')
+23:31:39.871607 line      2338         return _view_credit_wallet
+23:31:39.871816 return    2338         return _view_credit_wallet
+Return value:.. {'id': 2, 'client_id': 2, 'reference': 'Credit W...sheet.CreditTransferSheet object at 0xb6af8b8c>]}
+Starting var:.. self = <__main__.EWallet object at 0xb6ca772c>
+23:32:17.034994 call      2332     def test_view_credit_wallet(self):
+23:32:17.036097 line      2333         print('[ * ] View Credit Wallet')
+23:32:17.036236 line      2334         _view_credit_wallet = self.ewallet_controller(
+23:32:17.036345 line      2335                 controller='user', ctype='action', action='view', view='credit_wallet',
+New var:....... _view_credit_wallet = {'id': 2, 'client_id': 2, 'reference': 'Credit W...sheet.CreditTransferSheet object at 0xb6b18b6c>]}
+23:32:17.069857 line      2337         print(str(_view_credit_wallet) + '\n')
+23:32:17.070071 line      2338         return _view_credit_wallet
+23:32:17.070215 return    2338         return _view_credit_wallet
+Return value:.. {'id': 2, 'client_id': 2, 'reference': 'Credit W...sheet.CreditTransferSheet object at 0xb6b18b6c>]}
+Starting var:.. self = <__main__.EWallet object at 0xb6cc318c>
+23:34:17.407215 call      2332     def test_view_credit_wallet(self):
+23:34:17.408330 line      2333         print('[ * ] View Credit Wallet')
+23:34:17.408469 line      2334         _view_credit_wallet = self.ewallet_controller(
+23:34:17.408576 line      2335                 controller='user', ctype='action', action='view', view='credit_wallet',
+New var:....... _view_credit_wallet = {'id': 2, 'client_id': 2, 'reference': 'Credit W...sheet.CreditTransferSheet object at 0xb6b34b6c>]}
+23:34:17.442012 line      2337         print(str(_view_credit_wallet) + '\n')
+23:34:17.442248 line      2338         return _view_credit_wallet
+23:34:17.442402 return    2338         return _view_credit_wallet
+Return value:.. {'id': 2, 'client_id': 2, 'reference': 'Credit W...sheet.CreditTransferSheet object at 0xb6b34b6c>]}
+Starting var:.. self = <__main__.EWallet object at 0xb6c4d12c>
+23:35:03.494959 call      2332     def test_view_credit_wallet(self):
+23:35:03.496216 line      2333         print('[ * ] View Credit Wallet')
+23:35:03.496346 line      2334         _view_credit_wallet = self.ewallet_controller(
+23:35:03.496450 line      2335                 controller='user', ctype='action', action='view', view='credit_wallet',
+New var:....... _view_credit_wallet = {'id': 2, 'client_id': 2, 'reference': 'Credit W...sheet.CreditTransferSheet object at 0xb6abdb0c>]}
+23:35:03.527785 line      2337         print(str(_view_credit_wallet) + '\n')
+23:35:03.528157 line      2338         return _view_credit_wallet
+23:35:03.528351 return    2338         return _view_credit_wallet
+Return value:.. {'id': 2, 'client_id': 2, 'reference': 'Credit W...sheet.CreditTransferSheet object at 0xb6abdb0c>]}
+Starting var:.. self = <__main__.EWallet object at 0xb6cb212c>
+23:36:14.332206 call      2332     def test_view_credit_wallet(self):
+23:36:14.333631 line      2333         print('[ * ] View Credit Wallet')
+23:36:14.334114 line      2334         _view_credit_wallet = self.ewallet_controller(
+23:36:14.334253 line      2335                 controller='user', ctype='action', action='view', view='credit_wallet',
+New var:....... _view_credit_wallet = {'id': 2, 'client_id': 2, 'reference': 'Credit W...sheet.CreditTransferSheet object at 0xb6b23b8c>]}
+23:36:14.367390 line      2337         print(str(_view_credit_wallet) + '\n')
+23:36:14.367601 line      2338         return _view_credit_wallet
+23:36:14.367743 return    2338         return _view_credit_wallet
+Return value:.. {'id': 2, 'client_id': 2, 'reference': 'Credit W...sheet.CreditTransferSheet object at 0xb6b23b8c>]}
+Starting var:.. self = <__main__.EWallet object at 0xb6c9e16c>
+23:37:12.388951 call      2332     def test_view_credit_wallet(self):
+23:37:12.390116 line      2333         print('[ * ] View Credit Wallet')
+23:37:12.390252 line      2334         _view_credit_wallet = self.ewallet_controller(
+23:37:12.390360 line      2335                 controller='user', ctype='action', action='view', view='credit_wallet',
+New var:....... _view_credit_wallet = {'id': 2, 'client_id': 2, 'reference': 'Credit W...sheet.CreditTransferSheet object at 0xb6b10b6c>]}
+23:37:12.422915 line      2337         print(str(_view_credit_wallet) + '\n')
+23:37:12.423124 line      2338         return _view_credit_wallet
+23:37:12.423268 return    2338         return _view_credit_wallet
+Return value:.. {'id': 2, 'client_id': 2, 'reference': 'Credit W...sheet.CreditTransferSheet object at 0xb6b10b6c>]}
+Starting var:.. self = <__main__.EWallet object at 0xb6ca914c>
+23:40:19.779745 call      2332     def test_view_credit_wallet(self):
+23:40:19.780999 line      2333         print('[ * ] View Credit Wallet')
+23:40:19.781137 line      2334         _view_credit_wallet = self.ewallet_controller(
+23:40:19.781242 line      2335                 controller='user', ctype='action', action='view', view='credit_wallet',
+New var:....... _view_credit_wallet = {'id': 2, 'client_id': 2, 'reference': 'Credit W...sheet.CreditTransferSheet object at 0xb6b1ab4c>]}
+23:40:19.811394 line      2337         print(str(_view_credit_wallet) + '\n')
+23:40:19.811593 line      2338         return _view_credit_wallet
+23:40:19.811737 return    2338         return _view_credit_wallet
+Return value:.. {'id': 2, 'client_id': 2, 'reference': 'Credit W...sheet.CreditTransferSheet object at 0xb6b1ab4c>]}
+Starting var:.. self = <__main__.EWallet object at 0xb6d2b72c>
+23:42:06.354745 call      2332     def test_view_credit_wallet(self):
+23:42:06.355903 line      2333         print('[ * ] View Credit Wallet')
+23:42:06.356041 line      2334         _view_credit_wallet = self.ewallet_controller(
+23:42:06.356147 line      2335                 controller='user', ctype='action', action='view', view='credit_wallet',
+New var:....... _view_credit_wallet = {'id': 2, 'client_id': 2, 'reference': 'Credit W...sheet.CreditTransferSheet object at 0xb6adeaec>]}
+23:42:06.388331 line      2337         print(str(_view_credit_wallet) + '\n')
+23:42:06.388541 line      2338         return _view_credit_wallet
+23:42:06.388685 return    2338         return _view_credit_wallet
+Return value:.. {'id': 2, 'client_id': 2, 'reference': 'Credit W...sheet.CreditTransferSheet object at 0xb6adeaec>]}
+Starting var:.. self = <__main__.EWallet object at 0xb6c4e10c>
+23:42:50.244731 call      2332     def test_view_credit_wallet(self):
+23:42:50.245811 line      2333         print('[ * ] View Credit Wallet')
+23:42:50.245948 line      2334         _view_credit_wallet = self.ewallet_controller(
+23:42:50.246051 line      2335                 controller='user', ctype='action', action='view', view='credit_wallet',
+New var:....... _view_credit_wallet = {'id': 2, 'client_id': 2, 'reference': 'Credit W...sheet.CreditTransferSheet object at 0xb6abfb6c>]}
+23:42:50.277384 line      2337         print(str(_view_credit_wallet) + '\n')
+23:42:50.277596 line      2338         return _view_credit_wallet
+23:42:50.277738 return    2338         return _view_credit_wallet
+Return value:.. {'id': 2, 'client_id': 2, 'reference': 'Credit W...sheet.CreditTransferSheet object at 0xb6abfb6c>]}
+Starting var:.. self = <__main__.EWallet object at 0xb6d0a18c>
+23:43:58.936668 call      2332     def test_view_credit_wallet(self):
+23:43:58.938230 line      2333         print('[ * ] View Credit Wallet')
+23:43:58.938490 line      2334         _view_credit_wallet = self.ewallet_controller(
+23:43:58.938674 line      2335                 controller='user', ctype='action', action='view', view='credit_wallet',
+New var:....... _view_credit_wallet = {'id': 2, 'client_id': 2, 'reference': 'Credit W...sheet.CreditTransferSheet object at 0xb6b7ab4c>]}
+23:43:58.972496 line      2337         print(str(_view_credit_wallet) + '\n')
+23:43:58.972738 line      2338         return _view_credit_wallet
+23:43:58.972907 return    2338         return _view_credit_wallet
+Return value:.. {'id': 2, 'client_id': 2, 'reference': 'Credit W...sheet.CreditTransferSheet object at 0xb6b7ab4c>]}
+Starting var:.. self = <__main__.EWallet object at 0xb6d4afcc>
+23:47:18.362614 call      2332     def test_view_credit_wallet(self):
+23:47:18.363844 line      2333         print('[ * ] View Credit Wallet')
+23:47:18.364009 line      2334         _view_credit_wallet = self.ewallet_controller(
+23:47:18.364119 line      2335                 controller='user', ctype='action', action='view', view='credit_wallet',
+New var:....... _view_credit_wallet = {'id': 2, 'client_id': 2, 'reference': 'Credit W...sheet.CreditTransferSheet object at 0xb6afca8c>]}
+23:47:18.394551 line      2337         print(str(_view_credit_wallet) + '\n')
+23:47:18.394752 line      2338         return _view_credit_wallet
+23:47:18.394936 return    2338         return _view_credit_wallet
+Return value:.. {'id': 2, 'client_id': 2, 'reference': 'Credit W...sheet.CreditTransferSheet object at 0xb6afca8c>]}
+Starting var:.. self = <__main__.EWallet object at 0xb6ce51ec>
+23:51:55.974694 call      2332     def test_view_credit_wallet(self):
+23:51:55.975910 line      2333         print('[ * ] View Credit Wallet')
+23:51:55.976178 line      2334         _view_credit_wallet = self.ewallet_controller(
+23:51:55.976322 line      2335                 controller='user', ctype='action', action='view', view='credit_wallet',
+New var:....... _view_credit_wallet = {'id': 2, 'client_id': 2, 'reference': 'Credit W...sheet.CreditTransferSheet object at 0xb6b56b8c>]}
+23:51:56.014653 line      2337         print(str(_view_credit_wallet) + '\n')
+23:51:56.014882 line      2338         return _view_credit_wallet
+23:51:56.015030 return    2338         return _view_credit_wallet
+Return value:.. {'id': 2, 'client_id': 2, 'reference': 'Credit W...sheet.CreditTransferSheet object at 0xb6b56b8c>]}
+Starting var:.. self = <__main__.EWallet object at 0xb6c9e1ac>
+23:54:03.804560 call      2332     def test_view_credit_wallet(self):
+23:54:03.805654 line      2333         print('[ * ] View Credit Wallet')
+23:54:03.805791 line      2334         _view_credit_wallet = self.ewallet_controller(
+23:54:03.805897 line      2335                 controller='user', ctype='action', action='view', view='credit_wallet',
+New var:....... _view_credit_wallet = {'id': 2, 'client_id': 2, 'reference': 'Credit W...sheet.CreditTransferSheet object at 0xb6b0db6c>]}
+23:54:03.843179 line      2337         print(str(_view_credit_wallet) + '\n')
+23:54:03.843667 line      2338         return _view_credit_wallet
+23:54:03.844164 return    2338         return _view_credit_wallet
+Return value:.. {'id': 2, 'client_id': 2, 'reference': 'Credit W...sheet.CreditTransferSheet object at 0xb6b0db6c>]}
+Starting var:.. self = <__main__.EWallet object at 0xb6c9618c>
+23:55:38.797291 call      2332     def test_view_credit_wallet(self):
+23:55:38.798491 line      2333         print('[ * ] View Credit Wallet')
+23:55:38.798624 line      2334         _view_credit_wallet = self.ewallet_controller(
+23:55:38.798724 line      2335                 controller='user', ctype='action', action='view', view='credit_wallet',
+New var:....... _view_credit_wallet = {'id': 2, 'client_id': 2, 'reference': 'Credit W...sheet.CreditTransferSheet object at 0xb6b07bcc>]}
+23:55:38.833972 line      2337         print(str(_view_credit_wallet) + '\n')
+23:55:38.834176 line      2338         return _view_credit_wallet
+23:55:38.834409 return    2338         return _view_credit_wallet
+Return value:.. {'id': 2, 'client_id': 2, 'reference': 'Credit W...sheet.CreditTransferSheet object at 0xb6b07bcc>]}
+Starting var:.. self = <__main__.EWallet object at 0xb6d92fcc>
+00:00:27.929258 call      2332     def test_view_credit_wallet(self):
+00:00:27.930369 line      2333         print('[ * ] View Credit Wallet')
+00:00:27.930658 line      2334         _view_credit_wallet = self.ewallet_controller(
+00:00:27.930785 line      2335                 controller='user', ctype='action', action='view', view='credit_wallet',
+New var:....... _view_credit_wallet = {'id': 2, 'client_id': 2, 'reference': 'Credit W...sheet.CreditTransferSheet object at 0xb6b83aac>]}
+00:00:27.964970 line      2337         print(str(_view_credit_wallet) + '\n')
+00:00:27.965389 line      2338         return _view_credit_wallet
+00:00:27.965559 return    2338         return _view_credit_wallet
+Return value:.. {'id': 2, 'client_id': 2, 'reference': 'Credit W...sheet.CreditTransferSheet object at 0xb6b83aac>]}
+Starting var:.. self = <__main__.EWallet object at 0xb6d0e0ac>
+00:02:12.217804 call      2332     def test_view_credit_wallet(self):
+00:02:12.218913 line      2333         print('[ * ] View Credit Wallet')
+00:02:12.219052 line      2334         _view_credit_wallet = self.ewallet_controller(
+00:02:12.219159 line      2335                 controller='user', ctype='action', action='view', view='credit_wallet',
+New var:....... _view_credit_wallet = {'id': 2, 'client_id': 2, 'reference': 'Credit W...sheet.CreditTransferSheet object at 0xb6af5bcc>]}
+00:02:12.251362 line      2337         print(str(_view_credit_wallet) + '\n')
+00:02:12.251722 line      2338         return _view_credit_wallet
+00:02:12.251959 return    2338         return _view_credit_wallet
+Return value:.. {'id': 2, 'client_id': 2, 'reference': 'Credit W...sheet.CreditTransferSheet object at 0xb6af5bcc>]}
+Starting var:.. self = <__main__.EWallet object at 0xb6d940ec>
+00:04:26.325620 call      2332     def test_view_credit_wallet(self):
+00:04:26.327077 line      2333         print('[ * ] View Credit Wallet')
+00:04:26.327213 line      2334         _view_credit_wallet = self.ewallet_controller(
+00:04:26.327316 line      2335                 controller='user', ctype='action', action='view', view='credit_wallet',
+New var:....... _view_credit_wallet = {'id': 2, 'client_id': 2, 'reference': 'Credit W...sheet.CreditTransferSheet object at 0xb6b45a6c>]}
+00:04:26.358772 line      2337         print(str(_view_credit_wallet) + '\n')
+00:04:26.359113 line      2338         return _view_credit_wallet
+00:04:26.359291 return    2338         return _view_credit_wallet
+Return value:.. {'id': 2, 'client_id': 2, 'reference': 'Credit W...sheet.CreditTransferSheet object at 0xb6b45a6c>]}
+Starting var:.. self = <__main__.EWallet object at 0xb6d07d0c>
+00:05:52.926269 call      2332     def test_view_credit_wallet(self):
+00:05:52.927506 line      2333         print('[ * ] View Credit Wallet')
+00:05:52.927645 line      2334         _view_credit_wallet = self.ewallet_controller(
+00:05:52.927749 line      2335                 controller='user', ctype='action', action='view', view='credit_wallet',
+New var:....... _view_credit_wallet = {'id': 2, 'client_id': 2, 'reference': 'Credit W...sheet.CreditTransferSheet object at 0xb6ab9acc>]}
+00:05:52.963445 line      2337         print(str(_view_credit_wallet) + '\n')
+00:05:52.963649 line      2338         return _view_credit_wallet
+00:05:52.963790 return    2338         return _view_credit_wallet
+Return value:.. {'id': 2, 'client_id': 2, 'reference': 'Credit W...sheet.CreditTransferSheet object at 0xb6ab9acc>]}
+Starting var:.. self = <__main__.EWallet object at 0xb6d68d6c>
+00:27:13.002659 call      2332     def test_view_credit_wallet(self):
+00:27:13.003924 line      2333         print('[ * ] View Credit Wallet')
+00:27:13.004066 line      2334         _view_credit_wallet = self.ewallet_controller(
+00:27:13.004167 line      2335                 controller='user', ctype='action', action='view', view='credit_wallet',
+New var:....... _view_credit_wallet = {'id': 2, 'client_id': 2, 'reference': 'Credit W...sheet.CreditTransferSheet object at 0xb6b59d0c>]}
+00:27:13.034870 line      2337         print(str(_view_credit_wallet) + '\n')
+00:27:13.035092 line      2338         return _view_credit_wallet
+00:27:13.035235 return    2338         return _view_credit_wallet
+Return value:.. {'id': 2, 'client_id': 2, 'reference': 'Credit W...sheet.CreditTransferSheet object at 0xb6b59d0c>]}
+Starting var:.. self = <__main__.EWallet object at 0xb6d0140c>
+00:31:48.914574 call      2332     def test_view_credit_wallet(self):
+00:31:48.915848 line      2333         print('[ * ] View Credit Wallet')
+00:31:48.916179 line      2334         _view_credit_wallet = self.ewallet_controller(
+00:31:48.916349 line      2335                 controller='user', ctype='action', action='view', view='credit_wallet',
+New var:....... _view_credit_wallet = {'id': 2, 'client_id': 2, 'reference': 'Credit W...sheet.CreditTransferSheet object at 0xb6af2d4c>]}
+00:31:48.945859 line      2337         print(str(_view_credit_wallet) + '\n')
+00:31:48.946284 line      2338         return _view_credit_wallet
+00:31:48.946456 return    2338         return _view_credit_wallet
+Return value:.. {'id': 2, 'client_id': 2, 'reference': 'Credit W...sheet.CreditTransferSheet object at 0xb6af2d4c>]}
+Starting var:.. self = <__main__.EWallet object at 0xb6cf894c>
+00:36:42.942337 call      2332     def test_view_credit_wallet(self):
+00:36:42.943725 line      2333         print('[ * ] View Credit Wallet')
+00:36:42.943917 line      2334         _view_credit_wallet = self.ewallet_controller(
+00:36:42.944026 line      2335                 controller='user', ctype='action', action='view', view='credit_wallet',
+New var:....... _view_credit_wallet = {'id': 2, 'client_id': 2, 'reference': 'Credit W...sheet.CreditTransferSheet object at 0xb6ae9ccc>]}
+00:36:42.974226 line      2337         print(str(_view_credit_wallet) + '\n')
+00:36:42.974432 line      2338         return _view_credit_wallet
+00:36:42.974575 return    2338         return _view_credit_wallet
+Return value:.. {'id': 2, 'client_id': 2, 'reference': 'Credit W...sheet.CreditTransferSheet object at 0xb6ae9ccc>]}
+Starting var:.. self = <__main__.EWallet object at 0xb6d8144c>
+00:38:44.167599 call      2332     def test_view_credit_wallet(self):
+00:38:44.168907 line      2333         print('[ * ] View Credit Wallet')
+00:38:44.169039 line      2334         _view_credit_wallet = self.ewallet_controller(
+00:38:44.169143 line      2335                 controller='user', ctype='action', action='view', view='credit_wallet',
+New var:....... _view_credit_wallet = {'id': 2, 'client_id': 2, 'reference': 'Credit W...sheet.CreditTransferSheet object at 0xb6b7606c>]}
+00:38:44.197845 line      2337         print(str(_view_credit_wallet) + '\n')
+00:38:44.198051 line      2338         return _view_credit_wallet
+00:38:44.198207 return    2338         return _view_credit_wallet
+Return value:.. {'id': 2, 'client_id': 2, 'reference': 'Credit W...sheet.CreditTransferSheet object at 0xb6b7606c>]}
+Starting var:.. self = <__main__.EWallet object at 0xb6d0644c>
+00:39:44.601374 call      2332     def test_view_credit_wallet(self):
+00:39:44.602512 line      2333         print('[ * ] View Credit Wallet')
+00:39:44.602648 line      2334         _view_credit_wallet = self.ewallet_controller(
+00:39:44.602755 line      2335                 controller='user', ctype='action', action='view', view='credit_wallet',
+New var:....... _view_credit_wallet = {'id': 2, 'client_id': 2, 'reference': 'Credit W...sheet.CreditTransferSheet object at 0xb6afa08c>]}
+00:39:44.633348 line      2337         print(str(_view_credit_wallet) + '\n')
+00:39:44.633634 line      2338         return _view_credit_wallet
+00:39:44.633856 return    2338         return _view_credit_wallet
+Return value:.. {'id': 2, 'client_id': 2, 'reference': 'Credit W...sheet.CreditTransferSheet object at 0xb6afa08c>]}
+Starting var:.. self = <__main__.EWallet object at 0xb6cec40c>
+00:42:09.085122 call      2332     def test_view_credit_wallet(self):
+00:42:09.086447 line      2333         print('[ * ] View Credit Wallet')
+00:42:09.086610 line      2334         _view_credit_wallet = self.ewallet_controller(
+00:42:09.086716 line      2335                 controller='user', ctype='action', action='view', view='credit_wallet',
+New var:....... _view_credit_wallet = {'id': 2, 'client_id': 2, 'reference': 'Credit W...sheet.CreditTransferSheet object at 0xb6ae104c>]}
+00:42:09.115970 line      2337         print(str(_view_credit_wallet) + '\n')
+00:42:09.116180 line      2338         return _view_credit_wallet
+00:42:09.116322 return    2338         return _view_credit_wallet
+Return value:.. {'id': 2, 'client_id': 2, 'reference': 'Credit W...sheet.CreditTransferSheet object at 0xb6ae104c>]}
+Starting var:.. self = <__main__.EWallet object at 0xb6d0b44c>
+00:42:51.501522 call      2332     def test_view_credit_wallet(self):
+00:42:51.502642 line      2333         print('[ * ] View Credit Wallet')
+00:42:51.502778 line      2334         _view_credit_wallet = self.ewallet_controller(
+00:42:51.502906 line      2335                 controller='user', ctype='action', action='view', view='credit_wallet',
+New var:....... _view_credit_wallet = {'id': 2, 'client_id': 2, 'reference': 'Credit W...sheet.CreditTransferSheet object at 0xb6ac102c>]}
+00:42:51.534030 line      2337         print(str(_view_credit_wallet) + '\n')
+00:42:51.534503 line      2338         return _view_credit_wallet
+00:42:51.534707 return    2338         return _view_credit_wallet
+Return value:.. {'id': 2, 'client_id': 2, 'reference': 'Credit W...sheet.CreditTransferSheet object at 0xb6ac102c>]}
+Starting var:.. self = <__main__.EWallet object at 0xb6d4be0c>
+00:43:33.790246 call      2332     def test_view_credit_wallet(self):
+00:43:33.791595 line      2333         print('[ * ] View Credit Wallet')
+00:43:33.791733 line      2334         _view_credit_wallet = self.ewallet_controller(
+00:43:33.791836 line      2335                 controller='user', ctype='action', action='view', view='credit_wallet',
+New var:....... _view_credit_wallet = {'id': 2, 'client_id': 2, 'reference': 'Credit W...sheet.CreditTransferSheet object at 0xb6b3f04c>]}
+00:43:33.822681 line      2337         print(str(_view_credit_wallet) + '\n')
+00:43:33.822931 line      2338         return _view_credit_wallet
+00:43:33.823140 return    2338         return _view_credit_wallet
+Return value:.. {'id': 2, 'client_id': 2, 'reference': 'Credit W...sheet.CreditTransferSheet object at 0xb6b3f04c>]}
+Starting var:.. self = <__main__.EWallet object at 0xb6d18bcc>
+00:46:25.697102 call      2332     def test_view_credit_wallet(self):
+00:46:25.698212 line      2333         print('[ * ] View Credit Wallet')
+00:46:25.698502 line      2334         _view_credit_wallet = self.ewallet_controller(
+00:46:25.698629 line      2335                 controller='user', ctype='action', action='view', view='credit_wallet',
+New var:....... _view_credit_wallet = {'id': 2, 'client_id': 2, 'reference': 'Credit W...sheet.CreditTransferSheet object at 0xb6b0ac6c>]}
+00:46:25.731959 line      2337         print(str(_view_credit_wallet) + '\n')
+00:46:25.732161 line      2338         return _view_credit_wallet
+00:46:25.732298 return    2338         return _view_credit_wallet
+Return value:.. {'id': 2, 'client_id': 2, 'reference': 'Credit W...sheet.CreditTransferSheet object at 0xb6b0ac6c>]}
+Starting var:.. self = <__main__.EWallet object at 0xb6d568ec>
+00:49:26.068714 call      2332     def test_view_credit_wallet(self):
+00:49:26.070131 line      2333         print('[ * ] View Credit Wallet')
+00:49:26.070361 line      2334         _view_credit_wallet = self.ewallet_controller(
+00:49:26.070466 line      2335                 controller='user', ctype='action', action='view', view='credit_wallet',
+New var:....... _view_credit_wallet = {'id': 2, 'client_id': 2, 'reference': 'Credit W...sheet.CreditTransferSheet object at 0xb6b48c6c>]}
+00:49:26.099283 line      2337         print(str(_view_credit_wallet) + '\n')
+00:49:26.099484 line      2338         return _view_credit_wallet
+00:49:26.099630 return    2338         return _view_credit_wallet
+Return value:.. {'id': 2, 'client_id': 2, 'reference': 'Credit W...sheet.CreditTransferSheet object at 0xb6b48c6c>]}

@@ -517,6 +517,62 @@ class EWallet(Base):
         _active_session.commit()
         return _start
 
+    def action_pause_credit_clock_timer(self, **kwargs):
+        log.debug('')
+        _credit_clock = kwargs.get('credit_clock') or \
+                self.fetch_active_session_credit_clock()
+        if not _credit_clock:
+            return self.warning_could_not_fetch_credit_clock()
+        _active_session = kwargs.get('active_session') or self.session
+        if not _active_session:
+            return self.error_no_active_session_found()
+        _active_session.add(_credit_clock)
+        # TODO - Command Chain Pop Util
+        for item in ['controller', 'action', 'active_session']:
+            try:
+                kwargs.pop(item)
+            except KeyError:
+                log.error(
+                        'Could not pop tag {} from command chain.'.format(item)
+                        )
+        _pause = _credit_clock.main_controller(
+                controller='user', action='pause',
+                active_session=_active_session, **kwargs
+                )
+        if not _pause:
+            _active_session.rollback()
+            return self.error_could_not_pause_credit_clock_timer()
+        _active_session.commit()
+        return _pause
+
+    def action_resume_credit_clock_timer(self, **kwargs):
+        log.debug('')
+        _credit_clock = kwargs.get('credit_clock') or \
+                self.fetch_active_session_credit_clock()
+        if not _credit_clock:
+            return self.warning_could_not_fetch_credit_clock()
+        _active_session = kwargs.get('active_session') or self.session
+        if not _active_session:
+            return self.error_no_active_session_found()
+        _active_session.add(_credit_clock)
+        # TODO - Command Chain Pop Util
+        for item in ['controller', 'action', 'active_session']:
+            try:
+                kwargs.pop(item)
+            except KeyError:
+                log.error(
+                        'Could not pop tag {} from command chain.'.format(item)
+                        )
+        _resume = _credit_clock.main_controller(
+                controller='user', action='resume',
+                active_session=_active_session, **kwargs
+                )
+        if not isinstance(_resume, float):
+            _active_session.rollback()
+            return self.error_could_not_resume_credit_clock_timer()
+        _active_session.commit()
+        return _resume
+
     def action_stop_credit_clock_timer(self, **kwargs):
         log.debug('')
         _credit_clock = kwargs.get('credit_clock') or \
@@ -1288,6 +1344,8 @@ class EWallet(Base):
             return self.error_no_timer_action_specified()
         _handlers = {
                 'start': self.action_start_credit_clock_timer,
+                'pause': self.action_pause_credit_clock_timer,
+                'resume': self.action_resume_credit_clock_timer,
                 'stop': self.action_stop_credit_clock_timer,
                 }
         return _handlers[kwargs['timer']](**kwargs)
@@ -1773,6 +1831,14 @@ class EWallet(Base):
         return False
 
     # ERRORS
+
+    def error_could_not_pause_credit_clock_timer(self):
+        log.error('Could not pause credit clock timer.')
+        return False
+
+    def error_could_not_resume_credit_clock_timer(self):
+        log.error('Could not resume credit clock timer.')
+        return False
 
     def error_could_not_remove_user_from_account_archive(self):
         log.error('Could not remove user from account archive.')
@@ -2408,6 +2474,22 @@ class EWallet(Base):
         print(str(_start) + '\n')
         return _start
 
+    def test_pause_credit_clock(self):
+        print('[ * ]: Pause Credit Clock')
+        _pause = self.ewallet_controller(
+                controller='user', ctype='action', action='time', timer='pause'
+                )
+        print(str(_pause) + '\n')
+        return _pause
+
+    def test_resume_credit_clock(self):
+        print('[ * ]: Resume Credit Clock')
+        _resume = self.ewallet_controller(
+                controller='user', ctype='action', action='time', timer='resume'
+                )
+        print(str(_resume) + '\n')
+        return _resume
+
     def test_stop_credit_clock(self):
         print('[ * ]: Stop Credit Clock')
         _stop = self.ewallet_controller(
@@ -2416,7 +2498,6 @@ class EWallet(Base):
         print(str(_stop) + '\n')
         return _stop
 
-    # TODO
     def test_unlink_user_account(self):
         print('[ * ]: Unlink User Account')
         _unlink = self.ewallet_controller(
@@ -2445,23 +2526,33 @@ class EWallet(Base):
         _view_time_sheet_record = self.test_view_time_sheet_record()
         _convert_credits = self.test_convert_credits_to_clock()
         _start_clock = self.test_start_credit_clock()
+        self.sleep_printer()
+        _pause_clock = self.test_pause_credit_clock()
+        self.sleep_printer()
+        _resume_clock = self.test_resume_credit_clock()
+        self.sleep_printer()
+        _pause_clock = self.test_pause_credit_clock()
+        self.sleep_printer()
+        _resume_clock = self.test_resume_credit_clock()
+        _stop_clock = self.test_stop_credit_clock()
+#       _convert_clock = self.test_convert_clock_to_credits()
+#       _view_conversion_sheet = self.test_view_conversion_sheet()
+#       _view_conversion_sheet_record = self.test_view_conversion_sheet_record()
+#       _view_contact_list = self.test_view_contact_list()
+#       _view_contact_list_record = self.test_view_contact_list_record()
+#       _extract_credits = self.test_extract_credits()
+#       _second_view_account = self.test_view_account()
+#       print('[ TEST ] System.')
+#       _update_session = self.test_update_session()
+#       _logout = self.test_logout()
+#       _unlink_account = self.test_unlink_user_account()
+#       _second_logout = self.test_logout()
+
+    def sleep_printer(self):
         for item in range(3):
             print('Sleeping ...')
             time.sleep(1)
         print('\n')
-        _stop_clock = self.test_stop_credit_clock()
-        _convert_clock = self.test_convert_clock_to_credits()
-        _view_conversion_sheet = self.test_view_conversion_sheet()
-        _view_conversion_sheet_record = self.test_view_conversion_sheet_record()
-        _view_contact_list = self.test_view_contact_list()
-        _view_contact_list_record = self.test_view_contact_list_record()
-        _extract_credits = self.test_extract_credits()
-        _second_view_account = self.test_view_account()
-        print('[ TEST ] System.')
-        _update_session = self.test_update_session()
-        _logout = self.test_logout()
-#       _unlink_account = self.test_unlink_user_account()
-        _second_logout = self.test_logout()
 
     def test_update_session(self):
         print('[ * ] Update session')

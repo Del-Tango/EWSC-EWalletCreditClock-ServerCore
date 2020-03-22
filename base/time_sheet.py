@@ -4,7 +4,7 @@ import datetime
 import logging
 import pysnooper
 from itertools import count
-from sqlalchemy import Table, Column, String, Integer, Float, ForeignKey, Date, DateTime
+from sqlalchemy import Table, Column, String, Integer, Float, ForeignKey, Date, DateTime, update
 from sqlalchemy.orm import relationship
 
 from .res_utils import ResUtils, Base
@@ -23,9 +23,13 @@ class TimeSheetRecord(Base):
     reference = Column(String)
     create_date = Column(DateTime)
     write_date = Column(DateTime)
+    create_uid = Column(Integer, ForeignKey('res_user.user_id'))
+    write_uid = Column(Integer, ForeignKey('res_user.user_id'))
     time_start = Column(Float)
     time_stop = Column(Float)
     time_spent = Column(Float)
+    time_pending = Column(Float)
+    pending_count = Column(Integer)
     time_sheet_id = Column(
         Integer, ForeignKey('credit_clock_time_sheet.time_sheet_id')
         )
@@ -36,14 +40,34 @@ class TimeSheetRecord(Base):
     def __init__(self, **kwargs):
         self.create_date = datetime.datetime.now()
         self.write_date = datetime.datetime.now()
+        self.create_uid = kwargs.get('create_uid')
+        self.write_uid = kwargs.get('write_uid')
         self.reference = kwargs.get('reference') or 'Time Sheet Record'
         self.time_start = kwargs.get('time_start')
         self.time_stop = kwargs.get('time_stop')
         self.time_spent = kwargs.get('time_spent')
+        self.time_pending = kwargs.get('time_pending')
+        self.pending_count = kwargs.get('pending_count')
         self.time_sheet_id = kwargs.get('time_sheet_id')
         self.credit_clock_id = kwargs.get('credit_clock_id')
 
     # FETCHERS
+
+    def fetch_create_uid(self):
+        log.debug('')
+        return self.create_uid
+
+    def fetch_write_uid(self):
+        log.debug('')
+        return self.write_uid
+
+    def fetch_time_pending(self):
+        log.debug('')
+        return self.time_pending
+
+    def fetch_pending_count(self):
+        log.debug('')
+        return self.pending_count
 
     def fetch_record_id(self):
         log.debug('')
@@ -88,13 +112,45 @@ class TimeSheetRecord(Base):
                 'reference': self.reference,
                 'create_date': self.create_date,
                 'write_date': self.write_date,
+                'create_uid': self.create_uid,
+                'write_uid': self.write_uid,
                 'time_start': self.time_start,
                 'time_stop': self.time_stop,
                 'time_spent': self.time_spent,
+                'time_pending': self.time_pending,
+                'pending_count': self.pending_count,
                 }
         return _values
 
     # SETTERS
+
+    def set_create_uid(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('create_uid'):
+            return self.error_no_create_uid_found()
+        self.create_uid = kwargs['create_uid']
+        return True
+
+    def set_write_uid(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('write_uid'):
+            return self.error_no_write_uid_found()
+        self.write_uid = kwargs['write_uid']
+        return True
+
+    def set_time_pending(self, **kwargs):
+        log.debug('')
+        if kwargs.get('time_pending') is None:
+            return self.error_no_pending_time_found()
+        self.time_pending = kwargs['time_pending']
+        return True
+
+    def set_pending_count(self, **kwargs):
+        log.debug('')
+        if kwargs.get('pending_count') is None:
+            return self.error_no_pending_count_found()
+        self.pending_count = kwargs['pending_count']
+        return True
 
     def set_time_sheet_id(self, **kwargs):
         log.debug('')
@@ -125,7 +181,7 @@ class TimeSheetRecord(Base):
         self.time_start = kwargs['time_start']
         return True
 
-#   @pysnooper.snoop('logs/ewallet.log')
+    @pysnooper.snoop('logs/ewallet.log')
     def set_time_stop(self, **kwargs):
         log.debug('')
         if not kwargs.get('time_stop'):
@@ -143,19 +199,26 @@ class TimeSheetRecord(Base):
 
     # UPDATES
 
-#   @pysnooper.snoop('logs/ewallet.log')
+    @pysnooper.snoop('logs/ewallet.log')
     def update_record_values(self, values, **kwargs):
         log.debug('')
         _set = {
                 'time_start': self.set_time_start,
                 'time_stop': self.set_time_stop,
                 'time_spent': self.set_time_spent,
+                'time_pending': self.set_time_pending,
+                'pending_count': self.set_pending_count,
                 }
         for field_name, field_value in values.items():
             try:
-                _set[field_name](**{field_name: field_value})
+                _set[field_name](
+                        **{field_name: field_value},
+                        active_session=kwargs['active_session']
+                        )
             except KeyError:
-                log.warning('Invalid field name for actio update time sheet record values.')
+                log.warning(
+                    'Invalid field name for action update time sheet record values.'
+                )
         self.update_write_date()
         return True
 
@@ -165,6 +228,22 @@ class TimeSheetRecord(Base):
         return self.set_write_date(write_date=_write_date, **kwargs)
 
     # ERRORS
+
+    def error_no_create_uid_found(self):
+        log.error('No create user id found.')
+        return False
+
+    def error_no_write_uid_found(self):
+        log.error('No write user id found.')
+        return False
+
+    def error_no_pending_time_found(self):
+        log.error('No pending time found.')
+        return False
+
+    def error_no_pending_count_found(self):
+        log.error('No pending count found.')
+        return False
 
     def error_no_start_time_found(self):
         log.error('No start time found.')
@@ -583,4 +662,13 @@ class CreditClockTimeSheet(Base):
 ###############################################################################
 # CODE DUMP
 ###############################################################################
+
+#       _set = setattr(self, 'time_stop', kwargs['time_stop'])
+
+#       _set = update(TimeSheetRecord).\
+#               where(TimeSheetRecord.record_id==self.record_id).\
+#               values(time_stop=kwargs['time_stop'])
+#       kwargs['active_session'].add(_set)
+#       kwargs['active_session'].commit()
+
 

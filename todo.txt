@@ -1,5 +1,6 @@
 # TODO - Bug/? user action supply -> same partner_account
-# TODO - Add user action Clock Pause
+# TODO - Bug Report - on actions Pause & Resume only first time sheet record updated
+# TODO - Bug Report - time used measured in seconds
 
 # TODO - Persistent storage with SQLAlchemy ORM
 - session cleanup
