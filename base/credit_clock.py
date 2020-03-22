@@ -325,7 +325,7 @@ class CreditClock(Base):
         log.debug('')
         if not kwargs.get('active_time_record'):
             return self.error_no_credit_clock_active_time_record_found()
-        self.active_time_record.append(kwargs['active_time_record'])
+        self.active_time_record = [kwargs['active_time_record']]
         return self.active_time_record or self.error_could_not_set_active_time_record()
 
     def set_credit_clock_state(self, **kwargs):

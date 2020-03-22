@@ -1794,3 +1794,23 @@ New var:....... _view_credit_wallet = {'id': 2, 'client_id': 2, 'reference': 'Cr
 00:49:26.099484 line      2338         return _view_credit_wallet
 00:49:26.099630 return    2338         return _view_credit_wallet
 Return value:.. {'id': 2, 'client_id': 2, 'reference': 'Credit W...sheet.CreditTransferSheet object at 0xb6b48c6c>]}
+Starting var:.. self = <__main__.EWallet object at 0xb6c2b12c>
+01:03:04.223020 call      2332     def test_view_credit_wallet(self):
+01:03:04.224094 line      2333         print('[ * ] View Credit Wallet')
+01:03:04.224231 line      2334         _view_credit_wallet = self.ewallet_controller(
+01:03:04.224336 line      2335                 controller='user', ctype='action', action='view', view='credit_wallet',
+New var:....... _view_credit_wallet = {'id': 2, 'client_id': 2, 'reference': 'Credit W...sheet.CreditTransferSheet object at 0xb6a9c08c>]}
+01:03:04.253769 line      2337         print(str(_view_credit_wallet) + '\n')
+01:03:04.253968 line      2338         return _view_credit_wallet
+01:03:04.254108 return    2338         return _view_credit_wallet
+Return value:.. {'id': 2, 'client_id': 2, 'reference': 'Credit W...sheet.CreditTransferSheet object at 0xb6a9c08c>]}
+Starting var:.. self = <__main__.EWallet object at 0xb6d198ec>
+01:09:49.163224 call      2332     def test_view_credit_wallet(self):
+01:09:49.164484 line      2333         print('[ * ] View Credit Wallet')
+01:09:49.164641 line      2334         _view_credit_wallet = self.ewallet_controller(
+01:09:49.164750 line      2335                 controller='user', ctype='action', action='view', view='credit_wallet',
+New var:....... _view_credit_wallet = {'id': 2, 'client_id': 2, 'reference': 'Credit W...sheet.CreditTransferSheet object at 0xb6b0bc8c>]}
+01:09:49.194941 line      2337         print(str(_view_credit_wallet) + '\n')
+01:09:49.195153 line      2338         return _view_credit_wallet
+01:09:49.195300 return    2338         return _view_credit_wallet
+Return value:.. {'id': 2, 'client_id': 2, 'reference': 'Credit W...sheet.CreditTransferSheet object at 0xb6b0bc8c>]}
