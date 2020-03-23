@@ -1,10 +1,8 @@
 # TODO - Bug/? user action supply -> same partner_account
-# TODO - Bug Report - on actions Pause & Resume only first time sheet record updated
-# TODO - Bug Report - time used measured in seconds
 
 # TODO - Persistent storage with SQLAlchemy ORM
+- refactor session commit points
 - session cleanup
-- orm unlink account
 - orm contact list record creation
 - orm transfer record creation
 - orm conversion record creation

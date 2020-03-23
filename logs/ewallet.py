@@ -1814,3 +1814,13 @@ New var:....... _view_credit_wallet = {'id': 2, 'client_id': 2, 'reference': 'Cr
 01:09:49.195153 line      2338         return _view_credit_wallet
 01:09:49.195300 return    2338         return _view_credit_wallet
 Return value:.. {'id': 2, 'client_id': 2, 'reference': 'Credit W...sheet.CreditTransferSheet object at 0xb6b0bc8c>]}
+Starting var:.. self = <__main__.EWallet object at 0xb6cbfbcc>
+01:12:34.623036 call      2332     def test_view_credit_wallet(self):
+01:12:34.624559 line      2333         print('[ * ] View Credit Wallet')
+01:12:34.624722 line      2334         _view_credit_wallet = self.ewallet_controller(
+01:12:34.624826 line      2335                 controller='user', ctype='action', action='view', view='credit_wallet',
+New var:....... _view_credit_wallet = {'id': 2, 'client_id': 2, 'reference': 'Credit W...sheet.CreditTransferSheet object at 0xb6ab1cac>]}
+01:12:34.653173 line      2337         print(str(_view_credit_wallet) + '\n')
+01:12:34.653387 line      2338         return _view_credit_wallet
+01:12:34.653560 return    2338         return _view_credit_wallet
+Return value:.. {'id': 2, 'client_id': 2, 'reference': 'Credit W...sheet.CreditTransferSheet object at 0xb6ab1cac>]}

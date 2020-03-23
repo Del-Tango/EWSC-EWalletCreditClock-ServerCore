@@ -181,7 +181,7 @@ class TimeSheetRecord(Base):
         self.time_start = kwargs['time_start']
         return True
 
-    @pysnooper.snoop('logs/ewallet.log')
+#   @pysnooper.snoop('logs/ewallet.log')
     def set_time_stop(self, **kwargs):
         log.debug('')
         if not kwargs.get('time_stop'):
@@ -336,6 +336,8 @@ class CreditClockTimeSheet(Base):
         log.debug('')
         _values = {
                 'record_id': kwargs.get('record_id'),
+                'create_uid': kwargs.get('create_uid'),
+                'write_uid': kwargs.get('write_uid'),
                 'time_sheet_id': self.time_sheet_id,
                 'reference': kwargs.get('reference'),
                 'credit_clock': kwargs.get('credit_clock'),

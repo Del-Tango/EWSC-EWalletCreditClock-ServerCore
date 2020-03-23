@@ -162,6 +162,10 @@ class EWallet(Base):
             }
         return _handlers[kwargs['identifier']](**kwargs)
 
+    def fetch_active_session_id(self):
+        log.debug('')
+        return self.id
+
     def fetch_active_session(self):
         log.debug('')
         if not self.session:
@@ -195,10 +199,12 @@ class EWallet(Base):
             return self.error_no_session_contact_list_found()
         return self.contact_list[0]
 
-    def fetch_credit_wallet_credits(self):
+    def fetch_credit_wallet_credits(self, **kwargs):
         log.debug('')
-        _credit_wallet = self.fetch_active_session_credit_wallet()
-        return False if not _credit_wallet else _credit_wallet.main_controller(
+        _credit_wallet = kwargs.get('credit_wallet') or \
+                self.fetch_active_session_credit_wallet()
+        return self.error_no_credit_wallet_found() if not _credit_wallet else \
+                _credit_wallet.main_controller(
                 controller='system', action='view'
                 )
 
@@ -458,6 +464,8 @@ class EWallet(Base):
     def action_system_user_logout(self, **kwargs):
         log.debug('')
         _user = self.fetch_active_session_user()
+        if not _user:
+            return False
         _set_user_state = _user.set_user_state(
                 set_by='code', state_code=0
                 )
@@ -507,9 +515,11 @@ class EWallet(Base):
                 log.error(
                         'Could not pop tag {} from command chain.'.format(item)
                         )
+        _active_user = self.fetch_active_session_user()
+        _user_id = _active_user.fetch_user_id()
         _start = _credit_clock.main_controller(
                 controller='user', action='start',
-                active_session=_active_session, **kwargs
+                active_session=_active_session, uid=_user_id, **kwargs
                 )
         if not _start:
             _active_session.rollback()
@@ -535,9 +545,11 @@ class EWallet(Base):
                 log.error(
                         'Could not pop tag {} from command chain.'.format(item)
                         )
+        _active_user = self.fetch_active_session_user()
+        _user_id = _active_user.fetch_user_id()
         _pause = _credit_clock.main_controller(
                 controller='user', action='pause',
-                active_session=_active_session, **kwargs
+                active_session=_active_session, uid=_user_id, **kwargs
                 )
         if not _pause:
             _active_session.rollback()
@@ -563,9 +575,11 @@ class EWallet(Base):
                 log.error(
                         'Could not pop tag {} from command chain.'.format(item)
                         )
+        _active_user = self.fetch_active_session_user()
+        _user_id = _active_user.fetch_user_id()
         _resume = _credit_clock.main_controller(
                 controller='user', action='resume',
-                active_session=_active_session, **kwargs
+                active_session=_active_session, uid=_user_id, **kwargs
                 )
         if not isinstance(_resume, float):
             _active_session.rollback()
@@ -591,9 +605,11 @@ class EWallet(Base):
                 log.error(
                         'Could not pop tag {} from command chain.'.format(item)
                         )
+        _active_user = self.fetch_active_session_user()
+        _user_id = _active_user.fetch_user_id()
         _stop = _credit_clock.main_controller(
                 controller='user', action='stop',
-                active_session=_active_session, **kwargs
+                active_session=_active_session, uid=_user_id, **kwargs
                 )
         if not _stop:
             _active_session.rollback()
@@ -1073,6 +1089,7 @@ class EWallet(Base):
                 user_id=_user.fetch_user_id(),
                 active_session=_active_session,
                 )
+        _active_session.commit()
         return True if _unlink else \
                 self.warning_could_not_unlink_user_account()
 
@@ -2328,7 +2345,6 @@ class EWallet(Base):
         print(str(_supply_credits) + '\n')
         return _supply_credits
 
-    @pysnooper.snoop('logs/ewallet.py')
     def test_view_credit_wallet(self):
         print('[ * ] View Credit Wallet')
         _view_credit_wallet = self.ewallet_controller(
@@ -2535,18 +2551,18 @@ class EWallet(Base):
         self.sleep_printer()
         _resume_clock = self.test_resume_credit_clock()
         _stop_clock = self.test_stop_credit_clock()
-#       _convert_clock = self.test_convert_clock_to_credits()
-#       _view_conversion_sheet = self.test_view_conversion_sheet()
-#       _view_conversion_sheet_record = self.test_view_conversion_sheet_record()
-#       _view_contact_list = self.test_view_contact_list()
-#       _view_contact_list_record = self.test_view_contact_list_record()
-#       _extract_credits = self.test_extract_credits()
-#       _second_view_account = self.test_view_account()
-#       print('[ TEST ] System.')
-#       _update_session = self.test_update_session()
-#       _logout = self.test_logout()
+        _convert_clock = self.test_convert_clock_to_credits()
+        _view_conversion_sheet = self.test_view_conversion_sheet()
+        _view_conversion_sheet_record = self.test_view_conversion_sheet_record()
+        _view_contact_list = self.test_view_contact_list()
+        _view_contact_list_record = self.test_view_contact_list_record()
+        _extract_credits = self.test_extract_credits()
+        _second_view_account = self.test_view_account()
+        print('[ TEST ] System.')
+        _update_session = self.test_update_session()
+        _logout = self.test_logout()
 #       _unlink_account = self.test_unlink_user_account()
-#       _second_logout = self.test_logout()
+        _second_logout = self.test_logout()
 
     def sleep_printer(self):
         for item in range(3):
@@ -2583,7 +2599,18 @@ class EWallet(Base):
         self.test_orm()
 
 
-# TODO - Manage initialisation and sqlalchemy sessions (add session manager)
+def cleanup_session(ewallet_session):
+    if not ewallet_session:
+        return False
+    _working_session = ewallet_session.fetch_active_session()
+    if not _working_session:
+        return False
+    _working_session.query(EWallet) \
+                    .filter_by(id=ewallet.fetch_active_session_id()) \
+                    .delete()
+    _working_session.commit()
+    _working_session.close()
+
 Base.metadata.create_all(res_utils.engine)
 _working_session = res_utils.session_factory()
 
@@ -2592,7 +2619,7 @@ _working_session.add(ewallet)
 _working_session.commit()
 
 ewallet.ewallet_controller(controller='test')
-
+cleanup = cleanup_session(ewallet)
 
 ################################################################################
 # CODE DUMP
