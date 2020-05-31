@@ -2,6 +2,7 @@ from ewallet import EWallet
 from base.config import Config
 from base.res_utils import ResUtils
 from base.ewallet_worker import EWalletWorker
+from base.socket_handler import EWalletSocketHandler
 
 import time
 import datetime
@@ -18,14 +19,69 @@ log = logging.getLogger(config.log_config['log_name'])
 
 class EWalletSessionManager():
 
+    instruction_set_listener_socket_handler = None
+    command_chain_reply_socket_handler = None
+    socket_handler_thread_map = {}
     worker_pool = []
     client_pool = []
     client_worker_map = {}
 
     def __init__(self, *args, **kwargs):
-        pass
+        self.instruction_set_listener_socket_handler = kwargs.get(
+                'instruction_set_listener_socket_handler'
+                ) or self.open_ewallet_session_manager_command_chain_instruction_socket()
+        self.command_chain_reply_socket_handler = kwargs.get(
+                'command_chain_reply_socket_handler'
+                ) or self.open_ewallet_session_manager_command_chain_reply_socket()
+        self.socket_handler_thread_map = kwargs.get('socket_handler_thread_map') or \
+                {'instruction_thread': None, 'reply_thread': None}
+        self.worker_pool = kwargs.get('worker_pool') or []
+        self.client_pool = kwargs.get('client_pool') or []
+        self.client_worker_map = kwargs.get('client_worker_map') or {}
 
     # FETCHERS
+
+    def fetch_command_chain_reply_socket_handler_thread(self):
+        log.debug('')
+        thread_map = self.fetch_socket_handler_thread_map()
+        if not thread_map.get('reply_thread'):
+            return self.error_no_command_chain_reply_socket_handler_thread_found(thread_map)
+        return thread_map['reply_thread']
+
+    def fetch_socket_handler_thread_map(self):
+        log.debug('')
+        if not self.socket_handler_thread_map:
+            return self.error_no_socket_handler_thread_map_found()
+        return self.socket_handler_thread_map
+
+    def fetch_instruction_set_listener_socket_handler_thread(self):
+        log.debug('')
+        thread_map = self.fetch_socket_handler_thread_map()
+        if not thread_map.get('instruction_thread'):
+            return self.error_no_instruction_set_socket_handler_thread_found(thread_map)
+        return thread_map['instruction_thread']
+
+    def fetch_instruction_set_listener_socket_handler(self):
+        log.debug('')
+        if not self.instruction_set_listener_socket_handler:
+            return self.error_no_instruction_set_listener_socket_handler_found()
+        return self.instruction_set_listener_socket_handler
+
+    def fetch_command_chain_reply_socket_handler(self):
+        log.debug('')
+        if not self.command_chain_reply_socket_handler:
+            return self.error_no_command_chain_reply_socket_handler_found()
+        return self.command_chain_reply_socket_handler
+
+    # TODO : Fetch port number from configurations filer
+    def fetch_default_ewallet_command_chain_reply_port(self):
+        log.debug('')
+        return 8081
+
+    # TODO : Fetch port number from configurations file
+    def fetch_default_ewallet_command_chain_instruction_port(self):
+        log.debug('')
+        return 8080
 
     def fetch_worker_pool(self):
         log.debug('')
@@ -46,59 +102,185 @@ class EWalletSessionManager():
         pass
     def fetch_from_client_session_map(self):
         pass
-    def fetch_ewallet_worker_sessions(self):
+    def fetch_ewallet_worker_sessions(self, ewallet_worker):
         pass
     def fetch_from_ewallet_worker_session(self):
         pass
 
     # SETTERS
 
+    def set_instruction_listener_thread_to_map(self, listener_thread):
+        log.debug('')
+        try:
+            self.socket_handler_thread_map['instruction_thread'] = listener_thread
+        except:
+            return self.error_could_not_set_listener_thread_to_socket_handler_map(listener_thread)
+        return True
+
+    def set_reply_listener_thread_to_map(self, reply_thread):
+        log.debug('')
+        try:
+            self.socket_handler_thread_map['reply_thread'] = reply_thread
+        except:
+            return self.error_could_not_set_reply_thread_to_socket_handler_map(reply_thread)
+        return True
+
+    def unset_command_chain_reply_socket_handler(self):
+        log.debug('')
+        self.command_chain_reply_socket_handler = None
+        return True
+
+    def unset_instruction_set_listener_socket_handler(self):
+        log.debug('')
+        self.instruction_set_listener_socket_handler = None
+        return True
+
+    '''
+    [ NOTE   ]: Overrides currently set listener socket handler.
+    [ INPUT  ]: EWaleltSocketHandler object
+    [ RETURN ]: (True | False)
+    '''
+    def set_instruction_set_listener_socket_handler(self, socket_handler):
+        log.debug('')
+        try:
+            self.instruction_set_listener_socket_handler = socket_handler
+        except:
+            return self.error_invalid_listener_socket_handler(socket_handler)
+        return True
+
+    '''
+    [ NOTE   ]: Overrides currently set reply socket handler.
+    [ INPUT  ]: EWalletSocketHandler object
+    [ RETURN ]: (True | False)
+    '''
+    def set_command_chain_reply_socket_handler(self, socket_handler):
+        log.debug('')
+        try:
+            self.command_chain_reply_socket_handler = socket_handler
+        except:
+            return self.error_invalid_reply_socket_handler(socket_handler)
+        return True
+
+    '''
+    [ NOTE   ]: Overrides entire worker pool.
+    [ INPUT  ]: [worker1, worker2, ...]
+    [ RETURN ]: (True | False)
+    '''
     def set_worker_pool(self, worker_pool, **kwargs):
         log.debug('')
-        self.worker_pool = worker_pool
+        try:
+            self.worker_pool = worker_pool
+        except:
+            return self.error_could_not_set_worker_pool(worker_pool)
         return True
 
+    '''
+    [ NOTE   ]: Overrides entire client pool.
+    [ INPUT  ]: [user_id1, user_id2, ...]
+    [ RETURN ]: (True | False)
+    '''
     def set_client_pool(self, client_pool, **kwargs):
         log.debug('')
-        self.client_pool = client_pool
+        try:
+            self.client_pool = client_pool
+        except:
+            return self.error_coult_not_set_client_pool(client_pool)
         return True
 
-    def set_token_session_map(self, token_session_map, **kwargs):
+    '''
+    [ NOTE   ]: Overrides entire client/worker map.
+    [ INPUT  ]: {user_id: worker, user_id: worker, ...}
+    [ RETURN ]: (True | False)
+    '''
+    def set_client_worker_session_map(self, cw_map):
         log.debug('')
-        self.token_session_map = token_session_map
+        try:
+            self.client_worker_map = cw_map
+        except:
+            return self.error_could_not_set_client_worker_map(cw_map)
         return True
 
-    def set_client_session_map(self, client_session_map, **kwargs):
-        log.debug('')
-        self.client_session_map = client_session_map
-        return True
-
+    '''
+    [ NOTE   ]: Adds new work to worker pool stack.
+    [ INPUT  ]: EwalletWorker object.
+    [ RETURN ]: (True | False)
+    '''
     def set_to_worker_pool(self, worker, **kwargs):
         log.debug('')
-        self.worker_pool.append(worker)
+        try:
+            self.worker_pool.append(worker)
+        except:
+            return self.error_could_not_update_worker_pool(worker) #
         return True
 
+    '''
+    [ NOTE   ]: Adds new client user id to client pool stack.
+    [ INPUT  ]: User ID
+    [ RETURN ]: (True | False)
+    '''
     def set_to_client_pool(self, client, **kwargs):
         log.debug('')
-        self.client_pool.append(client)
+        try:
+            self.client_pool.append(client)
+        except:
+            return self.error_could_not_update_client_pool(client)
+        return True
 
-    # TODO
-    def set_to_token_session_map(self, token_map, **kwargs):
+    '''
+    [ NOTE   ]: Adds new entry to client/worker map including entry in workers user_id/session token map.
+    [ INPUT  ]: User ID, Session Token, EwalletWorker object.
+    [ RETURN ]: (True | False)
+    '''
+    def set_to_client_worker_session_map(self, user_id, session_token, worker):
         log.debug('')
-    def set_to_client_session_map(self, client_map, **kwargs):
-        log.debug('')
+        values = {
+                'session_manager': {user_id: worker},
+                'worker': {user_id: session_token},
+                }
+        try:
+            self.client_worker_map.update(values['session_manager'])
+            worker.token_session_map.update(values['worker'])
+        except:
+            return self.error_could_not_update_client_worker_session_map(values)
+        return True
 
     # UPDATERS
 
-    # TODO
-    def update_worker_pool(self):
-        pass
-    def update_client_pool(self):
-        pass
-    def update_token_session_map(self):
-        pass
-    def update_client_session_map(self):
-        pass
+    '''
+    [ NOTE   ]: Overrides Session Manager Worker Pool and checks for type errors.
+    [ INPUT  ]: [worker1, worker2, ...]
+    [ RETURN ]: (True | False)
+    '''
+    def update_worker_pool(self, worker_pool):
+        if not worker_pool:
+            return self.error_no_worker_pool_found()
+        return self.error_invalid_worker_pool(worker_pool) \
+                if not isinstance(worker_pool, list) else \
+                self.set_worker_pool(worker_pool)
+
+    '''
+    [ NOTE   ]: Overrides Session Manager Client Pool and checks for type errors.
+    [ INPUT  ]: [user_id1, user_id2, ...]
+    [ RETURN ]: (True | False)
+    '''
+    def update_client_pool(self, client_pool):
+        if not client_pool:
+            return self.error_client_pool_not_found()
+        return self.error_invalid_client_pool(client_pool) \
+                if not isinstance(client_pool, list) else \
+                self.set_client_pool(client_pool)
+
+    '''
+    [ NOTE   ]: Overrides Session Manager Client Worker map and checks for type errors.
+    [ INPUT  ]: {user_id: session_token, ...}
+    [ RETURN ]: (True | False)
+    '''
+    def update_client_worker__map(self, cw_map):
+        if not cw_map:
+            return self.error_client_worker_map_not_found()
+        return self.error_invalid_client_worker_map(cw_map) \
+                if not isinstance(cw_map, dict) else \
+                self.set_client_worker_session_map(cw_map)
 
     # CHECKERS
 
@@ -112,12 +294,23 @@ class EWalletSessionManager():
 
     # SPAWNERS
 
+    '''
+    [ NOTE   ]: Perform port number validity checks and creates a EWallet Socket Handler object.
+    [ INPUT  ]: port-number
+    [ RETURN ]: EWalletSocketHandler object
+    '''
+    def spawn_ewallet_session_manager_socket(self, socket_port):
+        log.debug('')
+        if not isinstance(socket_port, int):
+            return self.error_invalid_socket_port(socket_port)
+        return EWalletSocketHandler(
+                session_manager=self, port=socket_port, host='127.0.0.1'
+                )
+
     # TODO
     def spawn_ewallet_session_worker(self):
         pass
     def spawn_ewallet_session(self):
-        pass
-    def spawn_ewallet_session_manager_socket(self):
         pass
 
     # SCRAPERS
@@ -130,16 +323,24 @@ class EWalletSessionManager():
 
     # GENERAL
 
-    # TODO
+    '''
+    [ NOTE   ]: Creates an EWalletSessionManager object using default configuration values
+    [ RETURN ]: EWalletSessionManager object
+    '''
     def open_ewallet_session_manager_command_chain_instruction_socket(self, **kwargs):
         log.debug('')
-        _socket = self.spawn_ewallet_session_manager_socket()
+        _port = kwargs.get('in_port') or self.fetch_default_ewallet_command_chain_instruction_port()
+        _socket = self.spawn_ewallet_session_manager_socket(_port)
         return _socket
 
-    # TODO
+    '''
+    [ NOTE   ]: Create an EWalletSessionManager object using default configuration values
+    [ RETURN ]: EWalletSessionManager object
+    '''
     def open_ewallet_session_manager_command_chain_reply_socket(self, **kwargs):
         log.debug('')
-        _socket = self.spawn_ewallet_session_manager_socket()
+        _port = kwargs.get('out_port') or self.fetch_default_ewallet_command_chain_reply_port()
+        _socket = self.spawn_ewallet_session_manager_socket(_port)
         return _socket
 
     # TODO
@@ -194,6 +395,40 @@ class EWalletSessionManager():
 
     # HANDLERS
 
+    def handle_system_action_open_instruction_listener_port(self, **kwargs):
+        log.debug('')
+        _in_socket_handler = self.open_ewallet_session_manager_command_chain_instruction_socket(**kwargs)
+        set_socket_handler = self.set_instruction_set_listener_socket_handler(_in_socket_handler)
+        t = threading.Thread(target=_in_socket_handler.start_listener, args=())
+        t.daemon = True
+        set_thread_to_map = self.set_instruction_listener_thread_to_map(t)
+        t.start()
+        return _in_socket_handler
+
+    def handle_system_action_open_command_chain_reply_port(self, **kwargs):
+        log.debug('')
+        _out_socket_handler = self.open_ewallet_session_manager_command_chain_reply_socket(**kwargs)
+        set_socket_handler = self.set_command_chain_reply_socket_handler(_out_socket_handler)
+        t = threading.Thread(target=_out_socket_handler.start_listener, args=())
+        t.daemon = True
+        set_thread_to_map = self.set_reply_listener_thread_to_map(t)
+        t.start()
+        return _out_socket_handler
+
+    def handle_system_action_close_instruction_listener_port(self, **kwargs):
+        log.debug('')
+        listener_thread = self.fetch_instruction_set_listener_socket_handler_thread()
+        listener_thread._is_stopped = True
+        unset_socket_handler = self.unset_instruction_set_listener_socket_handler()
+        return True
+
+    def handle_system_action_close_command_chain_reply_port(self, **kwargs):
+        log.debug('')
+        reply_thread = self.fetch_command_chain_reply_socket_handler_thread()
+        reply_thread._is_stopped = True
+        unset_socket_handler = self.unset_command_chain_reply_socket_handler()
+        return True
+
     # TODO
     def handle_client_action_request_client_id(self, **kwargs):
         log.debug('')
@@ -205,23 +440,6 @@ class EWalletSessionManager():
         log.debug('')
         _session_token = self.action_request_session_token()
         return _session_token
-
-    # TODO
-    def handle_system_action_open_instruction_listener_port(self, **kwargs):
-        log.debug('')
-        _in_port = self.open_ewallet_session_manager_command_chain_instruction_socket()
-        return _in_port
-
-    # TODO
-    def handle_system_action_open_command_chain_reply_port(self, **kwargs):
-        log.debug('')
-        _out_port = self.open_ewallet_session_manager_command_chain_reply_socket()
-        return _out_port
-
-    def handle_system_action_close_instruction_listener_port(self, **kwargs):
-        log.debug('')
-    def handle_system_action_close_command_chain_reply_port(self, **kwargs):
-        log.debug('')
 
 	# TODO
     def handle_system_action_new_worker(self, **kwargs):
@@ -296,13 +514,13 @@ class EWalletSessionManager():
     '''
     def handle_system_action_open(self, **kwargs):
         log.debug('')
-        if not kwargs.get('open'):
+        if not kwargs.get('opening'):
             return self.error_no_system_action_open_target_specified()
         _handlers = {
                 'in_port': self.handle_system_action_open_instruction_listener_port,
                 'out_port': self.handle_system_action_open_command_chain_reply_port,
                 }
-        return _handlers[kwargs['open']](**kwargs)
+        return _handlers[kwargs['opening']](**kwargs)
 
     '''
     [ NOTE   ]: System action handler for close type actions.
@@ -311,13 +529,13 @@ class EWalletSessionManager():
     '''
     def handle_system_action_close(self, **kwargs):
         log.debug('')
-        if not kwargs.get('close'):
+        if not kwargs.get('closing'):
             return self.error_no_system_action_close_target_specified()
         _handlers = {
                 'in_port': self.handle_system_action_close_instruction_listener_port,
                 'out_port': self.handle_system_action_close_command_chain_reply_port,
                 }
-        return _handlers[kwargs['close']](**kwargs)
+        return _handlers[kwargs['closing']](**kwargs)
 
     '''
     [ NOTE   ]: System event handler for client timeout events.
@@ -482,6 +700,139 @@ class EWalletSessionManager():
 
     # ERRORS
 
+    def error_no_command_chain_reply_socket_handler_thread_found(self, thread_map):
+        log.error(
+                'No command chain reply socket handler thread found in thread map : {}'\
+                    .format(thread_map)
+                )
+        return False
+
+    def error_could_not_set_reply_thread_to_socket_handler_map(self, reply_thread):
+        log.error(
+                'Something went wrong. Could not set reply thread {} to socket handler thread map.'\
+                    .format(reply_thread)
+                )
+        return False
+
+    def error_could_not_set_listener_thread_to_socket_handler_map(self, listener_thread):
+        log.error(
+                'Something went wrong. Could not set instruction listener socket handler thread {} to map.'\
+                    .format(listener_thread)
+                )
+        return False
+
+    def error_no_socket_handler_thread_map_found(self):
+        log.error('No socket handler thread map found.')
+        return False
+
+    def error_no_instruction_set_socket_handler_thread_found(self, thread_map):
+        log.error(
+                'No instruction set listening socket handler thread found in thread map : {}'\
+                    .format(str(thread_map))
+                )
+        return False
+
+    def error_no_instruction_set_listener_socket_handler_found(self):
+        log.error('No instruction set listener socket handler found for session manager.')
+        return False
+
+    def error_no_command_chain_reply_socket_handler_found(self):
+        log.error('No command chain reply socket handler found for session manager.')
+        return False
+
+    def error_invalid_listener_socket_handler(self, socket_handler):
+        log.error(
+                'Invalid listener socket handler {} type {}.'.format(
+                    str(socket_handler), type(socket_handler)
+                    )
+                )
+        return False
+
+    def error_invalid_reply_socket_handler(self, socket_handler):
+        log.error(
+                'Invalid reply socket handler {} type {}.'.format(
+                    str(socket_handler), type(socket_handler)
+                    )
+                )
+        return False
+
+    def error_invalid_socket_port(self, socket_port):
+        log.error(
+                'Invalid socket port {} type {}.'.format(
+                    str(socket_port), type(socket_port)
+                    )
+                )
+        return False
+
+    def error_no_worker_pool_found(self):
+        log.error('No worker pool found.')
+        return False
+
+    def error_no_client_pool_found(self):
+        log.error('No client pool found.')
+        return False
+
+    def error_invalid_worker_pool(self, worker_pool):
+        log.error(
+                'Invalid worker pool {} type {}.'.format(
+                    str(worker_pool), type(worker_pool)
+                    )
+                )
+        return False
+
+    def error_client_worker_map_not_found(self):
+        log.error('No client worker map found.')
+        return False
+
+    def error_invalid_client_pool(self, client_pool):
+        log.error(
+                'Invalid client pool {} type {}.'.format(
+                    str(client_pool), type(client_pool)
+                    )
+                )
+        return False
+
+    def error_invalid_client_worker_map(self, cw_map):
+        log.error(
+                'Invalid client worker map {} type {}.'.format(
+                    str(cw_map), type(cw_map),
+                    )
+                )
+        return False
+
+    def error_could_not_update_worker_pool(self, worker):
+        log.error(
+                'Something went wrong. Could not update worker pool with new worker {}.'\
+                .format(worker)
+                )
+
+
+    def error_could_not_update_client_pool(self, client):
+        log.error(
+                'Something went wrong. Could not update client pool with new client {}.'\
+                .format(client)
+                )
+        return False
+
+    def error_could_not_update_client_worker_session_map(self, values):
+        log.error(
+                'Something went wrong. Could not update client worker '
+                'session map with values {}'.format(values)
+                )
+        return False
+
+    def error_could_not_set_worker_pool(self, worker_pool):
+        log.error('Something went wrong. Could not set worker pool : {}'.format(worker_pool))
+        return False
+
+    def error_could_not_set_client_pool(self, client_pool):
+        log.error('Something went wrong. Could not set client pool : {}'.format(client_pool))
+        return False
+
+    def error_could_not_set_client_worker_map(self, cw_map):
+        log.error('Something went wrong. Could not set client worker manp : {}'.format(cw_map))
+        return False
+
     def error_no_system_action_open_target_specified(self):
         log.error('No system action open target specified.')
         return False
@@ -610,3 +961,20 @@ session_manager = EWalletSessionManager()
 session_manager.session_manager_controller(controller='test')
 
 
+# CODE DUMP
+
+
+#   def set_token_session_map(self, token_session_map, **kwargs):
+#       log.debug('')
+#       self.token_session_map = token_session_map
+#       return True
+
+#   def set_client_session_map(self, client_session_map, **kwargs):
+#       log.debug('')
+#       self.client_session_map = client_session_map
+#       return True
+
+#   def set_to_token_session_map(self, token_map, **kwargs):
+#       log.debug('')
+#   def set_to_client_session_map(self, client_map, **kwargs):
+#       log.debug('')

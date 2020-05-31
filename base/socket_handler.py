@@ -1,16 +1,24 @@
+from .config import Config
+
 import socket
 import sys
 import selectors
 import types
+import logging
 import pysnooper
 
+config = Config()
+log_config = config.log_config
+log = logging.getLogger(log_config['log_name'])
+
 
 '''
-    [ NOTE ]: Multiconn socket handler for both server and client sides.
+[ NOTE ]: Multiconn socket handler for both server and client sides.
 '''
-class SocketHandler():
+class EWalletSocketHandler():
 
     def __init__(self, *args, **kwargs):
+        self.session_manager = kwargs.get('session_manager')
         self.sock = kwargs.get('sock') or self.create_socket()
         self.host = kwargs.get('host') or '127.0.0.1'
         self.port = kwargs.get('port') or 65432
@@ -18,7 +26,9 @@ class SocketHandler():
 
     # FETCHERS
 
+    #@pysnooper.snoop()
     def fetch_socket_values(self):
+        log.debug('')
         _values = {
                 'sock': self.sock,
                 'host': self.host,
@@ -27,46 +37,51 @@ class SocketHandler():
                 }
         return _values
 
-    def view_handler_values(self):
-        print(str(self.fetch_socket_values))
-
     # SETTERS
 
+    #@pysnooper.snoop()
     def set_socket(self, socket):
+        log.debug('')
         self.sock = socket
         return True
 
     # GENERAL
 
+    #@pysnooper.snoop()
     def create_socket(self, **kwargs):
+        log.debug('')
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         return sock
 
     #@pysnooper.snoop()
     def bind_socket(self, sock, **kwargs):
+        log.debug('')
         bind = sock.bind((self.host, self.port))
         listen = sock.listen()
         return True
 
     #@pysnooper.snoop()
     def accept_connection(self, sock, **kwargs):
+        log.debug('')
         conn, addr = sock.accept()
         if kwargs.get('multiconn'):
             conn.setblocking(False)
         return {'conn': conn, 'addr': addr}
 
-    @pysnooper.snoop()
+    #@pysnooper.snoop()
     def accept_wrapper(self, sock):
+        log.debug('')
         # Should be ready to read
         accept = self.accept_connection(sock, multiconn=True)
         set_socket = self.set_socket(accept['conn'])
-        print("Accepted connection from", accept['addr'])
+        log.info('Accepted connection from {}'.format(accept['addr']))
         data = types.SimpleNamespace(addr=accept['addr'], inb=b"", outb=b"")
         events = selectors.EVENT_READ | selectors.EVENT_WRITE
         self.sel.register(accept['conn'], events, data=data)
 
-#   @pysnooper.snoop()
+    #@pysnooper.snoop()
     def service_connection(self, key, mask):
+        log.debug('')
         sock = key.fileobj
         data = key.data
         if mask & selectors.EVENT_READ:
@@ -74,35 +89,50 @@ class SocketHandler():
             if recv_data:
                 data.outb += recv_data
             else:
-                print("Closing connection to", data.addr)
+                log.info('Closing connection to {}.'.format(data.addr))
                 self.sel.unregister(sock)
                 sock.close()
         if mask & selectors.EVENT_WRITE:
             if data.outb:
-                print("Echoing", repr(data.outb), "to", data.addr)
+                log.info('Echoing {} to {}'.format(repr(data.outb), data.addr))
                 sent = sock.send(data.outb)  # Should be ready to write
                 data.outb = data.outb[sent:]
 
 
     # ACTIONS
 
+    def terminate_socket_handler(self):
+        log.debug('')
+        self._running = False
+        return True
+
+    #@pysnooper.snoop()
     def destroy_socket(self, sock, **kwargs):
+        log.debug('')
         sock.close()
         return True
 
+    #@pysnooper.snoop()
     def send_data(self, conn, data, **kwargs):
+        log.debug('')
         conn.sendall(data)
         return True
 
+    #@pysnooper.snoop()
     def receive_data(self, conn, **kwargs):
+        log.debug('')
         data = conn.recv(1024)
         return data
 
+    #@pysnooper.snoop()
     def process_data(self, **kwargs):
-        print('Data received : {}'.format(kwargs.get('data')))
+        log.debug('')
+        log.info('Data received : {}'.format(kwargs.get('data')))
         return True
 
+    #@pysnooper.snoop()
     def incomming_transmission(self, conn, **kwargs):
+        log.debug('')
         try:
             while True:
                 events = self.sel.select(timeout=None)
@@ -112,22 +142,32 @@ class SocketHandler():
                     else:
                         self.service_connection(key, mask)
         except KeyboardInterrupt:
-            print("Caught keyboard interrupt, exiting")
+            log.info('Caught keyboard interrupt, exiting.')
         finally:
             self.sel.close()
             self.destroy_socket(conn)
 
     #@pysnooper.snoop()
     def start_listener(self, **kwargs):
+        log.debug('')
         with self.sock as s:
             self.bind_socket(s)
             accept = self.accept_connection(s)
             self.sel.register(s, selectors.EVENT_READ, data=None)
             transmission = self.incomming_transmission(**accept)
 
-_socket_handler = SocketHandler()
-_view = _socket_handler.view_handler_values()
-_socket_handler.start_listener()
+    # DISPLAY
+
+    def view_handler_values(self):
+        log.debug('')
+        values = (str(self.fetch_socket_values()))
+        log.debug(values)
+        return values
+
+if __name__ == "__main__":
+    _socket_handler = EWalletSocketHandler()
+    _view = _socket_handler.view_handler_values()
+    _socket_handler.start_listener()
 
 ##############################################################################
 # CODE DUMP

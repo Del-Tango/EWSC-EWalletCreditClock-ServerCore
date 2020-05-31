@@ -3007,15 +3007,16 @@ class EWallet(Base):
 
 # TODO - Decouple EWallet setup procedures
 
-Base.metadata.create_all(res_utils.engine)
-_working_session = res_utils.session_factory()
+if __name__ == '__main__':
+    Base.metadata.create_all(res_utils.engine)
+    _working_session = res_utils.session_factory()
 
-ewallet = EWallet(session=_working_session)
-_working_session.add(ewallet)
-_working_session.commit()
+    ewallet = EWallet(session=_working_session)
+    _working_session.add(ewallet)
+    _working_session.commit()
 
-system_user = res_utils.create_system_user(ewallet)
-ewallet.ewallet_controller(controller='test')
+    system_user = res_utils.create_system_user(ewallet)
+    ewallet.ewallet_controller(controller='test')
 
 ################################################################################
 # CODE DUMP
