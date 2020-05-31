@@ -24,6 +24,8 @@ class ResUser(Base):
     user_name = Column(String)
     user_create_date = Column(DateTime)
     user_write_date = Column(DateTime)
+    user_create_uid = Column(Integer, ForeignKey('res_user.user_id'))
+    user_write_uid = Column(Integer, ForeignKey('res_user.user_id'))
     user_pass_hash = Column(String)
     user_email = Column(String)
     user_phone = Column(String)
@@ -56,6 +58,8 @@ class ResUser(Base):
     def __init__(self, **kwargs):
         self.user_create_date = datetime.datetime.now()
         self.user_write_date = datetime.datetime.now()
+        self.user_create_uid = kwargs.get('user_create_uid')
+        self.user_write_uid = kwargs.get('user_write_uid')
         _user_credit_wallet = kwargs.get('user_credit_wallet') or \
                 self.user_action_controller(
                     action='create', target='credit_wallet', **kwargs
@@ -71,8 +75,8 @@ class ResUser(Base):
         self.user_email = kwargs.get('user_email')
         self.user_phone = kwargs.get('user_phone')
         self.user_alias = kwargs.get('user_alias')
-        self.user_state_code = kwargs.get('user_state_code')
-        self.user_state_name = kwargs.get('user_state_name')
+        self.user_state_code = kwargs.get('user_state_code') or 0
+        self.user_state_name = kwargs.get('user_state_name') or 'LoggedOut'
         self.user_pass_hash_archive = kwargs.get('user_pass_hash_archive') or []
         self.user_credit_wallet_archive = kwargs.get('user_credit_wallet_archive') or \
                 [_user_credit_wallet]
@@ -94,6 +98,14 @@ class ResUser(Base):
     def fetch_user_write_date(self):
         log.debug('')
         return self.user_write_date
+
+    def fetch_user_create_uid(self):
+        log.debug('')
+        return self.user_create_uid
+
+    def fetch_user_write_uid(self):
+        log.debug('')
+        return self.user_write_uid
 
     def fetch_user_credit_wallet(self):
         log.debug('')
@@ -146,6 +158,8 @@ class ResUser(Base):
                 'user_name': self.user_name,
                 'user_create_date': self.user_create_date,
                 'user_write_date': self.user_write_date,
+                'user_create_uid': self.user_create_uid,
+                'user_write_uid': self.user_write_uid,
                 'user_credit_wallet': self.fetch_user_credit_wallet(),
                 'user_contact_list': self.fetch_user_contact_list(),
                 'user_pass_hash': self.user_pass_hash,

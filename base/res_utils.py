@@ -7,24 +7,24 @@ import logging
 import pysnooper
 
 from .config import Config
+config, Base = Config(), declarative_base()
 
-log_config = Config().log_config
-log = logging.getLogger(log_config['log_name'])
 
-Base = declarative_base()
-
-# TODO
 class ResUtils():
 
     engine = create_engine('sqlite:///data/ewallet.db')
     _SessionFactory = sessionmaker(bind=engine)
 
-#   def __init__(self, *args, **kwargs):
-#       self.engine = create_engine('sqlite:///data/ewallet.db')
-        #'postgresql://dbuser:dbpassword@localhost:5432/sqlalchemy-orm-tutorial'
-        # use session_factory() to get a new Session
-#       self._SessionFactory = sessionmaker(bind=self.engine)
-#       self.Base = declarative_base()
+    #@pysnooper.snoop('logs/ewallet.log')
+    def create_system_user(self, ewallet_session):
+        if not ewallet_session:
+            return False
+        _system_user_values = config.system_user_values
+        score = ewallet_session.ewallet_controller(
+                controller='user', ctype='action', action='create', create='account',
+                **_system_user_values
+                )
+        return score
 
     def session_factory(self):
         global Base
@@ -44,5 +44,26 @@ class ResUtils():
             yield num
             num += 1
 
+res_utils = ResUtils()
 
+'''
+    [ NOTE ]: Setting up EWallet logger.
+'''
+def log_init():
+    log_config = config.log_config
+    log = logging.getLogger(log_config['log_name'])
+    log.setLevel(logging.DEBUG)
+    file_handler = logging.FileHandler(
+        log_config['log_dir'] + '/' + log_config['log_file'], 'a'
+        )
+    formatter = logging.Formatter(
+        log_config['log_record_format'],
+        log_config['log_date_format']
+        )
+    logging.Formatter.converter = res_utils.fetch_now_eet
+    file_handler.setFormatter(formatter)
+    log.addHandler(file_handler)
+    return log
+
+log = log_init()
 

@@ -1,4 +1,28 @@
+###############################################################################
+# EWallet Session Manager
+###############################################################################
+# TODO - System Action Open Instruction Listener Port
+# TODO - System Action Open Command Chain Reply Port
+# TODO - System Action Close Instruction Listener Port
+# TODO - System Action Close Command Chain Reply Port
+# TODO - User Action Request Client ID
+# TODO - System Action New Worker
+# TODO - User Action New Session
+
+
+###############################################################################
+# EWallet Session Worker
+###############################################################################
+# TODO - User Action Request Session Token
+# TODO - User Action New Session
+# TODO - System Action Scrape Session
+
+
+###############################################################################
+# EWallet Session
+###############################################################################
 # TODO - Bug/? user action supply -> same partner_account
+# TODO - Bug Report - User Action Supply Credits - System Core
 
 # TODO - Persistent storage with SQLAlchemy ORM
 - refactor session commit points
@@ -15,17 +39,19 @@
 # TODO - Manage initialisation and sqlalchemy sessions
 # TODO - PEP8-it
 # TODO - BUG FIX - Ewallet Record Sequencer
+# TODO - User Deletion order with 30 day pending
+# TODO - EWallet report an issue system
 
-# TODO - EWallet session manager
+###############################################################################
+# General
+###############################################################################
+# TODO - Add ACL permission sheet
+# TODO - Attach software liscence agreement
 
 # TODO - EWallet Client
-
+# TODO - EWallet Client Interface
+# TODO - EWallet Client user account security
 # TODO - Ewallet REST Api
 # TODO - Ewallet python package
 
-# TODO - Add ACL permission sheets
-# TODO - Deletion order with 30 day pending
-# TODO - Client user account security
-# TODO - EWallet Client Interface
-# TODO - EWallet report an issue system
-# TODO - Attach software liscence agreement
+

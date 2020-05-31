@@ -1,5 +1,6 @@
 from . import config
 from . import res_user
+from . import res_utils
 from . import res_user_pass_hash_archive
 from . import credit_clock
 from . import credit_wallet
@@ -8,4 +9,3 @@ from . import conversion_sheet
 from . import time_sheet
 from . import transfer_sheet
 from . import invoice_sheet
-from . import res_utils

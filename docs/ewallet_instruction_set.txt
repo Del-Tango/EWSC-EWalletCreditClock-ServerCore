@@ -1,0 +1,17 @@
+instruction_set = {
+    header: {
+        client_id:
+        src_address:
+        src_port:
+        session_token:
+        loggin_user:
+        session_id:
+        ...
+    }
+    command_chain: {
+        controller:
+        ctype:
+        action:
+        ...
+    }
+}

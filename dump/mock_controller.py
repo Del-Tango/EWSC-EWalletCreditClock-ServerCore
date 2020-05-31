@@ -1,4 +1,6 @@
 from ewallet import EWallet
+from ewallet_session_manager import EWalletSessionManager, EWalletWorker
+
 
 ewallet_session = EWallet()
 
@@ -12,7 +14,7 @@ def test_command_create_account():
             user_email='mock@email.com',
             user_pass='Davidson13$',
             user_phone='test_user_phone',
-            user_aliat='test_user_alias',
+            user_alias='test_user_alias',
             )
 
 def test_command_login():

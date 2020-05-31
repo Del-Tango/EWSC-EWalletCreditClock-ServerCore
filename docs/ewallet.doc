@@ -1,0 +1,430 @@
+    [ NOTE   ]: Fetches SCore user account used for administration and automation.
+    [ INPUT  ]: active_session=<session>
+    [ RETURN ]: (ResUser object | False)
+    def fetch_system_core_user_account(self, **kwargs):
+
+    [ NOTE   ]: Fetches a ResUser object by a specified criteria.
+    [ INPUT  ]: indentifier=(id | name | email | phone | alias)
+    [ RETURN ]: (ResUser object | False)
+    def fetch_user(self, **kwargs):
+
+    [ NOTE   ]: Fetches either specified credit wallet or active user credit wallet credit count.
+    [ INPUT  ]: credit_wallet=<wallet>
+    [ RETURN ]: (Credit wallet credits | False)
+    def fetch_credit_wallet_credits(self, **kwargs):
+
+    [ NOTE   ]: Fetches next user object in login stack.
+    [ INPUT  ]: active_user=<user>
+    [ RETURN ]: (ResUser object | [] if empty login stack | False)
+    def fetch_next_active_session_user(self, **kwargs):
+
+    [ NOTE   ]: Sets user data to active EWallet session.
+    [ INPUT  ]: {'active_user': <user>, 'credit_wallet': <wallet>, 'contact_list': <list>}
+    [ RETURN ]: ({'active_user': <user>, 'credit_wallet': <wallet>, 'contact_list': <list>} | False)
+    def set_session_data(self, data_dct):
+
+    [ NOTE   ]: Clears all user information from active EWallet session.
+    [ RETURN ]: ({'field-name': (True | False), ...} | False)
+    def clear_active_session_user_data(self, data_dct):
+
+    [ NOTE   ]: Update current session values from active user data.
+    [ INPUT  ]: session_active_user=<active_user>
+    [ RETURN ]: (True | False)
+    def update_session_from_user(self, **kwargs):
+
+    [ NOTE   ]: Update EWallet session user login stack with new user.
+    [ INPUT  ]: user=<user>
+    [ RETURN ]: (User login stack | False)
+    def update_user_account_archive(self, **kwargs):
+
+    [ NOTE   ]: Deletes specific user or active session user.
+    [ INPUT  ]: active_session=<session>, user_id=<user_id>
+    [ RETURN ]:
+    def unlink_user_account(self, **kwargs):
+
+    [ NOTE   ]: Jump table for user action category 'create new transfer', accessible from external api call.
+    [ INPUT  ]: ttype=(supply | pay | transfer)
+    [ RETURN ]: Action variable correspondent.
+    def action_create_new_transfer(self, **kwargs):
+
+    [ NOTE   ]: Jump table for user action category 'unlink contact', accessible from external api call.
+    [ INPUT  ]: unlink=(list | record)
+    [ RETURN ]: Action variable correspondent.
+    def action_unlink_contact(self, **kwargs):
+
+    [ NOTE   ]: Jump table for user action category 'unlink invoice', accessible from external api call.
+    [ INPUT  ]: unlink=(list | record)
+    [ RETURN ]: Action variable correspondent.
+    def action_unlink_invoice(self, **kwargs):
+
+    [ NOTE   ]: Jump table for user action category 'unlink transfer', accessible from external api call.
+    [ INPUT  ]: unlink=(list | record)
+    [ RETURN ]: Action variable correspondent.
+    def action_unlink_transfer(self, **kwargs):
+
+    [ NOTE   ]: Jump table for user action category 'unlink time', accessible from external api call.
+    [ INPUT  ]: unlinl=(list | record)
+    [ RETURN ]: Action variable correspondent.
+    def action_unlink_time(self, **kwargs):
+
+    [ NOTE   ]: Jump table for user action category 'unlink conversion', accessible from external api call.
+    [ INPUT  ]: unlink=(list | record)
+    [ RETURN ]: Action variable correspondent.
+    def action_unlink_conversion(self, **kwargs):
+
+    [ NOTE   ]: Jump table for user action category 'view contact', accessible from external api call.
+    [ INPUT  ]: contact=(list | record)
+    [ RETURN ]: Action variable correspondent.
+    def action_view_contact(self, **kwargs):
+
+    [ NOTE   ]: Jump table for user action category 'view invoice', accessible from external api call.
+    [ INPUT  ]: invoice=(list | record)
+    [ RETURN ]: Action variable correspondent.
+    def action_view_invoice(self, **kwargs):
+
+    [ NOTE   ]: Jump table for user action category 'view transfer', accessible from external api call.
+    [ INPUT  ]: transfer=(list | record)
+    [ RETURN ]: Action variable correspondent.
+    def action_view_transfer(self, **kwargs):
+
+    [ NOTE   ]: Jumpt table for user action category 'view time', accessible from external api call.
+    [ INPUT  ]: time=(list | record)
+    [ RETURN ]: Action variable correspondent.
+    def action_view_time(self, **kwargs):
+
+    [ NOTE   ]: Jump table for user action category 'view conversion', accessible from external api call.
+    [ INPUT  ]: conversion=(list | record)
+    [ RETURN ]: Action variable correspondent.
+    def action_view_conversion(self, **kwargs):
+
+    [ NOTE   ]: System action 'user logout', accessible from external api call.
+    [ RETURN ]: (Next user in login stack | True if login stack empty | False)
+    def action_system_user_logout(self, **kwargs):
+
+    [ NOTE   ]: System action 'user update'. Allows multiple logged in users to switch.
+    [ INPUT  ]: user=<user>
+    [ RETURN ]: (Active user | False)
+    def action_system_user_update(self, **kwargs):
+
+    [ NOTE   ]: System action 'session update', not accessible from external api call.
+    [ INPUT  ]: session_active_user=<active_user>
+    [ RETURN ]: (True | False)
+    def action_system_session_update(self, **kwargs):
+
+    [ NOTE   ]: User action 'start credit clock timer', accessible from external api call.
+    [ INPUT  ]: credit_clock=<clock>, active_session=<session>
+    [ RETURN ]: (Legacy start time | False)
+    def action_start_credit_clock_timer(self, **kwargs):
+
+    [ NOTE   ]: User action 'pause credit clock timer', accessible from external api call.
+    [ INPUT  ]: credit_clock=<clock>, active_session=<session>
+    [ RETURN ]: (Pause count | False)
+    def action_pause_credit_clock_timer(self, **kwargs):
+
+    [ NOTE   ]: User action 'resume credit clock timer', accessible from external api call.
+    [ INPUT  ]: credit_clock=<clock>, active_session=<session>
+    [ RETURN ]: (Elapsed clock time | False)
+    def action_resume_credit_clock_timer(self, **kwargs):
+
+    [ NOTE   ]: User action 'stop credit clock timer', accessible from external api call.
+    [ INPUT  ]: credit_clock=<clock>, active_session=<session>
+    [ RETURN ]: (Credit clock elapsed time | False)
+    def action_stop_credit_clock_timer(self, **kwargs):
+
+    [ NOTE   ]: User action 'view transfer list', accessible from external api call.
+    [ RETURN ]: (Transfer sheet values | False)
+    def action_view_transfer_list(self, **kwargs):
+
+    [ NOTE   ]: User action 'view transfer record', accessible from external api call.
+    [ INPUT  ]: record_id=<id>
+    [ RETURN ]: (Transfer record values | False)
+    def action_view_transfer_record(self, **kwargs):
+
+    [ NOTE   ]: User action 'view time list', accessible from external api call.
+    [ RETURN ]: (Time sheet values | False)
+    def action_view_time_list(self, **kwargs):
+
+    [ NOTE   ]: User action 'view time record', accessible from external api call.
+    [ INPUT  ]: record_id=<id>
+    [ RETURN ]: (Time record values | False)
+    def action_view_time_record(self, **kwargs):
+
+    [ NOTE   ]: User action 'view conversion list', accessible from external api call.
+    [ RETURN ]: (Conversion sheet values | False)
+    def action_view_conversion_list(self, **kwargs):
+
+    [ NOTE   ]: User action 'view conversion record', accessible from external api call.
+    [ INPUT  ]: record_id=<id>
+    [ RETURN ]: (Conversion record values | False)
+    def action_view_conversion_record(self, **kwargs):
+
+    [ NOTE   ]: User action 'view invoice list', accessible from external api call.
+    [ RETURN ]: (Invoice sheet values | False)
+    def action_view_invoice_list(self, **kwargs):
+
+    [ NOTE   ]: User action 'view invoice record', accessible from external api call.
+    [ INPUT  ]: record_id=<id>
+    [ RETURN ]: (Invoice record values | False)
+    def action_view_invoice_record(self, **kwargs):
+
+    [ NOTE   ]: User action 'view user account', accessible from external api call.
+    [ RETURN ]: (Active user values | False)
+    def action_view_user_account(self, **kwargs):
+
+    [ NOTE   ]: User action 'view credit wallet', accessible from external api call.
+    [ RETURN ]: (Credit wallet values | False)
+    def action_view_credit_wallet(self, **kwargs):
+
+    [ NOTE   ]: User action 'view credit clock', accessible from external api call.
+    [ RETURN ]: (Credit clock values | False)
+    def action_view_credit_clock(self, **kwargs):
+
+    [ NOTE   ]: User action 'view contact list', accessible from external api call.
+    [ RETURN ]: (Contact list values | False)
+    def action_view_contact_list(self, **kwargs):
+
+    [ NOTE   ]: User action 'view contact record', accessible from external user api call.
+    [ INPUT  ]: record_id=<id>
+    [ RETURN ]: (Contact record values | False)
+    def action_view_contact_record(self, **kwargs):
+
+    [ NOTE   ]: User action 'reser user account password', accessible from external user api calls.
+    [ INPUT  ]: user_pass=<pass>
+    [ RETURN ]: (True | False)
+    def action_reset_user_password(self, **kwargs):
+
+    [ NOTE   ]: User action 'reset user account email', accessible from external user api calls.
+    [ INPUT  ]: user_email=<email>
+    [ RETURN ]: (True | False)
+    def action_reset_user_email(self, **kwargs):
+
+    [ NOTE   ]: User action 'reset user account alias', accessible from external user api calls.
+    [ INPUT  ]: user_alias=<alias>
+    [ RETURN ]: (True | False)
+    def action_reset_user_alias(self, **kwargs):
+
+    [ NOTE   ]: User action 'reset user account phone', accessible from external user api calls.
+    [ INPUT  ]: user_phone=<phone>
+    [ RETURN ]: (True | False)
+    def action_reset_user_phone(self, **kwargs):
+
+    [ NOTE   ]: User action create new account, accessible from external user api calls.
+    [ INPUT  ]: user_name=<name> user_pass=<pass> user_email=<email> user_alias=<alias>
+    [ RETURN ]: (ResUser object | False)
+    def action_create_new_user_account(self, **kwargs):
+
+    [ NOTE   ]: User action 'convert credits to clock', accessible from external api calls.
+    [ INPUT  ]: credit_ewallet=<wallet>, active_session=<session>,
+    [ RETURN ]: Post conversion value.
+    def action_create_new_conversion_credits_to_clock(self, **kwargs):
+
+    [ NOTE   ]: User action 'convert clock to credits', accessible from external api calls.
+    [ INPUT  ]: credit_ewallet=<wallet>, credit_clock=<clock>, active_session=<session>
+    [ RETURN ]: Post conversion value.
+    def action_create_new_conversion_clock_to_credits(self, **kwargs):
+
+    [ NOTE   ]: Jump table for user action 'create new conversion', accessible from external api calls.
+    [ INPUT  ]: conversion=('credits2clock' | 'clock2credits')
+    [ RETURN ]: Action variable correspondent.
+    def action_create_new_conversion(self, **kwargs):
+
+    [ NOTE   ]: User action 'create new credit wallet', accessible from external api calls.
+    [ INPUT  ]: reference=<ref>, credits=<wallet credits>
+    [ RETURN ]: (CreditWallet object | False)
+    def action_create_new_credit_wallet(self, **kwargs):
+
+    [ NOTE   ]: User action 'create new credit clock', accessible from external api calls.
+    [ INPUT  ]: reference=<ref>, credit_clock=<clock credits>
+    [ RETURN ]: (CreditClock object | False)
+    def action_create_new_credit_clock(self, **kwargs):
+
+    [ NOTE   ]: User action 'create new contact list', accessible from external api calls.
+    [ INPUT  ]: reference=<ref>
+    [ RETURN ]: (ContactList object | False)
+    def action_create_new_contact_list(self, **kwargs):
+
+    [ NOTE   ]: User action 'create new contact record', accessible from external api calls.
+    [ INPUT  ]: user_name=<name>, user_email=<email>, user_phone=<phone>, notes=<notes>
+    [ RETURN ]: (ContactRecord object | False)
+    def action_create_new_contact_record(self, **kwargs):
+
+    [ NOTE   ]: Jump table for user action 'create new contact', accessible from external api calls.
+    [ INPUT  ]: contact=('list', 'record')
+    [ RETURN ]: Action variable correspondent.
+    def action_create_new_contact(self, **kwargs):
+
+    [ NOTE   ]: User action 'supply credits', accessible from external api calls.
+    [ INPUT  ]: partner_account=<partner>, credits=<credits>
+    [ RETURN ]: (Credit count | False)
+    def action_create_new_transfer_type_supply(self, **kwargs):
+
+    [ NOTE   ]: User action 'unlink user account', accessible from external api calls.
+    [ INPUT  ]: user=<user>, active_session=<session>
+    [ RETURN ]: (True | False)
+    def action_unlink_user_account(self, **kwargs):
+
+    [ NOTE   ]: User action 'unlink credit wallet', accessible from external api calls.
+    [ INPUT  ]: wallet_id=<id>
+    [ RETURN ]: (True | False)
+    def action_unlink_credit_wallet(self, **kwargs):
+
+    [ NOTE   ]: User action 'unlink contact list', accessible from external api calls.
+    [ INPUT  ]: list_id=<id>
+    [ RETURN ]: (True | False)
+    def action_unlink_contact_list(self, **kwargs):
+
+    [ NOTE   ]: User action 'unlink contact record', accessible from external api calls.
+    [ INPUT  ]: record_id=<id>
+    [ RETURN ]: (True | False)
+    def action_unlink_contact_record(self, **kwargs):
+
+    [ NOTE   ]: User action 'unlink invoice list', accessible from external api calls.
+    [ INPUT  ]: list_id=<id>
+    [ RETURN ]: (True | False)
+    def action_unlink_invoice_list(self, **kwargs):
+
+    [ NOTE   ]: User action 'unlink invoice record', accessible from external api calls.
+    [ INPUT  ]: record_id=<id>
+    [ RETURN ]: (True | False)
+    def action_unlink_invoice_record(self, **kwargs):
+
+    [ NOTE   ]: User action 'unlink transfer list', accessible from external api calls.
+    [ INPUT  ]: list_id=<id>
+    [ RETURN ]: (True | False)
+    def action_unlink_transfer_list(self, **kwargs):
+
+    [ NOTE   ]: User action 'unlink transfer record', accessible from external api calls.
+    [ INPUT  ]: record_id=<id>
+    [ RETURN ]: (True | False)
+    def action_unlink_transfer_record(self, **kwargs):
+
+    [ NOTE   ]: User action 'unlink time list', accessible from external api calls.
+    [ INPUT  ]: list_id=<id>
+    [ RETURN ]: (True | False)
+    def action_unlink_time_list(self, **kwargs):
+
+    [ NOTE   ]: User action 'unlink time record', accessible from external api calls.
+    [ INPUT  ]: record_id=<id>
+    [ RETURN ]: (True | False)
+    def action_unlink_time_record(self, **kwargs):
+
+    [ NOTE   ]: User action 'unlink conversion list', accessible from external api calls.
+    [ INPUT  ]: list_id=<id>
+    [ RETURN ]: (True | False)
+    def action_unlink_conversion_list(self, **kwargs):
+
+    [ NOTE   ]: User action 'unlink conversion record', accessible from external api calls.
+    [ INPUT  ]: record_id=<id>
+    [ RETURN ]: (True | False)
+    def action_unlink_conversion_record(self, **kwargs):
+
+    [ NOTE   ]: Jump table handler for system action 'send invoice'.
+    [ INPUT  ]: invoice=('record' | 'list')
+    [ RETURN ]: Action variable correspondent.
+    def handle_system_action_send_invoice(self, **kwargs):
+
+    [ NOTE   ]: Jump table handler for system action 'send transfer'.
+    [ INPUT  ]: transfer=('record' | 'list')
+    [ RETURN ]: Action variable correspondent.
+    def handle_system_action_send_transfer(self, **kwargs):
+
+    [ NOTE   ]: Jump table handler for system action 'receive invoice'.
+    [ INPUT  ]: invoice=('record' | 'list')
+    [ RETURN ]: Action variable correspondent.
+    def handle_system_action_receive_invoice(self, **kwargs):
+
+    [ NOTE   ]: Jump table handler for system action 'receive transfer'.
+    [ INPUT  ]: transfer=('record' | 'list')
+    [ RETURN ]: Action variable correspondent
+    def handle_system_action_receive_transfer(self, **kwargs):
+
+    [ NOTE   ]: Jump table handler for system action category type 'send'.
+    [ INPUT  ]: send=('invoice' | 'transfer')
+    [ RETURN ]: Action variable correspondent.
+    def handle_system_action_send(self, **kwargs):
+
+    [ NOTE   ]: Jump table handler for system action category type 'receive'.
+    [ INPUT  ]: receive=('invoice' | 'transfer')
+    [ RETURN ]: Action variable correspondent.
+    def handle_system_action_receive(self, **kwargs):
+
+    [ NOTE   ]: Jump table handler for system action category type 'update'.
+    [ INPUT  ]: target=('user' | 'session')
+    [ RETURN ]: Action variable correspondent.
+    def handle_system_action_update(self, **kwargs):
+
+    [ NOTE   ]: Jump table handler for system action category type 'check'.
+    [ INPUT  ]: target=('user' | 'session')
+    [ RETURN ]: Action variable correspondent.
+    def handle_system_action_check(self, **kwargs):
+
+    [ NOTE   ]: Jump table handler for user action category type 'reset'.
+    [ INPUT  ]: target=('user_alias' | 'user_pass' | 'user_email' | 'user_phone')
+    [ RETURN ]: Action variable correspondent.
+    def handle_user_action_reset(self, **kwargs):
+
+    [ NOTE   ]: Jump table handler for user action category type 'create'.
+    [ INPUT  ]: create=('account' | 'credit_wallet' | 'credit_clock' | 'transfer' | 'conversion' | 'contact')
+    [ RETURN ]: Action variable correspondent.
+    def handle_user_action_create(self, **kwargs):
+
+    [ NOTE   ]: Jump table handler for user action category type 'time'.
+    [ INPUT  ]: timer=('start' | 'pause' | 'resume' | 'stop')
+    [ RETURN ]: Action variable correspondent.
+    def handle_user_action_time(self, **kwargs):
+
+    [ NOTE   ]: Jump table handler for user action category type 'view'.
+    [ INPUT  ]: view=('account' | 'credit_wallet' | 'credit_clock' | 'contact' | 'invoice' | 'transfer' | 'time' | 'conversion')
+    [ RETURN ]: Action variable correspondent.
+    def handle_user_action_view(self, **kwargs):
+
+    [ NOTE   ]: Jump table handler for user action category type 'unlink'.
+    [ INPUT  ]: unlink=('account' | 'credit_wallet' | 'credit_clock' | 'contact' | 'invoice' | 'transfer' | 'time' | 'conversion')
+    [ RETURN ]: Action variable correspondent.
+    def handle_user_action_unlink(self, **kwargs):
+
+    [ NOTE   ]: High level manager for user action login.
+    [ INPUT  ]: user_name=<name>, user_pass=<pass>
+    [ RETURN ]: Logged in user if login action succesful, else False.
+    def handle_user_action_login(self, **kwargs):
+
+    [ NOTE   ]: High level manager for user action logout.
+    [ INPUT  ]:
+    [ RETURN ]: True if no other users loged in. If loged in users found in
+    def handle_user_action_logout(self, **kwargs):
+
+    [ NOTE   ]: User action controller, accessible to external user api calls.
+    [ INPUT  ]: action=('login' | 'logout' | 'create' | 'time' | 'reset' | 'view' | 'unlink')
+    [ RETURN ]: Action variable correspondent.
+    def ewallet_user_action_controller(self, **kwargs):
+
+    [ NOTE   ]: User event controller, accessible to external user api calls.
+    [ INPUT  ]: event=('signal' | 'notification' | 'request')
+    [ RETURN ]: Event variable correspondent.
+    def ewallet_user_event_controller(self, **kwargs):
+
+    [ NOTE   ]: System event controller, not accessible to external user api calls.
+    [ INPUT  ]: event=('signal' | 'notification' | 'request')
+    [ RETURN ]: Event variable correspondent.
+    def ewallet_system_event_controller(self, **kwargs):
+
+    [ NOTE   ]: System action controller, not accessible to user api calls.
+    [ INPUT  ]: action=('check' | 'update' | 'send' | 'receive')
+    [ RETURN ]: Action variable correspondent.
+    def ewallet_system_action_controller(self, **kwargs):
+
+    [ NOTE   ]: Low level command interface for system actions and events.
+    [ INPUT  ]: ctype=('action' | 'event')
+    [ RETURN ]: Action/Event variable correspondent.
+    def ewallet_system_controller(self, **kwargs):
+
+    [ NOTE   ]: High level command interface for user actions and events.
+    [ INPUT  ]: ctype=('action' | 'event')
+    [ RETURN ]: Action/Event variable correspondent.
+    def ewallet_user_controller(self, **kwargs):
+
+    [ NOTE   ]: Main command interface for EWallet session.
+    [ INPUT  ]: controller=('system' | 'user' | 'test')
+    [ RETURN ]: Action/Event variable correspondent.
+    def ewallet_controller(self, **kwargs):
+

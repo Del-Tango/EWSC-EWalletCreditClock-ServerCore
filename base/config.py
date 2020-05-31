@@ -24,6 +24,14 @@ class Config():
                 'wallet_reference': None,
                }
         self.config_file_parser(self.target_file)
+        self.system_user_values = {
+                'user_name': 'SystemCore',
+                'user_create_uid': None,
+                'user_write_uid': None,
+                'user_pass': 'SystemCoreDefaultPassword123!!',
+                'user_email': 'system.core@alvearesolutions.com',
+                'user_alias': 'S:Core',
+                }
 
     def fetch_config_dicts(self, **kwargs):
         return [self.log_config, self.client_config, self.wallet_config]
