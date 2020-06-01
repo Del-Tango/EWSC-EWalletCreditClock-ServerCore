@@ -7,6 +7,7 @@ from base.socket_handler import EWalletSocketHandler
 import time
 import datetime
 import random
+import string
 import hashlib
 import logging
 import datetime
@@ -36,7 +37,12 @@ class EWalletSessionManager():
         log.debug('')
         return self.socket_handler
 
-    # TODO : Fetch port number from configurations filer
+    # TODO - fetch data from configurations file
+    def fetch_client_id_default_prefix(self):
+        log.debug('')
+        return 'ewsm-uid'
+
+    # TODO : Fetch port number from configurations file
     def fetch_default_ewallet_command_chain_reply_port(self):
         log.debug('')
         return 8081
@@ -290,10 +296,16 @@ class EWalletSessionManager():
         _socket = self.spawn_ewallet_session_manager_socket_handler(in_port, out_port)
         return self.error_could_not_spawn_socket_handler() if not _socket else _socket
 
+    def generate_client_id(self):
+        log.debug('')
+        prefix = self.fetch_client_id_default_prefix()
+        timestamp = str(time.time())
+        uid_code = res_utils.generate_random_alpha_numeric_string(string_length=20)
+        user_id = prefix + ':' + uid_code + ':' + timestamp
+        return user_id
+
     # TODO
     def generate_ewallet_session_token(self):
-        pass
-    def generate_client_id(self):
         pass
     def map_ewallet_session_token(self):
         pass
@@ -917,8 +929,8 @@ class EWalletSessionManager():
 
     def test_session_manager_controller(self, **kwargs):
         print('[ TEST ] Session Manager')
-        _open_in_port = self.test_open_instruction_listener_port()
-        _listen = self.test_instruction_set_listener()
+#       _open_in_port = self.test_open_instruction_listener_port()
+#       _listen = self.test_instruction_set_listener()
 
         _client_id = self.test_request_client_id()
         _worker = self.test_new_worker()

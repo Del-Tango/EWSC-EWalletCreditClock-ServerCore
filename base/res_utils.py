@@ -4,6 +4,9 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 import datetime
 import logging
+import string
+import time
+import random
 import pysnooper
 
 from .config import Config
@@ -44,10 +47,15 @@ class ResUtils():
             yield num
             num += 1
 
+    def generate_random_alpha_numeric_string(self, string_length=8):
+        letters_and_digits = string.ascii_letters + string.digits
+        return ''.join((random.choice(letters_and_digits) for i in range(string_length)))
+
+
 res_utils = ResUtils()
 
 '''
-    [ NOTE ]: Setting up EWallet logger.
+[ NOTE ]: Setting up EWallet logger.
 '''
 def log_init():
     log_config = config.log_config
