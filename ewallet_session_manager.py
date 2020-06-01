@@ -19,59 +19,22 @@ log = logging.getLogger(config.log_config['log_name'])
 
 class EWalletSessionManager():
 
-    instruction_set_listener_socket_handler = None
-    command_chain_reply_socket_handler = None
-    socket_handler_thread_map = {}
+    socket_handler = None
     worker_pool = []
     client_pool = []
     client_worker_map = {}
 
     def __init__(self, *args, **kwargs):
-        self.instruction_set_listener_socket_handler = kwargs.get(
-                'instruction_set_listener_socket_handler'
-                ) or self.open_ewallet_session_manager_command_chain_instruction_socket()
-        self.command_chain_reply_socket_handler = kwargs.get(
-                'command_chain_reply_socket_handler'
-                ) or self.open_ewallet_session_manager_command_chain_reply_socket()
-        self.socket_handler_thread_map = kwargs.get('socket_handler_thread_map') or \
-                {'instruction_thread': None, 'reply_thread': None}
+        self.socket_handler = kwargs.get('socket_handler') or self.open_ewallet_session_manager_sockets()
         self.worker_pool = kwargs.get('worker_pool') or []
         self.client_pool = kwargs.get('client_pool') or []
         self.client_worker_map = kwargs.get('client_worker_map') or {}
 
     # FETCHERS
 
-    def fetch_command_chain_reply_socket_handler_thread(self):
+    def fetch_ewallet_session_manager_socket_handler(self):
         log.debug('')
-        thread_map = self.fetch_socket_handler_thread_map()
-        if not thread_map.get('reply_thread'):
-            return self.error_no_command_chain_reply_socket_handler_thread_found(thread_map)
-        return thread_map['reply_thread']
-
-    def fetch_socket_handler_thread_map(self):
-        log.debug('')
-        if not self.socket_handler_thread_map:
-            return self.error_no_socket_handler_thread_map_found()
-        return self.socket_handler_thread_map
-
-    def fetch_instruction_set_listener_socket_handler_thread(self):
-        log.debug('')
-        thread_map = self.fetch_socket_handler_thread_map()
-        if not thread_map.get('instruction_thread'):
-            return self.error_no_instruction_set_socket_handler_thread_found(thread_map)
-        return thread_map['instruction_thread']
-
-    def fetch_instruction_set_listener_socket_handler(self):
-        log.debug('')
-        if not self.instruction_set_listener_socket_handler:
-            return self.error_no_instruction_set_listener_socket_handler_found()
-        return self.instruction_set_listener_socket_handler
-
-    def fetch_command_chain_reply_socket_handler(self):
-        log.debug('')
-        if not self.command_chain_reply_socket_handler:
-            return self.error_no_command_chain_reply_socket_handler_found()
-        return self.command_chain_reply_socket_handler
+        return self.socket_handler
 
     # TODO : Fetch port number from configurations filer
     def fetch_default_ewallet_command_chain_reply_port(self):
@@ -109,56 +72,28 @@ class EWalletSessionManager():
 
     # SETTERS
 
-    def set_instruction_listener_thread_to_map(self, listener_thread):
-        log.debug('')
-        try:
-            self.socket_handler_thread_map['instruction_thread'] = listener_thread
-        except:
-            return self.error_could_not_set_listener_thread_to_socket_handler_map(listener_thread)
-        return True
-
-    def set_reply_listener_thread_to_map(self, reply_thread):
-        log.debug('')
-        try:
-            self.socket_handler_thread_map['reply_thread'] = reply_thread
-        except:
-            return self.error_could_not_set_reply_thread_to_socket_handler_map(reply_thread)
-        return True
-
-    def unset_command_chain_reply_socket_handler(self):
-        log.debug('')
-        self.command_chain_reply_socket_handler = None
-        return True
-
-    def unset_instruction_set_listener_socket_handler(self):
-        log.debug('')
-        self.instruction_set_listener_socket_handler = None
-        return True
-
     '''
-    [ NOTE   ]: Overrides currently set listener socket handler.
-    [ INPUT  ]: EWaleltSocketHandler object
+    [ NOTE   ]: Overrides socket_handler attribute with a None value.
     [ RETURN ]: (True | False)
     '''
-    def set_instruction_set_listener_socket_handler(self, socket_handler):
+    def unset_socket_handler(self):
         log.debug('')
         try:
-            self.instruction_set_listener_socket_handler = socket_handler
+            self.socket_handler = None
         except:
-            return self.error_invalid_listener_socket_handler(socket_handler)
+            return self.error_could_not_unset_socket_handler(self.socket_handler)
         return True
 
     '''
-    [ NOTE   ]: Overrides currently set reply socket handler.
-    [ INPUT  ]: EWalletSocketHandler object
+    [ NOTE   ]: Overrides socket_handler attribute with new EWalletSocketHandler object.
     [ RETURN ]: (True | False)
     '''
-    def set_command_chain_reply_socket_handler(self, socket_handler):
+    def set_socket_handler(self, socket_handler):
         log.debug('')
         try:
-            self.command_chain_reply_socket_handler = socket_handler
+            self.socket_handler = socket_handler
         except:
-            return self.error_invalid_reply_socket_handler(socket_handler)
+            return self.error_could_not_set_socket_handler(socket_handler) #
         return True
 
     '''
@@ -275,7 +210,7 @@ class EWalletSessionManager():
     [ INPUT  ]: {user_id: session_token, ...}
     [ RETURN ]: (True | False)
     '''
-    def update_client_worker__map(self, cw_map):
+    def update_client_worker_map(self, cw_map):
         if not cw_map:
             return self.error_client_worker_map_not_found()
         return self.error_invalid_client_worker_map(cw_map) \
@@ -296,15 +231,15 @@ class EWalletSessionManager():
 
     '''
     [ NOTE   ]: Perform port number validity checks and creates a EWallet Socket Handler object.
-    [ INPUT  ]: port-number
-    [ RETURN ]: EWalletSocketHandler object
+    [ INPUT  ]: In port number, Out port number
+    [ RETURN ]: EWalletSocketHandler object.
     '''
-    def spawn_ewallet_session_manager_socket(self, socket_port):
+    def spawn_ewallet_session_manager_socket_handler(self, in_port, out_port):
         log.debug('')
-        if not isinstance(socket_port, int):
-            return self.error_invalid_socket_port(socket_port)
+        if not isinstance(in_port, int) or not isinstance(out_port, int):
+            return self.error_invalid_socket_port(in_port, out_port)
         return EWalletSocketHandler(
-                session_manager=self, port=socket_port, host='127.0.0.1'
+                session_manager=self, in_port=in_port, out_port=out_port, host='127.0.0.1'
                 )
 
     # TODO
@@ -324,24 +259,36 @@ class EWalletSessionManager():
     # GENERAL
 
     '''
-    [ NOTE   ]: Creates an EWalletSessionManager object using default configuration values
-    [ RETURN ]: EWalletSessionManager object
+    [ NOTE   ]: Starts socket based command chain instruction set listener.
+    [ NOTE   ]: Programs hangs here untill interrupt.
+    [ RETURN ]: (True | False)
     '''
-    def open_ewallet_session_manager_command_chain_instruction_socket(self, **kwargs):
+    def start_instruction_set_listener(self):
         log.debug('')
-        _port = kwargs.get('in_port') or self.fetch_default_ewallet_command_chain_instruction_port()
-        _socket = self.spawn_ewallet_session_manager_socket(_port)
-        return _socket
+        socket_handler = self.fetch_ewallet_session_manager_socket_handler()
+        if not socket_handler:
+            return self.error_could_not_fetch_socket_handler()
+        log.info(
+                'Starting instruction set listener using socket handler values : {}.'\
+                .format(
+                    socket_handler.view_handler_values()
+                    )
+                )
+        socket_handler.start_listener()
+        return True
 
     '''
-    [ NOTE   ]: Create an EWalletSessionManager object using default configuration values
-    [ RETURN ]: EWalletSessionManager object
+    [ NOTE   ]: Creates new EWalletSocketHandler object using default configuration values.
+    [ RETURN ]: (EWalletSocketHandler object | False)
     '''
-    def open_ewallet_session_manager_command_chain_reply_socket(self, **kwargs):
+    def open_ewallet_session_manager_sockets(self, **kwargs):
         log.debug('')
-        _port = kwargs.get('out_port') or self.fetch_default_ewallet_command_chain_reply_port()
-        _socket = self.spawn_ewallet_session_manager_socket(_port)
-        return _socket
+        in_port = kwargs.get('in_port') or self.fetch_default_ewallet_command_chain_instruction_port()
+        out_port = kwargs.get('out_port') or self.fetch_default_ewallet_command_chain_reply_port()
+        if not in_port or not out_port:
+            return self.error_could_not_fetch_socket_handler_required_values()
+        _socket = self.spawn_ewallet_session_manager_socket_handler(in_port, out_port)
+        return self.error_could_not_spawn_socket_handler() if not _socket else _socket
 
     # TODO
     def generate_ewallet_session_token(self):
@@ -395,39 +342,32 @@ class EWalletSessionManager():
 
     # HANDLERS
 
-    def handle_system_action_open_instruction_listener_port(self, **kwargs):
+    '''
+    [ NOTE   ]: Turn Session Manager into server listenning for socket based instructions.
+    [ NOTE   ]: System hangs here until interrupt.
+    [ RETURN ]: True
+    '''
+    def handle_system_action_start_instruction_listener(self, **kwargs):
         log.debug('')
-        _in_socket_handler = self.open_ewallet_session_manager_command_chain_instruction_socket(**kwargs)
-        set_socket_handler = self.set_instruction_set_listener_socket_handler(_in_socket_handler)
-        t = threading.Thread(target=_in_socket_handler.start_listener, args=())
-        t.daemon = True
-        set_thread_to_map = self.set_instruction_listener_thread_to_map(t)
-        t.start()
-        return _in_socket_handler
+        return self.start_instruction_set_listener()
 
-    def handle_system_action_open_command_chain_reply_port(self, **kwargs):
+    '''
+    [ NOTE   ]: Create and setups Session Manager Socket Handler.
+    [ RETURN ]: EWalletSocketHandler object.
+    '''
+    def handle_system_action_open_sockets(self, **kwargs):
         log.debug('')
-        _out_socket_handler = self.open_ewallet_session_manager_command_chain_reply_socket(**kwargs)
-        set_socket_handler = self.set_command_chain_reply_socket_handler(_out_socket_handler)
-        t = threading.Thread(target=_out_socket_handler.start_listener, args=())
-        t.daemon = True
-        set_thread_to_map = self.set_reply_listener_thread_to_map(t)
-        t.start()
-        return _out_socket_handler
+        socket_handler = self.open_ewallet_session_manager_sockets(**kwargs)
+        set_socket_handler = self.set_socket_handler(socket_handler)
+        return socket_handler
 
-    def handle_system_action_close_instruction_listener_port(self, **kwargs):
+    '''
+    [ NOTE   ]: Desociates Ewallet Socket Handler from Session Manager.
+    [ RETURN ]: True
+    '''
+    def handle_system_action_close_sockets(self, **kwargs):
         log.debug('')
-        listener_thread = self.fetch_instruction_set_listener_socket_handler_thread()
-        listener_thread._is_stopped = True
-        unset_socket_handler = self.unset_instruction_set_listener_socket_handler()
-        return True
-
-    def handle_system_action_close_command_chain_reply_port(self, **kwargs):
-        log.debug('')
-        reply_thread = self.fetch_command_chain_reply_socket_handler_thread()
-        reply_thread._is_stopped = True
-        unset_socket_handler = self.unset_command_chain_reply_socket_handler()
-        return True
+        return self.unset_socket_handler()
 
     # TODO
     def handle_client_action_request_client_id(self, **kwargs):
@@ -508,8 +448,22 @@ class EWalletSessionManager():
         pass
 
     '''
+    [ NOTE   ]: System action handler for start type actions.
+    [ INPUT  ]: start=('instruction_listener')
+    [ RETURN ]: Action variable correspondent.
+    '''
+    def handle_system_action_start(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('start'):
+            return self.error_no_system_action_start_target_specified() #
+        _handlers = {
+                'instruction_listener': self.handle_system_action_start_instruction_listener,
+                }
+        return _handlers[kwargs['start']](**kwargs)
+
+    '''
     [ NOTE   ]: System action handler for open type actions.
-    [ INPUT  ]: open=('in_port' | 'out_port')
+    [ INPUT  ]: opening=('sockets')
     [ RETURN ]: Action variable correspondent.
     '''
     def handle_system_action_open(self, **kwargs):
@@ -517,14 +471,13 @@ class EWalletSessionManager():
         if not kwargs.get('opening'):
             return self.error_no_system_action_open_target_specified()
         _handlers = {
-                'in_port': self.handle_system_action_open_instruction_listener_port,
-                'out_port': self.handle_system_action_open_command_chain_reply_port,
+                'sockets': self.handle_system_action_open_sockets,
                 }
         return _handlers[kwargs['opening']](**kwargs)
 
     '''
     [ NOTE   ]: System action handler for close type actions.
-    [ INPUT  ]: close=('in_port' | 'out_port')
+    [ INPUT  ]: closing=('sockets')
     [ RETURN ]: Action variable correspondent.
     '''
     def handle_system_action_close(self, **kwargs):
@@ -532,8 +485,7 @@ class EWalletSessionManager():
         if not kwargs.get('closing'):
             return self.error_no_system_action_close_target_specified()
         _handlers = {
-                'in_port': self.handle_system_action_close_instruction_listener_port,
-                'out_port': self.handle_system_action_close_command_chain_reply_port,
+                'sockets': self.handle_system_action_close_sockets,
                 }
         return _handlers[kwargs['closing']](**kwargs)
 
@@ -586,7 +538,7 @@ class EWalletSessionManager():
 
     '''
     [ NOTE   ]: Client action controller for the EWallet Session Manager, accessible
-    to regular user api calls.
+                to regular user api calls.
     [ INPUT  ]: action=('new' | 'scrape' | 'search' | 'view' | 'request')+
     [ RETURN ]: Action variable correspondent.
     '''
@@ -605,7 +557,7 @@ class EWalletSessionManager():
 
     '''
     [ NOTE   ]: System action controller for the EWallet Session Manager, not accessible
-    to regular user api calls.
+                to regular user api calls.
     [ INPUT  ]: action=('new' | 'scrape' | 'search' | 'view' | 'request' | 'open' | 'close')+
     [ RETURN ]: Action variable correspondent.
     '''
@@ -615,6 +567,7 @@ class EWalletSessionManager():
             return self.error_no_system_session_manager_action_specified()
         _handlers = {
                 'new': self.handle_system_action_new,
+                'start': self.handle_system_action_start,
                 'scrape': self.handle_system_action_scrape,
                 'search': self.handle_system_action_search,
                 'view': self.handle_system_action_view,
@@ -627,7 +580,7 @@ class EWalletSessionManager():
     # TODO
     '''
     [ NOTE   ]: Client event controller for the EWallet Session Manager, accessible
-    to regular user api calls.
+                to regular user api calls.
     [ INPUT  ]: event=('timeout' | 'expire')+
     [ RETURN ]: Event variable correspondent.
     '''
@@ -636,7 +589,7 @@ class EWalletSessionManager():
 
     '''
     [ NOTE   ]: System event controller for the EWallet Session Manager, not accessible
-    to regular user api calls.
+                to regular user api calls.
     [ INPUT  ]: event=('timeout' | 'expire')+
     [ RETURN ]: Event variable correspondent.
     '''
@@ -652,7 +605,7 @@ class EWalletSessionManager():
 
     '''
     [ NOTE   ]: Main client controller for the EWallet Session Manager, accessible
-    to regular user api calls.
+                to regular user api calls.
     [ INPUT  ]: ctype=('action' | 'event')+
     [ RETURN ]: Action variable correspondent.
     '''
@@ -668,7 +621,7 @@ class EWalletSessionManager():
 
     '''
     [ NOTE   ]: Main system controller for the EWallet Session Manager, not accessible
-    to regular user api calls.
+                to regular user api calls.
     [ INPUT  ]: ctype=('action' | 'event')+
     [ RETURN ]: Action variable correspondent.
     '''
@@ -687,7 +640,7 @@ class EWalletSessionManager():
     [ INPUT  ]: controller=('client' | 'system' | 'test')+
     [ RETURN ]: Action variable correspondent.
     '''
-    def session_manager_controller(self, **kwargs):
+    def session_manager_controller(self, *args, **kwargs):
         log.debug('')
         if not kwargs.get('controller'):
             return self.error_no_session_manager_controller_specified()
@@ -699,6 +652,30 @@ class EWalletSessionManager():
         return _handlers[kwargs['controller']](**kwargs)
 
     # ERRORS
+
+    def error_could_not_fetch_socket_handler(self):
+        log.error('Something went wrong. Could not fetch socket handler.')
+        return False
+
+    def error_could_not_fetch_socket_handler_required_values(self):
+        log.error('Could not fetch required values for EWallet Socket Handler.')
+        return False
+
+    def error_could_not_spawn_socket_handler(self):
+        log.error('Could not spawn new EWallet Socket Handler.')
+        return False
+
+    def error_could_not_unset_socket_handler(self, socket_hadler):
+        log.error('Something went wrong. Could not unset socket handler {}.'.format(socket_handler))
+        return False
+
+    def error_could_not_set_socket_handler(self, socket_handler):
+        log.error('Something went wrong. Could not set socket handler {}.'.format(socket_handler))
+        return False
+
+    def error_no_system_action_start_target_specified(self, **kwargs):
+        log.error('No system action start target specified.')
+        return False
 
     def error_no_command_chain_reply_socket_handler_thread_found(self, thread_map):
         log.error(
@@ -887,45 +864,35 @@ class EWalletSessionManager():
 
     # TESTS
 
+    def test_instruction_set_listener(self):
+        log.debug('')
+        print('[ * ]: Action start instruction set listener')
+        listen = self.session_manager_controller(
+                controller='system', ctype='action', action='start',
+                start='instruction_listener'
+                )
+        print(str(listen) + '\n')
+        return listen
+
     def test_open_instruction_listener_port(self):
         log.debug('')
         print('[ * ] Action Open Instruction Listener Port')
         _in_port = self.session_manager_controller(
                 controller='system', ctype='action', action='open',
-                opening='in_port', in_port=8080
+                opening='sockets', in_port=8080, out_port=8081
                 )
         print(str(_in_port) + '\n')
         return _in_port
-
-    def test_open_command_chain_reply_port(self):
-        log.debug('')
-        print('[ * ] Action Open Command Chain Reply Port')
-        _out_port = self.session_manager_controller(
-                controller='system', ctype='action', action='open',
-                opening='out_port', out_port=8081,
-                )
-        print(str(_out_port) + '\n')
-        return _out_port
 
     def test_close_instruction_listener_port(self):
         log.debug('')
         print('[ * ] Action Close Instruction Listener Port')
         _in_port = self.session_manager_controller(
                 controller='system', ctype='action', action='close',
-                closing='in_port', in_port=8080,
+                closing='sockets',
                 )
         print(str(_in_port) + '\n')
         return _in_port
-
-    def test_close_command_chain_reply_port(self):
-        log.debug('')
-        print('[ * ] Action Close Command Chain Reply Port')
-        _out_port = self.session_manager_controller(
-                controller='system', ctype='action', action='close',
-                closing='out_port', out_port=8081,
-                )
-        print(str(_out_port) + '\n')
-        return _out_port
 
 
     def test_request_client_id(self):
@@ -951,11 +918,11 @@ class EWalletSessionManager():
     def test_session_manager_controller(self, **kwargs):
         print('[ TEST ] Session Manager')
         _open_in_port = self.test_open_instruction_listener_port()
-        _open_out_port = self.test_open_command_chain_reply_port()
+        _listen = self.test_instruction_set_listener()
+
         _client_id = self.test_request_client_id()
         _worker = self.test_new_worker()
         _close_in_port = self.test_close_instruction_listener_port()
-        _close_out_port = self.test_close_command_chain_reply_port()
 
 session_manager = EWalletSessionManager()
 session_manager.session_manager_controller(controller='test')
@@ -963,18 +930,10 @@ session_manager.session_manager_controller(controller='test')
 
 # CODE DUMP
 
-
-#   def set_token_session_map(self, token_session_map, **kwargs):
+#   def issue_reply_for_command_chain(self, data):
 #       log.debug('')
-#       self.token_session_map = token_session_map
+#       socket_handler = self.fetch_ewallet_session_manager_socket_handler()
+#       socket_handler.issue_reply(reply=data)
 #       return True
 
-#   def set_client_session_map(self, client_session_map, **kwargs):
-#       log.debug('')
-#       self.client_session_map = client_session_map
-#       return True
 
-#   def set_to_token_session_map(self, token_map, **kwargs):
-#       log.debug('')
-#   def set_to_client_session_map(self, client_map, **kwargs):
-#       log.debug('')

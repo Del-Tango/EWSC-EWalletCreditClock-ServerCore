@@ -6,6 +6,7 @@ import selectors
 import types
 import logging
 import pysnooper
+import json
 
 config = Config()
 log_config = config.log_config
@@ -19,9 +20,11 @@ class EWalletSocketHandler():
 
     def __init__(self, *args, **kwargs):
         self.session_manager = kwargs.get('session_manager')
-        self.sock = kwargs.get('sock') or self.create_socket()
+        self.in_sock = kwargs.get('in_sock') or self.create_socket()
+        self.out_sock = kwargs.get('out_sock') or self.create_socket()
         self.host = kwargs.get('host') or '127.0.0.1'
-        self.port = kwargs.get('port') or 65432
+        self.in_port = kwargs.get('in_port') or 8080
+        self.out_port = kwargs.get('out_port') or 8081
         self.sel = selectors.DefaultSelector()
 
     # FETCHERS
@@ -30,9 +33,11 @@ class EWalletSocketHandler():
     def fetch_socket_values(self):
         log.debug('')
         _values = {
-                'sock': self.sock,
+                'in_sock': self.in_sock,
+                'out_sock': self.out_sock,
                 'host': self.host,
-                'port': self.port,
+                'in_port': self.in_port,
+                'out_port': self.out_port,
                 'sel': self.sel,
                 }
         return _values
@@ -40,9 +45,14 @@ class EWalletSocketHandler():
     # SETTERS
 
     #@pysnooper.snoop()
-    def set_socket(self, socket):
+    def set_input_socket(self, socket):
         log.debug('')
-        self.sock = socket
+        self.in_sock = socket
+        return True
+
+    def set_output_socket(self, socket):
+        log.debug('')
+        self.out_sock = socket
         return True
 
     # GENERAL
@@ -54,10 +64,20 @@ class EWalletSocketHandler():
         return sock
 
     #@pysnooper.snoop()
-    def bind_socket(self, sock, **kwargs):
+    def bind_input_socket(self, sock, **kwargs):
         log.debug('')
-        bind = sock.bind((self.host, self.port))
+        bind = sock.bind((self.host, self.in_port))
         listen = sock.listen()
+        return True
+
+    def bind_output_socket(self, sock, **kwargs):
+        log.debug('')
+        bind = sock.bind((self.host, self.out_port))
+        return True
+
+    def connect_output_socket(self, sock, **kwargs):
+        log.debug('')
+        conn = self.out_sock.connect((self.host, self.out_port))
         return True
 
     #@pysnooper.snoop()
@@ -73,64 +93,74 @@ class EWalletSocketHandler():
         log.debug('')
         # Should be ready to read
         accept = self.accept_connection(sock, multiconn=True)
-        set_socket = self.set_socket(accept['conn'])
+        set_socket = self.set_input_socket(accept['conn'])
         log.info('Accepted connection from {}'.format(accept['addr']))
         data = types.SimpleNamespace(addr=accept['addr'], inb=b"", outb=b"")
         events = selectors.EVENT_READ | selectors.EVENT_WRITE
         self.sel.register(accept['conn'], events, data=data)
 
-    #@pysnooper.snoop()
+    @pysnooper.snoop()
     def service_connection(self, key, mask):
         log.debug('')
         sock = key.fileobj
         data = key.data
         if mask & selectors.EVENT_READ:
-            recv_data = sock.recv(1024)  # Should be ready to read
+            recv_data = self.receive_data(sock)
             if recv_data:
                 data.outb += recv_data
             else:
                 log.info('Closing connection to {}.'.format(data.addr))
-                self.sel.unregister(sock)
-                sock.close()
+                self.destroy_socket(sock)
         if mask & selectors.EVENT_WRITE:
             if data.outb:
-                log.info('Echoing {} to {}'.format(repr(data.outb), data.addr))
-                sent = sock.send(data.outb)  # Should be ready to write
-                data.outb = data.outb[sent:]
-
+                self.process_data(data=data)
 
     # ACTIONS
-
-    def terminate_socket_handler(self):
-        log.debug('')
-        self._running = False
-        return True
 
     #@pysnooper.snoop()
     def destroy_socket(self, sock, **kwargs):
         log.debug('')
+        try:
+            self.sel.unregister(sock)
+        except Exception as e:
+            log.error(e)
         sock.close()
         return True
 
     #@pysnooper.snoop()
     def send_data(self, conn, data, **kwargs):
         log.debug('')
+        # Should be ready to write
         conn.sendall(data)
         return True
 
     #@pysnooper.snoop()
     def receive_data(self, conn, **kwargs):
         log.debug('')
+        # Should be ready to read
         data = conn.recv(1024)
         return data
 
     #@pysnooper.snoop()
     def process_data(self, **kwargs):
         log.debug('')
-        log.info('Data received : {}'.format(kwargs.get('data')))
-        return True
+        data = kwargs.get('data')
+        if not data:
+            return self.error_no_data_found()
+        try:
+            decoded_data = eval(str(data.outb.decode('utf-8')))
+        except Exception as e:
+            log.warning(e)
+            return self.warning_invalid_command_chain_instruction_set(str(data.outb.decode('utf-8')))
+        if not decoded_data:
+            return self.warning_no_data_received()
+        if not isinstance(decoded_data, dict):
+            return self.warning_invalid_command_chain_instruction_set(decoded_data)
+        reply_data = self.session_manager.session_manager_controller(**decoded_data)
+        encoded_data = str(reply_data).encode('utf-8')
+        return self.issue_reply(reply=encoded_data)
 
-    #@pysnooper.snoop()
+    @pysnooper.snoop()
     def incomming_transmission(self, conn, **kwargs):
         log.debug('')
         try:
@@ -147,11 +177,28 @@ class EWalletSocketHandler():
             self.sel.close()
             self.destroy_socket(conn)
 
+#   @pysnooper.snoop()
+    def issue_reply(self, **kwargs):
+        log.debug('')
+        try:
+            sock = self.create_socket()
+            try:
+                sock.connect((self.host, self.out_port))
+            except Exception as e:
+                log.error(e)
+            self.send_data(sock, kwargs.get('reply'))
+            sock.close()
+        except:
+            return self.warning_could_not_send_reply_to_socket(
+                    repr(kwargs.get('reply')), self.out_port
+                    )
+        return True
+
     #@pysnooper.snoop()
     def start_listener(self, **kwargs):
         log.debug('')
-        with self.sock as s:
-            self.bind_socket(s)
+        with self.in_sock as s:
+            self.bind_input_socket(s)
             accept = self.accept_connection(s)
             self.sel.register(s, selectors.EVENT_READ, data=None)
             transmission = self.incomming_transmission(**accept)
@@ -161,8 +208,31 @@ class EWalletSocketHandler():
     def view_handler_values(self):
         log.debug('')
         values = (str(self.fetch_socket_values()))
-        log.debug(values)
         return values
+
+    # WARNINGS
+
+    def warning_invalid_command_chain_instruction_set(self, instruction_set):
+        log.warning(
+                'Could not process command. Invalid command chain instruction set {}.'\
+                .format(instruction_set)
+                )
+        return False
+
+    def warning_no_data_received(self):
+        log.warning('No data received.')
+        return False
+
+    def warning_could_not_send_reply_to_socket(self, reply, port):
+        log.warning('Could not send reply {} to port {}.'.format(reply, port))
+        return False
+
+    # ERRORS
+
+    def error_no_data_found(self):
+        log.error('No data found.')
+        return False
+
 
 if __name__ == "__main__":
     _socket_handler = EWalletSocketHandler()
@@ -173,103 +243,3 @@ if __name__ == "__main__":
 # CODE DUMP
 ###############################################################################
 
-# def send(self, msg):
-#   totalsent = 0
-#   MSGLEN = len(msg)
-#   while totalsent < MSGLEN:
-#     sent = self.sock.send(str.encode(msg[totalsent:]))
-#     if sent == 0:
-#       raise RuntimeError("socket connection broken")
-
-#     totalsent = totalsent + sent
-
-# def receive(self, EOFChar='\036'):
-#   msg = ''
-#   MSGLEN = 100
-#   while len(msg) < MSGLEN:
-#     chunk = self.sock.recv(MSGLEN-len(msg))
-#     if chunk.find(EOFChar) != -1:
-#       msg = msg + chunk
-#       return msg
-
-#     msg = msg + chunk
-#     return msg
-
-#       data = False
-#       with conn:
-#           print('Connected by', kwargs.get('addr'))
-#           try:
-#               while True:
-#                   data = self.receive_data(conn)
-#                   if not data:
-#                       break
-#                   self.send_data(conn, data)
-#               self.destroy_socket(conn)
-#           except KeyboardInterrupt:
-#               print('Caught keyboard interrupt. Exit Alive.')
-#       return True
-
-###############################################################################
-# SERVER
-
-#   import sys
-#   import socket
-#   import selectors
-#   import types
-
-#   sel = selectors.DefaultSelector()
-
-
-#   def accept_wrapper(sock):
-#       conn, addr = sock.accept()  # Should be ready to read
-#       print("accepted connection from", addr)
-#       conn.setblocking(False)
-#       data = types.SimpleNamespace(addr=addr, inb=b"", outb=b"")
-#       events = selectors.EVENT_READ | selectors.EVENT_WRITE
-#       sel.register(conn, events, data=data)
-
-#   def service_connection(key, mask):
-#       sock = key.fileobj
-#       data = key.data
-#       if mask & selectors.EVENT_READ:
-#           recv_data = sock.recv(1024)  # Should be ready to read
-#           if recv_data:
-#               data.outb += recv_data
-#           else:
-#               print("closing connection to", data.addr)
-#               sel.unregister(sock)
-#               sock.close()
-#       if mask & selectors.EVENT_WRITE:
-#           if data.outb:
-#               print("echoing", repr(data.outb), "to", data.addr)
-#               sent = sock.send(data.outb)  # Should be ready to write
-#               data.outb = data.outb[sent:]
-
-
-#   if len(sys.argv) != 3:
-#       print("usage:", sys.argv[0], "<host> <port>")
-#       sys.exit(1)
-
-#   host, port = sys.argv[1], int(sys.argv[2])
-#   lsock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-#   lsock.bind((host, port))
-#   lsock.listen()
-#   print("listening on", (host, port))
-#   lsock.setblocking(False)
-#   sel.register(lsock, selectors.EVENT_READ, data=None)
-
-#   try:
-#       while True:
-#           events = sel.select(timeout=None)
-#           for key, mask in events:
-#               if key.data is None:
-#                   accept_wrapper(key.fileobj)
-#               else:
-#                   service_connection(key, mask)
-#   except KeyboardInterrupt:
-#       print("caught keyboard interrupt, exiting")
-#   finally:
-#       sel.close()
-
-
-#

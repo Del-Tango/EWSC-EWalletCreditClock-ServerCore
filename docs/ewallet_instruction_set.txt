@@ -1,3 +1,37 @@
+################################################################################
+# EWallet Session Manager (Command Chain Instruction Set)
+################################################################################
+
+* Setup session manager socket based instruction listener:
+    session_manager_controller(
+        controller='system', ctype='action', action='start', start='instruction_listener'
+        )
+
+* Start session manager socket based instruction listener:
+    session_manager_controller(
+        controller='system', ctype='action', action='open', opening='sockets', in_port=<num>, out_port=<num>
+        )
+
+* Close session manager socket based instruction listener:
+    session_manager_controller(
+        controller='system', ctype='action', action='close', closing='sockets'
+        )
+
+
+################################################################################
+# EWallet Session (Command Chain)
+################################################################################
+
+
+
+
+
+
+
+
+
+[ EXAMPLE ]:
+
 instruction_set = {
     header: {
         client_id:
