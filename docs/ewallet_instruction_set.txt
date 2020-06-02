@@ -17,18 +17,38 @@
         controller='system', ctype='action', action='close', closing='sockets'
         )
 
+* User action Request Client ID
+    session_manager_controller(
+        controller='client', ctype='action', action='request', request='client_id'
+        )
+
+* System action New Worker
+    session_manager_controller(
+        controller='system', ctype='action', action='new', new='worker'
+        )
+
+* System action New Session
+    session_manager_controller(
+        controller='system', ctype='action', action='new', new='session'
+        )
+
+* User action Request Session Token
 
 ################################################################################
 # EWallet Session (Command Chain)
 ################################################################################
 
+* Assign worker to session
+    assign_worker = worker.main_controller(
+        controller='system', ctype='action', action='add', add='session',
+        session=<new-session>
+        )
 
-
-
-
-
-
-
+* Add new session map
+    main_controller(
+        controller='system', ctype='action', action='add', add='session_map',
+        client_id=<client-id>, session_token=<session-token>, session=<ewallet-session>
+        )
 
 [ EXAMPLE ]:
 

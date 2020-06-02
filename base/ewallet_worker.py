@@ -14,6 +14,7 @@ config, res_utils = Config(), ResUtils()
 log = logging.getLogger(config.log_config['log_name'])
 
 
+# [ NOTE ]: Worker states [(0, vacant), (1, in_use), (2, full)]
 class EWalletWorker():
 
     create_date = None
@@ -26,7 +27,6 @@ class EWalletWorker():
     def __init__(self, *args, **kwargs):
         _now = datetime.datetime.now()
         self.create_date = _now
-        # [ NOTE ]: Worker states [(0, vacant), (1, in_use), (2, full)]
         self.session_worker_state_code = 0
         self.session_worker_state_label = 'vacant'
         self.session_worker_state_timestamp = _now
@@ -65,9 +65,20 @@ class EWalletWorker():
 
     # SETTERS
 
+    def set_new_ewallet_session_to_pool(self, ewallet_session):
+        log.debug('')
+        try:
+            self.session_pool.append(ewallet_session)
+        except:
+            return self.error_could_not_add_new_session_to_pool()
+        return True
+
     def set_create_date(self, create_date):
         log.debug('')
-        self.create_date = create_date
+        try:
+            self.create_date = create_date
+        except:
+            return self.error_could_not_set_worker_create_date()
         return True
 
     '''
@@ -170,12 +181,11 @@ class EWalletWorker():
 
     # ACTIONS
 
-    # TODO
-    def action_spawn_new_session(self, **kwargs):
-        pass
+    def action_add_new_session(self, **kwargs):
+        log.debug('')
+        return self.set_new_ewallet_session_to_pool(kwargs.get('session'))
+
     def action_unlink_session(self, **kwargs):
-        pass
-    def action_add_session_to_pool(self, **kwargs):
         pass
     def action_fetch_session_from_pool(self, **kwargs):
         pass
@@ -190,17 +200,29 @@ class EWalletWorker():
     def process_session_command_chain(self, command_chain=None, **kwargs):
         pass
 
-    # HANDLERS
+
+
 
     # TODO
-    def handle_client_action_spawn(self):
-        pass
-    def handle_client_action_update(self):
-        pass
-    def handle_client_action_view(self):
-        pass
-    def handle_client_action_unlink(self):
-        pass
+    def action_add_client_id_session_token_map_entry(self, **kwargs):
+        log.debug('')
+
+
+
+
+
+    # HANDLERS
+
+    def handle_system_action_add(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('add'):
+            return self.error_no_worker_action_new_target_specified()
+        _handlers = {
+                'session': self.action_add_new_session,
+                'session_map': self.action_add_client_id_session_token_map_entry,
+                }
+        return _handlers[kwargs['add']](**kwargs)
+
     def handle_system_action_spawn(self):
         pass
     def handle_system_action_update(self):
@@ -212,23 +234,62 @@ class EWalletWorker():
 
     # CONTROLLERS
 
+    def system_action_controller(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('action'):
+            return self.error_no_system_session_manager_worker_action_specified()
+        _handlers = {
+                'add': self.handle_system_action_add,
+                }
+        return _handlers[kwargs['action']](**kwargs)
+
     # TODO
-    def client_action_controller(self):
-        pass
-    def client_event_controller(self):
-        pass
-    def system_action_controller(self):
-        pass
     def system_event_controller(self):
         pass
-    def client_controller(self):
-        pass
-    def system_controller(self):
-        pass
-    def main_controller(self):
-        pass
+
+    def system_controller(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('ctype'):
+            return self.error_no_system_session_manager_worker_controller_specified()
+        _handlers = {
+                'action': self.system_action_controller,
+                'event': self.system_event_controller,
+                }
+        return _handlers[kwargs['ctype']](**kwargs)
+
+    def main_controller(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('controller'):
+            return self.error_no_session_manager_worker_controller_specified()
+        _handlers = {
+                'system': self.system_controller,
+                }
+        return _handlers[kwargs['controller']](**kwargs)
 
     # ERRORS
+
+    def error_could_not_set_worker_create_date(self):
+        log.error('Something went wrong. Could not set worker create date.')
+        return False
+
+    def error_could_not_add_new_session_to_pool(self, ewallet_sesion):
+        log.error(
+                'Something went wrong. Could not set new EWallet Session {} to worker session pool.'\
+                    .format(ewallet_session)
+                )
+        return False
+
+    def error_no_worker_action_new_target_specified(self):
+        log.error('No worker action new target specified.')
+        return False
+
+    def error_no_system_session_manager_worker_action_specified(self):
+        log.error('No system session manager worker action specified.')
+        return False
+
+    def error_no_session_manager_controller_specified(self):
+        log.error('No session manager worker controller specified.')
+        return False
 
     def error_invalid_session_worker_state_code(self):
         log.error('Invalid session worker state code.')
