@@ -721,8 +721,9 @@ class CreditClock(Base):
                         'Could not pop tag {} from command chain.'.format(item)
                         )
         _record = _time_sheet.credit_clock_time_sheet_controller(
-                action='add', **creation_values,
-                active_session=kwargs['active_session']
+                action='add',
+                active_session=kwargs['active_session'],
+                **creation_values
                 )
         if not _record:
             kwargs['active_session'].rollback()

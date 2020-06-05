@@ -7,16 +7,12 @@
 ###############################################################################
 # EWallet Session Manager
 ###############################################################################
-# TODO - User Action Request Client ID
-# TODO - System Action New Worker
-# TODO - User Action New Session
+# TODO - User action login
 
 
 ###############################################################################
 # EWallet Session Worker
 ###############################################################################
-# TODO - User Action Request Session Token
-# TODO - User Action New Session
 # TODO - System Action Scrape Session
 
 

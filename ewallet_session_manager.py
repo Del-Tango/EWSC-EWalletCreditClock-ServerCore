@@ -542,7 +542,7 @@ class EWalletSessionManager():
 
     # HANDLERS
 
-    @pysnooper.snoop()
+#   @pysnooper.snoop()
     def handle_system_action_new_session(self, **kwargs):
         log.debug('')
         new_session = self.create_new_ewallet_session()

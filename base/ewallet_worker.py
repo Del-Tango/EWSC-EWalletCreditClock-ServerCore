@@ -200,16 +200,24 @@ class EWalletWorker():
     def process_session_command_chain(self, command_chain=None, **kwargs):
         pass
 
-
-
-
-    # TODO
+#   @pysnooper.snoop()
     def action_add_client_id_session_token_map_entry(self, **kwargs):
+        '''
+        [ NOTE   ]: Maps an existing client_id with a new session token and object.
+        [ INPUT  ]: client_id=<id>, session_token=<token>, session=<session-obj>
+        [ RETURN ]: {client_id: {'token': session_token, 'session': session}}
+        '''
         log.debug('')
-
-
-
-
+        if None in [kwargs.get('client_id'), kwargs.get('session_token'),
+                kwargs.get('session')]:
+            return self.error_required_session_token_map_entry_data_not_found()
+        map_entry = {kwargs['client_id']: {
+            'token': kwargs['session_token'],
+            'session': kwargs['session']
+            }
+        }
+        self.token_session_map.update(map_entry)
+        return map_entry
 
     # HANDLERS
 
@@ -267,6 +275,10 @@ class EWalletWorker():
         return _handlers[kwargs['controller']](**kwargs)
 
     # ERRORS
+
+    def error_required_session_token_map_entry_data_not_found(self):
+        log.error('Required session token map entry not found.')
+        return False
 
     def error_could_not_set_worker_create_date(self):
         log.error('Something went wrong. Could not set worker create date.')

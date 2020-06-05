@@ -1,2 +1,6 @@
 logs/ewallet.log
 data/ewallet.db
+*.log
+*.pyc
+*.db
+

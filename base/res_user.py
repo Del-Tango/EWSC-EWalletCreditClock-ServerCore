@@ -258,7 +258,7 @@ class ResUser(Base):
         self.set_user_write_date()
         return True
 
-#   @pysnooper.snoop('logs/ewallet.log')
+    @pysnooper.snoop('logs/ewallet.log')
     def set_user_state(self, **kwargs):
         log.debug('')
         if not kwargs.get('set_by'):
@@ -271,10 +271,12 @@ class ResUser(Base):
                 'setters': {
                     'code': self.set_user_state_code,
                     'name': self.set_user_state_name,
-                    }
+                    },
                 }
+        _set_command_chain = {kwargs['set_by']: kwargs.get('code') or kwargs.get('name')}
+        _set_command_chain.update(kwargs)
         _value_fetch = _handlers['converters'][kwargs['set_by']](
-                **{kwargs['set_by']: kwargs.get('code') or kwargs.get('name')}, **kwargs
+                **_set_command_chain
                 )
         _field_code = kwargs.get('state_code') if kwargs['set_by'] == 'code' \
                             else _value_fetch
@@ -666,12 +668,12 @@ class ResUser(Base):
 
         kwargs.pop('action')
         _create_transfer_record = _local_transfer_sheet.credit_transfer_sheet_controller(
-                action='add', transfer_type='outgoing', **kwargs,
+                action='add', transfer_type='outgoing', **kwargs
                 )
         _create_invoice_record = _local_invoice_sheet.credit_invoice_sheet_controller(
                 action='add', seller_id=self.fetch_user_id(),
                 transfer_record_id=_create_transfer_record.fetch_record_id(),
-                **kwargs,
+                **kwargs
                 )
 
         kwargs['active_session'].add(_create_transfer_record)

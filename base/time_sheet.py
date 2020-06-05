@@ -212,8 +212,8 @@ class TimeSheetRecord(Base):
         for field_name, field_value in values.items():
             try:
                 _set[field_name](
-                        **{field_name: field_value},
-                        active_session=kwargs['active_session']
+                        active_session=kwargs['active_session'],
+                        **{field_name: field_value}
                         )
             except KeyError:
                 log.warning(
