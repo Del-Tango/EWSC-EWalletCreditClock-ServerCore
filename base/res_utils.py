@@ -18,6 +18,14 @@ class ResUtils():
     engine = create_engine('sqlite:///data/ewallet.db')
     _SessionFactory = sessionmaker(bind=engine)
 
+    def remove_tags_from_command_chain(self, command_chain, *args):
+        for item in args:
+            try:
+                del command_chain[item]
+            except KeyError:
+                continue
+        return command_chain
+
     #@pysnooper.snoop('logs/ewallet.log')
     def create_system_user(self, ewallet_session):
         if not ewallet_session:

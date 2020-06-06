@@ -14,9 +14,10 @@ config, res_utils = Config(), ResUtils()
 log = logging.getLogger(config.log_config['log_name'])
 
 
-# [ NOTE ]: Worker states [(0, vacant), (1, in_use), (2, full)]
 class EWalletWorker():
-
+    '''
+    [ NOTE ]: Worker states [(0, vacant), (1, in_use), (2, full)]
+    '''
     create_date = None
     session_worker_state_code = int()
     session_worker_state_label = str()
@@ -53,14 +54,13 @@ class EWalletWorker():
         log.debug('')
         return {0: 'vacant', 1: 'in_use', 2: 'full'}
 
+    def fetch_session_token_map(self):
+        return self.token_session_map
+
     # TODO
     def fetch_session_pool(self):
         pass
-    def fetch_token_session_map(self):
-        pass
     def fetch_ewallet_session(self, session_id=None):
-        pass
-    def fetch_ewallet_user_session_set(self, user_id=None):
         pass
 
     # SETTERS
@@ -185,20 +185,17 @@ class EWalletWorker():
         log.debug('')
         return self.set_new_ewallet_session_to_pool(kwargs.get('session'))
 
-    def action_unlink_session(self, **kwargs):
-        pass
-    def action_fetch_session_from_pool(self, **kwargs):
-        pass
-    def action_remove_session_from_pool(self, **kwargs):
-        pass
+    # GENERAL
 
-    # GENERIC
-
-    # TODO
-    def validate_session_command_chain(self, command_chain=None, **kwargs):
-        pass
-    def process_session_command_chain(self, command_chain=None, **kwargs):
-        pass
+    def search_ewallet_session(self, session_token):
+        log.debug('')
+        token_map = self.fetch_session_token_map()
+        if not token_map:
+            return self.warning_empty_session_token_map()
+        for client_id in token_map:
+            if token_map[client_id]['token'] == session_token:
+                return token_map[client_id]['session']
+        return False
 
 #   @pysnooper.snoop()
     def action_add_client_id_session_token_map_entry(self, **kwargs):
@@ -221,6 +218,23 @@ class EWalletWorker():
 
     # HANDLERS
 
+    def handle_system_action_search_session(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('session_token'):
+            return self.error_no_session_token_found()
+        ewallet_session = self.search_ewallet_session(kwargs['session_token'])
+        return self.warning_session_token_not_mapped(kwargs['session_token']) \
+                if not ewallet_session else ewallet_session
+
+    def handle_system_action_search(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('search'):
+            return self.error_no_worker_action_search_target_specified()
+        _handlers = {
+                'session': self.handle_system_action_search_session,
+                }
+        return _handlers[kwargs['search']](**kwargs)
+
     def handle_system_action_add(self, **kwargs):
         log.debug('')
         if not kwargs.get('add'):
@@ -231,15 +245,6 @@ class EWalletWorker():
                 }
         return _handlers[kwargs['add']](**kwargs)
 
-    def handle_system_action_spawn(self):
-        pass
-    def handle_system_action_update(self):
-        pass
-    def handle_system_action_view(self):
-        pass
-    def handle_system_action_unlink(self):
-        pass
-
     # CONTROLLERS
 
     def system_action_controller(self, **kwargs):
@@ -248,6 +253,7 @@ class EWalletWorker():
             return self.error_no_system_session_manager_worker_action_specified()
         _handlers = {
                 'add': self.handle_system_action_add,
+                'search': self.handle_system_action_search,
                 }
         return _handlers[kwargs['action']](**kwargs)
 
@@ -274,7 +280,25 @@ class EWalletWorker():
                 }
         return _handlers[kwargs['controller']](**kwargs)
 
+    # WARNINGS
+
+    def warning_empty_session_token_map(self):
+        log.warning('Empty worker session token map.')
+        return False
+
+    def warning_session_token_not_mapped(self, session_token):
+        log.warning('Session token not mapped {}.'.format(session_token))
+        return False
+
     # ERRORS
+
+    def error_no_session_token_found(self):
+        log.error('No session token found.')
+        return False
+
+    def error_no_worker_action_search_target_specified(self):
+        log.error('No EWallet Session Manager search target specified.')
+        return False
 
     def error_required_session_token_map_entry_data_not_found(self):
         log.error('Required session token map entry not found.')

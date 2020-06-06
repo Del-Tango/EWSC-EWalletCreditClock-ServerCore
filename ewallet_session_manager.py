@@ -33,6 +33,12 @@ class EWalletSessionManager():
 
     # FETCHERS
 
+    def fetch_client_id_mapped_session_worker(self, client_id):
+        log.debug('')
+        if not self.client_worker_map.get(client_id):
+            return self.error_no_mapped_session_worker_found_for_client_id(client_id)
+        return self.client_worker_map[client_id]
+
     # TODO - Fetch configuration values for config file
     def fetch_session_token_default_prefix(self):
         log.debug('')
@@ -114,6 +120,14 @@ class EWalletSessionManager():
         pass
 
     # SETTERS
+
+    def set_new_client_id_to_pool(self, client_id):
+        log.debug('')
+        try:
+            self.client_pool.append(client_id)
+        except:
+            return self.error_could_not_set_client_pool(client_id)
+        return True
 
     def set_worker_to_pool(self, worker):
         log.debug('')
@@ -374,6 +388,22 @@ class EWalletSessionManager():
 
     # VALIDATORS
 
+    def validate_session_token_prefix(self, session_token):
+        log.debug('')
+        default_prefix = self.fetch_session_token_default_prefix()
+        return False if session_token[0] != default_prefix else True
+
+    def validate_session_token_length(self, session_token):
+        log.debug('')
+        default_length = self.fetch_session_token_default_length()
+        return False if len(session_token[1]) is not default_length else True
+
+    # TODO
+    def validate_session_token_timestamp(self, session_token):
+        log.debug('')
+        timestamp = session_token[2]
+        return True
+
     def validate_client_id_prefix(self, client_id):
         log.debug('')
         default_prefix = self.fetch_client_id_default_prefix()
@@ -381,8 +411,12 @@ class EWalletSessionManager():
 
     def validate_client_id_length(self, client_id):
         log.debug('')
-        default_length = self.fetch_client_if_default_length()
+        default_length = self.fetch_client_id_default_length()
         return False if len(client_id[1]) is not default_length else True
+
+    def validate_client_id_in_pool(self, client_id):
+        log.debug('')
+        return False if client_id not in self.client_pool else True
 
     # TODO
     def validate_client_id_timestamp(self, client_id):
@@ -390,17 +424,43 @@ class EWalletSessionManager():
         time_stamp = client_id[2]
         return True
 
+#   @pysnooper.snoop()
+    def validate_session_token(self, session_token):
+        session_token_segmented = session_token.split(':')
+        if len(session_token_segmented) != 3:
+            return self.error_invalid_session_token(session_token)
+        checks = {
+                'prefix': self.validate_session_token_prefix(session_token_segmented),
+                'length': self.validate_session_token_length(session_token_segmented),
+                'timestamp': self.validate_session_token_timestamp(session_token_segmented),
+                }
+        return False if False in checks.values() else True
+
+    @pysnooper.snoop()
     def validate_client_id(self, client_id):
         log.debug('')
-        client_id_segmented = client_id.split(':')
-        if len(client_id_segmented) != 3:
+        segmented_client_id = client_id.split(':')
+        if len(segmented_client_id) != 3:
             return self.error_invalid_client_id(client_id)
         checks = {
                 'prefix': self.validate_client_id_prefix(segmented_client_id),
                 'length': self.validate_client_id_length(segmented_client_id),
                 'timestamp': self.validate_client_id_timestamp(segmented_client_id),
+                'pool': self.validate_client_id_in_pool(client_id),
                 }
         return False if False in checks.values() else True
+
+#   @pysnooper.snoop()
+    def validate_instruction_set(self, instruction_set):
+        log.debug('')
+        if not instruction_set.get('client_id') or not instruction_set.get('session_token'):
+            return self.error_invalid_instruction_set_required_data(kwargs)
+        validations = {
+                'client_id': self.validate_client_id(instruction_set['client_id']),
+                'session_token': self.validate_session_token(instruction_set['session_token']),
+                }
+        return self.error_invalid_instruction_set_required_data(instruction_set) \
+                if False in validations.values() else True
 
     # CREATORS
 
@@ -503,6 +563,7 @@ class EWalletSessionManager():
     def action_request_client_id(self):
         log.debug('')
         _client_id = self.generate_client_id()
+        _set_to_pool = self.set_new_client_id_to_pool(_client_id)
         return _client_id
 
     def action_request_session_token(self, **kwargs):
@@ -605,14 +666,57 @@ class EWalletSessionManager():
         _expire = self.event_session_token_expire()
 
     # TODO
-    def handle_client_action_new(self, **kwargs):
-        pass
     def handle_client_action_scrape(self, **kwargs):
         pass
     def handle_client_action_search(self, **kwargs):
         pass
     def handle_client_action_view(self, **kwargs):
         pass
+
+
+
+    # TODO
+    def handle_client_action_new_account(self, **kwargs):
+        log.debug('')
+        instruction_set_validation = self.validate_instruction_set(kwargs)
+        if not instruction_set_validation:
+            return False
+        session_manager_worker = self.fetch_client_id_mapped_session_worker(kwargs['client_id'])
+        sanitized_instruction_set = res_utils.remove_tags_from_command_chain(
+                kwargs, 'controller', 'ctype', 'action'
+                )
+        ewallet_session = session_manager_worker.main_controller(
+            controller='system', ctype='action', action='search', search='session',
+            **sanitized_instruction_set
+        )
+        new_account = ewallet_session.ewallet_controller(
+            controller='user', ctype='action', action='create', create='account',
+            **sanitized_instruction_set
+        )
+        return new_account
+
+
+
+
+
+
+
+
+
+
+
+    def handle_client_action_new(self, **kwargs):
+        '''
+        [ NOTE   ]: Client action handler for new type actions.
+        [ INPUT  ]: new='account'
+        [ RETURN ]: Action variable correspondent.
+        '''
+        if not kwargs.get('new'):
+            return self.error_no_client_action_new_target_specified() #
+        _handlers = {
+                'account': self.handle_client_action_new_account,
+                }
+        return _handlers[kwargs['new']](**kwargs)
 
     '''
     [ NOTE   ]: Client action handler for request type actions.
@@ -631,7 +735,7 @@ class EWalletSessionManager():
 
     '''
     [ NOTE   ]: System action handler for new type actions.
-    [ INPUT  ]: new='worker'
+    [ INPUT  ]: new=('worker' | 'session')
     [ RETURN ]: Action variable correspondent.
     '''
     def handle_system_action_new(self, **kwargs):
@@ -858,6 +962,32 @@ class EWalletSessionManager():
         return _handlers[kwargs['controller']](**kwargs)
 
     # ERRORS
+
+    def error_cound_not_set_client_pool(self, client_id):
+        log.error(
+                'Something went wrong. Could not set client id {} to session manager client pool.'\
+                .format(client_id)
+                )
+        return False
+
+    def error_no_mapped_session_worker_found_for_client_id(self, client_id):
+        log.error('No mapped session worker found for client id {}.'.format(client_id))
+        return False
+
+    def error_invalid_session_token(self, session_token):
+        log.error('Invalid session token {}.'.format(session_token))
+        return False
+
+    def error_invalid_instruction_set_required_data(self, instruction_set):
+        log.error(
+                'Invalid EWallet session manager instruction set required data. '
+                'Instruction set : {}'.format(instruction_set)
+                )
+        return False
+
+    def error_no_client_action_new_target_specified(self):
+        log.error('No aclient action new target specified.')
+        return False
 
     def error_worker_pool_empty(self):
         log.error('Session manager worker pool empty.')
@@ -1189,17 +1319,45 @@ class EWalletSessionManager():
                 new='worker'
                 )
         print(str(_worker) + '\n')
-        return False
+        return _worker
+
+    # TODO
+    def test_user_action_create_account(self, **kwargs):
+        log.debug('')
+        print('[ * ]: User Action Create Account')
+        _create_account = self.session_manager_controller(
+                controller='client', ctype='action', action='new',
+                new='account', client_id=kwargs.get('client_id'),
+                session_token=kwargs.get('session_token'), user_name=kwargs.get('user_name'),
+                user_pass=kwargs.get('user_pass'), user_email=kwargs.get('user_email')
+                )
+        print(str(_create_account) + '\n')
+        return _create_account
+
+    # TODO
+    def test_user_action_session_login(self):
+        log.debug('')
+        print('[ * ]: User Action Session Login')
+        _login = self.session_manager_controller(
+                controller='client', ctype='action', action='login',
+                )
+        print(str(_login) + '\n')
+        return _login
 
     def test_session_manager_controller(self, **kwargs):
         print('[ TEST ] Session Manager')
 #       _open_in_port = self.test_open_instruction_listener_port()
 #       _listen = self.test_instruction_set_listener()
+#       _close_in_port = self.test_close_instruction_listener_port()
         _client_id = self.test_request_client_id()
         _worker = self.test_new_worker()
         _session = self.test_new_session()
         _session_token = self.test_request_session_token(_client_id)
-#       _close_in_port = self.test_close_instruction_listener_port()
+        _create_account = self.test_user_action_create_account(
+            client_id=_client_id, session_token=_session_token,
+            user_name='test_user', user_pass='1234@!xxA', user_email='testuser@mail.com'
+        )
+#       _session_login = self.test_user_action_session_login()
 
 session_manager = EWalletSessionManager()
 session_manager.session_manager_controller(controller='test')
