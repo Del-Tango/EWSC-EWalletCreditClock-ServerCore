@@ -45,11 +45,39 @@
         user_name=<user-name>, user_pass=<user-pass>, user_email=<user-email>
         )
 
-* User action Session Login # TODO
+* User action Session Login
+    session_manager_controller(
+        controller='client', ctype='action', action='login',
+        client_id=<client-id>, session_token=<token>, user_name=<name>, user_pass=<pass>
+        )
+
 
 ################################################################################
 # EWallet Session (Command Chain)
 ################################################################################
+
+* Create new user account
+    ewallet_controller(
+        controller='user', ctype='action', action='create', create='account',
+        user_name=<name>, user_pass=<pass>, user_email=<email>
+        )
+
+* Login user account
+    ewallet_controller(
+        controller='user', ctype='action', action='login', user_name=<name>,
+        user_pass=<pass>
+        )
+
+
+################################################################################
+# EWallet Session Manager Worker
+################################################################################
+
+* Search session by Session Token
+    main_controller(
+        controller='system', ctype='action', action='search', search='session',
+        session_token=<token>
+    )
 
 * Assign worker to session
     main_controller(
@@ -63,15 +91,7 @@
         client_id=<client-id>, session_token=<session-token>, session=<ewallet-session>
         )
 
-################################################################################
-# EWallet Session Manager Controller
-################################################################################
 
-* Search session by Session Token
-    main_controller(
-        controller='system', ctype='action', action='search', search='session',
-        session_token=<token>
-    )
 
 [ EXAMPLE ]:
 
