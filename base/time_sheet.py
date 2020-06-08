@@ -197,6 +197,16 @@ class TimeSheetRecord(Base):
         self.time_spent = kwargs['time_spent']
         return True
 
+    def set_write_uid(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('write_uid'):
+            return self.error_no_write_uid_found()
+        try:
+            self.write_uid = kwargs['write_uid']
+        except:
+            return self.error_could_not_set_write_uid()
+        return True
+
     # UPDATES
 
     @pysnooper.snoop('logs/ewallet.log')
@@ -208,6 +218,7 @@ class TimeSheetRecord(Base):
                 'time_spent': self.set_time_spent,
                 'time_pending': self.set_time_pending,
                 'pending_count': self.set_pending_count,
+                'write_uid': self.set_write_uid,
                 }
         for field_name, field_value in values.items():
             try:
@@ -228,6 +239,10 @@ class TimeSheetRecord(Base):
         return self.set_write_date(write_date=_write_date, **kwargs)
 
     # ERRORS
+
+    def error_could_not_set_write_uid(self):
+        log.error('Could not set write uid.')
+        return False
 
     def error_no_create_uid_found(self):
         log.error('No create user id found.')

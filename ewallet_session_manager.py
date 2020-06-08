@@ -515,23 +515,6 @@ class EWalletSessionManager():
     # GENERAL
 
 #   @pysnooper.snoop()
-    def start_credit_clock_timer(self, ewallet_session, instruction_set):
-        '''
-        [ NOTE   ]: Starts active credit clock consumption timer.
-        [ INPUT  ]: EWallet Session object, Instruction set
-        [ RETURN ]: (Legacy timestamp | False)
-        '''
-        log.debug('')
-        orm_session = ewallet_session.fetch_active_session()
-        start_timer = ewallet_session.ewallet_controller(
-                controller='user', ctype='action', action='time', timer='start',
-                active_session=orm_session, **instruction_set
-                )
-        return self.warning_could_not_start_credit_clock_timer(
-                ewallet_session, instruction_set
-                ) if not start_timer else start_timer
-
-#   @pysnooper.snoop()
     def supply_user_credit_ewallet_in_session(self, ewallet_session, instruction_set):
         '''
         [ NOTE   ]: Sends a User action Supply command chain to given ewallet session
@@ -659,6 +642,35 @@ class EWalletSessionManager():
 
     # ACTIONS
 
+#   @pysnooper.snoop()
+    def action_pause_credit_clock_timer(self, ewallet_session, instruction_set):
+        log.debug('')
+        orm_session = ewallet_session.fetch_active_session()
+        pause_timer = ewallet_session.ewallet_controller(
+            controller='user', ctype='action', action='time', timer='pause',
+            active_session=orm_session, **instruction_set
+        )
+        return self.warning_could_not_pause_credit_clock_timer(
+            ewallet_session, instruction_set
+        ) if not pause_timer else pause_timer
+
+#   @pysnooper.snoop()
+    def action_start_credit_clock_timer(self, ewallet_session, instruction_set):
+        '''
+        [ NOTE   ]: Starts active credit clock consumption timer.
+        [ INPUT  ]: EWallet Session object, Instruction set
+        [ RETURN ]: (Legacy timestamp | False)
+        '''
+        log.debug('')
+        orm_session = ewallet_session.fetch_active_session()
+        start_timer = ewallet_session.ewallet_controller(
+                controller='user', ctype='action', action='time', timer='start',
+                active_session=orm_session, **instruction_set
+                )
+        return self.warning_could_not_start_credit_clock_timer(
+                ewallet_session, instruction_set
+                ) if not start_timer else start_timer
+
     def action_convert_credits_to_credit_clock(self, ewallet_session, instruction_set):
         '''
         [ NOTE   ]: Executes credits to credit clock conversion and returns
@@ -756,60 +768,7 @@ class EWalletSessionManager():
 
     # HANDLERS
 
-#   #@pysnooper.snoop()
-    def handle_system_action_new_session(self, **kwargs):
-        log.debug('')
-        new_session = self.create_new_ewallet_session()
-        assign_worker = self.assign_new_ewallet_session_to_worker(new_session)
-        return new_session or False
-
-    def handle_system_action_start_instruction_listener(self, **kwargs):
-        '''
-        [ NOTE   ]: Turn Session Manager into server listenning for socket based instructions.
-        [ NOTE   ]: System hangs here until interrupt.
-        [ RETURN ]: True
-        '''
-        log.debug('')
-        return self.start_instruction_set_listener()
-
-    def handle_system_action_open_sockets(self, **kwargs):
-        '''
-        [ NOTE   ]: Create and setups Session Manager Socket Handler.
-        [ RETURN ]: EWalletSocketHandler object.
-        '''
-        log.debug('')
-        socket_handler = self.open_ewallet_session_manager_sockets(**kwargs)
-        set_socket_handler = self.set_socket_handler(socket_handler)
-        return socket_handler
-
-    # TODO - Kill process
-    def handle_system_action_close_sockets(self, **kwargs):
-        '''
-        [ NOTE   ]: Desociates Ewallet Socket Handler from Session Manager.
-        [ RETURN ]: True
-        '''
-        log.debug('')
-        return self.unset_socket_handler()
-
-    def handle_client_action_request_client_id(self, **kwargs):
-        log.debug('')
-        _client_id = self.action_request_client_id()
-        return _client_id
-
-    def handle_client_action_request_session_token(self, **kwargs):
-        log.debug('')
-        _session_token = self.action_request_session_token(**kwargs)
-        return _session_token
-
-    def handle_client_action_new_account(self, **kwargs):
-        '''
-        [ NOTE   ]: Validates received instruction set, searches for worker and session
-                    and proceeds to create new User Account in said session. Requiers
-                    valid Client ID and Session Token.
-        [ INPUT  ]: client_id=<id>, session_token=<token>, user_name=<name>
-                    user_pass=<pass>, user_email=<email>
-        [ RETURN ]: (ResUser object | False)
-        '''
+    def handle_client_action_pause(self, **kwargs):
         log.debug('')
         instruction_set_validation = self.validate_instruction_set(kwargs)
         if not instruction_set_validation:
@@ -819,33 +778,16 @@ class EWalletSessionManager():
         )
         if not ewallet:
             return False
-        new_account = self.create_ewallet_user_account_in_session(
-            ewallet['ewallet_session'], ewallet['sanitized_instruction_set']
+        pause_timer = self.action_pause_credit_clock_timer(
+            ewallet['ewallet_session'], ewallet['sanitized_instruction_set'],
         )
-        return new_account
-
-    def handle_system_action_new_worker(self, **kwargs):
-        '''
-        [ NOTE   ]: Creates new EWallet Session Manager Worker object and sets
-                    it to worker pool.
-        [ RETURN ]: (EWalletWorker object | False)
-        '''
-        log.debug('')
-        worker = self.action_new_worker()
-        set_to_pool = self.set_worker_to_pool(worker)
-        return worker or False
+        return pause_timer
 
     # TODO
-    def handle_system_event_session_timeout(self, **kwargs):
-        _timeout = self.event_session_timeout()
-    def handle_system_event_worker_timeout(self, **kwargs):
-        _timeout = self.event_worker_timeout()
-    def handle_system_event_client_ack_timeout(self, **kwargs):
-        _timeout = self.event_client_ack_timeout()
-    def handle_system_event_client_id_expire(self, **kwargs):
-        _expire = self.event_client_id_expire()
-    def handle_system_event_session_token_expire(self, **kwargs):
-        _expire = self.event_session_token_expire()
+    def handle_client_action_resume(self, **kwargs):
+        log.debug('')
+    def handle_client_action_stop(self, **kwargs):
+        log.debug('')
 
     def handle_client_action_convert_credits_to_clock(self, **kwargs):
         log.debug('')
@@ -918,10 +860,101 @@ class EWalletSessionManager():
                 )
         if not ewallet:
             return False
-        start_timer = self.start_credit_clock_timer(
+        start_timer = self.action_start_credit_clock_timer(
                 ewallet['ewallet_session'], ewallet['sanitized_instruction_set']
                 )
         return start_timer
+
+    def handle_client_action_request_client_id(self, **kwargs):
+        log.debug('')
+        _client_id = self.action_request_client_id()
+        return _client_id
+
+    def handle_client_action_request_session_token(self, **kwargs):
+        log.debug('')
+        _session_token = self.action_request_session_token(**kwargs)
+        return _session_token
+
+    def handle_client_action_new_account(self, **kwargs):
+        '''
+        [ NOTE   ]: Validates received instruction set, searches for worker and session
+                    and proceeds to create new User Account in said session. Requiers
+                    valid Client ID and Session Token.
+        [ INPUT  ]: client_id=<id>, session_token=<token>, user_name=<name>
+                    user_pass=<pass>, user_email=<email>
+        [ RETURN ]: (ResUser object | False)
+        '''
+        log.debug('')
+        instruction_set_validation = self.validate_instruction_set(kwargs)
+        if not instruction_set_validation:
+            return False
+        ewallet = self.fetch_ewallet_session_for_client_action_using_instruction_set(
+            kwargs
+        )
+        if not ewallet:
+            return False
+        new_account = self.create_ewallet_user_account_in_session(
+            ewallet['ewallet_session'], ewallet['sanitized_instruction_set']
+        )
+        return new_account
+
+#   #@pysnooper.snoop()
+    def handle_system_action_new_session(self, **kwargs):
+        log.debug('')
+        new_session = self.create_new_ewallet_session()
+        assign_worker = self.assign_new_ewallet_session_to_worker(new_session)
+        return new_session or False
+
+    def handle_system_action_start_instruction_listener(self, **kwargs):
+        '''
+        [ NOTE   ]: Turn Session Manager into server listenning for socket based instructions.
+        [ NOTE   ]: System hangs here until interrupt.
+        [ RETURN ]: True
+        '''
+        log.debug('')
+        return self.start_instruction_set_listener()
+
+    def handle_system_action_open_sockets(self, **kwargs):
+        '''
+        [ NOTE   ]: Create and setups Session Manager Socket Handler.
+        [ RETURN ]: EWalletSocketHandler object.
+        '''
+        log.debug('')
+        socket_handler = self.open_ewallet_session_manager_sockets(**kwargs)
+        set_socket_handler = self.set_socket_handler(socket_handler)
+        return socket_handler
+
+    # TODO - Kill process
+    def handle_system_action_close_sockets(self, **kwargs):
+        '''
+        [ NOTE   ]: Desociates Ewallet Socket Handler from Session Manager.
+        [ RETURN ]: True
+        '''
+        log.debug('')
+        return self.unset_socket_handler()
+
+    def handle_system_action_new_worker(self, **kwargs):
+        '''
+        [ NOTE   ]: Creates new EWallet Session Manager Worker object and sets
+                    it to worker pool.
+        [ RETURN ]: (EWalletWorker object | False)
+        '''
+        log.debug('')
+        worker = self.action_new_worker()
+        set_to_pool = self.set_worker_to_pool(worker)
+        return worker or False
+
+    # TODO
+    def handle_system_event_session_timeout(self, **kwargs):
+        _timeout = self.event_session_timeout()
+    def handle_system_event_worker_timeout(self, **kwargs):
+        _timeout = self.event_worker_timeout()
+    def handle_system_event_client_ack_timeout(self, **kwargs):
+        _timeout = self.event_client_ack_timeout()
+    def handle_system_event_client_id_expire(self, **kwargs):
+        _expire = self.event_client_id_expire()
+    def handle_system_event_session_token_expire(self, **kwargs):
+        _expire = self.event_session_token_expire()
 
     def handle_client_action_start(self, **kwargs):
         log.debug('')
@@ -1116,6 +1149,9 @@ class EWalletSessionManager():
                 'supply': self.handle_client_action_supply,
                 'convert': self.handle_client_action_convert,
                 'start': self.handle_client_action_start,
+                'pause': self.handle_client_action_pause, #
+                'resume': self.handle_client_action_resume, #
+                'stop': self.handle_client_action_stop, #
                 }
         return _handlers[kwargs['action']](**kwargs)
 
@@ -1217,6 +1253,13 @@ class EWalletSessionManager():
         return _handlers[kwargs['controller']](**kwargs)
 
     # WARNINGS
+
+    def warning_could_not_pause_credit_clock_timer(self, ewallet_session, instruction_set):
+        log.warning(
+                'Something went wrong. Could not pause credit clock timer in session {}. '\
+                'Details : {}'.format(ewallet_session, instruction_set)
+                )
+        return False
 
     def warning_could_not_start_credit_clock_timer(self, ewallet_session, instruction_set):
         log.warning(
@@ -1688,6 +1731,16 @@ class EWalletSessionManager():
         print(str(_start) + '\n')
         return _start
 
+    def test_user_action_pause_clock_timer(self, **kwargs):
+        log.debug('')
+        print('[ * ]: User Action Pause Clock Timer')
+        _pause = self.session_manager_controller(
+            controller='client', ctype='action', action='pause', pause='clock_timer',
+            client_id=kwargs['client_id'], session_token=kwargs['session_token']
+        )
+        print(str(_pause) + '\n')
+        return _pause
+
     def test_session_manager_controller(self, **kwargs):
         print('[ TEST ] Session Manager')
 #       open_in_port = self.test_open_instruction_listener_port()
@@ -1715,6 +1768,9 @@ class EWalletSessionManager():
             notes='Test Credits To Clock Conversion Notes...'
         )
         start_clock_timer = self.test_user_action_start_clock_timer(
+            client_id=client_id, session_token=session_token
+        )
+        pause_clock_timer = self.test_user_action_pause_clock_timer(
             client_id=client_id, session_token=session_token
         )
 
