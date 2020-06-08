@@ -13,7 +13,7 @@ from .invoice_sheet import CreditInvoiceSheet
 from .res_utils import ResUtils, Base
 from .config import Config
 
-log_config = Config().log_config
+res_utils, log_config = ResUtils(), Config().log_config
 log = logging.getLogger(log_config['log_name'])
 
 
@@ -428,22 +428,22 @@ class CreditEWallet(Base):
         log.debug('')
         if not kwargs.get('credits'):
             return self.error_no_credits_found()
-        _credit_clock = kwargs.get('credit_clock') or \
+        credit_clock = kwargs.get('credit_clock') or \
                 self.fetch_credit_ewallet_credit_clock()
-        if not _credit_clock:
+        if not credit_clock:
             return False
-        for item in ['controller', 'action', 'conversion']:
-            try:
-                kwargs.pop(item)
-            except KeyError:
-                continue
-        _convert = _credit_clock.main_controller(
-                controller='system', action='convert', conversion='to_minutes',
-                **kwargs
-                )
-        if not _convert:
+        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
+            kwargs, 'controller', 'action', 'conversion'
+        )
+        convert = credit_clock.main_controller(
+            controller='system', action='convert', conversion='to_minutes',
+            **sanitized_command_chain
+        )
+        if not convert:
             kwargs['active_session'].rollback()
-        return _convert
+            return self.error_credits_to_minutes_conversion_failure(kwargs)
+        kwargs['active_session'].commit()
+        return convert
 
 #   @pysnooper.snoop('logs/ewallet.log')
     def convert_minutes_to_credits(self, **kwargs):
@@ -873,6 +873,10 @@ class CreditEWallet(Base):
         return _handlers[kwargs['controller']](**kwargs)
 
     # ERRORS
+
+    def error_credits_to_minutes_conversion_failure(self, **kwargs):
+        log.error('Credits to minutes conversion failure. Details : {}'.format(kwargs))
+        return False
 
     def error_handler_buy_credits(self, **kwargs):
         _reasons_and_handlers = {

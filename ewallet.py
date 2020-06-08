@@ -1102,34 +1102,26 @@ class EWallet(Base):
         [ RETURN ]: Post conversion value.
         '''
         log.debug('')
-        _credit_wallet = kwargs.get('credit_ewallet') or \
+        credit_wallet = kwargs.get('credit_ewallet') or \
                 self.fetch_active_session_credit_wallet()
-        if not _credit_wallet:
+        if not credit_wallet:
             return self.error_could_not_fetch_active_session_credit_wallet()
-        _credits_before = self.fetch_credit_wallet_credits()
-        _active_session = kwargs.get('active_session') or self.fetch_active_session()
-        # TODO - Replace command chain adjustments with function in res_utils
-        kwargs.pop('controller')
-        kwargs.pop('action')
-        kwargs.pop('conversion')
-        try:
-            kwargs.pop('credit_ewallet')
-            kwargs.pop('active_session')
-        except KeyError:
-            log.warning(
-                'Could not pop tags credit_ewallet and active_session '
-                'from command chain.'
-            )
-        _convert = _credit_wallet.main_controller(
-                controller='system', action='convert', conversion='to_minutes',
-                credit_ewallet=_credit_wallet, active_session=_active_session,
-                **kwargs
-                )
-        if not _convert:
-            _active_session.rollback()
+        credits_before = self.fetch_credit_wallet_credits()
+        active_session = kwargs.get('active_session') or self.fetch_active_session()
+        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
+            kwargs, 'controller', 'action', 'conversion', 'credit_ewallet',
+            'active_session'
+        )
+        convert = credit_wallet.main_controller(
+            controller='system', action='convert', conversion='to_minutes',
+            credit_ewallet=credit_wallet, active_session=active_session,
+            **sanitized_command_chain
+        )
+        if not convert:
+            active_session.rollback()
             return self.error_could_not_convert_credits_to_minutes()
-        _active_session.commit()
-        return _convert
+        active_session.commit()
+        return convert
 
 #   @pysnooper.snoop('logs/ewallet.log')
     def action_create_new_conversion_clock_to_credits(self, **kwargs):
@@ -1139,37 +1131,29 @@ class EWallet(Base):
         [ RETURN ]: Post conversion value.
         '''
         log.debug('')
-        _credit_wallet = kwargs.get('credit_ewallet') or \
+        credit_wallet = kwargs.get('credit_ewallet') or \
                 self.fetch_active_session_credit_wallet()
-        _credit_clock = kwargs.get('credit_clock') or \
+        credit_clock = kwargs.get('credit_clock') or \
             self.fetch_active_session_credit_clock(
-                credit_ewallet=_credit_wallet
+                credit_ewallet=credit_wallet
             )
-        if not _credit_wallet:
+        if not credit_wallet:
             return self.error_could_not_fetch_active_session_credit_wallet()
-        _credits_before = self.fetch_credit_wallet_credits()
-        _active_session = kwargs.get('active_session') or self.fetch_active_session()
-        # TODO - Replace command chain adjustments with function in res_utils
-        kwargs.pop('controller')
-        kwargs.pop('action')
-        kwargs.pop('conversion')
-        try:
-            kwargs.pop('credit_ewallet')
-            kwargs.pop('active_session')
-        except KeyError:
-            log.warning(
-                'Could not pop tags credit_ewallet and active_session '
-                'from command chain.'
-            )
-        _convert = _credit_wallet.main_controller(
+        credits_before = self.fetch_credit_wallet_credits()
+        active_session = kwargs.get('active_session') or self.fetch_active_session()
+        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
+            kwargs, 'controller', 'action', 'conversion', 'credit_ewallet',
+            'active_session'
+        )
+        convert = credit_wallet.main_controller(
                 controller='system', action='convert', conversion='to_credits',
-                credit_ewallet=_credit_wallet, credit_clock=_credit_clock,
-                active_session=_active_session, **kwargs
+                credit_ewallet=credit_wallet, credit_clock=credit_clock,
+                active_session=active_session, **sanitized_command_chain
                 )
-        if not _convert:
-            _active_session.rollback()
+        if not convert:
+            active_session.rollback()
             return self.error_could_not_convert_minutes_to_credits()
-        _active_session.commit()
+        active_session.commit()
         return _convert
 
     def action_create_new_conversion(self, **kwargs):
@@ -1275,7 +1259,8 @@ class EWallet(Base):
 
     def action_create_new_contact(self, **kwargs):
         '''
-        [ NOTE   ]: Jump table for user action 'create new contact', accessible from external api calls.
+        [ NOTE   ]: Jump table for user action 'create new contact', accessible
+                    from external api calls.
         [ INPUT  ]: contact=('list', 'record')
         [ RETURN ]: Action variable correspondent.
         '''
@@ -1288,13 +1273,14 @@ class EWallet(Base):
                 }
         return _handlers[kwargs['contact']](**kwargs)
 
-#   @pysnooper.snoop('logs/ewallet.log')
+#   @pysnooper.snoop()
     def action_create_new_transfer_type_supply(self, **kwargs):
         '''
         [ NOTE   ]: User action 'supply credits' for active session user becomes
                     User event 'request credits' for SystemCore account.
                     Accessible from external api calls.
-        [ INPUT  ]: active_session=<orm-session>, partner_account=<partner>, credits=<credits>
+        [ INPUT  ]: active_session=<orm-session>, partner_account=<partner>,
+                    credits=<credits>
         [ RETURN ]: ({'total_credits': <count>, 'supplied_credits': <count>} | False)
         '''
         log.debug('')
@@ -1304,22 +1290,26 @@ class EWallet(Base):
                 self.fetch_system_core_user_account(**kwargs)
         if not partner_account:
             return self.error_handler_create_new_transfer(
-                    partner_account=partner_account,
-                    )
-        sanitized_instruction_set = res_utils.remove_tags_from_command_chain(
-                kwargs, 'ctype', 'partner_account'
-                )
+                partner_account=partner_account,
+            )
+        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
+            kwargs, 'ctype', 'partner_account'
+        )
         credits_before = self.fetch_credit_wallet_credits()
         credit_request = partner_account.user_controller(
-                ctype='event', event='request', request='credits',
-                partner_account=self.fetch_active_session_user(), **sanitized_instruction_set #partner_account
-                )
+            ctype='event', event='request', request='credits',
+            partner_account=self.fetch_active_session_user(),
+            **sanitized_command_chain
+        )
         credits_after = self.fetch_credit_wallet_credits()
-        if credits_after is (credits_before + kwargs.get('credits')):
+        if str(credits_after) == str(credits_before + kwargs.get('credits')):
             active_session.commit()
-            return {'total_credits': credits_after, 'supplied_credits': kwargs['credits']}
+            return {
+                'total_credits': credits_after,
+                'supplied_credits': kwargs['credits'],
+            }
         active_session.rollback()
-        return False
+        return self.error_supply_type_transfer_failure(kwargs)
 
     # TODO
     def action_create_new_transfer_type_pay(self, **kwargs):
@@ -1738,7 +1728,9 @@ class EWallet(Base):
     def handle_user_action_view(self, **kwargs):
         '''
         [ NOTE   ]: Jump table handler for user action category type 'view'.
-        [ INPUT  ]: view=('account' | 'credit_wallet' | 'credit_clock' | 'contact' | 'invoice' | 'transfer' | 'time' | 'conversion')
+        [ INPUT  ]: view=('account' | 'credit_wallet' | 'credit_clock' |
+                          'contact' | 'invoice' | 'transfer' | 'time' |
+                          'conversion')
         [ RETURN ]: Action variable correspondent.
         '''
         log.debug('')
@@ -1759,7 +1751,9 @@ class EWallet(Base):
     def handle_user_action_unlink(self, **kwargs):
         '''
         [ NOTE   ]: Jump table handler for user action category type 'unlink'.
-        [ INPUT  ]: unlink=('account' | 'credit_wallet' | 'credit_clock' | 'contact' | 'invoice' | 'transfer' | 'time' | 'conversion')
+        [ INPUT  ]: unlink=('account' | 'credit_wallet' | 'credit_clock' |
+                            'contact' | 'invoice' | 'transfer' | 'time' |
+                            'conversion')
         [ RETURN ]: Action variable correspondent.
         '''
         log.debug('')
@@ -2257,6 +2251,10 @@ class EWallet(Base):
         return False
 
     # ERRORS
+
+    def error_supply_type_transfer_failure(self, command_chain):
+        log.error('Supply type transfer failure. Details : {}'.format(command_chain))
+        return False
 
     def error_could_not_pause_credit_clock_timer(self):
         log.error('Could not pause credit clock timer.')

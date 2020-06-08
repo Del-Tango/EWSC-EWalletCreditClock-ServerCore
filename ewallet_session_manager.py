@@ -514,7 +514,24 @@ class EWalletSessionManager():
 
     # GENERAL
 
-#   #@pysnooper.snoop()
+#   @pysnooper.snoop()
+    def start_credit_clock_timer(self, ewallet_session, instruction_set):
+        '''
+        [ NOTE   ]: Starts active credit clock consumption timer.
+        [ INPUT  ]: EWallet Session object, Instruction set
+        [ RETURN ]: (Legacy timestamp | False)
+        '''
+        log.debug('')
+        orm_session = ewallet_session.fetch_active_session()
+        start_timer = ewallet_session.ewallet_controller(
+                controller='user', ctype='action', action='time', timer='start',
+                active_session=orm_session, **instruction_set
+                )
+        return self.warning_could_not_start_credit_clock_timer(
+                ewallet_session, instruction_set
+                ) if not start_timer else start_timer
+
+#   @pysnooper.snoop()
     def supply_user_credit_ewallet_in_session(self, ewallet_session, instruction_set):
         '''
         [ NOTE   ]: Sends a User action Supply command chain to given ewallet session
@@ -891,6 +908,30 @@ class EWalletSessionManager():
                 )
         return credit_supply
 
+    def handle_client_action_start_clock_timer(self, **kwargs):
+        log.debug('')
+        instruction_set_validation = self.validate_instruction_set(kwargs)
+        if not instruction_set_validation:
+            return False
+        ewallet = self.fetch_ewallet_session_for_client_action_using_instruction_set(
+                kwargs
+                )
+        if not ewallet:
+            return False
+        start_timer = self.start_credit_clock_timer(
+                ewallet['ewallet_session'], ewallet['sanitized_instruction_set']
+                )
+        return start_timer
+
+    def handle_client_action_start(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('start'):
+            return self.error_no_client_action_start_target_specified() #
+        _handlers = {
+                'clock_timer': self.handle_client_action_start_clock_timer,
+                }
+        return _handlers[kwargs['start']](**kwargs)
+
     def handle_client_action_convert(self, **kwargs):
         log.debug('')
         if not kwargs.get('convert'):
@@ -1073,7 +1114,8 @@ class EWalletSessionManager():
                 'request': self.handle_client_action_request,
                 'login': self.handle_client_action_login,
                 'supply': self.handle_client_action_supply,
-                'convert': self.handle_client_action_convert, #
+                'convert': self.handle_client_action_convert,
+                'start': self.handle_client_action_start,
                 }
         return _handlers[kwargs['action']](**kwargs)
 
@@ -1176,6 +1218,13 @@ class EWalletSessionManager():
 
     # WARNINGS
 
+    def warning_could_not_start_credit_clock_timer(self, ewallet_session, instruction_set):
+        log.warning(
+                'Something went wrong. Could not start credit clock timer in session {}. '\
+                'Details : {}'.format(ewallet_session, instruction_set)
+                )
+        return False
+
     def warning_could_not_convert_credits_to_credit_clock(self, credit_wallet, instruction_set):
         log.warning(
                 'Something went wrong. Could not convert credit wallet {} credits to credit clock. '\
@@ -1205,6 +1254,10 @@ class EWalletSessionManager():
         return False
 
     # ERRORS
+
+    def error_no_client_action_start_target_specified(self):
+        log.error('No client action start target specified.')
+        return False
 
     def error_no_conversion_credit_count_specified(self, ewallet_session, instruction_set):
         log.error(
@@ -1625,6 +1678,16 @@ class EWalletSessionManager():
         print(str(_convert) + '\n')
         return _convert
 
+    def test_user_action_start_clock_timer(self, **kwargs):
+        log.debug('')
+        print('[ * ]: User Action Start Clock Timer')
+        _start = self.session_manager_controller(
+            controller='client', ctype='action', action='start', start='clock_timer',
+            client_id=kwargs['client_id'], session_token=kwargs['session_token']
+        )
+        print(str(_start) + '\n')
+        return _start
+
     def test_session_manager_controller(self, **kwargs):
         print('[ TEST ] Session Manager')
 #       open_in_port = self.test_open_instruction_listener_port()
@@ -1650,6 +1713,9 @@ class EWalletSessionManager():
         convert_credits_2_clock = self.test_user_action_convert_credits_to_clock(
             client_id=client_id, session_token=session_token, credits=5,
             notes='Test Credits To Clock Conversion Notes...'
+        )
+        start_clock_timer = self.test_user_action_start_clock_timer(
+            client_id=client_id, session_token=session_token
         )
 
 if __name__ == '__main__':

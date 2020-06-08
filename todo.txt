@@ -7,8 +7,6 @@
 ###############################################################################
 # EWallet Session Manager
 ###############################################################################
-# TODO - User Action Convert Credits To Time
-    - BUG REPORT - Supply time not persistent. Implement orm
 # TODO - User Action Start Clock Timer
 # TODO - User Action Pause Clock Timer
 # TODO - User Action Resume Clock Timer

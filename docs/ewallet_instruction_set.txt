@@ -58,10 +58,16 @@
         cost=<cost>, notes=<notes>
         )
 
-* User action Convert Credits To Time # TODO
+* User action Convert Credits To Time
     session_manager_controller(
         controller='client', ctype='action', action='convert', convert='credits2clock',
         client_id=<id>, session_token=<token>, credits=<credits>, notes=<notes>
+        )
+
+* User action Start Clock Timer
+    session_manager_controller(
+        controller='client', ctype='action', action='start', start='clock',
+        client_id=<id>, session_token=<token>
         )
 
 
