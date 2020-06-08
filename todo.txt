@@ -7,7 +7,11 @@
 ###############################################################################
 # EWallet Session Manager
 ###############################################################################
-# TODO - User action login
+# TODO - User Action Convert Credits To Time
+# TODO - User Action Start Clock Timer
+# TODO - User Action Pause Clock Timer
+# TODO - User Action Resume Clock Timer
+# TODO - User Action Stop Clock Timer
 
 
 ###############################################################################

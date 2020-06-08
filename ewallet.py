@@ -24,10 +24,11 @@ config = Config()
 res_utils = ResUtils()
 log = logging.getLogger(config.log_config['log_name'])
 
-'''
-[ NOTE ]: Many2many table for user sessions.
-'''
+
 class SessionUser(Base):
+    '''
+    [ NOTE ]: Many2many table for user sessions.
+    '''
     __tablename__ = 'session_user'
     id = Column(Integer, primary_key=True)
     session_id = Column(Integer, ForeignKey('ewallet.id'))
@@ -36,10 +37,10 @@ class SessionUser(Base):
     user = relationship('ResUser', backref=backref('session_user', cascade='all, delete-orphan'))
     session = relationship('EWallet', backref=backref('session_user', cascade='all, delete-orphan'))
 
-'''
-[ NOTE ]: EWallet session. Managed by EWallet Workers within the Session Manager.
-'''
 class EWallet(Base):
+    '''
+    [ NOTE ]: EWallet session. Managed by EWallet Workers within the Session Manager.
+    '''
     __tablename__ = 'ewallet'
 
     id = Column(Integer, primary_key=True, nullable=False, autoincrement=True)
@@ -76,12 +77,13 @@ class EWallet(Base):
 
     # FETCHERS
 
-    '''
-    [ NOTE   ]: Fetches SCore user account used for administration and automation.
-    [ INPUT  ]: active_session=<session>
-    [ RETURN ]: (ResUser object | False)
-    '''
     def fetch_system_core_user_account(self, **kwargs):
+        '''
+        [ NOTE   ]: Fetches S:Core user account used for administration and automation.
+        [ INPUT  ]: active_session=<orm-session>
+        [ RETURN ]: (ResUser object | False)
+        '''
+        log.debug('')
         _active_session = kwargs.get('active_session') or \
                 self.fetch_active_session()
         _score_account = _active_session.query(ResUser).filter_by(user_id=1)
@@ -139,12 +141,12 @@ class EWallet(Base):
                 return self.user_account_archive[item]
         return self.warning_no_user_account_found('alias', kwargs['code'])
 
-    '''
-    [ NOTE   ]: Fetches a ResUser object by a specified criteria.
-    [ INPUT  ]: indentifier=(id | name | email | phone | alias)
-    [ RETURN ]: (ResUser object | False)
-    '''
     def fetch_user(self, **kwargs):
+        '''
+        [ NOTE   ]: Fetches a ResUser object by a specified criteria.
+        [ INPUT  ]: indentifier=(id | name | email | phone | alias)
+        [ RETURN ]: (ResUser object | False)
+        '''
         log.debug('')
         if not kwargs.get('identifier'):
             return self.error_no_user_identifier_found()
@@ -208,12 +210,12 @@ class EWallet(Base):
                 controller='system', action='view'
                 )
 
-    '''
-    [ NOTE   ]: Fetches next user object in login stack.
-    [ INPUT  ]: active_user=<user>
-    [ RETURN ]: (ResUser object | [] if empty login stack | False)
-    '''
     def fetch_next_active_session_user(self, **kwargs):
+        '''
+        [ NOTE   ]: Fetches next user object in login stack.
+        [ INPUT  ]: active_user=<user>
+        [ RETURN ]: (ResUser object | [] if empty login stack | False)
+        '''
         log.debug('')
         if not len(self.user_account_archive):
             return self.error_empty_session_user_account_archive()
@@ -245,12 +247,12 @@ class EWallet(Base):
                 else [contact_list]
         return self.contact_list
 
-    '''
-    [ NOTE   ]: Sets user data to active EWallet session.
-    [ INPUT  ]: {'active_user': <user>, 'credit_wallet': <wallet>, 'contact_list': <list>}
-    [ RETURN ]: ({'active_user': <user>, 'credit_wallet': <wallet>, 'contact_list': <list>} | False)
-    '''
     def set_session_data(self, data_dct):
+        '''
+        [ NOTE   ]: Sets user data to active EWallet session.
+        [ INPUT  ]: {'active_user': <user>, 'credit_wallet': <wallet>, 'contact_list': <list>}
+        [ RETURN ]: ({'active_user': <user>, 'credit_wallet': <wallet>, 'contact_list': <list>} | False)
+        '''
         log.debug('')
         _handlers = {
                 'active_user': self.set_session_active_user,
@@ -282,11 +284,11 @@ class EWallet(Base):
         self.user_account_archive = []
         return True
 
-    '''
-    [ NOTE   ]: Clears all user information from active EWallet session.
-    [ RETURN ]: ({'field-name': (True | False), ...} | False)
-    '''
     def clear_active_session_user_data(self, data_dct):
+        '''
+        [ NOTE   ]: Clears all user information from active EWallet session.
+        [ RETURN ]: ({'field-name': (True | False), ...} | False)
+        '''
         log.debug('')
         _handlers = {
                 'active_user': self.clear_session_active_user,
@@ -301,12 +303,12 @@ class EWallet(Base):
 
     # UPDATES
 
-    '''
-    [ NOTE   ]: Update current session values from active user data.
-    [ INPUT  ]: session_active_user=<active_user>
-    [ RETURN ]: (True | False)
-    '''
     def update_session_from_user(self, **kwargs):
+        '''
+        [ NOTE   ]: Update current session values from active user data.
+        [ INPUT  ]: session_active_user=<active_user>
+        [ RETURN ]: (True | False)
+        '''
         log.debug('')
         if not kwargs.get('session_active_user'):
             return self.error_no_session_active_user_found()
@@ -320,13 +322,13 @@ class EWallet(Base):
         log.info('Successfully updated ewallet session from current active user.')
         return True
 
-    '''
-    [ NOTE   ]: Update EWallet session user login stack with new user.
-    [ INPUT  ]: user=<user>
-    [ RETURN ]: (User login stack | False)
-    '''
 #   @pysnooper.snoop()
     def update_user_account_archive(self, **kwargs):
+        '''
+        [ NOTE   ]: Update EWallet session user login stack with new user.
+        [ INPUT  ]: user=<user>
+        [ RETURN ]: (User login stack | False)
+        '''
         log.debug('')
         if not kwargs.get('user'):
             return self.error_no_user_object_found()
@@ -339,12 +341,12 @@ class EWallet(Base):
 
     # UNLINKERS
 
-    '''
-    [ NOTE   ]: Deletes specific user or active session user.
-    [ INPUT  ]: active_session=<session>, user_id=<user_id>
-    [ RETURN ]:
-    '''
     def unlink_user_account(self, **kwargs):
+        '''
+        [ NOTE   ]: Deletes specific user or active session user.
+        [ INPUT  ]: active_session=<session>, user_id=<user_id>
+        [ RETURN ]:
+        '''
         log.debug('')
         if not kwargs.get('active_session'):
             return self.error_no_active_session_found()
@@ -356,12 +358,12 @@ class EWallet(Base):
 
     # ACTIONS
 
-    '''
-    [ NOTE   ]: Jump table for user action category 'create new transfer', accessible from external api call.
-    [ INPUT  ]: ttype=(supply | pay | transfer)
-    [ RETURN ]: Action variable correspondent.
-    '''
     def action_create_new_transfer(self, **kwargs):
+        '''
+        [ NOTE   ]: Jump table for user action category 'create new transfer', accessible from external api call.
+        [ INPUT  ]: ttype=(supply | pay | transfer)
+        [ RETURN ]: Action variable correspondent.
+        '''
         log.debug('')
         if not kwargs.get('ttype'):
             return self.error_no_transfer_type_specified()
@@ -372,12 +374,12 @@ class EWallet(Base):
                 }
         return _handlers[kwargs['ttype']](**kwargs)
 
-    '''
-    [ NOTE   ]: Jump table for user action category 'unlink contact', accessible from external api call.
-    [ INPUT  ]: unlink=(list | record)
-    [ RETURN ]: Action variable correspondent.
-    '''
     def action_unlink_contact(self, **kwargs):
+        '''
+        [ NOTE   ]: Jump table for user action category 'unlink contact', accessible from external api call.
+        [ INPUT  ]: unlink=(list | record)
+        [ RETURN ]: Action variable correspondent.
+        '''
         log.debug('')
         if not kwargs.get('unlink'):
             return self.error_no_unlink_target_specified()
@@ -387,12 +389,12 @@ class EWallet(Base):
                 }
         return _handlers[kwargs['unlink']](**kwargs)
 
-    '''
-    [ NOTE   ]: Jump table for user action category 'unlink invoice', accessible from external api call.
-    [ INPUT  ]: unlink=(list | record)
-    [ RETURN ]: Action variable correspondent.
-    '''
     def action_unlink_invoice(self, **kwargs):
+        '''
+        [ NOTE   ]: Jump table for user action category 'unlink invoice', accessible from external api call.
+        [ INPUT  ]: unlink=(list | record)
+        [ RETURN ]: Action variable correspondent.
+        '''
         log.debug('')
         if not kwargs.get('unlink'):
             return self.error_no_unlink_target_specified()
@@ -402,12 +404,12 @@ class EWallet(Base):
                 }
         return _handlers[kwargs['unlink']](**kwargs)
 
-    '''
-    [ NOTE   ]: Jump table for user action category 'unlink transfer', accessible from external api call.
-    [ INPUT  ]: unlink=(list | record)
-    [ RETURN ]: Action variable correspondent.
-    '''
     def action_unlink_transfer(self, **kwargs):
+        '''
+        [ NOTE   ]: Jump table for user action category 'unlink transfer', accessible from external api call.
+        [ INPUT  ]: unlink=(list | record)
+        [ RETURN ]: Action variable correspondent.
+        '''
         log.debug('')
         if not kwargs.get('unlink'):
             return self.error_no_unlink_target_specified()
@@ -417,12 +419,12 @@ class EWallet(Base):
                 }
         return _handlers[kwargs['unlink']](**kwargs)
 
-    '''
-    [ NOTE   ]: Jump table for user action category 'unlink time', accessible from external api call.
-    [ INPUT  ]: unlinl=(list | record)
-    [ RETURN ]: Action variable correspondent.
-    '''
     def action_unlink_time(self, **kwargs):
+        '''
+        [ NOTE   ]: Jump table for user action category 'unlink time', accessible from external api call.
+        [ INPUT  ]: unlinl=(list | record)
+        [ RETURN ]: Action variable correspondent.
+        '''
         log.debug('')
         if not kwargs.get('unlink'):
             return self.error_no_unlink_target_specified()
@@ -432,12 +434,12 @@ class EWallet(Base):
                 }
         return _handlers[kwargs['unlink']](**kwargs)
 
-    '''
-    [ NOTE   ]: Jump table for user action category 'unlink conversion', accessible from external api call.
-    [ INPUT  ]: unlink=(list | record)
-    [ RETURN ]: Action variable correspondent.
-    '''
     def action_unlink_conversion(self, **kwargs):
+        '''
+        [ NOTE   ]: Jump table for user action category 'unlink conversion', accessible from external api call.
+        [ INPUT  ]: unlink=(list | record)
+        [ RETURN ]: Action variable correspondent.
+        '''
         log.debug('')
         if not kwargs.get('unlink'):
             return self.error_no_unlink_target_specified()
@@ -447,12 +449,12 @@ class EWallet(Base):
                 }
         return _handlers[kwargs['unlink']](**kwargs)
 
-    '''
-    [ NOTE   ]: Jump table for user action category 'view contact', accessible from external api call.
-    [ INPUT  ]: contact=(list | record)
-    [ RETURN ]: Action variable correspondent.
-    '''
     def action_view_contact(self, **kwargs):
+        '''
+        [ NOTE   ]: Jump table for user action category 'view contact', accessible from external api call.
+        [ INPUT  ]: contact=(list | record)
+        [ RETURN ]: Action variable correspondent.
+        '''
         log.debug('')
         if not kwargs.get('contact'):
             return self.error_no_contact_target_specified()
@@ -462,12 +464,12 @@ class EWallet(Base):
                 }
         return _handlers[kwargs['contact']](**kwargs)
 
-    '''
-    [ NOTE   ]: Jump table for user action category 'view invoice', accessible from external api call.
-    [ INPUT  ]: invoice=(list | record)
-    [ RETURN ]: Action variable correspondent.
-    '''
     def action_view_invoice(self, **kwargs):
+        '''
+        [ NOTE   ]: Jump table for user action category 'view invoice', accessible from external api call.
+        [ INPUT  ]: invoice=(list | record)
+        [ RETURN ]: Action variable correspondent.
+        '''
         log.debug('')
         if not kwargs.get('invoice'):
             return self.error_no_invoice_target_specified()
@@ -477,12 +479,12 @@ class EWallet(Base):
                 }
         return _handlers[kwargs['invoice']](**kwargs)
 
-    '''
-    [ NOTE   ]: Jump table for user action category 'view transfer', accessible from external api call.
-    [ INPUT  ]: transfer=(list | record)
-    [ RETURN ]: Action variable correspondent.
-    '''
     def action_view_transfer(self, **kwargs):
+        '''
+        [ NOTE   ]: Jump table for user action category 'view transfer', accessible from external api call.
+        [ INPUT  ]: transfer=(list | record)
+        [ RETURN ]: Action variable correspondent.
+        '''
         log.debug('')
         if not kwargs.get('transfer'):
             return self.error_no_transfer_view_target_specified()
@@ -492,12 +494,12 @@ class EWallet(Base):
                 }
         return _handlers[kwargs['transfer']](**kwargs)
 
-    '''
-    [ NOTE   ]: Jumpt table for user action category 'view time', accessible from external api call.
-    [ INPUT  ]: time=(list | record)
-    [ RETURN ]: Action variable correspondent.
-    '''
     def action_view_time(self, **kwargs):
+        '''
+        [ NOTE   ]: Jumpt table for user action category 'view time', accessible from external api call.
+        [ INPUT  ]: time=(list | record)
+        [ RETURN ]: Action variable correspondent.
+        '''
         log.debug('')
         if not kwargs.get('time'):
             return self.error_no_time_view_target_specified()
@@ -507,12 +509,12 @@ class EWallet(Base):
                 }
         return _handlers[kwargs['time']](**kwargs)
 
-    '''
-    [ NOTE   ]: Jump table for user action category 'view conversion', accessible from external api call.
-    [ INPUT  ]: conversion=(list | record)
-    [ RETURN ]: Action variable correspondent.
-    '''
     def action_view_conversion(self, **kwargs):
+        '''
+        [ NOTE   ]: Jump table for user action category 'view conversion', accessible from external api call.
+        [ INPUT  ]: conversion=(list | record)
+        [ RETURN ]: Action variable correspondent.
+        '''
         log.debug('')
         if not kwargs.get('conversion'):
             return self.error_no_conversion_view_target_specified()
@@ -544,12 +546,12 @@ class EWallet(Base):
     def action_receive_transfer_sheet(self, **kwargs):
         pass
 
-    '''
-    [ NOTE   ]: System action 'user logout', accessible from external api call.
-    [ RETURN ]: (Next user in login stack | True if login stack empty | False)
-    '''
 #   @pysnooper.snoop('logs/ewallet.log')
     def action_system_user_logout(self, **kwargs):
+        '''
+        [ NOTE   ]: System action 'user logout', accessible from external api call.
+        [ RETURN ]: (Next user in login stack | True if login stack empty | False)
+        '''
         log.debug('')
         _user = self.fetch_active_session_user()
         if not _user:
@@ -565,12 +567,12 @@ class EWallet(Base):
         return True if not _search_user_for_session \
                 else _search_user_for_session
 
-    '''
-    [ NOTE   ]: System action 'user update'. Allows multiple logged in users to switch.
-    [ INPUT  ]: user=<user>
-    [ RETURN ]: (Active user | False)
-    '''
     def action_system_user_update(self, **kwargs):
+        '''
+        [ NOTE   ]: System action 'user update'. Allows multiple logged in users to switch.
+        [ INPUT  ]: user=<user>
+        [ RETURN ]: (Active user | False)
+        '''
         log.debug('')
         if not kwargs.get('user'):
             return self.error_no_user_specified()
@@ -580,24 +582,24 @@ class EWallet(Base):
         self.update_session_from_user(session_active_user=kwargs['user'])
         return self.active_user[0]
 
-    '''
-    [ NOTE   ]: System action 'session update', not accessible from external api call.
-    [ INPUT  ]: session_active_user=<active_user>
-    [ RETURN ]: (True | False)
-    '''
     def action_system_session_update(self, **kwargs):
+        '''
+        [ NOTE   ]: System action 'session update', not accessible from external api call.
+        [ INPUT  ]: session_active_user=<active_user>
+        [ RETURN ]: (True | False)
+        '''
         log.debug('')
         kwargs.update({'session_active_user': self.fetch_active_session_user()})
         _update = self.update_session_from_user(**kwargs)
         return _update or False
 
-    '''
-    [ NOTE   ]: User action 'start credit clock timer', accessible from external api call.
-    [ INPUT  ]: credit_clock=<clock>, active_session=<session>
-    [ RETURN ]: (Legacy start time | False)
-    '''
 #   @pysnooper.snoop('logs/ewallet.log')
     def action_start_credit_clock_timer(self, **kwargs):
+        '''
+        [ NOTE   ]: User action 'start credit clock timer', accessible from external api call.
+        [ INPUT  ]: credit_clock=<clock>, active_session=<session>
+        [ RETURN ]: (Legacy start time | False)
+        '''
         log.debug('')
         _credit_clock = kwargs.get('credit_clock') or \
                 self.fetch_active_session_credit_clock()
@@ -627,12 +629,12 @@ class EWallet(Base):
         _active_session.commit()
         return _start
 
-    '''
-    [ NOTE   ]: User action 'pause credit clock timer', accessible from external api call.
-    [ INPUT  ]: credit_clock=<clock>, active_session=<session>
-    [ RETURN ]: (Pause count | False)
-    '''
     def action_pause_credit_clock_timer(self, **kwargs):
+        '''
+        [ NOTE   ]: User action 'pause credit clock timer', accessible from external api call.
+        [ INPUT  ]: credit_clock=<clock>, active_session=<session>
+        [ RETURN ]: (Pause count | False)
+        '''
         log.debug('')
         _credit_clock = kwargs.get('credit_clock') or \
                 self.fetch_active_session_credit_clock()
@@ -662,12 +664,12 @@ class EWallet(Base):
         _active_session.commit()
         return _pause
 
-    '''
-    [ NOTE   ]: User action 'resume credit clock timer', accessible from external api call.
-    [ INPUT  ]: credit_clock=<clock>, active_session=<session>
-    [ RETURN ]: (Elapsed clock time | False)
-    '''
     def action_resume_credit_clock_timer(self, **kwargs):
+        '''
+        [ NOTE   ]: User action 'resume credit clock timer', accessible from external api call.
+        [ INPUT  ]: credit_clock=<clock>, active_session=<session>
+        [ RETURN ]: (Elapsed clock time | False)
+        '''
         log.debug('')
         _credit_clock = kwargs.get('credit_clock') or \
                 self.fetch_active_session_credit_clock()
@@ -697,12 +699,12 @@ class EWallet(Base):
         _active_session.commit()
         return _resume
 
-    '''
-    [ NOTE   ]: User action 'stop credit clock timer', accessible from external api call.
-    [ INPUT  ]: credit_clock=<clock>, active_session=<session>
-    [ RETURN ]: (Credit clock elapsed time | False)
-    '''
     def action_stop_credit_clock_timer(self, **kwargs):
+        '''
+        [ NOTE   ]: User action 'stop credit clock timer', accessible from external api call.
+        [ INPUT  ]: credit_clock=<clock>, active_session=<session>
+        [ RETURN ]: (Credit clock elapsed time | False)
+        '''
         log.debug('')
         _credit_clock = kwargs.get('credit_clock') or \
                 self.fetch_active_session_credit_clock()
@@ -732,11 +734,11 @@ class EWallet(Base):
         _active_session.commit()
         return _stop
 
-    '''
-    [ NOTE   ]: User action 'view transfer list', accessible from external api call.
-    [ RETURN ]: (Transfer sheet values | False)
-    '''
     def action_view_transfer_list(self, **kwargs):
+        '''
+        [ NOTE   ]: User action 'view transfer list', accessible from external api call.
+        [ RETURN ]: (Transfer sheet values | False)
+        '''
         log.debug('')
         _credit_wallet = self.fetch_active_session_credit_wallet()
         if not _credit_wallet:
@@ -749,12 +751,12 @@ class EWallet(Base):
         log.debug(res)
         return res
 
-    '''
-    [ NOTE   ]: User action 'view transfer record', accessible from external api call.
-    [ INPUT  ]: record_id=<id>
-    [ RETURN ]: (Transfer record values | False)
-    '''
     def action_view_transfer_record(self, **kwargs):
+        '''
+        [ NOTE   ]: User action 'view transfer record', accessible from external api call.
+        [ INPUT  ]: record_id=<id>
+        [ RETURN ]: (Transfer record values | False)
+        '''
         log.debug('')
         _credit_wallet = self.fetch_active_session_credit_wallet()
         if not _credit_wallet or not kwargs.get('record_id'):
@@ -777,11 +779,11 @@ class EWallet(Base):
         log.debug(res)
         return res
 
-    '''
-    [ NOTE   ]: User action 'view time list', accessible from external api call.
-    [ RETURN ]: (Time sheet values | False)
-    '''
     def action_view_time_list(self, **kwargs):
+        '''
+        [ NOTE   ]: User action 'view time list', accessible from external api call.
+        [ RETURN ]: (Time sheet values | False)
+        '''
         log.debug('')
         _credit_wallet = self.fetch_active_session_credit_wallet()
         if not _credit_wallet:
@@ -798,12 +800,12 @@ class EWallet(Base):
         log.debug(res)
         return res
 
-    '''
-    [ NOTE   ]: User action 'view time record', accessible from external api call.
-    [ INPUT  ]: record_id=<id>
-    [ RETURN ]: (Time record values | False)
-    '''
     def action_view_time_record(self, **kwargs):
+        '''
+        [ NOTE   ]: User action 'view time record', accessible from external api call.
+        [ INPUT  ]: record_id=<id>
+        [ RETURN ]: (Time record values | False)
+        '''
         log.debug('')
         _credit_wallet = self.fetch_active_session_credit_wallet()
         if not _credit_wallet or not kwargs.get('record_id'):
@@ -830,11 +832,11 @@ class EWallet(Base):
         log.debug(res)
         return res
 
-    '''
-    [ NOTE   ]: User action 'view conversion list', accessible from external api call.
-    [ RETURN ]: (Conversion sheet values | False)
-    '''
     def action_view_conversion_list(self, **kwargs):
+        '''
+        [ NOTE   ]: User action 'view conversion list', accessible from external api call.
+        [ RETURN ]: (Conversion sheet values | False)
+        '''
         log.debug('')
         _credit_clock = self.fetch_active_session_credit_clock()
         if not _credit_clock:
@@ -847,12 +849,12 @@ class EWallet(Base):
         log.debug(res)
         return res
 
-    '''
-    [ NOTE   ]: User action 'view conversion record', accessible from external api call.
-    [ INPUT  ]: record_id=<id>
-    [ RETURN ]: (Conversion record values | False)
-    '''
     def action_view_conversion_record(self, **kwargs):
+        '''
+        [ NOTE   ]: User action 'view conversion record', accessible from external api call.
+        [ INPUT  ]: record_id=<id>
+        [ RETURN ]: (Conversion record values | False)
+        '''
         log.debug('')
         _credit_wallet = self.fetch_active_session_credit_wallet()
         if not _credit_wallet or not kwargs.get('record_id'):
@@ -879,11 +881,11 @@ class EWallet(Base):
         log.debug(res)
         return res
 
-    '''
-    [ NOTE   ]: User action 'view invoice list', accessible from external api call.
-    [ RETURN ]: (Invoice sheet values | False)
-    '''
     def action_view_invoice_list(self, **kwargs):
+        '''
+        [ NOTE   ]: User action 'view invoice list', accessible from external api call.
+        [ RETURN ]: (Invoice sheet values | False)
+        '''
         log.debug('')
         _credit_wallet = self.fetch_active_session_credit_wallet()
         if not _credit_wallet:
@@ -896,12 +898,12 @@ class EWallet(Base):
         log.debug(res)
         return res
 
-    '''
-    [ NOTE   ]: User action 'view invoice record', accessible from external api call.
-    [ INPUT  ]: record_id=<id>
-    [ RETURN ]: (Invoice record values | False)
-    '''
     def action_view_invoice_record(self, **kwargs):
+        '''
+        [ NOTE   ]: User action 'view invoice record', accessible from external api call.
+        [ INPUT  ]: record_id=<id>
+        [ RETURN ]: (Invoice record values | False)
+        '''
         log.debug('')
         _credit_wallet = self.fetch_active_session_credit_wallet()
         if not _credit_wallet or not kwargs.get('record_id'):
@@ -924,11 +926,11 @@ class EWallet(Base):
         log.debug(res)
         return res
 
-    '''
-    [ NOTE   ]: User action 'view user account', accessible from external api call.
-    [ RETURN ]: (Active user values | False)
-    '''
     def action_view_user_account(self, **kwargs):
+        '''
+        [ NOTE   ]: User action 'view user account', accessible from external api call.
+        [ RETURN ]: (Active user values | False)
+        '''
         log.debug('')
         if not self.active_user:
             return self.error_no_session_active_user_found()
@@ -936,11 +938,11 @@ class EWallet(Base):
         log.debug(res)
         return res
 
-    '''
-    [ NOTE   ]: User action 'view credit wallet', accessible from external api call.
-    [ RETURN ]: (Credit wallet values | False)
-    '''
     def action_view_credit_wallet(self, **kwargs):
+        '''
+        [ NOTE   ]: User action 'view credit wallet', accessible from external api call.
+        [ RETURN ]: (Credit wallet values | False)
+        '''
         log.debug('')
         _credit_wallet = self.fetch_active_session_credit_wallet()
         if not _credit_wallet:
@@ -949,11 +951,11 @@ class EWallet(Base):
         log.debug(str(res))
         return res
 
-    '''
-    [ NOTE   ]: User action 'view credit clock', accessible from external api call.
-    [ RETURN ]: (Credit clock values | False)
-    '''
     def action_view_credit_clock(self, **kwargs):
+        '''
+        [ NOTE   ]: User action 'view credit clock', accessible from external api call.
+        [ RETURN ]: (Credit clock values | False)
+        '''
         log.debug('')
         _credit_wallet = self.fetch_active_session_credit_wallet()
         if not _credit_wallet:
@@ -966,11 +968,11 @@ class EWallet(Base):
         log.debug(res)
         return res
 
-    '''
-    [ NOTE   ]: User action 'view contact list', accessible from external api call.
-    [ RETURN ]: (Contact list values | False)
-    '''
     def action_view_contact_list(self, **kwargs):
+        '''
+        [ NOTE   ]: User action 'view contact list', accessible from external api call.
+        [ RETURN ]: (Contact list values | False)
+        '''
         log.debug('')
         _contact_list = self.fetch_active_session_contact_list()
         if not _contact_list:
@@ -979,12 +981,12 @@ class EWallet(Base):
         log.debug(res)
         return res
 
-    '''
-    [ NOTE   ]: User action 'view contact record', accessible from external user api call.
-    [ INPUT  ]: record_id=<id>
-    [ RETURN ]: (Contact record values | False)
-    '''
     def action_view_contact_record(self, **kwargs):
+        '''
+        [ NOTE   ]: User action 'view contact record', accessible from external user api call.
+        [ INPUT  ]: record_id=<id>
+        [ RETURN ]: (Contact record values | False)
+        '''
         log.debug('')
         _contact_list = self.fetch_active_session_contact_list()
         if not _contact_list or not kwargs.get('record_id'):
@@ -1003,12 +1005,12 @@ class EWallet(Base):
         log.debug(res)
         return res
 
-    '''
-    [ NOTE   ]: User action 'reser user account password', accessible from external user api calls.
-    [ INPUT  ]: user_pass=<pass>
-    [ RETURN ]: (True | False)
-    '''
     def action_reset_user_password(self, **kwargs):
+        '''
+        [ NOTE   ]: User action 'reser user account password', accessible from external user api calls.
+        [ INPUT  ]: user_pass=<pass>
+        [ RETURN ]: (True | False)
+        '''
         log.debug('')
         if not self.active_user or not kwargs.get('user_pass'):
             return self.error_no_user_password_found()
@@ -1021,12 +1023,12 @@ class EWallet(Base):
                 pass_hash_func=_pass_hash_func,
                 )
 
-    '''
-    [ NOTE   ]: User action 'reset user account email', accessible from external user api calls.
-    [ INPUT  ]: user_email=<email>
-    [ RETURN ]: (True | False)
-    '''
     def action_reset_user_email(self, **kwargs):
+        '''
+        [ NOTE   ]: User action 'reset user account email', accessible from external user api calls.
+        [ INPUT  ]: user_email=<email>
+        [ RETURN ]: (True | False)
+        '''
         log.debug('')
         if not self.active_user or not kwargs.get('user_email'):
             return self.error_no_user_email_found()
@@ -1037,12 +1039,12 @@ class EWallet(Base):
                 email_check_func=_email_check_func,
                 )
 
-    '''
-    [ NOTE   ]: User action 'reset user account alias', accessible from external user api calls.
-    [ INPUT  ]: user_alias=<alias>
-    [ RETURN ]: (True | False)
-    '''
     def action_reset_user_alias(self, **kwargs):
+        '''
+        [ NOTE   ]: User action 'reset user account alias', accessible from external user api calls.
+        [ INPUT  ]: user_alias=<alias>
+        [ RETURN ]: (True | False)
+        '''
         log.debug('')
         if not self.active_user or not kwargs.get('user_alias'):
             return self.error_no_user_alias_found()
@@ -1051,12 +1053,12 @@ class EWallet(Base):
                 alias=kwargs['user_alias']
                 )
 
-    '''
-    [ NOTE   ]: User action 'reset user account phone', accessible from external user api calls.
-    [ INPUT  ]: user_phone=<phone>
-    [ RETURN ]: (True | False)
-    '''
     def action_reset_user_phone(self, **kwargs):
+        '''
+        [ NOTE   ]: User action 'reset user account phone', accessible from external user api calls.
+        [ INPUT  ]: user_phone=<phone>
+        [ RETURN ]: (True | False)
+        '''
         log.debug('')
         if not self.active_user or not kwargs.get('user_phone'):
             return self.error_no_user_phone_found()
@@ -1065,12 +1067,12 @@ class EWallet(Base):
                 phone=kwargs['user_phone']
                 )
 
-    '''
-    [ NOTE   ]: User action create new account, accessible from external user api calls.
-    [ INPUT  ]: user_name=<name> user_pass=<pass> user_email=<email> user_alias=<alias>
-    [ RETURN ]: (ResUser object | False)
-    '''
     def action_create_new_user_account(self, **kwargs):
+        '''
+        [ NOTE   ]: User action create new account, accessible from external user api calls.
+        [ INPUT  ]: user_name=<name> user_pass=<pass> user_email=<email> user_alias=<alias>
+        [ RETURN ]: (ResUser object | False)
+        '''
         log.debug('')
         session_create_account = EWalletLogin().ewallet_login_controller(
                 action='new_account',
@@ -1093,12 +1095,12 @@ class EWallet(Base):
         self.session.commit()
         return session_create_account
 
-    '''
-    [ NOTE   ]: User action 'convert credits to clock', accessible from external api calls.
-    [ INPUT  ]: credit_ewallet=<wallet>, active_session=<session>,
-    [ RETURN ]: Post conversion value.
-    '''
     def action_create_new_conversion_credits_to_clock(self, **kwargs):
+        '''
+        [ NOTE   ]: User action 'convert credits to clock', accessible from external api calls.
+        [ INPUT  ]: credit_ewallet=<wallet>, active_session=<session>,
+        [ RETURN ]: Post conversion value.
+        '''
         log.debug('')
         _credit_wallet = kwargs.get('credit_ewallet') or \
                 self.fetch_active_session_credit_wallet()
@@ -1129,13 +1131,13 @@ class EWallet(Base):
         _active_session.commit()
         return _convert
 
-    '''
-    [ NOTE   ]: User action 'convert clock to credits', accessible from external api calls.
-    [ INPUT  ]: credit_ewallet=<wallet>, credit_clock=<clock>, active_session=<session>
-    [ RETURN ]: Post conversion value.
-    '''
 #   @pysnooper.snoop('logs/ewallet.log')
     def action_create_new_conversion_clock_to_credits(self, **kwargs):
+        '''
+        [ NOTE   ]: User action 'convert clock to credits', accessible from external api calls.
+        [ INPUT  ]: credit_ewallet=<wallet>, credit_clock=<clock>, active_session=<session>
+        [ RETURN ]: Post conversion value.
+        '''
         log.debug('')
         _credit_wallet = kwargs.get('credit_ewallet') or \
                 self.fetch_active_session_credit_wallet()
@@ -1170,12 +1172,12 @@ class EWallet(Base):
         _active_session.commit()
         return _convert
 
-    '''
-    [ NOTE   ]: Jump table for user action 'create new conversion', accessible from external api calls.
-    [ INPUT  ]: conversion=('credits2clock' | 'clock2credits')
-    [ RETURN ]: Action variable correspondent.
-    '''
     def action_create_new_conversion(self, **kwargs):
+        '''
+        [ NOTE   ]: Jump table for user action 'create new conversion', accessible from external api calls.
+        [ INPUT  ]: conversion=('credits2clock' | 'clock2credits')
+        [ RETURN ]: Action variable correspondent.
+        '''
         log.debug('')
         if not kwargs.get('conversion'):
             return self.error_no_conversion_type_specified()
@@ -1185,12 +1187,12 @@ class EWallet(Base):
                 }
         return _handlers[kwargs['conversion']](**kwargs)
 
-    '''
-    [ NOTE   ]: User action 'create new credit wallet', accessible from external api calls.
-    [ INPUT  ]: reference=<ref>, credits=<wallet credits>
-    [ RETURN ]: (CreditWallet object | False)
-    '''
     def action_create_new_credit_wallet(self, **kwargs):
+        '''
+        [ NOTE   ]: User action 'create new credit wallet', accessible from external api calls.
+        [ INPUT  ]: reference=<ref>, credits=<wallet credits>
+        [ RETURN ]: (CreditWallet object | False)
+        '''
         log.debug('')
         if not self.active_user:
             return self.error_no_session_active_user_found()
@@ -1206,12 +1208,12 @@ class EWallet(Base):
         log.info('Successfully created new credit wallet.')
         return _new_wallet
 
-    '''
-    [ NOTE   ]: User action 'create new credit clock', accessible from external api calls.
-    [ INPUT  ]: reference=<ref>, credit_clock=<clock credits>
-    [ RETURN ]: (CreditClock object | False)
-    '''
     def action_create_new_credit_clock(self, **kwargs):
+        '''
+        [ NOTE   ]: User action 'create new credit clock', accessible from external api calls.
+        [ INPUT  ]: reference=<ref>, credit_clock=<clock credits>
+        [ RETURN ]: (CreditClock object | False)
+        '''
         log.debug('')
         if not self.active_user:
             return self.error_no_session_active_user_found()
@@ -1227,12 +1229,12 @@ class EWallet(Base):
         log.info('Successfully created new credit clock.')
         return _new_clock
 
-    '''
-    [ NOTE   ]: User action 'create new contact list', accessible from external api calls.
-    [ INPUT  ]: reference=<ref>
-    [ RETURN ]: (ContactList object | False)
-    '''
     def action_create_new_contact_list(self, **kwargs):
+        '''
+        [ NOTE   ]: User action 'create new contact list', accessible from external api calls.
+        [ INPUT  ]: reference=<ref>
+        [ RETURN ]: (ContactList object | False)
+        '''
         log.debug('')
         if not self.active_user:
             return self.error_no_session_active_user_found()
@@ -1247,12 +1249,12 @@ class EWallet(Base):
         log.info('Successfully created new contact list.')
         return _new_list
 
-    '''
-    [ NOTE   ]: User action 'create new contact record', accessible from external api calls.
-    [ INPUT  ]: user_name=<name>, user_email=<email>, user_phone=<phone>, notes=<notes>
-    [ RETURN ]: (ContactRecord object | False)
-    '''
     def action_create_new_contact_record(self, **kwargs):
+        '''
+        [ NOTE   ]: User action 'create new contact record', accessible from external api calls.
+        [ INPUT  ]: user_name=<name>, user_email=<email>, user_phone=<phone>, notes=<notes>
+        [ RETURN ]: (ContactRecord object | False)
+        '''
         log.debug('')
         if not self.session_contact_list:
             return self.error_no_active_session_contact_list_found(
@@ -1271,12 +1273,12 @@ class EWallet(Base):
         log.info('Successfully created new contact record.')
         return _new_record
 
-    '''
-    [ NOTE   ]: Jump table for user action 'create new contact', accessible from external api calls.
-    [ INPUT  ]: contact=('list', 'record')
-    [ RETURN ]: Action variable correspondent.
-    '''
     def action_create_new_contact(self, **kwargs):
+        '''
+        [ NOTE   ]: Jump table for user action 'create new contact', accessible from external api calls.
+        [ INPUT  ]: contact=('list', 'record')
+        [ RETURN ]: Action variable correspondent.
+        '''
         log.debug('')
         if not kwargs.get('contact'):
             return self.error_no_contact_found()
@@ -1286,38 +1288,38 @@ class EWallet(Base):
                 }
         return _handlers[kwargs['contact']](**kwargs)
 
-    '''
-    [ NOTE   ]: User action 'supply credits', accessible from external api calls.
-    [ INPUT  ]: partner_account=<partner>, credits=<credits>
-    [ RETURN ]: (Credit count | False)
-    '''
 #   @pysnooper.snoop('logs/ewallet.log')
     def action_create_new_transfer_type_supply(self, **kwargs):
+        '''
+        [ NOTE   ]: User action 'supply credits' for active session user becomes
+                    User event 'request credits' for SystemCore account.
+                    Accessible from external api calls.
+        [ INPUT  ]: active_session=<orm-session>, partner_account=<partner>, credits=<credits>
+        [ RETURN ]: ({'total_credits': <count>, 'supplied_credits': <count>} | False)
+        '''
         log.debug('')
-        _partner_account = kwargs.get('partner_account') or \
+        active_session = kwargs.get('active_session') or \
+                self.fetch_active_session()
+        partner_account = kwargs.get('partner_account') or \
                 self.fetch_system_core_user_account(**kwargs)
-        if not _partner_account:
+        if not partner_account:
             return self.error_handler_create_new_transfer(
-                    partner_account=_partner_account,
+                    partner_account=partner_account,
                     )
-        # TODO
-        for item in ('ctype', 'partner_account'):
-            try:
-                kwargs.pop(item)
-            except:
-                log.warning('Could not pop {} item from command chain.'.format(item))
-        _credits_before = self.fetch_credit_wallet_credits()
-        _credit_request = _partner_account.user_controller(
-                ctype='event', event='request', request='credits',
-                partner_account=_partner_account, **kwargs
+        sanitized_instruction_set = res_utils.remove_tags_from_command_chain(
+                kwargs, 'ctype', 'partner_account'
                 )
-        _credits_after = self.fetch_credit_wallet_credits()
-        if _credits_after is (_credits_before + kwargs.get('credits')):
-            kwargs['active_session'].commit()
-            return _credit_request
-        else:
-            kwargs['active_session'].rollback()
-            return False
+        credits_before = self.fetch_credit_wallet_credits()
+        credit_request = partner_account.user_controller(
+                ctype='event', event='request', request='credits',
+                partner_account=self.fetch_active_session_user(), **sanitized_instruction_set #partner_account
+                )
+        credits_after = self.fetch_credit_wallet_credits()
+        if credits_after is (credits_before + kwargs.get('credits')):
+            active_session.commit()
+            return {'total_credits': credits_after, 'supplied_credits': kwargs['credits']}
+        active_session.rollback()
+        return False
 
     # TODO
     def action_create_new_transfer_type_pay(self, **kwargs):
@@ -1328,13 +1330,13 @@ class EWallet(Base):
         log.debug('')
         return False
 
-    '''
-    [ NOTE   ]: User action 'unlink user account', accessible from external api calls.
-    [ INPUT  ]: user=<user>, active_session=<session>
-    [ RETURN ]: (True | False)
-    '''
 #   @pysnooper.snoop('logs/ewallet.log')
     def action_unlink_user_account(self, **kwargs):
+        '''
+        [ NOTE   ]: User action 'unlink user account', accessible from external api calls.
+        [ INPUT  ]: user=<user>, active_session=<session>
+        [ RETURN ]: (True | False)
+        '''
         log.debug('')
         _user = kwargs.get('user') or self.fetch_active_session_user()
         if not _user:
@@ -1349,12 +1351,12 @@ class EWallet(Base):
         return True if _unlink else \
                 self.warning_could_not_unlink_user_account()
 
-    '''
-    [ NOTE   ]: User action 'unlink credit wallet', accessible from external api calls.
-    [ INPUT  ]: wallet_id=<id>
-    [ RETURN ]: (True | False)
-    '''
     def action_unlink_credit_wallet(self, **kwargs):
+        '''
+        [ NOTE   ]: User action 'unlink credit wallet', accessible from external api calls.
+        [ INPUT  ]: wallet_id=<id>
+        [ RETURN ]: (True | False)
+        '''
         log.debug('')
         if not self.active_user or not kwargs.get('wallet_id'):
             return self.error_handler_action_unlink_credit_wallet(
@@ -1366,12 +1368,12 @@ class EWallet(Base):
                 wallet_id=kwargs['wallet_id'],
                 )
 
-    '''
-    [ NOTE   ]: User action 'unlink contact list', accessible from external api calls.
-    [ INPUT  ]: list_id=<id>
-    [ RETURN ]: (True | False)
-    '''
     def action_unlink_contact_list(self, **kwargs):
+        '''
+        [ NOTE   ]: User action 'unlink contact list', accessible from external api calls.
+        [ INPUT  ]: list_id=<id>
+        [ RETURN ]: (True | False)
+        '''
         log.debug('')
         if not self.active_user or not kwargs.get('list_id'):
             return self.error_handler_action_unlink_contact_list(
@@ -1383,12 +1385,12 @@ class EWallet(Base):
                 list_id=kwargs['list_id']
                 )
 
-    '''
-    [ NOTE   ]: User action 'unlink contact record', accessible from external api calls.
-    [ INPUT  ]: record_id=<id>
-    [ RETURN ]: (True | False)
-    '''
     def action_unlink_contact_record(self, **kwargs):
+        '''
+        [ NOTE   ]: User action 'unlink contact record', accessible from external api calls.
+        [ INPUT  ]: record_id=<id>
+        [ RETURN ]: (True | False)
+        '''
         log.debug('')
         if not self.session_contact_list or not kwargs.get('record_id'):
             return self.error_handler_action_unlink_contact_record(
@@ -1400,12 +1402,12 @@ class EWallet(Base):
                 record_id=kwargs['record_id'],
                 )
 
-    '''
-    [ NOTE   ]: User action 'unlink invoice list', accessible from external api calls.
-    [ INPUT  ]: list_id=<id>
-    [ RETURN ]: (True | False)
-    '''
     def action_unlink_invoice_list(self, **kwargs):
+        '''
+        [ NOTE   ]: User action 'unlink invoice list', accessible from external api calls.
+        [ INPUT  ]: list_id=<id>
+        [ RETURN ]: (True | False)
+        '''
         log.debug('')
         if not self.session_credit_wallet or not kwargs.get('list_id'):
             return self.error_handler_action_unlink_invoice_list(
@@ -1417,12 +1419,12 @@ class EWallet(Base):
                 sheet_id=kwargs['list_id'],
                 )
 
-    '''
-    [ NOTE   ]: User action 'unlink invoice record', accessible from external api calls.
-    [ INPUT  ]: record_id=<id>
-    [ RETURN ]: (True | False)
-    '''
     def action_unlink_invoice_record(self, **kwargs):
+        '''
+        [ NOTE   ]: User action 'unlink invoice record', accessible from external api calls.
+        [ INPUT  ]: record_id=<id>
+        [ RETURN ]: (True | False)
+        '''
         log.debug('')
         if not self.session_credit_wallet or not kwargs.get('record_id'):
             return self.error_handler_action_unlink_invoice_record(
@@ -1436,12 +1438,12 @@ class EWallet(Base):
                 action='remove', record_id=kwargs['record_id'],
                 )
 
-    '''
-    [ NOTE   ]: User action 'unlink transfer list', accessible from external api calls.
-    [ INPUT  ]: list_id=<id>
-    [ RETURN ]: (True | False)
-    '''
     def action_unlink_transfer_list(self, **kwargs):
+        '''
+        [ NOTE   ]: User action 'unlink transfer list', accessible from external api calls.
+        [ INPUT  ]: list_id=<id>
+        [ RETURN ]: (True | False)
+        '''
         log.debug('')
         if not self.session_credit_wallet or not kwargs.get('list_id'):
             return self.error_handler_action_unlink_transfer_list(
@@ -1453,12 +1455,12 @@ class EWallet(Base):
                 sheet_id=kwargs['list_id'],
                 )
 
-    '''
-    [ NOTE   ]: User action 'unlink transfer record', accessible from external api calls.
-    [ INPUT  ]: record_id=<id>
-    [ RETURN ]: (True | False)
-    '''
     def action_unlink_transfer_record(self, **kwargs):
+        '''
+        [ NOTE   ]: User action 'unlink transfer record', accessible from external api calls.
+        [ INPUT  ]: record_id=<id>
+        [ RETURN ]: (True | False)
+        '''
         log.debug('')
         if not self.session_credit_wallet or not kwargs.get('record_id'):
             return self.error_handler_action_unlink_transfer_record(
@@ -1473,12 +1475,12 @@ class EWallet(Base):
                 action='remove', record_id=kwargs['record_id'],
                 )
 
-    '''
-    [ NOTE   ]: User action 'unlink time list', accessible from external api calls.
-    [ INPUT  ]: list_id=<id>
-    [ RETURN ]: (True | False)
-    '''
     def action_unlink_time_list(self, **kwargs):
+        '''
+        [ NOTE   ]: User action 'unlink time list', accessible from external api calls.
+        [ INPUT  ]: list_id=<id>
+        [ RETURN ]: (True | False)
+        '''
         log.debug('')
         if not self.session_credit_wallet or not kwargs.get('list_id'):
             return self.error_handler_action_unlink_time_list(
@@ -1494,12 +1496,12 @@ class EWallet(Base):
                 sheet_type='time', sheet_id=kwargs['list_id']
                 )
 
-    '''
-    [ NOTE   ]: User action 'unlink time record', accessible from external api calls.
-    [ INPUT  ]: record_id=<id>
-    [ RETURN ]: (True | False)
-    '''
     def action_unlink_time_record(self, **kwargs):
+        '''
+        [ NOTE   ]: User action 'unlink time record', accessible from external api calls.
+        [ INPUT  ]: record_id=<id>
+        [ RETURN ]: (True | False)
+        '''
         log.debug('')
         if not self.session_credit_wallet or not kwargs.get('record_id'):
             log.error('No active session credit wallet or time record id found.')
@@ -1519,12 +1521,12 @@ class EWallet(Base):
                 action='remove', record_id=kwargs['record_id']
                 )
 
-    '''
-    [ NOTE   ]: User action 'unlink conversion list', accessible from external api calls.
-    [ INPUT  ]: list_id=<id>
-    [ RETURN ]: (True | False)
-    '''
     def action_unlink_conversion_list(self, **kwargs):
+        '''
+        [ NOTE   ]: User action 'unlink conversion list', accessible from external api calls.
+        [ INPUT  ]: list_id=<id>
+        [ RETURN ]: (True | False)
+        '''
         log.debug('')
         if not self.session_credit_wallet or not kwargs.get('list_id'):
             return self.error_handler_action_unlink_conversion_list(
@@ -1540,12 +1542,12 @@ class EWallet(Base):
                 sheet_type='conversion', sheet_id=kwargs['list_id']
                 )
 
-    '''
-    [ NOTE   ]: User action 'unlink conversion record', accessible from external api calls.
-    [ INPUT  ]: record_id=<id>
-    [ RETURN ]: (True | False)
-    '''
     def action_unlink_conversion_record(self, **kwargs):
+        '''
+        [ NOTE   ]: User action 'unlink conversion record', accessible from external api calls.
+        [ INPUT  ]: record_id=<id>
+        [ RETURN ]: (True | False)
+        '''
         log.debug('')
         if not self.session_credit_wallet or not kwargs.get('record_id'):
             return self.error_handler_action_unlink_conversion_record(
@@ -1566,12 +1568,12 @@ class EWallet(Base):
 
     # HANDLERS
 
-    '''
-    [ NOTE   ]: Jump table handler for system action 'send invoice'.
-    [ INPUT  ]: invoice=('record' | 'list')
-    [ RETURN ]: Action variable correspondent.
-    '''
     def handle_system_action_send_invoice(self, **kwargs):
+        '''
+        [ NOTE   ]: Jump table handler for system action 'send invoice'.
+        [ INPUT  ]: invoice=('record' | 'list')
+        [ RETURN ]: Action variable correspondent.
+        '''
         if not kwargs.get('invoice'):
             return self.error_no_invoice_target_specified()
         _handlers = {
@@ -1580,12 +1582,12 @@ class EWallet(Base):
         }
         return _handlers[kwargs['invoice']](**kwargs)
 
-    '''
-    [ NOTE   ]: Jump table handler for system action 'send transfer'.
-    [ INPUT  ]: transfer=('record' | 'list')
-    [ RETURN ]: Action variable correspondent.
-    '''
     def handle_system_action_send_transfer(self, **kwargs):
+        '''
+        [ NOTE   ]: Jump table handler for system action 'send transfer'.
+        [ INPUT  ]: transfer=('record' | 'list')
+        [ RETURN ]: Action variable correspondent.
+        '''
         if not kwargs.get('transfer'):
             return self.error_no_transfer_target_specified()
         _handlers = {
@@ -1594,12 +1596,12 @@ class EWallet(Base):
         }
         return _handlers[kwargs['transfer']](**kwargs)
 
-    '''
-    [ NOTE   ]: Jump table handler for system action 'receive invoice'.
-    [ INPUT  ]: invoice=('record' | 'list')
-    [ RETURN ]: Action variable correspondent.
-    '''
     def handle_system_action_receive_invoice(self, **kwargs):
+        '''
+        [ NOTE   ]: Jump table handler for system action 'receive invoice'.
+        [ INPUT  ]: invoice=('record' | 'list')
+        [ RETURN ]: Action variable correspondent.
+        '''
         if not kwargs.get('invoice'):
             return self.error_no_invoice_target_specified()
         _handlers = {
@@ -1608,12 +1610,12 @@ class EWallet(Base):
         }
         return _handlers[kwargs['invoice']](**kwargs)
 
-    '''
-    [ NOTE   ]: Jump table handler for system action 'receive transfer'.
-    [ INPUT  ]: transfer=('record' | 'list')
-    [ RETURN ]: Action variable correspondent
-    '''
     def handle_system_action_receive_transfer(self, **kwargs):
+        '''
+        [ NOTE   ]: Jump table handler for system action 'receive transfer'.
+        [ INPUT  ]: transfer=('record' | 'list')
+        [ RETURN ]: Action variable correspondent
+        '''
         if not kwargs.get('transfer'):
             return self.error_no_transfer_target_specified()
         _handlers = {
@@ -1622,12 +1624,12 @@ class EWallet(Base):
         }
         return _handlers[kwargs['transfer']](**kwargs)
 
-    '''
-    [ NOTE   ]: Jump table handler for system action category type 'send'.
-    [ INPUT  ]: send=('invoice' | 'transfer')
-    [ RETURN ]: Action variable correspondent.
-    '''
     def handle_system_action_send(self, **kwargs):
+        '''
+        [ NOTE   ]: Jump table handler for system action category type 'send'.
+        [ INPUT  ]: send=('invoice' | 'transfer')
+        [ RETURN ]: Action variable correspondent.
+        '''
         if not kwargs.get('send'):
             return self.error_no_system_action_specified()
         _handlers = {
@@ -1636,12 +1638,12 @@ class EWallet(Base):
         }
         return _handlers[kwargs['send']](**kwargs)
 
-    '''
-    [ NOTE   ]: Jump table handler for system action category type 'receive'.
-    [ INPUT  ]: receive=('invoice' | 'transfer')
-    [ RETURN ]: Action variable correspondent.
-    '''
     def handle_system_action_receive(self, **kwargs):
+        '''
+        [ NOTE   ]: Jump table handler for system action category type 'receive'.
+        [ INPUT  ]: receive=('invoice' | 'transfer')
+        [ RETURN ]: Action variable correspondent.
+        '''
         if not kwargs.get('receive'):
             return self.error_no_system_action_specified()
         _handlers = {
@@ -1650,12 +1652,12 @@ class EWallet(Base):
         }
         return _handlers[kwargs['send']](**kwargs)
 
-    '''
-    [ NOTE   ]: Jump table handler for system action category type 'update'.
-    [ INPUT  ]: target=('user' | 'session')
-    [ RETURN ]: Action variable correspondent.
-    '''
     def handle_system_action_update(self, **kwargs):
+        '''
+        [ NOTE   ]: Jump table handler for system action category type 'update'.
+        [ INPUT  ]: target=('user' | 'session')
+        [ RETURN ]: Action variable correspondent.
+        '''
         log.debug('')
         if not kwargs.get('target'):
             return self.error_no_system_update_target_specified()
@@ -1665,12 +1667,12 @@ class EWallet(Base):
         }
         return _handlers[kwargs['target']](**kwargs)
 
-    '''
-    [ NOTE   ]: Jump table handler for system action category type 'check'.
-    [ INPUT  ]: target=('user' | 'session')
-    [ RETURN ]: Action variable correspondent.
-    '''
     def handle_system_action_check(self, **kwargs):
+        '''
+        [ NOTE   ]: Jump table handler for system action category type 'check'.
+        [ INPUT  ]: target=('user' | 'session')
+        [ RETURN ]: Action variable correspondent.
+        '''
         log.debug('')
         if not kwargs.get('target'):
             return self.error_no_system_check_target_specified()
@@ -1680,12 +1682,12 @@ class EWallet(Base):
                 }
         return _handlers[kwargs['target']](**kwargs)
 
-    '''
-    [ NOTE   ]: Jump table handler for user action category type 'reset'.
-    [ INPUT  ]: target=('user_alias' | 'user_pass' | 'user_email' | 'user_phone')
-    [ RETURN ]: Action variable correspondent.
-    '''
     def handle_user_action_reset(self, **kwargs):
+        '''
+        [ NOTE   ]: Jump table handler for user action category type 'reset'.
+        [ INPUT  ]: target=('user_alias' | 'user_pass' | 'user_email' | 'user_phone')
+        [ RETURN ]: Action variable correspondent.
+        '''
         log.debug('')
         if not kwargs.get('target'):
             return self.error_no_user_reset_target_specified()
@@ -1697,12 +1699,12 @@ class EWallet(Base):
                 }
         return _handlers[kwargs['target']](**kwargs)
 
-    '''
-    [ NOTE   ]: Jump table handler for user action category type 'create'.
-    [ INPUT  ]: create=('account' | 'credit_wallet' | 'credit_clock' | 'transfer' | 'conversion' | 'contact')
-    [ RETURN ]: Action variable correspondent.
-    '''
     def handle_user_action_create(self, **kwargs):
+        '''
+        [ NOTE   ]: Jump table handler for user action category type 'create'.
+        [ INPUT  ]: create=('account' | 'credit_wallet' | 'credit_clock' | 'transfer' | 'conversion' | 'contact')
+        [ RETURN ]: Action variable correspondent.
+        '''
         log.debug('')
         if not kwargs.get('create'):
             return self.error_no_user_create_target_specified()
@@ -1716,12 +1718,12 @@ class EWallet(Base):
                 }
         return _handlers[kwargs['create']](**kwargs)
 
-    '''
-    [ NOTE   ]: Jump table handler for user action category type 'time'.
-    [ INPUT  ]: timer=('start' | 'pause' | 'resume' | 'stop')
-    [ RETURN ]: Action variable correspondent.
-    '''
     def handle_user_action_time(self, **kwargs):
+        '''
+        [ NOTE   ]: Jump table handler for user action category type 'time'.
+        [ INPUT  ]: timer=('start' | 'pause' | 'resume' | 'stop')
+        [ RETURN ]: Action variable correspondent.
+        '''
         log.debug('')
         if not kwargs.get('timer'):
             return self.error_no_timer_action_specified()
@@ -1733,12 +1735,12 @@ class EWallet(Base):
                 }
         return _handlers[kwargs['timer']](**kwargs)
 
-    '''
-    [ NOTE   ]: Jump table handler for user action category type 'view'.
-    [ INPUT  ]: view=('account' | 'credit_wallet' | 'credit_clock' | 'contact' | 'invoice' | 'transfer' | 'time' | 'conversion')
-    [ RETURN ]: Action variable correspondent.
-    '''
     def handle_user_action_view(self, **kwargs):
+        '''
+        [ NOTE   ]: Jump table handler for user action category type 'view'.
+        [ INPUT  ]: view=('account' | 'credit_wallet' | 'credit_clock' | 'contact' | 'invoice' | 'transfer' | 'time' | 'conversion')
+        [ RETURN ]: Action variable correspondent.
+        '''
         log.debug('')
         if not kwargs.get('view'):
             return self.error_no_view_target_specified()
@@ -1754,12 +1756,12 @@ class EWallet(Base):
         }
         return _handlers[kwargs['view']](**kwargs)
 
-    '''
-    [ NOTE   ]: Jump table handler for user action category type 'unlink'.
-    [ INPUT  ]: unlink=('account' | 'credit_wallet' | 'credit_clock' | 'contact' | 'invoice' | 'transfer' | 'time' | 'conversion')
-    [ RETURN ]: Action variable correspondent.
-    '''
     def handle_user_action_unlink(self, **kwargs):
+        '''
+        [ NOTE   ]: Jump table handler for user action category type 'unlink'.
+        [ INPUT  ]: unlink=('account' | 'credit_wallet' | 'credit_clock' | 'contact' | 'invoice' | 'transfer' | 'time' | 'conversion')
+        [ RETURN ]: Action variable correspondent.
+        '''
         log.debug('')
         if not kwargs.get('unlink'):
             return self.error_no_unlink_target_specified()
@@ -1789,13 +1791,13 @@ class EWallet(Base):
     def handle_system_event_request(self, **kwargs):
         pass
 
-    '''
-    [ NOTE   ]: High level manager for user action login.
-    [ INPUT  ]: user_name=<name>, user_pass=<pass>
-    [ RETURN ]: Logged in user if login action succesful, else False.
-    '''
 #   @pysnooper.snoop('logs/ewallet.log')
     def handle_user_action_login(self, **kwargs):
+        '''
+        [ NOTE   ]: High level manager for user action login.
+        [ INPUT  ]: user_name=<name>, user_pass=<pass>
+        [ RETURN ]: Logged in user if login action succesful, else False.
+        '''
         log.debug('')
         _login_record = EWalletLogin()
         session_login = _login_record.ewallet_login_controller(
@@ -1813,13 +1815,13 @@ class EWallet(Base):
         log.info('User successfully loged in.')
         return session_login
 
-    '''
-    [ NOTE   ]: High level manager for user action logout.
-    [ INPUT  ]:
-    [ RETURN ]: True if no other users loged in. If loged in users found in
-    user account archive, returns next.
-    '''
     def handle_user_action_logout(self, **kwargs):
+        '''
+        [ NOTE   ]: High level manager for user action logout.
+        [ INPUT  ]:
+        [ RETURN ]: True if no other users loged in. If loged in users found in
+                    user account archive, returns next.
+        '''
         log.debug('')
         _user = self.fetch_active_session_user()
         _session_logout = self.action_system_user_logout()
@@ -1844,12 +1846,12 @@ class EWallet(Base):
 
     # CONTROLLERS
 
-    '''
-    [ NOTE   ]: User action controller, accessible to external user api calls.
-    [ INPUT  ]: action=('login' | 'logout' | 'create' | 'time' | 'reset' | 'view' | 'unlink')
-    [ RETURN ]: Action variable correspondent.
-    '''
     def ewallet_user_action_controller(self, **kwargs):
+        '''
+        [ NOTE   ]: User action controller, accessible to external user api calls.
+        [ INPUT  ]: action=('login' | 'logout' | 'create' | 'time' | 'reset' | 'view' | 'unlink')
+        [ RETURN ]: Action variable correspondent.
+        '''
         log.debug('')
         if not kwargs.get('action'):
             return self.error_no_user_action_specified()
@@ -1865,12 +1867,12 @@ class EWallet(Base):
         return _handlers[kwargs['action']](**kwargs)
 
 
-    '''
-    [ NOTE   ]: User event controller, accessible to external user api calls.
-    [ INPUT  ]: event=('signal' | 'notification' | 'request')
-    [ RETURN ]: Event variable correspondent.
-    '''
     def ewallet_user_event_controller(self, **kwargs):
+        '''
+        [ NOTE   ]: User event controller, accessible to external user api calls.
+        [ INPUT  ]: event=('signal' | 'notification' | 'request')
+        [ RETURN ]: Event variable correspondent.
+        '''
         log.debug('')
         if not kwargs.get('event'):
             return self.error_no_user_event_specified()
@@ -1881,12 +1883,12 @@ class EWallet(Base):
         }
         return _handlers[kwargs['event']](**kwargs)
 
-    '''
-    [ NOTE   ]: System event controller, not accessible to external user api calls.
-    [ INPUT  ]: event=('signal' | 'notification' | 'request')
-    [ RETURN ]: Event variable correspondent.
-    '''
     def ewallet_system_event_controller(self, **kwargs):
+        '''
+        [ NOTE   ]: System event controller, not accessible to external user api calls.
+        [ INPUT  ]: event=('signal' | 'notification' | 'request')
+        [ RETURN ]: Event variable correspondent.
+        '''
         log.debug('')
         if not kwargs.get('event'):
             return self.error_no_system_event_specified()
@@ -1897,12 +1899,12 @@ class EWallet(Base):
         }
         return _handlers[kwargs['event']](**kwargs)
 
-    '''
-    [ NOTE   ]: System action controller, not accessible to user api calls.
-    [ INPUT  ]: action=('check' | 'update' | 'send' | 'receive')
-    [ RETURN ]: Action variable correspondent.
-    '''
     def ewallet_system_action_controller(self, **kwargs):
+        '''
+        [ NOTE   ]: System action controller, not accessible to user api calls.
+        [ INPUT  ]: action=('check' | 'update' | 'send' | 'receive')
+        [ RETURN ]: Action variable correspondent.
+        '''
         log.debug('')
         if not kwargs.get('action'):
             return self.error_no_system_action_specified()
@@ -1914,12 +1916,12 @@ class EWallet(Base):
         }
         return _handlers[kwargs['action']](**kwargs)
 
-    '''
-    [ NOTE   ]: Low level command interface for system actions and events.
-    [ INPUT  ]: ctype=('action' | 'event')
-    [ RETURN ]: Action/Event variable correspondent.
-    '''
     def ewallet_system_controller(self, **kwargs):
+        '''
+        [ NOTE   ]: Low level command interface for system actions and events.
+        [ INPUT  ]: ctype=('action' | 'event')
+        [ RETURN ]: Action/Event variable correspondent.
+        '''
         log.debug('')
         if not kwargs.get('ctype'):
             return self.error_no_system_controller_type_specified()
@@ -1929,12 +1931,12 @@ class EWallet(Base):
         }
         return _handlers[kwargs['ctype']](**kwargs)
 
-    '''
-    [ NOTE   ]: High level command interface for user actions and events.
-    [ INPUT  ]: ctype=('action' | 'event')
-    [ RETURN ]: Action/Event variable correspondent.
-    '''
     def ewallet_user_controller(self, **kwargs):
+        '''
+        [ NOTE   ]: High level command interface for user actions and events.
+        [ INPUT  ]: ctype=('action' | 'event')
+        [ RETURN ]: Action/Event variable correspondent.
+        '''
         log.debug('')
         if not kwargs.get('ctype'):
             return self.error_no_user_controller_type_specified()
@@ -1944,12 +1946,12 @@ class EWallet(Base):
         }
         return _handlers[kwargs['ctype']](**kwargs)
 
-    '''
-    [ NOTE   ]: Main command interface for EWallet session.
-    [ INPUT  ]: controller=('system' | 'user' | 'test')
-    [ RETURN ]: Action/Event variable correspondent.
-    '''
     def ewallet_controller(self, **kwargs):
+        '''
+        [ NOTE   ]: Main command interface for EWallet session.
+        [ INPUT  ]: controller=('system' | 'user' | 'test')
+        [ RETURN ]: Action/Event variable correspondent.
+        '''
         log.debug('')
         if not kwargs.get('controller'):
             return self.error_no_ewallet_controller_specified()
@@ -3019,19 +3021,5 @@ if __name__ == '__main__':
 ################################################################################
 # CODE DUMP
 ################################################################################
-
-# Found in session worker
-#def cleanup_session(ewallet_session):
-#   if not ewallet_session:
-#       return False
-#   _working_session = ewallet_session.fetch_active_session()
-#   if not _working_session:
-#       return False
-#   _working_session.query(EWallet) \
-#                   .filter_by(id=ewallet.fetch_active_session_id()) \
-#                   .delete()
-#   _working_session.commit()
-#   _working_session.close()
-#cleanup = cleanup_session(ewallet)
 
 

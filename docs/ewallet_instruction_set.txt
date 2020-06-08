@@ -51,6 +51,19 @@
         client_id=<client-id>, session_token=<token>, user_name=<name>, user_pass=<pass>
         )
 
+* User action Supply Credits
+    session_manager_controller(
+        controller='client', ctype='action', action='supply', supply='credits'
+        client_id=<id>, session_token=<token>, currency=<currency>, credits=<credits>,
+        cost=<cost>, notes=<notes>
+        )
+
+* User action Convert Credits To Time # TODO
+    session_manager_controller(
+        controller='client', ctype='action', action='convert', convert='credits2clock',
+        client_id=<id>, session_token=<token>, credits=<credits>, notes=<notes>
+        )
+
 
 ################################################################################
 # EWallet Session (Command Chain)
@@ -66,6 +79,14 @@
     ewallet_controller(
         controller='user', ctype='action', action='login', user_name=<name>,
         user_pass=<pass>
+        )
+
+* Supply credits
+    ewallet_controller(
+        controller='user', ctype='action', action='create', create='transfer',
+        ttype='supply', active_session=self.session,
+        partner_account=self.fetch_system_core_user_account(),
+        credits=<count>, currency=<currency>, cost=<cost>, notes=<notes>
         )
 
 

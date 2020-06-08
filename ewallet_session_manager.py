@@ -33,6 +33,24 @@ class EWalletSessionManager():
 
     # FETCHERS
 
+#   @pysnooper.snoop()
+    def fetch_ewallet_session_for_client_action_using_instruction_set(self, instruction_set):
+        log.debug('')
+        session_manager_worker = self.fetch_client_id_mapped_session_worker(
+                instruction_set['client_id']
+                )
+        sanitized_instruction_set = res_utils.remove_tags_from_command_chain(
+                instruction_set, 'controller', 'ctype', 'action'
+                )
+        ewallet_session = self.fetch_ewallet_session_from_worker(
+                session_manager_worker, sanitized_instruction_set
+                )
+        value_set = {
+                'sanitized_instruction_set': sanitized_instruction_set,
+                'ewallet_session': ewallet_session,
+                }
+        return False if False in value_set.keys() else value_set
+
     def fetch_ewallet_session_from_worker(self, session_manager_worker, instruction_set):
         log.debug('')
         ewallet_session = session_manager_worker.main_controller(
@@ -504,9 +522,38 @@ class EWalletSessionManager():
 
     # GENERAL
 
-    def login_ewallet_user_account_in_session(self, ewallet_session, instruction_set):
+#   @pysnooper.snoop()
+    def supply_user_credit_ewallet_in_session(self, ewallet_session, instruction_set):
+        '''
+        [ NOTE   ]: Sends a User action Supply command chain to given ewallet session
+                    with the SystemCore account as beeing the partner, which creates
+                    a credit transaction between two wallets resulting in S:Core having
+                    a decreased credit count and the active user having an equivalent
+                    increase in credits.
+        [ INPUT  ]: EWallet Session object, Instruction set
+        [ RETURN ]: ({'extract': -<count>, 'supply': <count>} | False)
+        '''
         log.debug('')
-        account_login  = ewallet_session.ewallet_controller(
+        score = ewallet_session.fetch_system_core_user_account()
+        orm_session = ewallet_session.fetch_active_session()
+        credit_supply = ewallet_session.ewallet_controller(
+                controller='user', ctype='action', action='create', create='transfer',
+                ttype='supply', active_session=orm_session, partner_account=score,
+                **instruction_set
+                )
+        return self.warning_could_not_supply_user_credit_wallet_with_credits(
+                ewallet_session, instruction_set
+                ) if not credit_supply else credit_supply
+
+    def login_ewallet_user_account_in_session(self, ewallet_session, instruction_set):
+        '''
+        [ NOTE   ]: Sets user state to LoggedIn (state code 1), and updates given
+                    EWallet Session with user data.
+        [ INPUT  ]: EWallet Session object, Instruction set
+        [ RETURN ]: (ResUser object | False)
+        '''
+        log.debug('')
+        account_login = ewallet_session.ewallet_controller(
                 controller='user', ctype='action', action='login',
                 **instruction_set
                 )
@@ -515,6 +562,13 @@ class EWalletSessionManager():
                 ) if not account_login else account_login
 
     def assign_new_ewallet_session_to_worker(self, new_session):
+        '''
+        [ NOTE   ]: Adds new EWallet Session to one of the workers session pool.
+                    The worker is simply the neares available worker in pool, and
+                    if none is found, one is created.
+        [ INPUT  ]: EWallet Session object
+        [ RETURN ]: (EWallet Worker object | False)
+        '''
         log.debug('')
         worker = self.fetch_first_available_worker()
         if not worker:
@@ -717,15 +771,13 @@ class EWalletSessionManager():
         instruction_set_validation = self.validate_instruction_set(kwargs)
         if not instruction_set_validation:
             return False
-        session_manager_worker = self.fetch_client_id_mapped_session_worker(kwargs['client_id'])
-        sanitized_instruction_set = res_utils.remove_tags_from_command_chain(
-                kwargs, 'controller', 'ctype', 'action'
+        ewallet = self.fetch_ewallet_session_for_client_action_using_instruction_set(
+                kwargs
                 )
-        ewallet_session = self.fetch_ewallet_session_from_worker(
-                session_manager_worker, sanitized_instruction_set
-                )
+        if not ewallet:
+            return False
         new_account = self.create_ewallet_user_account_in_session(
-                ewallet_session, sanitized_instruction_set
+                ewallet['ewallet_session'], ewallet['sanitized_instruction_set']
                 )
         return new_account
 
@@ -765,17 +817,47 @@ class EWalletSessionManager():
         instruction_set_validation = self.validate_instruction_set(kwargs)
         if not instruction_set_validation:
             return False
-        session_manager_worker = self.fetch_client_id_mapped_session_worker(kwargs['client_id'])
-        sanitized_instruction_set = res_utils.remove_tags_from_command_chain(
-                kwargs, 'controller', 'ctype', 'action'
+        ewallet = self.fetch_ewallet_session_for_client_action_using_instruction_set(
+                kwargs
                 )
-        ewallet_session = self.fetch_ewallet_session_from_worker(
-                session_manager_worker, sanitized_instruction_set
-                )
+        if not ewallet:
+            return False
         user_login = self.login_ewallet_user_account_in_session(
-                ewallet_session, sanitized_instruction_set
+                ewallet['ewallet_session'], ewallet['sanitized_instruction_set']
                 )
         return user_login
+
+    # TODO - FiX ME
+    @pysnooper.snoop()
+    def handle_client_action_supply_credits(self, **kwargs):
+        log.debug('')
+        instruction_set_validation = self.validate_instruction_set(kwargs)
+        if not instruction_set_validation:
+            return False
+        ewallet = self.fetch_ewallet_session_for_client_action_using_instruction_set(
+                kwargs
+                )
+
+        # TODO - Remove 3 down
+        log.info(
+                'ACTIVE SESSION USER : {}'.format(ewallet['ewallet_session'].fetch_active_session_user().fetch_user_name())
+                )
+
+        if not ewallet:
+            return False
+        credit_supply = self.supply_user_credit_ewallet_in_session(
+                ewallet['ewallet_session'], ewallet['sanitized_instruction_set']
+                )
+        return credit_supply
+
+    def handle_client_action_supply(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('supply'):
+            return self.error_no_client_action_supply_target_specified() #
+        _handlers = {
+                'credits': self.handle_client_action_supply_credits, #
+                }
+        return _handlers[kwargs['supply']](**kwargs)
 
     def handle_client_action_new(self, **kwargs):
         '''
@@ -783,6 +865,7 @@ class EWalletSessionManager():
         [ INPUT  ]: new='account'
         [ RETURN ]: Action variable correspondent.
         '''
+        log.debug('')
         if not kwargs.get('new'):
             return self.error_no_client_action_new_target_specified()
         _handlers = {
@@ -935,6 +1018,7 @@ class EWalletSessionManager():
                 'view': self.handle_client_action_view,
                 'request': self.handle_client_action_request,
                 'login': self.handle_client_action_login,
+                'supply': self.handle_client_action_supply,
                 }
         return _handlers[kwargs['action']](**kwargs)
 
@@ -1037,6 +1121,13 @@ class EWalletSessionManager():
 
     # WARNINGS
 
+    def warning_could_not_supply_user_credit_wallet_with_credits(self, ewallet_session, instruction_set):
+        log.warning(
+                'Something went wrong. Could not supply user credit wallet with credits in session {}.'\
+                'Details : {}'.format(ewallet_session, instruction_set)
+                )
+        return False
+
     def warning_could_not_login_user_account(self, ewallet_session, instruction_set):
         log.warning(
             'Something went wrong. Could not login user account in session {}.'\
@@ -1052,6 +1143,10 @@ class EWalletSessionManager():
         return False
 
     # ERRORS
+
+    def error_no_client_action_supply_target_specified(self):
+        log.error('No client action supply target specified.')
+        return False
 
     def error_cound_not_set_client_pool(self, client_id):
         log.error(
@@ -1423,7 +1518,6 @@ class EWalletSessionManager():
         print(str(_create_account) + '\n')
         return _create_account
 
-    # TODO
     def test_user_action_session_login(self, **kwargs):
         log.debug('')
         print('[ * ]: User Action Session Login')
@@ -1435,26 +1529,43 @@ class EWalletSessionManager():
         print(str(_login) + '\n')
         return _login
 
+    def test_user_action_supply_credits(self, **kwargs):
+        log.debug('')
+        print('[ * ]: User Action Supply Credits')
+        _supply = self.session_manager_controller(
+                controller='client', ctype='action', action='supply', supply='credits',
+                client_id=kwargs['client_id'], session_token=kwargs['session_token'],
+                currency=kwargs['currency'], credits=kwargs['credits'], cost=kwargs['cost'],
+                notes=kwargs['notes']
+                )
+        print(str(_supply) + '\n')
+        return _supply
+
     def test_session_manager_controller(self, **kwargs):
         print('[ TEST ] Session Manager')
-#       _open_in_port = self.test_open_instruction_listener_port()
-#       _listen = self.test_instruction_set_listener()
-#       _close_in_port = self.test_close_instruction_listener_port()
-        _client_id = self.test_request_client_id()
-        _worker = self.test_new_worker()
-        _session = self.test_new_session()
-        _session_token = self.test_request_session_token(_client_id)
-        _create_account = self.test_user_action_create_account(
-            client_id=_client_id, session_token=_session_token,
+#       open_in_port = self.test_open_instruction_listener_port()
+#       listen = self.test_instruction_set_listener()
+#       close_in_port = self.test_close_instruction_listener_port()
+        client_id = self.test_request_client_id()
+        worker = self.test_new_worker()
+        session = self.test_new_session()
+        session_token = self.test_request_session_token(client_id)
+        create_account = self.test_user_action_create_account(
+            client_id=client_id, session_token=session_token,
             user_name='test_user', user_pass='1234@!xxA', user_email='testuser@mail.com'
         )
-        _session_login = self.test_user_action_session_login(
-            client_id=_client_id, session_token=_session_token,
+        session_login = self.test_user_action_session_login(
+            client_id=client_id, session_token=session_token,
             user_name='test_user', user_pass='1234@!xxA'
         )
+        supply_credits = self.test_user_action_supply_credits(
+            client_id=client_id, session_token=session_token,
+            currency='RON', credits=15, cost=4.74, notes='Test Credit Wallet Supply Notes...'
+        )
 
-session_manager = EWalletSessionManager()
-session_manager.session_manager_controller(controller='test')
+if __name__ == '__main__':
+    session_manager = EWalletSessionManager()
+    session_manager.session_manager_controller(controller='test')
 
 
 # CODE DUMP
