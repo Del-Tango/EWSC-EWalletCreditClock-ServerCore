@@ -1017,16 +1017,30 @@ class CreditClock(Base):
 
     # CONTROLLERS
 
+    def interogate_credit_clock_time_left(self, **kwargs):
+        log.debug('')
+        return self.fetch_credit_clock_time_left()
+
+    # TODO
+    def interogate_time_sheets(self, **kwargs):
+        log.debug('UNIMPLEMENTED')
+    def interogate_time_sheet_records(self, **kwargs):
+        log.debug('UNIMPLEMENTED')
+    def interogate_conversion_sheets(self, **kwargs):
+        log.debug('UNIMPLEMENTED')
+    def interogate_conversion_sheet_records(self, **kwargs):
+        log.debug('UNIMPLEMENTED')
+
     def interogate_credit_clock(self, **kwargs):
         log.debug('')
         if not kwargs.get('target'):
             return self.error_no_credit_clock_interogation_target_specified()
         _handlers = {
-                'credit_clock': self.display_credit_clock,
-                'time_sheets': self.display_time_sheets,
-                'time_records': self.display_time_sheet_records,
-                'conversion_sheets': self.display_conversion_sheets,
-                'conversion_records': self.display_conversion_sheet_records,
+                'credit_clock': self.interogate_credit_clock_time_left,
+                'time_sheets': self.interogate_time_sheets,
+                'time_records': self.interogate_time_sheet_records,
+                'conversion_sheets': self.interogate_conversion_sheets,
+                'conversion_records': self.interogate_conversion_sheet_records,
                 }
         return _handlers[kwargs.get('target')](**kwargs)
 

@@ -89,6 +89,7 @@ class CreditEWallet(Base):
         self.invoice_sheet_archive = kwargs.get('invoice_sheet_archive') or \
                 [_invoice_sheet]
 
+    # FETCHERS
 
     def fetch_credit_ewallet_id(self):
         log.debug('')
@@ -243,6 +244,8 @@ class CreditEWallet(Base):
                 }
         return _handlers[kwargs['identifier']](code=kwargs.get(code))
 
+    # SETTERS
+
     def set_id(self, **kwargs):
         log.debug('')
         if not kwargs.get('id'):
@@ -320,6 +323,8 @@ class CreditEWallet(Base):
         self.write_date = kwargs['write_date']
         return self.write_date
 
+    # UPDATERS
+
     def update_write_date(self):
         log.debug('')
         return self.set_write_date(write_date=datetime.datetime.now())
@@ -341,6 +346,8 @@ class CreditEWallet(Base):
         self.transfer_sheet_archive.append(transfer_sheet)
         log.info('Successfully updated transfer sheet archive.')
         return self.transfer_sheet_archive
+
+    # HANDLERS
 
     def handle_switch_credit_wallet_transfer_sheet_by_ref(self, code):
         log.debug('')
@@ -386,6 +393,8 @@ class CreditEWallet(Base):
         self.credit_clock = _new_credit_clock
         log.info('Successfully switched credit clock by id.')
         return _new_credit_clock
+
+    # GENERAL
 
     # TODO - Set up Access Controll List check
     def view_credits(self, **kwargs):
@@ -599,22 +608,39 @@ class CreditEWallet(Base):
                 }
         return _handlers[kwargs['transfer_type']](**kwargs)
 
+    # INTEROGATORS
+
+    def interogate_credit_wallet_credits(self, **kwargs):
+        log.debug('')
+        return self.fetch_credit_ewallet_credits()
+
+    # TODO
+    def interogate_credit_wallet_transfer_sheets(self, **kwargs):
+        log.debug('UNIMPLEMENTED')
+    def interogate_credit_wallet_transfer_records(self, **kwargs):
+        log.debug('UNIMPLEMENTED')
+    def interogate_credit_wallet_invoice_sheets(self, **kwargs):
+        log.debug('UNIMPLEMENTED')
+    def interogate_credit_wallet_invoice_records(self, **kwargs):
+        log.debug('UNIMPLEMENTED')
+
     def interogate_credit_wallet(self, **kwargs):
         log.debug('')
         if not kwargs.get('target'):
             return self.error_credit_wallet_interogation_target_not_found()
         _handlers = {
-                'credits': self.display_credit_wallet_credits,
-                'credit_transfer_sheets': self.display_credit_wallet_transfer_sheets,
-                'credit_transfer_records': self.display_credit_wallet_transfer_records,
-                'credit_invoice_sheets': self.display_credit_wallet_invoice_sheets,
-                'credit_invoice_records': self.display_credit_wallet_invoice_records,
+                'credits': self.interogate_credit_wallet_credits,
+                'credit_transfer_sheets': self.interogate_credit_wallet_transfer_sheets,
+                'credit_transfer_records': self.interogate_credit_wallet_transfer_records,
+                'credit_invoice_sheets': self.interogate_credit_wallet_invoice_sheets,
+                'credit_invoice_records': self.interogate_credit_wallet_invoice_records,
                 }
         return _handlers[kwargs['target']](**kwargs)
 
     def interogate_credit_clock(self, **kwargs):
         log.debug('')
-        return self.credit_clock.user_controller(
+        credit_clock = self.fetch_credit_ewallet_credit_clock()
+        return False if not credit_clock else credit_clock.user_controller(
                 action='interogate', target=kwargs.get('target'),
                 )
 
@@ -627,6 +653,8 @@ class CreditEWallet(Base):
                 'credit_clock': self.interogate_credit_clock,
                 }
         return _handlers[kwargs['interogate']](**kwargs)
+
+    # SWITCHES
 
     def switch_credit_wallet_transfer_sheet(self, **kwargs):
         log.debug('')
@@ -653,6 +681,27 @@ class CreditEWallet(Base):
                 'ref': self.handle_switch_credit_wallet_invoice_sheet_by_ref,
                 }
         return _handlers[kwargs['identifier']](kwargs['code'])
+
+    def switch_credit_wallet_sheet(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('sheet'):
+            return self.error_no_credit_wallet_sheet_target_specified()
+        _handlers = {
+                'transfer': self.switch_credit_wallet_transfer_sheet,
+                'invoice': self.switch_credit_wallet_invoice_sheet,
+                }
+        return _handlers[kwargs['sheet']](**kwargs)
+
+    def switch_credit_wallet_clock(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('clock_id'):
+            return self.error_no_credit_clock_id_found()
+        _clock = self.handle_switch_credit_wallet_clock_by_id(kwargs['clock_id'])
+        if not _clock:
+            return self.warning_could_not_fetch_credit_clock()
+        return _clock
+
+    # CREATORS
 
     def create_transfer_sheet(self, **kwargs):
         log.debug('')
@@ -684,24 +733,6 @@ class CreditEWallet(Base):
         log.info('Successfully created invoice sheet.')
         return _invoice_sheet
 
-    def switch_credit_wallet_sheet(self, **kwargs):
-        log.debug('')
-        if not kwargs.get('sheet'):
-            return self.error_no_credit_wallet_sheet_target_specified()
-        _handlers = {
-                'transfer': self.switch_credit_wallet_transfer_sheet,
-                'invoice': self.switch_credit_wallet_invoice_sheet,
-                }
-        return _handlers[kwargs['sheet']](**kwargs)
-
-    def switch_credit_wallet_clock(self, **kwargs):
-        log.debug('')
-        if not kwargs.get('clock_id'):
-            return self.error_no_credit_clock_id_found()
-        _clock = self.handle_switch_credit_wallet_clock_by_id(kwargs['clock_id'])
-        if not _clock:
-            return self.warning_could_not_fetch_credit_clock()
-        return _clock
 
     def create_sheets(self, **kwargs):
         log.debug('')
@@ -728,6 +759,8 @@ class CreditEWallet(Base):
         kwargs['active_session'].commit()
         log.info('Successfully created new credit clock.')
         return _new_credit_clock
+
+    # UNLINKERS
 
     def unlink_transfer_sheet(self, **kwargs):
         log.debug('')
@@ -790,6 +823,8 @@ class CreditEWallet(Base):
             log.info('Successfully removed credit clock.')
         return _unlink
 
+    # CONTROLLERS
+
     def system_controller(self, **kwargs):
         log.debug('')
         if not kwargs.get('action'):
@@ -836,6 +871,8 @@ class CreditEWallet(Base):
                 'test': self.test_controller,
                 }
         return _handlers[kwargs['controller']](**kwargs)
+
+    # ERRORS
 
     def error_handler_buy_credits(self, **kwargs):
         _reasons_and_handlers = {

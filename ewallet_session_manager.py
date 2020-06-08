@@ -33,7 +33,7 @@ class EWalletSessionManager():
 
     # FETCHERS
 
-#   @pysnooper.snoop()
+#   #@pysnooper.snoop()
     def fetch_ewallet_session_for_client_action_using_instruction_set(self, instruction_set):
         log.debug('')
         session_manager_worker = self.fetch_client_id_mapped_session_worker(
@@ -274,14 +274,6 @@ class EWalletSessionManager():
 
     # UPDATERS
 
-#   def update_client_worker_map(self, client_id, assigned_worker):
-#       log.debug('')
-#       try:
-#           self.client_worker_map.update({client_id: assigned_worker})
-#       except:
-#           return self.error_could_not_update_client_worker_map(client_id, assigned_worker)
-#       return True
-
     def update_worker_pool(self, worker_pool):
         '''
         [ NOTE   ]: Overrides Session Manager Worker Pool and checks for type errors.
@@ -461,7 +453,7 @@ class EWalletSessionManager():
         time_stamp = client_id[2]
         return True
 
-#   @pysnooper.snoop()
+#   #@pysnooper.snoop()
     def validate_session_token(self, session_token):
         session_token_segmented = session_token.split(':')
         if len(session_token_segmented) != 3:
@@ -473,7 +465,7 @@ class EWalletSessionManager():
                 }
         return False if False in checks.values() else True
 
-#   @pysnooper.snoop()
+#   #@pysnooper.snoop()
     def validate_client_id(self, client_id):
         log.debug('')
         segmented_client_id = client_id.split(':')
@@ -487,7 +479,7 @@ class EWalletSessionManager():
                 }
         return False if False in checks.values() else True
 
-#   @pysnooper.snoop()
+#   #@pysnooper.snoop()
     def validate_instruction_set(self, instruction_set):
         log.debug('')
         if not instruction_set.get('client_id') or not instruction_set.get('session_token'):
@@ -522,7 +514,7 @@ class EWalletSessionManager():
 
     # GENERAL
 
-#   @pysnooper.snoop()
+#   #@pysnooper.snoop()
     def supply_user_credit_ewallet_in_session(self, ewallet_session, instruction_set):
         '''
         [ NOTE   ]: Sends a User action Supply command chain to given ewallet session
@@ -650,24 +642,58 @@ class EWalletSessionManager():
 
     # ACTIONS
 
-    # TODO - Perform new worker checks
+    def action_convert_credits_to_credit_clock(self, ewallet_session, instruction_set):
+        '''
+        [ NOTE   ]: Executes credits to credit clock conversion and returns
+                    curent active credit ewallet credits and credit clock time left.
+        [ INPUT  ]: EWallet Session object, Instruction set
+        [ RETURN ]: ({'ewallet_credits': <credits>, 'credit_clock': <time>} | False)
+        '''
+        log.debug('')
+        if not instruction_set.get('credits'):
+            return self.error_no_conversion_credit_count_specified(
+                    ewallet_session, instruction_set
+                    )
+        credit_wallet = ewallet_session.fetch_active_session_credit_wallet()
+        orm_session = ewallet_session.fetch_active_session()
+        conversion = credit_wallet.main_controller(
+            controller='system', action='convert', conversion='to_minutes',
+            credit_ewallet=credit_wallet, active_session=orm_session,
+            credits=instruction_set['credits'],
+        )
+        post_conversion_value_set = {
+            'ewallet_credits': credit_wallet.main_controller(
+                controller='user', action='interogate', interogate='credit_wallet',
+                target='credits'
+            ),
+            'credit_clock': credit_wallet.main_controller(
+                controller='user', action='interogate', interogate='credit_clock',
+                target='credit_clock'
+            )
+        }
+        return self.warning_could_not_convert_credits_to_credit_clock(
+            credit_wallet, instruction_set
+        ) if not conversion else post_conversion_value_set
+
+    # TODO
+    def action_convert_credit_clock_to_credits(self, ewallet_session, instruction_set):
+        log.debug('')
+
     def action_new_worker(self):
         log.debug('')
-        _worker = self.spawn_ewallet_session_worker()
-        return _worker
+        worker = self.spawn_ewallet_session_worker()
+        return worker
 
-    # TODO
     def action_new_session(self):
         log.debug('')
-        _session = self.spawn_ewallet_session()
-        return _session
+        session = self.spawn_ewallet_session()
+        return session
 
-    # TODO
     def action_request_client_id(self):
         log.debug('')
-        _client_id = self.generate_client_id()
-        _set_to_pool = self.set_new_client_id_to_pool(_client_id)
-        return _client_id
+        client_id = self.generate_client_id()
+        set_to_pool = self.set_new_client_id_to_pool(client_id)
+        return client_id
 
     def action_request_session_token(self, **kwargs):
         '''
@@ -713,7 +739,7 @@ class EWalletSessionManager():
 
     # HANDLERS
 
-#   @pysnooper.snoop()
+#   #@pysnooper.snoop()
     def handle_system_action_new_session(self, **kwargs):
         log.debug('')
         new_session = self.create_new_ewallet_session()
@@ -772,13 +798,13 @@ class EWalletSessionManager():
         if not instruction_set_validation:
             return False
         ewallet = self.fetch_ewallet_session_for_client_action_using_instruction_set(
-                kwargs
-                )
+            kwargs
+        )
         if not ewallet:
             return False
         new_account = self.create_ewallet_user_account_in_session(
-                ewallet['ewallet_session'], ewallet['sanitized_instruction_set']
-                )
+            ewallet['ewallet_session'], ewallet['sanitized_instruction_set']
+        )
         return new_account
 
     def handle_system_action_new_worker(self, **kwargs):
@@ -804,13 +830,35 @@ class EWalletSessionManager():
     def handle_system_event_session_token_expire(self, **kwargs):
         _expire = self.event_session_token_expire()
 
-    # TODO
-    def handle_client_action_scrape(self, **kwargs):
-        pass
-    def handle_client_action_search(self, **kwargs):
-        pass
-    def handle_client_action_view(self, **kwargs):
-        pass
+    def handle_client_action_convert_credits_to_clock(self, **kwargs):
+        log.debug('')
+        instruction_set_validation = self.validate_instruction_set(kwargs)
+        if not instruction_set_validation:
+            return False
+        ewallet = self.fetch_ewallet_session_for_client_action_using_instruction_set(
+            kwargs
+        )
+        if not ewallet:
+            return False
+        conversion = self.action_convert_credits_to_credit_clock(
+            ewallet['ewallet_session'], ewallet['sanitized_instruction_set'],
+        )
+        return conversion
+
+    def handle_client_action_convert_clock_to_credits(self, **kwargs):
+        log.debug('')
+        instruction_set_validation = self.validate_instruction_set(kwargs)
+        if not instruction_set_validation:
+            return False
+        ewallet = self.fetch_ewallet_session_for_client_action_using_instruction_set(
+            kwargs
+        )
+        if not ewallet:
+            return False
+        conversion = self.action_convert_credit_clock_to_credits(
+            ewallet['ewallet_session'], ewallet['sanitized_instruction_set']
+        )
+        return conversion
 
     def handle_client_action_login(self, **kwargs):
         log.debug('')
@@ -827,8 +875,7 @@ class EWalletSessionManager():
                 )
         return user_login
 
-    # TODO - FiX ME
-    @pysnooper.snoop()
+#   #@pysnooper.snoop()
     def handle_client_action_supply_credits(self, **kwargs):
         log.debug('')
         instruction_set_validation = self.validate_instruction_set(kwargs)
@@ -837,18 +884,22 @@ class EWalletSessionManager():
         ewallet = self.fetch_ewallet_session_for_client_action_using_instruction_set(
                 kwargs
                 )
-
-        # TODO - Remove 3 down
-        log.info(
-                'ACTIVE SESSION USER : {}'.format(ewallet['ewallet_session'].fetch_active_session_user().fetch_user_name())
-                )
-
         if not ewallet:
             return False
         credit_supply = self.supply_user_credit_ewallet_in_session(
                 ewallet['ewallet_session'], ewallet['sanitized_instruction_set']
                 )
         return credit_supply
+
+    def handle_client_action_convert(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('convert'):
+            return self.error_no_client_action_convert_target_specified()
+        _handlers = {
+            'credits2clock': self.handle_client_action_convert_credits_to_clock,
+            'clock2credits': self.handle_client_action_convert_clock_to_credits,
+        }
+        return _handlers[kwargs['convert']](**kwargs)
 
     def handle_client_action_supply(self, **kwargs):
         log.debug('')
@@ -1005,7 +1056,10 @@ class EWalletSessionManager():
         '''
         [ NOTE   ]: Client action controller for the EWallet Session Manager, accessible
                     to regular user api calls.
-        [ INPUT  ]: action=('new' | 'scrape' | 'search' | 'view' | 'request')+
+        [ INPUT  ]: action=(
+                    'new' | 'scrape' | 'search' | 'view' | 'request' | 'login' |
+                    'supply' | 'convert'
+                    )+
         [ RETURN ]: Action variable correspondent.
         '''
         log.debug('')
@@ -1013,12 +1067,13 @@ class EWalletSessionManager():
             return self.error_no_client_session_manager_action_specified()
         _handlers = {
                 'new': self.handle_client_action_new,
-                'scrape': self.handle_client_action_scrape,
-                'search': self.handle_client_action_search,
-                'view': self.handle_client_action_view,
+#               'scrape': self.handle_client_action_scrape,
+#               'search': self.handle_client_action_search,
+#               'view': self.handle_client_action_view,
                 'request': self.handle_client_action_request,
                 'login': self.handle_client_action_login,
                 'supply': self.handle_client_action_supply,
+                'convert': self.handle_client_action_convert, #
                 }
         return _handlers[kwargs['action']](**kwargs)
 
@@ -1121,6 +1176,13 @@ class EWalletSessionManager():
 
     # WARNINGS
 
+    def warning_could_not_convert_credits_to_credit_clock(self, credit_wallet, instruction_set):
+        log.warning(
+                'Something went wrong. Could not convert credit wallet {} credits to credit clock. '\
+                'Details : {}'.format(credit_wallet, instruction_set)
+                )
+        return False
+
     def warning_could_not_supply_user_credit_wallet_with_credits(self, ewallet_session, instruction_set):
         log.warning(
                 'Something went wrong. Could not supply user credit wallet with credits in session {}.'\
@@ -1143,6 +1205,17 @@ class EWalletSessionManager():
         return False
 
     # ERRORS
+
+    def error_no_conversion_credit_count_specified(self, ewallet_session, instruction_set):
+        log.error(
+                'No conversion credit count specified for ewallet session {}. '\
+                'Details : {}'.format(ewallet_session, instruction_set)
+                )
+        return False
+
+    def error_no_client_action_convert_target_specified(self):
+        log.error('No client action convert target specified.')
+        return False
 
     def error_no_client_action_supply_target_specified(self):
         log.error('No client action supply target specified.')
@@ -1541,6 +1614,17 @@ class EWalletSessionManager():
         print(str(_supply) + '\n')
         return _supply
 
+    def test_user_action_convert_credits_to_clock(self, **kwargs):
+        log.debug('')
+        print('[ * ]: User Action Convert Credits To Clock')
+        _convert = self.session_manager_controller(
+                controller='client', ctype='action', action='convert', convert='credits2clock',
+                client_id=kwargs['client_id'], session_token=kwargs['session_token'],
+                credits=kwargs['credits'], notes=kwargs['notes']
+                )
+        print(str(_convert) + '\n')
+        return _convert
+
     def test_session_manager_controller(self, **kwargs):
         print('[ TEST ] Session Manager')
 #       open_in_port = self.test_open_instruction_listener_port()
@@ -1560,7 +1644,12 @@ class EWalletSessionManager():
         )
         supply_credits = self.test_user_action_supply_credits(
             client_id=client_id, session_token=session_token,
-            currency='RON', credits=15, cost=4.74, notes='Test Credit Wallet Supply Notes...'
+            currency='RON', credits=15, cost=4.74,
+            notes='Test Credit Wallet Supply Notes...'
+        )
+        convert_credits_2_clock = self.test_user_action_convert_credits_to_clock(
+            client_id=client_id, session_token=session_token, credits=5,
+            notes='Test Credits To Clock Conversion Notes...'
         )
 
 if __name__ == '__main__':

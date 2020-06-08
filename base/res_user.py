@@ -55,7 +55,7 @@ class ResUser(Base):
     # O2M
     user_contact_list_archive = relationship('ContactList')
 
-#   @pysnooper.snoop('logs/ewallet.log')
+#   #@pysnooper.snoop('logs/ewallet.log')
     def __init__(self, **kwargs):
         self.user_create_date = datetime.datetime.now()
         self.user_write_date = datetime.datetime.now()
@@ -268,7 +268,7 @@ class ResUser(Base):
         self.set_user_write_date()
         return True
 
-#   @pysnooper.snoop('logs/ewallet.log')
+#   #@pysnooper.snoop('logs/ewallet.log')
     def set_user_state_code(self, **kwargs):
         log.debug('')
         if kwargs.get('state_code') not in [0, 1]:
@@ -285,7 +285,7 @@ class ResUser(Base):
         self.set_user_write_date()
         return True
 
-    @pysnooper.snoop('logs/ewallet.log')
+#   #@pysnooper.snoop('logs/ewallet.log')
     def set_user_state(self, **kwargs):
         log.debug('')
         if not kwargs.get('set_by'):
@@ -426,7 +426,7 @@ class ResUser(Base):
         log.info('Successfully updated user credit wallet archive.')
         return self.user_credit_wallet_archive
 
-    @pysnooper.snoop('logs/ewallet.log')
+#   #@pysnooper.snoop('logs/ewallet.log')
     def update_user_contact_list_archive(self, contact_list):
         log.debug('')
         self.user_contact_list_archive.append(contact_list)
@@ -441,7 +441,7 @@ class ResUser(Base):
             return self.error_no_state_name_found()
         return self.fetch_user_state_code_map()['name'].get(kwargs['name'])
 
-#   @pysnooper.snoop('logs/ewallet.log')
+#   #@pysnooper.snoop('logs/ewallet.log')
     def convert_user_state_code_to_name(self, **kwargs):
         log.debug('')
         if kwargs.get('state_code') not in [0, 1]:
@@ -507,7 +507,7 @@ class ResUser(Base):
         command_chain['active_session'].add(share_transfer_record, share_invoice_record)
         return {'transfer': share_transfer_record, 'invoice': share_invoice_record}
 
-#   @pysnooper.snoop()
+#   #@pysnooper.snoop()
     def partner_credit_wallet_transaction(self, local_partner, remote_partner, command_chain):
         log.debug('')
         extract_credits_from_local = local_partner.action_extract_credits_from_wallet(**command_chain)
@@ -522,7 +522,7 @@ class ResUser(Base):
     # ACTIONS
 
     # TODO - Refactor - User main system controller
-#   @pysnooper.snoop('logs/ewallet.log')
+#   #@pysnooper.snoop('logs/ewallet.log')
     def action_create_credit_wallet(self, **kwargs):
         log.debug('')
         if not kwargs.get('active_session'):
@@ -637,7 +637,7 @@ class ResUser(Base):
             log.info('Successfully removed user contact list by id.')
         return _unlink
 
-    @pysnooper.snoop()
+    #@pysnooper.snoop()
     def action_extract_credits_from_wallet(self, **kwargs):
         log.debug('')
         credit_wallet = kwargs.get('credit_wallet') or \
@@ -656,7 +656,7 @@ class ResUser(Base):
                         credit_wallet=credit_wallet, **kwargs
                         )
 
-    @pysnooper.snoop()
+    #@pysnooper.snoop()
     def action_supply_credits_to_wallet(self, **kwargs):
         log.debug('')
         credit_wallet = kwargs.get('credit_wallet') or \
@@ -745,7 +745,7 @@ class ResUser(Base):
                 }
         return _handlers[kwargs['target']](**kwargs)
 
-#   @pysnooper.snoop()
+#   #@pysnooper.snoop()
     def handle_user_event_request_credits(self, **kwargs):
         '''
         [ NOTE   ]: User event Request Credit handler. Creates transaction

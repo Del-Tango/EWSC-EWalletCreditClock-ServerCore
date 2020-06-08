@@ -81,14 +81,14 @@ class EWalletWorker():
             return self.error_could_not_set_worker_create_date()
         return True
 
-    '''
-    [ NOTE   ]: State codes are used by the session manager to decide what worker
-    to place a new session in, what workers are idle, and what workers need to
-    be scraped.
-    [ INPUT  ]: (0 | 1 | 2), code_map=[0, 1, 2]
-    [ RETURN ]: (True | False)
-    '''
     def set_session_worker_state_code(self, state_code, **kwargs):
+        '''
+        [ NOTE   ]: State codes are used by the session manager to decide what worker
+                    to place a new session in, what workers are idle, and what workers need to
+                    be scraped.
+        [ INPUT  ]: (0 | 1 | 2), code_map=[0, 1, 2]
+        [ RETURN ]: (True | False)
+        '''
         log.debug('')
         if state_code not in kwargs.get('code_map') or \
                 self.fetch_session_worker_state_code_label_map().keys():
@@ -96,12 +96,12 @@ class EWalletWorker():
         self.session_worker_state_code = state_code
         return True
 
-    '''
-    [ NOTE   ]: State labels offer a human readable view of a workers activity.
-    [ INPUT  ]: ('vacant' | 'in_use' | 'full'), label_map=['vacant', 'in_use', 'full']
-    [ RETURN ]: (True | False)
-    '''
     def set_session_worker_state_label(self, state_label, **kwargs):
+        '''
+        [ NOTE   ]: State labels offer a human readable view of a workers activity.
+        [ INPUT  ]: ('vacant' | 'in_use' | 'full'), label_map=['vacant', 'in_use', 'full']
+        [ RETURN ]: (True | False)
+        '''
         log.debug('')
         if state_label not in kwargs.get('label_map') or \
                 self.fetch_session_worker_state_code_label_map().values():
@@ -109,13 +109,13 @@ class EWalletWorker():
         self.session_worker_state_label = state_label
         return True
 
-    '''
-    [ NOTE   ]: The state timestamp marks the moment of the last worker state
-    change, used mainly to check worker idle time.
-    [ INPUT  ]: Timestamp in the form of a datetime object.
-    [ RETURN ]: (True | False)
-    '''
     def set_session_worker_state_timestamp(self, timestamp):
+        '''
+        [ NOTE   ]: The state timestamp marks the moment of the last worker state
+                    change, used mainly to check worker idle time.
+        [ INPUT  ]: Timestamp in the form of a datetime object.
+        [ RETURN ]: (True | False)
+        '''
         log.debug('')
         self.session_worker_state_timestamp = timestamp
         return True
@@ -132,16 +132,16 @@ class EWalletWorker():
 
     # UPDATERS
 
-    '''
-    [ NOTE   ]: Update worker state using state code.
-    [ INPUT  ]: (0 | 1 | 2)
-    [ RETURN ]: {
-        'state_code': (True | False),
-        'state_label': (True | False),
-        'state_timestamp': (True | False)
-        }
-    '''
     def update_session_worker_state(self, state_code):
+        '''
+        [ NOTE   ]: Update worker state using state code.
+        [ INPUT  ]: (0 | 1 | 2)
+        [ RETURN ]: {
+            'state_code': (True | False),
+            'state_label': (True | False),
+            'state_timestamp': (True | False)
+            }
+        '''
         log.debug('')
         _mapper = self.fetch_session-worker_state_code_label_map()
         _state_label = _mapper.get(state_code)
@@ -161,12 +161,12 @@ class EWalletWorker():
 
     # CLEANERS
 
-    '''
-    [ NOTE   ]: Remove EWallet Session record from database.
-    [ INPUT  ]: Ewallet session object.
-    [ RETURN ]: (True | False)
-    '''
     def cleanup_session(self, ewallet_session):
+        '''
+        [ NOTE   ]: Remove EWallet Session record from database.
+        [ INPUT  ]: Ewallet session object.
+        [ RETURN ]: (True | False)
+        '''
         if not ewallet_session:
             return self.error_no_ewallet_session_found()
         _working_session = ewallet_session.fetch_active_session()
@@ -311,7 +311,7 @@ class EWalletWorker():
     def error_could_not_add_new_session_to_pool(self, ewallet_sesion):
         log.error(
                 'Something went wrong. Could not set new EWallet Session {} to worker session pool.'\
-                    .format(ewallet_session)
+                .format(ewallet_session)
                 )
         return False
 

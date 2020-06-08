@@ -19,10 +19,10 @@ log_config = Config().log_config
 log = logging.getLogger(log_config['log_name'])
 
 
-'''
-[ NOTE ]: EWallet user login handler and journal record.
-'''
 class EWalletLogin(Base):
+    '''
+    [ NOTE ]: EWallet user login handler and journal record.
+    '''
     __tablename__ = 'ewallet_login'
 
     login_id = Column(Integer, primary_key=True)
@@ -34,12 +34,12 @@ class EWalletLogin(Base):
         self.user_id = kwargs.get('user_id') or None
         self.login_status = kwargs.get('login_status') or False
 
-    '''
-    [ NOTE   ]: Fetches all user records from database.
-    [ INPUT  ]: active_session=<session>
-    [ RETURN ]: (ResUser set | False)
-    '''
     def fetch_all_user_records(self, active_session=None):
+        '''
+        [ NOTE   ]: Fetches all user records from database.
+        [ INPUT  ]: active_session=<session>
+        [ RETURN ]: (ResUser set | False)
+        '''
         log.debug('')
         if not active_session:
             return self.error_no_active_session_found()
@@ -48,12 +48,12 @@ class EWalletLogin(Base):
             log.info('No user records found.')
         return _user_records
 
-    '''
-    [ NOTE   ]: Fetches the names for all existing user accounts.
-    [ INPUT  ]: active_session=<session>
-    [ RETURN ]: (User name set | False)
-    '''
     def fetch_all_user_names(self, active_session=None):
+        '''
+        [ NOTE   ]: Fetches the names for all existing user accounts.
+        [ INPUT  ]: active_session=<session>
+        [ RETURN ]: (User name set | False)
+        '''
         log.debug('')
         if not active_session:
             return self.error_no_active_session_found()
@@ -64,12 +64,12 @@ class EWalletLogin(Base):
             ]
         return _user_names
 
-    '''
-    [ NOTE   ]: Fetches specified user account object by user name.
-    [ INPUT  ]: user_name=<name>, active_session=<session>
-    [ RETURN ]: (ResUser object | False)
-    '''
     def fetch_user_by_name(self, user_name=None, active_session=None):
+        '''
+        [ NOTE   ]: Fetches specified user account object by user name.
+        [ INPUT  ]: user_name=<name>, active_session=<session>
+        [ RETURN ]: (ResUser object | False)
+        '''
         if not active_session:
             return self.error_no_active_session_found()
         _user = active_session.query(ResUser) \
@@ -77,36 +77,36 @@ class EWalletLogin(Base):
 #               .one()
         return _user or self.error_no_user_record_found_by_name(user_name)
 
-    '''
-    [ NOTE   ]: Sets user account record id to EWallet Login Record.
-    [ INPUT  ]: <user_id>
-    [ RETURN ]: (True | False)
-    '''
     def set_user_id(self, user_id):
+        '''
+        [ NOTE   ]: Sets user account record id to EWallet Login Record.
+        [ INPUT  ]: <user_id>
+        [ RETURN ]: (True | False)
+        '''
         log.debug('')
         if not user_id:
             return self.error_no_user_id_found()
         self.user_id = user_id
         return True
 
-    '''
-    [ NOTE   ]: Sets user account login status to EWallet Login Record in the form of a boolean flag.
-    [ INPUT  ]: (True | False)
-    [ RETURN ]: (True | False)
-    '''
     def set_login_status(self, login_status):
+        '''
+        [ NOTE   ]: Sets user account login status to EWallet Login Record in the form of a boolean flag.
+        [ INPUT  ]: (True | False)
+        [ RETURN ]: (True | False)
+        '''
         log.debug('')
         if not isinstance(login_status, bool):
             return self.error_invalid_login_status()
         self.login_status = login_status
         return True
 
-    '''
-    [ NOTE   ]: Sets user login record data to EWallet Login Record.
-    [ INPUT  ]: user_id=<id>, login_status=<status>
-    [ RETURN ]: {'user_id': (True | False), 'login_status': (True | False)}
-    '''
     def set_login_record_data(self, **kwargs):
+        '''
+        [ NOTE   ]: Sets user login record data to EWallet Login Record.
+        [ INPUT  ]: user_id=<id>, login_status=<status>
+        [ RETURN ]: {'user_id': (True | False), 'login_status': (True | False)}
+        '''
         log.debug('')
         _values = {
                 'user_id': self.set_user_id(kwargs.get('user_id')),
@@ -114,48 +114,48 @@ class EWalletLogin(Base):
                 }
         return _values
 
-    '''
-    [ NOTE   ]: Uses the sha256 algorithm to hash password string.
-    [ INPUT  ]: <password>
-    [ RETURN ]: Password Hash
-    '''
     def hash_password(self, password):
+        '''
+        [ NOTE   ]: Uses the sha256 algorithm to hash password string.
+        [ INPUT  ]: <password>
+        [ RETURN ]: Password Hash
+        '''
         log.debug('')
         return str(hashlib.sha256(password.encode()).hexdigest())
 
-    '''
-    [ NOTE   ]: Checks if a user name exists in database associated with a ResUser record.
-    [ INPUT  ]: <user_name>, <active_session>
-    [ RETURN ]: (ResUser object | False)
-    '''
 #   @pysnooper.snoop()
     def check_user_name_exists(self, user_name, active_session):
+        '''
+        [ NOTE   ]: Checks if a user name exists in database associated with a ResUser record.
+        [ INPUT  ]: <user_name>, <active_session>
+        [ RETURN ]: (ResUser object | False)
+        '''
         log.debug('')
         _user = self.fetch_user_by_name(
                 user_name, active_session=active_session
                 )
         return _user or False
 
-    '''
-    [ NOTE   ]: Checks if user password and known sha256 hash match.
-    [ INPUT  ]: <user_pass>, <know_hash>
-    [ RETURN ]: (True | False)
-    '''
 #   @pysnooper.snoop()
     def check_user_pass_hash(self, user_pass, known_hash):
+        '''
+        [ NOTE   ]: Checks if user password and known sha256 hash match.
+        [ INPUT  ]: <user_pass>, <know_hash>
+        [ RETURN ]: (True | False)
+        '''
         log.debug('')
         _pass_hash = self.hash_password(user_pass)
         if str(_pass_hash) == str(known_hash):
             return True
         return False
 
-    '''
-    [ NOTE   ]: Tries to authenticate user using given credentials so the EWallet session can be updated.
-    [ INPUT  ]: user_name=<name>, user_pass=<pass>, active_session=<session>
-    [ RETURN ]: (ResUser object | False)
-    '''
 #   @pysnooper.snoop()
     def authenticate_user(self, **kwargs):
+        '''
+        [ NOTE   ]: Tries to authenticate user using given credentials so the EWallet session can be updated.
+        [ INPUT  ]: user_name=<name>, user_pass=<pass>, active_session=<session>
+        [ RETURN ]: (ResUser object | False)
+        '''
         log.debug('')
         _user_query = self.check_user_name_exists(
                 kwargs['user_name'], kwargs.get('active_session')
@@ -175,12 +175,12 @@ class EWalletLogin(Base):
             return self.warning_user_password_incorrect()
         return _user
 
-    '''
-    [ NOTE   ]: User action 'login', accessible from external api call.
-    [ INPUT  ]: user_name=<name>, user_pass=<pass>, active_session=<session>
-    [ RETURN ]: (ResUser object | False)
-    '''
     def action_login(self, **kwargs):
+        '''
+        [ NOTE   ]: User action 'login', accessible from external api call.
+        [ INPUT  ]: user_name=<name>, user_pass=<pass>, active_session=<session>
+        [ RETURN ]: (ResUser object | False)
+        '''
         log.debug('')
         if not kwargs.get('user_name') or not kwargs.get('user_pass'):
             return self.error_handler_action_login(
@@ -202,12 +202,13 @@ class EWalletLogin(Base):
                 )
         return _authenticated_user
 
-    '''
-    [ NOTE   ]: User action 'create new account', accessible from external api call.
-    [ INPUT  ]: user_name=<name>, user_pas=<pass>, user_email=<email>, user_phone=<phone>, user_alias=<alias>, active_session=<session>
-    [ RETURN ]: (ResUser object | False)
-    '''
     def action_create_new_account(self, **kwargs):
+        '''
+        [ NOTE   ]: User action 'create new account', accessible from external api call.
+        [ INPUT  ]: user_name=<name>, user_pas=<pass>, user_email=<email>,
+                    user_phone=<phone>, user_alias=<alias>, active_session=<session>
+        [ RETURN ]: (ResUser object | False)
+        '''
         log.debug('')
         _ewallet_new_user = EWalletCreateUser()
         _new_user = _ewallet_new_user.action_create_new_user(**kwargs)
@@ -215,12 +216,12 @@ class EWalletLogin(Base):
             return self.warning_could_not_create_new_user_account()
         return _new_user
 
-    '''
-    [ NOTE   ]: Jump table controller for EWallet login handler object.
-    [ INPUT  ]: action=('login' | 'new_account')
-    [ RETURN ]: Action variable correspondent.
-    '''
     def ewallet_login_controller(self, **kwargs):
+        '''
+        [ NOTE   ]: Jump table controller for EWallet login handler object.
+        [ INPUT  ]: action=('login' | 'new_account')
+        [ RETURN ]: Action variable correspondent.
+        '''
         log.debug('')
         if not kwargs.get('action'):
             return self.error_no_login_controller_action_specified()
@@ -305,17 +306,17 @@ class EWalletLogin(Base):
         return False
 
 
-'''
-[ NOTE ]: EWallet user account creator.
-'''
 class EWalletCreateUser(EWalletLogin):
+    '''
+    [ NOTE ]: EWallet user account creator.
+    '''
 
-    '''
-    [ NOTE   ]: Fetches all ResUser objects recorded in database.
-    [ INPUT  ]: active_session=<session>
-    [ RETURN ]: (ResUser object set | False)
-    '''
     def fetch_all_user_records(self, active_session=None):
+        '''
+        [ NOTE   ]: Fetches all ResUser objects recorded in database.
+        [ INPUT  ]: active_session=<session>
+        [ RETURN ]: (ResUser object set | False)
+        '''
         log.debug('')
         if not active_session:
             return self.error_no_active_session_found()
@@ -324,12 +325,12 @@ class EWalletCreateUser(EWalletLogin):
             log.info('No user records found.')
         return _user_records
 
-    '''
-    [ NOTE   ]: Fetches all user names recorded in database.
-    [ INPUT  ]: active_session=<session>
-    [ RETURN ]: (User name set | False)
-    '''
     def fetch_all_user_names(self, active_session=None):
+        '''
+        [ NOTE   ]: Fetches all user names recorded in database.
+        [ INPUT  ]: active_session=<session>
+        [ RETURN ]: (User name set | False)
+        '''
         log.debug('')
         if not active_session:
             return self.error_no_active_session_found()
@@ -340,13 +341,13 @@ class EWalletCreateUser(EWalletLogin):
             ]
         return _user_names
 
-    '''
-    [ NOTE   ]: Checks if given user name already exists in database records associated with a user account.
-    [ INPUT  ]: <user_name>, <user_name_set>
-    [ RETURN ]: (True | False)
-    '''
 #   @pysnooper.snoop()
     def check_user_name_ensure_one(self, user_name, user_names):
+        '''
+        [ NOTE   ]: Checks if given user name already exists in database records associated with a user account.
+        [ INPUT  ]: <user_name>, <user_name_set>
+        [ RETURN ]: (True | False)
+        '''
         log.debug('')
         if not user_names:
             return True
@@ -357,23 +358,23 @@ class EWalletCreateUser(EWalletLogin):
             return True
         return False
 
-    '''
-    [ NOTE   ]: Password check for corresponding EWallet password length standards.
-    [ INPUT  ]: <user_pass>
-    [ RETURN ]: (True | False)
-    '''
     def check_user_pass_length(self, user_pass):
+        '''
+        [ NOTE   ]: Password check for corresponding EWallet password length standards.
+        [ INPUT  ]: <user_pass>
+        [ RETURN ]: (True | False)
+        '''
         log.debug('')
         if len(user_pass) < 8:
             return self.warning_invalid_user_password_length()
         return True
 
-    '''
-    [ NOTE   ]: Password check for corresponding EWallet letter standards.
-    [ INPUT  ]: <user_pass>
-    [ RETURN ]: (True | False)
-    '''
     def check_user_pass_letters(self, user_pass):
+        '''
+        [ NOTE   ]: Password check for corresponding EWallet letter standards.
+        [ INPUT  ]: <user_pass>
+        [ RETURN ]: (True | False)
+        '''
         log.debug('')
         lower_case = 'abcdefghijklmnopqrstuvwxyz'
         upper_case = lower_case.upper()
@@ -382,12 +383,12 @@ class EWalletCreateUser(EWalletLogin):
                 return True
         return False
 
-    '''
-    [ NOTE   ]: Password check for corresponding EWallet number standards.
-    [ INPUT  ]: <user_pass>
-    [ RETURN ]: (True | False)
-    '''
     def check_user_pass_numbers(self, user_pass):
+        '''
+        [ NOTE   ]: Password check for corresponding EWallet number standards.
+        [ INPUT  ]: <user_pass>
+        [ RETURN ]: (True | False)
+        '''
         log.debug('')
         numbers = '1234567890'
         for item in list(user_pass):
@@ -395,12 +396,12 @@ class EWalletCreateUser(EWalletLogin):
                 return True
         return False
 
-    '''
-    [ NOTE   ]: Password check for corresponding EWallet symbol standards.
-    [ INPUT  ]: <user_pass>
-    [ RETURN ]: (True | False)
-    '''
     def check_user_pass_symbols(self, user_pass):
+        '''
+        [ NOTE   ]: Password check for corresponding EWallet symbol standards.
+        [ INPUT  ]: <user_pass>
+        [ RETURN ]: (True | False)
+        '''
         log.debug('')
         symbols = '!@#$%^&*()_+[]{};.<>/?\\|-='
         for item in list(user_pass):
@@ -408,12 +409,12 @@ class EWalletCreateUser(EWalletLogin):
                 return True
         return False
 
-    '''
-    [ NOTE   ]: Checks if password structure corresponds with EWallet standards.
-    [ INPUT  ]: <user_pass>
-    [ RETURN ]: (True | False)
-    '''
     def check_user_pass_characters(self, user_pass):
+        '''
+        [ NOTE   ]: Checks if password structure corresponds with EWallet standards.
+        [ INPUT  ]: <user_pass>
+        [ RETURN ]: (True | False)
+        '''
         log.debug('')
         _checks = {
                 'letters': self.check_user_pass_letters(user_pass),
@@ -424,12 +425,13 @@ class EWalletCreateUser(EWalletLogin):
             return self.warning_invalid_user_password_characters()
         return True
 
-    '''
-    [ NOTE   ]: System action 'check user password' verifying both length and structure, not accessible from external api call.
-    [ INPUT  ]: <user_pass>
-    [ RETURN ]: (True | False)
-    '''
     def check_user_pass(self, user_pass):
+        '''
+        [ NOTE   ]: System action 'check user password' verifying both length
+                    and structure, not accessible from external api call.
+        [ INPUT  ]: <user_pass>
+        [ RETURN ]: (True | False)
+        '''
         log.debug('')
         _checks = {
                 'length': self.check_user_pass_length(user_pass),
@@ -455,12 +457,12 @@ class EWalletCreateUser(EWalletLogin):
         log.debug('')
         return validate_email(user_email, verify=True)
 
-    '''
-    [ NOTE   ]: System action 'check user email' using jump table for security level jump table.
-    [ INPUT  ]: <user_email>, severity=(1 | 2 | 3)
-    [ RETURN ]: (True | False)
-    '''
     def check_user_email(self, user_email, severity=None):
+        '''
+        [ NOTE   ]: System action 'check user email' using jump table for security level jump table.
+        [ INPUT  ]: <user_email>, severity=(1 | 2 | 3)
+        [ RETURN ]: (True | False)
+        '''
         log.debug('')
         _severity_handlers = {
                 1: self.check_user_email_is_valid,
@@ -473,12 +475,17 @@ class EWalletCreateUser(EWalletLogin):
             return self.error_invalid_user_email_check_severity()
         return _severity_handlers[severity](user_email)
 
-    '''
-    [ NOTE   ]: Checks new users' name, password and email.
-    [ INPUT  ]: user_name=<name>, user_pass=<pass>, user_email=<email>, active_session=<session>
-    [ RETURN ]: {'user_name': (True | False), 'user_pass': (True | False), 'user_email': (True | False)}
-    '''
     def perform_new_user_checks(self, **kwargs):
+        '''
+        [ NOTE   ]: Checks new users' name, password and email.
+        [ INPUT  ]: user_name=<name>, user_pass=<pass>, user_email=<email>,
+                    active_session=<session>
+        [ RETURN ]: {
+            'user_name': (True | False),
+            'user_pass': (True | False),
+            'user_email': (True | False)
+        }
+        '''
         log.debug('')
         _user_names = self.fetch_all_user_names(
                 active_session=kwargs.get('active_session')
@@ -496,13 +503,14 @@ class EWalletCreateUser(EWalletLogin):
                 }
         return _checks
 
-    '''
-    [ NOTE   ]: Creates new user account and password hash record.
-    [ INPUT  ]: active_session=<session, user_name=<name>, user_email=<email>, user_phone=<phone>, user_alias=<alias>
-    [ RETURN ]: (ResUser object | False)
-    '''
 #   @pysnooper.snoop('logs/ewallet.log')
     def create_res_user(self, **kwargs):
+        '''
+        [ NOTE   ]: Creates new user account and password hash record.
+        [ INPUT  ]: active_session=<session, user_name=<name>, user_email=<email>,
+                    user_phone=<phone>, user_alias=<alias>
+        [ RETURN ]: (ResUser object | False)
+        '''
         log.debug('')
         if not kwargs.get('active_session'):
             log.error('No session found.')
@@ -525,12 +533,13 @@ class EWalletCreateUser(EWalletLogin):
         kwargs['active_session'].commit()
         return _new_user
 
-    '''
-    [ NOTE   ]: User action 'create new user', accessible from external api call.
-    [ INPUT  ]: active_session=<session, user_name=<name>, user_email=<email>, user_phone=<phone>, user_alias=<alias>
-    [ RETURN ]: (ResUser object | False)
-    '''
     def action_create_new_user(self, **kwargs):
+        '''
+        [ NOTE   ]: User action 'create new user', accessible from external api call.
+        [ INPUT  ]: active_session=<session, user_name=<name>, user_email=<email>,
+                    user_phone=<phone>, user_alias=<alias>
+        [ RETURN ]: (ResUser object | False)
+        '''
         log.debug('')
         if not kwargs.get('user_name') or not kwargs.get('user_pass'):
             return self.error_handler_action_create_new_user(
