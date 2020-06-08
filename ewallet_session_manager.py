@@ -643,7 +643,31 @@ class EWalletSessionManager():
     # ACTIONS
 
 #   @pysnooper.snoop()
+    def action_resume_credit_clock_timer(self, ewallet_session, instruction_set):
+        '''
+        [ NOTE   ]: Resumes active credit clock consumption timer if clock is in
+                    appropriate state.
+        [ INPUT  ]: EWallet Session object, Instruction set
+        [ RETURN ]: (Legacy elapsed time since user action start | False)
+        '''
+        log.debug('')
+        orm_session = ewallet_session.fetch_active_session()
+        resume_timer = ewallet_session.ewallet_controller(
+            controller='user', ctype='action', action='time', timer='resume',
+            active_session=orm_session, **instruction_set
+        )
+        return self.warning_could_not_resume_credit_clock_timer(
+            ewallet_session, instruction_set
+        ) if not resume_timer else resume_timer
+
+#   @pysnooper.snoop()
     def action_pause_credit_clock_timer(self, ewallet_session, instruction_set):
+        '''
+        [ NOTE   ]: Pauses active credit clock consumption timer if clock is in
+                    appropriate state.
+        [ INPUT  ]: EWallet Session object, Instruction set
+        [ RETURN ]: (Clock session pause count | False)
+        '''
         log.debug('')
         orm_session = ewallet_session.fetch_active_session()
         pause_timer = ewallet_session.ewallet_controller(
@@ -657,7 +681,8 @@ class EWalletSessionManager():
 #   @pysnooper.snoop()
     def action_start_credit_clock_timer(self, ewallet_session, instruction_set):
         '''
-        [ NOTE   ]: Starts active credit clock consumption timer.
+        [ NOTE   ]: Starts active credit clock consumption timer if clock is in
+                    appropriate state.
         [ INPUT  ]: EWallet Session object, Instruction set
         [ RETURN ]: (Legacy timestamp | False)
         '''
@@ -768,6 +793,21 @@ class EWalletSessionManager():
 
     # HANDLERS
 
+    def handle_client_action_resume(self, **kwargs):
+        log.debug('')
+        instruction_set_validation = self.validate_instruction_set(kwargs)
+        if not instruction_set_validation:
+            return False
+        ewallet = self.fetch_ewallet_session_for_client_action_using_instruction_set(
+            kwargs
+        )
+        if not ewallet:
+            return False
+        resume_timer = self.action_resume_credit_clock_timer(
+            ewallet['ewallet_session'], ewallet['sanitized_instruction_set'],
+        )
+        return resume_timer
+
     def handle_client_action_pause(self, **kwargs):
         log.debug('')
         instruction_set_validation = self.validate_instruction_set(kwargs)
@@ -784,8 +824,6 @@ class EWalletSessionManager():
         return pause_timer
 
     # TODO
-    def handle_client_action_resume(self, **kwargs):
-        log.debug('')
     def handle_client_action_stop(self, **kwargs):
         log.debug('')
 
@@ -959,7 +997,7 @@ class EWalletSessionManager():
     def handle_client_action_start(self, **kwargs):
         log.debug('')
         if not kwargs.get('start'):
-            return self.error_no_client_action_start_target_specified() #
+            return self.error_no_client_action_start_target_specified()
         _handlers = {
                 'clock_timer': self.handle_client_action_start_clock_timer,
                 }
@@ -978,9 +1016,9 @@ class EWalletSessionManager():
     def handle_client_action_supply(self, **kwargs):
         log.debug('')
         if not kwargs.get('supply'):
-            return self.error_no_client_action_supply_target_specified() #
+            return self.error_no_client_action_supply_target_specified()
         _handlers = {
-                'credits': self.handle_client_action_supply_credits, #
+                'credits': self.handle_client_action_supply_credits,
                 }
         return _handlers[kwargs['supply']](**kwargs)
 
@@ -1045,7 +1083,7 @@ class EWalletSessionManager():
         '''
         log.debug('')
         if not kwargs.get('start'):
-            return self.error_no_system_action_start_target_specified() #
+            return self.error_no_system_action_start_target_specified()
         _handlers = {
                 'instruction_listener': self.handle_system_action_start_instruction_listener,
                 }
@@ -1149,8 +1187,8 @@ class EWalletSessionManager():
                 'supply': self.handle_client_action_supply,
                 'convert': self.handle_client_action_convert,
                 'start': self.handle_client_action_start,
-                'pause': self.handle_client_action_pause, #
-                'resume': self.handle_client_action_resume, #
+                'pause': self.handle_client_action_pause,
+                'resume': self.handle_client_action_resume,
                 'stop': self.handle_client_action_stop, #
                 }
         return _handlers[kwargs['action']](**kwargs)
@@ -1159,7 +1197,10 @@ class EWalletSessionManager():
         '''
         [ NOTE   ]: System action controller for the EWallet Session Manager, not accessible
                     to regular user api calls.
-        [ INPUT  ]: action=('new' | 'scrape' | 'search' | 'view' | 'request' | 'open' | 'close')+
+        [ INPUT  ]: action=('new' | 'scrape' | 'search' | 'view' | 'request' |
+        [ NOTE   ]: Pauses active credit clock consumption timer.
+        [ INPUT  ]: EWallet Session object, Instruction set
+                    'open' | 'close')+
         [ RETURN ]: Action variable correspondent.
         '''
         log.debug('')
@@ -1253,6 +1294,13 @@ class EWalletSessionManager():
         return _handlers[kwargs['controller']](**kwargs)
 
     # WARNINGS
+
+    def warning_could_not_resume_credit_clock_timer(self, ewallet_session, instruction_set):
+        log.warning(
+                'Something went wrong. Could not resume credit clock timer in session {}. '\
+                'Details : {}'.format(ewallet_session, instruction_set)
+                )
+        return False
 
     def warning_could_not_pause_credit_clock_timer(self, ewallet_session, instruction_set):
         log.warning(
@@ -1741,6 +1789,16 @@ class EWalletSessionManager():
         print(str(_pause) + '\n')
         return _pause
 
+    def test_user_action_resume_clock_timer(self, **kwargs):
+        log.debug('')
+        print('[ * ]: User Action Resume Clock Timer')
+        _resume = self.session_manager_controller(
+            controller='client', ctype='action', action='resume', resume='clock_timer',
+            client_id=kwargs['client_id'], session_token=kwargs['session_token']
+        )
+        print(str(_resume) + '\n')
+        return _resume
+
     def test_session_manager_controller(self, **kwargs):
         print('[ TEST ] Session Manager')
 #       open_in_port = self.test_open_instruction_listener_port()
@@ -1773,6 +1831,10 @@ class EWalletSessionManager():
         pause_clock_timer = self.test_user_action_pause_clock_timer(
             client_id=client_id, session_token=session_token
         )
+        resume_clock_timer = self.test_user_action_resume_clock_timer(
+            client_id=client_id, session_token=session_token
+        )
+
 
 if __name__ == '__main__':
     session_manager = EWalletSessionManager()
