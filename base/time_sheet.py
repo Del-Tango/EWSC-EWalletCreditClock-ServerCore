@@ -209,7 +209,7 @@ class TimeSheetRecord(Base):
 
     # UPDATES
 
-    @pysnooper.snoop('logs/ewallet.log')
+#   @pysnooper.snoop('logs/ewallet.log')
     def update_record_values(self, values, **kwargs):
         log.debug('')
         _set = {
@@ -679,13 +679,5 @@ class CreditClockTimeSheet(Base):
 ###############################################################################
 # CODE DUMP
 ###############################################################################
-
-#       _set = setattr(self, 'time_stop', kwargs['time_stop'])
-
-#       _set = update(TimeSheetRecord).\
-#               where(TimeSheetRecord.record_id==self.record_id).\
-#               values(time_stop=kwargs['time_stop'])
-#       kwargs['active_session'].add(_set)
-#       kwargs['active_session'].commit()
 
 

@@ -590,8 +590,8 @@ class EWallet(Base):
         '''
         log.debug('')
         kwargs.update({'session_active_user': self.fetch_active_session_user()})
-        _update = self.update_session_from_user(**kwargs)
-        return _update or False
+        update = self.update_session_from_user(**kwargs)
+        return update or False
 
 #   @pysnooper.snoop('logs/ewallet.log')
     def action_start_credit_clock_timer(self, **kwargs):
@@ -601,33 +601,28 @@ class EWallet(Base):
         [ RETURN ]: (Legacy start time | False)
         '''
         log.debug('')
-        _credit_clock = kwargs.get('credit_clock') or \
+        credit_clock = kwargs.get('credit_clock') or \
                 self.fetch_active_session_credit_clock()
-        if not _credit_clock:
+        if not credit_clock:
             return self.warning_could_not_fetch_credit_clock()
-        _active_session = kwargs.get('active_session') or self.session
-        if not _active_session:
+        active_session = kwargs.get('active_session') or self.session
+        if not active_session:
             return self.error_no_active_session_found()
-        _active_session.add(_credit_clock)
-        # TODO - Command Chain Pop Util
-        for item in ['controller', 'action', 'active_session']:
-            try:
-                kwargs.pop(item)
-            except KeyError:
-                log.error(
-                        'Could not pop tag {} from command chain.'.format(item)
-                        )
-        _active_user = self.fetch_active_session_user()
-        _user_id = _active_user.fetch_user_id()
-        _start = _credit_clock.main_controller(
-                controller='user', action='start',
-                active_session=_active_session, uid=_user_id, **kwargs
-                )
-        if not _start:
-            _active_session.rollback()
+        active_session.add(credit_clock)
+        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
+            kwargs, 'controller', 'action', 'active_session'
+        )
+        active_user = self.fetch_active_session_user()
+        user_id = active_user.fetch_user_id()
+        start = credit_clock.main_controller(
+            controller='user', action='start',
+            active_session=active_session, uid=user_id, **sanitized_command_chain
+        )
+        if not start:
+            active_session.rollback()
             return self.error_could_not_start_credit_clock_timer()
-        _active_session.commit()
-        return _start
+        active_session.commit()
+        return start
 
     def action_pause_credit_clock_timer(self, **kwargs):
         '''
@@ -636,34 +631,30 @@ class EWallet(Base):
         [ RETURN ]: (Pause count | False)
         '''
         log.debug('')
-        _credit_clock = kwargs.get('credit_clock') or \
+        credit_clock = kwargs.get('credit_clock') or \
                 self.fetch_active_session_credit_clock()
-        if not _credit_clock:
+        if not credit_clock:
             return self.warning_could_not_fetch_credit_clock()
-        _active_session = kwargs.get('active_session') or self.session
-        if not _active_session:
+        active_session = kwargs.get('active_session') or self.session
+        if not active_session:
             return self.error_no_active_session_found()
-        _active_session.add(_credit_clock)
-        # TODO - Command Chain Pop Util
-        for item in ['controller', 'action', 'active_session']:
-            try:
-                kwargs.pop(item)
-            except KeyError:
-                log.error(
-                        'Could not pop tag {} from command chain.'.format(item)
-                        )
-        _active_user = self.fetch_active_session_user()
-        _user_id = _active_user.fetch_user_id()
-        _pause = _credit_clock.main_controller(
-                controller='user', action='pause',
-                active_session=_active_session, uid=_user_id, **kwargs
-                )
-        if not _pause:
-            _active_session.rollback()
+        active_session.add(credit_clock)
+        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
+            kwargs, 'controller', 'action', 'active_session'
+        )
+        active_user = self.fetch_active_session_user()
+        user_id = active_user.fetch_user_id()
+        pause = credit_clock.main_controller(
+            controller='user', action='pause',
+            active_session=active_session, uid=user_id, **sanitized_command_chain
+        )
+        if not pause:
+            active_session.rollback()
             return self.error_could_not_pause_credit_clock_timer()
-        _active_session.commit()
-        return _pause
+        active_session.commit()
+        return pause
 
+#   @pysnooper.snoop()
     def action_resume_credit_clock_timer(self, **kwargs):
         '''
         [ NOTE   ]: User action 'resume credit clock timer', accessible from external api call.
@@ -671,33 +662,29 @@ class EWallet(Base):
         [ RETURN ]: (Elapsed clock time | False)
         '''
         log.debug('')
-        _credit_clock = kwargs.get('credit_clock') or \
+        credit_clock = kwargs.get('credit_clock') or \
                 self.fetch_active_session_credit_clock()
-        if not _credit_clock:
+        if not credit_clock:
             return self.warning_could_not_fetch_credit_clock()
-        _active_session = kwargs.get('active_session') or self.session
-        if not _active_session:
+        active_session = kwargs.get('active_session') or self.session
+        if not active_session:
             return self.error_no_active_session_found()
-        _active_session.add(_credit_clock)
-        # TODO - Command Chain Pop Util
-        for item in ['controller', 'action', 'active_session']:
-            try:
-                kwargs.pop(item)
-            except KeyError:
-                log.error(
-                        'Could not pop tag {} from command chain.'.format(item)
-                        )
-        _active_user = self.fetch_active_session_user()
-        _user_id = _active_user.fetch_user_id()
-        _resume = _credit_clock.main_controller(
-                controller='user', action='resume',
-                active_session=_active_session, uid=_user_id, **kwargs
-                )
-        if not isinstance(_resume, float):
-            _active_session.rollback()
+        active_session.add(credit_clock)
+        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
+            kwargs, 'controller', 'action', 'active_session'
+        )
+        active_user = self.fetch_active_session_user()
+        user_id = active_user.fetch_user_id()
+        resume = credit_clock.main_controller(
+            controller='user', action='resume',
+            active_session=active_session, uid=user_id,
+            **sanitized_command_chain
+        )
+        if not isinstance(resume, float):
+            active_session.rollback()
             return self.error_could_not_resume_credit_clock_timer()
-        _active_session.commit()
-        return _resume
+        active_session.commit()
+        return resume
 
     def action_stop_credit_clock_timer(self, **kwargs):
         '''
@@ -706,33 +693,28 @@ class EWallet(Base):
         [ RETURN ]: (Credit clock elapsed time | False)
         '''
         log.debug('')
-        _credit_clock = kwargs.get('credit_clock') or \
+        credit_clock = kwargs.get('credit_clock') or \
                 self.fetch_active_session_credit_clock()
-        if not _credit_clock:
+        if not credit_clock:
             return self.warning_could_not_fetch_credit_clock()
-        _active_session = kwargs.get('active_session') or self.session
-        if not _active_session:
+        active_session = kwargs.get('active_session') or self.session
+        if not active_session:
             return self.error_no_active_session_found()
-        _active_session.add(_credit_clock)
-        # TODO - Command Chain Pop Util
-        for item in ['controller', 'action', 'active_session']:
-            try:
-                kwargs.pop(item)
-            except KeyError:
-                log.error(
-                        'Could not pop tag {} from command chain.'.format(item)
-                        )
-        _active_user = self.fetch_active_session_user()
-        _user_id = _active_user.fetch_user_id()
-        _stop = _credit_clock.main_controller(
-                controller='user', action='stop',
-                active_session=_active_session, uid=_user_id, **kwargs
-                )
-        if not _stop:
-            _active_session.rollback()
+        active_session.add(credit_clock)
+        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
+            kwargs, 'controller', 'action', 'active_session'
+        )
+        active_user = self.fetch_active_session_user()
+        user_id = active_user.fetch_user_id()
+        stop = credit_clock.main_controller(
+            controller='user', action='stop', active_session=active_session,
+            uid=user_id, **sanitized_command_chain
+        )
+        if not stop:
+            active_session.rollback()
             return self.error_could_not_stop_credit_clock_timer()
-        _active_session.commit()
-        return _stop
+        active_session.commit()
+        return stop
 
     def action_view_transfer_list(self, **kwargs):
         '''

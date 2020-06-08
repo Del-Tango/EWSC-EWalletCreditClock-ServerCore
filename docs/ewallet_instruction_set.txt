@@ -18,27 +18,32 @@
         )
 
 * User action Request Client ID
+    * Returns Client ID string.
     session_manager_controller(
         controller='client', ctype='action', action='request', request='client_id'
         )
 
 * System action New Worker
+    * Returns EWalletWorker object.
     session_manager_controller(
         controller='system', ctype='action', action='new', new='worker'
         )
 
 * System action New Session
+    * Returns EWallet object.
     session_manager_controller(
         controller='system', ctype='action', action='new', new='session'
         )
 
 * User action Request Session Token
+    * Returns EWallet Session Token.
     session_manager_controller(
         controller='client', ctype='action', action='request', request='session_token',
         client_id=client_id
         )
 
 * User action Create Account
+    * Returns ResUser object.
     session_manager_controller(
         controller='client', ctype='action', action='new',
         new='account', client_id=<client-id>, session_token=<session-token>,
@@ -46,12 +51,14 @@
         )
 
 * User action Session Login
+    * Returns ResUser object.
     session_manager_controller(
         controller='client', ctype='action', action='login',
         client_id=<client-id>, session_token=<token>, user_name=<name>, user_pass=<pass>
         )
 
 * User action Supply Credits
+    * Returns {'total_credits': <count>, 'supplied_credits': <count>}
     session_manager_controller(
         controller='client', ctype='action', action='supply', supply='credits'
         client_id=<id>, session_token=<token>, currency=<currency>, credits=<credits>,
@@ -59,22 +66,40 @@
         )
 
 * User action Convert Credits To Time
+    * Returns {'ewallet_credits': <count>, 'credit_clock': <time>}
     session_manager_controller(
         controller='client', ctype='action', action='convert', convert='credits2clock',
         client_id=<id>, session_token=<token>, credits=<credits>, notes=<notes>
         )
 
 * User action Start Clock Timer
+    * Returns legacy timestamp for action start timer.
     session_manager_controller(
         controller='client', ctype='action', action='start', start='clock_timer',
         client_id=<id>, session_token=<token>
         )
 
 * User action Pause Clock Timer
+    * Return suspend count for current clock consumption session.
     session_manager_controller(
         controller='client', ctype='action', action='pause', pause='clock_timer',
-        client_id=<id>, session_token=<token<
+        client_id=<id>, session_token=<token>
         )
+
+* User action Resume Clock Timer
+    * Returns total amount of time spent active but suspended in minutes.
+    session_manager_controller(
+        controller='client', ctype='action', action='resume', pause='clock_timer',
+        client_id=<id>, session_token=<token>
+        )
+
+* User action Stop Clock Timer:
+    * Returns total amount of active time in minutes.
+    session_manager_controller(
+        controller='client', ctype='action', action='stop', pause='clock_timer',
+        client_id=<id>, session_token=<token>
+        )
+
 
 ################################################################################
 # EWallet Session (Command Chain)

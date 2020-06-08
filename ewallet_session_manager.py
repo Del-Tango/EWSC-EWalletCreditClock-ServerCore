@@ -642,6 +642,17 @@ class EWalletSessionManager():
 
     # ACTIONS
 
+    def action_stop_credit_clock_timer(self, ewallet_session, instruction_set):
+        log.debug('')
+        orm_session = ewallet_session.fetch_active_session()
+        stop_timer = ewallet_session.ewallet_controller(
+            controller='user', ctype='action', action='time', timer='stop',
+            active_session=orm_session, **instruction_set
+        )
+        return self.warning_could_not_stop_credit_clock_timer(
+            ewallet_session, instruction_set
+            ) if not stop_timer else stop_timer
+
 #   @pysnooper.snoop()
     def action_resume_credit_clock_timer(self, ewallet_session, instruction_set):
         '''
@@ -658,7 +669,7 @@ class EWalletSessionManager():
         )
         return self.warning_could_not_resume_credit_clock_timer(
             ewallet_session, instruction_set
-        ) if not resume_timer else resume_timer
+        ) if not isinstance(resume_timer, float) else resume_timer
 
 #   @pysnooper.snoop()
     def action_pause_credit_clock_timer(self, ewallet_session, instruction_set):
@@ -676,7 +687,7 @@ class EWalletSessionManager():
         )
         return self.warning_could_not_pause_credit_clock_timer(
             ewallet_session, instruction_set
-        ) if not pause_timer else pause_timer
+        ) if not isinstance(pause_timer, int) else pause_timer
 
 #   @pysnooper.snoop()
     def action_start_credit_clock_timer(self, ewallet_session, instruction_set):
@@ -823,9 +834,20 @@ class EWalletSessionManager():
         )
         return pause_timer
 
-    # TODO
     def handle_client_action_stop(self, **kwargs):
         log.debug('')
+        instruction_set_validation = self.validate_instruction_set(kwargs)
+        if not instruction_set_validation:
+            return False
+        ewallet = self.fetch_ewallet_session_for_client_action_using_instruction_set(
+            kwargs
+        )
+        if not ewallet:
+            return False
+        stop_timer = self.action_stop_credit_clock_timer(
+            ewallet['ewallet_session'], ewallet['sanitized_instruction_set'],
+        )
+        return stop_timer
 
     def handle_client_action_convert_credits_to_clock(self, **kwargs):
         log.debug('')
@@ -1294,6 +1316,13 @@ class EWalletSessionManager():
         return _handlers[kwargs['controller']](**kwargs)
 
     # WARNINGS
+
+    def warning_could_not_stop_credit_clock_timer(self, ewallet_session, instruction_set):
+        log.warning(
+                'Something went wrong. Could not stop credit clock timer in session {}. '\
+                'Details : {}'.format(ewallet_session, instruction_set)
+                )
+        return False
 
     def warning_could_not_resume_credit_clock_timer(self, ewallet_session, instruction_set):
         log.warning(
@@ -1799,6 +1828,16 @@ class EWalletSessionManager():
         print(str(_resume) + '\n')
         return _resume
 
+    def test_user_action_stop_clock_timer(self, **kwargs):
+        log.debug('')
+        print('[ * ]: User Action Stop Clock Timer')
+        _stop = self.session_manager_controller(
+            controller='client', ctype='action', action='stop', stop='clock_timer',
+            client_id=kwargs['client_id'], session_token=kwargs['session_token']
+        )
+        print(str(_stop) + '\n')
+        return _stop
+
     def test_session_manager_controller(self, **kwargs):
         print('[ TEST ] Session Manager')
 #       open_in_port = self.test_open_instruction_listener_port()
@@ -1828,12 +1867,19 @@ class EWalletSessionManager():
         start_clock_timer = self.test_user_action_start_clock_timer(
             client_id=client_id, session_token=session_token
         )
+        time.sleep(3)
         pause_clock_timer = self.test_user_action_pause_clock_timer(
             client_id=client_id, session_token=session_token
         )
+        time.sleep(3)
         resume_clock_timer = self.test_user_action_resume_clock_timer(
             client_id=client_id, session_token=session_token
         )
+        time.sleep(3)
+        stop_clock_timer = self.test_user_action_stop_clock_timer(
+            client_id=client_id, session_token=session_token
+        )
+        time.sleep(3)
 
 
 if __name__ == '__main__':
