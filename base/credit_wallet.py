@@ -500,113 +500,106 @@ class CreditEWallet(Base):
         log.debug('')
         if not kwargs.get('credits') or not kwargs.get('used_on'):
             return self.error_handler_use_credits(
-                    credits=kwargs.get('credits'),
-                    used_on=kwargs.get('used_on'),
-                    )
+                credits=kwargs.get('credits'),
+                used_on=kwargs.get('used_on'),
+            )
         log.info('Attempting to extract credits from wallet...')
-        _extract = self.system_controller(
-                action='extract', credits=kwargs['credits'],
-                )
-        log.info('Creating transfer record...')
-        _transfer_record = self.transfer_sheet.credit_transfer_sheet_controller(
-                action='add', reference=kwargs.get('reference'),
-                credits=kwargs['credits'],
-                transfer_type=kwargs.get('transfer_type'),
-                transfer_from=kwargs.get('transfer_from'),
-                transfer_to=kwargs['used_on'],
-                )
-        return _extract
+        return self.system_controller(
+            action='extract', credits=kwargs['credits'],
+        )
 
     def share_transfer_record(self, **kwargs):
         log.debug('')
         if not kwargs.get('transfer_record') or not kwargs.get('partner_ewallet'):
             return self.error_handler_share_transfer_record(
-                    transfer_record=kwargs.get('transfer_record'),
-                    partner_ewallet=kwargs.get('partner_ewallet'),
-                    )
+                transfer_record=kwargs.get('transfer_record'),
+                partner_ewallet=kwargs.get('partner_ewallet'),
+            )
         log.info('Attempting to share transfer record...')
-        _partner_transfer_sheet = kwargs['partner_ewallet'].fetch_credit_ewallet_transfer_sheet()
-        _share = _partner_transfer_sheet.credit_transfer_sheet_controller(
-                action='append', records=[kwargs['transfer_record']]
-                )
-        return _share
+        partner_transfer_sheet = kwargs['partner_ewallet'].fetch_credit_ewallet_transfer_sheet()
+        share = partner_transfer_sheet.credit_transfer_sheet_controller(
+            action='append', records=[kwargs['transfer_record']]
+        )
+        return share
 
+    # TODO - Refactor - User transaction handler from ResUser
 #   @pysnooper.snoop()
     def transfer_credits_incomming(self, **kwargs):
         log.debug('')
         if not kwargs.get('credits') or not kwargs.get('partner_ewallet'):
             return self.error_handler_transfer_credits(
-                    credits=kwargs.get('credits'),
-                    partner_ewallet=kwargs.get('partner_ewallet'),
-                    )
+                credits=kwargs.get('credits'),
+                partner_ewallet=kwargs.get('partner_ewallet'),
+            )
         log.info('Extracting credits from partner ewallet...')
-        _source_extract = kwargs['partner_ewallet'].system_controller(
-                action='extract', credits=kwargs['credits']
-                )
+        source_extract = kwargs['partner_ewallet'].system_controller(
+            action='extract', credits=kwargs['credits']
+        )
         log.info('Supplying wallet with credits...')
-        _destination_supply = self.system_controller(
-                action='supply', credits=kwargs['credits']
-                )
+        destination_supply = self.system_controller(
+            action='supply', credits=kwargs['credits']
+        )
         log.info('Creating transfer record...')
-        _transfer_sheet = self.fetch_credit_ewallet_transfer_sheet()
-        _transfer_record = _transfer_sheet.credit_transfer_sheet_controller(
-                action='add', reference=kwargs.get('reference'),
-                transfer_type=kwargs.get('transfer_type'),
-                transfer_from=kwargs.get('transfer_from'),
-                transfer_to=self.client_id, credits=kwargs['credits']
-                )
-        kwargs['active_session'].add(_transfer_record)
+        transfer_sheet = self.fetch_credit_ewallet_transfer_sheet()
+        transfer_record = transfer_sheet.credit_transfer_sheet_controller(
+            action='add', reference=kwargs.get('reference'),
+            transfer_type=kwargs.get('transfer_type'),
+            transfer_from=kwargs.get('transfer_from'),
+            transfer_to=self.client_id, credits=kwargs['credits']
+        )
+        kwargs['active_session'].add(transfer_record)
         log.info('Attempting transfer record share with partner...')
         self.share_transfer_record(
-                partner_ewallet=kwargs['partner_ewallet'],
-                transfer_records=[_transfer_record],
-                )
+            partner_ewallet=kwargs['partner_ewallet'],
+            transfer_records=[transfer_record],
+        )
         kwargs['active_session'].commit()
-        return _destination_supply
+        return destination_supply
 
+    # TODO - Refactor, use transaction handler from ResUser
 #   @pysnooper.snoop()
     def transfer_credits_outgoing(self, **kwargs):
         log.debug('')
         if not kwargs.get('active_session') or not kwargs.get('credits') or \
                 not kwargs.get('partner_ewallet'):
             return self.error_handler_transfer_credits(
-                    credits=kwargs.get('credits'),
-                    partner_ewallet=kwargs.get('partner_ewallet'),
-                    active_session=kwargs.get('active_session'),
-                    )
+                credits=kwargs.get('credits'),
+                partner_ewallet=kwargs.get('partner_ewallet'),
+                active_session=kwargs.get('active_session'),
+            )
         log.info('Extracting credits from wallet...')
-        _source_extract = self.system_controller(
-                action='extract', credits=kwargs['credits']
-                )
+        source_extract = self.system_controller(
+            action='extract', credits=kwargs['credits']
+        )
         log.info('Supplying partner wallet with credits...')
-        _destination_supply = kwargs['partner_ewallet'].system_controller(
-                action='supply', credits=kwargs['credits']
-                )
+        destination_supply = kwargs['partner_ewallet'].system_controller(
+            action='supply', credits=kwargs['credits']
+        )
         log.info('Creating transfer record...')
-        _transfer_sheet = self.fetch_credit_ewallet_transfer_sheet()
-        _transfer_record = _transfer_sheet.credit_transfer_sheet_controller(
-                action='add', reference=kwargs.get('reference'),
-                transfer_type=kwargs.get('transfer_type'), transfer_from=self.client_id,
-                transfer_to=kwargs.get('transfer_to'), credits=kwargs['credits']
-                )
-        kwargs['active_session'].add(_transfer_record)
+        transfer_sheet = self.fetch_credit_ewallet_transfer_sheet()
+        transfer_record = transfer_sheet.credit_transfer_sheet_controller(
+            action='add', reference=kwargs.get('reference'),
+            transfer_type=kwargs.get('transfer_type'), transfer_from=self.client_id,
+            transfer_to=kwargs.get('transfer_to'), credits=kwargs['credits']
+        )
+        kwargs['active_session'].add(transfer_record)
         log.info('Attempting transfer record share with partner...')
         self.share_transfer_record(
-                partner_ewallet=kwargs['partner_ewallet'],
-                transfer_record=_transfer_record,
-                )
+            partner_ewallet=kwargs['partner_ewallet'],
+            transfer_record=transfer_record,
+        )
         kwargs['active_session'].commit()
-        return _source_extract
+        return source_extract
 
     def transfer_credits(self, **kwargs):
         log.debug('')
         if not kwargs.get('transfer_type'):
             return self.error_no_transfer_type_found()
-        _handlers = {
-                'incomming': self.transfer_credits_incomming,
-                'outgoing': self.transfer_credits_outgoing,
-                }
-        return _handlers[kwargs['transfer_type']](**kwargs)
+        handlers = {
+            'incomming': self.transfer_credits_incomming,
+            'outgoing': self.transfer_credits_outgoing,
+        }
+        return handlers[kwargs['transfer_type']](**kwargs)
 
     # INTEROGATORS
 

@@ -208,15 +208,15 @@ class CreditTransferSheet(Base):
     # [ NOTE ]: Transfer Type : (incomming | outgoing | expence)
     def fetch_transfer_record_creation_values(self, **kwargs):
         log.debug('')
-        _values = {
-                'reference': kwargs.get('reference'),
-                'transfer_sheet_id': self.fetch_transfer_sheet_id(),
-                'transfer_type': kwargs.get('transfer_type'),
-                'transfer_from': kwargs.get('transfer_from'),
-                'transfer_to': kwargs.get('transfer_to'),
-                'credits': kwargs.get('credits'),
-                }
-        return _values
+        values = {
+            'reference': kwargs.get('reference'),
+            'transfer_sheet': self,
+            'transfer_type': kwargs.get('transfer_type'),
+            'transfer_from': kwargs.get('transfer_from'),
+            'transfer_to': kwargs.get('transfer_to'),
+            'credits': kwargs.get('credits'),
+        }
+        return values
 
     def fetch_transfer_sheet_record_by_id(self, **kwargs):
         log.debug('')
@@ -373,14 +373,14 @@ class CreditTransferSheet(Base):
         log.debug('')
         if not kwargs.get('transfer_type') or not kwargs.get('credits'):
             return self.error_handler_add_transfer_sheet_record(
-                    transfer_type=kwargs.get('transfer_type'),
-                    credits=kwargs.get('credits'),
-                    )
-        _values = self.fetch_transfer_record_creation_values(**kwargs)
-        _record = self.create_transfer_sheet_record(values=_values)
-        _update = self.update_records(_record)
+                transfer_type=kwargs.get('transfer_type'),
+                credits=kwargs.get('credits'),
+            )
+        values = self.fetch_transfer_record_creation_values(**kwargs)
+        record = self.create_transfer_sheet_record(values=values)
+        update = self.update_records(record)
         log.info('Successfully added new transfer record.')
-        return _record
+        return record
 
     # TODO - Apply ORM
     def remove_transfer_sheet_record(self, **kwargs):

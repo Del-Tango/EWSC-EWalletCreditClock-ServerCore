@@ -642,6 +642,18 @@ class EWalletSessionManager():
 
     # ACTIONS
 
+    # TODO
+    def action_pay_partner_account(self, ewallet_session, instruction_set):
+        log.debug('')
+        orm_session = ewallet_session.fetch_active_session()
+        pay_partner = ewallet_session.ewallet_controller(
+            controller='user', ctype='action', action='create', create='transfer',
+            ttype='pay', **instruction_set
+        )
+        return self.warning_could_not_pay_partner_account(
+            ewallet_session, instruction_set
+            ) if not pay_partner else pay_partner
+
     def action_stop_credit_clock_timer(self, ewallet_session, instruction_set):
         log.debug('')
         orm_session = ewallet_session.fetch_active_session()
@@ -803,6 +815,22 @@ class EWalletSessionManager():
         pass
 
     # HANDLERS
+
+    # TODO
+    def handle_client_action_pay(self, **kwargs):
+        log.debug('')
+        instruction_set_validation = self.validate_instruction_set(kwargs)
+        if not instruction_set_validation:
+            return False
+        ewallet = self.fetch_ewallet_session_for_client_action_using_instruction_set(
+            kwargs
+        )
+        if not ewallet:
+            return False
+        pay_partner = self.action_pay_partner_account(
+            ewallet['ewallet_session'], ewallet['sanitized_instruction_set'],
+        )
+        return pay_partner
 
     def handle_client_action_resume(self, **kwargs):
         log.debug('')
@@ -1192,7 +1220,7 @@ class EWalletSessionManager():
                     to regular user api calls.
         [ INPUT  ]: action=(
                     'new' | 'scrape' | 'search' | 'view' | 'request' | 'login' |
-                    'supply' | 'convert'
+                    'supply' | 'convert | start | pause | resume | stop | pay'
                     )+
         [ RETURN ]: Action variable correspondent.
         '''
@@ -1211,7 +1239,8 @@ class EWalletSessionManager():
                 'start': self.handle_client_action_start,
                 'pause': self.handle_client_action_pause,
                 'resume': self.handle_client_action_resume,
-                'stop': self.handle_client_action_stop, #
+                'stop': self.handle_client_action_stop,
+                'pay': self.handle_client_action_pay,
                 }
         return _handlers[kwargs['action']](**kwargs)
 
@@ -1316,6 +1345,13 @@ class EWalletSessionManager():
         return _handlers[kwargs['controller']](**kwargs)
 
     # WARNINGS
+
+    def warning_could_not_pay_partner_account(self, ewallet_session, instruction_set):
+        log.warning(
+            'Something went wrong. Could not pay partner account in session {}. Details : {}'\
+            .format(ewallet_session, instruction_set)
+        )
+        return False
 
     def warning_could_not_stop_credit_clock_timer(self, ewallet_session, instruction_set):
         log.warning(
@@ -1838,11 +1874,23 @@ class EWalletSessionManager():
         print(str(_stop) + '\n')
         return _stop
 
+    def test_user_action_pay_credits_to_partner(self, **kwargs):
+        log.debug('')
+        print('[ * ]: User Action Pay Credits To Partner')
+        _pay = self.session_manager_controller(
+            controller='client', ctype='action', action='pay', pay=kwargs['pay'],
+            credits=kwargs['credits'], client_id=kwargs['client_id'],
+            session_token=kwargs['session_token']
+        )
+        print(str(_pay) + '\n')
+        return _pay
+
     def test_session_manager_controller(self, **kwargs):
         print('[ TEST ] Session Manager')
 #       open_in_port = self.test_open_instruction_listener_port()
 #       listen = self.test_instruction_set_listener()
 #       close_in_port = self.test_close_instruction_listener_port()
+
         client_id = self.test_request_client_id()
         worker = self.test_new_worker()
         session = self.test_new_session()
@@ -1855,32 +1903,35 @@ class EWalletSessionManager():
             client_id=client_id, session_token=session_token,
             user_name='test_user', user_pass='1234@!xxA'
         )
-        supply_credits = self.test_user_action_supply_credits(
-            client_id=client_id, session_token=session_token,
-            currency='RON', credits=15, cost=4.74,
-            notes='Test Credit Wallet Supply Notes...'
+#       supply_credits = self.test_user_action_supply_credits(
+#           client_id=client_id, session_token=session_token,
+#           currency='RON', credits=15, cost=4.74,
+#           notes='Test Credit Wallet Supply Notes...'
+#       )
+#       convert_credits_2_clock = self.test_user_action_convert_credits_to_clock(
+#           client_id=client_id, session_token=session_token, credits=5,
+#           notes='Test Credits To Clock Conversion Notes...'
+#       )
+#       start_clock_timer = self.test_user_action_start_clock_timer(
+#           client_id=client_id, session_token=session_token
+#       )
+#       time.sleep(3)
+#       pause_clock_timer = self.test_user_action_pause_clock_timer(
+#           client_id=client_id, session_token=session_token
+#       )
+#       time.sleep(3)
+#       resume_clock_timer = self.test_user_action_resume_clock_timer(
+#           client_id=client_id, session_token=session_token
+#       )
+#       time.sleep(3)
+#       stop_clock_timer = self.test_user_action_stop_clock_timer(
+#           client_id=client_id, session_token=session_token
+#       )
+#       time.sleep(3)
+        pay_credits = self.test_user_action_pay_credits_to_partner(
+            partner_account=1, credits=5, client_id=client_id, session_token=session_token,
+            pay='system.core@alvearesolutions.com'
         )
-        convert_credits_2_clock = self.test_user_action_convert_credits_to_clock(
-            client_id=client_id, session_token=session_token, credits=5,
-            notes='Test Credits To Clock Conversion Notes...'
-        )
-        start_clock_timer = self.test_user_action_start_clock_timer(
-            client_id=client_id, session_token=session_token
-        )
-        time.sleep(3)
-        pause_clock_timer = self.test_user_action_pause_clock_timer(
-            client_id=client_id, session_token=session_token
-        )
-        time.sleep(3)
-        resume_clock_timer = self.test_user_action_resume_clock_timer(
-            client_id=client_id, session_token=session_token
-        )
-        time.sleep(3)
-        stop_clock_timer = self.test_user_action_stop_clock_timer(
-            client_id=client_id, session_token=session_token
-        )
-        time.sleep(3)
-
 
 if __name__ == '__main__':
     session_manager = EWalletSessionManager()

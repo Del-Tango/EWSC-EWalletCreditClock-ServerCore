@@ -340,18 +340,19 @@ class CreditInvoiceSheet(Base):
         log.info('Successfully updated invoice sheet records.')
         return self.records
 
+#   @pysnooper.snoop()
     def add_credit_invoice_sheet_record(self, **kwargs):
         log.debug('')
-        if not kwargs.get('credits') or not kwargs.get('seller_id'):
-            return self.error_handlers_add_credit_invoice_sheet_record(
-                    credits=kwargs.get('credits'),
-                    seller_id=kwargs.get('seller_id'),
-                    )
-        _values = self.fetch_invoice_record_creation_values(**kwargs)
-        _record = CreditInvoiceSheetRecord(**_values)
-        _update = self.update_records(_record)
+        if not kwargs.get('credits') or not kwargs.get('seller'):
+            return self.error_handler_add_credit_invoice_sheet_record(
+                credits=kwargs.get('credits'),
+                seller_id=kwargs['seller'].fetch_user_id(),
+            )
+        values = self.fetch_invoice_record_creation_values(**kwargs)
+        record = CreditInvoiceSheetRecord(**values)
+        update = self.update_records(record)
         log.info('Successfully added new invoice record.')
-        return _record
+        return record
 
     def remove_credit_invoice_sheet_record(self, **kwargs):
         log.debug('')
@@ -419,37 +420,16 @@ class CreditInvoiceSheet(Base):
         log.debug('')
         if not kwargs.get('action'):
             return self.error_no_invoice_sheet_controller_action_specified()
-        _handlers = {
-                'add': self.add_credit_invoice_sheet_record,
-                'remove': self.remove_credit_invoice_sheet_record,
-                'interogate': self.interogate_credit_invoice_sheet_records,
-                'clear': self.clear_credit_invoice_sheet_records,
-                }
-        _handle = _handlers[kwargs['action']](**kwargs)
-        if _handle:
+        handlers = {
+            'add': self.add_credit_invoice_sheet_record,
+            'remove': self.remove_credit_invoice_sheet_record,
+            'interogate': self.interogate_credit_invoice_sheet_records,
+            'clear': self.clear_credit_invoice_sheet_records,
+        }
+        handle = handlers[kwargs['action']](**kwargs)
+        if handle:
             self.update_write_date()
-        return _handle
-
-#   # TODO - Refactor
-#   def display_credit_invoice_sheet_records(self, records=[]):
-#       log.debug('')
-#       if not records:
-#           records = [item for item in self.records.values()]
-#       for item in records:
-#           print('{}: {} - {}'.format(
-#               item.fetch_record_create_date(), item.fetch_record_id(),
-#               item.fetch_record_reference()
-#               ))
-#       return records
-
-#   # TODO - Refactor
-#   def display_credit_invoice_sheet_record_values(self, records=[]):
-#       log.debug('')
-#       if not records:
-#           records = [item for item in self.records.values()]
-#       for item in records:
-#           print(item.fetch_record_values())
-#       return records
+        return handle
 
     def error_handler_add_credit_invoice_sheet_record(self, **kwargs):
         _reasons_and_handlers = {

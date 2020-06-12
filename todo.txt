@@ -7,9 +7,8 @@
 ###############################################################################
 # EWallet Session Manager
 ###############################################################################
-# TODO - User Action Resume Clock Timer
-# TODO - User Action Stop Clock Timer
-
+# TODO - User action Spend Credits
+- Remove credit wallet search from res user
 
 ###############################################################################
 # EWallet Session Worker

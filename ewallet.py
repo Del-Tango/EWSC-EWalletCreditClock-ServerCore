@@ -77,6 +77,24 @@ class EWallet(Base):
 
     # FETCHERS
 
+    def fetch_partner_credit_wallet(self, partner_account):
+        log.debug('')
+        partner_wallet = False if not partner_account.user_credit_wallet else \
+                partner_account.user_credit_wallet[0]
+        return self.warning_no_partner_credit_wallet_found() if not partner_wallet \
+                else partner_wallet
+
+    def fetch_user_by_email(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('email'):
+            return self.error_no_user_email_found()
+        active_session = kwargs.get('active_session') or self.fetch_active_session()
+        if not active_session:
+            return self.error_no_active_session_found()
+        user_account = active_session.query(ResUser).filter_by(user_email=kwargs['email'])
+        return self.warning_no_user_account_found('email', kwargs['email']) \
+                if not user_account else user_account[0]
+
     def fetch_system_core_user_account(self, **kwargs):
         '''
         [ NOTE   ]: Fetches S:Core user account used for administration and automation.
@@ -84,10 +102,10 @@ class EWallet(Base):
         [ RETURN ]: (ResUser object | False)
         '''
         log.debug('')
-        _active_session = kwargs.get('active_session') or \
+        active_session = kwargs.get('active_session') or \
                 self.fetch_active_session()
-        _score_account = _active_session.query(ResUser).filter_by(user_id=1)
-        return False if not _score_account else _score_account[0]
+        score_account = active_session.query(ResUser).filter_by(user_id=1)
+        return False if not score_account else score_account[0]
 
     # TODO - Apply ORM
     def fetch_user_by_id(self, **kwargs):
@@ -107,17 +125,6 @@ class EWallet(Base):
                 log.info('Successfully fetched user by name.')
                 return self.user_account_archive[item]
         return self.warning_no_user_account_found('name', kwargs['code'])
-
-    # TODO - Apply ORM
-    def fetch_user_by_email(self, **kwargs):
-        log.debug('')
-        if not kwargs.get('code'):
-            return self.error_no_user_email_found()
-        for item in self.user_account_archive:
-            if self.user_account_archive[item].fetch_user_email() == kwargs['code']:
-                log.info('Successfully fetched user by email.')
-                return self.user_account_archive[item]
-        return self.warning_no_user_account_found('email', kwargs['code'])
 
     # TODO - Apply ORM
     def fetch_user_by_phone(self, **kwargs):
@@ -531,19 +538,11 @@ class EWallet(Base):
         pass
     def action_send_invoice_record(self, **kwargs):
         pass
-    def action_send_invoice_sheet(self, **kwargs):
-        pass
     def action_send_transfer_record(self, **kwargs):
-        pass
-    def action_send_transfer_sheet(self, **kwargs):
         pass
     def action_receive_invoice_record(self, **kwargs):
         pass
-    def action_receive_invoice_sheet(self, **kwargs):
-        pass
     def action_receive_transfer_record(self, **kwargs):
-        pass
-    def action_receive_transfer_sheet(self, **kwargs):
         pass
 
 #   @pysnooper.snoop('logs/ewallet.log')
@@ -1275,13 +1274,13 @@ class EWallet(Base):
                 partner_account=partner_account,
             )
         sanitized_command_chain = res_utils.remove_tags_from_command_chain(
-            kwargs, 'ctype', 'partner_account'
+            kwargs, 'ctype', 'partner_account', 'active_session'
         )
         credits_before = self.fetch_credit_wallet_credits()
         credit_request = partner_account.user_controller(
             ctype='event', event='request', request='credits',
             partner_account=self.fetch_active_session_user(),
-            **sanitized_command_chain
+            active_session=active_session, **sanitized_command_chain
         )
         credits_after = self.fetch_credit_wallet_credits()
         if str(credits_after) == str(credits_before + kwargs.get('credits')):
@@ -1293,9 +1292,39 @@ class EWallet(Base):
         active_session.rollback()
         return self.error_supply_type_transfer_failure(kwargs)
 
-    # TODO
+#   @pysnooper.snoop()
     def action_create_new_transfer_type_pay(self, **kwargs):
         log.debug('')
+        if not kwargs.get('pay'):
+            return self.error_no_user_action_pay_target_specified()
+        active_session = kwargs.get('active_session') or \
+            self.fetch_active_session()
+        partner_account = kwargs.get('partner_account') or \
+            self.fetch_user(identifier='email', email=kwargs['pay'])
+        if not partner_account:
+            return self.error_handler_create_new_transfer(
+                partner_account=partner_account,
+            )
+        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
+            kwargs, 'ctype', 'action', 'ttype', 'partner_account', 'pay'
+        )
+        credits_before = self.fetch_credit_wallet_credits()
+        current_account = self.fetch_active_session_user()
+        action_pay = current_account.user_controller(
+            ctype='action', action='transfer', ttype='payment', pay=partner_account,
+            **sanitized_command_chain,
+        )
+        credits_after = self.fetch_credit_wallet_credits()
+        if str(credits_after) == str(credits_before - kwargs.get('credits')):
+            active_session.commit()
+            return {
+                'total_credits': credits_after,
+                'spent_credits': kwargs['credits'],
+            }
+        active_session.rollback()
+        return self.error_pay_type_transfer_failure(kwargs)
+
+    # TODO
     def action_create_new_transfer_type_transfer(self, **kwargs):
         log.debug('')
     def action_unlink_credit_clock(self, **kwargs):
@@ -1540,12 +1569,27 @@ class EWallet(Base):
 
     # HANDLERS
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     def handle_system_action_send_invoice(self, **kwargs):
         '''
         [ NOTE   ]: Jump table handler for system action 'send invoice'.
         [ INPUT  ]: invoice=('record' | 'list')
         [ RETURN ]: Action variable correspondent.
         '''
+        log.debug('')
         if not kwargs.get('invoice'):
             return self.error_no_invoice_target_specified()
         _handlers = {
@@ -1560,6 +1604,7 @@ class EWallet(Base):
         [ INPUT  ]: transfer=('record' | 'list')
         [ RETURN ]: Action variable correspondent.
         '''
+        log.debug('')
         if not kwargs.get('transfer'):
             return self.error_no_transfer_target_specified()
         _handlers = {
@@ -1574,6 +1619,7 @@ class EWallet(Base):
         [ INPUT  ]: invoice=('record' | 'list')
         [ RETURN ]: Action variable correspondent.
         '''
+        log.debug('')
         if not kwargs.get('invoice'):
             return self.error_no_invoice_target_specified()
         _handlers = {
@@ -1777,11 +1823,11 @@ class EWallet(Base):
         log.debug('')
         _login_record = EWalletLogin()
         session_login = _login_record.ewallet_login_controller(
-                action='login', user_name=kwargs.get('user_name'),
-                user_pass=kwargs.get('user_pass'),
-                user_archive=self.user_account_archive,
-                active_session=self.session,
-                )
+           action='login', user_name=kwargs.get('user_name'),
+           user_pass=kwargs.get('user_pass'),
+           user_archive=self.user_account_archive,
+           active_session=self.session,
+        )
         if not session_login:
             return self.warning_could_not_login()
         self.session.add(_login_record)
@@ -1799,26 +1845,26 @@ class EWallet(Base):
                     user account archive, returns next.
         '''
         log.debug('')
-        _user = self.fetch_active_session_user()
-        _session_logout = self.action_system_user_logout()
-        _logout_record = EWalletLogout(
-                user_id=_user.fetch_user_id(),
-                logout_status=False if not _session_logout else True,
-                )
-        self.session.add(_logout_record)
-        if not _session_logout:
+        user = self.fetch_active_session_user()
+        session_logout = self.action_system_user_logout()
+        logout_record = EWalletLogout(
+            user_id=user.fetch_user_id(),
+            logout_status=False if not session_logout else True,
+        )
+        self.session.add(logout_record)
+        if not session_logout:
             self.session.rollback()
             return self.warning_could_not_logout()
-        _update_next = False if isinstance(_session_logout, bool) \
-                else self.action_system_user_update(user=_session_logout)
+        update_next = False if isinstance(session_logout, bool) \
+                else self.action_system_user_update(user=session_logout)
         try:
-            self.user_account_archive.remove(_user)
+            self.user_account_archive.remove(user)
         except:
             self.session.rollback()
             return self.error_could_not_remove_user_from_account_archive()
         self.session.commit()
         log.info('User successfully loged out.')
-        return _update_next or True
+        return update_next or True
 
     # CONTROLLERS
 
@@ -2233,6 +2279,16 @@ class EWallet(Base):
         return False
 
     # ERRORS
+
+    def error_pay_type_transfer_failure(self, command_chain):
+        log.error(
+            'Credit payment failure. Details : {}'.format(command_chain)
+        )
+        return False
+
+    def error_no_user_action_pay_target_specified(self):
+        log.error('No user action pay target specified.')
+        return False
 
     def error_supply_type_transfer_failure(self, command_chain):
         log.error('Supply type transfer failure. Details : {}'.format(command_chain))

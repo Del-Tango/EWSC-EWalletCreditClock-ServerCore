@@ -100,6 +100,15 @@
         client_id=<id>, session_token=<token>
         )
 
+# TODO - res_user.py 584
+
+* User action Pay Credits:
+    * Returns {'total_credits': <count>, 'spent_credits': <count>}
+    session_manager_controller(
+        controller='client', ctype='action', action='pay', client_id=<id>,
+        session_token=<token>, pay=<partner-email>, credits=<count>
+        )
+
 
 ################################################################################
 # EWallet Session (Command Chain)
