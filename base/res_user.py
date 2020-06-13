@@ -86,6 +86,27 @@ class ResUser(Base):
 
     # FETCHERS
 
+    def fetch_transaction_handler_creation_values_for_event_request_credits(self, **kwargs):
+        log.debug('')
+        creation_values = {
+            'transaction_type': 'supply',
+            'source_user_account': self,
+            'target_user_account': kwargs.get('partner_account'),
+            'active_session': kwargs.get('active_session'),
+        }
+        return creation_values
+
+    def fetch_transaction_handler_creation_values_for_action_pay(self, **kwargs):
+        log.debug('')
+        creation_values = {
+            'transaction_type': 'pay',
+            'source_user_account': self,
+            'target_user_account': kwargs.get('pay'),
+            'active_session': kwargs.get('active_session'),
+
+        }
+        return creation_values
+
     def fetch_user_active_ewallet_session(self):
         log.debug('')
         return self.error_no_active_ewallet_user_session_found()\
@@ -481,36 +502,9 @@ class ResUser(Base):
 
     # CREATORS
 
-    # TODO
-    def create_credit_wallet_payment_transaction_records(self, transfer_sheet, invoice_sheet, command_chain):
-        log.debug('UNIMPLEMENTED')
-
-    def create_credit_wallet_supply_transaction_records(self, transfer_sheet, invoice_sheet, command_chain):
+    def create_transaction_handler(self, creation_values):
         log.debug('')
-        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
-            command_chain, 'action'
-        )
-        create_transfer_record = transfer_sheet.credit_transfer_sheet_controller(
-            action='add', transfer_type='outgoing', **sanitized_command_chain
-        )
-        create_invoice_record = invoice_sheet.credit_invoice_sheet_controller(
-            action='add', seller=self,
-            transfer_record=create_transfer_record,
-            **sanitized_command_chain
-        )
-        if not create_transfer_record or not create_invoice_record:
-            return self.warning_could_not_create_credit_wallet_supply_transaction_records(
-                transfer_record=create_transfer_record,
-                invoice_record=create_invoice_record,
-                **command_chain
-            )
-        command_chain['active_session'].add(
-            create_transfer_record, create_invoice_record
-        )
-        return {
-            'transfer_record': create_transfer_record,
-            'invoice_record': create_invoice_record
-        }
+        return EWalletTransactionHandler(**creation_values)
 
     def create_user_pass_hash_record(self, **kwargs):
         if not kwargs.get('pass_hash'):
@@ -523,92 +517,41 @@ class ResUser(Base):
 
     # GENERAL
 
-    # TODO - Migrate to transaction handler
-    def post_credit_transaction_transfer_invoice_record_share(self, transfer_sheet, invoice_sheet, command_chain):
-        log.debug('MOVE TO TRANSACTION HANDLER')
+    # EVENTS
+
+#   @pysnooper.snoop()
+    def event_request_credits(self, **kwargs):
+        '''
+        [ NOTE   ]: User event Request Credit. Creates transaction
+                    between 2 credit wallets along with transaction records
+                    (transfer record & invoice record). Shares records with
+                    partner.
+        [ INPUT  ]: partner_account=<account>
+        [ RETURN ]: ({'extract': <count>, 'supply': <count>} | False)
+        '''
+        log.debug('')
+        if not kwargs.get('partner_account'):
+            return self.error_no_partner_account_found()
+        active_session = kwargs.get('active_session') or \
+                self.fetch_user_active_session(stype='orm')
+        if not active_session:
+            return self.error_could_not_fetch_active_orm_session()
         sanitized_command_chain = res_utils.remove_tags_from_command_chain(
-            command_chain, 'action'
+            kwargs, 'active_session'
         )
-        share_transfer_record = transfer_sheet.credit_transfer_sheet_controller(
-            action='add', transfer_type='incoming', **sanitized_command_chain
-        )
-        share_invoice_record = invoice_sheet.credit_invoice_sheet_controller(
-            action='add', seller_id=self.fetch_user_id(),
-            transfer_record_id=share_transfer_record.fetch_record_id(),
+        creation_values = self.fetch_transaction_handler_creation_values_for_event_request_credits(
+            active_session=active_session,
             **sanitized_command_chain
         )
-        if not share_transfer_record or not share_invoice_record:
-            return self.warning_credit_transaction_record_share_failure(
-                share_transfer_record=share_transfer_record,
-                share_invoice_record=share_invoice_record,
-                **command_chain
-            )
-        command_chain['active_session'].add(share_transfer_record, share_invoice_record)
-        return {'transfer': share_transfer_record, 'invoice': share_invoice_record}
-
-    def partner_credit_wallet_transaction_type_send(self, local_partner, remote_partner, command_chain):
-        log.debug('')
-        extract_credits_from_local = local_partner.action_extract_credits_from_wallet(**command_chain)
-        supply_credits_to_remote = remote_partner.action_supply_credits_to_wallet(**command_chain)
-        if not extract_credits_from_local or not supply_credits_to_remote:
-            return self.warning_credit_transaction_chain_failure(
-                extract=extract_credits_from_local,
-                supply=supply_credits_to_remote
-            )
-        return {'extract': extract_credits_from_local, 'supply': supply_credits_to_remote}
-
-    # TODO
-    def partner_credit_wallet_transaction_type_receive(self, local_partner, remote_partner, command_chain):
-        log.debug('UNIMPLEMENTED')
-        return False
-
-#   #@pysnooper.snoop()
-    def partner_credit_wallet_transaction(self, local_partner, remote_partner, **kwargs):
-        log.debug('')
-        if not kwargs.get('ttype'):
-            return self.error_no_credit_wallet_transaction_type_specified()
-        handlers = {
-            'send': self.partner_credit_wallet_transaction_type_send,
-            'receive': self.partner_credit_wallet_transaction_type_receive,
-        }
-        return handlers[kwargs['ttype']](local_partner, remote_partner, kwargs)
+        transaction_handler = self.create_transaction_handler(creation_values)
+        transaction = transaction_handler.action_init_transaction(
+            active_session=active_session,
+            **sanitized_command_chain
+        )
+        return transaction
 
     # ACTIONS
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-    def fetch_transaction_handler_creation_values_for_action_pay(self, **kwargs):
-        log.debug('')
-        creation_values = {
-            'transaction_type': 'pay',
-            'source_credit_wallet': kwargs.get('source_credit_wallet'),
-            'target_credit_wallet': kwargs.get('target_credit_wallet'),
-            'source_user_account': self,
-            'target_user_account': kwargs.get('pay'),
-            'active_session': kwargs.get('active_session'),
-
-        }
-        return creation_values
-
-    def create_transaction_handler(self, creation_values):
-        log.debug('')
-        return EWalletTransactionHandler(**creation_values)
-
-
-
-
-    # TODO - You left off here
     def action_pay_partner_account(self, **kwargs):
         log.debug('')
         if not kwargs.get('pay'):
@@ -617,67 +560,16 @@ class ResUser(Base):
                 self.fetch_user_active_session(stype='orm')
         if not active_session:
             return self.error_could_not_fetch_active_orm_session()
-        credit_wallets = self.fetch_credit_wallets_for_transaction(
-            self, kwargs['pay'], kwargs
-        )
-
         sanitized_command_chain = res_utils.remove_tags_from_command_chain(
             kwargs, 'active_session'
         )
-
-        # TODO - Make use of transaction handler here
         creation_values = self.fetch_transaction_handler_creation_values_for_action_pay(
-            source_credit_wallet=credit_wallets['local'],
-            target_credit_wallet=credit_wallets['remote'],
             active_session=active_session,
             **sanitized_command_chain
         )
         transaction_handler = self.create_transaction_handler(creation_values)
         transaction = transaction_handler.action_init_transaction(**sanitized_command_chain)
-
-
-#       use_credits = credit_wallets['local'].main_controller(
-#           controller='user', action='use', credits=kwargs['credits'],
-#           used_on=kwargs['pay'], transfer_type='payment', transfer_from=self,
-#           reference=kwargs.get('reference'), partner_account=kwargs['pay']
-#       )
-
-#       remote_receive_credits = credit_wallets['local'].main_controller(
-#           controller='system', action='supply', credits=use_credits,
-#       )
-
-
-
-        # TODO - Move to credit wallet
-#       credit_transaction = self.partner_credit_wallet_transaction(
-#           self, kwargs['pay'], ttype='send', **kwargs
-#       )
-#       local_sheets = self.fetch_credit_wallet_transfer_and_invoice_sheets(
-#           credit_wallets['local']
-#       )
-#       remote_sheets = self.fetch_credit_wallet_transfer_and_invoice_sheets(
-#           credit_wallets['remote']
-#       )
-#       transaction_records = self.create_credit_wallet_payment_transaction_records(
-#           local_sheets['transfer'], local_sheets['invoice'], kwargs
-#       )
-#       record_share = self.post_credit_transaction_transfer_invoice_record_share(
-#           local_sheets['transfer'], local_sheets['invoice'], kwargs
-#       )
-
-
-        # return {'ewallet_credits': <n>, 'spent_credits': <n>, 'payed': <name>}
-
-
-
-
-
-
-
-
-
-
-
+        return transaction
 
     # TODO - Refactor - User main system controller
 #   #@pysnooper.snoop('logs/ewallet.log')
@@ -795,43 +687,6 @@ class ResUser(Base):
             log.info('Successfully removed user contact list by id.')
         return _unlink
 
-    #@pysnooper.snoop()
-    def action_extract_credits_from_wallet(self, **kwargs):
-        log.debug('')
-        credit_wallet = kwargs.get('credit_wallet') or \
-                self.fetch_user_credit_wallet()
-        if not credit_wallet:
-            return self.error_no_credit_wallet_found()
-        sanitized_instruction_set = res_utils.remove_tags_from_command_chain(
-                kwargs, 'controller', 'action'
-                )
-        extract = credit_wallet.main_controller(
-                controller='system', action='extract',
-                **sanitized_instruction_set
-                )
-        return extract if isinstance(extract, int) else \
-                self.warning_could_not_extract_user_account_credit_wallet_with_credits(
-                        credit_wallet=credit_wallet, **kwargs
-                        )
-
-    #@pysnooper.snoop()
-    def action_supply_credits_to_wallet(self, **kwargs):
-        log.debug('')
-        credit_wallet = kwargs.get('credit_wallet') or \
-                self.fetch_user_credit_wallet()
-        if not credit_wallet:
-            return self.error_no_credit_wallet_found()
-        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
-                kwargs, 'controller', 'action'
-                )
-        supply = credit_wallet.main_controller(
-                controller='system', action='supply', **sanitized_command_chain
-                )
-        return supply if isinstance(supply, int) else \
-                self.warning_could_not_supply_user_account_credit_wallet_with_credits(
-                        credit_wallet=credit_wallet, **kwargs
-                        )
-
     # HANDLERS
 
     def handle_user_action_transfer(self, **kwargs):
@@ -912,51 +767,12 @@ class ResUser(Base):
                 }
         return _handlers[kwargs['target']](**kwargs)
 
-#   #@pysnooper.snoop()
-    def handle_user_event_request_credits(self, **kwargs):
-        '''
-        [ NOTE   ]: User event Request Credit handler. Creates transaction
-                    between 2 credit wallets along with transaction records
-                    (transfer record & invoice record). Shares records with
-                    partner.
-        [ INPUT  ]: partner_account=<account>
-        [ RETURN ]: ({'extract': <count>, 'supply': <count>} | False)
-        '''
-        log.debug('')
-        if not kwargs.get('partner_account'):
-            return self.error_no_partner_account_found()
-        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
-            kwargs, 'ttype'
-        )
-        credit_wallets = self.fetch_credit_wallets_for_transaction(
-            self, kwargs['partner_account'], sanitized_command_chain
-        )
-        credit_transaction = self.partner_credit_wallet_transaction(
-            self, kwargs['partner_account'], ttype='send', **sanitized_command_chain
-        )
-        transaction_sheets = self.fetch_credit_wallet_transfer_and_invoice_sheets(
-            credit_wallets['local']
-        )
-        transaction_records = self.create_credit_wallet_supply_transaction_records(
-            transaction_sheets['transfer'], transaction_sheets['invoice'],
-            sanitized_command_chain
-        )
-        remote_transaction_sheets = self.fetch_credit_wallet_transfer_and_invoice_sheets(
-            credit_wallets['remote']
-        )
-        transaction_record_share = self.post_credit_transaction_transfer_invoice_record_share(
-            remote_transaction_sheets['transfer'],
-            remote_transaction_sheets['invoice'],
-            sanitized_command_chain
-        )
-        return credit_transaction or False
-
     def handle_user_event_request(self, **kwargs):
         log.debug('')
         if not kwargs.get('request'):
             return self.error_no_user_event_request_specified()
         _handlers = {
-            'credits': self.handle_user_event_request_credits,
+            'credits': self.event_request_credits,
         }
         return _handlers[kwargs['request']](**kwargs)
 
@@ -1328,4 +1144,147 @@ class ResUser(Base):
 ###############################################################################
 # CODE DUMP
 ###############################################################################
+
+    # TODO
+#   def create_credit_wallet_payment_transaction_records(self, transfer_sheet, invoice_sheet, command_chain):
+#       log.debug('UNIMPLEMENTED')
+
+#   # TODO  - Remove
+#   def create_credit_wallet_supply_transaction_records(self, transfer_sheet, invoice_sheet, command_chain):
+#       log.debug('DEPRECATED')
+#       sanitized_command_chain = res_utils.remove_tags_from_command_chain(
+#           command_chain, 'action'
+#       )
+#       create_transfer_record = transfer_sheet.credit_transfer_sheet_controller(
+#           action='add', transfer_type='outgoing', **sanitized_command_chain
+#       )
+#       create_invoice_record = invoice_sheet.credit_invoice_sheet_controller(
+#           action='add', seller=self,
+#           transfer_record=create_transfer_record,
+#           **sanitized_command_chain
+#       )
+#       if not create_transfer_record or not create_invoice_record:
+#           return self.warning_could_not_create_credit_wallet_supply_transaction_records(
+#               transfer_record=create_transfer_record,
+#               invoice_record=create_invoice_record,
+#               **command_chain
+#           )
+#       command_chain['active_session'].add(
+#           create_transfer_record, create_invoice_record
+#       )
+#       return {
+#           'transfer_record': create_transfer_record,
+#           'invoice_record': create_invoice_record
+#       }
+
+#   #@pysnooper.snoop()
+#   def partner_credit_wallet_transaction(self, local_partner, remote_partner, **kwargs):
+#       log.debug('DEPRECATED')
+#       if not kwargs.get('ttype'):
+#           return self.error_no_credit_wallet_transaction_type_specified()
+#       handlers = {
+#           'send': self.partner_credit_wallet_transaction_type_send,
+#           'receive': self.partner_credit_wallet_transaction_type_receive,
+#       }
+#       return handlers[kwargs['ttype']](local_partner, remote_partner, kwargs)
+
+#   #@pysnooper.snoop()
+#   def action_extract_credits_from_wallet(self, **kwargs):
+#       log.debug('DEPRECATED')
+#       credit_wallet = kwargs.get('credit_wallet') or \
+#               self.fetch_user_credit_wallet()
+#       if not credit_wallet:
+#           return self.error_no_credit_wallet_found()
+#       sanitized_instruction_set = res_utils.remove_tags_from_command_chain(
+#               kwargs, 'controller', 'action'
+#               )
+#       extract = credit_wallet.main_controller(
+#               controller='system', action='extract',
+#               **sanitized_instruction_set
+#               )
+#       return extract if isinstance(extract, int) else \
+#               self.warning_could_not_extract_user_account_credit_wallet_with_credits(
+#                       credit_wallet=credit_wallet, **kwargs
+#                       )
+
+#   #@pysnooper.snoop()
+#   def action_supply_credits_to_wallet(self, **kwargs):
+#       log.debug('DEPRECATED')
+#       credit_wallet = kwargs.get('credit_wallet') or \
+#               self.fetch_user_credit_wallet()
+#       if not credit_wallet:
+#           return self.error_no_credit_wallet_found()
+#       sanitized_command_chain = res_utils.remove_tags_from_command_chain(
+#           kwargs, 'controller', 'action'
+#       )
+#       supply = credit_wallet.main_controller(
+#           controller='system', action='supply', **sanitized_command_chain
+#       )
+#       return supply if isinstance(supply, int) else \
+#           self.warning_could_not_supply_user_account_credit_wallet_with_credits(
+#           credit_wallet=credit_wallet, **kwargs
+#       )
+
+    # TODO - Migrate to transaction handler
+#   def post_credit_transaction_transfer_invoice_record_share(self, transfer_sheet, invoice_sheet, command_chain):
+#       log.debug('MOVE TO TRANSACTION HANDLER')
+#       sanitized_command_chain = res_utils.remove_tags_from_command_chain(
+#           command_chain, 'action'
+#       )
+#       share_transfer_record = transfer_sheet.credit_transfer_sheet_controller(
+#           action='add', transfer_type='incoming', **sanitized_command_chain
+#       )
+#       share_invoice_record = invoice_sheet.credit_invoice_sheet_controller(
+#           action='add', seller_id=self.fetch_user_id(),
+#           transfer_record_id=share_transfer_record.fetch_record_id(),
+#           **sanitized_command_chain
+#       )
+#       if not share_transfer_record or not share_invoice_record:
+#           return self.warning_credit_transaction_record_share_failure(
+#               share_transfer_record=share_transfer_record,
+#               share_invoice_record=share_invoice_record,
+#               **command_chain
+#           )
+#       command_chain['active_session'].add(share_transfer_record, share_invoice_record)
+#       return {'transfer': share_transfer_record, 'invoice': share_invoice_record}
+
+#   def partner_credit_wallet_transaction_type_send(self, local_partner, remote_partner, command_chain):
+#       log.debug('DEPRECATED')
+#       extract_credits_from_local = local_partner.action_extract_credits_from_wallet(**command_chain)
+#       supply_credits_to_remote = remote_partner.action_supply_credits_to_wallet(**command_chain)
+#       if not extract_credits_from_local or not supply_credits_to_remote:
+#           return self.warning_credit_transaction_chain_failure(
+#               extract=extract_credits_from_local,
+#               supply=supply_credits_to_remote
+#           )
+#       return {'extract': extract_credits_from_local, 'supply': supply_credits_to_remote}
+
+#       credit_wallets = self.fetch_credit_wallets_for_transaction(
+#           self, kwargs['pay'], kwargs
+#       )
+#       sanitized_command_chain = res_utils.remove_tags_from_command_chain(
+#           kwargs, 'ttype'
+#       )
+#       credit_wallets = self.fetch_credit_wallets_for_transaction(
+#           self, kwargs['partner_account'], sanitized_command_chain
+#       )
+#       credit_transaction = self.partner_credit_wallet_transaction(
+#           self, kwargs['partner_account'], ttype='send', **sanitized_command_chain
+#       )
+#       transaction_sheets = self.fetch_credit_wallet_transfer_and_invoice_sheets(
+#           credit_wallets['local']
+#       )
+#       transaction_records = self.create_credit_wallet_supply_transaction_records(
+#           transaction_sheets['transfer'], transaction_sheets['invoice'],
+#           sanitized_command_chain
+#       )
+#       remote_transaction_sheets = self.fetch_credit_wallet_transfer_and_invoice_sheets(
+#           credit_wallets['remote']
+#       )
+#       transaction_record_share = self.post_credit_transaction_transfer_invoice_record_share(
+#           remote_transaction_sheets['transfer'],
+#           remote_transaction_sheets['invoice'],
+#           sanitized_command_chain
+#       )
+#       return credit_transaction or False
 

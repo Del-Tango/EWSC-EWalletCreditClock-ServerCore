@@ -514,29 +514,6 @@ class EWalletSessionManager():
 
     # GENERAL
 
-#   @pysnooper.snoop()
-    def supply_user_credit_ewallet_in_session(self, ewallet_session, instruction_set):
-        '''
-        [ NOTE   ]: Sends a User action Supply command chain to given ewallet session
-                    with the SystemCore account as beeing the partner, which creates
-                    a credit transaction between two wallets resulting in S:Core having
-                    a decreased credit count and the active user having an equivalent
-                    increase in credits.
-        [ INPUT  ]: EWallet Session object, Instruction set
-        [ RETURN ]: ({'extract': -<count>, 'supply': <count>} | False)
-        '''
-        log.debug('')
-        score = ewallet_session.fetch_system_core_user_account()
-        orm_session = ewallet_session.fetch_active_session()
-        credit_supply = ewallet_session.ewallet_controller(
-                controller='user', ctype='action', action='create', create='transfer',
-                ttype='supply', active_session=orm_session, partner_account=score,
-                **instruction_set
-                )
-        return self.warning_could_not_supply_user_credit_wallet_with_credits(
-                ewallet_session, instruction_set
-                ) if not credit_supply else credit_supply
-
     def login_ewallet_user_account_in_session(self, ewallet_session, instruction_set):
         '''
         [ NOTE   ]: Sets user state to LoggedIn (state code 1), and updates given
@@ -642,7 +619,6 @@ class EWalletSessionManager():
 
     # ACTIONS
 
-    # TODO
     def action_pay_partner_account(self, ewallet_session, instruction_set):
         log.debug('')
         orm_session = ewallet_session.fetch_active_session()
@@ -653,6 +629,29 @@ class EWalletSessionManager():
         return self.warning_could_not_pay_partner_account(
             ewallet_session, instruction_set
             ) if not pay_partner else pay_partner
+
+#   @pysnooper.snoop()
+    def action_supply_user_credit_ewallet_in_session(self, ewallet_session, instruction_set):
+        '''
+        [ NOTE   ]: Sends a User action Supply command chain to given ewallet session
+                    with the SystemCore account as beeing the partner, which creates
+                    a credit transaction between two wallets resulting in S:Core having
+                    a decreased credit count and the active user having an equivalent
+                    increase in credits.
+        [ INPUT  ]: EWallet Session object, Instruction set
+        [ RETURN ]: ({'extract': -<count>, 'supply': <count>} | False)
+        '''
+        log.debug('')
+        score = ewallet_session.fetch_system_core_user_account()
+        orm_session = ewallet_session.fetch_active_session()
+        credit_supply = ewallet_session.ewallet_controller(
+                controller='user', ctype='action', action='create', create='transfer',
+                ttype='supply', active_session=orm_session, partner_account=score,
+                **instruction_set
+                )
+        return self.warning_could_not_supply_user_credit_wallet_with_credits(
+                ewallet_session, instruction_set
+                ) if not credit_supply else credit_supply
 
     def action_stop_credit_clock_timer(self, ewallet_session, instruction_set):
         log.debug('')
@@ -933,7 +932,7 @@ class EWalletSessionManager():
                 )
         if not ewallet:
             return False
-        credit_supply = self.supply_user_credit_ewallet_in_session(
+        credit_supply = self.action_supply_user_credit_ewallet_in_session(
                 ewallet['ewallet_session'], ewallet['sanitized_instruction_set']
                 )
         return credit_supply
@@ -1903,31 +1902,31 @@ class EWalletSessionManager():
             client_id=client_id, session_token=session_token,
             user_name='test_user', user_pass='1234@!xxA'
         )
-#       supply_credits = self.test_user_action_supply_credits(
-#           client_id=client_id, session_token=session_token,
-#           currency='RON', credits=15, cost=4.74,
-#           notes='Test Credit Wallet Supply Notes...'
-#       )
-#       convert_credits_2_clock = self.test_user_action_convert_credits_to_clock(
-#           client_id=client_id, session_token=session_token, credits=5,
-#           notes='Test Credits To Clock Conversion Notes...'
-#       )
-#       start_clock_timer = self.test_user_action_start_clock_timer(
-#           client_id=client_id, session_token=session_token
-#       )
-#       time.sleep(3)
-#       pause_clock_timer = self.test_user_action_pause_clock_timer(
-#           client_id=client_id, session_token=session_token
-#       )
-#       time.sleep(3)
-#       resume_clock_timer = self.test_user_action_resume_clock_timer(
-#           client_id=client_id, session_token=session_token
-#       )
-#       time.sleep(3)
-#       stop_clock_timer = self.test_user_action_stop_clock_timer(
-#           client_id=client_id, session_token=session_token
-#       )
-#       time.sleep(3)
+        supply_credits = self.test_user_action_supply_credits(
+            client_id=client_id, session_token=session_token,
+            currency='RON', credits=15, cost=4.74,
+            notes='Test Credit Wallet Supply Notes...'
+        )
+        convert_credits_2_clock = self.test_user_action_convert_credits_to_clock(
+            client_id=client_id, session_token=session_token, credits=5,
+            notes='Test Credits To Clock Conversion Notes...'
+        )
+        start_clock_timer = self.test_user_action_start_clock_timer(
+            client_id=client_id, session_token=session_token
+        )
+        time.sleep(3)
+        pause_clock_timer = self.test_user_action_pause_clock_timer(
+            client_id=client_id, session_token=session_token
+        )
+        time.sleep(3)
+        resume_clock_timer = self.test_user_action_resume_clock_timer(
+            client_id=client_id, session_token=session_token
+        )
+        time.sleep(3)
+        stop_clock_timer = self.test_user_action_stop_clock_timer(
+            client_id=client_id, session_token=session_token
+        )
+        time.sleep(3)
         pay_credits = self.test_user_action_pay_credits_to_partner(
             partner_account=1, credits=5, client_id=client_id, session_token=session_token,
             pay='system.core@alvearesolutions.com'

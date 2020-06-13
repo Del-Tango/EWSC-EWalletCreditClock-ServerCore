@@ -476,26 +476,6 @@ class CreditEWallet(Base):
                 }
         return _handlers[kwargs['conversion']](**kwargs)
 
-    def buy_credits(self, **kwargs):
-        log.debug('')
-        if not kwargs.get('credits') or not kwargs.get('seller_id'):
-            return self.error_handler_buy_credits(
-                    credits=kwargs.get('credits'),
-                    seller_id=kwargs.get('seller_id')
-                    )
-        log.info('Attempting to supply wallet with credits...')
-        _supply = self.system_controller(
-                action='supply', credits=kwargs['credits']
-                )
-        log.info('Creating invoice record...')
-        _invoice_record = self.invoice_sheet.credit_invoice_sheet_controller(
-                action='add', reference=kwargs.get('reference'),
-                credits=kwargs['credits'], currency=kwargs.get('currency'),
-                cost=kwargs.get('cost'), seller_id=kwargs['seller_id'],
-                notes=kwargs.get('notes')
-                )
-        return _supply
-
     def use_credits(self, **kwargs):
         log.debug('')
         if not kwargs.get('credits') or not kwargs.get('used_on'):
@@ -507,99 +487,6 @@ class CreditEWallet(Base):
         return self.system_controller(
             action='extract', credits=kwargs['credits'],
         )
-
-    def share_transfer_record(self, **kwargs):
-        log.debug('')
-        if not kwargs.get('transfer_record') or not kwargs.get('partner_ewallet'):
-            return self.error_handler_share_transfer_record(
-                transfer_record=kwargs.get('transfer_record'),
-                partner_ewallet=kwargs.get('partner_ewallet'),
-            )
-        log.info('Attempting to share transfer record...')
-        partner_transfer_sheet = kwargs['partner_ewallet'].fetch_credit_ewallet_transfer_sheet()
-        share = partner_transfer_sheet.credit_transfer_sheet_controller(
-            action='append', records=[kwargs['transfer_record']]
-        )
-        return share
-
-    # TODO - Refactor - User transaction handler from ResUser
-#   @pysnooper.snoop()
-    def transfer_credits_incomming(self, **kwargs):
-        log.debug('')
-        if not kwargs.get('credits') or not kwargs.get('partner_ewallet'):
-            return self.error_handler_transfer_credits(
-                credits=kwargs.get('credits'),
-                partner_ewallet=kwargs.get('partner_ewallet'),
-            )
-        log.info('Extracting credits from partner ewallet...')
-        source_extract = kwargs['partner_ewallet'].system_controller(
-            action='extract', credits=kwargs['credits']
-        )
-        log.info('Supplying wallet with credits...')
-        destination_supply = self.system_controller(
-            action='supply', credits=kwargs['credits']
-        )
-        log.info('Creating transfer record...')
-        transfer_sheet = self.fetch_credit_ewallet_transfer_sheet()
-        transfer_record = transfer_sheet.credit_transfer_sheet_controller(
-            action='add', reference=kwargs.get('reference'),
-            transfer_type=kwargs.get('transfer_type'),
-            transfer_from=kwargs.get('transfer_from'),
-            transfer_to=self.client_id, credits=kwargs['credits']
-        )
-        kwargs['active_session'].add(transfer_record)
-        log.info('Attempting transfer record share with partner...')
-        self.share_transfer_record(
-            partner_ewallet=kwargs['partner_ewallet'],
-            transfer_records=[transfer_record],
-        )
-        kwargs['active_session'].commit()
-        return destination_supply
-
-    # TODO - Refactor, use transaction handler from ResUser
-#   @pysnooper.snoop()
-    def transfer_credits_outgoing(self, **kwargs):
-        log.debug('')
-        if not kwargs.get('active_session') or not kwargs.get('credits') or \
-                not kwargs.get('partner_ewallet'):
-            return self.error_handler_transfer_credits(
-                credits=kwargs.get('credits'),
-                partner_ewallet=kwargs.get('partner_ewallet'),
-                active_session=kwargs.get('active_session'),
-            )
-        log.info('Extracting credits from wallet...')
-        source_extract = self.system_controller(
-            action='extract', credits=kwargs['credits']
-        )
-        log.info('Supplying partner wallet with credits...')
-        destination_supply = kwargs['partner_ewallet'].system_controller(
-            action='supply', credits=kwargs['credits']
-        )
-        log.info('Creating transfer record...')
-        transfer_sheet = self.fetch_credit_ewallet_transfer_sheet()
-        transfer_record = transfer_sheet.credit_transfer_sheet_controller(
-            action='add', reference=kwargs.get('reference'),
-            transfer_type=kwargs.get('transfer_type'), transfer_from=self.client_id,
-            transfer_to=kwargs.get('transfer_to'), credits=kwargs['credits']
-        )
-        kwargs['active_session'].add(transfer_record)
-        log.info('Attempting transfer record share with partner...')
-        self.share_transfer_record(
-            partner_ewallet=kwargs['partner_ewallet'],
-            transfer_record=transfer_record,
-        )
-        kwargs['active_session'].commit()
-        return source_extract
-
-    def transfer_credits(self, **kwargs):
-        log.debug('')
-        if not kwargs.get('transfer_type'):
-            return self.error_no_transfer_type_found()
-        handlers = {
-            'incomming': self.transfer_credits_incomming,
-            'outgoing': self.transfer_credits_outgoing,
-        }
-        return handlers[kwargs['transfer_type']](**kwargs)
 
     # INTEROGATORS
 
@@ -822,48 +709,46 @@ class CreditEWallet(Base):
         log.debug('')
         if not kwargs.get('action'):
             return self.error_no_system_controller_action_specified()
-        _handlers = {
-                'view': self.view_credits,
-                'supply': self.supply_credits,
-                'extract': self.extract_credits,
-                'convert': self.convert_credits,
-                'create_sheet': self.create_sheets,
-                'create_clock': self.create_clock,
-                'unlink_sheet': self.unlink_sheet,
-                'unlink_clock': self.unlink_clock,
-                }
-        _handle = _handlers[kwargs['action']](**kwargs)
-        if _handle:
+        handlers = {
+            'view': self.view_credits,
+            'supply': self.supply_credits,
+            'extract': self.extract_credits,
+            'convert': self.convert_credits,
+            'create_sheet': self.create_sheets,
+            'create_clock': self.create_clock,
+            'unlink_sheet': self.unlink_sheet,
+            'unlink_clock': self.unlink_clock,
+        }
+        handle = handlers[kwargs['action']](**kwargs)
+        if handle:
             self.update_write_date()
-        return _handle
+        return handle
 
     def user_controller(self, **kwargs):
         log.debug('')
         if not kwargs.get('action'):
             return self.error_no_user_controller_action_specified()
-        _handlers = {
-                'buy': self.buy_credits,
-                'use': self.use_credits,
-                'transfer': self.transfer_credits,
-                'interogate': self.interogate_credits,
-                'switch_sheet': self.switch_credit_wallet_sheet,
-                'switch_clock': self.switch_credit_wallet_clock,
-                }
-        _handle = _handlers[kwargs['action']](**kwargs)
-        if _handle and kwargs['action'] != 'interogate':
+        handlers = {
+            'use': self.use_credits,
+            'interogate': self.interogate_credits,
+            'switch_sheet': self.switch_credit_wallet_sheet,
+            'switch_clock': self.switch_credit_wallet_clock,
+        }
+        handle = handlers[kwargs['action']](**kwargs)
+        if handle and kwargs['action'] != 'interogate':
             self.update_write_date()
-        return _handle
+        return handle
 
     def main_controller(self, **kwargs):
         log.debug('')
         if not kwargs.get('controller'):
             return self.error_no_controller_type_specified()
-        _handlers = {
-                'system': self.system_controller,
-                'user': self.user_controller,
-                'test': self.test_controller,
-                }
-        return _handlers[kwargs['controller']](**kwargs)
+        handlers = {
+            'system': self.system_controller,
+            'user': self.user_controller,
+            'test': self.test_controller,
+        }
+        return handlers[kwargs['controller']](**kwargs)
 
     # ERRORS
 
@@ -1268,4 +1153,119 @@ class CreditEWallet(Base):
 ###############################################################################
 # CODE DUMP
 ###############################################################################
+
+#   def share_transfer_record(self, **kwargs):
+#       log.debug('DEPRECATED')
+#       if not kwargs.get('transfer_record') or not kwargs.get('partner_ewallet'):
+#           return self.error_handler_share_transfer_record(
+#               transfer_record=kwargs.get('transfer_record'),
+#               partner_ewallet=kwargs.get('partner_ewallet'),
+#           )
+#       log.info('Attempting to share transfer record...')
+#       partner_transfer_sheet = kwargs['partner_ewallet'].fetch_credit_ewallet_transfer_sheet()
+#       share = partner_transfer_sheet.credit_transfer_sheet_controller(
+#           action='append', records=[kwargs['transfer_record']]
+#       )
+#       return share
+
+#   # TODO - Remove, replaced by transaction handler at ResUser level
+#   @pysnooper.snoop()
+#   def transfer_credits_incomming(self, **kwargs):
+#       log.debug('DEPRECATED')
+#       if not kwargs.get('credits') or not kwargs.get('partner_ewallet'):
+#           return self.error_handler_transfer_credits(
+#               credits=kwargs.get('credits'),
+#               partner_ewallet=kwargs.get('partner_ewallet'),
+#           )
+#       log.info('Extracting credits from partner ewallet...')
+#       source_extract = kwargs['partner_ewallet'].system_controller(
+#           action='extract', credits=kwargs['credits']
+#       )
+#       log.info('Supplying wallet with credits...')
+#       destination_supply = self.system_controller(
+#           action='supply', credits=kwargs['credits']
+#       )
+#       log.info('Creating transfer record...')
+#       transfer_sheet = self.fetch_credit_ewallet_transfer_sheet()
+#       transfer_record = transfer_sheet.credit_transfer_sheet_controller(
+#           action='add', reference=kwargs.get('reference'),
+#           transfer_type=kwargs.get('transfer_type'),
+#           transfer_from=kwargs.get('transfer_from'),
+#           transfer_to=self.client_id, credits=kwargs['credits']
+#       )
+#       kwargs['active_session'].add(transfer_record)
+#       log.info('Attempting transfer record share with partner...')
+#       self.share_transfer_record(
+#           partner_ewallet=kwargs['partner_ewallet'],
+#           transfer_records=[transfer_record],
+#       )
+#       kwargs['active_session'].commit()
+#       return destination_supply
+
+#   # TODO - Remove, replaced by transaction handler at ResUser level
+#   @pysnooper.snoop()
+#   def transfer_credits_outgoing(self, **kwargs):
+#       log.debug('DEPRECATED')
+#       if not kwargs.get('active_session') or not kwargs.get('credits') or \
+#               not kwargs.get('partner_ewallet'):
+#           return self.error_handler_transfer_credits(
+#               credits=kwargs.get('credits'),
+#               partner_ewallet=kwargs.get('partner_ewallet'),
+#               active_session=kwargs.get('active_session'),
+#           )
+#       log.info('Extracting credits from wallet...')
+#       source_extract = self.system_controller(
+#           action='extract', credits=kwargs['credits']
+#       )
+#       log.info('Supplying partner wallet with credits...')
+#       destination_supply = kwargs['partner_ewallet'].system_controller(
+#           action='supply', credits=kwargs['credits']
+#       )
+#       log.info('Creating transfer record...')
+#       transfer_sheet = self.fetch_credit_ewallet_transfer_sheet()
+#       transfer_record = transfer_sheet.credit_transfer_sheet_controller(
+#           action='add', reference=kwargs.get('reference'),
+#           transfer_type=kwargs.get('transfer_type'), transfer_from=self.client_id,
+#           transfer_to=kwargs.get('transfer_to'), credits=kwargs['credits']
+#       )
+#       kwargs['active_session'].add(transfer_record)
+#       log.info('Attempting transfer record share with partner...')
+#       self.share_transfer_record(
+#           partner_ewallet=kwargs['partner_ewallet'],
+#           transfer_record=transfer_record,
+#       )
+#       kwargs['active_session'].commit()
+#       return source_extract
+
+#   def transfer_credits(self, **kwargs):
+#       log.debug('DEPRECATED')
+#       if not kwargs.get('transfer_type'):
+#           return self.error_no_transfer_type_found()
+#       handlers = {
+#           'incomming': self.transfer_credits_incomming,
+#           'outgoing': self.transfer_credits_outgoing,
+#       }
+#       return handlers[kwargs['transfer_type']](**kwargs)
+
+
+#   def buy_credits(self, **kwargs):
+#       log.debug('DEPRECATED')
+#       if not kwargs.get('credits') or not kwargs.get('seller_id'):
+#           return self.error_handler_buy_credits(
+#               credits=kwargs.get('credits'),
+#               seller_id=kwargs.get('seller_id')
+#           )
+#       log.info('Attempting to supply wallet with credits...')
+#       supply = self.system_controller(
+#           action='supply', credits=kwargs['credits']
+#       )
+#       log.info('Creating invoice record...')
+#       invoice_record = self.invoice_sheet.credit_invoice_sheet_controller(
+#           action='add', reference=kwargs.get('reference'),
+#           credits=kwargs['credits'], currency=kwargs.get('currency'),
+#           cost=kwargs.get('cost'), seller_id=kwargs['seller_id'],
+#           notes=kwargs.get('notes')
+#       )
+#       return supply
+
 
