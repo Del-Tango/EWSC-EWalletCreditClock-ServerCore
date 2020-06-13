@@ -622,6 +622,18 @@ class EWalletSessionManager():
     [ NOTE ]: SqlAlchemy ORM sessions are fetched here.
     '''
 
+
+    def action_new_contact_record(self, ewallet_session, instruction_set):
+        log.debug('')
+        orm_session = ewallet_session.fetch_active_session()
+        new_contact_record = ewallet_session.ewallet_controller(
+            controller='user', ctype='action', action='create',
+            create='contact', **instruction_set
+        )
+        return self.warning_could_not_create_new_contact_record(
+            ewallet_session, instruction_set
+        ) if not new_contact_record else new_contact_record
+
     def action_view_contact_list(self, ewallet_session, instruction_set):
         log.debug('')
         orm_session = ewallet_session.fetch_active_session()
@@ -837,6 +849,31 @@ class EWalletSessionManager():
         pass
 
     # HANDLERS
+
+    def handle_action_new_contact_record(self, **kwargs):
+        log.debug('')
+        instruction_set_validation = self.validate_instruction_set(kwargs)
+        if not instruction_set_validation:
+            return False
+        ewallet = self.fetch_ewallet_session_for_client_action_using_instruction_set(
+            kwargs
+        )
+        if not ewallet:
+            return False
+        new_contact_record = self.action_new_contact_record(
+            ewallet['ewallet_session'], ewallet['sanitized_instruction_set'],
+        )
+        return new_contact_record
+
+    def handle_client_action_new_contact(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('contact'):
+            return self.error_no_client_action_new_contact_target_specified(kwargs)
+        handlers = {
+#           'list': self.handle_action_new_contact_list,
+            'record': self.handle_action_new_contact_record,
+        }
+        return handlers[kwargs['contact']](**kwargs)
 
     def handle_client_action_view_contact_list(self, **kwargs):
         log.debug('')
@@ -1153,6 +1190,7 @@ class EWalletSessionManager():
             return self.error_no_client_action_new_target_specified()
         _handlers = {
                 'account': self.handle_client_action_new_account,
+                'contact': self.handle_client_action_new_contact,
                 }
         return _handlers[kwargs['new']](**kwargs)
 
@@ -1416,6 +1454,13 @@ class EWalletSessionManager():
 
     # WARNINGS
 
+    def warning_could_not_create_new_contact_record(self, ewallet_session, instruction_set):
+        log.warning(
+            'Something went wrong. Could not create new contact record for session {}.'\
+            'Details : {}'.format(ewallet_session, instruction_set)
+        )
+        return False
+
     def warning_could_not_view_contact_list(self, ewallet_session, instruction_set):
         log.warning(
             'Something went wrong. Could not view active contact list for ewallet session {}.'\
@@ -1494,6 +1539,13 @@ class EWalletSessionManager():
         return False
 
     # ERRORS
+
+    def error_no_client_action_new_contact_target_specified(self, instruction_set):
+        log.error(
+            'No client action new contact target specified. Details : {}'\
+            .format(instruction_set)
+        )
+        return False
 
     def error_no_client_action_view_contact_target_specified(self, instruction_set):
         log.error(
@@ -1989,7 +2041,7 @@ class EWalletSessionManager():
         log.debug('')
         print('[ * ]: User Action Add Contact List Record')
         _add_record = self.session_manager_controller(
-            controller='client', ctype='action', action='add', add='contact',
+            controller='client', ctype='action', action='new', new='contact', contact='record',
             client_id=kwargs['client_id'], session_token=kwargs['session_token'],
             contact_list=kwargs['contact_list'],
             user_name=kwargs['user_name'], user_email=['user_email'],
@@ -2048,26 +2100,26 @@ class EWalletSessionManager():
             client_id=client_id, session_token=session_token, credits=5,
             notes='Test Credits To Clock Conversion Notes...'
         )
-        start_clock_timer = self.test_user_action_start_clock_timer(
-            client_id=client_id, session_token=session_token
-        )
-        time.sleep(3)
-        pause_clock_timer = self.test_user_action_pause_clock_timer(
-            client_id=client_id, session_token=session_token
-        )
-        time.sleep(3)
-        resume_clock_timer = self.test_user_action_resume_clock_timer(
-            client_id=client_id, session_token=session_token
-        )
-        time.sleep(3)
-        stop_clock_timer = self.test_user_action_stop_clock_timer(
-            client_id=client_id, session_token=session_token
-        )
-        time.sleep(3)
-        pay_credits = self.test_user_action_pay_credits_to_partner(
-            partner_account=1, credits=5, client_id=client_id, session_token=session_token,
-            pay='system.core@alvearesolutions.com'
-        )
+#       start_clock_timer = self.test_user_action_start_clock_timer(
+#           client_id=client_id, session_token=session_token
+#       )
+#       time.sleep(3)
+#       pause_clock_timer = self.test_user_action_pause_clock_timer(
+#           client_id=client_id, session_token=session_token
+#       )
+#       time.sleep(3)
+#       resume_clock_timer = self.test_user_action_resume_clock_timer(
+#           client_id=client_id, session_token=session_token
+#       )
+#       time.sleep(3)
+#       stop_clock_timer = self.test_user_action_stop_clock_timer(
+#           client_id=client_id, session_token=session_token
+#       )
+#       time.sleep(3)
+#       pay_credits = self.test_user_action_pay_credits_to_partner(
+#           partner_account=1, credits=5, client_id=client_id, session_token=session_token,
+#           pay='system.core@alvearesolutions.com'
+#       )
         view_contact_list = self.test_user_action_view_contact_list(
             client_id=client_id, session_token=session_token,
         )

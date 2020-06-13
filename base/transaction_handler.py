@@ -18,8 +18,8 @@ log = logging.getLogger(log_config['log_name'])
 class EWalletTransactionHandler():
     '''
     [ NOTE ]: Responsible for wallet transactions and journaling.
-    [ NOTE ]: Currently supports (Credit Payment)
-    [ TODO ]: Add support for (Credit Supply, Credit Transfer)
+    [ NOTE ]: Currently supports (Credit Payment, Credit Supply)
+    [ TODO ]: Add support for (Credit Transfer)
     '''
 
     transaction_type = None

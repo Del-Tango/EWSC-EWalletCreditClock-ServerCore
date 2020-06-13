@@ -30,6 +30,7 @@ class ContactListRecord(Base):
     reference = Column(String)
 
     def __init__(self, **kwargs):
+        self.record_id = kwargs.get('record_id') or 1
         self.create_date = datetime.datetime.now()
         self.write_date = datetime.datetime.now()
         self.contact_list_id = kwargs.get('contact_list_id')
@@ -306,6 +307,8 @@ class ContactList(Base):
                 }
         return _handlers[kwargs['search_by']](**kwargs)
 
+    # SETTERS
+
     def set_contact_list_id(self, **kwargs):
         log.debug('')
         if not kwargs.get('contact_list_id'):
@@ -334,6 +337,18 @@ class ContactList(Base):
         self.records = kwargs['records']
         return True
 
+    # UPDATERS
+
+    def update_contact_list_records(self, record):
+        log.debug('')
+        try:
+            self.records.append(record)
+        except:
+            return self.error_could_not_update_contact_list_records(record)
+        return True
+
+    # HANDLERS
+
     def handle_update_contact_list_rewrite(self, **kwargs):
         log.debug('')
         if not kwargs.get('records'):
@@ -350,13 +365,11 @@ class ContactList(Base):
         log.debug('')
         if not kwargs.get('records'):
             return self.error_no_contact_records_found()
-        _new_records = kwargs['records']
-        for item in _new_records:
-            _record_id = item.fetch_record_id()
-            self.records.update({_record_id: item})
+        for item in kwargs['records']:
+            update = self.update_contact_list_records(item)
         if self.records:
             log.info('Successfully updated contact list.')
-        return self.records
+        return kwargs['records']
 
     def handle_update_contact_list_remove(self, **kwargs):
         log.debug('')

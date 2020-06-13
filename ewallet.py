@@ -1221,6 +1221,14 @@ class EWallet(Base):
         log.info('Successfully created new contact list.')
         return _new_list
 
+
+
+    def fetch_active_session_contact_list(self):
+        log.debug('')
+        return False if not self.contact_list else \
+            self.contact_list[0]
+
+
     def action_create_new_contact_record(self, **kwargs):
         '''
         [ NOTE   ]: User action 'create new contact record', accessible from external api calls.
@@ -1228,22 +1236,26 @@ class EWallet(Base):
         [ RETURN ]: (ContactRecord object | False)
         '''
         log.debug('')
-        if not self.session_contact_list:
+        contact_list = self.fetch_active_session_contact_list()
+        if not contact_list:
             return self.error_no_active_session_contact_list_found(
                 self.active_user.fetch_user_name()
-                )
-        _new_record = self.session_contact_list.contact_list_controller(
-                action='create', user_name=kwargs.get('user_name'),
-                user_email=kwargs.get('user_email'),
-                user_phone=kwargs.get('user_phone'),
-                notes=kwargs.get('notes'),
-                )
-        if not _new_record:
+            )
+        new_record = contact_list.contact_list_controller(
+            action='create', user_name=kwargs.get('user_name'),
+            user_email=kwargs.get('user_email'),
+            user_phone=kwargs.get('user_phone'),
+            notes=kwargs.get('notes'),
+        )
+        if not new_record:
             return self.warning_could_not_create_contact_record(
                 self.active_user.fetch_user_name()
-                )
+            )
         log.info('Successfully created new contact record.')
-        return _new_record
+        return {
+            'contact_record': new_record.fetch_record_id(),
+            'contact_list': contact_list.fetch_contact_list_id()
+        }
 
     def action_create_new_contact(self, **kwargs):
         '''
@@ -1255,11 +1267,11 @@ class EWallet(Base):
         log.debug('')
         if not kwargs.get('contact'):
             return self.error_no_contact_found()
-        _handlers = {
-                'list': self.action_create_new_contact_list,
-                'record': self.action_create_new_contact_record,
-                }
-        return _handlers[kwargs['contact']](**kwargs)
+        handlers = {
+            'list': self.action_create_new_contact_list,
+            'record': self.action_create_new_contact_record,
+        }
+        return handlers[kwargs['contact']](**kwargs)
 
 #   @pysnooper.snoop()
     def action_create_new_transfer_type_supply(self, **kwargs):

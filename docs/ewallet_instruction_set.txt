@@ -107,13 +107,10 @@
         session_token=<token>, pay=<partner-email>, credits=<count>
         )
 
-# TODO
 * User action Add Contact:
-    * Returns {'new_contact': <alias>,
-               'contact_record': <id>,
-               'contact_sheet': <id>}
+    * Returns {'new_contact': <alias>, 'contact_record': <id>, 'contact_sheet': <id>}
     session_manager_controller(
-        controller='client', ctype='action', action='add', add='contact',
+        controller='client', ctype='action', action='new', new='contact', contact='record',
         client_id=<id>, session_token=<token>, contact_sheet=<id>,
         user_name=<name>, user_email=<email>, user_phone=<phone>, user_reference=<ref>,
         notes=<notes>,
