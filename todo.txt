@@ -7,7 +7,10 @@
 ###############################################################################
 # EWallet Session Manager
 ###############################################################################
-# TODO - User action view contact record
+# TODO - User action Transfer Credits
+# TODO - User action Convert Time To Credits
+# TODO - User action View Transfer Sheet
+
 
 ###############################################################################
 # EWallet Session Worker
@@ -18,8 +21,7 @@
 ###############################################################################
 # EWallet Session
 ###############################################################################
-# TODO - Bug/? user action supply -> same partner_account
-# TODO - Bug Report - User Action Supply Credits - System Core
+# TODO - BUG Report - Record id's don't autoincrement
 
 # TODO - Persistent storage with SQLAlchemy ORM
 - refactor session commit points

@@ -628,7 +628,7 @@ class EWalletSessionManager():
         orm_session = ewallet_session.fetch_active_session()
         new_contact_record = ewallet_session.ewallet_controller(
             controller='user', ctype='action', action='create',
-            create='contact', **instruction_set
+            create='contact', active_session=orm_session, **instruction_set
         )
         return self.warning_could_not_create_new_contact_record(
             ewallet_session, instruction_set
@@ -638,7 +638,8 @@ class EWalletSessionManager():
         log.debug('')
         orm_session = ewallet_session.fetch_active_session()
         view_contact_list = ewallet_session.ewallet_controller(
-            controller='user', ctype='action', action='view', **instruction_set
+        controller='user', ctype='action', action='view',
+        active_session=orm_session, **instruction_set
         )
         return self.warning_could_not_view_contact_list(
             ewallet_session, instruction_set
@@ -648,7 +649,8 @@ class EWalletSessionManager():
         log.debug('')
         orm_session = ewallet_session.fetch_active_session()
         view_contact_record = ewallet_session.ewallet_controller(
-            controller='user', ctype='action', **instruction_set
+            controller='user', ctype='action', action='view',
+            active_session=orm_session, **instruction_set
         )
         return self.warning_could_not_view_contact_record(
             ewallet_session, instruction_set
@@ -2044,8 +2046,8 @@ class EWalletSessionManager():
             controller='client', ctype='action', action='new', new='contact', contact='record',
             client_id=kwargs['client_id'], session_token=kwargs['session_token'],
             contact_list=kwargs['contact_list'],
-            user_name=kwargs['user_name'], user_email=['user_email'],
-            user_phone=kwargs['user_phone'], user_reference=['user_reference'],
+            user_name=kwargs['user_name'], user_email=kwargs['user_email'],
+            user_phone=kwargs['user_phone'], user_reference=kwargs['user_reference'],
             notes=kwargs['notes'],
         )
         print(str(_add_record) + '\n')
@@ -2100,26 +2102,26 @@ class EWalletSessionManager():
             client_id=client_id, session_token=session_token, credits=5,
             notes='Test Credits To Clock Conversion Notes...'
         )
-#       start_clock_timer = self.test_user_action_start_clock_timer(
-#           client_id=client_id, session_token=session_token
-#       )
-#       time.sleep(3)
-#       pause_clock_timer = self.test_user_action_pause_clock_timer(
-#           client_id=client_id, session_token=session_token
-#       )
-#       time.sleep(3)
-#       resume_clock_timer = self.test_user_action_resume_clock_timer(
-#           client_id=client_id, session_token=session_token
-#       )
-#       time.sleep(3)
-#       stop_clock_timer = self.test_user_action_stop_clock_timer(
-#           client_id=client_id, session_token=session_token
-#       )
-#       time.sleep(3)
-#       pay_credits = self.test_user_action_pay_credits_to_partner(
-#           partner_account=1, credits=5, client_id=client_id, session_token=session_token,
-#           pay='system.core@alvearesolutions.com'
-#       )
+        start_clock_timer = self.test_user_action_start_clock_timer(
+            client_id=client_id, session_token=session_token
+        )
+        time.sleep(3)
+        pause_clock_timer = self.test_user_action_pause_clock_timer(
+            client_id=client_id, session_token=session_token
+        )
+        time.sleep(3)
+        resume_clock_timer = self.test_user_action_resume_clock_timer(
+            client_id=client_id, session_token=session_token
+        )
+        time.sleep(3)
+        stop_clock_timer = self.test_user_action_stop_clock_timer(
+            client_id=client_id, session_token=session_token
+        )
+        time.sleep(3)
+        pay_credits = self.test_user_action_pay_credits_to_partner(
+            partner_account=1, credits=5, client_id=client_id, session_token=session_token,
+            pay='system.core@alvearesolutions.com'
+        )
         view_contact_list = self.test_user_action_view_contact_list(
             client_id=client_id, session_token=session_token,
         )

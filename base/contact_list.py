@@ -30,7 +30,7 @@ class ContactListRecord(Base):
     reference = Column(String)
 
     def __init__(self, **kwargs):
-        self.record_id = kwargs.get('record_id') or 1
+        self.record_id = kwargs.get('record_id')
         self.create_date = datetime.datetime.now()
         self.write_date = datetime.datetime.now()
         self.contact_list_id = kwargs.get('contact_list_id')
@@ -232,19 +232,19 @@ class ContactList(Base):
         if not kwargs.get('code'):
             return self.error_no_contact_record_id_found()
         if kwargs.get('active_session'):
-            _match = list(
-                    kwargs['active_session'].query(ContactListRecord) \
-                            .filter_by(record_id=kwargs['code'])
+            match = list(
+                kwargs['active_session'].query(ContactListRecord)\
+                .filter_by(record_id=kwargs['code'])
             )
         else:
-            _match = [
-                    item for item in self.records
-                    if item.fetch_record_id() is kwargs['code']
-                    ]
-        _record = False if not _match else _match[0]
-        if _record:
+            match = [
+                item for item in self.records
+                if item.fetch_record_id() is kwargs['code']
+            ]
+        record = False if not match else match[0]
+        if record:
             log.info('Successfully fetched contact record by id.')
-        return _record
+        return record
 
     def fetch_contact_list_record_by_ref(self, **kwargs):
         log.debug('')
@@ -454,15 +454,16 @@ class ContactList(Base):
 
     def create_contact_list_record(self, **kwargs):
         log.debug('')
-        _record = ContactListRecord(
-                contact_list_id=self.contact_list_id,
-                user_name=kwargs.get('user_name'),
-                user_email=kwargs.get('user_email'),
-                user_phone=kwargs.get('user_phone'),
-                notes=kwargs.get('notes')
-                )
-        self.handle_update_contact_list_append(records=[_record])
-        return _record
+        record = ContactListRecord(
+            contact_list_id=self.contact_list_id,
+            user_name=kwargs.get('user_name'),
+            user_email=kwargs.get('user_email'),
+            user_phone=kwargs.get('user_phone'),
+            notes=kwargs.get('notes')
+        )
+        self.handle_update_contact_list_append(records=[record])
+        kwargs['active_session'].add(record)
+        return record
 
     def display_contact_list_records(self, **kwargs):
         log.debug('')

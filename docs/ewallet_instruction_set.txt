@@ -123,12 +123,19 @@
         contact='list', client_id=<id>, session_token=<token>
         )
 
-# TODO
 * User action View Contact Record:
-    * Returns {'contact_record': <id>, record_data={'name': <name>, ...}}
+    * Returns {'contact_list': <id>, 'contact_record': <id>, record_data={'user_name': <name>, ...}}
     session_manager_controller(
         controller='client', ctype='action', action='view', view='contact',
         contact='record', client_id=<id>, session_token=<token>, record=<id>
+        )
+
+# TODO
+* User action Transfer Credits
+    * Returns {'transfered_to': <user_name>, 'ewallet_credits': <credits>, 'transfered_credits': <credits>}
+    session_manager_controller(
+        controller='client', ctype='action', action='transfer', client_id=<id>,
+        session_token=<token>, transfer_to=<email>, credits=<credits>
         )
 
 ################################################################################

@@ -969,6 +969,7 @@ class EWallet(Base):
             'contact_records': contact_list_record_map,
         }
 
+#   @pysnooper.snoop()
     def action_view_contact_record(self, **kwargs):
         '''
         [ NOTE   ]: User action 'view contact record', accessible from external user api call.
@@ -976,22 +977,26 @@ class EWallet(Base):
         [ RETURN ]: (Contact record values | False)
         '''
         log.debug('')
-        _contact_list = self.fetch_active_session_contact_list()
-        if not _contact_list or not kwargs.get('record_id'):
+        contact_list = self.fetch_active_session_contact_list()
+        if not contact_list or not kwargs.get('record'):
             return self.error_handler_action_view_contact_record(
-                contact_list=_contact_list,
-                record_id=kwargs.get('record_id'),
+                contact_list=contact_list,
+                record_id=kwargs.get('record'),
             )
         log.info('Attempting to fetch contact record by id...')
-        _record = _contact_list.fetch_contact_list_record(
+        record = contact_list.fetch_contact_list_record(
             search_by='id' if not kwargs.get('search_by') else kwargs['search_by'],
-            code=kwargs['record_id'], active_session=self.session
+            code=kwargs['record'], active_session=self.fetch_active_session()
         )
-        if not _record:
+        if not record:
             return self.warning_could_not_fetch_contact_record()
-        res = _record.fetch_record_values()
-        log.debug(res)
-        return res
+        contact_record_data = record.fetch_record_values()
+        log.debug(contact_record_data)
+        return {
+            'contact_list': contact_list.fetch_contact_list_id(),
+            'contact_record': kwargs['record'],
+            'record_data': contact_record_data,
+        }
 
     def action_reset_user_password(self, **kwargs):
         '''
@@ -1241,16 +1246,18 @@ class EWallet(Base):
             return self.error_no_active_session_contact_list_found(
                 self.active_user.fetch_user_name()
             )
+        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
+            kwargs, 'action'
+        )
         new_record = contact_list.contact_list_controller(
-            action='create', user_name=kwargs.get('user_name'),
-            user_email=kwargs.get('user_email'),
-            user_phone=kwargs.get('user_phone'),
-            notes=kwargs.get('notes'),
+            action='create', **sanitized_command_chain
         )
         if not new_record:
+            kwargs['active_session'].rollback()
             return self.warning_could_not_create_contact_record(
                 self.active_user.fetch_user_name()
             )
+        kwargs['active_session'].commit()
         log.info('Successfully created new contact record.')
         return {
             'contact_record': new_record.fetch_record_id(),
