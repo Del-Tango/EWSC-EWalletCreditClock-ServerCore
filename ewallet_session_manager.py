@@ -618,6 +618,29 @@ class EWalletSessionManager():
         pass
 
     # ACTIONS
+    '''
+    [ NOTE ]: SqlAlchemy ORM sessions are fetched here.
+    '''
+
+    def action_view_contact_list(self, ewallet_session, instruction_set):
+        log.debug('')
+        orm_session = ewallet_session.fetch_active_session()
+        view_contact_list = ewallet_session.ewallet_controller(
+            controller='user', ctype='action', action='view', **instruction_set
+        )
+        return self.warning_could_not_view_contact_list(
+            ewallet_session, instruction_set
+        ) if not view_contact_list else view_contact_list
+
+    def action_view_contact_record(self, ewallet_session, instruction_set):
+        log.debug('')
+        orm_session = ewallet_session.fetch_active_session()
+        view_contact_record = ewallet_session.ewallet_controller(
+            controller='user', ctype='action', **instruction_set
+        )
+        return self.warning_could_not_view_contact_record(
+            ewallet_session, instruction_set
+        ) if not view_contact_record else view_contact_record
 
     def action_pay_partner_account(self, ewallet_session, instruction_set):
         log.debug('')
@@ -628,7 +651,7 @@ class EWalletSessionManager():
         )
         return self.warning_could_not_pay_partner_account(
             ewallet_session, instruction_set
-            ) if not pay_partner else pay_partner
+        ) if not pay_partner else pay_partner
 
 #   @pysnooper.snoop()
     def action_supply_user_credit_ewallet_in_session(self, ewallet_session, instruction_set):
@@ -815,7 +838,55 @@ class EWalletSessionManager():
 
     # HANDLERS
 
-    # TODO
+    def handle_client_action_view_contact_list(self, **kwargs):
+        log.debug('')
+        instruction_set_validation = self.validate_instruction_set(kwargs)
+        if not instruction_set_validation:
+            return False
+        ewallet = self.fetch_ewallet_session_for_client_action_using_instruction_set(
+            kwargs
+        )
+        if not ewallet:
+            return False
+        view_contact_list = self.action_view_contact_list(
+            ewallet['ewallet_session'], ewallet['sanitized_instruction_set'],
+        )
+        return view_contact_list
+
+    def handle_client_action_view_contact_record(self, **kwargs):
+        log.debug('')
+        instruction_set_validation = self.validate_instruction_set(kwargs)
+        if not instruction_set_validation:
+            return False
+        ewallet = self.fetch_ewallet_session_for_client_action_using_instruction_set(
+            kwargs
+        )
+        if not ewallet:
+            return False
+        view_contact_record = self.action_view_contact_record(
+            ewallet['ewallet_session'], ewallet['sanitized_instruction_set'],
+        )
+        return view_contact_record
+
+    def handle_client_action_view_contact(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('contact'):
+            return self.error_no_client_action_view_contact_target_specified(kwargs)
+        handlers = {
+            'list': self.handle_client_action_view_contact_list,
+            'record': self.handle_client_action_view_contact_record,
+        }
+        return handlers[kwargs['contact']](**kwargs)
+
+    def handle_client_action_view(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('view'):
+            return self.error_no_client_action_view_target_specified(kwargs)
+        handlers = {
+            'contact': self.handle_client_action_view_contact,
+        }
+        return handlers[kwargs['view']](**kwargs)
+
     def handle_client_action_pay(self, **kwargs):
         log.debug('')
         instruction_set_validation = self.validate_instruction_set(kwargs)
@@ -1230,7 +1301,7 @@ class EWalletSessionManager():
                 'new': self.handle_client_action_new,
 #               'scrape': self.handle_client_action_scrape,
 #               'search': self.handle_client_action_search,
-#               'view': self.handle_client_action_view,
+                'view': self.handle_client_action_view,
                 'request': self.handle_client_action_request,
                 'login': self.handle_client_action_login,
                 'supply': self.handle_client_action_supply,
@@ -1345,6 +1416,20 @@ class EWalletSessionManager():
 
     # WARNINGS
 
+    def warning_could_not_view_contact_list(self, ewallet_session, instruction_set):
+        log.warning(
+            'Something went wrong. Could not view active contact list for ewallet session {}.'\
+            'Details : {}'.format(ewallet_session, instruction_set)
+        )
+        return False
+
+    def warning_could_not_view_contact_record(self, ewallet_session, instruction_set):
+        log.warning(
+            'Something went wrong. Could not view active contact list record for ewallet session {}.'\
+            'Details : {}'.format(ewallet_session, instruction_set)
+        )
+        return False
+
     def warning_could_not_pay_partner_account(self, ewallet_session, instruction_set):
         log.warning(
             'Something went wrong. Could not pay partner account in session {}. Details : {}'\
@@ -1409,6 +1494,18 @@ class EWalletSessionManager():
         return False
 
     # ERRORS
+
+    def error_no_client_action_view_contact_target_specified(self, instruction_set):
+        log.error(
+            'No client action View Contact target specified. Details : {}'.format(instruction_set)
+        )
+        return False
+
+    def error_no_client_action_view_target_specified(self, instruction_set):
+        log.error(
+            'No client action View target specified. Details : {}'.format(instruction_set)
+        )
+        return False
 
     def error_no_client_action_start_target_specified(self):
         log.error('No client action start target specified.')
@@ -1748,7 +1845,7 @@ class EWalletSessionManager():
 
     def test_open_instruction_listener_port(self):
         log.debug('')
-        print('[ * ] Action Open Instruction Listener Port')
+        print('[ * ]: Action Open Instruction Listener Port')
         _in_port = self.session_manager_controller(
                 controller='system', ctype='action', action='open',
                 opening='sockets', in_port=8080, out_port=8081
@@ -1758,7 +1855,7 @@ class EWalletSessionManager():
 
     def test_close_instruction_listener_port(self):
         log.debug('')
-        print('[ * ] Action Close Instruction Listener Port')
+        print('[ * ]: Action Close Instruction Listener Port')
         _in_port = self.session_manager_controller(
                 controller='system', ctype='action', action='close',
                 closing='sockets',
@@ -1769,7 +1866,7 @@ class EWalletSessionManager():
 
     def test_request_client_id(self):
         log.debug('')
-        print('[ * ] Action Request Client ID')
+        print('[ * ]: Action Request Client ID')
         _client_id = self.session_manager_controller(
                 controller='client', ctype='action', action='request',
                 request='client_id'
@@ -1779,7 +1876,7 @@ class EWalletSessionManager():
 
     def test_new_worker(self):
         log.debug('')
-        print('[ * ] Action New Worker')
+        print('[ * ]: Action New Worker')
         _worker = self.session_manager_controller(
                 controller='system', ctype='action', action='new',
                 new='worker'
@@ -1874,6 +1971,10 @@ class EWalletSessionManager():
         return _stop
 
     def test_user_action_pay_credits_to_partner(self, **kwargs):
+        '''
+        [ NOTE ]: Instruction Set Details
+            - pay = Target user email address
+        '''
         log.debug('')
         print('[ * ]: User Action Pay Credits To Partner')
         _pay = self.session_manager_controller(
@@ -1883,6 +1984,42 @@ class EWalletSessionManager():
         )
         print(str(_pay) + '\n')
         return _pay
+
+    def test_user_action_add_contact_record(self, **kwargs):
+        log.debug('')
+        print('[ * ]: User Action Add Contact List Record')
+        _add_record = self.session_manager_controller(
+            controller='client', ctype='action', action='add', add='contact',
+            client_id=kwargs['client_id'], session_token=kwargs['session_token'],
+            contact_list=kwargs['contact_list'],
+            user_name=kwargs['user_name'], user_email=['user_email'],
+            user_phone=kwargs['user_phone'], user_reference=['user_reference'],
+            notes=kwargs['notes'],
+        )
+        print(str(_add_record) + '\n')
+        return _add_record
+
+    def test_user_action_view_contact_list(self, **kwargs):
+        log.debug('')
+        print('[ * ]: User Action View Active Contact List')
+        _view_list = self.session_manager_controller(
+            controller='client', ctype='action', action='view', view='contact',
+            contact='list', client_id=kwargs['client_id'],
+            session_token=kwargs['session_token']
+        )
+        print(str(_view_list) + '\n')
+        return _view_list
+
+    def test_user_action_view_contact_record(self, **kwargs):
+        log.debug('')
+        print('[ * ]: User Action View Active Contact List Record')
+        _view_record = self.session_manager_controller(
+            controller='client', ctype='action', action='view', view='contact',
+            contact='record', client_id=kwargs['client_id'],
+            session_token=kwargs['session_token'], record=kwargs['record']
+        )
+        print(str(_view_record) + '\n')
+        return _view_record
 
     def test_session_manager_controller(self, **kwargs):
         print('[ TEST ] Session Manager')
@@ -1931,6 +2068,22 @@ class EWalletSessionManager():
             partner_account=1, credits=5, client_id=client_id, session_token=session_token,
             pay='system.core@alvearesolutions.com'
         )
+        view_contact_list = self.test_user_action_view_contact_list(
+            client_id=client_id, session_token=session_token,
+        )
+        add_contact_record = self.test_user_action_add_contact_record(
+            client_id=client_id, session_token=session_token,
+            contact_list=view_contact_list['contact_list'],
+            user_name='This is bob', user_email='this@is.bob', user_phone='095551234',
+            user_reference='That weird guy coding wallets.', notes='WOOHO.'
+        )
+        view_contact_record = self.test_user_action_view_contact_record(
+            client_id=client_id, session_token=session_token,
+            record=add_contact_record['contact_record']
+        )
+
+
+
 
 if __name__ == '__main__':
     session_manager = EWalletSessionManager()

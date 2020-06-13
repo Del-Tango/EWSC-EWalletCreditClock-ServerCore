@@ -100,8 +100,6 @@
         client_id=<id>, session_token=<token>
         )
 
-# TODO - res_user.py 584
-
 * User action Pay Credits:
     * Returns {'total_credits': <count>, 'spent_credits': <count>}
     session_manager_controller(
@@ -109,6 +107,32 @@
         session_token=<token>, pay=<partner-email>, credits=<count>
         )
 
+# TODO
+* User action Add Contact:
+    * Returns {'new_contact': <alias>,
+               'contact_record': <id>,
+               'contact_sheet': <id>}
+    session_manager_controller(
+        controller='client', ctype='action', action='add', add='contact',
+        client_id=<id>, session_token=<token>, contact_sheet=<id>,
+        user_name=<name>, user_email=<email>, user_phone=<phone>, user_reference=<ref>,
+        notes=<notes>,
+        )
+
+* User action View Contact List:
+    * Returns {'contact_list': <id>, 'contact_records': {<id>: <name>, ...}}
+    session_manager_controller(
+        controller='client', ctype='action', action='view', view='contact',
+        contact='list', client_id=<id>, session_token=<token>
+        )
+
+# TODO
+* User action View Contact Record:
+    * Returns {'contact_record': <id>, record_data={'name': <name>, ...}}
+    session_manager_controller(
+        controller='client', ctype='action', action='view', view='contact',
+        contact='record', client_id=<id>, session_token=<token>, record=<id>
+        )
 
 ################################################################################
 # EWallet Session (Command Chain)

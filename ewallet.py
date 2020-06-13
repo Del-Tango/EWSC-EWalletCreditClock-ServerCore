@@ -955,12 +955,19 @@ class EWallet(Base):
         [ RETURN ]: (Contact list values | False)
         '''
         log.debug('')
-        _contact_list = self.fetch_active_session_contact_list()
-        if not _contact_list:
+        contact_list = self.fetch_active_session_contact_list()
+        if not contact_list:
             return self.error_no_session_contact_list_found()
-        res = _contact_list.fetch_contact_list_values()
-        log.debug(res)
-        return res
+        contact_list_data = contact_list.fetch_contact_list_values()
+        contact_list_record_map = {
+            item.fetch_record_id(): item.fetch_record_user_name() \
+                for item in contact_list_data['records']
+        }
+        log.debug(contact_list_data)
+        return {
+            'contact_list': contact_list_data['id'],
+            'contact_records': contact_list_record_map,
+        }
 
     def action_view_contact_record(self, **kwargs):
         '''
