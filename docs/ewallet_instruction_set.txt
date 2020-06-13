@@ -130,12 +130,11 @@
         contact='record', client_id=<id>, session_token=<token>, record=<id>
         )
 
-# TODO
 * User action Transfer Credits
     * Returns {'transfered_to': <user_name>, 'ewallet_credits': <credits>, 'transfered_credits': <credits>}
     session_manager_controller(
-        controller='client', ctype='action', action='transfer', client_id=<id>,
-        session_token=<token>, transfer_to=<email>, credits=<credits>
+        controller='client', ctype='action', action='transfer', transfer='credits',
+        client_id=<id>, session_token=<token>, transfer_to=<email>, credits=<credits>
         )
 
 ################################################################################

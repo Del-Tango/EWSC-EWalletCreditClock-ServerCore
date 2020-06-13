@@ -86,6 +86,16 @@ class ResUser(Base):
 
     # FETCHERS
 
+    def fetch_transaction_handler_creation_values_for_action_transfer(self, **kwargs):
+        log.debug('')
+        creation_values = {
+            'transaction_type': 'transfer',
+            'source_user_account': self,
+            'target_user_account': kwargs.get('transfer_to'),
+            'active_session': kwargs.get('active_session'),
+        }
+        return creation_values
+
     def fetch_transaction_handler_creation_values_for_event_request_credits(self, **kwargs):
         log.debug('')
         creation_values = {
@@ -284,6 +294,7 @@ class ResUser(Base):
         self.user_write_date = datetime.datetime.now()
         return True
 
+    # TODO - Refactor
     def set_user_pass(self, **kwargs):
         log.debug('')
         if not kwargs.get('password') or not kwargs.get('pass_check_func') \
@@ -552,6 +563,24 @@ class ResUser(Base):
 
     # ACTIONS
 
+    def action_transfer_credits_to_partner_account(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('transfer_to'):
+            return self.error_no_user_action_transfer_credits_target_partner_account_specified(kwargs)
+        active_session = kwargs.get('active_session') or \
+                self.fetch_user_active_session(stype='orm')
+        if not active_session:
+            return self.error_could_not_fetch_active_orm_session()
+        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
+            kwargs, 'active_session'
+        )
+        creation_values = self.fetch_transaction_handler_creation_values_for_action_transfer(
+            active_session=active_session, **sanitized_command_chain
+        )
+        transaction_handler = self.create_transaction_handler(creation_values)
+        transaction = transaction_handler.action_init_transaction(**sanitized_command_chain)
+        return transaction
+
     def action_pay_partner_account(self, **kwargs):
         log.debug('')
         if not kwargs.get('pay'):
@@ -564,8 +593,7 @@ class ResUser(Base):
             kwargs, 'active_session'
         )
         creation_values = self.fetch_transaction_handler_creation_values_for_action_pay(
-            active_session=active_session,
-            **sanitized_command_chain
+            active_session=active_session, **sanitized_command_chain
         )
         transaction_handler = self.create_transaction_handler(creation_values)
         transaction = transaction_handler.action_init_transaction(**sanitized_command_chain)
@@ -695,6 +723,7 @@ class ResUser(Base):
             return self.error_no_user_action_transfer_type_specified(kwargs)
         handlers = {
                 'payment': self.action_pay_partner_account,
+                'transfer': self.action_transfer_credits_to_partner_account,
         }
         return handlers[kwargs['ttype']](**kwargs)
 
@@ -879,6 +908,13 @@ class ResUser(Base):
         return False
 
     # ERRORS
+
+    def error_no_user_action_transfer_credits_target_partner_account_specified(self, command_chain):
+        log.error(
+            'No user action transfer credits target partner account specified. Detauls : {}'\
+            .format(command_chain)
+        )
+        return False
 
     def error_no_credit_wallet_transaction_type_specified(self):
         log.error('No credit wallet transaction type specified.')

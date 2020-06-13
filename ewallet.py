@@ -84,6 +84,7 @@ class EWallet(Base):
         return self.warning_no_partner_credit_wallet_found() if not partner_wallet \
                 else partner_wallet
 
+#   @pysnooper.snoop()
     def fetch_user_by_email(self, **kwargs):
         log.debug('')
         if not kwargs.get('email'):
@@ -91,8 +92,10 @@ class EWallet(Base):
         active_session = kwargs.get('active_session') or self.fetch_active_session()
         if not active_session:
             return self.error_no_active_session_found()
-        user_account = active_session.query(ResUser).filter_by(user_email=kwargs['email'])
-        return self.warning_no_user_account_found('email', kwargs['email']) \
+        user_account = list(
+            active_session.query(ResUser).filter_by(user_email=kwargs['email'])
+        )
+        return self.warning_no_user_account_found(kwargs) \
                 if not user_account else user_account[0]
 
     def fetch_system_core_user_account(self, **kwargs):
@@ -364,6 +367,37 @@ class EWallet(Base):
                 .delete()
 
     # ACTIONS
+
+#   @pysnooper.snoop()
+    def action_create_new_transfer_type_transfer(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('transfer_to'):
+            return self.error_no_user_action_transfer_credits_target_specified(kwargs)
+        active_session = kwargs.get('active_session') or \
+            self.fetch_active_session()
+        partner_account = kwargs.get('partner_account') or \
+            self.fetch_user(identifier='email', email=kwargs['transfer_to'])
+        if not partner_account:
+            return self.error_could_not_fetch_partner_account(kwargs)
+        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
+            kwargs, 'ctype', 'action', 'ttype', 'partner_account', 'pay',
+            'transfer_to'
+        )
+        credits_before = self.fetch_credit_wallet_credits()
+        current_account = self.fetch_active_session_user()
+        action_transfer = current_account.user_controller(
+            ctype='action', action='transfer', ttype='transfer',
+            transfer_to=partner_account, **sanitized_command_chain
+        )
+        credits_after = self.fetch_credit_wallet_credits()
+        if str(credits_after) == str(credits_before - kwargs.get('credits')):
+            active_session.commit()
+            return {
+                'total_credits': credits_after,
+                'transfered_credits': kwargs['credits'],
+            }
+        active_session.rollback()
+        return self.error_transfer_type_transfer_failure(kwargs)
 
     def action_create_new_transfer(self, **kwargs):
         '''
@@ -1351,8 +1385,6 @@ class EWallet(Base):
         return self.error_pay_type_transfer_failure(kwargs)
 
     # TODO
-    def action_create_new_transfer_type_transfer(self, **kwargs):
-        log.debug('')
     def action_unlink_credit_clock(self, **kwargs):
         log.debug('')
         return False
@@ -1752,15 +1784,15 @@ class EWallet(Base):
         log.debug('')
         if not kwargs.get('create'):
             return self.error_no_user_create_target_specified()
-        _handlers = {
-                'account': self.action_create_new_user_account,
-                'credit_wallet': self.action_create_new_credit_wallet,
-                'credit_clock': self.action_create_new_credit_clock,
-                'transfer': self.action_create_new_transfer,
-                'conversion': self.action_create_new_conversion,
-                'contact': self.action_create_new_contact,
-                }
-        return _handlers[kwargs['create']](**kwargs)
+        handlers = {
+            'account': self.action_create_new_user_account,
+            'credit_wallet': self.action_create_new_credit_wallet,
+            'credit_clock': self.action_create_new_credit_clock,
+            'transfer': self.action_create_new_transfer,
+            'conversion': self.action_create_new_conversion,
+            'contact': self.action_create_new_contact,
+        }
+        return handlers[kwargs['create']](**kwargs)
 
     def handle_user_action_time(self, **kwargs):
         '''
@@ -2306,6 +2338,24 @@ class EWallet(Base):
 
     # ERRORS
 
+    def error_could_not_fetch_partner_account(self, command_chain):
+        log.error('Could not fetch partner account. Details : {}'.format(command_chain))
+        return False
+
+    def error_no_user_action_transfer_credits_target_specified(self, command_chain):
+        log.error(
+            'No user action transfer credits target specified. Details : {}'\
+            .format(command_chain)
+        )
+        return False
+
+    def error_transfer_type_transfer_failure(self, command_chain):
+        log.error(
+            'Transfer type transaction failure. Details : {}'\
+            .format(command_chain)
+        )
+        return False
+
     def error_pay_type_transfer_failure(self, command_chain):
         log.error(
             'Credit payment failure. Details : {}'.format(command_chain)
@@ -2591,6 +2641,12 @@ class EWallet(Base):
         return False
 
     # WARNINGS
+
+    def warning_no_user_account_found(self, command_chain):
+        log.warning(
+            'No user account found. Details : {}'.format(command_chain)
+        )
+        return False
 
     def warning_could_not_unlink_user_account(self):
         log.warning('Something went wrong. Could not unlink user account.')

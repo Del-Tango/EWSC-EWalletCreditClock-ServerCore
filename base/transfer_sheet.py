@@ -177,6 +177,8 @@ class CreditTransferSheet(Base):
         self.reference = kwargs.get('reference') or 'Transfer Sheet'
         self.records = kwargs.get('records') or []
 
+    # FETCHERS
+
     def fetch_transfer_sheet_id(self):
         log.debug('')
         return self.transfer_sheet_id
@@ -310,15 +312,17 @@ class CreditTransferSheet(Base):
         log.debug('')
         if not kwargs.get('search_by'):
             return self.error_no_transfer_sheet_record_identifier_specified()
-        _handlers = {
-                'id': self.fetch_transfer_sheet_record_by_id,
-                'reference': self.fetch_transfer_sheet_record_by_ref,
-                'date': self.fetch_transfer_sheet_record_by_date,
-                'transfer_from': self.fetch_transfer_sheet_record_by_src,
-                'transfer_to': self.fetch_transfer_sheet_record_by_dst,
-                'all': self.fetch_all_transfer_sheet_records,
-                }
-        return _handlers[kwargs['search_by']](**kwargs)
+        handlers = {
+            'id': self.fetch_transfer_sheet_record_by_id,
+            'reference': self.fetch_transfer_sheet_record_by_ref,
+            'date': self.fetch_transfer_sheet_record_by_date,
+            'transfer_from': self.fetch_transfer_sheet_record_by_src,
+            'transfer_to': self.fetch_transfer_sheet_record_by_dst,
+            'all': self.fetch_all_transfer_sheet_records,
+        }
+        return handlers[kwargs['search_by']](**kwargs)
+
+    # SETTERS
 
     def set_transfer_sheet_id(self, **kwargs):
         log.debug('')
@@ -348,6 +352,8 @@ class CreditTransferSheet(Base):
         self.records = kwargs['records']
         return True
 
+    # UPDATERS
+
     def update_write_date(self):
         log.debug('')
         self.write_date = datetime.datetime.now()
@@ -360,6 +366,8 @@ class CreditTransferSheet(Base):
             })
         log.info('Successfully updated transfer sheet records.')
         return self.records
+
+    # ACTIONS
 
     def create_transfer_sheet_record(self, values=None):
         log.debug('')
@@ -394,7 +402,10 @@ class CreditTransferSheet(Base):
 
     def update_records(self, record):
         log.debug('')
-        self.records.append(record)
+        try:
+            self.records.append(record)
+        except:
+            return self.error_could_not_update_transfer_sheet_records(record)
         return self.records
 
     def append_transfer_sheet_record(self, **kwargs):
@@ -418,6 +429,8 @@ class CreditTransferSheet(Base):
         log.info('Successfully cleared transfer sheet records.')
         return self.records
 
+    # CONTROLLERS
+
     def credit_transfer_sheet_controller(self, **kwargs):
         log.debug('')
         if not kwargs.get('action'):
@@ -433,6 +446,12 @@ class CreditTransferSheet(Base):
         if _handle and kwargs['action'] != 'interogate':
             self.update_write_date()
         return _handle
+
+    # ERRORS
+
+    def error_could_not_update_transfer_sheet_records(self, record):
+        log.error('Could not update transfer sheet records with {}.'.format(record))
+        return False
 
     def error_handler_add_transfer_sheet_record(self, **kwargs):
         _reasons_and_handlers = {
@@ -520,17 +539,4 @@ class CreditTransferSheet(Base):
 ###############################################################################
 # CODE DUMP
 ###############################################################################
-
-    # TODO - Refactor
-#   def display_transfer_sheet_records(self, records=[]):
-#       log.debug('')
-#       if not records:
-#           records = [item for item in self.records.values()]
-#       print('Transfer Sheet {} Records:'.format(self.reference))
-#       for item in records:
-#           print('{}: {} - {}'.format(
-#               item.fetch_record_create_date(), item.fetch_record_id(),
-#               item.fetch_record_reference()
-#               ))
-#       return records
 

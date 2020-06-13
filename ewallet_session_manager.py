@@ -622,6 +622,16 @@ class EWalletSessionManager():
     [ NOTE ]: SqlAlchemy ORM sessions are fetched here.
     '''
 
+    def action_transfer_credits(self, ewallet_session, instruction_set):
+        log.debug('')
+        orm_session = ewallet_session.fetch_active_session()
+        transfer_credits = ewallet_session.ewallet_controller(
+            controller='user', ctype='action', action='create', create='transfer',
+            ttype='transfer', active_session=orm_session, **instruction_set
+        )
+        return self.warning_could_not_transfer_credits_to_partner(
+            ewallet_session, instruction_set
+        ) if not transfer_credits else transfer_credits
 
     def action_new_contact_record(self, ewallet_session, instruction_set):
         log.debug('')
@@ -851,6 +861,31 @@ class EWalletSessionManager():
         pass
 
     # HANDLERS
+
+    def handle_client_action_transfer_credits(self, **kwargs):
+        log.debug('')
+        instruction_set_validation = self.validate_instruction_set(kwargs)
+        if not instruction_set_validation:
+            return False
+        ewallet = self.fetch_ewallet_session_for_client_action_using_instruction_set(
+            kwargs
+        )
+        if not ewallet:
+            return False
+        credit_transfer = self.action_transfer_credits(
+            ewallet['ewallet_session'], ewallet['sanitized_instruction_set'],
+        )
+        return credit_transfer
+
+    def handle_client_action_transfer(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('transfer'):
+            return self.error_no_client_action_transfer_target_specified(kwargs)
+        handlers = {
+            'credits': self.handle_client_action_transfer_credits,
+#           'time': self.handle_client_action_transfer_time,
+        }
+        return handlers[kwargs['transfer']](**kwargs)
 
     def handle_action_new_contact_record(self, **kwargs):
         log.debug('')
@@ -1351,6 +1386,7 @@ class EWalletSessionManager():
                 'resume': self.handle_client_action_resume,
                 'stop': self.handle_client_action_stop,
                 'pay': self.handle_client_action_pay,
+                'transfer': self.handle_client_action_transfer,
                 }
         return _handlers[kwargs['action']](**kwargs)
 
@@ -1456,6 +1492,13 @@ class EWalletSessionManager():
 
     # WARNINGS
 
+    def warning_could_not_transfer_credits_to_partner(self, ewallet_session, instruction_set):
+        log.warning(
+            'Something went wrong. Could not transfer credits to partner in ewallet session {}. '\
+            'Details : {}'.format(ewallet_session, instruction_set)
+        )
+        return False
+
     def warning_could_not_create_new_contact_record(self, ewallet_session, instruction_set):
         log.warning(
             'Something went wrong. Could not create new contact record for session {}.'\
@@ -1541,6 +1584,13 @@ class EWalletSessionManager():
         return False
 
     # ERRORS
+
+    def error_no_client_action_transfer_target_specified(self, instruction_set):
+        log.error(
+            'No client action transfer target specified. Details : {}'\
+            .format(instruction_set)
+        )
+        return False
 
     def error_no_client_action_new_contact_target_specified(self, instruction_set):
         log.error(
@@ -2075,6 +2125,18 @@ class EWalletSessionManager():
         print(str(_view_record) + '\n')
         return _view_record
 
+    def test_user_action_transfer_credits(self, **kwargs):
+        log.debug('')
+        print('[ * ]: User action Transfer Credits.')
+        _transfer = self.session_manager_controller(
+            controller='client', ctype='action', action='transfer',
+            transfer='credits', client_id=kwargs['client_id'],
+            session_token=kwargs['session_token'], transfer_to=kwargs['transfer_to'],
+            credits=kwargs['credits']
+        )
+        print(str(_transfer) + '\n')
+        return _transfer
+
     def test_session_manager_controller(self, **kwargs):
         print('[ TEST ] Session Manager')
 #       open_in_port = self.test_open_instruction_listener_port()
@@ -2128,16 +2190,17 @@ class EWalletSessionManager():
         add_contact_record = self.test_user_action_add_contact_record(
             client_id=client_id, session_token=session_token,
             contact_list=view_contact_list['contact_list'],
-            user_name='This is bob', user_email='this@is.bob', user_phone='095551234',
+            user_name='This is bob', user_email='example@example.com', user_phone='095551234',
             user_reference='That weird guy coding wallets.', notes='WOOHO.'
         )
         view_contact_record = self.test_user_action_view_contact_record(
             client_id=client_id, session_token=session_token,
             record=add_contact_record['contact_record']
         )
-
-
-
+        transfer_credits = self.test_user_action_transfer_credits(
+            client_id=client_id, session_token=session_token,
+            transfer_to='example@example.com', credits=50
+        )
 
 if __name__ == '__main__':
     session_manager = EWalletSessionManager()

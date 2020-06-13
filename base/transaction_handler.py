@@ -18,8 +18,8 @@ log = logging.getLogger(log_config['log_name'])
 class EWalletTransactionHandler():
     '''
     [ NOTE ]: Responsible for wallet transactions and journaling.
-    [ NOTE ]: Currently supports (Credit Payment, Credit Supply)
-    [ TODO ]: Add support for (Credit Transfer)
+    [ NOTE ]: Currently supports (Credit Payment)
+    [ TODO ]: Add support for (Credit Supply, Credit Transfer)
     '''
 
     transaction_type = None
@@ -122,6 +122,22 @@ class EWalletTransactionHandler():
 
     # COMPUTERS
 
+    def compute_transaction_type_transfer(self, **kwargs):
+        log.debug('')
+        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
+            kwargs, 'controller', 'action'
+        )
+        extract_credits_from_source = kwargs['source_credit_wallet'].main_controller(
+            controller='system', action='extract', **sanitized_command_chain
+        )
+        supply_credits_to_target = kwargs['target_credit_wallet'].main_controller(
+            controller='system', action='supply', **sanitized_command_chain
+        )
+        return {
+            'extract': extract_credits_from_source,
+            'supply': supply_credits_to_target
+        }
+
 #   @pysnooper.snoop()
     def compute_transaction_type_supply(self, **kwargs):
         '''
@@ -162,6 +178,28 @@ class EWalletTransactionHandler():
         }
 
     # GENERAL
+
+    def share_partner_transaction_transfer_journal_records(self, journal_records, **kwargs):
+        log.debug('')
+        transfer_from = kwargs['source_user_account'].fetch_user_id()
+        transfer_to = kwargs['transfer_to'].fetch_user_id()
+        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
+            kwargs, 'action', 'transfer_from', 'transfer_to'
+        )
+        share_transfer_record = journal_records['transfer_sheets']['target'].credit_transfer_sheet_controller(
+            action='add', transfer_type='incoming',
+            transfer_from=transfer_from, transfer_to=transfer_to,
+            **sanitized_command_chain
+        )
+        if not share_transfer_record:
+            return self.warning_credit_transaction_record_share_failure(
+                share_transfer_record=share_transfer_record,
+                share_invoice_record=None,
+                command_chain=sanitized_command_chain
+            )
+        return {
+            'transfer_record': share_transfer_record,
+        }
 
     def share_partner_transaction_supply_journal_records(self, journal_records, **kwargs):
         log.debug('')
@@ -210,6 +248,30 @@ class EWalletTransactionHandler():
         }
 
     # JOURNALS
+
+#   @pysnooper.snoop()
+    def journal_transaction_type_transfer(self, **kwargs):
+        log.debug('')
+
+        # TODO - REMOVE
+        log.info('COMMAND CHAIN DETAILS : {}'.format(kwargs))
+
+        transfer_sheets = self.fetch_credit_wallet_pair_transfer_sheets(
+            kwargs['source_credit_wallet'], kwargs['target_credit_wallet'],
+        )
+        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
+            kwargs, 'action', 'transfer_to'
+        )
+        transfer_record = transfer_sheets['source'].credit_transfer_sheet_controller(
+            action='add', transfer_type='transfer',
+            transfer_from=kwargs['source_user_account'].fetch_user_id(),
+            transfer_to=kwargs['target_user_account'].fetch_user_id(),
+            **sanitized_command_chain
+        )
+        return {
+            'transfer_sheets': transfer_sheets,
+            'transfer_record': transfer_record,
+        }
 
     def journal_transaction_type_supply(self, **kwargs):
         log.debug('')
@@ -267,6 +329,18 @@ class EWalletTransactionHandler():
 
     # HANDLERS
 
+    def handle_action_start_transaction_type_transfer(self, **kwargs):
+        log.debug('')
+        compute = self.compute_transaction_type_transfer(**kwargs)
+        journal = self.journal_transaction_type_transfer(**kwargs)
+        share = self.share_partner_transaction_transfer_journal_records(journal, **kwargs)
+        kwargs['active_session'].add(share['transfer_record'])
+        return {
+            'ewallet_credits': kwargs['source_credit_wallet'].fetch_credit_ewallet_credits(),
+            'spent_credits': compute['extract'],
+            'transfer_record': journal['transfer_record'],
+        }
+
 #   @pysnooper.snoop()
     def handle_action_start_transaction_type_supply(self, **kwargs):
         log.debug('')
@@ -298,10 +372,6 @@ class EWalletTransactionHandler():
             'transfer_record': journal['transfer_record'],
             'invoice_record': journal['invoice_record'],
         }
-
-    # TODO
-    def handle_action_start_transaction_type_transfer(self, **kwargs):
-        log.debug('UNIMPLEMENTED')
 
     def handle_action_start_transaction(self, **kwargs):
         log.debug('')
