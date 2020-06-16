@@ -756,16 +756,18 @@ class EWallet(Base):
         [ RETURN ]: (Transfer sheet values | False)
         '''
         log.debug('')
-        _credit_wallet = self.fetch_active_session_credit_wallet()
-        if not _credit_wallet:
+        credit_wallet = self.fetch_active_session_credit_wallet()
+        if not credit_wallet:
             return self.error_no_session_credit_wallet_found()
         log.info('Attempting to fetch active transfer sheet...')
-        _transfer_sheet = _credit_wallet.fetch_credit_ewallet_transfer_sheet()
-        if not _transfer_sheet:
+        transfer_sheet = credit_wallet.fetch_credit_ewallet_transfer_sheet()
+        if not transfer_sheet:
             return self.warning_could_not_fetch_transfer_sheet()
-        res = _transfer_sheet.fetch_transfer_sheet_values()
-        log.debug(res)
-        return res
+        command_chain_response = {
+            'failed': False,
+            'list_data': transfer_sheet.fetch_transfer_sheet_values(),
+        }
+        return command_chain_response
 
     def action_view_transfer_record(self, **kwargs):
         '''
@@ -774,25 +776,24 @@ class EWallet(Base):
         [ RETURN ]: (Transfer record values | False)
         '''
         log.debug('')
-        _credit_wallet = self.fetch_active_session_credit_wallet()
+        credit_wallet = self.fetch_active_session_credit_wallet()
         if not _credit_wallet or not kwargs.get('record_id'):
             return self.error_handler_action_view_transfer_record(
-                    credit_wallet=self.session_credit_wallet,
-                    record_id=kwargs.get('record_id'),
-                    )
+                credit_wallet=self.session_credit_wallet,
+                record_id=kwargs.get('record_id'),
+            )
         log.info('Attempting to fetch active transfer sheet...')
-        _transfer_sheet = _credit_wallet.fetch_credit_ewallet_transfer_sheet()
-        if not _transfer_sheet:
+        transfer_sheet = credit_wallet.fetch_credit_ewallet_transfer_sheet()
+        if not transfer_sheet:
             return self.warning_could_not_fetch_transfer_sheet()
         log.info('Attempting to fetch transfer record by id...')
-        _record = _transfer_sheet.fetch_transfer_sheet_records(
-                search_by='id', code=kwargs['record_id'],
-                active_session=self.session
-                )
-        if not _record:
+        record = transfer_sheet.fetch_transfer_sheet_records(
+            search_by='id', code=kwargs['record_id'],
+            active_session=self.session
+        )
+        if not record:
             return self.warning_could_not_fetch_transfer_sheet_record()
-        res = _record.fetch_record_values()
-        log.debug(res)
+        res = record.fetch_record_values()
         return res
 
     def action_view_time_list(self, **kwargs):

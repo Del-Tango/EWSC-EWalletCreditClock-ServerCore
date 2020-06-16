@@ -27,7 +27,7 @@ class CreditTransferSheetRecord(Base):
     credits = Column(Integer)
     transfer_sheet_id = Column(
         Integer, ForeignKey('credit_transfer_sheet.transfer_sheet_id')
-        )
+    )
 
     def __init__(self, **kwargs):
         self.create_date = datetime.datetime.now()
@@ -37,7 +37,6 @@ class CreditTransferSheetRecord(Base):
         self.transfer_from = kwargs.get('transfer_from')
         self.transfer_to = kwargs.get('transfer_to')
         self.credits = kwargs.get('credits') or 0
-        self.transfer_sheet_id = kwargs.get('transfer_sheet_id')
 
     def fetch_record_id(self):
         log.debug('')
@@ -61,18 +60,18 @@ class CreditTransferSheetRecord(Base):
 
     def fetch_record_values(self):
         log.debug('')
-        _values = {
-                'id': self.record_id,
-                'transfer_sheet_id': self.transfer_sheet_id,
-                'reference': self.reference,
-                'create_date': self.create_date,
-                'write_date': self.write_date,
-                'transfer_type': self.transfer_type,
-                'transfer_from': self.transfer_from,
-                'transfer_to': self.transfer_to,
-                'credits': self.credits,
-                }
-        return _values
+        values = {
+            'id': self.record_id,
+            'transfer_sheet_id': self.transfer_sheet_id,
+            'reference': self.reference,
+            'create_date': self.create_date,
+            'write_date': self.write_date,
+            'transfer_type': self.transfer_type,
+            'transfer_from': self.transfer_from,
+            'transfer_to': self.transfer_to,
+            'credits': self.credits,
+        }
+        return values
 
     def set_record_id(self, **kwargs):
         log.debug('')
@@ -197,18 +196,23 @@ class CreditTransferSheet(Base):
 
     def fetch_transfer_sheet_values(self):
         log.debug('')
-        _values = {
-                'id': self.transfer_sheet_id,
-                'wallet_id': self.wallet_id,
-                'reference': self.reference,
-                'create_date': self.create_date,
-                'write_date': self.write_date,
-                'records': self.records,
-                }
-        return _values
+        values = {
+            'id': self.transfer_sheet_id,
+            'wallet_id': self.wallet_id,
+            'reference': self.reference,
+            'create_date': self.create_date,
+            'write_date': self.write_date,
+            'records': {
+                record.fetch_record_id(): record.fetch_record_reference()
+                for record in self.records
+            },
+        }
+        return values
 
-    # [ NOTE ]: Transfer Type : (incomming | outgoing | expence)
     def fetch_transfer_record_creation_values(self, **kwargs):
+        '''
+        [ NOTE ]: Transfer Type : (incomming | outgoing | expence)
+        '''
         log.debug('')
         values = {
             'reference': kwargs.get('reference'),

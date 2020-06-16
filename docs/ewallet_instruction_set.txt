@@ -148,7 +148,8 @@
         }
         * [ NOK ]: {
             'failed': True,
-
+            'error': <msg>,
+            'warning': <msg>,
         }
     * Controller Instruction Set
         session_manager_controller(
@@ -160,17 +161,17 @@
     * Returns:
         * [ OK  ]: {
             'failed': False,
-            'transfer_sheet': <id>,
+            'list_data': <transfer-sheet-data>,
         }
         * [ NOK ]: {
             'failed': True,
             'error': <msg>,
-            'details': <tech-details>,
+            'warning': <msg>,
         }
     * Controller Instruction Set
         session_manager_controller(
             controller='client', ctype='action', action='view', view='transfer',
-            transfer='sheet', client_id=<client_id>, session_token=<token>
+            transfer='list', client_id=<client_id>, session_token=<token>
         )
 
 ################################################################################
