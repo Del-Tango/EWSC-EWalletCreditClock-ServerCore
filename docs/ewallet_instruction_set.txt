@@ -161,7 +161,8 @@
     * Returns:
         * [ OK  ]: {
             'failed': False,
-            'list_data': <transfer-sheet-data>,
+            'transfer_sheet': <id>,
+            'sheet_data': <transfer-sheet-data>,
         }
         * [ NOK ]: {
             'failed': True,
@@ -178,6 +179,8 @@
     * Returns:
         * [ OK  ]: {
             'failed': False,
+            'transfer_sheet': <id>,
+            'transfer_record': <id>,
             'record_data': <transfer-record-data>,
         }
         * [ NOK ]: {

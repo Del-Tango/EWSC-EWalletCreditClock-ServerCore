@@ -765,7 +765,8 @@ class EWallet(Base):
             return self.warning_could_not_fetch_transfer_sheet()
         command_chain_response = {
             'failed': False,
-            'list_data': transfer_sheet.fetch_transfer_sheet_values(),
+            'transfer_sheet': transfer_sheet.fetch_transfer_sheet_id(),
+            'sheet_data': transfer_sheet.fetch_transfer_sheet_values(),
         }
         return command_chain_response
 
@@ -794,6 +795,8 @@ class EWallet(Base):
             return self.warning_could_not_fetch_transfer_sheet_record()
         command_chain_response = {
             'failed': False,
+            'transfer_sheet': transfer_sheet.fetch_transfer_sheet_id(),
+            'transfer_record': record.fetch_record_id(),
             'record_data': record.fetch_record_values(),
         }
         return command_chain_response
