@@ -807,20 +807,23 @@ class EWallet(Base):
         [ RETURN ]: (Time sheet values | False)
         '''
         log.debug('')
-        _credit_wallet = self.fetch_active_session_credit_wallet()
-        if not _credit_wallet:
+        credit_wallet = self.fetch_active_session_credit_wallet()
+        if not credit_wallet:
             return self.error_no_session_credit_wallet_found()
         log.info('Attempting to fetch active credit clock...')
-        _credit_clock = _credit_wallet.fetch_credit_ewallet_credit_clock()
-        if not _credit_clock:
+        credit_clock = credit_wallet.fetch_credit_ewallet_credit_clock()
+        if not credit_clock:
             return self.warning_could_not_fetch_credit_clock()
         log.info('Attempting to fetch active time sheet...')
-        _time_sheet = _credit_clock.fetch_credit_clock_time_sheet()
-        if not _time_sheet:
+        time_sheet = credit_clock.fetch_credit_clock_time_sheet()
+        if not time_sheet:
             return self.warning_could_not_fetch_time_sheet()
-        res = _time_sheet.fetch_time_sheet_values()
-        log.debug(res)
-        return res
+        command_chain_response = {
+            'failed': False,
+            'time_sheet': time_sheet.fetch_time_sheet_id(),
+            'sheet_data': time_sheet.fetch_time_sheet_values(),
+        }
+        return command_chain_response
 
     def action_view_time_record(self, **kwargs):
         '''

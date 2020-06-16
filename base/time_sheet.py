@@ -88,7 +88,7 @@ class TimeSheetRecord(Base):
         log.debug('')
         return self.write_date
 
-    def fetch_reference(self):
+    def fetch_record_reference(self):
         log.debug('')
         return self.reference
 
@@ -337,15 +337,18 @@ class CreditClockTimeSheet(Base):
 
     def fetch_time_sheet_values(self):
         log.debug('')
-        _values = {
-                'time_sheet_id': self.time_sheet_id,
-                'clock_id': self.clock_id,
-                'reference': self.reference,
-                'create_date': self.create_date,
-                'write_date': self.write_date,
-                'records': self.records,
-                }
-        return _values
+        values = {
+            'time_sheet_id': self.time_sheet_id,
+            'clock_id': self.clock_id,
+            'reference': self.reference,
+            'create_date': self.create_date,
+            'write_date': self.write_date,
+            'records': {
+                record.fetch_record_id(): record.fetch_record_reference()
+                for record in self.records
+            },
+        }
+        return values
 
     def fetch_time_record_creation_values(self, **kwargs):
         log.debug('')
