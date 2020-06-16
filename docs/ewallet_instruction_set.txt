@@ -171,7 +171,24 @@
     * Controller Instruction Set
         session_manager_controller(
             controller='client', ctype='action', action='view', view='transfer',
-            transfer='list', client_id=<client_id>, session_token=<token>
+            transfer='list', client_id=<client-id>, session_token=<token>
+        )
+
+* User action View Transfer Sheet Record:
+    * Returns:
+        * [ OK  ]: {
+            'failed': False,
+            'record_data': <transfer-record-data>,
+        }
+        * [ NOK ]: {
+            'failed': True,
+            'error': <msg>,
+            'warning': <msg>,
+        }
+    * Controller Instruction Set
+        session_manager_controller(
+            controller='client', ctype='action', action='view', view='transfer',
+            transfer='record', record_id=<id>, client_id=<client-id>, session_token=<token>
         )
 
 ################################################################################

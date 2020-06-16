@@ -777,7 +777,7 @@ class EWallet(Base):
         '''
         log.debug('')
         credit_wallet = self.fetch_active_session_credit_wallet()
-        if not _credit_wallet or not kwargs.get('record_id'):
+        if not credit_wallet or not kwargs.get('record_id'):
             return self.error_handler_action_view_transfer_record(
                 credit_wallet=self.session_credit_wallet,
                 record_id=kwargs.get('record_id'),
@@ -788,13 +788,15 @@ class EWallet(Base):
             return self.warning_could_not_fetch_transfer_sheet()
         log.info('Attempting to fetch transfer record by id...')
         record = transfer_sheet.fetch_transfer_sheet_records(
-            search_by='id', code=kwargs['record_id'],
-            active_session=self.session
+            search_by='id', code=kwargs['record_id'], active_session=self.session
         )
         if not record:
             return self.warning_could_not_fetch_transfer_sheet_record()
-        res = record.fetch_record_values()
-        return res
+        command_chain_response = {
+            'failed': False,
+            'record_data': record.fetch_record_values(),
+        }
+        return command_chain_response
 
     def action_view_time_list(self, **kwargs):
         '''
