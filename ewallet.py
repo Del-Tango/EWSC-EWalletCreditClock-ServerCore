@@ -37,6 +37,7 @@ class SessionUser(Base):
     user = relationship('ResUser', backref=backref('session_user', cascade='all, delete-orphan'))
     session = relationship('EWallet', backref=backref('session_user', cascade='all, delete-orphan'))
 
+
 class EWallet(Base):
     '''
     [ NOTE ]: EWallet session. Managed by EWallet Workers within the Session Manager.
@@ -1150,7 +1151,7 @@ class EWallet(Base):
         active_session.commit()
         return convert
 
-#   @pysnooper.snoop('logs/ewallet.log')
+#   @pysnooper.snoop()
     def action_create_new_conversion_clock_to_credits(self, **kwargs):
         '''
         [ NOTE   ]: User action 'convert clock to credits', accessible from external api calls.
@@ -1173,15 +1174,15 @@ class EWallet(Base):
             'active_session'
         )
         convert = credit_wallet.main_controller(
-                controller='system', action='convert', conversion='to_credits',
-                credit_ewallet=credit_wallet, credit_clock=credit_clock,
-                active_session=active_session, **sanitized_command_chain
-                )
+            controller='system', action='convert', conversion='to_credits',
+            credit_ewallet=credit_wallet, credit_clock=credit_clock,
+            active_session=active_session, **sanitized_command_chain
+        )
         if not convert:
             active_session.rollback()
             return self.error_could_not_convert_minutes_to_credits()
         active_session.commit()
-        return _convert
+        return convert
 
     def action_create_new_conversion(self, **kwargs):
         '''
@@ -1626,20 +1627,6 @@ class EWallet(Base):
                 )
 
     # HANDLERS
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
     def handle_system_action_send_invoice(self, **kwargs):
         '''

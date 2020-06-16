@@ -7,9 +7,13 @@
 ###############################################################################
 # EWallet Session Manager
 ###############################################################################
-# TODO - User action Transfer Credits
-# TODO - User action Convert Time To Credits
 # TODO - User action View Transfer Sheet
+# TODO - User action View Transfer Record
+# TODO - User action View Time Sheet
+# TODO - User action View TIme Record
+# TODO - User action View Conversion Sheet
+# TODO - User action View Conversion Record
+# TODO - User action View User Account
 
 
 ###############################################################################

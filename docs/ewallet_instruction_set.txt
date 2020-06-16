@@ -130,11 +130,47 @@
         contact='record', client_id=<id>, session_token=<token>, record=<id>
         )
 
-* User action Transfer Credits
+* User action Transfer Credits:
     * Returns {'transfered_to': <user_name>, 'ewallet_credits': <credits>, 'transfered_credits': <credits>}
     session_manager_controller(
         controller='client', ctype='action', action='transfer', transfer='credits',
         client_id=<id>, session_token=<token>, transfer_to=<email>, credits=<credits>
+        )
+
+* User action Convert Time To Credits:
+    * Returns
+        * [ OK  ]: {
+            'failed': False,
+            'conversion_record_id': <id>,
+            'ewallet_credits': <credits>,
+            'credit_clock': <time>,
+            'converted_minutes': <time>
+        }
+        * [ NOK ]: {
+            'failed': True,
+
+        }
+    * Controller Instruction Set
+        session_manager_controller(
+            controller='client', ctype='action', action='convert', convert='clock2credits',
+            client_id=<id>, session_token=<token>, credits=<credits>, notes=<notes>
+        )
+
+* User action View Transfer Sheet:
+    * Returns:
+        * [ OK  ]: {
+            'failed': False,
+            'transfer_sheet': <id>,
+        }
+        * [ NOK ]: {
+            'failed': True,
+            'error': <msg>,
+            'details': <tech-details>,
+        }
+    * Controller Instruction Set
+        session_manager_controller(
+            controller='client', ctype='action', action='view', view='transfer',
+            transfer='sheet', client_id=<client_id>, session_token=<token>
         )
 
 ################################################################################

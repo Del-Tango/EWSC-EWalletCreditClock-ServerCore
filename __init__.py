@@ -1,4 +1,4 @@
-import base
-import ewallet_login
-import ewallet_logout
-import ewallet
+from . import base
+from . import ewallet_login
+from . import ewallet_logout
+from . import ewallet

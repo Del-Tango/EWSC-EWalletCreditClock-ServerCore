@@ -1,11 +1,13 @@
 import datetime
 import pysnooper
+import os
 
 
 class Config():
 
     def __init__(self, **kwargs):
         self.sys_boot_date = datetime.datetime.now()
+        self.current_directory = os.path.dirname(os.path.realpath(__file__))
         self.target_file = 'conf/ewallet.conf'
         self.log_config = {
                 'log_name': 'EWallet',

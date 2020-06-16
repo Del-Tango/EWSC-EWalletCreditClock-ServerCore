@@ -423,7 +423,7 @@ class CreditEWallet(Base):
         log.info('Successfully extracted credits from wallet.')
         return self.credits
 
-#   @pysnooper.snoop('logs/ewallet.log')
+#   @pysnooper.snoop()
     def convert_credits_to_minutes(self, **kwargs):
         log.debug('')
         if not kwargs.get('credits'):
@@ -445,26 +445,23 @@ class CreditEWallet(Base):
         kwargs['active_session'].commit()
         return convert
 
-#   @pysnooper.snoop('logs/ewallet.log')
+#   @pysnooper.snoop()
     def convert_minutes_to_credits(self, **kwargs):
         log.debug('')
         if not kwargs.get('minutes'):
             return self.error_no_minutes_found()
-        _credit_clock = kwargs.get('credit_clock') or \
+        credit_clock = kwargs.get('credit_clock') or \
                 self.fetch_credit_ewallet_credit_clock()
-        # TODO - Command Chain Pop Util
-        for item in ['controller', 'action', 'conversion']:
-            try:
-                kwargs.pop(item)
-            except KeyError:
-                continue
-        _convert = _credit_clock.main_controller(
-                controller='system', action='convert', conversion='to_credits',
-                **kwargs
-                )
+        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
+            kwargs, 'controller', 'action', 'conversion'
+        )
+        convert = credit_clock.main_controller(
+            controller='system', action='convert', conversion='to_credits',
+            **sanitized_command_chain
+        )
         self.update_write_date()
         log.info('Successfully converted minutes to credits.')
-        return _convert
+        return convert
 
     def convert_credits(self, **kwargs):
         log.debug('')

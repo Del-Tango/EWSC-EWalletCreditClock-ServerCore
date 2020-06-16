@@ -459,10 +459,10 @@ class EWalletSessionManager():
         if len(session_token_segmented) != 3:
             return self.error_invalid_session_token(session_token)
         checks = {
-                'prefix': self.validate_session_token_prefix(session_token_segmented),
-                'length': self.validate_session_token_length(session_token_segmented),
-                'timestamp': self.validate_session_token_timestamp(session_token_segmented),
-                }
+            'prefix': self.validate_session_token_prefix(session_token_segmented),
+            'length': self.validate_session_token_length(session_token_segmented),
+            'timestamp': self.validate_session_token_timestamp(session_token_segmented),
+        }
         return False if False in checks.values() else True
 
 #   #@pysnooper.snoop()
@@ -472,11 +472,11 @@ class EWalletSessionManager():
         if len(segmented_client_id) != 3:
             return self.error_invalid_client_id(client_id)
         checks = {
-                'prefix': self.validate_client_id_prefix(segmented_client_id),
-                'length': self.validate_client_id_length(segmented_client_id),
-                'timestamp': self.validate_client_id_timestamp(segmented_client_id),
-                'pool': self.validate_client_id_in_pool(client_id),
-                }
+            'prefix': self.validate_client_id_prefix(segmented_client_id),
+            'length': self.validate_client_id_length(segmented_client_id),
+            'timestamp': self.validate_client_id_timestamp(segmented_client_id),
+            'pool': self.validate_client_id_in_pool(client_id),
+        }
         return False if False in checks.values() else True
 
 #   #@pysnooper.snoop()
@@ -485,11 +485,11 @@ class EWalletSessionManager():
         if not instruction_set.get('client_id') or not instruction_set.get('session_token'):
             return self.error_invalid_instruction_set_required_data(kwargs)
         validations = {
-                'client_id': self.validate_client_id(instruction_set['client_id']),
-                'session_token': self.validate_session_token(instruction_set['session_token']),
-                }
+            'client_id': self.validate_client_id(instruction_set['client_id']),
+            'session_token': self.validate_session_token(instruction_set['session_token']),
+        }
         return self.error_invalid_instruction_set_required_data(instruction_set) \
-                if False in validations.values() else True
+            if False in validations.values() else True
 
     # CREATORS
 
@@ -505,8 +505,8 @@ class EWalletSessionManager():
             **instruction_set
         )
         return self.warning_could_not_create_new_user_account(
-                ewallet_session, instruction_set
-                ) if not new_account else new_account
+             ewallet_session, instruction_set
+        ) if not new_account else new_account
 
     def create_new_ewallet_session(self):
         log.debug('')
@@ -523,12 +523,11 @@ class EWalletSessionManager():
         '''
         log.debug('')
         account_login = ewallet_session.ewallet_controller(
-                controller='user', ctype='action', action='login',
-                **instruction_set
-                )
+            controller='user', ctype='action', action='login', **instruction_set
+        )
         return self.warning_could_not_login_user_account(
-                ewallet_session, instruction_set
-                ) if not account_login else account_login
+            ewallet_session, instruction_set
+        ) if not account_login else account_login
 
     def assign_new_ewallet_session_to_worker(self, new_session):
         '''
@@ -548,7 +547,7 @@ class EWalletSessionManager():
         assign_worker = worker.main_controller(
             controller='system', ctype='action', action='add', add='session',
             session=new_session
-            )
+        )
         return False if not assign_worker else worker
 
     def start_instruction_set_listener(self):
@@ -562,11 +561,9 @@ class EWalletSessionManager():
         if not socket_handler:
             return self.error_could_not_fetch_socket_handler()
         log.info(
-                'Starting instruction set listener using socket handler values : {}.'\
-                .format(
-                    socket_handler.view_handler_values()
-                    )
-                )
+            'Starting instruction set listener using socket handler values : {}.'\
+            .format(socket_handler.view_handler_values())
+        )
         socket_handler.start_listener()
         return True
 
@@ -580,8 +577,8 @@ class EWalletSessionManager():
         out_port = kwargs.get('out_port') or self.fetch_default_ewallet_command_chain_reply_port()
         if not in_port or not out_port:
             return self.error_could_not_fetch_socket_handler_required_values()
-        _socket = self.spawn_ewallet_session_manager_socket_handler(in_port, out_port)
-        return self.error_could_not_spawn_socket_handler() if not _socket else _socket
+        socket = self.spawn_ewallet_session_manager_socket_handler(in_port, out_port)
+        return self.error_could_not_spawn_socket_handler() if not socket else socket
 
     def generate_client_id(self):
         '''
@@ -709,7 +706,7 @@ class EWalletSessionManager():
         )
         return self.warning_could_not_stop_credit_clock_timer(
             ewallet_session, instruction_set
-            ) if not stop_timer else stop_timer
+            ) if not stop_timer else {'minutes_spent': stop_timer}
 
 #   @pysnooper.snoop()
     def action_resume_credit_clock_timer(self, ewallet_session, instruction_set):
@@ -727,7 +724,8 @@ class EWalletSessionManager():
         )
         return self.warning_could_not_resume_credit_clock_timer(
             ewallet_session, instruction_set
-        ) if not isinstance(resume_timer, float) else resume_timer
+            ) if not isinstance(resume_timer, float) else \
+            {'pending_time': resume_timer}
 
 #   @pysnooper.snoop()
     def action_pause_credit_clock_timer(self, ewallet_session, instruction_set):
@@ -745,7 +743,8 @@ class EWalletSessionManager():
         )
         return self.warning_could_not_pause_credit_clock_timer(
             ewallet_session, instruction_set
-        ) if not isinstance(pause_timer, int) else pause_timer
+            ) if not isinstance(pause_timer, int) else \
+            {'pending_count': pause_timer}
 
 #   @pysnooper.snoop()
     def action_start_credit_clock_timer(self, ewallet_session, instruction_set):
@@ -763,7 +762,7 @@ class EWalletSessionManager():
                 )
         return self.warning_could_not_start_credit_clock_timer(
                 ewallet_session, instruction_set
-                ) if not start_timer else start_timer
+                ) if not start_timer else {'clock_timestamp': start_timer}
 
     def action_convert_credits_to_credit_clock(self, ewallet_session, instruction_set):
         '''
@@ -775,8 +774,8 @@ class EWalletSessionManager():
         log.debug('')
         if not instruction_set.get('credits'):
             return self.error_no_conversion_credit_count_specified(
-                    ewallet_session, instruction_set
-                    )
+                ewallet_session, instruction_set
+            )
         credit_wallet = ewallet_session.fetch_active_session_credit_wallet()
         orm_session = ewallet_session.fetch_active_session()
         conversion = credit_wallet.main_controller(
@@ -798,9 +797,20 @@ class EWalletSessionManager():
             credit_wallet, instruction_set
         ) if not conversion else post_conversion_value_set
 
-    # TODO
     def action_convert_credit_clock_to_credits(self, ewallet_session, instruction_set):
         log.debug('')
+        if not instruction_set.get('minutes'):
+            return self.error_no_conversion_credit_clock_time_specified(
+                ewallet_session, instruction_set
+            )
+        orm_session = ewallet_session.fetch_active_session()
+        conversion = ewallet_session.ewallet_controller(
+            controller='user', ctype='action', action='create',
+            create='conversion', conversion='clock2credits',
+            active_session=orm_session, **instruction_set
+        )
+        return self.warning_could_not_convert_credit_clock_time_to_credits(conversion, **kwargs) \
+                if conversion.get('failed') else conversion
 
     def action_new_worker(self):
         log.debug('')
@@ -816,7 +826,7 @@ class EWalletSessionManager():
         log.debug('')
         client_id = self.generate_client_id()
         set_to_pool = self.set_new_client_id_to_pool(client_id)
-        return client_id
+        return {'client_id': client_id}
 
     def action_request_session_token(self, **kwargs):
         '''
@@ -824,7 +834,7 @@ class EWalletSessionManager():
                     available worker or creates a new worker if none found,
                     generates a new session token and maps it to the Client ID.
         [ INPUT  ]: client_id=<id>
-        [ RETURN ]: (Session Token | False)
+        [ RETURN ]: ({session_token: <token>} | False)
         '''
         log.debug('')
         if not kwargs.get('client_id'):
@@ -841,10 +851,10 @@ class EWalletSessionManager():
         if not session_token:
             return self.error_could_not_generate_ewallet_session_token(new_session)
         mapping = self.map_client_id_to_ewallet_session(
-                client_id, session_token, assigned_worker, new_session
-                )
+            client_id, session_token, assigned_worker, new_session
+        )
         return self.error_could_not_map_client_id_to_session_token(client_id, session_token) \
-                if not mapping else session_token
+                if not mapping else {'session_token': session_token}
 
     # EVENTS
 
@@ -1483,14 +1493,20 @@ class EWalletSessionManager():
         log.debug('')
         if not kwargs.get('controller'):
             return self.error_no_session_manager_controller_specified()
-        _handlers = {
-                'client': self.client_session_manager_controller,
-                'system': self.system_session_manager_controller,
-                'test': self.test_session_manager_controller,
-                }
-        return _handlers[kwargs['controller']](**kwargs)
+        handlers = {
+            'client': self.client_session_manager_controller,
+            'system': self.system_session_manager_controller,
+            'test': self.test_session_manager_controller,
+        }
+        return handlers[kwargs['controller']](**kwargs)
 
     # WARNINGS
+
+    def warning_could_not_convert_credit_clock_time_to_credits(self, conversion_response, **kwargs):
+        msg = 'Could not convert credit clock time to credits. Got response {}. '\
+              'Command Chain Details : {}'.format(conversion_response, kwargs)
+        log.warning(msg)
+        return msg
 
     def warning_could_not_transfer_credits_to_partner(self, ewallet_session, instruction_set):
         log.warning(
@@ -1584,6 +1600,13 @@ class EWalletSessionManager():
         return False
 
     # ERRORS
+
+    def error_no_conversion_credit_clock_time_specified(self, ewallet_session, instruction_set):
+        log.error(
+            'No conversion credit clock time specified in ewallet session {}. Details : {}'\
+            .format(ewallet_session, instruction_set)
+        )
+        return False
 
     def error_no_client_action_transfer_target_specified(self, instruction_set):
         log.error(
@@ -2137,6 +2160,17 @@ class EWalletSessionManager():
         print(str(_transfer) + '\n')
         return _transfer
 
+    def test_user_action_convert_clock_to_credits(self, **kwargs):
+        print('[ * ]: User action Convert Clock To Credits')
+        _convert = self.session_manager_controller(
+            controller='client', ctype='action', action='convert', convert='clock2credits',
+            client_id=kwargs['client_id'], session_token=kwargs['session_token'],
+            minutes=kwargs['minutes']
+        )
+        print(str(_convert) + '\n')
+        return _convert
+
+
     def test_session_manager_controller(self, **kwargs):
         print('[ TEST ] Session Manager')
 #       open_in_port = self.test_open_instruction_listener_port()
@@ -2146,60 +2180,66 @@ class EWalletSessionManager():
         client_id = self.test_request_client_id()
         worker = self.test_new_worker()
         session = self.test_new_session()
-        session_token = self.test_request_session_token(client_id)
+        session_token = self.test_request_session_token(client_id['client_id'])
         create_account = self.test_user_action_create_account(
-            client_id=client_id, session_token=session_token,
+            client_id=client_id['client_id'], session_token=session_token['session_token'],
             user_name='test_user', user_pass='1234@!xxA', user_email='testuser@mail.com'
         )
         session_login = self.test_user_action_session_login(
-            client_id=client_id, session_token=session_token,
+            client_id=client_id['client_id'], session_token=session_token['session_token'],
             user_name='test_user', user_pass='1234@!xxA'
         )
         supply_credits = self.test_user_action_supply_credits(
-            client_id=client_id, session_token=session_token,
+            client_id=client_id['client_id'], session_token=session_token['session_token'],
             currency='RON', credits=15, cost=4.74,
             notes='Test Credit Wallet Supply Notes...'
         )
         convert_credits_2_clock = self.test_user_action_convert_credits_to_clock(
-            client_id=client_id, session_token=session_token, credits=5,
+            client_id=client_id['client_id'], session_token=session_token['session_token'], credits=5,
             notes='Test Credits To Clock Conversion Notes...'
         )
         start_clock_timer = self.test_user_action_start_clock_timer(
-            client_id=client_id, session_token=session_token
+            client_id=client_id['client_id'], session_token=session_token['session_token']
         )
         time.sleep(3)
         pause_clock_timer = self.test_user_action_pause_clock_timer(
-            client_id=client_id, session_token=session_token
+            client_id=client_id['client_id'], session_token=session_token['session_token']
         )
         time.sleep(3)
         resume_clock_timer = self.test_user_action_resume_clock_timer(
-            client_id=client_id, session_token=session_token
+            client_id=client_id['client_id'], session_token=session_token['session_token']
         )
         time.sleep(3)
         stop_clock_timer = self.test_user_action_stop_clock_timer(
-            client_id=client_id, session_token=session_token
+            client_id=client_id['client_id'], session_token=session_token['session_token']
         )
         time.sleep(3)
         pay_credits = self.test_user_action_pay_credits_to_partner(
-            partner_account=1, credits=5, client_id=client_id, session_token=session_token,
+            partner_account=1, credits=5, client_id=client_id['client_id'],
+            session_token=session_token['session_token'],
             pay='system.core@alvearesolutions.com'
         )
         view_contact_list = self.test_user_action_view_contact_list(
-            client_id=client_id, session_token=session_token,
+            client_id=client_id['client_id'],
+            session_token=session_token['session_token'],
         )
         add_contact_record = self.test_user_action_add_contact_record(
-            client_id=client_id, session_token=session_token,
+            client_id=client_id['client_id'], session_token=session_token['session_token'],
             contact_list=view_contact_list['contact_list'],
             user_name='This is bob', user_email='example@example.com', user_phone='095551234',
             user_reference='That weird guy coding wallets.', notes='WOOHO.'
         )
         view_contact_record = self.test_user_action_view_contact_record(
-            client_id=client_id, session_token=session_token,
+            client_id=client_id['client_id'], session_token=session_token['session_token'],
             record=add_contact_record['contact_record']
         )
         transfer_credits = self.test_user_action_transfer_credits(
-            client_id=client_id, session_token=session_token,
+            client_id=client_id['client_id'], session_token=session_token['session_token'],
             transfer_to='example@example.com', credits=50
+        )
+        convert_clock_2_credits = self.test_user_action_convert_clock_to_credits(
+            client_id=client_id['client_id'], session_token=session_token['session_token'],
+            minutes=13,
         )
 
 if __name__ == '__main__':

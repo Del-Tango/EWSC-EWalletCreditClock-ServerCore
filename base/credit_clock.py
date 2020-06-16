@@ -432,10 +432,10 @@ class CreditClock(Base):
 
     def check_clock_is_pending(self, **kwargs):
         log.debug('')
-        _state = self.fetch_credit_clock_state()
-        if not _state:
+        state = self.fetch_credit_clock_state()
+        if not state:
             return self.error_no_credit_clock_state_found()
-        return True if _state == 'pending' else False
+        return True if state == 'pending' else False
 
     def check_clock_is_active(self, **kwargs):
         log.debug('')
@@ -750,19 +750,19 @@ class CreditClock(Base):
 #   @pysnooper.snoop('logs/ewallet.log')
     def create_credit_clock_conversion_record(self, creation_values, **kwargs):
         log.debug('')
-        _conversion_sheet = kwargs.get('conversion_sheet') or \
+        conversion_sheet = kwargs.get('conversion_sheet') or \
                 self.fetch_credit_clock_conversion_sheet()
         if not self.conversion_sheet:
             return self.error_no_credit_clock_conversion_sheet_found()
         if not kwargs.get('active_session'):
             return self.error_no_active_session_found()
-        _record = _conversion_sheet.credit_clock_conversion_sheet_controller(
-                action='add', **creation_values
-                )
-        if _record:
-            kwargs['active_session'].add(_record)
+        record = conversion_sheet.credit_clock_conversion_sheet_controller(
+            action='add', **creation_values
+        )
+        if record:
+            kwargs['active_session'].add(record)
             log.info('Successfully created new credit clock conversion record.')
-        return _record or False
+        return record or False
 
     # ACTIONS
 
@@ -961,59 +961,78 @@ class CreditClock(Base):
         log.debug('')
         if not kwargs.get('credits') or not kwargs.get('credit_ewallet'):
             return self.error_no_credits_found()
-        _supply_minutes = self.supply_credit_clock_minutes(**kwargs)
-        _extract_credits = self.extract_ewallet_credits(**kwargs)
-        return _supply_minutes
+        supply_minutes = self.supply_credit_clock_minutes(**kwargs)
+        extract_credits = self.extract_ewallet_credits(**kwargs)
+        return supply_minutes
 
-    '''
+    @pysnooper.snoop('logs/ewallet.log')
+    def convert_minutes_to_credits(self, **kwargs):
+        '''
         [ RETURN ]: Minutes left after subtraction or dictionary with error,
         minutes found in command chain and remainder
         (in case of insufficient time).
-    '''
-#   @pysnooper.snoop('logs/ewallet.log')
-    def convert_minutes_to_credits(self, **kwargs):
+        '''
         log.debug('')
         if not kwargs.get('minutes'):
             return self.error_no_minutes_found()
         if (self.credit_clock - kwargs['minutes']) < 0:
-            _remainder = abs(self.credit_clock - kwargs['minutes'])
-            _extract = self.extract_credit_clock_minutes(
-                    clock_credits=(self.credit_clock - kwargs['minutes'] + _remainder)
-                    )
+            remainder = abs(self.credit_clock - kwargs['minutes'])
+            extract = self.extract_credit_clock_minutes(
+                clock_credits=(self.credit_clock - kwargs['minutes'] + remainder)
+            )
             log.warning('Not enough minutes to convert to credits. Converted remainder.')
             return {
-                    'error': 'Insufficient time',
-                    'minutes': kwargs['minutes'],
-                    'remainder': _remainder
-                    }
-        _extract = self.extract_credit_clock_minutes(**kwargs)
-        _supply = self.supply_ewallet_credits(
-                credits=kwargs['minutes'], **kwargs
-                )
+                'failed': True,
+                'error': 'Insufficient time',
+                'minutes': kwargs['minutes'],
+                'remainder': remainder
+            }
+        extract = self.extract_credit_clock_minutes(**kwargs)
+        supply = self.supply_ewallet_credits(
+            credits=kwargs['minutes'], **kwargs
+        )
         log.info('Successfully converted minutes to credits.')
-        return _extract
+        command_chain_response = {
+            'ewallet_credits': extract,
+            'credit_clock': supply,
+            'converted_minutes': kwargs['minutes'],
+        }
+        return command_chain_response
 
+    # TODO - Fix active_session commit case. Brace for failure.
     def credit_converter(self, **kwargs):
-        log.debug('')
+        log.debug('TODO - Fix active_session commit case. Brace for failure.')
         if not kwargs.get('conversion'):
             return self.error_no_credit_conversion_type_specified()
         if not kwargs.get('active_session'):
             return self.error_no_active_session_found()
-        _handlers = {
-                'to_minutes': self.convert_credits_to_minutes,
-                'to_credits': self.convert_minutes_to_credits,
-                }
-        _conversion_sheet = self.fetch_credit_clock_conversion_sheet()
-        if not _conversion_sheet:
+        handlers = {
+            'to_minutes': self.convert_credits_to_minutes,
+            'to_credits': self.convert_minutes_to_credits,
+        }
+        conversion_sheet = self.fetch_credit_clock_conversion_sheet()
+        if not conversion_sheet:
             kwargs['active_session'].rollback()
             return False
-        kwargs['conversion_sheet'] = _conversion_sheet
-        _creation_values = self.fetch_credit_clock_conversion_record_creation_values(**kwargs)
-        _conversion_record = self.create_credit_clock_conversion_record(
-                _creation_values, **kwargs
-                )
-        kwargs['active_session'].add(_conversion_record)
-        return _handlers[kwargs['conversion']](**kwargs)
+        kwargs['conversion_sheet'] = conversion_sheet
+        creation_values = self.fetch_credit_clock_conversion_record_creation_values(**kwargs)
+        conversion_record = self.create_credit_clock_conversion_record(
+            creation_values, **kwargs
+        )
+        kwargs['active_session'].add(conversion_record)
+        conversion = handlers[kwargs['conversion']](**kwargs)
+
+        kwargs['active_session'].commit()
+        command_chain_response = {
+            'failed': False,
+            'conversion_record_id': conversion_record.fetch_record_id(),
+        }
+
+        if isinstance(conversion, dict):
+            command_chain_response.update(conversion)
+        else:
+            command_chain_response.update({'conversion': conversion})
+        return command_chain_response
 
     # CONTROLLERS
 
@@ -1592,11 +1611,4 @@ class CreditClock(Base):
 ###############################################################################
 # CODE DUMP
 ###############################################################################
-
-#   time_sheet_id = Column(
-#      Integer, ForeignKey('credit_clock_time_sheet.time_sheet_id')
-#      )
-#   conversion_sheet_id = Column(
-#      Integer, ForeignKey('credit_clock_conversion_sheet.conversion_sheet_id')
-#      )
 
