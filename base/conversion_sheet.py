@@ -69,19 +69,19 @@ class CreditClockConversionSheetRecord(Base):
         log.debug('')
         return self.credits
 
-    def fetch_record_data(self):
+    def fetch_record_values(self):
         log.debug('')
-        _values = {
-                'id': self.record_id,
-                'conversion_sheet_id': self.conversion_sheet_id,
-                'reference': self.reference,
-                'create_date': self.create_date,
-                'write_date': self.write_date,
-                'conversion_type': self.conversion_type,
-                'minutes': self.minutes,
-                'credits': self.credits,
-                }
-        return _values
+        values = {
+            'id': self.record_id,
+            'conversion_sheet_id': self.conversion_sheet_id,
+            'reference': self.reference,
+            'create_date': self.create_date,
+            'write_date': self.write_date,
+            'conversion_type': self.conversion_type,
+            'minutes': self.minutes,
+            'credits': self.credits,
+        }
+        return values
 
     def set_conversion_sheet_id(self, **kwargs):
         log.debug('')

@@ -372,6 +372,41 @@ class EWallet(Base):
     [ NOTE ]: Command chain responses are formatted here.
     '''
 
+    def action_view_conversion_record(self, **kwargs):
+        '''
+        [ NOTE   ]: User action 'view conversion record', accessible from external api call.
+        [ INPUT  ]: record_id=<id>
+        [ RETURN ]: (Conversion record values | False)
+        '''
+        log.debug('')
+        credit_wallet = self.fetch_active_session_credit_wallet()
+        if not credit_wallet or not kwargs.get('record_id'):
+            return self.error_handler_action_view_conversion_record(
+                credit_wallet=credit_wallet, record_id=kwargs.get('record_id'),
+            )
+        log.info('Attempting to fetch active credit clock...')
+        credit_clock = credit_wallet.fetch_credit_ewallet_credit_clock()
+        if not credit_clock:
+            return self.warning_could_not_fetch_credit_clock()
+        log.info('Attempting to fetch active conversion sheet...')
+        conversion_sheet = credit_clock.fetch_credit_clock_conversion_sheet()
+        if not conversion_sheet:
+            return self.warning_could_not_fetch_conversion_sheet()
+        log.info('Attempting to fetch conversion record by id...')
+        record = conversion_sheet.fetch_conversion_sheet_record(
+            search_by='id', code=kwargs['record_id'],
+            active_session=self.session
+        )
+        if not record:
+            return self.warning_could_not_fetch_conversion_record()
+        command_chain_response = {
+            'failed': False,
+            'conversion_sheet': conversion_sheet.fetch_conversion_sheet_id(),
+            'conversion_record': record.fetch_record_id(),
+            'record_data': record.fetch_record_values(),
+        }
+        return command_chain_response
+
     def action_view_conversion_list(self, **kwargs):
         '''
         [ NOTE   ]: User action 'view conversion list', accessible from external api call.
@@ -883,38 +918,6 @@ class EWallet(Base):
             'record_data': record.fetch_record_values(),
         }
         return command_chain_response
-
-    def action_view_conversion_record(self, **kwargs):
-        '''
-        [ NOTE   ]: User action 'view conversion record', accessible from external api call.
-        [ INPUT  ]: record_id=<id>
-        [ RETURN ]: (Conversion record values | False)
-        '''
-        log.debug('')
-        _credit_wallet = self.fetch_active_session_credit_wallet()
-        if not _credit_wallet or not kwargs.get('record_id'):
-            return self.error_handler_action_view_conversion_record(
-                    credit_wallet=_credit_wallet,
-                    record_id=kwargs.get('record_id'),
-                    )
-        log.info('Attempting to fetch active credit clock...')
-        _credit_clock = _credit_wallet.fetch_credit_ewallet_credit_clock()
-        if not _credit_clock:
-            return self.warning_could_not_fetch_credit_clock()
-        log.info('Attempting to fetch active conversion sheet...')
-        _conversion_list = _credit_clock.fetch_credit_clock_conversion_sheet()
-        if not _conversion_list:
-            return self.warning_could_not_fetch_conversion_sheet()
-        log.info('Attempting to fetch conversion record by id...')
-        _record = _conversion_list.fetch_conversion_sheet_record(
-                search_by='id', code=kwargs['record_id'],
-                active_session=self.session
-                )
-        if not _record:
-            return self.warning_could_not_fetch_conversion_record()
-        res = _record.fetch_record_data()
-        log.debug(res)
-        return res
 
     def action_view_invoice_list(self, **kwargs):
         '''

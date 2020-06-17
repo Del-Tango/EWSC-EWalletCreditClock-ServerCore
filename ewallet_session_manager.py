@@ -465,7 +465,7 @@ class EWalletSessionManager():
         }
         return False if False in checks.values() else True
 
-#   #@pysnooper.snoop()
+#   @pysnooper.snoop()
     def validate_client_id(self, client_id):
         log.debug('')
         segmented_client_id = client_id.split(':')
@@ -618,6 +618,20 @@ class EWalletSessionManager():
     '''
     [ NOTE ]: SqlAlchemy ORM sessions are fetched here.
     '''
+
+    def action_view_conversion_record(self, ewallet_session, instruction_set):
+        log.debug('')
+        orm_session = ewallet_session.fetch_active_session()
+        sanitized_instruction_set = res_utils.remove_tags_from_command_chain(
+            instruction_set, 'controller', 'ctype', 'action', 'view', 'conversion',
+        )
+        view_conversion_record = ewallet_session.ewallet_controller(
+            controller='user', ctype='action', action='view', view='conversion',
+            conversion='record', active_session=orm_session, **sanitized_instruction_set
+        )
+        return self.warning_could_not_view_conversion_sheet_record(
+            ewallet_session, instruction_set
+        ) if view_conversion_record.get('failed') else view_conversion_record
 
     def action_view_conversion_sheet(self, ewallet_session, instruction_set):
         log.debug('')
@@ -944,6 +958,21 @@ class EWalletSessionManager():
 
     # HANDLERS
 
+    def handle_client_action_view_conversion_record(self, **kwargs):
+        log.debug('')
+        instruction_set_validation = self.validate_instruction_set(kwargs)
+        if not instruction_set_validation:
+            return False
+        ewallet = self.fetch_ewallet_session_for_client_action_using_instruction_set(
+            kwargs
+        )
+        if not ewallet:
+            return False
+        view_conversion_record = self.action_view_conversion_record(
+            ewallet['ewallet_session'], ewallet['sanitized_instruction_set'],
+        )
+        return view_conversion_record
+
     def handle_client_action_view_conversion_sheet(self, **kwargs):
         log.debug('')
         instruction_set_validation = self.validate_instruction_set(kwargs)
@@ -965,7 +994,7 @@ class EWalletSessionManager():
             return self.error_no_client_action_view_conversion_target_specified(kwargs)
         handlers = {
             'list': self.handle_client_action_view_conversion_sheet,
-#           'record': self.handle_client_action_view_conversion_record,
+            'record': self.handle_client_action_view_conversion_record,
         }
         return handlers[kwargs['conversion']](**kwargs)
 
@@ -1683,6 +1712,15 @@ class EWalletSessionManager():
         return handlers[kwargs['controller']](**kwargs)
 
     # WARNINGS
+
+    def warning_could_not_view_conversion_sheet_record(self, ewallet_session, instruction_set):
+        instruction_set_response = {
+            'failed': True,
+            'warning': 'Something went wrong. Could not view conversion sheet record in ewallet session {}. '\
+                       'Instruction set details : {}'.format(ewallet_session, instruction_set)
+        }
+        log.warning(instruction_set_response['warning'])
+        return instruction_set_response
 
     def warning_could_not_view_time_sheet_record(self, ewallet_session, instruction_set):
         instruction_set_response = {
@@ -2458,6 +2496,16 @@ class EWalletSessionManager():
         print(str(_view) + '\n')
         return _view
 
+    def test_user_action_view_conversion_record(self, **kwargs):
+        print('[ * ]: User action View Conversion Record')
+        _view = self.session_manager_controller(
+            controller='client', ctype='action', action='view', view='conversion',
+            conversion='record', record_id=kwargs['record_id'], client_id=kwargs['client_id'],
+            session_token=kwargs['session_token']
+        )
+        print(str(_view) + '\n')
+        return _view
+
     def test_session_manager_controller(self, **kwargs):
         print('[ TEST ] Session Manager')
 #       open_in_port = self.test_open_instruction_listener_port()
@@ -2544,6 +2592,10 @@ class EWalletSessionManager():
         )
         view_conversion_sheet = self.test_user_action_view_conversion_sheet(
             client_id=client_id['client_id'], session_token=session_token['session_token'],
+        )
+        view_conversion_record = self.test_user_action_view_conversion_record(
+            client_id=client_id['client_id'], session_token=session_token['session_token'],
+            record_id=1
         )
 
 if __name__ == '__main__':
