@@ -57,37 +57,35 @@ class CreditEWallet(Base):
             return
         self.create_date = datetime.datetime.now()
         self.write_date = datetime.datetime.now()
-
-        _credit_clock = kwargs.get('credit_clock') or \
-                self.system_controller(
-                    action='create_clock', reference='Credit Clock',
-                    credit_clock=0.0, active_session=kwargs['active_session']
-                )
-        _transfer_sheet = kwargs.get('transfer_sheet') or \
-                self.system_controller(
-                    action='create_sheet', sheet='transfer',
-                    reference='Transfer Sheet',
-                    active_session=kwargs['active_session']
-                )
-        _invoice_sheet = kwargs.get('invoice_sheet') or \
-                self.system_controller(
-                    action='create_sheet', sheet='invoice',
-                    reference='Invoice Sheet',
-                    active_session=kwargs['active_session']
-                )
-
+        credit_clock = kwargs.get('credit_clock') or \
+            self.system_controller(
+                action='create_clock', reference='Credit Clock',
+                credit_clock=0.0, active_session=kwargs['active_session']
+            )
+        transfer_sheet = kwargs.get('transfer_sheet') or \
+            self.system_controller(
+                action='create_sheet', sheet='transfer',
+                reference='Transfer Sheet',
+                active_session=kwargs['active_session']
+            )
+        invoice_sheet = kwargs.get('invoice_sheet') or \
+            self.system_controller(
+                action='create_sheet', sheet='invoice',
+                reference='Invoice Sheet',
+                active_session=kwargs['active_session']
+            )
         self.active_session_id = kwargs.get('active_session_id')
         self.reference = kwargs.get('reference')
         self.credits = kwargs.get('credits')
-        self.credit_clock = [_credit_clock]
-        self.transfer_sheet = [_transfer_sheet]
-        self.invoice_sheet = [_invoice_sheet]
+        self.credit_clock = [credit_clock]
+        self.transfer_sheet = [transfer_sheet]
+        self.invoice_sheet = [invoice_sheet]
         self.credit_clock_archive = kwargs.get('credit_clock_archive') or \
-                [_credit_clock]
+                [credit_clock]
         self.transfer_sheet_archive = kwargs.get('transfer_sheet_archive') or \
-                [_transfer_sheet]
+                [transfer_sheet]
         self.invoice_sheet_archive = kwargs.get('invoice_sheet_archive') or \
-                [_invoice_sheet]
+                [invoice_sheet]
 
     # FETCHERS
 

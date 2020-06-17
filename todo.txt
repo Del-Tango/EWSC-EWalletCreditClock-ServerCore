@@ -7,7 +7,10 @@
 ###############################################################################
 # EWallet Session Manager
 ###############################################################################
-# TODO - User action View User Account
+# TODO - User action Edit User Account
+# TODO - User action Session Login (2)
+# TODO - User action View Credit Wallet
+# TODO - User action View Credit CLock
 
 
 ###############################################################################
@@ -38,6 +41,7 @@
 # TODO - BUG FIX - Ewallet Record Sequencer
 # TODO - User Deletion order with 30 day pending
 # TODO - EWallet report an issue system
+
 
 ###############################################################################
 # General

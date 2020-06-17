@@ -483,7 +483,7 @@ class EWalletSessionManager():
     def validate_instruction_set(self, instruction_set):
         log.debug('')
         if not instruction_set.get('client_id') or not instruction_set.get('session_token'):
-            return self.error_invalid_instruction_set_required_data(kwargs)
+            return self.error_invalid_instruction_set_required_data(instruction_set)
         validations = {
             'client_id': self.validate_client_id(instruction_set['client_id']),
             'session_token': self.validate_session_token(instruction_set['session_token']),
@@ -618,6 +618,20 @@ class EWalletSessionManager():
     '''
     [ NOTE ]: SqlAlchemy ORM sessions are fetched here.
     '''
+
+    def action_view_user_account(self, ewallet_session, instruction_set):
+        log.debug('')
+        orm_session = ewallet_session.fetch_active_session()
+        sanitized_instruction_set = res_utils.remove_tags_from_command_chain(
+            instruction_set, 'controller', 'ctype', 'action', 'view',
+        )
+        view_account = ewallet_session.ewallet_controller(
+            controller='user', ctype='action', action='view', view='account',
+            active_session=orm_session, **sanitized_instruction_set
+        )
+        return self.warning_could_not_view_user_account(
+            ewallet_session, instruction_set
+        ) if view_account.get('failed') else view_account
 
     def action_view_conversion_record(self, ewallet_session, instruction_set):
         log.debug('')
@@ -958,6 +972,21 @@ class EWalletSessionManager():
 
     # HANDLERS
 
+    def handle_client_action_view_account(self, **kwargs):
+        log.debug('')
+        instruction_set_validation = self.validate_instruction_set(kwargs)
+        if not instruction_set_validation:
+            return False
+        ewallet = self.fetch_ewallet_session_for_client_action_using_instruction_set(
+            kwargs
+        )
+        if not ewallet:
+            return False
+        view_account = self.action_view_user_account(
+            ewallet['ewallet_session'], ewallet['sanitized_instruction_set'],
+        )
+        return view_account
+
     def handle_client_action_view_conversion_record(self, **kwargs):
         log.debug('')
         instruction_set_validation = self.validate_instruction_set(kwargs)
@@ -1178,7 +1207,7 @@ class EWalletSessionManager():
             'time': self.handle_client_action_view_time,
             'conversion': self.handle_client_action_view_conversion,
 #           'invoice':
-#           'account':
+            'account': self.handle_client_action_view_account,
         }
         return handlers[kwargs['view']](**kwargs)
 
@@ -2506,6 +2535,15 @@ class EWalletSessionManager():
         print(str(_view) + '\n')
         return _view
 
+    def test_user_action_view_account(self, **kwargs):
+        print('[ * ]: User action View Account')
+        _view = self.session_manager_controller(
+            controller='client', ctype='action', action='view', view='account',
+            client_id=kwargs['client_id'], session_token=kwargs['session_token']
+        )
+        print(str(_view) + '\n')
+        return _view
+
     def test_session_manager_controller(self, **kwargs):
         print('[ TEST ] Session Manager')
 #       open_in_port = self.test_open_instruction_listener_port()
@@ -2554,20 +2592,20 @@ class EWalletSessionManager():
             session_token=session_token['session_token'],
             pay='system.core@alvearesolutions.com'
         )
-        view_contact_list = self.test_user_action_view_contact_list(
-            client_id=client_id['client_id'],
-            session_token=session_token['session_token'],
-        )
-        add_contact_record = self.test_user_action_add_contact_record(
-            client_id=client_id['client_id'], session_token=session_token['session_token'],
-            contact_list=view_contact_list['contact_list'],
-            user_name='This is bob', user_email='example@example.com', user_phone='095551234',
-            user_reference='That weird guy coding wallets.', notes='WOOHO.'
-        )
-        view_contact_record = self.test_user_action_view_contact_record(
-            client_id=client_id['client_id'], session_token=session_token['session_token'],
-            record=add_contact_record['contact_record']
-        )
+#       view_contact_list = self.test_user_action_view_contact_list(
+#           client_id=client_id['client_id'],
+#           session_token=session_token['session_token'],
+#       )
+#       add_contact_record = self.test_user_action_add_contact_record(
+#           client_id=client_id['client_id'], session_token=session_token['session_token'],
+#           contact_list=view_contact_list['contact_list'],
+#           user_name='This is bob', user_email='example@example.com', user_phone='095551234',
+#           user_reference='That weird guy coding wallets.', notes='WOOHO.'
+#       )
+#       view_contact_record = self.test_user_action_view_contact_record(
+#           client_id=client_id['client_id'], session_token=session_token['session_token'],
+#           record=add_contact_record['contact_record']
+#       )
         transfer_credits = self.test_user_action_transfer_credits(
             client_id=client_id['client_id'], session_token=session_token['session_token'],
             transfer_to='example@example.com', credits=50
@@ -2576,26 +2614,29 @@ class EWalletSessionManager():
             client_id=client_id['client_id'], session_token=session_token['session_token'],
             minutes=13,
         )
-        view_transfer_sheet = self.test_user_action_view_transfer_sheet(
-            client_id=client_id['client_id'], session_token=session_token['session_token'],
-        )
+#       view_transfer_sheet = self.test_user_action_view_transfer_sheet(
+#           client_id=client_id['client_id'], session_token=session_token['session_token'],
+#       )
         view_transfer_record = self.test_user_action_view_transfer_record(
             client_id=client_id['client_id'], session_token=session_token['session_token'],
             record_id=1
         )
-        view_time_sheet = self.test_user_action_view_time_sheet(
-            client_id=client_id['client_id'], session_token=session_token['session_token'],
-        )
+#       view_time_sheet = self.test_user_action_view_time_sheet(
+#           client_id=client_id['client_id'], session_token=session_token['session_token'],
+#       )
         view_time_record = self.test_user_action_view_time_record(
             client_id=client_id['client_id'], session_token=session_token['session_token'],
             record_id=33
         )
-        view_conversion_sheet = self.test_user_action_view_conversion_sheet(
-            client_id=client_id['client_id'], session_token=session_token['session_token'],
-        )
+#       view_conversion_sheet = self.test_user_action_view_conversion_sheet(
+#           client_id=client_id['client_id'], session_token=session_token['session_token'],
+#       )
         view_conversion_record = self.test_user_action_view_conversion_record(
             client_id=client_id['client_id'], session_token=session_token['session_token'],
             record_id=1
+        )
+        view_account = self.test_user_action_view_account(
+            client_id=client_id['client_id'], session_token=session_token['session_token'],
         )
 
 if __name__ == '__main__':

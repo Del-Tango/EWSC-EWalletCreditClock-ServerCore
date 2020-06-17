@@ -372,6 +372,24 @@ class EWallet(Base):
     [ NOTE ]: Command chain responses are formatted here.
     '''
 
+    def action_view_user_account(self, **kwargs):
+        '''
+        [ NOTE   ]: User action 'view user account', accessible from external api call.
+        [ RETURN ]: (Active user values | False)
+        '''
+        log.debug('')
+        if not self.active_user:
+            return self.error_no_session_active_user_found()
+        active_user = self.fetch_active_session_user()
+        if not active_user:
+            return self.warning_could_not_fetch_ewallet_session_active_user()
+        command_chain_response = {
+            'failed': False,
+            'account': active_user.fetch_user_name(),
+            'account_data': active_user.fetch_user_values(),
+        }
+        return command_chain_response
+
     def action_view_conversion_record(self, **kwargs):
         '''
         [ NOTE   ]: User action 'view conversion record', accessible from external api call.
@@ -961,18 +979,6 @@ class EWallet(Base):
         if not _record:
             return self.warning_could_not_fetch_invoice_sheet_record()
         res = _record.fetch_record_values()
-        log.debug(res)
-        return res
-
-    def action_view_user_account(self, **kwargs):
-        '''
-        [ NOTE   ]: User action 'view user account', accessible from external api call.
-        [ RETURN ]: (Active user values | False)
-        '''
-        log.debug('')
-        if not self.active_user:
-            return self.error_no_session_active_user_found()
-        res = self.active_user[0].fetch_user_values()
         log.debug(res)
         return res
 
@@ -2650,6 +2656,14 @@ class EWallet(Base):
         return False
 
     # WARNINGS
+
+    def warning_could_not_fetch_ewallet_session_active_user(self):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Something went wrong. Could not fetch ewallet session active user.'
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
 
     def warning_no_user_account_found(self, command_chain):
         log.warning(

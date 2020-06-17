@@ -238,26 +238,35 @@ class ResUser(Base):
 
     def fetch_user_values(self):
         log.debug('')
-        _values = {
-                'id': self.user_id,
-                'user_name': self.user_name,
-                'user_create_date': self.user_create_date,
-                'user_write_date': self.user_write_date,
-                'user_create_uid': self.user_create_uid,
-                'user_write_uid': self.user_write_uid,
-                'user_credit_wallet': self.fetch_user_credit_wallet(),
-                'user_contact_list': self.fetch_user_contact_list(),
-                'user_pass_hash': self.user_pass_hash,
-                'user_email': self.user_email,
-                'user_phone': self.user_phone,
-                'user_alias': self.user_alias,
-                'user_state_code': self.user_state_code,
-                'user_state_name': self.user_state_name,
-                'user_pass_hash_archive': self.user_pass_hash_archive,
-                'user_credit_wallet_archive': self.user_credit_wallet_archive,
-                'user_contact_list_archive': self.user_contact_list_archive,
-                }
-        return _values
+        values = {
+            'id': self.user_id,
+            'user_name': self.user_name,
+            'user_create_date': self.user_create_date,
+            'user_write_date': self.user_write_date,
+            'user_create_uid': self.user_create_uid,
+            'user_write_uid': self.user_write_uid,
+            'user_credit_wallet': self.fetch_user_credit_wallet().fetch_credit_ewallet_id(),
+            'user_contact_list': self.fetch_user_contact_list().fetch_contact_list_id(),
+#           'user_pass_hash': self.user_pass_hash,
+            'user_email': self.user_email,
+            'user_phone': self.user_phone,
+            'user_alias': self.user_alias,
+            'user_state_code': self.user_state_code,
+            'user_state_name': self.user_state_name,
+#           'user_pass_hash_archive': {
+#               item.fetch_pass_hash_archive_id(): item.fetch_pass_hash_archive_pass_hash() \
+#               for item in self.user_pass_hash_archive
+#           },
+            'user_credit_wallet_archive': {
+                item.fetch_credit_ewallet_id(): item.fetch_credit_ewallet_reference() \
+                for item in self.user_credit_wallet_archive
+            },
+            'user_contact_list_archive': {
+                item.fetch_contact_list_id(): item.fetch_contact_list_reference() \
+                for item in self.user_contact_list_archive
+            },
+        }
+        return values
 
     def fetch_credit_wallet_by_id(self, credit_wallet_id):
         log.debug('')
@@ -275,17 +284,17 @@ class ResUser(Base):
 
     def fetch_user_state_code_map(self):
         log.debug('')
-        _state_map = {
-                'code': {
-                    0: 'LoggedOut',
-                    1: 'LoggedIn',
-                    },
-                'name': {
-                    'LoggedOut': 0,
-                    'LoggedIn': 1,
-                    }
+        state_map = {
+            'code': {
+                0: 'LoggedOut',
+                1: 'LoggedIn',
+                },
+            'name': {
+                'LoggedOut': 0,
+                'LoggedIn': 1,
                 }
-        return _state_map
+            }
+        return state_map
 
     # SETTERS
 

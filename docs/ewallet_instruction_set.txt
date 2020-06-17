@@ -270,6 +270,45 @@
             session_token=<token>
         )
 
+* User action View User Account:
+    * Returns:
+        * [ OK  ]: {
+            'failed': False,
+            'account': <user-name>,
+            'account_data': <user-account-data>,
+        }
+        * [ NOK ]: {
+            'failed': True,
+            'error': <msg>,
+            'warning': <msg>,
+        }
+    * Controller Instruction Set:
+        session_manager_controller(
+            controller='client', ctype='action', action='view', view='account',
+            client_id=<client-id>, session_token=<token>
+        )
+
+# TODO
+
+* User action Edit User Account:
+    * Returns :
+        * [ OK  ]: {
+            'failed': False,
+            'account': <user-name>
+            'account_data': <user-account-data>
+        }
+        * [ NOK ]: {
+            'failed': True,
+            'error': <msg>,
+            'warning': <msg>,
+        }
+    * Controller Instruction Set"
+        session_manager_controller(
+            controller='client', ctype='action', action='edit', edit='account',
+            client_id=<client-id>, session_token=<token>, user_name=<name>,
+            user_pass=<pass>, user_email=<email>, user_phone=<phone>, user_alias=<alias>,
+        )
+
 
 ################################################################################
 # EWallet Session (Command Chain)
