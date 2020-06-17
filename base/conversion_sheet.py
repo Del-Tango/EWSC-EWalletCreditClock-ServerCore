@@ -45,7 +45,7 @@ class CreditClockConversionSheetRecord(Base):
         log.debug('')
         return self.conversion_sheet_id
 
-    def fetch_reference(self):
+    def fetch_record_reference(self):
         log.debug('')
         return self.reference
 
@@ -201,26 +201,29 @@ class CreditClockConversionSheet(Base):
 
     def fetch_conversion_sheet_values(self):
         log.debug('')
-        _values = {
-                'id': self.conversion_sheet_id,
-                'clock_id': self.clock_id,
-                'reference': self.reference,
-                'create_date': self.create_date,
-                'write_date': self.write_date,
-                'records': self.records,
-                }
-        return _values
+        values = {
+            'id': self.conversion_sheet_id,
+            'clock_id': self.clock_id,
+            'reference': self.reference,
+            'create_date': self.create_date,
+            'write_date': self.write_date,
+            'records': {
+                item.fetch_record_id(): item.fetch_record_reference() \
+                for item in self.records
+            },
+        }
+        return values
 
     def fetch_conversion_record_creation_values(self, **kwargs):
         log.debug('')
-        _values = {
-                'conversion_sheet_id': self.conversion_sheet_id,
-                'reference': kwargs.get('reference'),
-                'conversion_type': kwargs.get('conversion_type'),
-                'minutes': kwargs.get('minutes'),
-                'credits': kwargs.get('credits'),
-                }
-        return _values
+        values = {
+            'conversion_sheet_id': self.conversion_sheet_id,
+            'reference': kwargs.get('reference'),
+            'conversion_type': kwargs.get('conversion_type'),
+            'minutes': kwargs.get('minutes'),
+            'credits': kwargs.get('credits'),
+        }
+        return values
 
     def fetch_conversion_sheet_record_by_id(self, **kwargs):
         log.debug('')

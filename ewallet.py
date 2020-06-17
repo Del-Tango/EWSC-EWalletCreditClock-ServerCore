@@ -368,6 +368,29 @@ class EWallet(Base):
                 .delete()
 
     # ACTIONS
+    '''
+    [ NOTE ]: Command chain responses are formatted here.
+    '''
+
+    def action_view_conversion_list(self, **kwargs):
+        '''
+        [ NOTE   ]: User action 'view conversion list', accessible from external api call.
+        [ RETURN ]: (Conversion sheet values | False)
+        '''
+        log.debug('')
+        credit_clock = self.fetch_active_session_credit_clock()
+        if not credit_clock:
+            return self.warning_could_not_fetch_credit_clock()
+        log.info('Attempting to fetch active conversion sheet...')
+        conversion_sheet = credit_clock.fetch_credit_clock_conversion_sheet()
+        if not conversion_sheet:
+            return self.warning_could_not_fetch_conversion_sheet()
+        command_chain_response = {
+            'failed': False,
+            'conversion_sheet': conversion_sheet.fetch_conversion_sheet_id(),
+            'sheet_data': conversion_sheet.fetch_conversion_sheet_values(),
+        }
+        return command_chain_response
 
     def action_view_time_record(self, **kwargs):
         '''
@@ -860,23 +883,6 @@ class EWallet(Base):
             'record_data': record.fetch_record_values(),
         }
         return command_chain_response
-
-    def action_view_conversion_list(self, **kwargs):
-        '''
-        [ NOTE   ]: User action 'view conversion list', accessible from external api call.
-        [ RETURN ]: (Conversion sheet values | False)
-        '''
-        log.debug('')
-        _credit_clock = self.fetch_active_session_credit_clock()
-        if not _credit_clock:
-            return self.warning_could_not_fetch_credit_clock()
-        log.info('Attempting to fetch active conversion sheet...')
-        _conversion_list = _credit_clock.fetch_credit_clock_conversion_sheet()
-        if not _conversion_list:
-            return self.warning_could_not_fetch_conversion_sheet()
-        res = _conversion_list.fetch_conversion_sheet_values()
-        log.debug(res)
-        return res
 
     def action_view_conversion_record(self, **kwargs):
         '''

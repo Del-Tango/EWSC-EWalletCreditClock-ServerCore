@@ -352,32 +352,30 @@ class CreditClockTimeSheet(Base):
 
     def fetch_time_record_creation_values(self, **kwargs):
         log.debug('')
-        _values = {
-                'record_id': kwargs.get('record_id'),
-                'create_uid': kwargs.get('create_uid'),
-                'write_uid': kwargs.get('write_uid'),
-                'time_sheet_id': self.time_sheet_id,
-                'reference': kwargs.get('reference'),
-                'credit_clock': kwargs.get('credit_clock'),
-                'time_start': kwargs.get('time_start'),
-                'time_stop': kwargs.get('time_stop'),
-                'time_spent': kwargs.get('time_spent'),
-                }
-        return _values
+        values = {
+            'record_id': kwargs.get('record_id'),
+            'create_uid': kwargs.get('create_uid'),
+            'write_uid': kwargs.get('write_uid'),
+            'time_sheet_id': self.time_sheet_id,
+            'reference': kwargs.get('reference'),
+            'credit_clock': kwargs.get('credit_clock'),
+            'time_start': kwargs.get('time_start'),
+            'time_stop': kwargs.get('time_stop'),
+            'time_spent': kwargs.get('time_spent'),
+        }
+        return values
 
     def fetch_time_sheet_record_by_id(self, **kwargs):
         log.debug('')
         if not kwargs.get('code'):
             return self.error_no_time_record_id_found()
         if kwargs.get('active_session'):
-            match = list(
-                kwargs['active_session'].query(TimeSheetRecord) \
-                        .filter_by(record_id=kwargs['code'])
-            )
+            match = list(kwargs['active_session'].query(TimeSheetRecord) \
+                        .filter_by(record_id=kwargs['code']))
         else:
             match = [
-                item for item in self.records
-                if item.fetch_record_id() is kwargs['code']
+                item for item in self.records if
+                item.fetch_record_id() is kwargs['code']
             ]
         record = False if not match else match[0]
         if not record:
