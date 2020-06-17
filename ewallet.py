@@ -369,6 +369,66 @@ class EWallet(Base):
 
     # ACTIONS
 
+    def action_view_time_record(self, **kwargs):
+        '''
+        [ NOTE   ]: User action 'view time record', accessible from external api call.
+        [ INPUT  ]: record_id=<id>
+        [ RETURN ]: (Time record values | False)
+        '''
+        log.debug('')
+        credit_wallet = self.fetch_active_session_credit_wallet()
+        if not credit_wallet or not kwargs.get('record_id'):
+            return self.error_handler_action_view_time_record(
+                credit_wallet=_credit_wallet,
+                record_id=kwargs.get('record_id'),
+            )
+        log.info('Attempting to fetch active credit clock...')
+        credit_clock = credit_wallet.fetch_credit_ewallet_credit_clock()
+        if not credit_clock:
+            return self.warning_could_not_fetch_credit_clock()
+        log.info('Attempting to fetch active time sheet...')
+        time_sheet = credit_clock.fetch_credit_clock_time_sheet()
+        if not time_sheet:
+            return self.warning_could_not_fetch_time_sheet()
+        log.info('Attempting to fetch time record...')
+        record = time_sheet.fetch_time_sheet_record(
+            search_by='id', code=kwargs['record_id'],
+            active_session=self.session
+        )
+        if not record:
+            return self.warning_could_not_fetch_time_sheet_record()
+        command_chain_response = {
+            'failed': False,
+            'time_sheet': time_sheet.fetch_time_sheet_id(),
+            'time_record': record.fetch_record_id(),
+            'record_data': record.fetch_record_values(),
+        }
+        return command_chain_response
+
+    def action_view_time_list(self, **kwargs):
+        '''
+        [ NOTE   ]: User action 'view time list', accessible from external api call.
+        [ RETURN ]: (Time sheet values | False)
+        '''
+        log.debug('')
+        credit_wallet = self.fetch_active_session_credit_wallet()
+        if not credit_wallet:
+            return self.error_no_session_credit_wallet_found()
+        log.info('Attempting to fetch active credit clock...')
+        credit_clock = credit_wallet.fetch_credit_ewallet_credit_clock()
+        if not credit_clock:
+            return self.warning_could_not_fetch_credit_clock()
+        log.info('Attempting to fetch active time sheet...')
+        time_sheet = credit_clock.fetch_credit_clock_time_sheet()
+        if not time_sheet:
+            return self.warning_could_not_fetch_time_sheet()
+        command_chain_response = {
+            'failed': False,
+            'time_sheet': time_sheet.fetch_time_sheet_id(),
+            'sheet_data': time_sheet.fetch_time_sheet_values(),
+        }
+        return command_chain_response
+
 #   @pysnooper.snoop()
     def action_create_new_transfer_type_transfer(self, **kwargs):
         log.debug('')
@@ -800,62 +860,6 @@ class EWallet(Base):
             'record_data': record.fetch_record_values(),
         }
         return command_chain_response
-
-    def action_view_time_list(self, **kwargs):
-        '''
-        [ NOTE   ]: User action 'view time list', accessible from external api call.
-        [ RETURN ]: (Time sheet values | False)
-        '''
-        log.debug('')
-        credit_wallet = self.fetch_active_session_credit_wallet()
-        if not credit_wallet:
-            return self.error_no_session_credit_wallet_found()
-        log.info('Attempting to fetch active credit clock...')
-        credit_clock = credit_wallet.fetch_credit_ewallet_credit_clock()
-        if not credit_clock:
-            return self.warning_could_not_fetch_credit_clock()
-        log.info('Attempting to fetch active time sheet...')
-        time_sheet = credit_clock.fetch_credit_clock_time_sheet()
-        if not time_sheet:
-            return self.warning_could_not_fetch_time_sheet()
-        command_chain_response = {
-            'failed': False,
-            'time_sheet': time_sheet.fetch_time_sheet_id(),
-            'sheet_data': time_sheet.fetch_time_sheet_values(),
-        }
-        return command_chain_response
-
-    def action_view_time_record(self, **kwargs):
-        '''
-        [ NOTE   ]: User action 'view time record', accessible from external api call.
-        [ INPUT  ]: record_id=<id>
-        [ RETURN ]: (Time record values | False)
-        '''
-        log.debug('')
-        _credit_wallet = self.fetch_active_session_credit_wallet()
-        if not _credit_wallet or not kwargs.get('record_id'):
-            return self.error_handler_action_view_time_record(
-                    credit_wallet=_credit_wallet,
-                    record_id=kwargs.get('record_id'),
-                    )
-        log.info('Attempting to fetch active credit clock...')
-        _credit_clock = _credit_wallet.fetch_credit_ewallet_credit_clock()
-        if not _credit_clock:
-            return self.warning_could_not_fetch_credit_clock()
-        log.info('Attempting to fetch active time sheet...')
-        _time_sheet = _credit_clock.fetch_credit_clock_time_sheet()
-        if not _time_sheet:
-            return self.warning_could_not_fetch_time_sheet()
-        log.info('Attempting to fetch time record...')
-        _record = _time_sheet.fetch_time_sheet_record(
-                search_by='id', code=kwargs['record_id'],
-                active_session=self.session
-                )
-        if not _record:
-            return self.warning_could_not_fetch_time_sheet_record()
-        res = _record.fetch_record_data()
-        log.debug(res)
-        return res
 
     def action_view_conversion_list(self, **kwargs):
         '''
@@ -2682,11 +2686,12 @@ class EWallet(Base):
         return False
 
     def warning_could_not_fetch_time_sheet_record(self):
-        log.warning(
-                'Something went wrong. '
-                'Could not fetch time sheet record.'
-                )
-        return False
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Something went wrong. Could not fetch time sheet record.',
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
 
     def warning_could_not_fetch_time_sheet(self):
         log.warning(

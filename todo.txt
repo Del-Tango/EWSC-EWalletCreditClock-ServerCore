@@ -7,7 +7,6 @@
 ###############################################################################
 # EWallet Session Manager
 ###############################################################################
-# TODO - User action View TIme Record
 # TODO - User action View Conversion Sheet
 # TODO - User action View Conversion Record
 # TODO - User action View User Account

@@ -104,23 +104,23 @@ class TimeSheetRecord(Base):
         log.debug('')
         return self.time_spent
 
-    def fetch_record_data(self):
+    def fetch_record_values(self):
         log.debug('')
-        _values = {
-                'record_id': self.record_id,
-                'time_sheet_id': self.time_sheet_id,
-                'reference': self.reference,
-                'create_date': self.create_date,
-                'write_date': self.write_date,
-                'create_uid': self.create_uid,
-                'write_uid': self.write_uid,
-                'time_start': self.time_start,
-                'time_stop': self.time_stop,
-                'time_spent': self.time_spent,
-                'time_pending': self.time_pending,
-                'pending_count': self.pending_count,
-                }
-        return _values
+        values = {
+            'record_id': self.record_id,
+            'time_sheet_id': self.time_sheet_id,
+            'reference': self.reference,
+            'create_date': self.create_date,
+            'write_date': self.write_date,
+            'create_uid': self.create_uid,
+            'write_uid': self.write_uid,
+            'time_start': self.time_start,
+            'time_stop': self.time_stop,
+            'time_spent': self.time_spent,
+            'time_pending': self.time_pending,
+            'pending_count': self.pending_count,
+        }
+        return values
 
     # SETTERS
 
@@ -370,22 +370,20 @@ class CreditClockTimeSheet(Base):
         if not kwargs.get('code'):
             return self.error_no_time_record_id_found()
         if kwargs.get('active_session'):
-            _match = list(
-                    kwargs['active_session'].query(TimeSheetRecord) \
-                            .filter_by(record_id=kwargs['code'])
+            match = list(
+                kwargs['active_session'].query(TimeSheetRecord) \
+                        .filter_by(record_id=kwargs['code'])
             )
         else:
-            _match = [
-                    item for item in self.records
-                    if item.fetch_record_id() is kwargs['code']
-                    ]
-        _record = False if not _match else _match[0]
-        if not _record:
-            return self.warning_could_not_fetch_time_record(
-                    'id', kwargs['code']
-                    )
+            match = [
+                item for item in self.records
+                if item.fetch_record_id() is kwargs['code']
+            ]
+        record = False if not match else match[0]
+        if not record:
+            return self.warning_could_not_fetch_time_record('id', kwargs['code'])
         log.info('Successfully fetched time record by id.')
-        return _record
+        return record
 
     # TODO - Refactor for multiple records
     def fetch_time_sheet_record_by_ref(self, **kwargs):
