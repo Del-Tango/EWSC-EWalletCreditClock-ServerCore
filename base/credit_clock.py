@@ -45,22 +45,22 @@ class CreditClock(Base):
     # O2M
     conversion_sheet_archive = relationship('CreditClockConversionSheet')
 
-    def __init__(self, **kwargs):
+    def __init__(self, *args, **kwargs):
         if not kwargs.get('active_session'):
             self.error_no_active_session_found()
             return
         self.create_date = datetime.datetime.now()
         self.write_date = datetime.datetime.now()
-        _time_sheet = kwargs.get('time_sheet') or \
-                self.system_controller(
-                    action='create', create='sheet', sheet_type='time',
-                    active_session=kwargs['active_session']
-                )
-        _conversion_sheet = kwargs.get('conversion_sheet') or \
-                self.system_controller(
-                    action='create', create='sheet', sheet_type='conversion',
-                    active_session=kwargs['active_session']
-                )
+        time_sheet = kwargs.get('time_sheet') or \
+            self.system_controller(
+                action='create', create='sheet', sheet_type='time',
+                active_session=kwargs['active_session']
+            )
+        conversion_sheet = kwargs.get('conversion_sheet') or \
+            self.system_controller(
+                action='create', create='sheet', sheet_type='conversion',
+                active_session=kwargs['active_session']
+            )
         self.wallet_id = kwargs.get('wallet_id')
         self.reference = kwargs.get('reference')
         self.credit_clock = kwargs.get('credit_clock') or 0.00
@@ -70,13 +70,12 @@ class CreditClock(Base):
         self.end_time = kwargs.get('end_time')
         self.pending_time = kwargs.get('pending_time') or 0.00
         self.pending_count = kwargs.get('pending_count') or 0
-        self.time_sheet = [_time_sheet]
-        self.conversion_sheet = [_conversion_sheet]
-        self.time_sheet_archive = kwargs.get('time_sheet_archive') or \
-                [_time_sheet]
-        self.conversion_sheet_archive = kwargs.get('conversion_sheet_archive') or \
-                [_conversion_sheet]
-
+        self.time_sheet = [time_sheet]
+        self.conversion_sheet = [conversion_sheet]
+        self.time_sheet_archive = kwargs.get(
+            'time_sheet_archive') or [time_sheet]
+        self.conversion_sheet_archive = kwargs.get(
+            'conversion_sheet_archive') or [conversion_sheet]
 
     # FETCHERS
 
@@ -181,18 +180,26 @@ class CreditClock(Base):
         return self.time_spent or \
                 self.error_no_time_spent_found()
 
-    def fetch_credit_clock_values():
+    def fetch_credit_clock_values(self):
         log.debug('')
-        _values = {
-                'id': self.clock_id,
-                'wallet_id': self.wallet_id,
-                'reference': self.reference,
-                'credit_clock': self.credit_clock,
-                'credit_clock_state': self.fetch_credit_clock_state(),
-                'time_sheet': self.time_sheet,
-                'time_sheet_archive': self.time_sheet_archive,
-                }
-        return _values
+        values = {
+            'id': self.clock_id,
+            'wallet_id': self.wallet_id,
+            'reference': self.reference,
+            'credit_clock': self.credit_clock,
+            'credit_clock_state': self.fetch_credit_clock_state(),
+            'time_sheet': self.fetch_credit_clock_time_sheet().fetch_time_sheet_id(),
+            'time_sheet_archive': {
+                item.fetch_time_sheet_id(): item.fetch_time_sheet_reference() \
+                for item in self.time_sheet_archive
+            },
+            'conversion_sheet': self.fetch_credit_clock_conversion_sheet().fetch_conversion_sheet_id(),
+            'conversion_sheet_archive': {
+                item.fetch_conversion_sheet_id(): item.fetch_conversion_sheet_reference() \
+                for item in self.conversion_sheet_archive
+            },
+        }
+        return values
 
     def fetch_time_sheet_creation_values(self, **kwargs):
         _values = {

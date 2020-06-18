@@ -372,6 +372,26 @@ class EWallet(Base):
     [ NOTE ]: Command chain responses are formatted here.
     '''
 
+    def action_view_credit_clock(self, **kwargs):
+        '''
+        [ NOTE   ]: User action 'view credit clock', accessible from external api call.
+        [ RETURN ]: (Credit clock values | False)
+        '''
+        log.debug('')
+        credit_wallet = self.fetch_active_session_credit_wallet()
+        if not credit_wallet:
+            return self.error_no_session_credit_wallet_found()
+        log.info('Attempting to fetch active credit clock...')
+        credit_clock = credit_wallet.fetch_credit_ewallet_credit_clock()
+        if not credit_clock:
+            return self.warning_could_not_fetch_credit_clock()
+        command_chain_response = {
+            'failed': False,
+            'credit_clock': credit_clock.fetch_credit_clock_id(),
+            'clock_data': credit_clock.fetch_credit_clock_values(),
+        }
+        return command_chain_response
+
     def action_view_credit_wallet(self, **kwargs):
         '''
         [ NOTE   ]: User action 'view credit wallet', accessible from external api call.
@@ -1068,23 +1088,6 @@ class EWallet(Base):
         if not _record:
             return self.warning_could_not_fetch_invoice_sheet_record()
         res = _record.fetch_record_values()
-        log.debug(res)
-        return res
-
-    def action_view_credit_clock(self, **kwargs):
-        '''
-        [ NOTE   ]: User action 'view credit clock', accessible from external api call.
-        [ RETURN ]: (Credit clock values | False)
-        '''
-        log.debug('')
-        _credit_wallet = self.fetch_active_session_credit_wallet()
-        if not _credit_wallet:
-            return self.error_no_session_credit_wallet_found()
-        log.info('Attempting to fetch active credit clock...')
-        _credit_clock = _credit_wallet.fetch_credit_ewallet_credit_clock()
-        if not _credit_clock:
-            return self.warning_could_not_fetch_credit_clock()
-        res = _credit_clock.fetch_credit_clock_values()
         log.debug(res)
         return res
 
