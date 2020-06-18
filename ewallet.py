@@ -372,6 +372,26 @@ class EWallet(Base):
     [ NOTE ]: Command chain responses are formatted here.
     '''
 
+    def action_view_invoice_list(self, **kwargs):
+        '''
+        [ NOTE   ]: User action 'view invoice list', accessible from external api call.
+        [ RETURN ]: (Invoice sheet values | False)
+        '''
+        log.debug('')
+        credit_wallet = self.fetch_active_session_credit_wallet()
+        if not credit_wallet:
+            return self.error_no_session_credit_wallet_found()
+        log.info('Attempting to fetch active invoice sheet...')
+        invoice_sheet = credit_wallet.fetch_credit_ewallet_invoice_sheet()
+        if not invoice_sheet:
+            return self.warning_could_not_fetch_invoice_sheet()
+        command_chain_response = {
+            'failed': False,
+            'invoice_sheet': invoice_sheet.fetch_invoice_sheet_id(),
+            'sheet_data': invoice_sheet.fetch_invoice_sheet_values(),
+        }
+        return command_chain_response
+
     def action_view_credit_clock(self, **kwargs):
         '''
         [ NOTE   ]: User action 'view credit clock', accessible from external api call.
@@ -760,11 +780,11 @@ class EWallet(Base):
         log.debug('')
         if not kwargs.get('invoice'):
             return self.error_no_invoice_target_specified()
-        _handlers = {
-                'list': self.action_view_invoice_list,
-                'record': self.action_view_invoice_record,
-                }
-        return _handlers[kwargs['invoice']](**kwargs)
+        handlers = {
+            'list': self.action_view_invoice_list,
+            'record': self.action_view_invoice_record,
+        }
+        return handlers[kwargs['invoice']](**kwargs)
 
     def action_view_transfer(self, **kwargs):
         '''
@@ -1045,23 +1065,6 @@ class EWallet(Base):
             'record_data': record.fetch_record_values(),
         }
         return command_chain_response
-
-    def action_view_invoice_list(self, **kwargs):
-        '''
-        [ NOTE   ]: User action 'view invoice list', accessible from external api call.
-        [ RETURN ]: (Invoice sheet values | False)
-        '''
-        log.debug('')
-        _credit_wallet = self.fetch_active_session_credit_wallet()
-        if not _credit_wallet:
-            return self.error_no_session_credit_wallet_found()
-        log.info('Attempting to fetch active invoice sheet...')
-        _invoice_sheet = _credit_wallet.fetch_credit_ewallet_invoice_sheet()
-        if not _invoice_sheet:
-            return self.warning_could_not_fetch_invoice_sheet()
-        res = _invoice_sheet.fetch_invoice_sheet_values()
-        log.debug(res)
-        return res
 
     def action_view_invoice_record(self, **kwargs):
         '''

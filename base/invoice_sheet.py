@@ -210,15 +210,18 @@ class CreditInvoiceSheet(Base):
 
     def fetch_invoice_sheet_values(self):
         log.debug('')
-        _values = {
-                'id': self.invoice_sheet_id,
-                'wallet_id': self.wallet_id,
-                'reference': self.reference,
-                'create_date': self.create_date,
-                'write_date': self.write_date,
-                'records': self.records,
-                }
-        return _values
+        values = {
+            'id': self.invoice_sheet_id,
+            'wallet_id': self.wallet_id,
+            'reference': self.reference,
+            'create_date': self.create_date,
+            'write_date': self.write_date,
+            'records': {
+                item.fetch_record_id(): item.fetch_record_reference() \
+                for item in self.records
+            },
+        }
+        return values
 
     def fetch_invoice_record_creation_values(self, **kwargs):
         log.debug('')
