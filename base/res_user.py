@@ -61,17 +61,17 @@ class ResUser(Base):
         self.user_write_date = datetime.datetime.now()
         self.user_create_uid = kwargs.get('user_create_uid')
         self.user_write_uid = kwargs.get('user_write_uid')
-        _user_credit_wallet = kwargs.get('user_credit_wallet') or \
-                self.user_action_controller(
-                    action='create', target='credit_wallet', **kwargs
-                )
-        _user_contact_list = kwargs.get('user_contact_list') or \
-                self.user_action_controller(
-                    action='create', target='contact_list', **kwargs
-                )
+        user_credit_wallet = kwargs.get('user_credit_wallet') or \
+            self.user_action_controller(
+                action='create', target='credit_wallet', **kwargs
+            )
+        user_contact_list = kwargs.get('user_contact_list') or \
+            self.user_action_controller(
+                action='create', target='contact_list', **kwargs
+            )
         self.user_name = kwargs.get('user_name')
-        self.user_credit_wallet = [_user_credit_wallet]
-        self.user_contact_list = [_user_contact_list]
+        self.user_credit_wallet = [user_credit_wallet]
+        self.user_contact_list = [user_contact_list]
         self.user_pass_hash = kwargs.get('user_pass_hash')
         self.user_email = kwargs.get('user_email')
         self.user_phone = kwargs.get('user_phone')
@@ -80,9 +80,9 @@ class ResUser(Base):
         self.user_state_name = kwargs.get('user_state_name') or 'LoggedOut'
         self.user_pass_hash_archive = kwargs.get('user_pass_hash_archive') or []
         self.user_credit_wallet_archive = kwargs.get('user_credit_wallet_archive') or \
-                [_user_credit_wallet]
+                [user_credit_wallet]
         self.user_contact_list_archive = kwargs.get('user_contact_list_archive') or \
-                [_user_contact_list]
+                [user_contact_list]
 
     # FETCHERS
 
@@ -113,7 +113,6 @@ class ResUser(Base):
             'source_user_account': self,
             'target_user_account': kwargs.get('pay'),
             'active_session': kwargs.get('active_session'),
-
         }
         return creation_values
 
@@ -309,21 +308,21 @@ class ResUser(Base):
         if not kwargs.get('password') or not kwargs.get('pass_check_func') \
                 or not kwargs.get('pass_hash_func'):
             return self.error_handler_set_user_pass(
-                    password=kwargs.get('password'),
-                    pass_check_func=kwargs.get('pass_check_func'),
-                    pass_hash_func=kwargs.get('pass_hash_func'),
-                    )
+                password=kwargs.get('password'),
+                pass_check_func=kwargs.get('pass_check_func'),
+                pass_hash_func=kwargs.get('pass_hash_func'),
+            )
         log.info('Performing user password checks...')
-        _check = kwargs['pass_check_func'](kwargs['password'])
-        if not _check:
+        check = kwargs['pass_check_func'](kwargs['password'])
+        if not check:
             return _create_user.error_invalid_user_pass()
         log.info('Password coresponds with security standards. Hashing...')
-        _pass_hash = kwargs['pass_hash_func'](kwargs['password'])
-        _hash_record = self.create_user_pass_hash_record(
-                pass_hash=_pass_hash, **kwargs
+        pass_hash = kwargs['pass_hash_func'](kwargs['password'])
+        hash_record = self.create_user_pass_hash_record(
+                pass_hash=pass_hash, **kwargs
                 )
-        self.user_pass = _pass_hash
-        kwargs['active_session'].add(_hash_record)
+        self.user_pass = pass_hash
+        kwargs['active_session'].add(hash_record)
         kwargs['active_session'].commit()
         self.set_user_write_date()
         log.info('Successfully set user password.')
@@ -572,6 +571,51 @@ class ResUser(Base):
 
     # ACTIONS
 
+    def action_edit_user_name(self, **kwargs):
+        log.debug('')
+        set_user_name = self.set_user_name(name=kwargs['user_name'])
+        return self.error_could_not_edit_user_name(kwargs) \
+            if not set_user_name else {
+                'failed': False,
+                'user_name': set_user_name
+            }
+
+    def action_edit_user_pass(self, **kwargs):
+        log.debug('')
+        set_user_pass = self.set_user_name(password=kwargs['user_pass'])
+        return self.error_could_not_edit_user_pass(kwargs) \
+            if not set_user_pass else {
+                'failed': False,
+                'user_pass': set_user_pass
+            }
+
+    def action_edit_user_alias(self, **kwargs):
+        log.debug('')
+        set_user_alias = self.set_user_alias(alias=kwargs['user_alias'])
+        return self.error_could_not_edit_user_alias(kwargs) \
+            if not set_user_alias else {
+                'failed': False,
+                'user_alias': set_user_alias,
+            }
+
+    def action_edit_user_email(self, **kwargs):
+        log.debug('TODO - Add email validations here')
+        set_user_email = self.set_user_email(email=kwargs['user_email'])
+        return self.error_could_not_edit_user_email(kwargs) \
+            if not set_user_email else {
+                'failed': False,
+                'user_email': set_user_email,
+            }
+
+    def action_edit_user_phone(self, **kwargs):
+        log.debug('')
+        set_user_phone = self.set_user_phone(phone=kwargs['user_phone'])
+        return self.error_could_not_edit_user_phone(kwargs) \
+            if not set_user_phone else {
+                'failed': False,
+                'user_phone': set_user_phone,
+            }
+
     def action_transfer_credits_to_partner_account(self, **kwargs):
         log.debug('')
         if not kwargs.get('transfer_to'):
@@ -726,6 +770,54 @@ class ResUser(Base):
 
     # HANDLERS
 
+    def handle_user_action_edit_name(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('user_name'):
+            return self.error_no_user_name_specified_for_user_action_edit(kwargs)
+        edit_user_name = self.action_edit_user_name(**kwargs)
+        return edit_user_name
+
+    def handle_user_action_edit_pass(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('user_pass'):
+            return self.error_no_user_pass_specified_for_user_action_edit(kwargs)
+        edit_user_pass = self.action_edit_user_pass(**kwargs)
+        return edit_user_pass
+
+    def handle_user_action_edit_alias(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('user_alias'):
+            return self.error_no_user_alias_specified_for_user_action_edit(kwargs)
+        edit_user_alias = self.action_edit_user_alias(**kwargs)
+        return edit_user_alias
+
+    def handle_user_action_edit_email(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('user_email'):
+            return self.error_no_user_email_specified_for_user_action_edit(kwargs)
+        edit_user_email = self.action_edit_user_email(**kwargs)
+        return edit_user_email
+
+    def handle_user_action_edit_phone(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('user_phone'):
+            return self.error_no_user_phone_specified_for_user_action_edit(kwargs)
+        edit_user_phone = self.action_edit_user_phone(**kwargs)
+        return edit_user_phone
+
+    def handle_user_action_edit(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('edit'):
+            return self.error_no_user_action_edit_target_specified(kwargs)
+        handlers = {
+            'user_name': self.handle_user_action_edit_name,
+            'user_pass': self.handle_user_action_edit_pass,
+            'user_alias': self.handle_user_action_edit_alias,
+            'user_email': self.handle_user_action_edit_email,
+            'user_phone': self.handle_user_action_edit_phone,
+        }
+        return handlers[kwargs['edit']](**kwargs)
+
     def handle_user_action_transfer(self, **kwargs):
         log.debug('')
         if not kwargs.get('ttype'):
@@ -830,6 +922,7 @@ class ResUser(Base):
                 'switch': self.handle_user_action_switch,
                 'unlink': self.handle_user_action_unlink,
                 'transfer': self.handle_user_action_transfer,
+                'edit': self.handle_user_action_edit,
                 }
         return _handlers[kwargs['action']](**kwargs)
 
@@ -917,6 +1010,96 @@ class ResUser(Base):
         return False
 
     # ERRORS
+
+    def error_could_not_edit_user_name(self, command_chain):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Something went wrong. Could not edit user name. Command chain details : {}'\
+                     .format(command_chain)
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_could_not_edit_user_pass(self, command_chain):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Something went wrong. Could not edit user password. Command chain details : {}'\
+                     .format(command_chain)
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_could_not_edit_user_alias(self, command_chain):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Something went wrong. Could not edit user alias. Command chain details : {}'\
+                     .format(command_chain)
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_could_not_edit_user_email(self, command_chain):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Something went wrong. Could not edit user email. Command chain details : {}'\
+                     .format(command_chain)
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_could_not_edit_user_phone(self, command_chain):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Something went wrong. Could not edit user phone. Command chain details : {}'\
+                     .format(command_chain)
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_no_user_name_specified_for_user_action_edit(self, command_chain):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No user name specified for user action edit. Command chain details : {}'\
+                     .format(command_chain)
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_no_user_pass_specified_for_user_action_edit(self, command_chain):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No user pass specified for user action edit. Command chain details : {}'\
+                     .format(command_chain)
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_no_user_alias_specified_for_user_action_edit(self, command_chain):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No user alias specified for user action edit. Command chain details : {}'\
+                     .format(command_chain)
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_no_user_email_specified_for_user_action_edit(self, command_chain):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No user email specified for user action edit. Command chain details : {}'\
+                     .format(command_chain)
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_no_user_phone_specified_for_user_action_edit(self, command_chain):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No user phone specified for user action edit. Command chain details : {}'\
+                     .format(command_chain)
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
 
     def error_no_user_action_transfer_credits_target_partner_account_specified(self, command_chain):
         log.error(
@@ -1189,147 +1372,4 @@ class ResUser(Base):
 ###############################################################################
 # CODE DUMP
 ###############################################################################
-
-    # TODO
-#   def create_credit_wallet_payment_transaction_records(self, transfer_sheet, invoice_sheet, command_chain):
-#       log.debug('UNIMPLEMENTED')
-
-#   # TODO  - Remove
-#   def create_credit_wallet_supply_transaction_records(self, transfer_sheet, invoice_sheet, command_chain):
-#       log.debug('DEPRECATED')
-#       sanitized_command_chain = res_utils.remove_tags_from_command_chain(
-#           command_chain, 'action'
-#       )
-#       create_transfer_record = transfer_sheet.credit_transfer_sheet_controller(
-#           action='add', transfer_type='outgoing', **sanitized_command_chain
-#       )
-#       create_invoice_record = invoice_sheet.credit_invoice_sheet_controller(
-#           action='add', seller=self,
-#           transfer_record=create_transfer_record,
-#           **sanitized_command_chain
-#       )
-#       if not create_transfer_record or not create_invoice_record:
-#           return self.warning_could_not_create_credit_wallet_supply_transaction_records(
-#               transfer_record=create_transfer_record,
-#               invoice_record=create_invoice_record,
-#               **command_chain
-#           )
-#       command_chain['active_session'].add(
-#           create_transfer_record, create_invoice_record
-#       )
-#       return {
-#           'transfer_record': create_transfer_record,
-#           'invoice_record': create_invoice_record
-#       }
-
-#   #@pysnooper.snoop()
-#   def partner_credit_wallet_transaction(self, local_partner, remote_partner, **kwargs):
-#       log.debug('DEPRECATED')
-#       if not kwargs.get('ttype'):
-#           return self.error_no_credit_wallet_transaction_type_specified()
-#       handlers = {
-#           'send': self.partner_credit_wallet_transaction_type_send,
-#           'receive': self.partner_credit_wallet_transaction_type_receive,
-#       }
-#       return handlers[kwargs['ttype']](local_partner, remote_partner, kwargs)
-
-#   #@pysnooper.snoop()
-#   def action_extract_credits_from_wallet(self, **kwargs):
-#       log.debug('DEPRECATED')
-#       credit_wallet = kwargs.get('credit_wallet') or \
-#               self.fetch_user_credit_wallet()
-#       if not credit_wallet:
-#           return self.error_no_credit_wallet_found()
-#       sanitized_instruction_set = res_utils.remove_tags_from_command_chain(
-#               kwargs, 'controller', 'action'
-#               )
-#       extract = credit_wallet.main_controller(
-#               controller='system', action='extract',
-#               **sanitized_instruction_set
-#               )
-#       return extract if isinstance(extract, int) else \
-#               self.warning_could_not_extract_user_account_credit_wallet_with_credits(
-#                       credit_wallet=credit_wallet, **kwargs
-#                       )
-
-#   #@pysnooper.snoop()
-#   def action_supply_credits_to_wallet(self, **kwargs):
-#       log.debug('DEPRECATED')
-#       credit_wallet = kwargs.get('credit_wallet') or \
-#               self.fetch_user_credit_wallet()
-#       if not credit_wallet:
-#           return self.error_no_credit_wallet_found()
-#       sanitized_command_chain = res_utils.remove_tags_from_command_chain(
-#           kwargs, 'controller', 'action'
-#       )
-#       supply = credit_wallet.main_controller(
-#           controller='system', action='supply', **sanitized_command_chain
-#       )
-#       return supply if isinstance(supply, int) else \
-#           self.warning_could_not_supply_user_account_credit_wallet_with_credits(
-#           credit_wallet=credit_wallet, **kwargs
-#       )
-
-    # TODO - Migrate to transaction handler
-#   def post_credit_transaction_transfer_invoice_record_share(self, transfer_sheet, invoice_sheet, command_chain):
-#       log.debug('MOVE TO TRANSACTION HANDLER')
-#       sanitized_command_chain = res_utils.remove_tags_from_command_chain(
-#           command_chain, 'action'
-#       )
-#       share_transfer_record = transfer_sheet.credit_transfer_sheet_controller(
-#           action='add', transfer_type='incoming', **sanitized_command_chain
-#       )
-#       share_invoice_record = invoice_sheet.credit_invoice_sheet_controller(
-#           action='add', seller_id=self.fetch_user_id(),
-#           transfer_record_id=share_transfer_record.fetch_record_id(),
-#           **sanitized_command_chain
-#       )
-#       if not share_transfer_record or not share_invoice_record:
-#           return self.warning_credit_transaction_record_share_failure(
-#               share_transfer_record=share_transfer_record,
-#               share_invoice_record=share_invoice_record,
-#               **command_chain
-#           )
-#       command_chain['active_session'].add(share_transfer_record, share_invoice_record)
-#       return {'transfer': share_transfer_record, 'invoice': share_invoice_record}
-
-#   def partner_credit_wallet_transaction_type_send(self, local_partner, remote_partner, command_chain):
-#       log.debug('DEPRECATED')
-#       extract_credits_from_local = local_partner.action_extract_credits_from_wallet(**command_chain)
-#       supply_credits_to_remote = remote_partner.action_supply_credits_to_wallet(**command_chain)
-#       if not extract_credits_from_local or not supply_credits_to_remote:
-#           return self.warning_credit_transaction_chain_failure(
-#               extract=extract_credits_from_local,
-#               supply=supply_credits_to_remote
-#           )
-#       return {'extract': extract_credits_from_local, 'supply': supply_credits_to_remote}
-
-#       credit_wallets = self.fetch_credit_wallets_for_transaction(
-#           self, kwargs['pay'], kwargs
-#       )
-#       sanitized_command_chain = res_utils.remove_tags_from_command_chain(
-#           kwargs, 'ttype'
-#       )
-#       credit_wallets = self.fetch_credit_wallets_for_transaction(
-#           self, kwargs['partner_account'], sanitized_command_chain
-#       )
-#       credit_transaction = self.partner_credit_wallet_transaction(
-#           self, kwargs['partner_account'], ttype='send', **sanitized_command_chain
-#       )
-#       transaction_sheets = self.fetch_credit_wallet_transfer_and_invoice_sheets(
-#           credit_wallets['local']
-#       )
-#       transaction_records = self.create_credit_wallet_supply_transaction_records(
-#           transaction_sheets['transfer'], transaction_sheets['invoice'],
-#           sanitized_command_chain
-#       )
-#       remote_transaction_sheets = self.fetch_credit_wallet_transfer_and_invoice_sheets(
-#           credit_wallets['remote']
-#       )
-#       transaction_record_share = self.post_credit_transaction_transfer_invoice_record_share(
-#           remote_transaction_sheets['transfer'],
-#           remote_transaction_sheets['invoice'],
-#           sanitized_command_chain
-#       )
-#       return credit_transaction or False
 

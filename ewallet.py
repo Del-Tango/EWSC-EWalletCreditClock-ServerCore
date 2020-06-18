@@ -372,14 +372,87 @@ class EWallet(Base):
     [ NOTE ]: Command chain responses are formatted here.
     '''
 
+    def action_edit_account_user_name(self, **kwargs):
+        log.debug('')
+        active_user = self.fetch_active_session_user()
+        if not active_user:
+            return self.warning_could_not_fetch_ewallet_session_active_user()
+        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
+            kwargs, 'ctype', 'action', 'edit'
+        )
+        edit_user_name = active_user.user_controller(
+            ctype='action', action='edit', edit='user_name',
+            **sanitized_command_chain
+        )
+        return self.warning_could_not_edit_account_user_name(kwargs) if \
+            edit_user_name.get('failed') else edit_user_name
+
+    def action_edit_account_user_pass(self, **kwargs):
+        log.debug('TODO')
+        active_user = self.fetch_active_session_user()
+        if not active_user:
+            return self.warning_could_not_fetch_ewallet_session_active_user()
+        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
+            kwargs, 'ctype', 'action', 'edit'
+        )
+        edit_user_pass = active_user.user_controller(
+            ctype='action', action='edit', edit='user_pass',
+            **sanitized_command_chain
+        )
+        return self.warning_could_not_edit_account_user_pass(kwargs) if \
+            edit_user_pass.get('failed') else edit_user_pass
+
+    def action_edit_account_user_alias(self, **kwargs):
+        log.debug('')
+        active_user = self.fetch_active_session_user()
+        if not active_user:
+            return self.warning_could_not_fetch_ewallet_session_active_user()
+        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
+            kwargs, 'ctype', 'action', 'edit'
+        )
+        edit_user_alias = active_user.user_controller(
+            ctype='action', action='edit', edit='user_alias',
+            **sanitized_command_chain
+        )
+        return self.warning_could_not_edit_account_user_alias(kwargs) if \
+            edit_user_alias.get('failed') else edit_user_alias
+
+    def action_edit_account_user_email(self, **kwargs):
+        log.debug('')
+        active_user = self.fetch_active_session_user()
+        if not active_user:
+            return self.warning_could_not_fetch_ewallet_session_active_user()
+        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
+            kwargs, 'ctype', 'action', 'edit'
+        )
+        edit_user_email = active_user.user_controller(
+            ctype='action', action='edit', edit='user_email',
+            **sanitized_command_chain
+        )
+        return self.warning_could_not_edit_account_user_email(kwargs) if \
+            edit_user_email.get('failed') else edit_user_email
+
+    def action_edit_account_user_phone(self, **kwargs):
+        log.debug('')
+        active_user = self.fetch_active_session_user()
+        if not active_user:
+            return self.warning_could_not_fetch_ewallet_session_active_user()
+        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
+            kwargs, 'ctype', 'action', 'edit'
+        )
+        edit_user_phone = active_user.user_controller(
+            ctype='action', action='edit', edit='user_phone',
+            **sanitized_command_chain
+        )
+        return self.warning_could_not_edit_account_user_phone(kwargs) if \
+            edit_user_phone.get('failed') else edit_user_phone
+
     def action_view_user_account(self, **kwargs):
         '''
         [ NOTE   ]: User action 'view user account', accessible from external api call.
         [ RETURN ]: (Active user values | False)
         '''
         log.debug('')
-        if not self.active_user:
-            return self.error_no_session_active_user_found()
         active_user = self.fetch_active_session_user()
         if not active_user:
             return self.warning_could_not_fetch_ewallet_session_active_user()
@@ -1656,6 +1729,68 @@ class EWallet(Base):
 
     # HANDLERS
 
+    def handle_user_action_edit_account_user_name(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('user_name'):
+            return False
+        edit_user_name = self.action_edit_account_user_name(**kwargs)
+        return False if edit_user_name.get('failed') else True
+
+    def handle_user_action_edit_account_user_pass(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('user_pass'):
+            return False
+        edit_user_pass = self.action_edit_account_user_pass(**kwargs)
+        return False if edit_user_pass.get('failed') else True
+
+    def handle_user_action_edit_account_user_alias(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('user_alias'):
+            return False
+        edit_user_alias = self.action_edit_account_user_alias(**kwargs)
+        return False if edit_user_alias.get('failed') else True
+
+    def handle_user_action_edit_account_user_email(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('user_email'):
+            return False
+        edit_user_email = self.action_edit_account_user_email(**kwargs)
+        return False if edit_user_email.get('failed') else True
+
+    def handle_user_action_edit_account_user_phone(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('user_phone'):
+            return False
+        edit_user_phone = self.action_edit_account_user_phone(**kwargs)
+        return False if edit_user_phone.get('failed') else True
+
+    def handle_user_action_edit_account(self, **kwargs):
+        log.debug('')
+        user = self.fetch_active_session_user()
+        edit_value_set = {
+            'user_name': self.handle_user_action_edit_account_user_name(**kwargs),
+            'user_pass': self.handle_user_action_edit_account_user_pass(**kwargs),
+            'user_alias': self.handle_user_action_edit_account_user_alias(**kwargs),
+            'user_email': self.handle_user_action_edit_account_user_email(**kwargs),
+            'user_phone': self.handle_user_action_edit_account_user_phone(**kwargs),
+        }
+        return self.warning_no_user_account_values_edited(kwargs) if True not in \
+            edit_value_set.values() else {
+            'failed': False,
+            'account': user.fetch_user_name(),
+            'edit': edit_value_set,
+            'account_data': user.fetch_user_values(),
+            }
+
+    def handle_user_action_edit(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('edit'):
+            return self.error_no_user_action_edit_target_specified(kwargs)
+        handlers = {
+            'account': self.handle_user_action_edit_account,
+        }
+        return handlers[kwargs['edit']](**kwargs)
+
     def handle_system_action_send_invoice(self, **kwargs):
         '''
         [ NOTE   ]: Jump table handler for system action 'send invoice'.
@@ -1958,6 +2093,7 @@ class EWallet(Base):
             'reset': self.handle_user_action_reset,
             'view': self.handle_user_action_view,
             'unlink': self.handle_user_action_unlink,
+            'edit': self.handle_user_action_edit,
         }
         return _handlers[kwargs['action']](**kwargs)
 
@@ -2353,6 +2489,16 @@ class EWallet(Base):
 
     # ERRORS
 
+    def error_no_user_action_edit_target_specified(self, command_chain):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No user action edit target specified. Command chain details : {}'\
+                     .foramt(command_chain)
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+
     def error_could_not_fetch_partner_account(self, command_chain):
         log.error('Could not fetch partner account. Details : {}'.format(command_chain))
         return False
@@ -2656,6 +2802,60 @@ class EWallet(Base):
         return False
 
     # WARNINGS
+
+    def warning_could_not_edit_account_user_name(self, command_chain):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Something went wrong. Could not edit account user name. Command chain details : {}'\
+                       .format(command_chain)
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
+
+    def warning_could_not_edit_account_user_pass(self, command_chain):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Something went wrong. Could not edit account user pass. Command chain details : {}'\
+                       .format(command_chain)
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
+
+    def warning_could_not_edit_account_user_alias(self, command_chain):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Something went wrong. Could not edit account user alias. Command chain details : {}'\
+                       .format(command_chain)
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
+
+    def warning_could_not_edit_account_user_email(self, command_chain):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Something went wrong. Could not edit account user email. Command chain details : {}'\
+                       .format(command_chain)
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
+
+    def warning_could_not_edit_account_user_phone(self, command_chain):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Something went wrong. Could not edit account user phone. Command chain details : {}'\
+                       .format(command_chain)
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
+
+    def warning_no_user_account_values_edited(self, command_chain):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Something went wrong. No user account values edited. Command chain details : {}'\
+                       .format(command_chain)
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
 
     def warning_could_not_fetch_ewallet_session_active_user(self):
         command_chain_response = {

@@ -619,6 +619,20 @@ class EWalletSessionManager():
     [ NOTE ]: SqlAlchemy ORM sessions are fetched here.
     '''
 
+    def action_edit_user_account(self, ewallet_session, instruction_set):
+        log.debug('')
+        orm_session = ewallet_session.fetch_active_session()
+        sanitized_instruction_set = res_utils.remove_tags_from_command_chain(
+            instruction_set, 'controller', 'ctype', 'action', 'edit',
+        )
+        edit_account = ewallet_session.ewallet_controller(
+            controller='user', ctype='action', action='edit', edit='account',
+            active_session=orm_session, **sanitized_instruction_set
+        )
+        return self.warning_could_not_edit_user_account(
+            ewallet_session, instruction_set
+        ) if edit_account.get('failed') else edit_account
+
     def action_view_user_account(self, ewallet_session, instruction_set):
         log.debug('')
         orm_session = ewallet_session.fetch_active_session()
@@ -971,6 +985,33 @@ class EWalletSessionManager():
         pass
 
     # HANDLERS
+    '''
+    [ NOTE ]: Instruction set validation and sanitizations are performed here.
+    '''
+
+    def handle_client_action_edit_account(self, **kwargs):
+        log.debug('')
+        instruction_set_validation = self.validate_instruction_set(kwargs)
+        if not instruction_set_validation:
+            return False
+        ewallet = self.fetch_ewallet_session_for_client_action_using_instruction_set(
+            kwargs
+        )
+        if not ewallet:
+            return False
+        edit_account = self.action_edit_user_account(
+            ewallet['ewallet_session'], ewallet['sanitized_instruction_set'],
+        )
+        return edit_account
+
+    def handle_client_action_edit(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('edit'):
+            return self.error_no_client_action_edit_target_specified(kwargs)
+        handlers = {
+            'account': self.handle_client_action_edit_account,
+        }
+        return handlers[kwargs['edit']](**kwargs)
 
     def handle_client_action_view_account(self, **kwargs):
         log.debug('')
@@ -1637,6 +1678,7 @@ class EWalletSessionManager():
                 'stop': self.handle_client_action_stop,
                 'pay': self.handle_client_action_pay,
                 'transfer': self.handle_client_action_transfer,
+                'edit': self.handle_client_action_edit,
                 }
         return _handlers[kwargs['action']](**kwargs)
 
@@ -1741,6 +1783,15 @@ class EWalletSessionManager():
         return handlers[kwargs['controller']](**kwargs)
 
     # WARNINGS
+
+    def warning_could_not_edit_user_account(self, ewallet_session, instruction_set):
+        instruction_set_response = {
+            'failed': True,
+            'warning': 'Something went wrong. Could not edit user account in ewallet session {}. '\
+                       'Instruction set details : {}'.format(ewallet_session, instruction_set)
+        }
+        log.warning(instruction_set_response['warning'])
+        return instruction_set_response
 
     def warning_could_not_view_conversion_sheet_record(self, ewallet_session, instruction_set):
         instruction_set_response = {
@@ -1888,6 +1939,15 @@ class EWalletSessionManager():
         return False
 
     # ERRORS
+
+    def error_no_client_action_edit_target_specified(self, instruction_set):
+        instruction_set_response = {
+            'failed': True,
+            'error': 'No client action edit target specified. Instruction set details : {}'\
+                     .format(instruction_set)
+        }
+        log.error(instruction_set_response['error'])
+        return instruction_set_response
 
     def error_no_client_action_view_conversion_target_specified(self, instruction_set):
         log.error()
@@ -2260,7 +2320,7 @@ class EWalletSessionManager():
 
     def test_new_session(self):
         log.debug('')
-        print('[ * ]: Action New Session')
+        print('[ * ]: System Action New Session')
         session = self.session_manager_controller(
                 controller='system', ctype='action', action='new', new='session'
                 )
@@ -2269,7 +2329,7 @@ class EWalletSessionManager():
 
     def test_instruction_set_listener(self):
         log.debug('')
-        print('[ * ]: Action start instruction set listener')
+        print('[ * ]: System Action Start Instruction Set Listener')
         listen = self.session_manager_controller(
                 controller='system', ctype='action', action='start',
                 start='instruction_listener'
@@ -2279,7 +2339,7 @@ class EWalletSessionManager():
 
     def test_open_instruction_listener_port(self):
         log.debug('')
-        print('[ * ]: Action Open Instruction Listener Port')
+        print('[ * ]: System Action Open Instruction Listener Port')
         _in_port = self.session_manager_controller(
                 controller='system', ctype='action', action='open',
                 opening='sockets', in_port=8080, out_port=8081
@@ -2289,7 +2349,7 @@ class EWalletSessionManager():
 
     def test_close_instruction_listener_port(self):
         log.debug('')
-        print('[ * ]: Action Close Instruction Listener Port')
+        print('[ * ]: System Action Close Instruction Listener Port')
         _in_port = self.session_manager_controller(
                 controller='system', ctype='action', action='close',
                 closing='sockets',
@@ -2300,7 +2360,7 @@ class EWalletSessionManager():
 
     def test_request_client_id(self):
         log.debug('')
-        print('[ * ]: Action Request Client ID')
+        print('[ * ]: User Action Request Client ID')
         _client_id = self.session_manager_controller(
                 controller='client', ctype='action', action='request',
                 request='client_id'
@@ -2310,7 +2370,7 @@ class EWalletSessionManager():
 
     def test_new_worker(self):
         log.debug('')
-        print('[ * ]: Action New Worker')
+        print('[ * ]: System Action New Worker')
         _worker = self.session_manager_controller(
                 controller='system', ctype='action', action='new',
                 new='worker'
@@ -2544,6 +2604,18 @@ class EWalletSessionManager():
         print(str(_view) + '\n')
         return _view
 
+    def test_user_action_edit_account(self, **kwargs):
+        print('[ * ]: User action Edit Account')
+        _edit = self.session_manager_controller(
+            controller='client', ctype='action', action='edit', edit='account',
+            client_id=kwargs['client_id'], session_token=kwargs['session_token'],
+            user_name=kwargs['user_name'], user_phone=kwargs['user_phone'],
+#           user_email=kwargs['user_email'], user_pass=kwargs['user_pass'],
+            user_alias=kwargs['user_alias']
+        )
+        print(str(_edit) + '\n')
+        return _edit
+
     def test_session_manager_controller(self, **kwargs):
         print('[ TEST ] Session Manager')
 #       open_in_port = self.test_open_instruction_listener_port()
@@ -2637,6 +2709,11 @@ class EWalletSessionManager():
         )
         view_account = self.test_user_action_view_account(
             client_id=client_id['client_id'], session_token=session_token['session_token'],
+        )
+        edit_account = self.test_user_action_edit_account(
+            client_id=client_id['client_id'], session_token=session_token['session_token'],
+            user_name='New Name', user_phone='555555555', user_alias='New Alias',
+#           user_pass='1234asscdYEEBOY@!', user_email='new@user.mail'
         )
 
 if __name__ == '__main__':

@@ -288,13 +288,12 @@
             client_id=<client-id>, session_token=<token>
         )
 
-# TODO
-
 * User action Edit User Account:
-    * Returns :
+    * Returns:
         * [ OK  ]: {
             'failed': False,
             'account': <user-name>
+            'edit': {'user_name': True, 'user_email': False, ...}
             'account_data': <user-account-data>
         }
         * [ NOK ]: {
@@ -306,7 +305,7 @@
         session_manager_controller(
             controller='client', ctype='action', action='edit', edit='account',
             client_id=<client-id>, session_token=<token>, user_name=<name>,
-            user_pass=<pass>, user_email=<email>, user_phone=<phone>, user_alias=<alias>,
+            user_email=<email>, user_phone=<phone>, user_alias=<alias>,
         )
 
 
