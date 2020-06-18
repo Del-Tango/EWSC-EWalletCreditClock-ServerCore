@@ -271,6 +271,11 @@
         )
 
 * User action View User Account:
+    * Controller Instruction Set:
+        session_manager_controller(
+            controller='client', ctype='action', action='view', view='account',
+            client_id=<client-id>, session_token=<token>
+        )
     * Returns:
         * [ OK  ]: {
             'failed': False,
@@ -282,13 +287,15 @@
             'error': <msg>,
             'warning': <msg>,
         }
-    * Controller Instruction Set:
-        session_manager_controller(
-            controller='client', ctype='action', action='view', view='account',
-            client_id=<client-id>, session_token=<token>
-        )
+
 
 * User action Edit User Account:
+    * Controller Instruction Set:
+        session_manager_controller(
+            controller='client', ctype='action', action='edit', edit='account',
+            client_id=<client-id>, session_token=<token>, user_name=<name>,
+            user_email=<email>, user_phone=<phone>, user_alias=<alias>,
+        )
     * Returns:
         * [ OK  ]: {
             'failed': False,
@@ -301,12 +308,26 @@
             'error': <msg>,
             'warning': <msg>,
         }
-    * Controller Instruction Set"
+
+
+* User action View Credit EWallet:
+    * Controller Instruction Set:
         session_manager_controller(
-            controller='client', ctype='action', action='edit', edit='account',
-            client_id=<client-id>, session_token=<token>, user_name=<name>,
-            user_email=<email>, user_phone=<phone>, user_alias=<alias>,
+            controller='client', ctype='action', action='view', view='credit',
+            credit='wallet', client_id=<client-id>, session_token=<token>
         )
+    * Returns:
+        * [ OK  ]: {
+            'failed': False,
+            'credit_ewallet': <id>,
+            'ewallet_data': <credit-ewallet-data>,
+        }
+        * [ NOK ]: {
+            'failed': True,
+            'error': <msg>,
+            'warning': <msg>,
+        }
+
 
 
 ################################################################################

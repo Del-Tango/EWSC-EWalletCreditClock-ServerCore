@@ -125,7 +125,7 @@ class CreditClock(Base):
                 }
         return _map
 
-    def fetch_credit_id(self):
+    def fetch_credit_clock_id(self):
         log.debug('')
         return self.clock_id or \
                 self.error_no_credit_clock_id_found()

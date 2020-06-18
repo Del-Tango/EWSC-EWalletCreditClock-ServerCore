@@ -7,10 +7,8 @@
 ###############################################################################
 # EWallet Session Manager
 ###############################################################################
-# TODO - User action Edit User Account
-# TODO - User action Session Login (2)
-# TODO - User action View Credit Wallet
 # TODO - User action View Credit CLock
+# TODO - User action Session Login (2)
 
 
 ###############################################################################

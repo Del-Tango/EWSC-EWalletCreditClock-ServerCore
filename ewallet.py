@@ -372,6 +372,22 @@ class EWallet(Base):
     [ NOTE ]: Command chain responses are formatted here.
     '''
 
+    def action_view_credit_wallet(self, **kwargs):
+        '''
+        [ NOTE   ]: User action 'view credit wallet', accessible from external api call.
+        [ RETURN ]: (Credit wallet values | False)
+        '''
+        log.debug('')
+        credit_wallet = self.fetch_active_session_credit_wallet()
+        if not credit_wallet:
+            return self.error_no_session_credit_wallet_found()
+        command_chain_response = {
+            'failed': False,
+            'credit_ewallet': credit_wallet.fetch_credit_ewallet_id(),
+            'ewallet_data': credit_wallet.fetch_credit_ewallet_values(),
+        }
+        return command_chain_response
+
     def action_edit_account_user_name(self, **kwargs):
         log.debug('')
         active_user = self.fetch_active_session_user()
@@ -1053,19 +1069,6 @@ class EWallet(Base):
             return self.warning_could_not_fetch_invoice_sheet_record()
         res = _record.fetch_record_values()
         log.debug(res)
-        return res
-
-    def action_view_credit_wallet(self, **kwargs):
-        '''
-        [ NOTE   ]: User action 'view credit wallet', accessible from external api call.
-        [ RETURN ]: (Credit wallet values | False)
-        '''
-        log.debug('')
-        _credit_wallet = self.fetch_active_session_credit_wallet()
-        if not _credit_wallet:
-            return self.error_no_session_credit_wallet_found()
-        res = _credit_wallet.fetch_credit_ewallet_values()
-        log.debug(str(res))
         return res
 
     def action_view_credit_clock(self, **kwargs):

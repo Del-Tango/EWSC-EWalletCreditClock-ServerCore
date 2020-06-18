@@ -130,19 +130,30 @@ class CreditEWallet(Base):
 #   @pysnooper.snoop()
     def fetch_credit_ewallet_values(self):
         log.debug('')
-        _values = {
-                'id': self.wallet_id,
-                'client_id': self.client_id,
-                'reference': self.reference,
-                'create_date': self.create_date,
-                'write_date': self.write_date,
-                'credits': self.credits,
-                'credit_clock': self.credit_clock,
-                'credit_clock_archive': self.credit_clock_archive,
-                'transfer_sheet': self.transfer_sheet,
-                'transfer_sheet_archive': self.transfer_sheet_archive,
-                }
-        return _values
+        values = {
+            'id': self.wallet_id,
+            'client_id': self.client_id,
+            'reference': self.reference,
+            'create_date': self.create_date,
+            'write_date': self.write_date,
+            'credits': self.credits,
+            'credit_clock': self.fetch_credit_ewallet_credit_clock().fetch_credit_clock_id(),
+            'credit_clock_archive': {
+                item.fetch_credit_clock_id(): item.fetch_credit_clock_reference() \
+                for item in self.credit_clock_archive
+            },
+            'transfer_sheet': self.fetch_credit_ewallet_transfer_sheet().fetch_transfer_sheet_id(),
+            'transfer_sheet_archive': {
+                item.fetch_transfer_sheet_id(): item.fetch_transfer_sheet_reference() \
+                for item in self.transfer_sheet_archive
+            },
+            'invoice_sheet': self.fetch_credit_ewallet_invoice_sheet().fetch_invoice_sheet_id(),
+            'invoice_sheet_archive': {
+                item.fetch_invoice_sheet_id(): item.fetch_invoice_sheet_reference() \
+                for item in self.invoice_sheet_archive
+            },
+        }
+        return values
 
     def fetch_credit_wallet_transfer_sheet_by_id(self, code):
         log.debug('')
