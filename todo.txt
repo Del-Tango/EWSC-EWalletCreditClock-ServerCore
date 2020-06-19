@@ -7,7 +7,6 @@
 ###############################################################################
 # EWallet Session Manager
 ###############################################################################
-# TODO - User action Create Credit Wallet
 # TODO - User action Create Credit Clock
 # TODO - User action Create Transfer Sheet
 # TODO - User action Create Conversion Sheet

@@ -476,11 +476,11 @@ class CreditEWallet(Base):
         log.debug('')
         if not kwargs.get('conversion'):
             return self.error_no_conversion_target_specified()
-        _handlers = {
-                'to_minutes': self.convert_credits_to_minutes,
-                'to_credits': self.convert_minutes_to_credits,
-                }
-        return _handlers[kwargs['conversion']](**kwargs)
+        handlers = {
+            'to_minutes': self.convert_credits_to_minutes,
+            'to_credits': self.convert_minutes_to_credits,
+        }
+        return handlers[kwargs['conversion']](**kwargs)
 
     def use_credits(self, **kwargs):
         log.debug('')

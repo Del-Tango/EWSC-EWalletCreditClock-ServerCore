@@ -55,7 +55,7 @@ class ResUser(Base):
     # O2M
     user_contact_list_archive = relationship('ContactList')
 
-#   #@pysnooper.snoop('logs/ewallet.log')
+#   @pysnooper.snoop('logs/ewallet.log')
     def __init__(self, **kwargs):
         self.user_create_date = datetime.datetime.now()
         self.user_write_date = datetime.datetime.now()
@@ -85,6 +85,15 @@ class ResUser(Base):
                 [user_contact_list]
 
     # FETCHERS
+
+    def fetch_credit_ewallet_creation_values(self, **kwargs):
+        log.debug('')
+        creation_values = {
+            'client_id': self.fetch_user_id(),
+            'reference': kwargs.get('reference') or 'Credit EWallet',
+            'credits': kwargs.get('credits') or 0,
+        }
+        return creation_values
 
     def fetch_transaction_handler_creation_values_for_action_transfer(self, **kwargs):
         log.debug('')
@@ -521,18 +530,34 @@ class ResUser(Base):
 
     # CREATORS
 
+    def create_credit_ewallet(self, creation_values, **kwargs):
+        log.debug('')
+        try:
+            new_credit_ewallet = CreditEWallet(
+                active_session=kwargs['active_session'], **creation_values
+            )
+        except:
+            return self.error_could_not_create_new_credit_ewallet(creation_values)
+        return new_credit_ewallet
+
     def create_transaction_handler(self, creation_values):
         log.debug('')
-        return EWalletTransactionHandler(**creation_values)
+        try:
+            transaction_handler = EWalletTransactionHandler(**creation_values)
+        except:
+            return self.error_could_not_create_new_transaction_handler(creation_values)
+        return transaction_handler
 
+    # TODO - Receive creation values
     def create_user_pass_hash_record(self, **kwargs):
+        log.debug('')
         if not kwargs.get('pass_hash'):
             return self.error_no_user_pass_hash_found()
-        _pass_hash_record = ResUserPassHashArchive(
-                user_id=kwargs.get('user_id') or self.fetch_user_id(),
-                user_pass_hash=kwargs['pass_hash'],
-                )
-        return _pass_hash_record
+        pass_hash_record = ResUserPassHashArchive(
+            user_id=kwargs.get('user_id') or self.fetch_user_id(),
+            user_pass_hash=kwargs['pass_hash'],
+        )
+        return pass_hash_record
 
     # GENERAL
 
@@ -570,6 +595,22 @@ class ResUser(Base):
         return transaction
 
     # ACTIONS
+
+#   @pysnooper.snoop('logs/ewallet.log')
+    def action_create_credit_wallet(self, **kwargs):
+        log.debug('')
+        active_session = kwargs.get('active_session') or \
+                self.fetch_user_active_session(stype='orm')
+        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
+            kwargs, 'active_session'
+        )
+        creation_values = self.fetch_credit_ewallet_creation_values(**kwargs)
+        new_credit_wallet = self.create_credit_ewallet(
+            creation_values, active_session=active_session, **kwargs
+        )
+        active_session.add(new_credit_wallet)
+        update_archive = self.update_user_credit_wallet_archive(new_credit_wallet)
+        return new_credit_wallet
 
     def action_edit_user_name(self, **kwargs):
         log.debug('')
@@ -651,24 +692,6 @@ class ResUser(Base):
         transaction_handler = self.create_transaction_handler(creation_values)
         transaction = transaction_handler.action_init_transaction(**sanitized_command_chain)
         return transaction
-
-    # TODO - Refactor - User main system controller
-#   #@pysnooper.snoop('logs/ewallet.log')
-    def action_create_credit_wallet(self, **kwargs):
-        log.debug('')
-        if not kwargs.get('active_session'):
-            return self.error_no_active_session_found()
-        _new_credit_wallet = CreditEWallet(
-                client_id=self.user_id,
-                reference=kwargs.get('reference') or 'Credit Wallet',
-                credits=kwargs.get('credits') or 0,
-                active_session=kwargs['active_session'],
-                )
-        kwargs['active_session'].add(_new_credit_wallet)
-        self.update_user_credit_wallet_archive(_new_credit_wallet)
-        kwargs['active_session'].commit()
-        log.info('Successfully created new user credit wallet.')
-        return _new_credit_wallet
 
     def action_create_credit_clock(self, **kwargs):
         log.debug('')
@@ -941,11 +964,11 @@ class ResUser(Base):
         log.debug('')
         if not kwargs.get('ctype'):
             return self.error_no_user_controller_type_specified()
-        _controllers = {
-                'action': self.user_action_controller,
-                'event': self.user_event_controller,
-                }
-        return _controllers[kwargs['ctype']](**kwargs)
+        controllers = {
+            'action': self.user_action_controller,
+            'event': self.user_event_controller,
+        }
+        return controllers[kwargs['ctype']](**kwargs)
 
     # WARNINGS
 
@@ -1010,6 +1033,24 @@ class ResUser(Base):
         return False
 
     # ERRORS
+
+    def error_could_not_create_new_transaction_handler(self, creation_values):
+        command_chain_reply = {
+            'failed': True,
+            'error': 'Something went wrong. Could not create new transaction handler with creation values {}.'\
+                     .format(creation_values),
+        }
+        log.error(command_chain_reply['error'])
+        return command_chain_reply
+
+    def error_could_not_create_new_credit_ewallet(self, creation_values):
+        command_chain_reply = {
+            'failed': True,
+            'error': 'Something went wrong. Could not create new credit ewallet with creation values {}.'\
+                     .format(creation_values),
+        }
+        log.error(command_chain_reply['error'])
+        return command_chain_reply
 
     def error_could_not_edit_user_name(self, command_chain):
         command_chain_response = {

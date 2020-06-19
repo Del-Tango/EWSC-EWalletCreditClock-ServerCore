@@ -619,6 +619,20 @@ class EWalletSessionManager():
     [ NOTE ]: SqlAlchemy ORM sessions are fetched here.
     '''
 
+    def action_new_credit_ewallet(self, ewallet_session, instruction_set):
+        log.debug('')
+        orm_session = ewallet_session.fetch_active_session()
+        sanitized_instruction_set = res_utils.remove_tags_from_command_chain(
+            instruction_set, 'controller', 'ctype', 'action', 'new', 'credit'
+        )
+        new_credit_ewallet = ewallet_session.ewallet_controller(
+            controller='user', ctype='action', action='create', create='credit_wallet',
+            active_session=orm_session, **sanitized_instruction_set
+        )
+        return self.warning_could_not_create_new_credit_ewallet(
+            ewallet_session, instruction_set
+        ) if new_credit_ewallet.get('failed') else new_credit_ewallet
+
     def action_view_invoice_record(self, ewallet_session, instruction_set):
         log.debug('')
         orm_session = ewallet_session.fetch_active_session()
@@ -979,8 +993,8 @@ class EWalletSessionManager():
             create='conversion', conversion='clock2credits',
             active_session=orm_session, **instruction_set
         )
-        return self.warning_could_not_convert_credit_clock_time_to_credits(conversion, **kwargs) \
-                if conversion.get('failed') else conversion
+        return self.warning_could_not_convert_credit_clock_time_to_credits(
+            instruction_set) if conversion.get('failed') else conversion
 
     def action_new_worker(self):
         log.debug('')
@@ -1044,6 +1058,31 @@ class EWalletSessionManager():
     '''
     [ NOTE ]: Instruction set validation and sanitizations are performed here.
     '''
+
+    def handle_client_action_new_credit_ewallet(self, **kwargs):
+        log.debug('')
+        instruction_set_validation = self.validate_instruction_set(kwargs)
+        if not instruction_set_validation:
+            return False
+        ewallet = self.fetch_ewallet_session_for_client_action_using_instruction_set(
+            kwargs
+        )
+        if not ewallet:
+            return False
+        new_credit_ewallet = self.action_new_credit_ewallet(
+            ewallet['ewallet_session'], ewallet['sanitized_instruction_set'],
+        )
+        return new_credit_ewallet
+
+    def handle_client_action_new_credit(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('credit'):
+            return self.error_no_client_action_target_new_credit_target_specified(kwargs)
+        handlers = {
+            'ewallet': self.handle_client_action_new_credit_ewallet,
+#           'clock':
+        }
+        return handlers[kwargs['credit']](**kwargs)
 
     def handle_client_action_view_invoice_record(self, **kwargs):
         log.debug('')
@@ -1656,6 +1695,7 @@ class EWalletSessionManager():
         _handlers = {
                 'account': self.handle_client_action_new_account,
                 'contact': self.handle_client_action_new_contact,
+                'credit': self.handle_client_action_new_credit,
                 }
         return _handlers[kwargs['new']](**kwargs)
 
@@ -2114,6 +2154,15 @@ class EWalletSessionManager():
         return False
 
     # ERRORS
+
+    def error_no_client_action_new_credit_target_specified(self, instruction_set):
+        instruction_set_response = {
+                'failed': True,
+                'error': 'No client action new credit target specified. Instruction set details : {}'\
+                         .format(instruction_set),
+        }
+        log.error(instruction_set_response['error'])
+        return instruction_set_response
 
     def error_no_client_action_view_invoice_target_specified(self, instruction_set):
         instruction_set_response = {
@@ -2849,6 +2898,16 @@ class EWalletSessionManager():
         print(str(_view) + '\n')
         return _view
 
+    def test_user_action_create_credit_ewallet(self, **kwargs):
+        print('[ * ]: User action Create Credit EWallet')
+        _create = self.session_manager_controller(
+            controller='client', ctype='action', action='new', new='credit',
+            credit='ewallet', client_id=kwargs['client_id'],
+            session_token=kwargs['session_token']
+        )
+        print(str(_create) + '\n')
+        return _create
+
     def test_session_manager_controller(self, **kwargs):
         print('[ TEST ] Session Manager')
 #       open_in_port = self.test_open_instruction_listener_port()
@@ -2960,6 +3019,9 @@ class EWalletSessionManager():
         view_invoice_record = self.test_user_action_view_invoice_record(
             client_id=client_id['client_id'], session_token=session_token['session_token'],
             record_id=1
+        )
+        create_credit_ewallet = self.test_user_action_create_credit_ewallet(
+            client_id=client_id['client_id'], session_token=session_token['session_token'],
         )
 
 if __name__ == '__main__':
