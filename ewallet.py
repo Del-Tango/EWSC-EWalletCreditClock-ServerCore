@@ -214,12 +214,12 @@ class EWallet(Base):
     '''
     def fetch_credit_wallet_credits(self, **kwargs):
         log.debug('')
-        _credit_wallet = kwargs.get('credit_wallet') or \
+        credit_wallet = kwargs.get('credit_wallet') or \
                 self.fetch_active_session_credit_wallet()
-        return self.error_no_credit_wallet_found() if not _credit_wallet else \
-                _credit_wallet.main_controller(
+        return self.error_no_credit_wallet_found() if not credit_wallet else \
+            credit_wallet.main_controller(
                 controller='system', action='view'
-                )
+            )
 
     def fetch_next_active_session_user(self, **kwargs):
         '''
@@ -371,6 +371,37 @@ class EWallet(Base):
     '''
     [ NOTE ]: Command chain responses are formatted here.
     '''
+
+    def action_create_new_credit_clock(self, **kwargs):
+        '''
+        [ NOTE   ]: User action 'create new credit clock', accessible from external api calls.
+        [ INPUT  ]: reference=<ref>, credit_clock=<clock credits>
+        [ RETURN ]: (CreditClock object | False)
+        '''
+        log.debug('')
+        active_user = self.fetch_active_session_user()
+        if not active_user:
+            return self.error_no_session_active_user_found()
+        sanitized_instruction_set = res_utils.remove_tags_from_command_chain(
+            kwargs, 'ctype', 'action', 'target'
+        )
+        new_clock = active_user.user_controller(
+            ctype='action', action='create', target='credit_clock',
+            **sanitized_instruction_set
+        )
+        if not new_clock:
+            kwargs['active_session'].rollback()
+            return self.warning_could_not_create_credit_clock(
+                active_user.fetch_user_name(), kwargs
+            )
+        kwargs['active_session'].commit()
+        log.info('Successfully created new credit clock.')
+        command_chain_response = {
+            'failed': False,
+            'credit_clock': new_clock.fetch_credit_clock_id(),
+            'clock_data': new_clock.fetch_credit_clock_values(),
+        }
+        return command_chain_response
 
     def action_create_new_credit_wallet(self, **kwargs):
         '''
@@ -1343,27 +1374,6 @@ class EWallet(Base):
                 'clock2credits': self.action_create_new_conversion_clock_to_credits,
                 }
         return _handlers[kwargs['conversion']](**kwargs)
-
-    def action_create_new_credit_clock(self, **kwargs):
-        '''
-        [ NOTE   ]: User action 'create new credit clock', accessible from external api calls.
-        [ INPUT  ]: reference=<ref>, credit_clock=<clock credits>
-        [ RETURN ]: (CreditClock object | False)
-        '''
-        log.debug('')
-        if not self.active_user:
-            return self.error_no_session_active_user_found()
-        _new_clock = self.active_user.user_controller(
-                ctype='action', action='create', target='credit_clock',
-                reference=kwargs.get('reference'),
-                credit_clock=kwargs.get('credit_clock'),
-                )
-        if not _new_clock:
-            return self.warning_could_not_create_credit_clock(
-                self.active_user.fetch_user_name()
-                )
-        log.info('Successfully created new credit clock.')
-        return _new_clock
 
     def action_create_new_contact_list(self, **kwargs):
         '''
@@ -2826,6 +2836,15 @@ class EWallet(Base):
 
     # WARNINGS
 
+    def warning_could_not_create_credit_clock(self, user_name, command_chain):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Something went wrong. Could not create new credit clock for user {}. '\
+                       'Command set details : {}'.format(user_name, command_chain)
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
+
     def warning_could_not_create_credit_wallet(self, user_name, command_chain):
         command_chain_response = {
             'failed': True,
@@ -3033,13 +3052,6 @@ class EWallet(Base):
         log.warning(
                 'Something went wrong. '
                 'Could not create new user account for %s.', user_name
-                )
-        return False
-
-    def warning_could_not_create_credit_clock(self, user_name):
-        log.warning(
-                'Something went wrong. '
-                'Could not create new credit clock for user %s.', user_name
                 )
         return False
 

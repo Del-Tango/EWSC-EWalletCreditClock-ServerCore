@@ -596,6 +596,23 @@ class ResUser(Base):
 
     # ACTIONS
 
+    def action_create_credit_clock(self, **kwargs):
+        log.debug('')
+        credit_wallet = self.fetch_user_credit_wallet()
+        if not credit_wallet:
+            return self.error_could_not_fetch_user_credit_wallet(kwargs)
+        active_session = kwargs.get('active_session') or \
+                self.fetch_user_active_session(stype='orm')
+        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
+            kwargs, 'active_session', 'controller', 'action'
+        )
+        new_credit_clock = credit_wallet.main_controller(
+            controller='system', action='create_clock',
+            active_session=active_session, **sanitized_command_chain
+        )
+        log.info('Successfully created new user credit clock.')
+        return new_credit_clock
+
 #   @pysnooper.snoop('logs/ewallet.log')
     def action_create_credit_wallet(self, **kwargs):
         log.debug('')
@@ -692,16 +709,6 @@ class ResUser(Base):
         transaction_handler = self.create_transaction_handler(creation_values)
         transaction = transaction_handler.action_init_transaction(**sanitized_command_chain)
         return transaction
-
-    def action_create_credit_clock(self, **kwargs):
-        log.debug('')
-        _new_credit_clock = self.user_credit_wallet.main_controller(
-                controller='system', action='create_clock',
-                reference=kwargs.get('reference'),
-                credit_clock=kwargs.get('credit_clock'),
-                )
-        log.info('Successfully created new user credit clock.')
-        return _new_credit_clock
 
     def action_create_contact_list(self, **kwargs):
         log.debug('')
@@ -1033,6 +1040,15 @@ class ResUser(Base):
         return False
 
     # ERRORS
+
+    def error_could_not_fetch_user_credit_wallet(self, command_chain):
+        command_chain_reply = {
+            'failed': True,
+            'error': 'Could not fetch user credit wallet. Command chain details : {}'\
+                     .format(command_chain),
+        }
+        log.error(command_chain_reply['error'])
+        return command_chain_reply
 
     def error_could_not_create_new_transaction_handler(self, creation_values):
         command_chain_reply = {

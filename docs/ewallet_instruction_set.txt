@@ -405,6 +405,24 @@
             'warning': <msg>,
         }
 
+* User action Create Credit Clock:
+    * Controller Instruction Set:
+        session_manager_controller(
+            controller='system', ctype='action', action='new', new='credit',
+            credit='clock', client_id=<client-id>, session_token=<token>
+        )
+    * Returns:
+        * [ OK  ]: {
+            'failed': False,
+            'credit_clock': <id>,
+            'clock_data': <credit-ewallet-data>,
+        }
+        * [ NOK ]: {
+            'failed': True,
+            'error': <msg>,
+            'warning': <msg>,
+        }
+
 ################################################################################
 # EWallet Session (Command Chain)
 ################################################################################
