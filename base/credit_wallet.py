@@ -89,6 +89,38 @@ class CreditEWallet(Base):
 
     # FETCHERS
 
+    def fetch_credit_wallet_clock(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('identifier'):
+            return self.error_no_credit_clock_identifier_found()
+        handlers = {
+            'id': self.fetch_credit_wallet_clock_by_id,
+            'reference': self.fetch_credit_wallet_clock_by_ref,
+            'all': self.fetch_credit_wallet_clocks,
+        }
+        return handlers[kwargs['identifier']](**kwargs)
+
+    def fetch_credit_wallet_clock_by_id(self, **kwargs):
+        log.debug('')
+        active_session = kwargs.get('active_session')
+        if not active_session:
+            return self.error_no_active_session_found()
+        if not kwargs.get('code') or not isinstance(kwargs['code'], int):
+            return self.error_invalid_credit_clock_id(kwargs)
+        clock = list(
+            active_session.query(CreditClock).filter_by(clock_id=kwargs['code'])
+        )
+        if clock:
+            log.info('Successfully fetched credit clock by id.')
+        return self.warning_no_credit_clock_found_by_id(clock_id) if not \
+            clock else clock[0]
+
+    def fetch_credit_ewallet_credit_clock(self):
+        log.debug('')
+        if not len(self.credit_clock):
+            return self.error_no_credit_ewallet_credit_clock_found()
+        return self.credit_clock[0]
+
     def fetch_credit_ewallet_id(self):
         log.debug('')
         return self.wallet_id
@@ -108,12 +140,6 @@ class CreditEWallet(Base):
     def fetch_credit_ewallet_credits(self):
         log.debug('')
         return self.credits
-
-    def fetch_credit_ewallet_credit_clock(self):
-        log.debug('')
-        if not len(self.credit_clock):
-            return self.error_no_credit_ewallet_credit_clock_found()
-        return self.credit_clock[0]
 
     def fetch_credit_ewallet_transfer_sheet(self):
         log.debug('')
@@ -195,14 +221,6 @@ class CreditEWallet(Base):
         log.debug('')
         return self.invoice_sheet_archive.values()
 
-    def fetch_credit_wallet_clock_by_id(self, code):
-        log.debug('')
-        _clock = self.credit_clock_archive.get(code)
-        if not _clock:
-            return self.warning_could_not_fetch_credit_clock('id', code)
-        log.info('Successfully fetched credit clock by id.')
-        return _clock
-
     def fetch_credit_wallet_clock_by_ref(self, code):
         log.debug('')
         if not self.credit_clock_archive:
@@ -242,18 +260,15 @@ class CreditEWallet(Base):
                 }
         return _handlers[kwargs['identifier']](kwargs.get('code'))
 
-    def fetch_credit_wallet_clock(self, **kwargs):
-        log.debug('')
-        if not kwargs.get('identifier'):
-            return self.error_no_credit_clock_identifier_found()
-        _handlers = {
-                'id': self.fetch_credit_wallet_clock_by_id,
-                'reference': self.fetch_credit_wallet_clock_by_ref,
-                'all': self.fetch_credit_wallet_clocks,
-                }
-        return _handlers[kwargs['identifier']](code=kwargs.get(code))
-
     # SETTERS
+
+    def set_credit_clock(self, credit_clock):
+        log.debug('')
+        try:
+            self.credit_clock = [credit_clock]
+        except:
+            return self.error_could_not_set_credit_clock(credit_clock)
+        return True
 
     def set_id(self, **kwargs):
         log.debug('')
@@ -282,13 +297,6 @@ class CreditEWallet(Base):
             return self.error_no_credits_found()
         self.credits = kwargs['credits']
         return True
-
-    def set_credit_clock(self, **kwargs):
-        log.debug('')
-        if not kwargs.get('credit_clock'):
-            return self.error_no_credit_clock_found()
-        self.credit_clock = kwargs['credit_clock']
-        return False
 
     def set_credit_clock_archive(self, **kwargs):
         log.debug('')
@@ -358,6 +366,17 @@ class CreditEWallet(Base):
 
     # HANDLERS
 
+#   @pysnooper.snoop()
+    def handle_switch_credit_wallet_clock_by_id(self, **kwargs):
+        log.debug('')
+        new_credit_clock = self.fetch_credit_wallet_clock(
+            identifier='id', **kwargs
+        )
+        set_clock = self.set_credit_clock(new_credit_clock)
+        if set_clock:
+            log.info('Successfully switched credit clock by id.')
+        return new_credit_clock
+
     def handle_switch_credit_wallet_transfer_sheet_by_ref(self, code):
         log.debug('')
         _new_transfer_sheet = self.fetch_credit_wallet_transfer_sheet(
@@ -393,15 +412,6 @@ class CreditEWallet(Base):
         self.invoice_sheet = _new_invoice_sheet
         log.info('Successfully switched invoice sheet by id.')
         return _new_invoice_sheet
-
-    def handle_switch_credit_wallet_clock_by_id(self, code):
-        log.debug('')
-        _new_credit_clock = self.fetch_credit_wallet_clock(
-                identifier='id', code=code
-                )
-        self.credit_clock = _new_credit_clock
-        log.info('Successfully switched credit clock by id.')
-        return _new_credit_clock
 
     # GENERAL
 
@@ -572,20 +582,20 @@ class CreditEWallet(Base):
         log.debug('')
         if not kwargs.get('sheet'):
             return self.error_no_credit_wallet_sheet_target_specified()
-        _handlers = {
-                'transfer': self.switch_credit_wallet_transfer_sheet,
-                'invoice': self.switch_credit_wallet_invoice_sheet,
-                }
-        return _handlers[kwargs['sheet']](**kwargs)
+        handlers = {
+            'transfer': self.switch_credit_wallet_transfer_sheet,
+            'invoice': self.switch_credit_wallet_invoice_sheet,
+        }
+        return handlers[kwargs['sheet']](**kwargs)
 
     def switch_credit_wallet_clock(self, **kwargs):
         log.debug('')
         if not kwargs.get('clock_id'):
             return self.error_no_credit_clock_id_found()
-        _clock = self.handle_switch_credit_wallet_clock_by_id(kwargs['clock_id'])
-        if not _clock:
-            return self.warning_could_not_fetch_credit_clock()
-        return _clock
+        clock = self.handle_switch_credit_wallet_clock_by_id(code=kwargs['clock_id'], **kwargs)
+        if not clock:
+            return self.warning_could_not_switch_credit_clock(kwargs)
+        return clock
 
     # CREATORS
 
@@ -802,6 +812,19 @@ class CreditEWallet(Base):
 
     # WARNINGS
 
+    def warning_no_credit_clock_found_by_id(self, clock_id):
+        log.warning('No credit clock found by id {}.'.format(clock_id))
+        return False
+
+    def warning_could_not_switch_credit_clock(self, command_chain):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Something went wrong. Could not switch credit clock. '\
+                       'Command chain details : {}'.format(command_chain),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
+
     def warning_could_not_create_new_time_sheet(self, command_chain):
         command_chain_response = {
             'failed': True,
@@ -842,6 +865,23 @@ class CreditEWallet(Base):
         return False
 
     # ERRORS
+
+    def error_no_credit_ewallet_credit_clock_found(self):
+        log.error('No credit clock found.')
+        return False
+
+    def error_could_not_set_credit_clock(self, credit_clock):
+        log.error('Could not set credit clock {}.'.format(credit_clock))
+        return False
+
+    def error_invalid_credit_clock_id(self, command_chain):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Invalid credit clock id. Command chain details : {}'\
+                     .format(command_chain),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
 
     def error_could_not_fetch_credit_clock(self, command_chain):
         command_chain_response = {

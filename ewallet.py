@@ -377,6 +377,33 @@ class EWallet(Base):
     [ NOTE ]: Command chain responses are formatted here.
     '''
 
+    def action_switch_credit_clock(self, **kwargs):
+        log.debug('')
+        active_user = self.fetch_active_session_user()
+        if not active_user:
+            return self.error_no_session_active_user_found()
+        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
+            kwargs, 'ctype', 'action', 'target'
+        )
+        switch_credit_clock = active_user.user_controller(
+            ctype='action', action='switch', target='credit_clock',
+            **sanitized_command_chain,
+        )
+        if not switch_credit_clock or isinstance(switch_credit_clock, dict) and \
+                switch_credit_clock.get('failed'):
+            kwargs['active_session'].rollback()
+            return self.warning_could_not_switch_credit_clock(
+                active_user.fetch_user_name(), kwargs
+            )
+        kwargs['active_session'].commit()
+        log.info('Successfully switched credit clock.')
+        command_chain_response = {
+            'failed': False,
+            'credit_clock': switch_credit_clock.fetch_credit_clock_id(),
+            'clock_data': switch_credit_clock.fetch_credit_clock_values(),
+        }
+        return command_chain_response
+
     def action_switch_credit_ewallet(self, **kwargs):
         log.debug('')
         active_user = self.fetch_active_session_user()
@@ -1892,6 +1919,13 @@ class EWallet(Base):
 
     # HANDLERS
 
+    def handle_user_action_switch_credit_clock(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('clock_id'):
+            return self.error_no_user_action_switch_credit_clock_id_specified(kwargs)
+        switch_credit_clock = self.action_switch_credit_clock(**kwargs)
+        return switch_credit_clock
+
     def handle_user_action_switch_credit_ewallet(self, **kwargs):
         log.debug('')
         if not kwargs.get('ewallet_id'):
@@ -1905,7 +1939,7 @@ class EWallet(Base):
             return self.error_no_user_action_switch_target_specified(kwargs)
         handlers = {
             'credit_ewallet': self.handle_user_action_switch_credit_ewallet,
-#           'credit_clock':
+            'credit_clock': self.handle_user_action_switch_credit_clock,
 #           'transfer_sheet':
 #           'invoice_sheet':
 #           'conversion_sheet':
@@ -2381,6 +2415,284 @@ class EWallet(Base):
         }
         return _controllers[kwargs['controller']](**kwargs)
 
+    # WARNINGS
+
+    def warning_could_not_switch_credit_clock(self, user_name, command_chain):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Something went wrong. Could not switch credit clock for user {}. '\
+                       'Command chain details : {}'.format(user_name, command_chain),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
+
+    def warning_could_not_switch_credit_ewallet(self, user_name, command_chain):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Something went wrong. Could not switch credit ewallet for user {}. '\
+                       'Command chain details : {}'.format(user_name, command_chain),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
+
+    def warning_could_not_create_conversion_sheet(self, command_chain):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Something went wrong. Could not create new conversion sheet. '\
+                       'Command chain details : {}'.format(command_chain),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
+
+    def warning_could_not_create_invoice_sheet(self, command_chain):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Something went wrong. Could not create new invoice sheet. '\
+                       'Command chain details : {}'.format(command_chain),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
+
+    def warning_could_not_create_credit_clock(self, user_name, command_chain):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Something went wrong. Could not create new credit clock for user {}. '\
+                       'Command set details : {}'.format(user_name, command_chain)
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
+
+    def warning_could_not_create_credit_wallet(self, user_name, command_chain):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Something went wrong. Could not create new credit wallet for user {}. '\
+                     'Command chain details : {}'.format(user_name, command_chain)
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
+
+    def warning_could_not_edit_account_user_name(self, command_chain):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Something went wrong. Could not edit account user name. Command chain details : {}'\
+                       .format(command_chain)
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
+
+    def warning_could_not_edit_account_user_pass(self, command_chain):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Something went wrong. Could not edit account user pass. Command chain details : {}'\
+                       .format(command_chain)
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
+
+    def warning_could_not_edit_account_user_alias(self, command_chain):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Something went wrong. Could not edit account user alias. Command chain details : {}'\
+                       .format(command_chain)
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
+
+    def warning_could_not_edit_account_user_email(self, command_chain):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Something went wrong. Could not edit account user email. Command chain details : {}'\
+                       .format(command_chain)
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
+
+    def warning_could_not_edit_account_user_phone(self, command_chain):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Something went wrong. Could not edit account user phone. Command chain details : {}'\
+                       .format(command_chain)
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
+
+    def warning_no_user_account_values_edited(self, command_chain):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Something went wrong. No user account values edited. Command chain details : {}'\
+                       .format(command_chain)
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
+
+    def warning_could_not_fetch_ewallet_session_active_user(self):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Something went wrong. Could not fetch ewallet session active user.'
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
+
+    def warning_no_user_account_found(self, command_chain):
+        log.warning(
+            'No user account found. Details : {}'.format(command_chain)
+        )
+        return False
+
+    def warning_could_not_unlink_user_account(self):
+        log.warning('Something went wrong. Could not unlink user account.')
+
+    def warning_could_not_login(self):
+        log.warning(
+                'Something went wrong. '
+                'Login subroutine failure.'
+                )
+        return False
+
+    def warning_could_not_logout(self, **kwargs):
+        log.warning(
+                'Something went wrong. '
+                'Logout subroutine failure for user {}.'.format(
+                    self.active_user.fetch_user_name()
+                    )
+                )
+        return False
+
+    def warning_could_not_fetch_conversion_record(self):
+        log.warning(
+                'Something went wrong. '
+                'Could not fetch conversion sheet record.'
+                )
+        return False
+
+    def warning_user_not_in_session_archive(self):
+        log.error('User account not found in session user archive.')
+        return False
+
+    def warning_could_not_fetch_conversion_sheet(self):
+        log.warning(
+                'Something went wrong. '
+                'Could not fetch credit clock conversion sheet.'
+                )
+        return False
+
+    def warning_could_not_fetch_time_sheet_record(self):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Something went wrong. Could not fetch time sheet record.',
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
+
+    def warning_could_not_fetch_time_sheet(self):
+        log.warning(
+                'Something went wrong. '
+                'Could not fetch time sheet.'
+                )
+        return False
+
+    def warning_could_not_fetch_transfer_sheet_record(self):
+        log.warning(
+                'Something went wrong. '
+                'Could not fetch transfer sheet record.'
+                )
+        return False
+
+    def warning_could_not_fetch_transfer_sheet(self):
+        log.warning(
+                'Something went wrong. '
+                'Could not fetch credit wallet transfer sheet.'
+                )
+        return False
+
+    def warning_could_not_fetch_invoice_sheet_record(self):
+        log.warning(
+                'Something went wrong. '
+                'Could not fetch invoice sheet record.'
+                )
+        return False
+
+    def warning_could_not_fetch_invoice_sheet(self):
+        log.warning(
+                'Something went wrong. '
+                'Could not fetch credit wallet invoice sheet.'
+                )
+        return False
+
+    def warning_could_not_fetch_contact_record(self):
+        log.warning(
+                'Something went wrong. '
+                'Could not fetch contact record.'
+                )
+        return False
+
+    def warning_could_not_fetch_conversion_sheet(self):
+        log.warning(
+                'Something went wrong. '
+                'Could not fetch credit clock conversion sheet.'
+                )
+        return False
+
+    def warning_could_not_fetch_time_sheet(self):
+        log.warning(
+                'Something went wrong. '
+                'Could not fetch credit clock time sheet.'
+                )
+        return False
+
+    def warning_could_not_fetch_credit_clock(self):
+        log.warning(
+                'Something went wrong. '
+                'Could not fetch credit clock.'
+                )
+        return False
+
+    def warning_could_not_fetch_credit_wallet_transfer_sheet(self):
+        log.warning(
+                'Something went wrong. '
+                'Could not fetch credit wallet transfer sheet.'
+                )
+        return False
+
+    def warning_could_not_fetch_credit_wallet_invoice_sheet(self):
+        log.warning(
+                'Something went wrong. '
+                'Could not fetch credit wallet invoice sheet.'
+                )
+        return False
+
+    def warning_no_user_acount_found(self, search_code, code):
+        log.warning('No user account found by %s %s.', search_code, code)
+        return False
+
+    def warning_could_not_create_user_account(self, user_name):
+        log.warning(
+                'Something went wrong. '
+                'Could not create new user account for %s.', user_name
+                )
+        return False
+
+    def warning_could_not_create_contact_list(self, user_name):
+        log.warning(
+                'Something went wrong. '
+                'Could not create new contact list for user %s.', user_name
+                )
+        return False
+
+    def warning_could_not_create_contact_record(self, user_name):
+        log.warning(
+                'Something went wrong. '
+                'Could not create new contact record for %s contact list.', user_name
+                )
+        return False
+
+    def warning_could_not_fetch_user_by_id(self, user_id):
+        log.warning(
+                'Something went wrong. '
+                'Could not fetch user by id %s.', user_id
+                )
+        return False
+
     # ERROR HANDLERS
 
     def error_handler_action_create_new_transfer(self, **kwargs):
@@ -2676,6 +2988,15 @@ class EWallet(Base):
         return False
 
     # ERRORS
+
+    def error_no_user_action_switch_credit_clock_id_specified(self, command_chain):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No user action switch credit clock id specified. Command chain details : {}'\
+                     .format(command_chain),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
 
     def error_no_user_action_switch_target_specified(self, command_chain):
         command_chain_response = {
@@ -3014,275 +3335,6 @@ class EWallet(Base):
 
     def error_could_not_stop_credit_clock_timer(self):
         log.error('Could not stop credit clock timer.')
-        return False
-
-    # WARNINGS
-
-    def warning_could_not_switch_credit_ewallet(self, user_name, command_chain):
-        command_chain_response = {
-            'failed': True,
-            'warning': 'Something went wrong. Could not switch credit ewallet for user {}. '\
-                       'Command chain details : {}'.format(user_name, command_chain),
-        }
-        log.warning(command_chain_response['warning'])
-        return command_chain_response
-
-    def warning_could_not_create_conversion_sheet(self, command_chain):
-        command_chain_response = {
-            'failed': True,
-            'warning': 'Something went wrong. Could not create new conversion sheet. '\
-                       'Command chain details : {}'.format(command_chain),
-        }
-        log.warning(command_chain_response['warning'])
-        return command_chain_response
-
-    def warning_could_not_create_invoice_sheet(self, command_chain):
-        command_chain_response = {
-            'failed': True,
-            'warning': 'Something went wrong. Could not create new invoice sheet. '\
-                       'Command chain details : {}'.format(command_chain),
-        }
-        log.warning(command_chain_response['warning'])
-        return command_chain_response
-
-    def warning_could_not_create_credit_clock(self, user_name, command_chain):
-        command_chain_response = {
-            'failed': True,
-            'warning': 'Something went wrong. Could not create new credit clock for user {}. '\
-                       'Command set details : {}'.format(user_name, command_chain)
-        }
-        log.warning(command_chain_response['warning'])
-        return command_chain_response
-
-    def warning_could_not_create_credit_wallet(self, user_name, command_chain):
-        command_chain_response = {
-            'failed': True,
-            'warning': 'Something went wrong. Could not create new credit wallet for user {}. '\
-                     'Command chain details : {}'.format(user_name, command_chain)
-        }
-        log.warning(command_chain_response['warning'])
-        return command_chain_response
-
-    def warning_could_not_edit_account_user_name(self, command_chain):
-        command_chain_response = {
-            'failed': True,
-            'warning': 'Something went wrong. Could not edit account user name. Command chain details : {}'\
-                       .format(command_chain)
-        }
-        log.warning(command_chain_response['warning'])
-        return command_chain_response
-
-    def warning_could_not_edit_account_user_pass(self, command_chain):
-        command_chain_response = {
-            'failed': True,
-            'warning': 'Something went wrong. Could not edit account user pass. Command chain details : {}'\
-                       .format(command_chain)
-        }
-        log.warning(command_chain_response['warning'])
-        return command_chain_response
-
-    def warning_could_not_edit_account_user_alias(self, command_chain):
-        command_chain_response = {
-            'failed': True,
-            'warning': 'Something went wrong. Could not edit account user alias. Command chain details : {}'\
-                       .format(command_chain)
-        }
-        log.warning(command_chain_response['warning'])
-        return command_chain_response
-
-    def warning_could_not_edit_account_user_email(self, command_chain):
-        command_chain_response = {
-            'failed': True,
-            'warning': 'Something went wrong. Could not edit account user email. Command chain details : {}'\
-                       .format(command_chain)
-        }
-        log.warning(command_chain_response['warning'])
-        return command_chain_response
-
-    def warning_could_not_edit_account_user_phone(self, command_chain):
-        command_chain_response = {
-            'failed': True,
-            'warning': 'Something went wrong. Could not edit account user phone. Command chain details : {}'\
-                       .format(command_chain)
-        }
-        log.warning(command_chain_response['warning'])
-        return command_chain_response
-
-    def warning_no_user_account_values_edited(self, command_chain):
-        command_chain_response = {
-            'failed': True,
-            'warning': 'Something went wrong. No user account values edited. Command chain details : {}'\
-                       .format(command_chain)
-        }
-        log.warning(command_chain_response['warning'])
-        return command_chain_response
-
-    def warning_could_not_fetch_ewallet_session_active_user(self):
-        command_chain_response = {
-            'failed': True,
-            'warning': 'Something went wrong. Could not fetch ewallet session active user.'
-        }
-        log.warning(command_chain_response['warning'])
-        return command_chain_response
-
-    def warning_no_user_account_found(self, command_chain):
-        log.warning(
-            'No user account found. Details : {}'.format(command_chain)
-        )
-        return False
-
-    def warning_could_not_unlink_user_account(self):
-        log.warning('Something went wrong. Could not unlink user account.')
-
-    def warning_could_not_login(self):
-        log.warning(
-                'Something went wrong. '
-                'Login subroutine failure.'
-                )
-        return False
-
-    def warning_could_not_logout(self, **kwargs):
-        log.warning(
-                'Something went wrong. '
-                'Logout subroutine failure for user {}.'.format(
-                    self.active_user.fetch_user_name()
-                    )
-                )
-        return False
-
-    def warning_could_not_fetch_conversion_record(self):
-        log.warning(
-                'Something went wrong. '
-                'Could not fetch conversion sheet record.'
-                )
-        return False
-
-    def warning_user_not_in_session_archive(self):
-        log.error('User account not found in session user archive.')
-        return False
-
-    def warning_could_not_fetch_conversion_sheet(self):
-        log.warning(
-                'Something went wrong. '
-                'Could not fetch credit clock conversion sheet.'
-                )
-        return False
-
-    def warning_could_not_fetch_time_sheet_record(self):
-        command_chain_response = {
-            'failed': True,
-            'warning': 'Something went wrong. Could not fetch time sheet record.',
-        }
-        log.warning(command_chain_response['warning'])
-        return command_chain_response
-
-    def warning_could_not_fetch_time_sheet(self):
-        log.warning(
-                'Something went wrong. '
-                'Could not fetch time sheet.'
-                )
-        return False
-
-    def warning_could_not_fetch_transfer_sheet_record(self):
-        log.warning(
-                'Something went wrong. '
-                'Could not fetch transfer sheet record.'
-                )
-        return False
-
-    def warning_could_not_fetch_transfer_sheet(self):
-        log.warning(
-                'Something went wrong. '
-                'Could not fetch credit wallet transfer sheet.'
-                )
-        return False
-
-    def warning_could_not_fetch_invoice_sheet_record(self):
-        log.warning(
-                'Something went wrong. '
-                'Could not fetch invoice sheet record.'
-                )
-        return False
-
-    def warning_could_not_fetch_invoice_sheet(self):
-        log.warning(
-                'Something went wrong. '
-                'Could not fetch credit wallet invoice sheet.'
-                )
-        return False
-
-    def warning_could_not_fetch_contact_record(self):
-        log.warning(
-                'Something went wrong. '
-                'Could not fetch contact record.'
-                )
-        return False
-
-    def warning_could_not_fetch_conversion_sheet(self):
-        log.warning(
-                'Something went wrong. '
-                'Could not fetch credit clock conversion sheet.'
-                )
-        return False
-
-    def warning_could_not_fetch_time_sheet(self):
-        log.warning(
-                'Something went wrong. '
-                'Could not fetch credit clock time sheet.'
-                )
-        return False
-
-    def warning_could_not_fetch_credit_clock(self):
-        log.warning(
-                'Something went wrong. '
-                'Could not fetch credit clock.'
-                )
-        return False
-
-    def warning_could_not_fetch_credit_wallet_transfer_sheet(self):
-        log.warning(
-                'Something went wrong. '
-                'Could not fetch credit wallet transfer sheet.'
-                )
-        return False
-
-    def warning_could_not_fetch_credit_wallet_invoice_sheet(self):
-        log.warning(
-                'Something went wrong. '
-                'Could not fetch credit wallet invoice sheet.'
-                )
-        return False
-
-    def warning_no_user_acount_found(self, search_code, code):
-        log.warning('No user account found by %s %s.', search_code, code)
-        return False
-
-    def warning_could_not_create_user_account(self, user_name):
-        log.warning(
-                'Something went wrong. '
-                'Could not create new user account for %s.', user_name
-                )
-        return False
-
-    def warning_could_not_create_contact_list(self, user_name):
-        log.warning(
-                'Something went wrong. '
-                'Could not create new contact list for user %s.', user_name
-                )
-        return False
-
-    def warning_could_not_create_contact_record(self, user_name):
-        log.warning(
-                'Something went wrong. '
-                'Could not create new contact record for %s contact list.', user_name
-                )
-        return False
-
-    def warning_could_not_fetch_user_by_id(self, user_id):
-        log.warning(
-                'Something went wrong. '
-                'Could not fetch user by id %s.', user_id
-                )
         return False
 
     # TESTS

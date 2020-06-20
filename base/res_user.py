@@ -751,14 +751,18 @@ class ResUser(Base):
         log.debug('')
         if not kwargs.get('clock_id'):
             return self.error_no_clock_id_found()
-        _clock_switch = self.user_credit_wallet.main_controller(
-                controller='user', action='switch_clock',
-                clock_id=kwargs['clock_id']
-                )
-        if not _clock_switch:
+        credit_wallet = self.fetch_user_credit_wallet()
+        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
+            kwargs, 'controller', 'action'
+        )
+        clock_switch = credit_wallet.main_controller(
+            controller='user', action='switch_clock',
+            **sanitized_command_chain
+        )
+        if not clock_switch:
             return self.warning_could_not_fetch_credit_clock()
         log.info('Successfully switched user credit clock.')
-        return _clock_switch
+        return clock_switch
 
     def action_switch_contact_list(self, **kwargs):
         log.debug('')
