@@ -589,6 +589,28 @@ class CreditEWallet(Base):
 
     # CREATORS
 
+#   @pysnooper.snoop()
+    def create_conversion_sheet(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('active_session'):
+            return self.error_no_active_session_found(kwargs)
+        credit_clock = self.fetch_credit_ewallet_credit_clock()
+        if not credit_clock:
+            return self.error_could_not_fetch_credit_clock(kwargs)
+        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
+            kwargs, 'controller', 'action', 'create',
+        )
+        conversion_sheet = credit_clock.main_controller(
+            controller='system', action='create', create='sheet',
+            sheet_type='conversion', **sanitized_command_chain
+        )
+        if not conversion_sheet:
+            kwargs['active_session'].rollback()
+            return self.warning_could_not_create_new_conversion_sheet(kwargs)
+        kwargs['active_session'].commit()
+        log.info('Successfully create conversion sheet.')
+        return conversion_sheet
+
     def create_transfer_sheet(self, **kwargs):
         log.debug('')
         if not kwargs.get('active_session'):
@@ -642,6 +664,7 @@ class CreditEWallet(Base):
         _handlers = {
                 'transfer': self.create_transfer_sheet,
                 'invoice': self.create_invoice_sheet,
+                'conversion': self.create_conversion_sheet,
                 }
         return _handlers[kwargs['sheet']](**kwargs)
 
@@ -756,6 +779,15 @@ class CreditEWallet(Base):
         return handlers[kwargs['controller']](**kwargs)
 
     # ERRORS
+
+    def error_could_not_fetch_credit_clock(self, command_chain):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Could not fetch credit clock. Command chain details : {}'\
+                     .format(command_chain),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
 
     def error_credits_to_minutes_conversion_failure(self, **kwargs):
         log.error('Credits to minutes conversion failure. Details : {}'.format(kwargs))

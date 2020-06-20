@@ -619,6 +619,20 @@ class EWalletSessionManager():
     [ NOTE ]: SqlAlchemy ORM sessions are fetched here.
     '''
 
+    def action_new_conversion_sheet(self, ewallet_session, instruction_set):
+        log.debug('')
+        orm_session = ewallet_session.fetch_active_session()
+        sanitized_instruction_set = res_utils.remove_tags_from_command_chain(
+            instruction_set, 'controller', 'ctype', 'action', 'new', 'conversion'
+        )
+        new_conversion_sheet = ewallet_session.ewallet_controller(
+            controller='user', ctype='action', action='create', create='conversion_sheet',
+            active_session=orm_session, **sanitized_instruction_set
+        )
+        return self.warning_could_not_create_new_conversion_sheet(
+            ewallet_session, instruction_set
+        ) if new_conversion_sheet.get('failed') else new_conversion_sheet
+
     def action_new_invoice_sheet(self, ewallet_session, instruction_set):
         log.debug('')
         orm_session = ewallet_session.fetch_active_session()
@@ -1100,6 +1114,30 @@ class EWalletSessionManager():
     '''
     [ NOTE ]: Instruction set validation and sanitizations are performed here.
     '''
+
+    def handle_client_action_new_conversion_sheet(self, **kwargs):
+        log.debug('')
+        instruction_set_validation = self.validate_instruction_set(kwargs)
+        if not instruction_set_validation:
+            return False
+        ewallet = self.fetch_ewallet_session_for_client_action_using_instruction_set(
+            kwargs
+        )
+        if not ewallet:
+            return False
+        new_conversion_sheet = self.action_new_conversion_sheet(
+            ewallet['ewallet_session'], ewallet['sanitized_instruction_set'],
+        )
+        return new_conversion_sheet
+
+    def handle_client_action_new_conversion(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('conversion'):
+            return self.error_no_client_action_new_conversion_target_specified(kwargs)
+        handlers = {
+            'list': self.handle_client_action_new_conversion_sheet,
+        }
+        return handlers[kwargs['conversion']](**kwargs)
 
     def handle_client_action_new_invoice_sheet(self, **kwargs):
         log.debug('')
@@ -1803,6 +1841,7 @@ class EWalletSessionManager():
                 'credit': self.handle_client_action_new_credit,
                 'transfer': self.handle_client_action_new_transfer,
                 'invoice': self.handle_client_action_new_invoice,
+                'conversion': self.handle_client_action_new_conversion,
                 }
         return _handlers[kwargs['new']](**kwargs)
 
@@ -2288,6 +2327,15 @@ class EWalletSessionManager():
         return False
 
     # ERRORS
+
+    def error_no_client_action_new_conversion_target_specified(self, instruction_set):
+        instruction_set_response = {
+            'failed': True,
+            'error': 'No client action new conversion target specified. Instruction set details : {} '\
+                     .format(instruction_set),
+        }
+        log.error(instruction_set_response['error'])
+        return instruction_set_response
 
     def error_no_client_action_new_invoice_target_specified(self, instruction_set):
         instruction_set_ressponse = {
@@ -3090,6 +3138,16 @@ class EWalletSessionManager():
         print(str(_create) + '\n')
         return _create
 
+    def test_user_action_create_conversion_sheet(self, **kwargs):
+        print('[ * ]: User action Create Conversion Sheet')
+        _create = self.session_manager_controller(
+            controller='client', ctype='action', action='new', new='conversion',
+            conversion='list', client_id=kwargs['client_id'],
+            session_token=kwargs['session_token']
+        )
+        print(str(_create) + '\n')
+        return _create
+
     def test_session_manager_controller(self, **kwargs):
         print('[ TEST ] Session Manager')
 #       open_in_port = self.test_open_instruction_listener_port()
@@ -3213,6 +3271,9 @@ class EWalletSessionManager():
             client_id=client_id['client_id'], session_token=session_token['session_token'],
         )
         create_invoice_sheet = self.test_user_action_create_invoice_sheet(
+            client_id=client_id['client_id'], session_token=session_token['session_token'],
+        )
+        create_conversion_sheet = self.test_user_action_create_conversion_sheet(
             client_id=client_id['client_id'], session_token=session_token['session_token'],
         )
 

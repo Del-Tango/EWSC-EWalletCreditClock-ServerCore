@@ -372,6 +372,30 @@ class EWallet(Base):
     [ NOTE ]: Command chain responses are formatted here.
     '''
 
+    def action_create_new_conversion_sheet(self, **kwargs):
+        log.debug('')
+        credit_wallet = self.fetch_active_session_credit_wallet()
+        if not credit_wallet:
+            return self.error_could_not_fetch_active_session_credit_wallet(kwargs)
+        sanitized_instruction_set = res_utils.remove_tags_from_command_chain(
+            kwargs, 'controller', 'ctype', 'action', 'create', 'conversion'
+        )
+        new_conversion_sheet = credit_wallet.main_controller(
+            controller='system', ctype='action', action='create_sheet', sheet='conversion',
+            **sanitized_instruction_set
+        )
+        if not new_conversion_sheet:
+            kwargs['active_session'].rollback()
+            return self.warning_could_not_create_conversion_sheet(kwargs)
+        kwargs['active_session'].commit()
+        log.info('Successfully created new conversion sheet.')
+        command_chain_response = {
+            'failed': False,
+            'conversion_sheet': new_conversion_sheet.fetch_conversion_sheet_id(),
+            'sheet_data': new_conversion_sheet.fetch_conversion_sheet_values(),
+        }
+        return command_chain_response
+
     def action_create_new_invoice_sheet(self, **kwargs):
         log.debug('')
         credit_wallet = self.fetch_active_session_credit_wallet()
@@ -2021,6 +2045,8 @@ class EWallet(Base):
             'credit_clock': self.action_create_new_credit_clock,
             'transfer_sheet': self.action_create_new_transfer_sheet,
             'invoice_sheet': self.action_create_new_invoice_sheet,
+            'conversion_sheet': self.action_create_new_conversion_sheet,
+#           'time_sheet':
             'transfer': self.action_create_new_transfer,
             'conversion': self.action_create_new_conversion,
             'contact': self.action_create_new_contact,
@@ -2179,7 +2205,6 @@ class EWallet(Base):
             'edit': self.handle_user_action_edit,
         }
         return _handlers[kwargs['action']](**kwargs)
-
 
     def ewallet_user_event_controller(self, **kwargs):
         '''
@@ -2894,6 +2919,15 @@ class EWallet(Base):
         return False
 
     # WARNINGS
+
+    def warning_could_not_create_conversion_sheet(self, command_chain):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Something went wrong. Could not create new conversion sheet. '\
+                       'Command chain details : {}'.format(command_chain),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
 
     def warning_could_not_create_invoice_sheet(self, command_chain):
         command_chain_response = {

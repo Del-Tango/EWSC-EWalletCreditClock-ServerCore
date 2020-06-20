@@ -742,17 +742,18 @@ class CreditClock(Base):
         kwargs['active_session'].commit()
         return _record or False
 
+    @pysnooper.snoop()
     def create_credit_clock_conversion_sheet(self, **kwargs):
         log.debug('')
         if not kwargs.get('active_session'):
             return self.error_no_active_session_found()
-        _values = self.fetch_conversion_sheet_creation_values(**kwargs)
-        _conversion_sheet = CreditClockConversionSheet(**_values)
-        kwargs['active_session'].add(_conversion_sheet)
-        _update_archive = self.update_conversion_sheet_archive(_conversion_sheet)
+        values = self.fetch_conversion_sheet_creation_values(**kwargs)
+        conversion_sheet = CreditClockConversionSheet(**values)
+        kwargs['active_session'].add(conversion_sheet)
+        self.update_conversion_sheet_archive(conversion_sheet)
         kwargs['active_session'].commit()
         log.info('Successfully created new credit clock conversion sheet.')
-        return _conversion_sheet
+        return conversion_sheet
 
 #   @pysnooper.snoop('logs/ewallet.log')
     def create_credit_clock_conversion_record(self, creation_values, **kwargs):
@@ -1074,11 +1075,11 @@ class CreditClock(Base):
         log.debug('')
         if not kwargs.get('sheet_type'):
             return self.error_no_credit_clock_sheet_target_specified()
-        _handlers = {
-                'time': self.create_credit_clock_time_sheet,
-                'conversion': self.create_credit_clock_conversion_sheet,
-                }
-        return _handlers[kwargs['sheet_type']](**kwargs)
+        handlers = {
+            'time': self.create_credit_clock_time_sheet,
+            'conversion': self.create_credit_clock_conversion_sheet,
+        }
+        return handlers[kwargs['sheet_type']](**kwargs)
 
     def create_credit_clock_record(self, **kwargs):
         log.debug('')
