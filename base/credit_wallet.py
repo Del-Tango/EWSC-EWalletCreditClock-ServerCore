@@ -593,16 +593,32 @@ class CreditEWallet(Base):
         log.debug('')
         if not kwargs.get('active_session'):
             return self.error_no_active_session_found()
-        _transfer_sheet = CreditTransferSheet(
-                id=self.wallet_id,
-                reference=kwargs.get('reference'),
-                active_session=kwargs['active_session'],
-                )
-        kwargs['active_session'].add(_transfer_sheet)
-        _update_archive = self.update_transfer_sheet_archive(_transfer_sheet)
+        transfer_sheet = CreditTransferSheet(
+            id=self.wallet_id,
+            reference=kwargs.get('reference'),
+            active_session=kwargs['active_session'],
+        )
+        kwargs['active_session'].add(transfer_sheet)
+        self.update_transfer_sheet_archive(transfer_sheet)
         kwargs['active_session'].commit()
         log.info('Successfully created transfer sheet.')
-        return _transfer_sheet
+        return transfer_sheet
+
+    def create_clock(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('active_session'):
+            return self.error_no_active_session_found()
+        new_credit_clock = CreditClock(
+            wallet_id=self.wallet_id,
+            reference=kwargs.get('reference') or 'Credit Clock',
+            credit_clock=kwargs.get('credit_clock') or 0.0,
+            active_session=kwargs['active_session']
+        )
+        kwargs['active_session'].add(new_credit_clock)
+        self.update_credit_clock_archive(new_credit_clock)
+        kwargs['active_session'].commit()
+        log.info('Successfully created new credit clock.')
+        return new_credit_clock
 
     def create_invoice_sheet(self, **kwargs):
         log.debug('')
@@ -619,7 +635,6 @@ class CreditEWallet(Base):
         log.info('Successfully created invoice sheet.')
         return _invoice_sheet
 
-
     def create_sheets(self, **kwargs):
         log.debug('')
         if not kwargs.get('sheet'):
@@ -629,22 +644,6 @@ class CreditEWallet(Base):
                 'invoice': self.create_invoice_sheet,
                 }
         return _handlers[kwargs['sheet']](**kwargs)
-
-    def create_clock(self, **kwargs):
-        log.debug('')
-        if not kwargs.get('active_session'):
-            return self.error_no_active_session_found()
-        _new_credit_clock = CreditClock(
-                wallet_id=self.wallet_id,
-                reference=kwargs.get('reference') or 'Credit Clock',
-                credit_clock=kwargs.get('credit_clock') or 0.0,
-                active_session=kwargs['active_session']
-                )
-        kwargs['active_session'].add(_new_credit_clock)
-        self.update_credit_clock_archive(_new_credit_clock)
-        kwargs['active_session'].commit()
-        log.info('Successfully created new credit clock.')
-        return _new_credit_clock
 
     # UNLINKERS
 

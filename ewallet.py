@@ -372,6 +372,30 @@ class EWallet(Base):
     [ NOTE ]: Command chain responses are formatted here.
     '''
 
+    def action_create_new_transfer_sheet(self, **kwargs):
+        log.debug('')
+        credit_wallet = self.fetch_active_session_credit_wallet()
+        if not credit_wallet:
+            return self.error_could_not_fetch_active_session_credit_wallet(kwargs)
+        sanitized_instruction_set = res_utils.remove_tags_from_command_chain(
+            kwargs, 'controller', 'ctype', 'action', 'create', 'transfer'
+        )
+        new_transfer_sheet = credit_wallet.main_controller(
+            controller='system', ctype='action', action='create_sheet', sheet='transfer',
+            **sanitized_instruction_set
+        )
+        if not new_transfer_sheet:
+            kwargs['active_session'].rollback()
+            return self.warning_could_not_create_transfer_sheet(kwargs) #
+        kwargs['active_session'].commit()
+        log.info('Successfully created new transfer sheet.')
+        command_chain_response = {
+            'failed': False,
+            'transfer_sheet': new_transfer_sheet.fetch_transfer_sheet_id(),
+            'sheet_data': new_transfer_sheet.fetch_transfer_sheet_values(),
+        }
+        return command_chain_response
+
     def action_create_new_credit_clock(self, **kwargs):
         '''
         [ NOTE   ]: User action 'create new credit clock', accessible from external api calls.
@@ -1971,6 +1995,7 @@ class EWallet(Base):
             'account': self.action_create_new_user_account,
             'credit_wallet': self.action_create_new_credit_wallet,
             'credit_clock': self.action_create_new_credit_clock,
+            'transfer_sheet': self.action_create_new_transfer_sheet,
             'transfer': self.action_create_new_transfer,
             'conversion': self.action_create_new_conversion,
             'contact': self.action_create_new_contact,
@@ -2521,6 +2546,15 @@ class EWallet(Base):
         return False
 
     # ERRORS
+
+    def error_could_not_fetch_active_session_credit_wallet(self, command_chain):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Could not fetch active session credit ewallet. Command chain details : {}'\
+                     .format(command_chain),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_respons
 
     def error_no_user_action_edit_target_specified(self, command_chain):
         command_chain_response = {
