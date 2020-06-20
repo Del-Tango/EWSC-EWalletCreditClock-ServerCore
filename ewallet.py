@@ -372,17 +372,41 @@ class EWallet(Base):
     [ NOTE ]: Command chain responses are formatted here.
     '''
 
+    def action_create_new_time_sheet(self, **kwargs):
+        log.debug('')
+        credit_wallet = self.fetch_active_session_credit_wallet()
+        if not credit_wallet:
+            return self.error_could_not_fetch_active_session_credit_wallet(kwargs)
+        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
+            kwargs, 'controller', 'ctype', 'action', 'create', 'time'
+        )
+        new_time_sheet = credit_wallet.main_controller(
+            controller='system', ctype='action', action='create_sheet', sheet='time',
+            **sanitized_command_chain
+        )
+        if not new_time_sheet:
+            kwargs['active_session'].rollback()
+            return self.warning_could_not_create_conversion_sheet(kwargs)
+        kwargs['active_session'].commit()
+        log.info('Successfully created new time sheet.')
+        command_chain_response = {
+            'failed': False,
+            'time_sheet': new_time_sheet.fetch_time_sheet_id(),
+            'sheet_data': new_time_sheet.fetch_time_sheet_values(),
+        }
+        return command_chain_response
+
     def action_create_new_conversion_sheet(self, **kwargs):
         log.debug('')
         credit_wallet = self.fetch_active_session_credit_wallet()
         if not credit_wallet:
             return self.error_could_not_fetch_active_session_credit_wallet(kwargs)
-        sanitized_instruction_set = res_utils.remove_tags_from_command_chain(
+        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
             kwargs, 'controller', 'ctype', 'action', 'create', 'conversion'
         )
         new_conversion_sheet = credit_wallet.main_controller(
             controller='system', ctype='action', action='create_sheet', sheet='conversion',
-            **sanitized_instruction_set
+            **sanitized_command_chain
         )
         if not new_conversion_sheet:
             kwargs['active_session'].rollback()
@@ -401,12 +425,12 @@ class EWallet(Base):
         credit_wallet = self.fetch_active_session_credit_wallet()
         if not credit_wallet:
             return self.error_could_not_fetch_active_session_credit_wallet(kwargs)
-        sanitized_instruction_set = res_utils.remove_tags_from_command_chain(
+        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
             kwargs, 'controller', 'ctype', 'action', 'create', 'transfer'
         )
         new_invoice_sheet = credit_wallet.main_controller(
             controller='system', ctype='action', action='create_sheet', sheet='invoice',
-            **sanitized_instruction_set
+            **sanitized_command_chain
         )
         if not new_invoice_sheet:
             kwargs['active_session'].rollback()
@@ -425,12 +449,12 @@ class EWallet(Base):
         credit_wallet = self.fetch_active_session_credit_wallet()
         if not credit_wallet:
             return self.error_could_not_fetch_active_session_credit_wallet(kwargs)
-        sanitized_instruction_set = res_utils.remove_tags_from_command_chain(
+        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
             kwargs, 'controller', 'ctype', 'action', 'create', 'transfer'
         )
         new_transfer_sheet = credit_wallet.main_controller(
             controller='system', ctype='action', action='create_sheet', sheet='transfer',
-            **sanitized_instruction_set
+            **sanitized_command_chain
         )
         if not new_transfer_sheet:
             kwargs['active_session'].rollback()
@@ -454,12 +478,12 @@ class EWallet(Base):
         active_user = self.fetch_active_session_user()
         if not active_user:
             return self.error_no_session_active_user_found()
-        sanitized_instruction_set = res_utils.remove_tags_from_command_chain(
+        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
             kwargs, 'ctype', 'action', 'target'
         )
         new_clock = active_user.user_controller(
             ctype='action', action='create', target='credit_clock',
-            **sanitized_instruction_set
+            **sanitized_command_chain
         )
         if not new_clock:
             kwargs['active_session'].rollback()
@@ -485,12 +509,12 @@ class EWallet(Base):
         active_user = self.fetch_active_session_user()
         if not active_user:
             return self.error_no_session_active_user_found()
-        sanitized_instruction_set = res_utils.remove_tags_from_command_chain(
+        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
             kwargs, 'ctype', 'action', 'target'
         )
         new_wallet = active_user.user_controller(
             ctype='action', action='create', target='credit_wallet',
-            **sanitized_instruction_set
+            **sanitized_command_chain
         )
         if not new_wallet:
             kwargs['active_session'].rollback()
@@ -2046,7 +2070,7 @@ class EWallet(Base):
             'transfer_sheet': self.action_create_new_transfer_sheet,
             'invoice_sheet': self.action_create_new_invoice_sheet,
             'conversion_sheet': self.action_create_new_conversion_sheet,
-#           'time_sheet':
+            'time_sheet': self.action_create_new_time_sheet,
             'transfer': self.action_create_new_transfer,
             'conversion': self.action_create_new_conversion,
             'contact': self.action_create_new_contact,

@@ -589,6 +589,27 @@ class CreditEWallet(Base):
 
     # CREATORS
 
+    def create_time_sheet(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('active_session'):
+            return self.error_no_active_session_found(kwargs)
+        credit_clock = self.fetch_credit_ewallet_credit_clock()
+        if not credit_clock:
+            return self.error_could_not_fetch_credit_clock(kwargs)
+        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
+            kwargs, 'controller', 'action', 'create',
+        )
+        conversion_sheet = credit_clock.main_controller(
+            controller='system', action='create', create='sheet',
+            sheet_type='time', **sanitized_command_chain
+        )
+        if not conversion_sheet:
+            kwargs['active_session'].rollback()
+            return self.warning_could_not_create_new_time_sheet(kwargs)
+        kwargs['active_session'].commit()
+        log.info('Successfully create conversion sheet.')
+        return conversion_sheet
+
 #   @pysnooper.snoop()
     def create_conversion_sheet(self, **kwargs):
         log.debug('')
@@ -646,27 +667,28 @@ class CreditEWallet(Base):
         log.debug('')
         if not kwargs.get('active_session'):
             return self.error_no_active_session_found()
-        _invoice_sheet = CreditInvoiceSheet(
-                id=self.wallet_id,
-                reference=kwargs.get('reference'),
-                active_session=kwargs['active_session'],
-                )
-        kwargs['active_session'].add(_invoice_sheet)
-        _update_archive = self.update_invoice_sheet_archive(_invoice_sheet)
+        invoice_sheet = CreditInvoiceSheet(
+            id=self.wallet_id,
+            reference=kwargs.get('reference'),
+            active_session=kwargs['active_session'],
+        )
+        kwargs['active_session'].add(invoice_sheet)
+        self.update_invoice_sheet_archive(invoice_sheet)
         kwargs['active_session'].commit()
         log.info('Successfully created invoice sheet.')
-        return _invoice_sheet
+        return invoice_sheet
 
     def create_sheets(self, **kwargs):
         log.debug('')
         if not kwargs.get('sheet'):
             return self.error_no_sheet_creation_target_specified()
-        _handlers = {
-                'transfer': self.create_transfer_sheet,
-                'invoice': self.create_invoice_sheet,
-                'conversion': self.create_conversion_sheet,
-                }
-        return _handlers[kwargs['sheet']](**kwargs)
+        handlers = {
+            'transfer': self.create_transfer_sheet,
+            'invoice': self.create_invoice_sheet,
+            'conversion': self.create_conversion_sheet,
+            'time': self.create_time_sheet,
+        }
+        return handlers[kwargs['sheet']](**kwargs)
 
     # UNLINKERS
 
@@ -777,6 +799,47 @@ class CreditEWallet(Base):
             'test': self.test_controller,
         }
         return handlers[kwargs['controller']](**kwargs)
+
+    # WARNINGS
+
+    def warning_could_not_create_new_time_sheet(self, command_chain):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Something went wrong. Could not create new time sheet. '\
+                       'Command chain detils : {}'.format(command_chain),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
+
+    def warning_could_not_create_new_conversion_sheet(self, command_chain):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Something went wrong. Could not create new conversion sheet. '\
+                       'Command chain detils : {}'.format(command_chain),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
+
+    def warning_could_not_fetch_credit_clock(self, search_code, code):
+        log.warning(
+                'Something went wrong. '
+                'Could not fetch credit clock by %s %s.', search_code, code
+                )
+        return False
+
+    def warning_could_not_fetch_transfer_sheet(self, search_code, code):
+        log.warning(
+                'Something went wrong. '
+                'Could not fetch transfer sheet by %s %s.', search_code, code
+                )
+        return False
+
+    def warning_could_not_fetch_invoice_sheet(self, search_code, code):
+        log.warning(
+                'Something went wrong. '
+                'Could not fetch invoice sheet by %s %s.', search_code, code
+                )
+        return False
 
     # ERRORS
 
@@ -1057,26 +1120,7 @@ class CreditEWallet(Base):
         log.error('Could not supply credits to credit ewallet.')
         return False
 
-    def warning_could_not_fetch_credit_clock(self, search_code, code):
-        log.warning(
-                'Something went wrong. '
-                'Could not fetch credit clock by %s %s.', search_code, code
-                )
-        return False
-
-    def warning_could_not_fetch_transfer_sheet(self, search_code, code):
-        log.warning(
-                'Something went wrong. '
-                'Could not fetch transfer sheet by %s %s.', search_code, code
-                )
-        return False
-
-    def warning_could_not_fetch_invoice_sheet(self, search_code, code):
-        log.warning(
-                'Something went wrong. '
-                'Could not fetch invoice sheet by %s %s.', search_code, code
-                )
-        return False
+    # TESTS
 
     def test_system_controller(self):
         print('[ TEST ] System controller...')

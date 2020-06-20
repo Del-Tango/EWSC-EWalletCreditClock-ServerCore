@@ -742,7 +742,7 @@ class CreditClock(Base):
         kwargs['active_session'].commit()
         return _record or False
 
-    @pysnooper.snoop()
+#   @pysnooper.snoop()
     def create_credit_clock_conversion_sheet(self, **kwargs):
         log.debug('')
         if not kwargs.get('active_session'):
@@ -973,7 +973,7 @@ class CreditClock(Base):
         extract_credits = self.extract_ewallet_credits(**kwargs)
         return supply_minutes
 
-    @pysnooper.snoop('logs/ewallet.log')
+#   @pysnooper.snoop('logs/ewallet.log')
     def convert_minutes_to_credits(self, **kwargs):
         '''
         [ RETURN ]: Minutes left after subtraction or dictionary with error,

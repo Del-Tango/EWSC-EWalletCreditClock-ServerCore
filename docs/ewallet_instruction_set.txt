@@ -288,7 +288,6 @@
             'warning': <msg>,
         }
 
-
 * User action Edit User Account:
     * Controller Instruction Set:
         session_manager_controller(
@@ -309,7 +308,6 @@
             'warning': <msg>,
         }
 
-
 * User action View Credit EWallet:
     * Controller Instruction Set:
         session_manager_controller(
@@ -327,7 +325,6 @@
             'error': <msg>,
             'warning': <msg>,
         }
-
 
 * User action View Credit Clock:
     * Controller Instruction Set:
@@ -347,7 +344,6 @@
             'warning': <msg>,
         }
 
-
 * User action View Invoice Sheet:
     * Controller Instruction Set:
         session_manager_controller(
@@ -365,7 +361,6 @@
             'error': <msg>,
             'warning': <msg>,
         }
-
 
 * User action View Invoice Sheet Record:
     * Controller Instruction Set:
@@ -387,7 +382,6 @@
             'warning': <msg>,
         }
 
-
 * User action Create New Credit EWallet:
     * Controller Instruction Set:
         session_manager_controller(
@@ -405,7 +399,6 @@
             'error': <msg>,
             'warning': <msg>,
         }
-
 
 * User action Create New Credit Clock:
     * Controller Instruction Set:
@@ -425,7 +418,6 @@
             'warning': <msg>,
         }
 
-
 * User action Create Transfer Sheet:
     * Controller Instruction Set:
         session_manager_controller(
@@ -443,7 +435,6 @@
             'error': <msg>,
             'warning': <msg>,
         }
-
 
 * User action Create Invoice Sheet:
     * Controller Instruction Set:
@@ -463,7 +454,6 @@
             'warning': <msg>,
         }
 
-
 * User action Create Conversion Sheet:
     * Controller Instruction Set:
         session_manager_controller(
@@ -482,6 +472,22 @@
             'warning': <msg>,
         }
 
+* User action Create Time Sheet:
+    * Controller Instruction Set:
+        session_manager_controller(
+            controller='client', ctype='action', action='new', new='time',
+            time='list', client_id=<client-id>, session_token=<token>
+        )
+    * Returns:
+        * [ OK  ]: {
+            'failed': False,
+            'time_sheet': <id>,
+            'sheet_data': <time-sheet-data>,
+        }
+        * [ NOK ]: {
+            'failed': True,
+            'error': <msg>,
+        }
 
 ################################################################################
 # EWallet Session (Command Chain)
