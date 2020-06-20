@@ -89,13 +89,30 @@ class CreditEWallet(Base):
 
     # FETCHERS
 
+    def fetch_credit_wallet_invoice_sheet_by_id(self, **kwargs):
+        log.debug('')
+        active_session = kwargs.get('active_session')
+        if not active_session:
+            return self.error_no_active_session_found()
+        if not kwargs.get('code') or not isinstance(kwargs['code'], int):
+            return self.error_invalid_invoice_sheet_id(kwargs)
+        invoice_sheet = list(
+            active_session.query(CreditInvoiceSheet).filter_by(
+                invoice_sheet_id=kwargs['code']
+            )
+        )
+        if invoice_sheet:
+            log.info('Successfully fetched credit transfer sheet by id.')
+        return self.warning_no_invoice_sheet_found_by_id(kwargs) if not \
+            invoice_sheet else invoice_sheet[0]
+
     def fetch_credit_wallet_transfer_sheet_by_id(self, **kwargs):
         log.debug('')
         active_session = kwargs.get('active_session')
         if not active_session:
             return self.error_no_active_session_found()
         if not kwargs.get('code') or not isinstance(kwargs['code'], int):
-            return self.error_invalid_credit_clock_id(kwargs)
+            return self.error_invalid_transfer_sheet_id(kwargs)
         transfer_sheet = list(
             active_session.query(CreditTransferSheet).filter_by(
                 transfer_sheet_id=kwargs['code']
@@ -210,14 +227,6 @@ class CreditEWallet(Base):
         log.debug('')
         return self.transfer_sheet_archive.values()
 
-    def fetch_credit_wallet_invoice_sheet_by_id(self, code):
-        log.debug('')
-        _invoice_sheet = self.invoice_sheet_archive.get(code)
-        if not _invoice_sheet:
-            return self.warning_could_not_fetch_invoice_sheet('id', code)
-        log.info('Successfully fetched invoice sheet by id.')
-        return _invoice_sheet
-
     def fetch_credit_wallet_invoice_sheet_by_ref(self, code):
         log.debug('')
         for item in self.invoice_sheet_archive:
@@ -270,6 +279,14 @@ class CreditEWallet(Base):
         return _handlers[kwargs['identifier']](kwargs.get('code'))
 
     # SETTERS
+
+    def set_invoice_sheet(self, invoice_sheet):
+        log.debug('')
+        try:
+            self.invoice_sheet = [invoice_sheet]
+        except:
+            return self.error_could_not_set_invoice_sheet(invoice_sheet)
+        return True
 
     def set_transfer_sheet(self, transfer_sheet):
         log.debug('')
@@ -327,13 +344,6 @@ class CreditEWallet(Base):
         if not kwargs.get('transfer_sheet_archive'):
             return self.error_no_transfer_sheet_archive_found()
         self.transfer_sheet_archive = kwargs['transfer_sheet_archive']
-        return True
-
-    def set_invoice_sheet(self, **kwargs):
-        log.debug('')
-        if not kwargs.get('invoice_sheet'):
-            return self.error_no_invoice_sheet_found()
-        self.invoice_sheet = kwargs['invoice_sheet']
         return True
 
     def set_invoice_sheet_archive(self, **kwargs):
@@ -544,28 +554,27 @@ class CreditEWallet(Base):
 
     # SWITCHES
 
+    def switch_credit_wallet_invoice_sheet(self, **kwargs):
+        log.debug('')
+        new_invoice_sheet = self.fetch_credit_wallet_invoice_sheet_by_id(
+            code=kwargs['sheet_id'], **kwargs
+        )
+        set_sheet = self.set_invoice_sheet(new_invoice_sheet)
+        if set_sheet:
+            log.info('Successfully switched invoice sheet by id.')
+        return self.warning_could_not_switch_credit_ewallet_invoice_sheet(kwargs) \
+            if not set_sheet else new_invoice_sheet
+
     def switch_credit_wallet_transfer_sheet(self, **kwargs):
         log.debug('')
         new_transfer_sheet = self.fetch_credit_wallet_transfer_sheet_by_id(
             code=kwargs['sheet_id'], **kwargs
         )
         set_sheet = self.set_transfer_sheet(new_transfer_sheet)
-        log.info('Successfully switched transfer sheet by id.')
+        if set_sheet:
+            log.info('Successfully switched transfer sheet by id.')
         return self.warning_could_not_switch_credit_ewallet_transfer_sheet(kwargs) \
             if not set_sheet else new_transfer_sheet
-
-    def switch_credit_wallet_invoice_sheet(self, **kwargs):
-        log.debug('')
-        if not kwargs.get('identifier') or not kwargs.get('code'):
-            return self.error_handler_switch_credit_wallet_invoice_sheet(
-                    identifier=kwargs.get('identifier'),
-                    code=kwargs.get('code'),
-                    )
-        _handlers = {
-                'id': self.handle_switch_credit_wallet_invoice_sheet_by_id,
-                'ref': self.handle_switch_credit_wallet_invoice_sheet_by_ref,
-                }
-        return _handlers[kwargs['identifier']](kwargs['code'])
 
     def switch_credit_wallet_sheet(self, **kwargs):
         log.debug('')
@@ -801,6 +810,24 @@ class CreditEWallet(Base):
 
     # WARNINGS
 
+    def warning_no_invoice_sheet_found_by_id(self, command_chain):
+        log.warning()
+        command_chain_response = {
+            'failed': True,
+            'warning': 'No invoice sheet found by id. Command chain details : {}'.format(command_chain),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
+
+    def warning_could_not_switch_credit_ewallet_invoice_sheet(self, command_chain):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Something went wrong. Could not switch credit ewallet invoice sheet. '\
+                       'Command chain details : {}'.format(command_chain),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
+
     def warning_no_transfer_sheet_found_by_id(self, command_chain):
         command_chain_response = {
             'failed': True,
@@ -875,6 +902,30 @@ class CreditEWallet(Base):
         return False
 
     # ERRORS
+
+    def error_invalid_invoice_sheet_id(self, command_chain):
+        log.error()
+        command_chain_response = {
+            'failed': True,
+            'error': 'Invalid invoice sheet id. Command chain details : {}'\
+                     .format(command_chain),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_invalid_transfer_sheet_id(self, command_chain):
+        log.error()
+        command_chain_response = {
+            'failed': True,
+            'error': 'Invalid transfer sheet id. Command chain details : {}'\
+                     .format(command_chain),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_could_not_set_invoice_sheet(self, invoice_sheet):
+        log.error('Could not set invoice sheet {}.'.format(invoice_sheet))
+        return False
 
     def error_no_switch_credit_ewallet_transfer_sheet_indentifier_specified(self, command_chain):
         command_chain_response = {
