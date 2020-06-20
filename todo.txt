@@ -7,10 +7,8 @@
 ###############################################################################
 # EWallet Session Manager
 ###############################################################################
-# TODO - User action Create Transfer Sheet
 # TODO - User action Create Conversion Sheet
 # TODO - User action Create Time Sheet
-# TODO - User action Create Invoice Sheet
 # TODO - User action Create Contact List
 # TODO - User action Session Login (2)
 

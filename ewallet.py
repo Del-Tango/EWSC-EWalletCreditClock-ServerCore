@@ -372,6 +372,30 @@ class EWallet(Base):
     [ NOTE ]: Command chain responses are formatted here.
     '''
 
+    def action_create_new_invoice_sheet(self, **kwargs):
+        log.debug('')
+        credit_wallet = self.fetch_active_session_credit_wallet()
+        if not credit_wallet:
+            return self.error_could_not_fetch_active_session_credit_wallet(kwargs)
+        sanitized_instruction_set = res_utils.remove_tags_from_command_chain(
+            kwargs, 'controller', 'ctype', 'action', 'create', 'transfer'
+        )
+        new_invoice_sheet = credit_wallet.main_controller(
+            controller='system', ctype='action', action='create_sheet', sheet='invoice',
+            **sanitized_instruction_set
+        )
+        if not new_invoice_sheet:
+            kwargs['active_session'].rollback()
+            return self.warning_could_not_create_invoice_sheet(kwargs)
+        kwargs['active_session'].commit()
+        log.info('Successfully created new invoice sheet.')
+        command_chain_response = {
+            'failed': False,
+            'invoice_sheet': new_invoice_sheet.fetch_invoice_sheet_id(),
+            'sheet_data': new_invoice_sheet.fetch_invoice_sheet_values(),
+        }
+        return command_chain_response
+
     def action_create_new_transfer_sheet(self, **kwargs):
         log.debug('')
         credit_wallet = self.fetch_active_session_credit_wallet()
@@ -386,7 +410,7 @@ class EWallet(Base):
         )
         if not new_transfer_sheet:
             kwargs['active_session'].rollback()
-            return self.warning_could_not_create_transfer_sheet(kwargs) #
+            return self.warning_could_not_create_transfer_sheet(kwargs)
         kwargs['active_session'].commit()
         log.info('Successfully created new transfer sheet.')
         command_chain_response = {
@@ -1996,6 +2020,7 @@ class EWallet(Base):
             'credit_wallet': self.action_create_new_credit_wallet,
             'credit_clock': self.action_create_new_credit_clock,
             'transfer_sheet': self.action_create_new_transfer_sheet,
+            'invoice_sheet': self.action_create_new_invoice_sheet,
             'transfer': self.action_create_new_transfer,
             'conversion': self.action_create_new_conversion,
             'contact': self.action_create_new_contact,
@@ -2869,6 +2894,15 @@ class EWallet(Base):
         return False
 
     # WARNINGS
+
+    def warning_could_not_create_invoice_sheet(self, command_chain):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Something went wrong. Could not create new invoice sheet. '\
+                       'Command chain details : {}'.format(command_chain),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
 
     def warning_could_not_create_credit_clock(self, user_name, command_chain):
         command_chain_response = {
