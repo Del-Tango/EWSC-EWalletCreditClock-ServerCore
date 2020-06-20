@@ -86,6 +86,16 @@ class ResUser(Base):
 
     # FETCHERS
 
+    def fetch_user_contact_list_by_id(self, list_id, **kwargs):
+        log.debug('')
+        active_session = kwargs.get('active_session') or \
+                self.fetch_user_active_ewallet_session().fetch_active_session()
+        contact_list = list(
+            active_session.query(ContactList).filter_by(contact_list_id=list_id)
+        )
+        return self.warning_no_contact_list_found_by_id(list_id, kwargs) if not \
+            contact_list else contact_list[0]
+
     def fetch_user_credit_ewallet_by_id(self, ewallet_id, **kwargs):
         log.debug('')
         active_session = kwargs.get('active_session') or \
@@ -93,7 +103,7 @@ class ResUser(Base):
         ewallet = list(
             active_session.query(CreditEWallet).filter_by(wallet_id=ewallet_id)
         )
-        return self.warning_no_credit_ewallet_found_by_id(ewallet_id) if not \
+        return self.warning_no_credit_ewallet_found_by_id(ewallet_id, kwargs) if not \
             ewallet else ewallet[0]
 
     def fetch_credit_ewallet_creation_values(self, **kwargs):
@@ -316,6 +326,15 @@ class ResUser(Base):
 
     # SETTERS
 
+    def set_user_contact_list(self, contact_list):
+        log.debug('')
+        try:
+            self.user_contact_list = [contact_list]
+            self.set_user_write_date()
+        except:
+            return self.error_could_not_set_contact_list(contact_list)
+        return True
+
     def set_user_write_date(self):
         log.debug('')
         self.user_write_date = datetime.datetime.now()
@@ -450,15 +469,6 @@ class ResUser(Base):
         self.user_credit_wallet = kwargs['credit_ewallet']
         self.set_user_write_date()
         log.info('Successfully set user credit ewallet.')
-        return True
-
-    def set_user_contact_list(self, **kwargs):
-        log.debug('')
-        if not kwargs.get('contact_list'):
-            return self.error_no_contact_list_found()
-        self.user_contact_list = kwargs['contact_list']
-        self.set_user_write_date()
-        log.info('Successfully set user contact list.')
         return True
 
     def set_user_name(self, **kwargs):
@@ -605,6 +615,19 @@ class ResUser(Base):
         return transaction
 
     # ACTIONS
+
+    def action_switch_contact_list(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('list_id'):
+            return self.error_no_contact_list_id_found()
+        log.info('Attempting to fetch user contact list...')
+        contact_list = self.fetch_user_contact_list_by_id(kwargs['list_id'])
+        if not contact_list:
+            return self.warning_could_not_fetch_contact_list()
+        switch = self.set_user_contact_list(contact_list)
+        if switch:
+            log.info('Successfully switched user contact list.')
+        return contact_list
 
     def action_switch_time_sheet(self, **kwargs):
         log.debug('')
@@ -836,19 +859,6 @@ class ResUser(Base):
         log.info('Successfully switched user credit clock.')
         return clock_switch
 
-    def action_switch_contact_list(self, **kwargs):
-        log.debug('')
-        if not kwargs.get('list_id'):
-            return self.error_no_contact_list_id_found()
-        log.info('Attempting to fetch user contact list...')
-        _list = self.fetch_user_contact_list_by_id(kwargs['list_id'])
-        if not _list:
-            return self.warning_could_not_fetch_contact_list()
-        _switch = self.set_user_contact_list(_list)
-        if _switch:
-            log.info('Successfully switched user contact list.')
-        return _switch
-
     def action_unlink_credit_wallet(self, **kwargs):
         log.debug('')
         if not kwargs.get('wallet_id'):
@@ -1069,8 +1079,22 @@ class ResUser(Base):
 
     # WARNINGS
 
-    def warning_no_credit_ewallet_found_by_id(self, ewallet_id):
-        log.warning('No credit ewallet found by id {}.'.format(ewallet_id))
+    def warning_no_contact_list_found_by_id(self, list_id, command_chain):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'No contact list found by id {}. Command chain details : {}'\
+                       .format(list_id, command_chain),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
+
+    def warning_no_credit_ewallet_found_by_id(self, ewallet_id, command_chain):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'No credit ewallet found by id {}. Command chain details : {}'\
+                       .format(ewallet_id, command_chain),
+        }
+        log.warning(command_chain_response['warning'])
         return False
 
     def warning_credit_transaction_record_share_failure(self, **kwargs):
@@ -1134,6 +1158,10 @@ class ResUser(Base):
         return False
 
     # ERRORS
+
+    def error_could_not_set_contact_list(self, contact_list):
+        log.error('Could not set contact list {}.'.format(contact_list))
+        return False
 
     def error_no_invoice_sheet_id_specified(self, command_chain):
         command_chain_response = {

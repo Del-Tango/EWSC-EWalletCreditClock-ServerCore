@@ -7,7 +7,16 @@
 ###############################################################################
 # EWallet Session Manager
 ###############################################################################
-# TODO - User action Switch Contact List
+# TODO - User action Unlink Transfer Record
+# TODO - User action Unlink Invoice Record
+# TODO - User action Unlink Conversion Record
+# TODO - User action Unlink Time Record
+# TODO - User action Unlink Contact Record
+# TODO - User action Unlink Transfer Sheet
+# TODO - User action Unlink Invoice Sheet
+# TODO - User action Unlink Conversion Sheet
+# TODO - User action Unlink Time Sheet
+# TODO - User action Unlink Contact List
 # TODO - User action Session Login (2)
 
 

@@ -619,6 +619,20 @@ class EWalletSessionManager():
     [ NOTE ]: SqlAlchemy ORM sessions are fetched here.
     '''
 
+    def action_switch_contact_list(self, ewallet_session, instruction_set):
+        log.debug('')
+        orm_session = ewallet_session.fetch_active_session()
+        sanitized_instruction_set = res_utils.remove_tags_from_command_chain(
+            instruction_set, 'controller', 'ctype', 'action', 'switch'
+        )
+        switch_contact_list = ewallet_session.ewallet_controller(
+            controller='user', ctype='action', action='switch', switch='contact_list',
+            active_session=orm_session, **sanitized_instruction_set
+        )
+        return self.warning_could_not_switch_contact_list(
+            ewallet_session, instruction_set
+        ) if switch_contact_list.get('failed') else switch_contact_list
+
     def action_switch_time_sheet(self, ewallet_session, instruction_set):
         log.debug('')
         orm_session = ewallet_session.fetch_active_session()
@@ -1227,6 +1241,21 @@ class EWalletSessionManager():
     [ NOTE ]: Instruction set validation and sanitizations are performed here.
     '''
 
+    def handle_client_action_switch_contact_list(self, **kwargs):
+        log.debug('')
+        instruction_set_validation = self.validate_instruction_set(kwargs)
+        if not instruction_set_validation:
+            return False
+        ewallet = self.fetch_ewallet_session_for_client_action_using_instruction_set(
+            kwargs
+        )
+        if not ewallet:
+            return False
+        switch_contact_list = self.action_switch_contact_list(
+            ewallet['ewallet_session'], ewallet['sanitized_instruction_set']
+        )
+        return switch_contact_list
+
     def handle_client_action_switch_time_sheet(self, **kwargs):
         log.debug('')
         instruction_set_validation = self.validate_instruction_set(kwargs)
@@ -1337,7 +1366,7 @@ class EWalletSessionManager():
             'invoice_sheet': self.handle_client_action_switch_invoice_sheet,
             'conversion_sheet': self.handle_client_action_switch_conversion_sheet,
             'time_sheet': self.handle_client_action_switch_time_sheet,
-#           'contact_list':
+            'contact_list': self.handle_client_action_switch_contact_list,
         }
         return handlers[kwargs['switch']](**kwargs)
 
@@ -2373,6 +2402,24 @@ class EWalletSessionManager():
         return handlers[kwargs['controller']](**kwargs)
 
     # WARNINGS
+
+    def warning_could_not_switch_contact_list(self, ewallet_session, instruction_set):
+        instruction_set_response = {
+            'failed': True,
+            'warning': 'Something went wrong. Could not switch contact list in ewallet session {}. '\
+                       'Instruction set details : {}'.format(ewallet_session, instruction_set),
+        }
+        log.warning(instruction_set_response['warning'])
+        return instruction_set_response
+
+    def warning_cound_not_switch_contact_list(self, ewallet_session, instruction_set):
+        instruction_set_response = {
+            'failed': True,
+            'warning': 'Something went wrong. Could not switch contact list in ewallet session {}. '\
+                       'Instruction set details : {}'.format(ewallet_session, instruction_set),
+        }
+        log.warning(instruction_set_response['warning'])
+        return instruction_set_response
 
     def warning_could_not_switch_time_sheet(self, ewallet_session, instruction_set):
         instruction_set_response = {
@@ -3585,6 +3632,17 @@ class EWalletSessionManager():
         print(str(_switch) + '\n')
         return _switch
 
+    def test_user_action_switch_contact_list(self, **kwargs):
+        print('[ * ]: User action Switch Contact List')
+        _switch = self.session_manager_controller(
+            controller='client', ctype='action', action='switch', switch='contact_list',
+            list_id=kwargs['list_id'], client_id=kwargs['client_id'],
+            session_token=kwargs['session_token']
+        )
+        print(str(_switch) + '\n')
+        return _switch
+
+
     def test_session_manager_controller(self, **kwargs):
         print('[ TEST ] Session Manager')
 #       open_in_port = self.test_open_instruction_listener_port()
@@ -3719,29 +3777,33 @@ class EWalletSessionManager():
 #       create_contact_list = self.test_user_action_create_contact_list(
 #           client_id=client_id['client_id'], session_token=session_token['session_token'],
 #       )
-        switch_credit_ewallet = self.test_user_action_switch_credit_ewallet(
+#       switch_credit_ewallet = self.test_user_action_switch_credit_ewallet(
+#           client_id=client_id['client_id'], session_token=session_token['session_token'],
+#           ewallet_id=2
+#       )
+#       switch_credit_clock = self.test_user_action_switch_credit_clock(
+#           client_id=client_id['client_id'], session_token=session_token['session_token'],
+#           clock_id=2
+#       )
+#       switch_transfer_sheet = self.test_user_action_switch_transfer_sheet(
+#           client_id=client_id['client_id'], session_token=session_token['session_token'],
+#           sheet_id=2
+#       )
+#       switch_invoice_sheet = self.test_user_action_switch_invoice_sheet(
+#           client_id=client_id['client_id'], session_token=session_token['session_token'],
+#           sheet_id=2
+#       )
+#       switch_conversion_sheet = self.test_user_action_switch_conversion_sheet(
+#           client_id=client_id['client_id'], session_token=session_token['session_token'],
+#           sheet_id=2
+#       )
+#       switch_time_sheet = self.test_user_action_switch_time_sheet(
+#           client_id=client_id['client_id'], session_token=session_token['session_token'],
+#           sheet_id=2
+#       )
+        switch_contact_list = self.test_user_action_switch_contact_list(
             client_id=client_id['client_id'], session_token=session_token['session_token'],
-            ewallet_id=2
-        )
-        switch_credit_clock = self.test_user_action_switch_credit_clock(
-            client_id=client_id['client_id'], session_token=session_token['session_token'],
-            clock_id=2
-        )
-        switch_transfer_sheet = self.test_user_action_switch_transfer_sheet(
-            client_id=client_id['client_id'], session_token=session_token['session_token'],
-            sheet_id=2
-        )
-        switch_invoice_sheet = self.test_user_action_switch_invoice_sheet(
-            client_id=client_id['client_id'], session_token=session_token['session_token'],
-            sheet_id=2
-        )
-        switch_conversion_sheet = self.test_user_action_switch_conversion_sheet(
-            client_id=client_id['client_id'], session_token=session_token['session_token'],
-            sheet_id=2
-        )
-        switch_time_sheet = self.test_user_action_switch_time_sheet(
-            client_id=client_id['client_id'], session_token=session_token['session_token'],
-            sheet_id=2
+            list_id=2
         )
 
 if __name__ == '__main__':
