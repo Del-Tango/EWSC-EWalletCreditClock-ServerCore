@@ -377,6 +377,33 @@ class EWallet(Base):
     [ NOTE ]: Command chain responses are formatted here.
     '''
 
+    def action_switch_time_sheet(self, **kwargs):
+        log.debug('')
+        active_user = self.fetch_active_session_user()
+        if not active_user:
+            return self.error_no_session_active_user_found()
+        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
+            kwargs, 'ctype', 'action', 'target'
+        )
+        switch_time_sheet = active_user.user_controller(
+            ctype='action', action='switch', target='time_sheet',
+            **sanitized_command_chain
+        )
+        if not switch_time_sheet or isinstance(switch_time_sheet, dict) and \
+                switch_time_sheet.get('failed'):
+            kwargs['active_session'].rollback()
+            return self.warning_could_not_switch_time_sheet(
+                active_user.fetch_user_name(), kwargs
+            )
+        kwargs['active_session'].commit()
+        log.info('Successfully switched conversion sheet.')
+        command_chain_response = {
+            'failed': False,
+            'time_sheet': switch_time_sheet.fetch_time_sheet_id(),
+            'sheet_data': switch_time_sheet.fetch_time_sheet_values(),
+        }
+        return command_chain_response
+
     def action_switch_conversion_sheet(self, **kwargs):
         log.debug('')
         active_user = self.fetch_active_session_user()
@@ -399,7 +426,7 @@ class EWallet(Base):
         log.info('Successfully switched conversion sheet.')
         command_chain_response = {
             'failed': False,
-            'invoice_sheet': switch_conversion_sheet.fetch_conversion_sheet_id(),
+            'conversion_sheet': switch_conversion_sheet.fetch_conversion_sheet_id(),
             'sheet_data': switch_conversion_sheet.fetch_conversion_sheet_values(),
         }
         return command_chain_response
@@ -1995,6 +2022,13 @@ class EWallet(Base):
 
     # HANDLERS
 
+    def handle_user_action_switch_time_sheet(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('sheet_id'):
+            return self.error_no_user_action_switch_time_sheet_id_specified(kwargs)
+        switch_time_sheet = self.action_switch_time_sheet(**kwargs)
+        return switch_time_sheet
+
     def handle_user_action_switch_conversion_sheet(self, **kwargs):
         log.debug('')
         if not kwargs.get('sheet_id'):
@@ -2031,7 +2065,7 @@ class EWallet(Base):
         return switch_credit_ewallet
 
     def handle_user_action_switch(self, **kwargs):
-        log.debug('TODO')
+        log.debug('')
         if not kwargs.get('switch'):
             return self.error_no_user_action_switch_target_specified(kwargs)
         handlers = {
@@ -2040,7 +2074,7 @@ class EWallet(Base):
             'transfer_sheet': self.handle_user_action_switch_transfer_sheet,
             'invoice_sheet': self.handle_user_action_switch_invoice_sheet,
             'conversion_sheet': self.handle_user_action_switch_conversion_sheet,
-#           'time_sheet':
+            'time_sheet': self.handle_user_action_switch_time_sheet,
         }
         return handlers[kwargs['switch']](**kwargs)
 
@@ -2513,6 +2547,15 @@ class EWallet(Base):
         return _controllers[kwargs['controller']](**kwargs)
 
     # WARNINGS
+
+    def warning_could_not_switch_time_sheet(self, user_name, command_chain):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Something went wrong. Could not switch time sheet for ewallet user {}. '\
+                       'Command chain details : {}'.format(user_name, command_chain),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
 
     def warning_could_not_switch_conversion_sheet(self, user_name, command_chain):
         command_chain_response = {
@@ -3103,6 +3146,15 @@ class EWallet(Base):
         return False
 
     # ERRORS
+
+    def error_no_user_action_switch_time_sheet_id_specified(self, command_chain):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No user action switch time sheet id specified. Command chain details :"{}'\
+                     .format(command_chain),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
 
     def error_no_user_action_switch_conversion_sheet_id_specified(self, command_chain):
         command_chain_response = {
