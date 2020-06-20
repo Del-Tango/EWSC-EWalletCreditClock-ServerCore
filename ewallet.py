@@ -78,6 +78,11 @@ class EWallet(Base):
 
     # FETCHERS
 
+    def fetch_active_session_contact_list(self):
+        log.debug('')
+        return False if not self.contact_list else \
+            self.contact_list[0]
+
     def fetch_partner_credit_wallet(self, partner_account):
         log.debug('')
         partner_wallet = False if not partner_account.user_credit_wallet else \
@@ -371,6 +376,38 @@ class EWallet(Base):
     '''
     [ NOTE ]: Command chain responses are formatted here.
     '''
+
+    # TODO
+    def action_create_new_contact_list(self, **kwargs):
+        '''
+        [ NOTE   ]: User action 'create new contact list', accessible from external api calls.
+        [ INPUT  ]: reference=<ref>
+        [ RETURN ]: (ContactList object | False)
+        '''
+        log.debug('TODO')
+        active_user = self.fetch_active_session_user()
+        if not active_user:
+            return self.error_no_session_active_user_found()
+        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
+            kwargs, 'ctype', 'action', 'target'
+        )
+        new_contact_list = active_user.user_controller(
+            ctype='action', action='create', target='contact_list',
+            **sanitized_command_chain,
+        )
+        if not new_contact_list:
+            kwargs['active_session'].rollback()
+            return self.warning_could_not_create_contact_list(
+                active_user.fetch_user_name()
+            )
+        kwargs['active_session'].commit()
+        log.info('Successfully created new contact list.')
+        command_chain_response = {
+            'failed': False,
+            'contact_list': new_contact_list.fetch_contact_list_id(),
+            'list_data': new_contact_list.fetch_contact_list_values(),
+        }
+        return command_chain_response
 
     def action_create_new_time_sheet(self, **kwargs):
         log.debug('')
@@ -1470,34 +1507,6 @@ class EWallet(Base):
                 'clock2credits': self.action_create_new_conversion_clock_to_credits,
                 }
         return _handlers[kwargs['conversion']](**kwargs)
-
-    def action_create_new_contact_list(self, **kwargs):
-        '''
-        [ NOTE   ]: User action 'create new contact list', accessible from external api calls.
-        [ INPUT  ]: reference=<ref>
-        [ RETURN ]: (ContactList object | False)
-        '''
-        log.debug('')
-        if not self.active_user:
-            return self.error_no_session_active_user_found()
-        _new_list = self.active_user.user_controller(
-                ctype='action', action='create', target='contact_list',
-                reference=kwargs.get('reference'),
-                )
-        if not _new_list:
-            return self.warning_could_not_create_contact_list(
-                self.active_user.fetch_user_name()
-                )
-        log.info('Successfully created new contact list.')
-        return _new_list
-
-
-
-    def fetch_active_session_contact_list(self):
-        log.debug('')
-        return False if not self.contact_list else \
-            self.contact_list[0]
-
 
     def action_create_new_contact_record(self, **kwargs):
         '''

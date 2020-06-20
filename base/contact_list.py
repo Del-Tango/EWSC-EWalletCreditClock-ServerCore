@@ -206,15 +206,18 @@ class ContactList(Base):
 
     def fetch_contact_list_values(self):
         log.debug('')
-        _values = {
-                'id': self.contact_list_id,
-                'client_id': self.client_id,
-                'reference': self.reference,
-                'create_date': self.create_date,
-                'write_date': self.write_date,
-                'records': self.records,
-                }
-        return _values
+        values = {
+            'id': self.contact_list_id,
+            'client_id': self.client_id,
+            'reference': self.reference,
+            'create_date': self.create_date,
+            'write_date': self.write_date,
+            'records': {
+                item.fetch_record_id(): item.fetch_record_reference() \
+                for item in self.records
+            }
+        }
+        return values
 
     # TODO
     def fetch_contact_list_records_from_database():

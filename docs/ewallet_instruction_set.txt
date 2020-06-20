@@ -489,6 +489,24 @@
             'error': <msg>,
         }
 
+* User action Create Contact List:
+    * Controller Instruction Set:
+        session_manager_controller(
+            controller='client', ctype='action', action='new', new='contact',
+            contact='list', client_id=<client-id>, session_token=<token>
+        )
+    * Returns:
+        * [ OK  ]: {
+            'failed': False,
+            'time_sheet': <id>,
+            'sheet_data': <time-sheet-data>,
+        }
+        * [ NOK ]: {
+            'failed': True,
+            'error': <msg>,
+        }
+
+
 ################################################################################
 # EWallet Session (Command Chain)
 ################################################################################

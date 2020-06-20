@@ -619,6 +619,20 @@ class EWalletSessionManager():
     [ NOTE ]: SqlAlchemy ORM sessions are fetched here.
     '''
 
+    def action_new_contact_list(self, ewallet_session, instruction_set):
+        log.debug('')
+        orm_session = ewallet_session.fetch_active_session()
+        sanitized_instruction_set = res_utils.remove_tags_from_command_chain(
+            instruction_set, 'controller', 'ctype', 'action', 'new', 'contact'
+        )
+        new_contact_list = ewallet_session.ewallet_controller(
+            controller='user', ctype='action', action='create', create='contact',
+            contact='list', active_session=orm_session, **sanitized_instruction_set
+        )
+        return self.warning_could_not_create_new_contact_list(
+            ewallet_session, instruction_set
+        ) if new_contact_list.get('failed') else new_contact_list
+
     def action_new_time_sheet(self, ewallet_session, instruction_set):
         log.debug('')
         orm_session = ewallet_session.fetch_active_session()
@@ -1129,6 +1143,21 @@ class EWalletSessionManager():
     [ NOTE ]: Instruction set validation and sanitizations are performed here.
     '''
 
+    def handle_client_action_new_contact_list(self, **kwargs):
+        log.debug('')
+        instruction_set_validation = self.validate_instruction_set(kwargs)
+        if not instruction_set_validation:
+            return False
+        ewallet = self.fetch_ewallet_session_for_client_action_using_instruction_set(
+            kwargs
+        )
+        if not ewallet:
+            return False
+        new_contact_list = self.action_new_contact_list(
+            ewallet['ewallet_session'], ewallet['sanitized_instruction_set']
+        )
+        return new_contact_list
+
     def handle_client_action_new_time_sheet(self, **kwargs):
         log.debug('')
         instruction_set_validation = self.validate_instruction_set(kwargs)
@@ -1529,7 +1558,7 @@ class EWalletSessionManager():
         }
         return handlers[kwargs['transfer']](**kwargs)
 
-    def handle_action_new_contact_record(self, **kwargs):
+    def handle_client_action_new_contact_record(self, **kwargs):
         log.debug('')
         instruction_set_validation = self.validate_instruction_set(kwargs)
         if not instruction_set_validation:
@@ -1549,8 +1578,8 @@ class EWalletSessionManager():
         if not kwargs.get('contact'):
             return self.error_no_client_action_new_contact_target_specified(kwargs)
         handlers = {
-#           'list': self.handle_action_new_contact_list,
-            'record': self.handle_action_new_contact_record,
+            'list': self.handle_client_action_new_contact_list,
+            'record': self.handle_client_action_new_contact_record,
         }
         return handlers[kwargs['contact']](**kwargs)
 
@@ -2145,6 +2174,15 @@ class EWalletSessionManager():
         return handlers[kwargs['controller']](**kwargs)
 
     # WARNINGS
+
+    def warning_could_not_create_new_contact_list(self, ewallet_session, instruction_set):
+        instruction_set_response = {
+            'failed': True,
+            'warning': 'Something went wrong. Could not create new contact list in ewallet session {}. '\
+                       'Instruction set details : {}'.format(ewallet_session, instruction_set),
+        }
+        log.warning(instruction_set_response['warning'])
+        return instruction_set_response
 
     def warning_could_not_create_new_time_sheet(self, ewallet_session, instruction_set):
         instruction_set_response = {
@@ -3215,12 +3253,21 @@ class EWalletSessionManager():
         print(str(_create) + '\n')
         return _create
 
+    def test_user_action_create_contact_list(self, **kwargs):
+        print('[ * ]: User action Create Contact List')
+        _create = self.session_manager_controller(
+            controller='client', ctype='action', action='new', new='contact',
+            contact='list', client_id=kwargs['client_id'],
+            session_token=kwargs['session_token'],
+        )
+        print(str(_create) + '\n')
+        return _create
+
     def test_session_manager_controller(self, **kwargs):
         print('[ TEST ] Session Manager')
 #       open_in_port = self.test_open_instruction_listener_port()
 #       listen = self.test_instruction_set_listener()
 #       close_in_port = self.test_close_instruction_listener_port()
-
         client_id = self.test_request_client_id()
         worker = self.test_new_worker()
         session = self.test_new_session()
@@ -3231,6 +3278,7 @@ class EWalletSessionManager():
         )
         session_login = self.test_user_action_session_login(
             client_id=client_id['client_id'], session_token=session_token['session_token'],
+
             user_name='test_user', user_pass='1234@!xxA'
         )
         supply_credits = self.test_user_action_supply_credits(
@@ -3343,7 +3391,10 @@ class EWalletSessionManager():
 #       create_conversion_sheet = self.test_user_action_create_conversion_sheet(
 #           client_id=client_id['client_id'], session_token=session_token['session_token'],
 #       )
-        create_time_sheet = self.test_user_action_create_time_sheet(
+#       create_time_sheet = self.test_user_action_create_time_sheet(
+#           client_id=client_id['client_id'], session_token=session_token['session_token'],
+#       )
+        create_contact_list = self.test_user_action_create_contact_list(
             client_id=client_id['client_id'], session_token=session_token['session_token'],
         )
 
