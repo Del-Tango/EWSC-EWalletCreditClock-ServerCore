@@ -606,6 +606,25 @@ class ResUser(Base):
 
     # ACTIONS
 
+    def action_switch_conversion_sheet(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('sheet_id'):
+            return self.error_no_invoice_sheet_id_specified(kwargs)
+        log.info('Attempting to fetch user credit ewallet...')
+        credit_ewallet = self.fetch_user_credit_wallet()
+        if not credit_ewallet:
+            return self.error_could_not_fetch_user_credit_ewallet(kwargs)
+        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
+            kwargs, 'controller', 'action', 'sheet', 'identifier'
+        )
+        switch = credit_ewallet.main_controller(
+            controller='user', action='switch_sheet', sheet='conversion',
+            **sanitized_command_chain
+        )
+        if switch:
+            log.info('Successfully switched credit clock conversion sheet.')
+        return switch
+
     def action_switch_invoice_sheet(self, **kwargs):
         log.debug('')
         if not kwargs.get('sheet_id'):
@@ -967,7 +986,7 @@ class ResUser(Base):
                 'contact_list': self.action_switch_contact_list,
                 'transfer_sheet': self.action_switch_transfer_sheet,
                 'invoice_sheet': self.action_switch_invoice_sheet,
-#               'conversion_sheet':
+                'conversion_sheet': self.action_switch_conversion_sheet,
 #               'time_sheet':
                 }
         return _handlers[kwargs['target']](**kwargs)

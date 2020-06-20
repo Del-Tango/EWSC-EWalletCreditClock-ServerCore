@@ -582,6 +582,24 @@
             'warning': <msg>,
         }
 
+* User action Switch Conversion Sheet:
+    * Controller Instruction Set:
+        session_manager_controller(
+            controller='client', ctype='action', action='switch', switch='conversion_sheet',
+            sheet_id=<id>, client_id=<client-id>, session_token=<token>
+        )
+    * Returns:
+        * [ OK  ]: {
+            'failed': False,
+            'conversion_sheet': <id>,
+            'sheet_data': <conversion-sheet-data>,
+        }
+        * [ NOK ]: {
+            'failed': True,
+            'error': <msg>,
+            'warning': <msg>,
+        }
+
 ################################################################################
 # EWallet Session (Command Chain)
 ################################################################################

@@ -79,6 +79,20 @@ class CreditClock(Base):
 
     # FETCHERS
 
+    def fetch_credit_clock_conversion_sheet_by_id(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('active_session'):
+            return self.error_no_active_session_found(kwargs)
+        conversion_sheet = list(
+            kwargs['active_session'].query(CreditClockConversionSheet).filter_by(
+                conversion_sheet_id=kwargs['sheet_id']
+            )
+        )
+        if conversion_sheet:
+            log.info('Successfully fetched conversion sheet by id.')
+        return self.warning_could_not_fetch_conversion_sheet_by_id(kwargs) \
+            if not conversion_sheet else conversion_sheet[0]
+
     def fetch_active_credit_clock_time_record(self, **kwargs):
         log.debug('')
         if not self.active_time_record:
@@ -239,14 +253,6 @@ class CreditClock(Base):
         log.debug('')
         return self.time_sheet_archive.values()
 
-    def fetch_credit_clock_conversion_sheet_by_id(self, code):
-        log.debug('')
-        _conversion_sheet = self.conversion_sheet_archive.get(code)
-        if not _conversion_sheet:
-            return self.warning_could_not_fetch_conversion_sheet('id', code)
-        log.info('Successfully fetched conversion sheet by id.')
-        return _conversion_sheet
-
     def fetch_credit_clock_conversion_sheet_by_ref(self, code):
         log.debug('')
         for item in self.conversion_sheet_archive:
@@ -317,6 +323,14 @@ class CreditClock(Base):
         return _values
 
     # SETTERS
+
+    def set_credit_clock_conversion_sheet(self, conversion_sheet):
+        log.debug('')
+        try:
+            self.conversion_sheet = [conversion_sheet]
+        except:
+            return self.error_could_not_set_credit_clock_conversion_sheet(conversion_sheet)
+        return True
 
     def set_credit_clock_pending_time(self, **kwargs):
         log.debug('')
@@ -428,13 +442,6 @@ class CreditClock(Base):
         self.time_sheet = kwargs['time_sheet']
         return True
 
-    def set_credit_clock_conversion_sheet(self, **kwargs):
-        log.debug('')
-        if not kwargs.get('conversion_sheet'):
-            return self.error_no_conversion_sheet_found()
-        self.conversion_sheet = kwargs['conversion_sheet']
-        return True
-
     # CHECKERS
 
     def check_clock_is_pending(self, **kwargs):
@@ -539,28 +546,6 @@ class CreditClock(Base):
         log.info('Successfully switched credit clock time sheet by reference.')
         return _new_time_sheet
 
-    def handle_switch_credit_clock_conversion_sheet_by_id(self, code):
-        log.debug('')
-        _new_conversion_sheet = self.fetch_credit_clock_conversion_sheet(
-                identifier='id', code=code
-                )
-        if not _new_conversion_sheet:
-            return self.warning_could_not_fetch_conversion_sheet('id', code)
-        self.set_credit_clock_conversion_sheet(conversion_sheet=_new_conversion_sheet)
-        log.info('Successfully switch credit clock conversion sheet by id.')
-        return _new_conversion_sheet
-
-    def handle_switch_credit_clock_conversion_sheet_by_ref(self, code):
-        log.debug('')
-        _new_conversion_sheet = self.fetch_credit_clock_conversion_sheet(
-                identifier='reference', code=code
-                )
-        if not _new_conversion_sheet:
-            return self.warning_could_not_fetch_conversion_sheet('reference', code)
-        self.set_credit_clock_conversion_sheet(conversion_sheet=_new_conversion_sheet)
-        log.info('Successfully switched credit clock conversion sheet by reference.')
-        return _new_conversion_sheet
-
     # GENERIC
 
 #   @pysnooper.snoop()
@@ -661,19 +646,17 @@ class CreditClock(Base):
                 )
         return minutes_spent
 
+    # SWITCHERS
+
     def switch_credit_clock_conversion_sheet(self, **kwargs):
         log.debug('')
-        if not kwargs.get('identifier') or not kwargs.get('code'):
-            return self.error_handler_switch_credit_clock_conversion_sheet(
-                    identifier=kwargs.get('identifier'),
-                    code=kwargs.get('code'),
-                    )
-        _handlers = {
-                'id': self.handle_switch_credit_clock_conversion_sheet_by_id,
-                'reference': self.handle_switch_credit_clock_conversion_sheet_by_ref,
-                }
-        _handle = _handlers[kwargs['identifier']](kwargs.get('code'))
-        return _handle
+        new_conversion_sheet = self.fetch_credit_clock_conversion_sheet_by_id(**kwargs)
+        if not new_conversion_sheet:
+            return self.warning_could_not_fetch_conversion_sheet_by_id(kwargs)
+        set_sheet = self.set_credit_clock_conversion_sheet(new_conversion_sheet)
+        if set_sheet:
+            log.info('Successfully switch credit clock conversion sheet by id.')
+        return new_conversion_sheet
 
     def switch_credit_clock_time_sheet(self, **kwargs):
         log.debug('')
@@ -693,11 +676,11 @@ class CreditClock(Base):
         log.debug('')
         if not kwargs.get('sheet'):
             return self.error_no_credit_clock_sheet_target_specified()
-        _handlers = {
-                    'time': self.switch_credit_clock_time_sheet,
-                    'conversion': self.switch_credit_clock_conversion_sheet,
-                }
-        return _handlers[kwargs['sheet']](**kwargs)
+        handlers = {
+            'time': self.switch_credit_clock_time_sheet,
+            'conversion': self.switch_credit_clock_conversion_sheet,
+        }
+        return handlers[kwargs['sheet']](**kwargs)
 
     # CREATORS
 
@@ -1263,6 +1246,19 @@ class CreditClock(Base):
 
     # ERRORS
 
+    def error_no_active_session_found(self, command_chain):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No active SqlAlchemy ORM session found. Command chain details : {}'\
+                     .format(command_chain),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_could_not_set_credit_clock_conversion_sheet(self, conversion_sheet):
+        log.error('Could not set credit clock conversion sheet {}.'.format(conversion_sheet))
+        return False
+
     def error_no_clock_state_check_type_specified(self):
         log.error('No clock state check type specified.')
         return False
@@ -1532,6 +1528,24 @@ class CreditClock(Base):
 
     # WARNINGS
 
+    def warning_could_not_fetch_conversion_sheet_by_id(self, command_chain):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Could not fetch conversion sheet by id. Command chain details : {}'\
+                       .format(command_chain),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
+
+    def warning_could_not_fetch_conversion_sheet_by_id_(self, command_chain):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Could not fetch conversion sheet by id. Command chain details {}'\
+                       .format(command_chaine),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
+
     def warning_could_not_clear_credit_clock_field(self):
         log.warning('Could not clear credit clock field.')
         return False
@@ -1619,4 +1633,42 @@ class CreditClock(Base):
 ###############################################################################
 # CODE DUMP
 ###############################################################################
+
+#       if not kwargs.get('identifier') or not kwargs.get('code'):
+#           return self.error_handler_switch_credit_clock_conversion_sheet(
+#                   identifier=kwargs.get('identifier'),
+#                   code=kwargs.get('code'),
+#                   )
+#       _handlers = {
+#               'id': self.handle_switch_credit_clock_conversion_sheet_by_id,
+#               'reference': self.handle_switch_credit_clock_conversion_sheet_by_ref,
+#               }
+#       _handle = _handlers[kwargs['identifier']](kwargs.get('code'))
+#       return _handle
+
+
+
+
+#   def handle_switch_credit_clock_conversion_sheet_by_id(self, code):
+#       log.debug('')
+#       _new_conversion_sheet = self.fetch_credit_clock_conversion_sheet(
+#               identifier='id', code=code
+#               )
+#       if not _new_conversion_sheet:
+#           return self.warning_could_not_fetch_conversion_sheet('id', code)
+#       self.set_credit_clock_conversion_sheet(conversion_sheet=_new_conversion_sheet)
+#       log.info('Successfully switch credit clock conversion sheet by id.')
+#       return _new_conversion_sheet
+
+#   def handle_switch_credit_clock_conversion_sheet_by_ref(self, code):
+#       log.debug('')
+#       _new_conversion_sheet = self.fetch_credit_clock_conversion_sheet(
+#               identifier='reference', code=code
+#               )
+#       if not _new_conversion_sheet:
+#           return self.warning_could_not_fetch_conversion_sheet('reference', code)
+#       self.set_credit_clock_conversion_sheet(conversion_sheet=_new_conversion_sheet)
+#       log.info('Successfully switched credit clock conversion sheet by reference.')
+#       return _new_conversion_sheet
+
 
