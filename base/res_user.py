@@ -606,17 +606,36 @@ class ResUser(Base):
 
     # ACTIONS
 
+    def action_switch_transfer_sheet(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('sheet_id'):
+            return self.error_no_transfer_sheet_id_found(kwargs)
+        log.info('Attempting to fetch user credit ewallet...')
+        credit_ewallet = self.fetch_user_credit_wallet()
+        if not credit_ewallet:
+            return self.error_could_not_fetch_user_credit_ewallet(kwargs)
+        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
+            kwargs, 'controller', 'action', 'sheet', 'identifier'
+        )
+        switch = credit_ewallet.main_controller(
+            controller='user', action='switch_sheet', sheet='transfer',
+            **sanitized_command_chain
+        )
+        if switch:
+            log.info('successfully switched credit ewallet transfer sheet.')
+        return switch
+
     def action_switch_credit_wallet(self, **kwargs):
         log.debug('')
         if not kwargs.get('ewallet_id'):
             return self.error_no_wallet_id_found()
-        log.info('Attempting to fetch user credit wallet...')
+        log.info('Attempting to fetch user credit ewallet...')
         ewallet = self.fetch_user_credit_ewallet_by_id(kwargs['ewallet_id'])
         if not ewallet:
             return self.warning_could_not_fetch_credit_wallet()
         switch = self.set_user_credit_wallet(credit_ewallet=ewallet)
         if switch:
-            log.info('Successfully switched credit wallet by id.')
+            log.info('Successfully switched credit ewallet by id.')
         return ewallet
 
     def action_create_credit_clock(self, **kwargs):
@@ -646,7 +665,7 @@ class ResUser(Base):
         )
         creation_values = self.fetch_credit_ewallet_creation_values(**kwargs)
         new_credit_wallet = self.create_credit_ewallet(
-            creation_values, active_session=active_session, **kwargs
+            creation_values, active_session=active_session, **sanitized_command_chain
         )
         active_session.add(new_credit_wallet)
         update_archive = self.update_user_credit_wallet_archive(new_credit_wallet)
@@ -927,7 +946,7 @@ class ResUser(Base):
                 'credit_wallet': self.action_switch_credit_wallet,
                 'credit_clock': self.action_switch_credit_clock,
                 'contact_list': self.action_switch_contact_list,
-#               'transfer_sheet':
+                'transfer_sheet': self.action_switch_transfer_sheet,
 #               'invoice_sheet':
 #               'conversion_sheet':
 #               'time_sheet':
@@ -1062,6 +1081,24 @@ class ResUser(Base):
         return False
 
     # ERRORS
+
+    def error_no_transfer_sheet_id_found(self, command_chain):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No transfer sheet id found. Command chain details : {}'\
+                     .format(command_chain),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_could_not_fetch_user_credit_ewallet(self, command_chain):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Could not fetch active user credit ewallet. Command chain details : {}'\
+                     .format(command_chain),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
 
     def error_could_not_fetch_user_credit_wallet(self, command_chain):
         command_chain_reply = {

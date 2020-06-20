@@ -377,6 +377,33 @@ class EWallet(Base):
     [ NOTE ]: Command chain responses are formatted here.
     '''
 
+    def action_switch_transfer_sheet(self, **kwargs):
+        log.debug('')
+        active_user = self.fetch_active_session_user()
+        if not active_user:
+            return self.error_no_session_active_user_found()
+        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
+            kwargs, 'ctype', 'action', 'target'
+        )
+        switch_transfer_sheet = active_user.user_controller(
+            ctype='action', action='switch', target='transfer_sheet',
+            **sanitized_command_chain
+        )
+        if not switch_transfer_sheet or isinstance(switch_transfer_sheet, dict) and \
+                switch_transfer_sheet.get('failed'):
+            kwargs['active_session'].rollback()
+            return self.warning_could_not_switch_transfer_sheet(
+                active_user.fetch_user_name(), kwargs
+            )
+        kwargs['active_session'].commit()
+        log.info('Successfully switched tramsfer sheet.')
+        command_chain_response = {
+            'failed': False,
+            'transfer_sheet': switch_transfer_sheet.fetch_transfer_sheet_id(),
+            'sheet_data': switch_transfer_sheet.fetch_transfer_sheet_values(),
+        }
+        return command_chain_response
+
     def action_switch_credit_clock(self, **kwargs):
         log.debug('')
         active_user = self.fetch_active_session_user()
@@ -1354,15 +1381,10 @@ class EWallet(Base):
         contact_list = self.fetch_active_session_contact_list()
         if not contact_list:
             return self.error_no_session_contact_list_found()
-        contact_list_data = contact_list.fetch_contact_list_values()
-        contact_list_record_map = {
-            item.fetch_record_id(): item.fetch_record_user_name() \
-                for item in contact_list_data['records']
-        }
-        log.debug(contact_list_data)
         return {
-            'contact_list': contact_list_data['id'],
-            'contact_records': contact_list_record_map,
+            'failed': False,
+            'contact_list': contact_list.fetch_contact_list_id(),
+            'list_data': contact_list.fetch_contact_list_values(),
         }
 
 #   @pysnooper.snoop()
@@ -1919,6 +1941,13 @@ class EWallet(Base):
 
     # HANDLERS
 
+    def handle_user_action_switch_transfer_sheet(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('sheet_id'):
+            return self.error_no_user_action_switch_transfer_sheet_id_specified(kwargs)
+        switch_transfer_sheet = self.action_switch_transfer_sheet(**kwargs)
+        return switch_transfer_sheet
+
     def handle_user_action_switch_credit_clock(self, **kwargs):
         log.debug('')
         if not kwargs.get('clock_id'):
@@ -1940,7 +1969,7 @@ class EWallet(Base):
         handlers = {
             'credit_ewallet': self.handle_user_action_switch_credit_ewallet,
             'credit_clock': self.handle_user_action_switch_credit_clock,
-#           'transfer_sheet':
+            'transfer_sheet': self.handle_user_action_switch_transfer_sheet,
 #           'invoice_sheet':
 #           'conversion_sheet':
 #           'time_sheet':
@@ -2307,7 +2336,7 @@ class EWallet(Base):
         log.debug('')
         if not kwargs.get('action'):
             return self.error_no_user_action_specified()
-        _handlers = {
+        handlers = {
             'login': self.handle_user_action_login,
             'logout': self.handle_user_action_logout,
             'create': self.handle_user_action_create,
@@ -2318,7 +2347,7 @@ class EWallet(Base):
             'edit': self.handle_user_action_edit,
             'switch': self.handle_user_action_switch,
         }
-        return _handlers[kwargs['action']](**kwargs)
+        return handlers[kwargs['action']](**kwargs)
 
     def ewallet_user_event_controller(self, **kwargs):
         '''
@@ -2988,6 +3017,15 @@ class EWallet(Base):
         return False
 
     # ERRORS
+
+    def error_no_user_action_switch_transfer_sheet_id_specified(self, command_chain):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No user action switch transfer sheet id specified. Command chain details : {}'\
+                     .format(command_chain),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
 
     def error_no_user_action_switch_credit_clock_id_specified(self, command_chain):
         command_chain_response = {

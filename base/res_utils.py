@@ -19,12 +19,13 @@ class ResUtils():
     _SessionFactory = sessionmaker(bind=engine)
 
     def remove_tags_from_command_chain(self, command_chain, *args):
+        sanitized_command_chain = command_chain.copy()
         for item in args:
             try:
-                del command_chain[item]
+                del sanitized_command_chain[item]
             except KeyError:
                 continue
-        return command_chain
+        return sanitized_command_chain
 
     #@pysnooper.snoop('logs/ewallet.log')
     def create_system_user(self, ewallet_session):
