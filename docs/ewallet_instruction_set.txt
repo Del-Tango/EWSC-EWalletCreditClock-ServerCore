@@ -487,6 +487,7 @@
         * [ NOK ]: {
             'failed': True,
             'error': <msg>,
+            'warning': <msg>,
         }
 
 * User action Create Contact List:
@@ -504,8 +505,27 @@
         * [ NOK ]: {
             'failed': True,
             'error': <msg>,
+            'warning': <msg>,
         }
 
+* User action Switch Credit EWallet:
+    * Controller Instruction Set:
+        session_manager_controller(
+            controller='client', ctype='action', action='switch', switch='credit',
+            credit='ewallet', ewallet_id=<id>, client_id=<client-id>,
+            session_token=<token>
+        )
+    * Returns:
+        * [ OK  ]: {
+            'failed': False,
+            'credit_ewallet': <id>,
+            'ewallet_data': <credit-ewallet-data>,
+        }
+        * [ NOK ]: {
+            'failed': True,
+            'error': <msg>,
+            'warning': <msg>,
+        }
 
 ################################################################################
 # EWallet Session (Command Chain)

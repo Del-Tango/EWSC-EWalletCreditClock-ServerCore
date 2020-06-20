@@ -619,6 +619,20 @@ class EWalletSessionManager():
     [ NOTE ]: SqlAlchemy ORM sessions are fetched here.
     '''
 
+    def action_switch_credit_ewallet(self, ewallet_session, instruction_set):
+        log.debug('')
+        orm_session = ewallet_session.fetch_active_session()
+        sanitized_instruction_set = res_utils.remove_tags_from_command_chain(
+            instruction_set, 'controller', 'ctype', 'action', 'switch', 'credit'
+        )
+        switch_credit_ewallet = ewallet_session.ewallet_controller(
+            controller='user', ctype='action', action='switch', switch='credit_ewallet',
+            active_session=orm_session, **sanitized_instruction_set
+        )
+        return self.warning_could_not_switch_credit_ewallet(
+            ewallet_session, instruction_set
+        ) if switch_credit_ewallet.get('failed') else switch_credit_ewallet
+
     def action_new_contact_list(self, ewallet_session, instruction_set):
         log.debug('')
         orm_session = ewallet_session.fetch_active_session()
@@ -1142,6 +1156,44 @@ class EWalletSessionManager():
     '''
     [ NOTE ]: Instruction set validation and sanitizations are performed here.
     '''
+
+    def handle_client_action_switch_credit_ewallet(self, **kwargs):
+        log.debug('')
+        instruction_set_validation = self.validate_instruction_set(kwargs)
+        if not instruction_set_validation:
+            return False
+        ewallet = self.fetch_ewallet_session_for_client_action_using_instruction_set(
+            kwargs
+        )
+        if not ewallet:
+            return False
+        switch_credit_ewallet = self.action_switch_credit_ewallet(
+            ewallet['ewallet_session'], ewallet['sanitized_instruction_set']
+        )
+        return switch_credit_ewallet
+
+    def handle_client_action_switch_credit(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('credit'):
+            return self.error_no_client_action_switch_credit_target_specified(kwargs)
+        handlers = {
+            'ewallet': self.handle_client_action_switch_credit_ewallet,
+#           'clock':
+        }
+        return handlers[kwargs['credit']](**kwargs)
+
+    def handle_client_action_switch(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('switch'):
+            return self.error_no_client_action_switch_target_specified(kwargs)
+        handlers = {
+            'credit': self.handle_client_action_switch_credit,
+#           'transfer_list':
+#           'invoice_list':
+#           'conversion_list':
+#           'time_list':
+        }
+        return handlers[kwargs['switch']](**kwargs)
 
     def handle_client_action_new_contact_list(self, **kwargs):
         log.debug('')
@@ -2070,6 +2122,7 @@ class EWalletSessionManager():
                 'pay': self.handle_client_action_pay,
                 'transfer': self.handle_client_action_transfer,
                 'edit': self.handle_client_action_edit,
+                'switch': self.handle_client_action_switch,
                 }
         return _handlers[kwargs['action']](**kwargs)
 
@@ -2174,6 +2227,15 @@ class EWalletSessionManager():
         return handlers[kwargs['controller']](**kwargs)
 
     # WARNINGS
+
+    def warning_could_not_switch_credit_ewallet(self, ewallet_session, instruction_set):
+        instruction_set_response = {
+            'failed': True,
+            'warning': 'Something went wrong. Could not switch credit ewallet in ewallet session {}. '\
+                       'Instruction set details : {}'.format(ewallet_session, instruction_set),
+        }
+        log.warning(instruction_set_response['warning'])
+        return instruction_set_response
 
     def warning_could_not_create_new_contact_list(self, ewallet_session, instruction_set):
         instruction_set_response = {
@@ -2413,6 +2475,24 @@ class EWalletSessionManager():
         return False
 
     # ERRORS
+
+    def error_no_client_action_switch_target_specified(self, instruction_set):
+        instruction_set_response = {
+            'failed': True,
+            'error': 'No client action switch target specified. Instruction set details : {}'\
+                     .format(instruction_set),
+        }
+        log.error(instruction_set_response['error'])
+        return instruction_set_response
+
+    def error_no_client_action_switch_credit_target_specified(self, instruction_set):
+        instruction_set_response = {
+            'failed': True,
+            'error': 'No client action switch credit target specified. Instruction set details : {}'\
+                     .format(instruction_set),
+        }
+        log.error(instruction_set_response['error'])
+        return instruction_set_response
 
     def error_no_client_action_new_time_target_specified(self, instruction_set):
         instruction_set_response = {
@@ -3263,6 +3343,16 @@ class EWalletSessionManager():
         print(str(_create) + '\n')
         return _create
 
+    def test_user_action_switch_credit_ewallet(self, **kwargs):
+        print('[ * ]: User action Switch Credit EWallet')
+        _switch = self.session_manager_controller(
+            controller='client', ctype='action', action='switch', switch='credit',
+            credit='ewallet', ewallet_id=kwargs['ewallet_id'],
+            client_id=kwargs['client_id'], session_token=kwargs['session_token'],
+        )
+        print(str(_switch) + '\n')
+        return _switch
+
     def test_session_manager_controller(self, **kwargs):
         print('[ TEST ] Session Manager')
 #       open_in_port = self.test_open_instruction_listener_port()
@@ -3396,6 +3486,10 @@ class EWalletSessionManager():
 #       )
         create_contact_list = self.test_user_action_create_contact_list(
             client_id=client_id['client_id'], session_token=session_token['session_token'],
+        )
+        switch_credit_ewallet = self.test_user_action_switch_credit_ewallet(
+            client_id=client_id['client_id'], session_token=session_token['session_token'],
+            ewallet_id=2
         )
 
 if __name__ == '__main__':

@@ -86,6 +86,16 @@ class ResUser(Base):
 
     # FETCHERS
 
+    def fetch_user_credit_ewallet_by_id(self, ewallet_id, **kwargs):
+        log.debug('')
+        active_session = kwargs.get('active_session') or \
+                self.fetch_user_active_ewallet_session().fetch_active_session()
+        ewallet = list(
+            active_session.query(CreditEWallet).filter_by(wallet_id=ewallet_id)
+        )
+        return self.warning_no_credit_ewallet_found_by_id(ewallet_id) if not \
+            ewallet else ewallet[0]
+
     def fetch_credit_ewallet_creation_values(self, **kwargs):
         log.debug('')
         creation_values = {
@@ -435,11 +445,11 @@ class ResUser(Base):
 
     def set_user_credit_wallet(self, **kwargs):
         log.debug('')
-        if not kwargs.get('credit_wallet'):
+        if not kwargs.get('credit_ewallet'):
             return self.error_no_credit_wallet_found()
-        self.user_credit_wallet = kwargs['credit_wallet']
+        self.user_credit_wallet = kwargs['credit_ewallet']
         self.set_user_write_date()
-        log.info('Successfully set user credit wallet.')
+        log.info('Successfully set user credit ewallet.')
         return True
 
     def set_user_contact_list(self, **kwargs):
@@ -462,9 +472,9 @@ class ResUser(Base):
 
     def set_user_credit_wallet(self, **kwargs):
         log.debug('')
-        if not kwargs.get('wallet'):
+        if not kwargs.get('credit_ewallet'):
             return self.error_no_credit_wallet_found()
-        self.user_credit_wallet = kwargs['wallet']
+        self.user_credit_wallet = [kwargs['credit_ewallet']]
         self.set_user_write_date()
         log.info('Successfully set user credit wallet.')
         return True
@@ -596,6 +606,19 @@ class ResUser(Base):
 
     # ACTIONS
 
+    def action_switch_credit_wallet(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('ewallet_id'):
+            return self.error_no_wallet_id_found()
+        log.info('Attempting to fetch user credit wallet...')
+        ewallet = self.fetch_user_credit_ewallet_by_id(kwargs['ewallet_id'])
+        if not ewallet:
+            return self.warning_could_not_fetch_credit_wallet()
+        switch = self.set_user_credit_wallet(credit_ewallet=ewallet)
+        if switch:
+            log.info('Successfully switched credit wallet by id.')
+        return ewallet
+
     def action_create_credit_clock(self, **kwargs):
         log.debug('')
         credit_wallet = self.fetch_user_credit_wallet()
@@ -723,19 +746,6 @@ class ResUser(Base):
         kwargs['active_session'].commit()
         log.info('Successfully created new user contact list.')
         return _new_contact_list
-
-    def action_switch_credit_wallet(self, **kwargs):
-        log.debug('')
-        if not kwargs.get('wallet_id'):
-            return self.error_no_wallet_id_found()
-        log.info('Attempting to fetch user credit wallet...')
-        _wallet = self.fetch_user_credit_wallet_by_id(kwargs['wallet_id'])
-        if not _wallet:
-            return self.warning_could_not_fetch_credit_wallet()
-        _switch = self.set_user_credit_wallet(_wallet)
-        if _switch:
-            log.info('Successfully switched credit wallet by id.')
-        return _switch
 
     def action_switch_credit_clock(self, **kwargs):
         log.debug('')
@@ -913,6 +923,10 @@ class ResUser(Base):
                 'credit_wallet': self.action_switch_credit_wallet,
                 'credit_clock': self.action_switch_credit_clock,
                 'contact_list': self.action_switch_contact_list,
+#               'transfer_sheet':
+#               'invoice_sheet':
+#               'conversion_sheet':
+#               'time_sheet':
                 }
         return _handlers[kwargs['target']](**kwargs)
 
@@ -978,6 +992,10 @@ class ResUser(Base):
         return controllers[kwargs['ctype']](**kwargs)
 
     # WARNINGS
+
+    def warning_no_credit_ewallet_found_by_id(self, ewallet_id):
+        log.warning('No credit ewallet found by id {}.'.format(ewallet_id))
+        return False
 
     def warning_credit_transaction_record_share_failure(self, **kwargs):
         log.warning(

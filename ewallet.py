@@ -377,14 +377,39 @@ class EWallet(Base):
     [ NOTE ]: Command chain responses are formatted here.
     '''
 
-    # TODO
+    def action_switch_credit_ewallet(self, **kwargs):
+        log.debug('')
+        active_user = self.fetch_active_session_user()
+        if not active_user:
+            return self.error_no_session_active_user_found()
+        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
+            kwargs, 'ctype', 'action', 'target'
+        )
+        switch_credit_ewallet = active_user.user_controller(
+            ctype='action', action='switch', target='credit_wallet',
+            **sanitized_command_chain,
+        )
+        if not switch_credit_ewallet:
+            kwargs['active_session'].rollback()
+            return self.warning_could_not_switch_credit_ewallet(
+                active_user.fetch_user_name(), kwargs
+            )
+        kwargs['active_session'].commit()
+        log.info('Successfully switched credit ewallet.')
+        command_chain_response = {
+            'failed': False,
+            'credit_ewallet': switch_credit_ewallet.fetch_credit_ewallet_id(),
+            'ewallet_data': switch_credit_ewallet.fetch_credit_ewallet_values(),
+        }
+        return command_chain_response
+
     def action_create_new_contact_list(self, **kwargs):
         '''
         [ NOTE   ]: User action 'create new contact list', accessible from external api calls.
         [ INPUT  ]: reference=<ref>
         [ RETURN ]: (ContactList object | False)
         '''
-        log.debug('TODO')
+        log.debug('')
         active_user = self.fetch_active_session_user()
         if not active_user:
             return self.error_no_session_active_user_found()
@@ -1867,6 +1892,27 @@ class EWallet(Base):
 
     # HANDLERS
 
+    def handle_user_action_switch_credit_ewallet(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('ewallet_id'):
+            return self.error_no_user_action_switch_credit_ewallet_id_specified(kwargs)
+        switch_credit_ewallet = self.action_switch_credit_ewallet(**kwargs)
+        return switch_credit_ewallet
+
+    def handle_user_action_switch(self, **kwargs):
+        log.debug('TODO')
+        if not kwargs.get('switch'):
+            return self.error_no_user_action_switch_target_specified(kwargs)
+        handlers = {
+            'credit_ewallet': self.handle_user_action_switch_credit_ewallet,
+#           'credit_clock':
+#           'transfer_sheet':
+#           'invoice_sheet':
+#           'conversion_sheet':
+#           'time_sheet':
+        }
+        return handlers[kwargs['switch']](**kwargs)
+
     def handle_user_action_edit_account_user_name(self, **kwargs):
         log.debug('')
         if not kwargs.get('user_name'):
@@ -1914,10 +1960,10 @@ class EWallet(Base):
         }
         return self.warning_no_user_account_values_edited(kwargs) if True not in \
             edit_value_set.values() else {
-            'failed': False,
-            'account': user.fetch_user_name(),
-            'edit': edit_value_set,
-            'account_data': user.fetch_user_values(),
+                'failed': False,
+                'account': user.fetch_user_name(),
+                'edit': edit_value_set,
+                'account_data': user.fetch_user_values(),
             }
 
     def handle_user_action_edit(self, **kwargs):
@@ -2236,6 +2282,7 @@ class EWallet(Base):
             'view': self.handle_user_action_view,
             'unlink': self.handle_user_action_unlink,
             'edit': self.handle_user_action_edit,
+            'switch': self.handle_user_action_switch,
         }
         return _handlers[kwargs['action']](**kwargs)
 
@@ -2630,6 +2677,24 @@ class EWallet(Base):
 
     # ERRORS
 
+    def error_no_user_action_switch_target_specified(self, command_chain):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No user action switch target specified. Command chain details : {}'\
+                     .format(command_chain),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_no_user_action_switch_credit_ewallet_id_specified(self, command_chain):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No user action switch credit ewallet id specified. Command chain details : {}'\
+                     .format(command_chain),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
     def error_could_not_fetch_active_session_credit_wallet(self, command_chain):
         command_chain_response = {
             'failed': True,
@@ -2952,6 +3017,15 @@ class EWallet(Base):
         return False
 
     # WARNINGS
+
+    def warning_could_not_switch_credit_ewallet(self, user_name, command_chain):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Something went wrong. Could not switch credit ewallet for user {}. '\
+                       'Command chain details : {}'.format(user_name, command_chain),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
 
     def warning_could_not_create_conversion_sheet(self, command_chain):
         command_chain_response = {
