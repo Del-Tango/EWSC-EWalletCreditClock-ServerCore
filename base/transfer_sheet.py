@@ -394,15 +394,19 @@ class CreditTransferSheet(Base):
         log.info('Successfully added new transfer record.')
         return record
 
-    # TODO - Apply ORM
     def remove_transfer_sheet_record(self, **kwargs):
         log.debug('')
         if not kwargs.get('record_id'):
             return self.error_no_transfer_record_id_found()
-        _unlink = self.records.pop(kwargs['record_id'])
-        if _unlink:
-            log.info('Successfully removed transfer sheet record.')
-        return _unlink
+        try:
+            kwargs['active_session'].query(
+                CreditTransferSheetRecord
+            ).filter_by(
+                record_id=kwargs['record_id']
+            ).delete()
+        except:
+            return self.error_could_not_remove_transfer_sheet_record(kwargs)
+        return True
 
     def update_records(self, record):
         log.debug('')
@@ -452,6 +456,15 @@ class CreditTransferSheet(Base):
         return _handle
 
     # ERRORS
+
+    def error_could_not_remove_transfer_sheet_record(self, command_chain):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Could not remove transfer sheet record. Command chain details : {}'\
+                     .format(command_chain),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
 
     def error_could_not_update_transfer_sheet_records(self, record):
         log.error('Could not update transfer sheet records with {}.'.format(record))

@@ -636,6 +636,25 @@
             'warning': <msg>,
         }
 
+* User action Unlink Transfer Record:
+    * Controller Instruction Set:
+        session_manager_controller(
+            controller='client', ctype='action', action='unlink', unlink='transfer',
+            transfer='record', record_id=<id>, client_id=<client-id>,
+            session_token=<token>
+        )
+    * Returns:
+        * [ OK  ]: {
+            'failed': False,
+            'transfer_sheet': <id>,
+            'transfer_record': <id>,
+        }
+        * [ NOK ]: {
+            'failed': True,
+            'error': <msg>,
+            'warning': <msg>,
+        }
+
 ################################################################################
 # EWallet Session (Command Chain)
 ################################################################################

@@ -619,6 +619,20 @@ class EWalletSessionManager():
     [ NOTE ]: SqlAlchemy ORM sessions are fetched here.
     '''
 
+    def action_unlink_transfer_sheet_record(self, ewallet_session, instruction_set):
+        log.debug('')
+        orm_session = ewallet_session.fetch_active_session()
+        sanitized_instruction_set = res_utils.remove_tags_from_command_chain(
+            instruction_set, 'controller', 'ctype', 'action', 'unlink', 'transfer'
+        )
+        unlink_transfer_record = ewallet_session.ewallet_controller(
+            controller='user', ctype='action', action='unlink', unlink='transfer',
+            transfer='record', active_session=orm_session, **sanitized_instruction_set
+        )
+        return self.warning_could_not_unlink_transfer_sheet_record(
+            ewallet_session, instruction_set
+        ) if unlink_transfer_record.get('failed') else unlink_transfer_record
+
     def action_switch_contact_list(self, ewallet_session, instruction_set):
         log.debug('')
         orm_session = ewallet_session.fetch_active_session()
@@ -1240,6 +1254,45 @@ class EWalletSessionManager():
     '''
     [ NOTE ]: Instruction set validation and sanitizations are performed here.
     '''
+
+    def handle_client_action_unlink_transfer_record(self, **kwargs):
+        log.debug('')
+        instruction_set_validation = self.validate_instruction_set(kwargs)
+        if not instruction_set_validation:
+            return False
+        ewallet = self.fetch_ewallet_session_for_client_action_using_instruction_set(
+            kwargs
+        )
+        if not ewallet:
+            return False
+        unlink_transfer_record = self.action_unlink_transfer_sheet_record(
+            ewallet['ewallet_session'], ewallet['sanitized_instruction_set']
+        )
+        return unlink_transfer_record
+
+    def handle_client_action_unlink_transfer(self, **kwargs):
+        log.debug('TODO')
+        if not kwargs.get('transfer'):
+            return self.error_no_client_action_unlink_transfer_target_specified(kwargs)
+        handlers = {
+#           'list':
+            'record': self.handle_client_action_unlink_transfer_record,
+        }
+        return handlers[kwargs['transfer']](**kwargs)
+
+    def handle_client_action_unlink(self, **kwargs):
+        log.debug('TODO')
+        if not kwargs.get('unlink'):
+            return self.error_no_client_action_unlink_target_specified(kwargs)
+        handlers = {
+            'transfer': self.handle_client_action_unlink_transfer,
+#           'invoice':
+#           'conversion':
+#           'time':
+#           'contact':
+#           'credit':
+        }
+        return handlers[kwargs['unlink']](**kwargs)
 
     def handle_client_action_switch_contact_list(self, **kwargs):
         log.debug('')
@@ -2281,25 +2334,26 @@ class EWalletSessionManager():
         log.debug('')
         if not kwargs.get('action'):
             return self.error_no_client_session_manager_action_specified()
-        _handlers = {
-                'new': self.handle_client_action_new,
-#               'scrape': self.handle_client_action_scrape,
-#               'search': self.handle_client_action_search,
-                'view': self.handle_client_action_view,
-                'request': self.handle_client_action_request,
-                'login': self.handle_client_action_login,
-                'supply': self.handle_client_action_supply,
-                'convert': self.handle_client_action_convert,
-                'start': self.handle_client_action_start,
-                'pause': self.handle_client_action_pause,
-                'resume': self.handle_client_action_resume,
-                'stop': self.handle_client_action_stop,
-                'pay': self.handle_client_action_pay,
-                'transfer': self.handle_client_action_transfer,
-                'edit': self.handle_client_action_edit,
-                'switch': self.handle_client_action_switch,
-                }
-        return _handlers[kwargs['action']](**kwargs)
+        handlers = {
+            'new': self.handle_client_action_new,
+#           'scrape': self.handle_client_action_scrape,
+#           'search': self.handle_client_action_search,
+            'view': self.handle_client_action_view,
+            'request': self.handle_client_action_request,
+            'login': self.handle_client_action_login,
+            'supply': self.handle_client_action_supply,
+            'convert': self.handle_client_action_convert,
+            'start': self.handle_client_action_start,
+            'pause': self.handle_client_action_pause,
+            'resume': self.handle_client_action_resume,
+            'stop': self.handle_client_action_stop,
+            'pay': self.handle_client_action_pay,
+            'transfer': self.handle_client_action_transfer,
+            'edit': self.handle_client_action_edit,
+            'switch': self.handle_client_action_switch,
+            'unlink': self.handle_client_action_unlink,
+        }
+        return handlers[kwargs['action']](**kwargs)
 
     def system_session_manager_action_controller(self, **kwargs):
         '''
@@ -2402,6 +2456,15 @@ class EWalletSessionManager():
         return handlers[kwargs['controller']](**kwargs)
 
     # WARNINGS
+
+    def warning_could_not_unlink_transfer_sheet_record(self, ewallet_session, instruction_set):
+        instruction_set_response = {
+            'failed': True,
+            'warning': 'Something went wrong. Could not unlink transfer sheet record in ewallet session {}. '\
+                       'Instruction set details : {}'.format(ewallet_session, instruction_set),
+        }
+        log.warning(instruction_set_response['warning'])
+        return instruction_set_response
 
     def warning_could_not_switch_contact_list(self, ewallet_session, instruction_set):
         instruction_set_response = {
@@ -2704,6 +2767,24 @@ class EWalletSessionManager():
         return False
 
     # ERRORS
+
+    def error_no_client_action_unlink_target_specified(self, instruction_set):
+        instruction_set_response = {
+            'failed': True,
+            'error': 'No client action unlink target specified. Instruction set details : {}'\
+                     .format(instruction_set),
+        }
+        log.error(instruction_set_response['error'])
+        return instruction_set_response
+
+    def error_no_client_action_unlink_transfer_target_specified(self, instruction_set):
+        instruction_set_response = {
+            'failed': True,
+            'error': 'No client action unlink transfer target specified. Instruction set details : {}'\
+                     .format(instruction_set),
+        }
+        log.error(instruction_set_response['error'])
+        return instruction_set_response
 
     def error_no_client_action_switch_target_specified(self, instruction_set):
         instruction_set_response = {
@@ -3642,6 +3723,15 @@ class EWalletSessionManager():
         print(str(_switch) + '\n')
         return _switch
 
+    def test_user_action_unlink_transfer_record(self, **kwargs):
+        print('[ * ]: User action Unlink Transfer Record')
+        _unlink = self.session_manager_controller(
+            controller='client', ctype='action', action='unlink', unlink='transfer',
+            transfer='record', record_id=kwargs['record_id'],
+            client_id=kwargs['client_id'], session_token=kwargs['session_token']
+        )
+        print(str(_unlink) + '\n')
+        return _unlink
 
     def test_session_manager_controller(self, **kwargs):
         print('[ TEST ] Session Manager')
@@ -3804,6 +3894,10 @@ class EWalletSessionManager():
         switch_contact_list = self.test_user_action_switch_contact_list(
             client_id=client_id['client_id'], session_token=session_token['session_token'],
             list_id=2
+        )
+        unlink_transfer_record = self.test_user_action_unlink_transfer_record(
+            client_id=client_id['client_id'], session_token=session_token['session_token'],
+            record_id=2
         )
 
 if __name__ == '__main__':

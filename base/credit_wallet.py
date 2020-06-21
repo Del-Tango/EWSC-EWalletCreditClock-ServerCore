@@ -486,18 +486,6 @@ class CreditEWallet(Base):
         }
         return handlers[kwargs['conversion']](**kwargs)
 
-    def use_credits(self, **kwargs):
-        log.debug('')
-        if not kwargs.get('credits') or not kwargs.get('used_on'):
-            return self.error_handler_use_credits(
-                credits=kwargs.get('credits'),
-                used_on=kwargs.get('used_on'),
-            )
-        log.info('Attempting to extract credits from wallet...')
-        return self.system_controller(
-            action='extract', credits=kwargs['credits'],
-        )
-
     # INTEROGATORS
 
     def interogate_credit_wallet_credits(self, **kwargs):
@@ -533,16 +521,6 @@ class CreditEWallet(Base):
         return False if not credit_clock else credit_clock.user_controller(
                 action='interogate', target=kwargs.get('target'),
                 )
-
-    def interogate_credits(self, **kwargs):
-        log.debug('')
-        if not kwargs.get('interogate'):
-            return self.error_credit_interogation_target_not_found()
-        _handlers = {
-                'credit_wallet': self.interogate_credit_wallet,
-                'credit_clock': self.interogate_credit_clock,
-                }
-        return _handlers[kwargs['interogate']](**kwargs)
 
     # SWITCHES
 
@@ -603,27 +581,6 @@ class CreditEWallet(Base):
             log.info('Successfully switched transfer sheet by id.')
         return self.warning_could_not_switch_credit_ewallet_transfer_sheet(kwargs) \
             if not set_sheet else new_transfer_sheet
-
-    def switch_credit_wallet_sheet(self, **kwargs):
-        log.debug('')
-        if not kwargs.get('sheet'):
-            return self.error_no_credit_wallet_sheet_target_specified()
-        handlers = {
-            'transfer': self.switch_credit_wallet_transfer_sheet,
-            'invoice': self.switch_credit_wallet_invoice_sheet,
-            'conversion': self.switch_credit_wallet_clock_conversion_sheet,
-            'time': self.switch_credit_wallet_clock_time_sheet,
-        }
-        return handlers[kwargs['sheet']](**kwargs)
-
-    def switch_credit_wallet_clock(self, **kwargs):
-        log.debug('')
-        if not kwargs.get('clock_id'):
-            return self.error_no_credit_clock_id_found()
-        clock = self.handle_switch_credit_wallet_clock_by_id(code=kwargs['clock_id'], **kwargs)
-        if not clock:
-            return self.warning_could_not_switch_credit_clock(kwargs)
-        return clock
 
     # CREATORS
 
@@ -728,7 +685,98 @@ class CreditEWallet(Base):
         }
         return handlers[kwargs['sheet']](**kwargs)
 
+    # ACTIONS
+
+    def action_unlink_transfer(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('transfer'):
+            return self.error_no_credit_ewallet_unlink_transfer_target_specified(kwargs)
+        handlers = {
+#           'list':
+            'record': self.unlink_transfer_record,
+        }
+        return handlers[kwargs['transfer']](**kwargs)
+
+    def action_unlink(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('unlink'):
+            return self.error_no_credit_ewallet_unlink_target_specified(kwargs)
+        handlers = {
+            'transfer': self.action_unlink_transfer,
+#           'invoice':
+#           'conversion':
+#           'time':
+#           'clock':
+        }
+        return handlers[kwargs['unlink']](**kwargs)
+
+    def action_interogate_credits(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('interogate'):
+            return self.error_credit_interogation_target_not_found()
+        _handlers = {
+                'credit_wallet': self.interogate_credit_wallet,
+                'credit_clock': self.interogate_credit_clock,
+                }
+        return _handlers[kwargs['interogate']](**kwargs)
+
+    def action_switch_credit_wallet_sheet(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('sheet'):
+            return self.error_no_credit_wallet_sheet_target_specified()
+        handlers = {
+            'transfer': self.switch_credit_wallet_transfer_sheet,
+            'invoice': self.switch_credit_wallet_invoice_sheet,
+            'conversion': self.switch_credit_wallet_clock_conversion_sheet,
+            'time': self.switch_credit_wallet_clock_time_sheet,
+        }
+        return handlers[kwargs['sheet']](**kwargs)
+
+    def action_switch_credit_wallet_clock(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('clock_id'):
+            return self.error_no_credit_clock_id_found()
+        clock = self.handle_switch_credit_wallet_clock_by_id(code=kwargs['clock_id'], **kwargs)
+        if not clock:
+            return self.warning_could_not_switch_credit_clock(kwargs)
+        return clock
+
+    def action_use_credits(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('credits') or not kwargs.get('used_on'):
+            return self.error_handler_use_credits(
+                credits=kwargs.get('credits'),
+                used_on=kwargs.get('used_on'),
+            )
+        log.info('Attempting to extract credits from wallet...')
+        return self.system_controller(
+            action='extract', credits=kwargs['credits'],
+        )
+
     # UNLINKERS
+
+    def unlink_transfer_record(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('record_id'):
+            return self.error_transfer_record_id_not_found(kwargs)
+        log.info('Attempting to fetch transfer sheet...')
+        transfer_sheet = self.fetch_credit_ewallet_transfer_sheet()
+        if not transfer_sheet:
+            return self.warning_could_not_fetch_transfer_sheet(kwargs)
+        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
+            kwargs, 'action',
+        )
+        unlink = transfer_sheet.credit_transfer_sheet_controller(
+            action='remove', **sanitized_command_chain
+        )
+        if not unlink or isinstance(unlink, dict) and unlink.get('failed'):
+            return self.warning_could_not_unlink_transfer_record(kwargs)
+        command_chain_response = {
+            'failed': False,
+            'transfer_sheet': transfer_sheet.fetch_transfer_sheet_id(),
+            'transfer_record': kwargs['record_id'],
+        }
+        return command_chain_response
 
     def unlink_transfer_sheet(self, **kwargs):
         log.debug('')
@@ -817,10 +865,11 @@ class CreditEWallet(Base):
         if not kwargs.get('action'):
             return self.error_no_user_controller_action_specified()
         handlers = {
-            'use': self.use_credits,
-            'interogate': self.interogate_credits,
-            'switch_sheet': self.switch_credit_wallet_sheet,
-            'switch_clock': self.switch_credit_wallet_clock,
+            'use': self.action_use_credits,
+            'interogate': self.action_interogate_credits,
+            'unlink': self.action_unlink,
+            'switch_sheet': self.action_switch_credit_wallet_sheet,
+            'switch_clock': self.action_switch_credit_wallet_clock,
         }
         handle = handlers[kwargs['action']](**kwargs)
         if handle and kwargs['action'] != 'interogate':
@@ -839,6 +888,33 @@ class CreditEWallet(Base):
         return handlers[kwargs['controller']](**kwargs)
 
     # WARNINGS
+
+    def warning_could_not_unlink_transfer_record(self, command_chain):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Something went wrong. Could not unlink transfer sheet record. '\
+                       'Command chain details : {}'.format(command_chain),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
+
+    def warning_could_not_unlink_transfer_sheet_record(self, command_chain):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Something went wrong. Could not unlink transfer sheet record. '\
+                       'Command chain details : {}'.format(command_chain),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
+
+    def warning_could_not_fetch_transfer_sheet(self, command_chain, *args, **kwargs):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Could not fetch transfer sheet. Command chain details : {}'\
+                       .format(command_chain),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
 
     def warning_could_not_switch_credit_ewallet_time_sheet(self, command_chain):
         command_chain_response = {
@@ -934,13 +1010,6 @@ class CreditEWallet(Base):
                 )
         return False
 
-    def warning_could_not_fetch_transfer_sheet(self, search_code, code):
-        log.warning(
-                'Something went wrong. '
-                'Could not fetch transfer sheet by %s %s.', search_code, code
-                )
-        return False
-
     def warning_could_not_fetch_invoice_sheet(self, search_code, code):
         log.warning(
                 'Something went wrong. '
@@ -949,6 +1018,24 @@ class CreditEWallet(Base):
         return False
 
     # ERRORS
+
+    def error_no_credit_ewallet_unlink_transfer_target_specified(self, command_chain):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No credit ewallet unlink transfer target specified. Command chain details : {}'\
+                     .format(command_chain),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_no_credit_ewallet_unlink_target_specified(self, command_chain):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No credit ewallet unlink target specified. Command chain details : {}'\
+                     .format(command_chain),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
 
     def error_could_not_fetch_credit_ewallet_credit_clock(self, command_chain):
         command_chain_response = {
