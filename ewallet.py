@@ -377,6 +377,48 @@ class EWallet(Base):
     [ NOTE ]: Command chain responses are formatted here.
     '''
 
+    def action_unlink_conversion_record(self, **kwargs):
+        '''
+        [ NOTE   ]: User action 'unlink conversion record', accessible from external api calls.
+        [ INPUT  ]: record_id=<id>
+        [ RETURN ]: (True | False)
+        '''
+        log.debug('')
+        active_user = self.fetch_active_session_user()
+        credit_ewallet = active_user.fetch_user_credit_wallet()
+        if not credit_ewallet:
+            return self.error_could_not_fetch_active_session_credit_ewallet(kwargs)
+        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
+            kwargs, 'controller', 'action', 'unlink', 'conversion'
+        )
+        unlink_record = credit_ewallet.main_controller(
+            controller='user', action='unlink', unlink='conversion', conversion='record',
+            **sanitized_command_chain
+        )
+        if not unlink_record or isinstance(unlink_record, dict) and \
+                unlink_record.get('failed'):
+            kwargs['active_session'].rollback()
+            return self.warning_could_not_unlink_conversion_sheet_record(
+                active_user.fetch_user_name(), kwargs
+            )
+        kwargs['active_session'].commit()
+        return unlink_record
+
+    def action_unlink_conversion(self, **kwargs):
+        '''
+        [ NOTE   ]: Jump table for user action category 'unlink conversion', accessible from external api call.
+        [ INPUT  ]: unlink=(list | record)
+        [ RETURN ]: Action variable correspondent.
+        '''
+        log.debug('')
+        if not kwargs.get('conversion'):
+            return self.error_no_unlink_target_specified()
+        handlers = {
+            'list': self.action_unlink_conversion_list,
+            'record': self.action_unlink_conversion_record,
+        }
+        return handlers[kwargs['conversion']](**kwargs)
+
     def action_unlink_invoice_record(self, **kwargs):
         '''
         [ NOTE   ]: User action 'unlink invoice record', accessible from external api calls.
@@ -1031,18 +1073,19 @@ class EWallet(Base):
             )
         log.info('Attempting to fetch active credit clock...')
         credit_clock = credit_wallet.fetch_credit_ewallet_credit_clock()
-        if not credit_clock:
+        if not credit_clock or isinstance(credit_clock, dict) and credit_clock.get('failed'):
             return self.warning_could_not_fetch_credit_clock()
         log.info('Attempting to fetch active conversion sheet...')
         conversion_sheet = credit_clock.fetch_credit_clock_conversion_sheet()
-        if not conversion_sheet:
+        if not conversion_sheet or isinstance(conversion_sheet, dict) and \
+                conversion_sheet.get('failed'):
             return self.warning_could_not_fetch_conversion_sheet()
         log.info('Attempting to fetch conversion record by id...')
         record = conversion_sheet.fetch_conversion_sheet_record(
-            search_by='id', code=kwargs['record_id'],
+            identifier='id', code=kwargs['record_id'],
             active_session=self.session
         )
-        if not record:
+        if not record or isinstance(record, dict) and record.get('failed'):
             return self.warning_could_not_fetch_conversion_record()
         command_chain_response = {
             'failed': False,
@@ -1206,21 +1249,6 @@ class EWallet(Base):
         _handlers = {
                 'list': self.action_unlink_time_list,
                 'record': self.action_unlink_time_record,
-                }
-        return _handlers[kwargs['unlink']](**kwargs)
-
-    def action_unlink_conversion(self, **kwargs):
-        '''
-        [ NOTE   ]: Jump table for user action category 'unlink conversion', accessible from external api call.
-        [ INPUT  ]: unlink=(list | record)
-        [ RETURN ]: Action variable correspondent.
-        '''
-        log.debug('')
-        if not kwargs.get('unlink'):
-            return self.error_no_unlink_target_specified()
-        _handlers = {
-                'list': self.action_unlink_conversion_list,
-                'record': self.action_unlink_conversion_record,
                 }
         return _handlers[kwargs['unlink']](**kwargs)
 
@@ -2038,30 +2066,6 @@ class EWallet(Base):
                 sheet_type='conversion', sheet_id=kwargs['list_id']
                 )
 
-    def action_unlink_conversion_record(self, **kwargs):
-        '''
-        [ NOTE   ]: User action 'unlink conversion record', accessible from external api calls.
-        [ INPUT  ]: record_id=<id>
-        [ RETURN ]: (True | False)
-        '''
-        log.debug('')
-        if not self.session_credit_wallet or not kwargs.get('record_id'):
-            return self.error_handler_action_unlink_conversion_record(
-                    credit_wallet=self.session_credit_wallet,
-                    record_id=kwargs.get('record_id'),
-                    )
-        log.info('Attempting to fetch active credit clock...')
-        _credit_clock = self.session_credit_wallet.fetch_credit_ewallet_credit_clock()
-        if not _credit_clock:
-            return self.warning_could_not_fetch_credit_clock()
-        log.info('Attempting to fetch active conversion sheet...')
-        _conversion_list = _credit_clock.fetch_credit_clock_conversion_sheet()
-        if not _conversion_list:
-            return self.warning_could_not_fetch_conversion_sheet()
-        return _conversion_list.credit_clock_conversion_sheet_controller(
-                action='remove', record_id=kwargs['record_id']
-                )
-
     # HANDLERS
 
     def handle_user_action_switch_contact_list(self, **kwargs):
@@ -2597,6 +2601,15 @@ class EWallet(Base):
         return _controllers[kwargs['controller']](**kwargs)
 
     # WARNINGS
+
+    def warning_could_not_unlink_conversion_sheet_record(self, user_name, command_chain):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Something went wrong. Could not unlink conversion sheet record for user {}. '\
+                       'Command chain details : {}'.format(user_name, command_chain),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
 
     def warning_could_not_unlink_invoice_sheet_record(self, user_name, command_chain):
         command_chain_response = {
@@ -3968,5 +3981,22 @@ if __name__ == '__main__':
 ################################################################################
 # CODE DUMP
 ################################################################################
+
+#       if not self.session_credit_wallet or not kwargs.get('record_id'):
+#           return self.error_handler_action_unlink_conversion_record(
+#                   credit_wallet=self.session_credit_wallet,
+#                   record_id=kwargs.get('record_id'),
+#                   )
+#       log.info('Attempting to fetch active credit clock...')
+#       _credit_clock = self.session_credit_wallet.fetch_credit_ewallet_credit_clock()
+#       if not _credit_clock:
+#           return self.warning_could_not_fetch_credit_clock()
+#       log.info('Attempting to fetch active conversion sheet...')
+#       _conversion_list = _credit_clock.fetch_credit_clock_conversion_sheet()
+#       if not _conversion_list:
+#           return self.warning_could_not_fetch_conversion_sheet()
+#       return _conversion_list.credit_clock_conversion_sheet_controller(
+#               action='remove', record_id=kwargs['record_id']
+#               )
 
 

@@ -1046,26 +1046,26 @@ class ResUser(Base):
         log.debug('')
         if not kwargs.get('action'):
             return self.error_no_user_controller_action_specified()
-        _handlers = {
-                'create': self.handle_user_action_create,
-                'reset': self.handle_user_action_reset,
-                'switch': self.handle_user_action_switch,
-                'unlink': self.handle_user_action_unlink,
-                'transfer': self.handle_user_action_transfer,
-                'edit': self.handle_user_action_edit,
-                }
-        return _handlers[kwargs['action']](**kwargs)
+        handlers = {
+            'create': self.handle_user_action_create,
+            'reset': self.handle_user_action_reset,
+            'switch': self.handle_user_action_switch,
+            'unlink': self.handle_user_action_unlink,
+            'transfer': self.handle_user_action_transfer,
+            'edit': self.handle_user_action_edit,
+        }
+        return handlers[kwargs['action']](**kwargs)
 
     def user_event_controller(self, **kwargs):
         log.debug('')
         if not kwargs.get('event'):
             return self.error_no_user_controller_event_specified()
-        _handlers = {
-                'request': self.handle_user_event_request,
-                'notification': self.handle_user_event_notification,
-                'signal': self.handle_user_event_signal,
-                }
-        return _handlers[kwargs['event']](**kwargs)
+        handlers = {
+            'request': self.handle_user_event_request,
+            'notification': self.handle_user_event_notification,
+            'signal': self.handle_user_event_signal,
+        }
+        return handlers[kwargs['event']](**kwargs)
 
     def user_controller(self, **kwargs):
         log.debug('')

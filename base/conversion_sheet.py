@@ -175,6 +175,35 @@ class CreditClockConversionSheet(Base):
         self.reference = kwargs.get('reference') or 'Conversion Sheet'
         self.records = kwargs.get('records') or []
 
+    # FETCHERS
+
+    def fetch_conversion_sheet_record_by_id(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('record_id'):
+            return self.error_no_conversion_record_id_found(kwargs)
+        record = list(
+            kwargs['active_session'].query(
+                CreditClockConversionSheetRecord
+            ).filter_by(record_id=kwargs['record_id'])
+        )
+        return self.error_could_not_fetch_conversion_sheet_record_by_id(kwargs) \
+            if not record else record[0]
+
+    def fetch_conversion_sheet_record(self, **kwargs):
+        log.debug('')
+        if not self.records or not kwargs.get('identifier'):
+            return self.error_no_conversion_sheet_record_identifier_specified()
+        handlers = {
+            'id': self.fetch_conversion_sheet_record_by_id,
+            'reference': self.fetch_conversion_sheet_record_by_ref,
+            'date': self.fetch_conversion_sheet_records_by_date,
+            'credits': self.fetch_conversion_sheet_records_by_credits,
+            'minutes': self.fetch_conversion_sheet_records_by_minutes,
+            'conversion_type': self.fetch_conversion_sheet_records_by_type,
+            'all': self.fetch_conversion_sheet_records,
+        }
+        return handlers[kwargs['identifier']](**kwargs)
+
     def fetch_conversion_sheet_id(self):
         log.debug('')
         return self.conversion_sheet_id
@@ -224,27 +253,6 @@ class CreditClockConversionSheet(Base):
             'credits': kwargs.get('credits'),
         }
         return values
-
-    def fetch_conversion_sheet_record_by_id(self, **kwargs):
-        log.debug('')
-        if not kwargs.get('code'):
-            return self.error_no_conversion_record_id_found()
-        if kwargs.get('active_session'):
-            _match = list(kwargs['active_session'].query(
-                CreditClockConversionSheetRecord
-                ).filter_by(record_id=kwargs['code']))
-        else:
-            _match = [
-                    item for item in self.records
-                    if item.fetch_record_id() is kwargs['code']
-                    ]
-        _record = False if not _match else _match[0]
-        if not _record:
-            return self.warning_could_not_fetch_conversion_record(
-                    'id', kwargs['code']
-                    )
-        log.info('Successfully fetched conversion record by id.')
-        return _record
 
     def fetch_conversion_sheet_record_by_ref(self, **kwargs):
         log.debug('')
@@ -322,21 +330,6 @@ class CreditClockConversionSheet(Base):
         log.debug('')
         return self.records.values()
 
-    def fetch_conversion_sheet_record(self, **kwargs):
-        log.debug('')
-        if not self.records or not kwargs.get('search_by'):
-            return self.error_no_conversion_sheet_record_identifier_specified()
-        _handlers = {
-                'id': self.fetch_conversion_sheet_record_by_id,
-                'reference': self.fetch_conversion_sheet_record_by_ref,
-                'date': self.fetch_conversion_sheet_records_by_date,
-                'credits': self.fetch_conversion_sheet_records_by_credits,
-                'minutes': self.fetch_conversion_sheet_records_by_minutes,
-                'conversion_type': self.fetch_conversion_sheet_records_by_type,
-                'all': self.fetch_conversion_sheet_records,
-                }
-        return _handlers[kwargs['search_by']](**kwargs)
-
     def set_clock_id(self, **kwargs):
         log.debug('')
         if not kwargs.get('clock_id'):
@@ -386,6 +379,20 @@ class CreditClockConversionSheet(Base):
         log.info('Successfully added conversion record to sheet.')
         return _record
 
+    # ACTIONS
+
+    def action_remove_conversion_sheet_record(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('record_id'):
+            return self.error_no_conversion_record_id_found()
+        try:
+            kwargs['active_session'].query(
+                CreditClockConversionSheetRecord
+            ).filter_by(record_id=kwargs['record_id']).delete()
+        except:
+            return self.error_could_not_remove_conversion_sheet_record(kwargs)
+        return True
+
     def action_add_conversion_sheet_record(self, **kwargs):
         log.debug('')
         _record = CreditClockConversionSheetRecord(
@@ -397,20 +404,6 @@ class CreditClockConversionSheet(Base):
                 )
         self.update_conversion_sheet_records(record=_record)
         return _record
-
-    def action_remove_conversion_sheet_record(self, **kwargs):
-        log.debug('')
-        if not kwargs.get('record_id'):
-            return self.error_no_conversion_record_id_found()
-        _record = self.fetch_conversion_sheet_record(
-                identifier='id', code=kwargs['record_id']
-                )
-        if not _record:
-            return self.warning_could_not_fetch_conversion_record(
-                    'id', kwargs['record_id']
-                    )
-        log.info('Successfully removed conversion record.')
-        return self.records.pop(kwargs['record_id'])
 
     def interogate_conversion_sheet_records_by_id(self, **kwargs):
         log.debug('')
@@ -570,13 +563,42 @@ class CreditClockConversionSheet(Base):
         log.debug('')
         if not kwargs.get('action'):
             return self.error_no_conversion_sheet_controller_action_specified()
-        _handlers = {
-                'add': self.action_add_conversion_sheet_record,
-                'remove': self.action_remove_conversion_sheet_record,
-                'interogate': self.action_interogate_conversion_sheet_records,
-                'clear': self.action_clear_conversion_sheet_records,
-                }
-        return _handlers[kwargs['action']](**kwargs)
+        handlers = {
+            'add': self.action_add_conversion_sheet_record,
+            'remove': self.action_remove_conversion_sheet_record,
+            'interogate': self.action_interogate_conversion_sheet_records,
+            'clear': self.action_clear_conversion_sheet_records,
+        }
+        return handlers[kwargs['action']](**kwargs)
+
+    # ERRORS
+
+    def error_could_not_remove_conversion_sheet_record(self, command_chain):
+        command_chain_response = {
+            'failed': True,
+            'errors': 'Something went wrong. Could not remove conversion sheet record. '\
+                      'Command chain details : {}'.format(command_chain),
+        }
+        log.error(command_chain_response['errors'])
+        return command_chain_response
+
+    def error_could_not_fetch_conversion_sheet_record_by_id(self, command_chain):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Could not fetch conversion sheet record by id. Command chain details : {}'\
+                     .format(command_chain),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_no_conversion_record_id_found(self, command_chain):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No conversion sheet record id found. Command chain details : {}'\
+                     .format(command_chain),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
 
     def error_no_conversion_record_conversion_type_found(self):
         log.error('No conversion record conversion type found.')
@@ -627,10 +649,6 @@ class CreditClockConversionSheet(Base):
 
     def error_no_conversion_record_minutes_found(self):
         log.error('No conversion record minutes found.')
-        return False
-
-    def error_no_conversion_record_id_found(self):
-        log.error('No conversion record id found.')
         return False
 
     def error_no_conversion_record_reference_found(self):

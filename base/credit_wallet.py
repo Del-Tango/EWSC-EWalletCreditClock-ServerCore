@@ -687,6 +687,16 @@ class CreditEWallet(Base):
 
     # ACTIONS
 
+    def action_unlink_conversion(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('conversion'):
+            return self.error_no_credit_ewallet_unlink_conversion_target_specified(kwargs)
+        handlers = {
+#           'list':
+            'record': self.unlink_conversion_record,
+        }
+        return handlers[kwargs['conversion']](**kwargs)
+
     def action_unlink_invoice(self, **kwargs):
         log.debug('')
         if not kwargs.get('invoice'):
@@ -714,7 +724,7 @@ class CreditEWallet(Base):
         handlers = {
             'transfer': self.action_unlink_transfer,
             'invoice': self.action_unlink_invoice,
-#           'conversion':
+            'conversion': self.action_unlink_conversion,
 #           'time':
 #           'clock':
         }
@@ -764,6 +774,22 @@ class CreditEWallet(Base):
         )
 
     # UNLINKERS
+
+    def unlink_conversion_record(self, **kwargs):
+        log.debug('')
+        credit_clock = self.fetch_credit_ewallet_credit_clock()
+        if not credit_clock:
+            return self.error_could_not_fetch_credit_ewallet_credit_clock(kwargs)
+        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
+            kwargs, 'controller', 'ctype', 'action', 'unlink', 'conversion'
+        )
+        unlink = credit_clock.main_controller(
+            controller='user', ctype='action', action='unlink', unlink='conversion',
+            conversion='record', **sanitized_command_chain
+        )
+        return self.warning_could_not_unlink_conversion_record(kwargs) \
+            if not unlink or isinstance(unlink, dict) and unlink.get('failed') \
+            else unlink
 
     def unlink_invoice_record(self, **kwargs):
         log.debug('')
@@ -922,6 +948,15 @@ class CreditEWallet(Base):
 
     # WARNINGS
 
+    def warning_could_not_unlink_conversion_record(self, command_chain):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Something went wrong. Could not unlink conversion record. '\
+                       'Command chain details : {}'.format(command_chain),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
+
     def warning_could_not_fetch_invoice_sheet(self, command_chain):
         command_chain_response = {
             'failed': True,
@@ -1069,6 +1104,15 @@ class CreditEWallet(Base):
         return False
 
     # ERRORS
+
+    def error_no_credit_ewallet_unlink_conversion_target_specified(self, command_chain):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No credit ewallet unlink conversion target specified. Command chain details : {}'\
+                     .format(command_chain),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
 
     def error_invoice_record_id_not_found(self, command_chain):
         command_chain_response = {
