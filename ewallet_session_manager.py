@@ -619,6 +619,20 @@ class EWalletSessionManager():
     [ NOTE ]: SqlAlchemy ORM sessions are fetched here.
     '''
 
+    def action_unlink_time_sheet_record(self, ewallet_session, instruction_set):
+        log.debug('')
+        orm_session = ewallet_session.fetch_active_session()
+        sanitized_instruction_set = res_utils.remove_tags_from_command_chain(
+            instruction_set, 'controller', 'ctype', 'action', 'unlink', 'time'
+        )
+        unlink_time_record = ewallet_session.ewallet_controller(
+            controller='user', ctype='action', action='unlink', unlink='time',
+            time='record', active_session=orm_session, **sanitized_instruction_set
+        )
+        return self.warning_could_not_unlink_time_sheet_record(
+            ewallet_session, instruction_set
+        ) if unlink_time_record.get('failed') else unlink_time_record
+
     def action_unlink_conversion_sheet_record(self, ewallet_session, instruction_set):
         log.debug('')
         orm_session = ewallet_session.fetch_active_session()
@@ -1285,6 +1299,31 @@ class EWalletSessionManager():
     [ NOTE ]: Instruction set validation and sanitizations are performed here.
     '''
 
+    def handle_client_action_unlink_time_record(self, **kwargs):
+        log.debug('')
+        instruction_set_validation = self.validate_instruction_set(kwargs)
+        if not instruction_set_validation:
+            return False
+        ewallet = self.fetch_ewallet_session_for_client_action_using_instruction_set(
+            kwargs
+        )
+        if not ewallet:
+            return False
+        unlink_time_record = self.action_unlink_time_sheet_record(
+            ewallet['ewallet_session'], ewallet['sanitized_instruction_set']
+        )
+        return unlink_time_record
+
+    def handle_client_action_unlink_time(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('time'):
+            return self.error_no_client_action_unlink_time_target_specified(kwargs) #
+        handlers = {
+#           'list':
+            'record': self.handle_client_action_unlink_time_record,
+        }
+        return handlers[kwargs['time']](**kwargs)
+
     def handle_client_action_unlink_conversion_record(self, **kwargs):
         log.debug('')
         instruction_set_validation = self.validate_instruction_set(kwargs)
@@ -1368,7 +1407,7 @@ class EWalletSessionManager():
             'transfer': self.handle_client_action_unlink_transfer,
             'invoice': self.handle_client_action_unlink_invoice,
             'conversion': self.handle_client_action_unlink_conversion,
-#           'time':
+            'time': self.handle_client_action_unlink_time,
 #           'contact':
 #           'credit':
         }
@@ -2537,6 +2576,15 @@ class EWalletSessionManager():
 
     # WARNINGS
 
+    def warning_could_not_unlink_time_sheet_record(self, ewallet_session, instruction_set):
+        instruction_set_response = {
+            'failed': True,
+            'warning': 'Something went wrong. Could not unlink time sheet record in ewallet session {}. '\
+                       'Instruction set details : {}'.format(ewallet_session, instruction_set),
+        }
+        log.warning(instruction_set_response['warning'])
+        return instruction_set_response
+
     def warning_could_not_unlink_conversion_sheet_record(self, ewallet_session, instruction_set):
         instruction_set_response = {
             'failed': True,
@@ -2865,6 +2913,15 @@ class EWalletSessionManager():
         return False
 
     # ERRORS
+
+    def error_no_client_action_unlink_time_target_specified(self, instruction_set):
+        instruction_set_response = {
+            'failed': True,
+            'error': 'No client action unlink time target specified. Instruction set details : {}'\
+                     .format(instruction_set),
+        }
+        log.error(instruction_set_response['error'])
+        return instruction_set_response
 
     def error_no_client_action_unlink_conversion_target_specified(self, instruction_set):
         instruction_set_response = {
@@ -3869,6 +3926,16 @@ class EWalletSessionManager():
         print(str(_unlink) + '\n')
         return _unlink
 
+    def test_user_action_unlink_time_record(self, **kwargs):
+        print('[ * ]: User action Unlink Time Record')
+        _unlink = self.session_manager_controller(
+            controller='client', ctype='action', action='unlink', unlink='time',
+            time='record', record_id=kwargs['record_id'],
+            client_id=kwargs['client_id'], session_token=kwargs['session_token']
+        )
+        print(str(_unlink) + '\n')
+        return _unlink
+
     def test_session_manager_controller(self, **kwargs):
         print('[ TEST ] Session Manager')
 #       open_in_port = self.test_open_instruction_listener_port()
@@ -4040,6 +4107,10 @@ class EWalletSessionManager():
             record_id=2
         )
         unlink_conversion_record = self.test_user_action_unlink_conversion_record(
+            client_id=client_id['client_id'], session_token=session_token['session_token'],
+            record_id=2
+        )
+        unlink_time_record = self.test_user_action_unlink_time_record(
             client_id=client_id['client_id'], session_token=session_token['session_token'],
             record_id=2
         )

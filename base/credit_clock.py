@@ -733,7 +733,7 @@ class CreditClock(Base):
             return self.error_no_credit_clock_action_unlink_target_specified(kwargs)
         handlers = {
             'conversion': self.unlink_conversion,
-#           'time':
+            'time': self.unlink_time,
         }
         return handlers[kwargs['unlink']](**kwargs)
 
@@ -1068,6 +1068,39 @@ class CreditClock(Base):
 
     # UNLINKERS
 
+    def unlink_time_record(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('record_id'):
+            return self.error_no_time_sheet_record_id_found(kwargs)
+        time_sheet = self.fetch_credit_clock_time_sheet()
+        if not time_sheet:
+            return self.error_could_not_fetch_time_sheet(kwargs)
+        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
+            kwargs, 'action'
+        )
+        unlink = time_sheet.credit_clock_time_sheet_controller(
+            action='remove', **sanitized_command_chain
+        )
+        if not unlink or isinstance(unlink, dict) and unlink.get('failed'):
+            return self.warning_could_not_unlink_credit_clock_time_sheet_record(kwargs)
+        log.info('Successfully removed credit clock time record.')
+        command_chain_response = {
+            'failed': False,
+            'time_sheet': time_sheet.fetch_time_sheet_id(),
+            'time_record': kwargs['record_id'],
+        }
+        return command_chain_response
+
+    def unlink_time(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('time'):
+            return self.error_no_credit_clock_unlink_time_target_specified(kwargs)
+        handlers = {
+#           'list':
+            'record': self.unlink_time_record,
+        }
+        return handlers[kwargs['time']](**kwargs)
+
     def unlink_conversion_record(self, **kwargs):
         log.debug('')
         if not kwargs.get('record_id'):
@@ -1272,6 +1305,33 @@ class CreditClock(Base):
         return False
 
     # ERRORS
+
+    def error_no_time_sheet_record_id_found(self, command_chain):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No time sheet record id found. Command chain details : {}'\
+                     .format(command_chain),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_could_not_fetch_time_sheet(self, command_chain):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Could not fetch time sheet. Command chain details : {}'\
+                     .format(command_chain),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_no_credit_clock_unlink_time_target_specified(self, command_chain):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No credit clock unlink time target specified. Command chain details : {}'\
+                     .format(command_chain),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
 
     def error_could_not_fetch_conversion_sheet(self, command_chain):
         command_chain_response = {
@@ -1590,6 +1650,15 @@ class CreditClock(Base):
         return False
 
     # WARNINGS
+
+    def warning_could_not_unlink_credit_clock_time_sheet_record(self, command_chain):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Something went wrong. Could not unlink credit clock time sheet record. '\
+                     'Command chain details : {}'.format(command_chain),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
 
     def warning_could_not_unlink_credit_clock_conversion_sheet_record(self, command_chain):
         command_chain_response = {

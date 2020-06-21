@@ -53,6 +53,19 @@ class TimeSheetRecord(Base):
 
     # FETCHERS
 
+    def fetch_time_sheet_record(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('identifier'):
+            return self.error_no_time_record_identifier_specified()
+        handlers = {
+            'id': self.fetch_time_sheet_record_by_id,
+            'reference': self.fetch_time_sheet_record_by_ref,
+            'date': self.fetch_time_sheet_record_by_date,
+            'time': self.fetch_time_sheet_record_by_time,
+            'all': self.fetch_time_sheet_records,
+        }
+        return handlers[kwargs['identifier']](**kwargs)
+
     def fetch_create_uid(self):
         log.debug('')
         return self.create_uid
@@ -235,10 +248,30 @@ class TimeSheetRecord(Base):
 
     def update_write_date(self, **kwargs):
         log.debug('')
-        _write_date = datetime.datetime.now()
-        return self.set_write_date(write_date=_write_date, **kwargs)
+        write_date = datetime.datetime.now()
+        return self.set_write_date(write_date=write_date, **kwargs)
+
+    # WARNINGS
+
+    def warning_could_not_fetch_time_record(self, command_chain):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Could not fetch credit clock time sheet record. Command chain details : {}'\
+                       .format(command_chain),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
 
     # ERRORS
+
+    def error_no_time_record_id_found(self, command_chain):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No time record id found. Command chain details : {}'\
+                        .format(command_chain),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
 
     def error_could_not_set_write_uid(self):
         log.error('Could not set write uid.')
@@ -311,6 +344,29 @@ class CreditClockTimeSheet(Base):
 
     # FETCHERS
 
+    def fetch_time_sheet_record_by_id(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('record_id'):
+            return self.error_no_time_record_id_found(kwargs)
+        record = list(
+            kwargs['active_session'].query(
+                TimeSheetRecord
+            ).filter_by(record_id=kwargs['record_id'])
+        )
+        if record:
+            log.info('Successfully fetched time record by id.')
+        return self.warning_could_not_fetch_time_record(kwargs) if not \
+            record else record[0]
+
+    def fetch_time_sheet_record(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('identifier'):
+            return self.error_no_time_sheet_record_identifier_specified(kwargs)
+        fetchers = {
+            'id': self.fetch_time_sheet_record_by_id,
+        }
+        return fetchers[kwargs['identifier']](**kwargs)
+
     def fetch_time_sheet_id(self):
         log.debug('')
         return self.time_sheet_id
@@ -365,24 +421,6 @@ class CreditClockTimeSheet(Base):
         }
         return values
 
-    def fetch_time_sheet_record_by_id(self, **kwargs):
-        log.debug('')
-        if not kwargs.get('code'):
-            return self.error_no_time_record_id_found()
-        if kwargs.get('active_session'):
-            match = list(kwargs['active_session'].query(TimeSheetRecord) \
-                        .filter_by(record_id=kwargs['code']))
-        else:
-            match = [
-                item for item in self.records if
-                item.fetch_record_id() is kwargs['code']
-            ]
-        record = False if not match else match[0]
-        if not record:
-            return self.warning_could_not_fetch_time_record('id', kwargs['code'])
-        log.info('Successfully fetched time record by id.')
-        return record
-
     # TODO - Refactor for multiple records
     def fetch_time_sheet_record_by_ref(self, **kwargs):
         log.debug('')
@@ -425,19 +463,6 @@ class CreditClockTimeSheet(Base):
     def fetch_time_sheet_records(self, **kwargs):
         log.debug('')
         return self.records.values()
-
-    def fetch_time_sheet_record(self, **kwargs):
-        log.debug('')
-        if not kwargs.get('search_by'):
-            return self.error_no_time_record_identifier_specified()
-        _handlers = {
-                'id': self.fetch_time_sheet_record_by_id,
-                'reference': self.fetch_time_sheet_record_by_ref,
-                'date': self.fetch_time_sheet_record_by_date,
-                'time': self.fetch_time_sheet_record_by_time,
-                'all': self.fetch_time_sheet_records,
-                }
-        return _handlers[kwargs['search_by']](**kwargs)
 
     # SETTERS
 
@@ -489,6 +514,18 @@ class CreditClockTimeSheet(Base):
 
     # ACTIONS
 
+    def action_remove_time_sheet_record(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('record_id'):
+            return self.error_no_time_record_id_found()
+        try:
+            kwargs['active_session'].query(
+                TimeSheetRecord
+            ).filter_by(record_id=kwargs['record_id']).delete()
+        except:
+            return self.error_could_not_remove_time_sheet_record(kwargs)
+        return True
+
     def action_interogate_all_time_sheet_records(self, **kwargs):
         log.debug('')
         return self.fetch_time_sheet_records(identifier='all')
@@ -511,23 +548,6 @@ class CreditClockTimeSheet(Base):
         if _record:
             log.info('Successfully added new time record.')
         return _record or False
-
-    def action_remove_time_sheet_record(self, **kwargs):
-        log.debug('')
-        if not kwargs.get('record_id'):
-            return self.error_no_time_record_id_found()
-        log.info('Attempting to fetch time record...')
-        _record = self.fetch_time_sheet_record(
-                identifier='id', code=kwargs['record_id']
-                )
-        if not _record:
-            return self.warning_could_not_fetch_time_record(
-                    'id', kwargs['record_id']
-                    )
-        _unlink = self.records.pop(kwargs['record_id'])
-        if _unlink:
-            log.info('Successfully removed time record by id.')
-        return _unlink
 
     def action_interogate_time_sheet_records_by_id(self, **kwargs):
         log.debug('')
@@ -620,7 +640,45 @@ class CreditClockTimeSheet(Base):
                 }
         return _handlers[kwargs['action']](**kwargs)
 
+    # WARNINGS
+
+    def warning_could_not_fetch_time_record(self, command_chain):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Could not fetch credit clock time sheet record. Command chain details : {}'\
+                       .format(command_chain),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
+
     # ERRORS
+
+    def error_could_not_remove_time_sheet_record(self, command_chain):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Could not remove time sheet record. Command chain details : {}'\
+                     .format(command_chain),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_no_time_sheet_record_identifier_specified(self, command_chain):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No time sheet record identifier specified. Command chain details : {}'\
+                     .format(command_chain),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_no_time_record_id_found(self, command_chain):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No time record id found. Command chain details : {}'\
+                        .format(command_chain),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
 
     def error_no_active_session_found(self):
         log.error('No active session found.')
@@ -658,22 +716,10 @@ class CreditClockTimeSheet(Base):
         log.error('No time record time found.')
         return False
 
-    def error_no_time_record_id_found(self):
-        log.error('No time record id found.')
-        return False
-
     def error_no_time_record_reference_found(self):
         log.error('No time record reference found.')
         return False
 
-    # WARNINGS
-
-    def warning_could_not_fetch_time_record(self, search_code, code):
-        log.warning(
-                'Something went wrong. '
-                'Could not fetch time record by %s %s.', search_code, code
-                )
-        return False
 
 ###############################################################################
 # CODE DUMP
