@@ -722,7 +722,7 @@ class CreditEWallet(Base):
         if not kwargs.get('transfer'):
             return self.error_no_credit_ewallet_unlink_transfer_target_specified(kwargs)
         handlers = {
-#           'list':
+            'list': self.unlink_transfer_list,
             'record': self.unlink_transfer_record,
         }
         return handlers[kwargs['transfer']](**kwargs)
@@ -784,6 +784,24 @@ class CreditEWallet(Base):
         )
 
     # UNLINKERS
+
+    def unlink_transfer_list(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('list_id'):
+            return self.error_no_transfer_list_id_specified(kwargs)
+        try:
+            kwargs['active_session'].query(
+                CreditTransferSheet
+            ).filter_by(
+                transfer_sheet_id=kwargs['list_id']
+            ).delete()
+        except:
+            return self.error_could_not_remove_transfer_sheet(kwargs)
+        command_chain_response = {
+            'failed': False,
+            'transfer_sheet': kwargs['list_id'],
+        }
+        return command_chain_response
 
     def unlink_time_record(self, **kwargs):
         log.debug('')
@@ -1139,6 +1157,24 @@ class CreditEWallet(Base):
         return False
 
     # ERRORS
+
+    def error_no_transfer_list_id_specified(self, command_chain):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No transfer list id specified. Command chain details : {}'\
+                     .format(command_chain),
+        }
+        log.error(command_chain_reponse['error'])
+        return command_chain_response
+
+    def error_could_not_remove_transfer_sheet(self, command_chain):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Something went wrong. Could not remove transfer sheet. Command chain details : {}'\
+                     .format(command_chain),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
 
     def error_no_credit_ewallet_unlink_time_targe_specified(self, command_chain):
         command_chain_response = {
