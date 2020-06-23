@@ -749,6 +749,23 @@
             'warning': <msg>,
         }
 
+* User action Unlink Invoice Sheet:
+    * Controller Instruction Set:
+        session_manager_controller(
+            controller='client', ctype='action', action='unlink', unlink='invoice',
+            invoice='list', list_id=<id>, client_id=<client-id>,
+            session_token=<token>
+        )
+    * Returns:
+        * [ OK  ]: {
+            'failed': False,
+            'invoice_sheet': <id>,
+        }
+        * [ NOK ]: {
+            'failed': True,
+            'error': <msg>,
+            'warning': <msg>,
+        }
 
 ################################################################################
 # EWallet Session (Command Chain)

@@ -712,7 +712,7 @@ class CreditEWallet(Base):
         if not kwargs.get('invoice'):
             return self.error_no_credit_ewallet_unlink_invoice_target_specified(kwargs)
         handlers = {
-#           'list':
+            'list': self.unlink_invoice_list,
             'record': self.unlink_invoice_record,
         }
         return handlers[kwargs['invoice']](**kwargs)
@@ -784,6 +784,24 @@ class CreditEWallet(Base):
         )
 
     # UNLINKERS
+
+    def unlink_invoice_list(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('list_id'):
+            return self.error_no_invoice_list_id_specified(kwargs)
+        try:
+            kwargs['active_session'].query(
+                CreditInvoiceSheet
+            ).filter_by(
+                invoice_sheet_id=kwargs['list_id']
+            ).delete()
+        except:
+            self.error_could_not_remove_invoice_sheet(kwargs)
+        command_chain_response = {
+            'failed': False,
+            'invoice_sheet': kwargs['list_id'],
+        }
+        return command_chain_response
 
     def unlink_transfer_list(self, **kwargs):
         log.debug('')
@@ -896,23 +914,6 @@ class CreditEWallet(Base):
         _unlink = self.transfer_sheet_archive.pop(kwargs['sheet_id'])
         if _unlink:
             log.info('Successfully removed transfer sheet.')
-        return _unlink
-
-    def unlink_invoice_sheet(self, **kwargs):
-        log.debug('')
-        if not kwargs.get('sheet_id'):
-            return self.error_no_invoice_sheet_id_found()
-        log.info('Attempting to fetch invoice sheet.')
-        _invoice_sheet = self.fetch_invoice_sheet(
-                identifier='id', code=kwargs['sheet_id']
-                )
-        if not _invoice_sheet:
-            return self.warning_could_not_fetch_invoice_sheet(
-                    'id', kwargs['sheet_id']
-                    )
-        _unlink = self.invoice_sheet_archive.pop(kwargs['sheet_id'])
-        if _unlink:
-            log.info('Successfully removed invoice sheet.')
         return _unlink
 
     def unlink_sheet(self, **kwargs):
@@ -1157,6 +1158,24 @@ class CreditEWallet(Base):
         return False
 
     # ERRORS
+
+    def error_no_invoice_list_id_specified(self, command_chain):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No invoice list id specified. Command chain details : {}'\
+                     .format(command_chain),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_could_not_remove_invoice_sheet(self, command_chain):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Something went wrong. Could not remove invoice sheet. Command chain details : {}'\
+                     .format(command_chain),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
 
     def error_no_transfer_list_id_specified(self, command_chain):
         command_chain_response = {
