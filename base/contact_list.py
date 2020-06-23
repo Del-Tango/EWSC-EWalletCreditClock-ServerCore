@@ -352,6 +352,24 @@ class ContactList(Base):
 
     # HANDLERS
 
+    def handle_update_contact_list_remove(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('record_id'):
+            return self.error_no_contact_record_id_found(kwargs)
+        try:
+            kwargs['active_session'].query(
+                ContactListRecord
+            ).filter_by(record_id=kwargs['record_id']).delete()
+        except:
+            return self.error_could_not_remove_contact_list_record(kwargs)
+        log.info('Successfully removed contact record.')
+        command_chain_response = {
+            'failed': False,
+            'contact_list': self.contact_list_id,
+            'contact_record': kwargs['record_id'],
+        }
+        return command_chain_response
+
     def handle_update_contact_list_rewrite(self, **kwargs):
         log.debug('')
         if not kwargs.get('records'):
@@ -373,13 +391,6 @@ class ContactList(Base):
         if self.records:
             log.info('Successfully updated contact list.')
         return kwargs['records']
-
-    def handle_update_contact_list_remove(self, **kwargs):
-        log.debug('')
-        if not kwargs.get('record_id'):
-            return self.error_no_contact_record_id_found()
-        log.info('Successfully removed contact record.')
-        return self.records.pop(kwargs['record_id'])
 
     def handle_update_contact_list_clear(self, **kwargs):
         log.debug('')
@@ -492,16 +503,15 @@ class ContactList(Base):
     # [ INPUT ]: values = {'update_type': '', records: []}
     def update_contact_list(self, **kwargs):
         log.debug('')
-        if not kwargs.get('update_type'):
+        if not kwargs.get('utype'):
             return self.error_no_contact_list_update_type_specified()
-        _handlers = {
-                'rewrite': self.handle_update_contact_list_rewrite,
-                'append': self.handle_update_contact_list_append,
-                'remove': self.handle_update_contact_list_remove,
-                'clear': self.handle_update_contact_list_clear,
-                }
-        self.contact_list_record_buffer = _handlers[kwargs.get('update_type')](**kwargs)
-        return True
+        handlers = {
+            'rewrite': self.handle_update_contact_list_rewrite,
+            'append': self.handle_update_contact_list_append,
+            'remove': self.handle_update_contact_list_remove,
+            'clear': self.handle_update_contact_list_clear,
+        }
+        return handlers[kwargs.get('utype')](**kwargs)
 
     def interogate_contact_list(self, **kwargs):
         log.debug('')
@@ -525,6 +535,26 @@ class ContactList(Base):
                 'interogate': self.interogate_contact_list,
                 }
         return _handlers[kwargs['action']](**kwargs)
+
+    # ERRORS
+
+    def error_no_contact_record_id_found(self, command_chain):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No contact list record id found. Command chain details : {}'\
+                     .format(command_chain),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_could_not_remove_contact_list_record(self, command_chain):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Could not remove contact list record. Command chain details : {}'\
+                     .format(command_chain),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
 
     def error_no_contact_list_id_found(self):
         log.error('No contact list id found.')
@@ -576,10 +606,6 @@ class ContactList(Base):
 
     def error_no_contact_records_found(self):
         log.error('No contact records found.')
-        return False
-
-    def error_no_contact_record_id_found(self):
-        log.error('No contact list record id found.')
         return False
 
     def error_no_contact_record_reference_found(self):

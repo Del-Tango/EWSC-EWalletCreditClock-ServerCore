@@ -377,6 +377,49 @@ class EWallet(Base):
     [ NOTE ]: Command chain responses are formatted here.
     '''
 
+    def action_unlink_contact_record(self, **kwargs):
+        '''
+        [ NOTE   ]: User action 'unlink contact record', accessible from external api calls.
+        [ INPUT  ]: record_id=<id>
+        [ RETURN ]: (True | False)
+        '''
+        log.debug('')
+        active_user = self.fetch_active_session_user()
+        contact_list = active_user.fetch_user_contact_list()
+        if not contact_list:
+            return self.error_could_not_fetch_active_session_contact_list(kwargs)
+        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
+            kwargs, 'controller', 'action', 'unlink', 'contact'
+        )
+        unlink_record = contact_list.contact_list_controller(
+            controller='user', action='update', utype='remove',
+            **sanitized_command_chain
+        )
+        if not unlink_record or isinstance(unlink_record, dict) and \
+                unlink_record.get('failed'):
+            kwargs['active_session'].rollback()
+            return self.warning_could_not_unlink_contact_list_record(
+                active_user.fetch_user_name(), kwargs
+            )
+        kwargs['active_session'].commit()
+        return unlink_record
+
+    def action_unlink_contact(self, **kwargs):
+        '''
+        [ NOTE   ]: Jump table for user action category 'unlink contact', accessible from external api call.
+        [ INPUT  ]: unlink=(list | record)
+        [ RETURN ]: Action variable correspondent.
+        '''
+        log.debug('')
+        if not kwargs.get('contact'):
+            return self.error_no_unlink_target_specified()
+        handlers = {
+            'list': self.action_unlink_contact_list,
+            'record': self.action_unlink_contact_record,
+        }
+        return handlers[kwargs['contact']](**kwargs)
+
+
     def action_unlink_time_record(self, **kwargs):
         '''
         [ NOTE   ]: User action 'unlink time record', accessible from external api calls.
@@ -1264,21 +1307,6 @@ class EWallet(Base):
                 }
         return _handlers[kwargs['ttype']](**kwargs)
 
-    def action_unlink_contact(self, **kwargs):
-        '''
-        [ NOTE   ]: Jump table for user action category 'unlink contact', accessible from external api call.
-        [ INPUT  ]: unlink=(list | record)
-        [ RETURN ]: Action variable correspondent.
-        '''
-        log.debug('')
-        if not kwargs.get('unlink'):
-            return self.error_no_unlink_target_specified()
-        _handlers = {
-                'list': self.action_unlink_contact_list,
-                'record': self.action_unlink_contact_record,
-                }
-        return _handlers[kwargs['unlink']](**kwargs)
-
     def action_view_contact(self, **kwargs):
         '''
         [ NOTE   ]: Jump table for user action category 'view contact', accessible from external api call.
@@ -1975,23 +2003,6 @@ class EWallet(Base):
                 list_id=kwargs['list_id']
                 )
 
-    def action_unlink_contact_record(self, **kwargs):
-        '''
-        [ NOTE   ]: User action 'unlink contact record', accessible from external api calls.
-        [ INPUT  ]: record_id=<id>
-        [ RETURN ]: (True | False)
-        '''
-        log.debug('')
-        if not self.session_contact_list or not kwargs.get('record_id'):
-            return self.error_handler_action_unlink_contact_record(
-                    contact_list=self.session_contact_list,
-                    record_id=kwargs.get('record_id'),
-                    )
-        return self.session_contact_list.contact_list_controller(
-                action='update', update_type='remove',
-                record_id=kwargs['record_id'],
-                )
-
     def action_unlink_invoice_list(self, **kwargs):
         '''
         [ NOTE   ]: User action 'unlink invoice list', accessible from external api calls.
@@ -2603,6 +2614,15 @@ class EWallet(Base):
         return _controllers[kwargs['controller']](**kwargs)
 
     # WARNINGS
+
+    def warning_could_not_unlink_contact_list_record(self, user_name, command_chain):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Something went wrong. Could not unlink contact list record for user {}. '\
+                       'Command chain details : {}'.format(user_name, command_chain),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
 
     def warning_could_not_fetch_time_sheet_record(self, command_chain):
         command_chain_response = {
@@ -3257,6 +3277,15 @@ class EWallet(Base):
         return False
 
     # ERRORS
+
+    def error_could_not_fetch_active_session_contact_list(self, command_chain):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Could not fetch active session contact list. Command chain details : {}'\
+                     .format(command_chain),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
 
     def error_no_unlink_target_specified(self, command_chain):
         command_chain_response = {
