@@ -803,6 +803,24 @@
             'warning': <msg>,
         }
 
+* User action Unlink Contact List:
+    * Controller Instruction Set:
+        session_manager_controller(
+            controller='client', ctype='action', action='unlink', unlink='contact',
+            contact='list', list_id=<id>, client_id=<client-id>,
+            session_token=<token>
+        )
+    * Returns:
+        * [ OK  ]: {
+            'failed': False,
+            'contact_list': <id>,
+        }
+        * [ NOK ]: {
+            'failed': True,
+            'error': <msg>,
+            'warning': <msg>,
+        }
+
 ################################################################################
 # EWallet Session (Command Chain)
 ################################################################################

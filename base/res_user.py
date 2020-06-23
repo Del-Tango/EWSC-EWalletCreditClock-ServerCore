@@ -303,13 +303,6 @@ class ResUser(Base):
             log.info('Successfully fetched credit wallet by id.')
         return _record
 
-    def fetch_contact_list_by_id(self, contact_list_id):
-        log.debug('')
-        _contact_list = self.user_contact_list_archive.get(contact_list_id)
-        if _contact_list:
-            log.info('Successfully fetched contact list by id.')
-        return _contact_list
-
     def fetch_user_state_code_map(self):
         log.debug('')
         state_map = {
@@ -616,6 +609,21 @@ class ResUser(Base):
 
     # ACTIONS
 
+    def action_unlink_contact_list(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('list_id'):
+            return self.error_no_contact_list_id_found(kwargs)
+        try:
+            kwargs['active_session'].query(
+                ContactList
+            ).filter_by(
+                contact_list_id=kwargs['list_id']
+            ).delete()
+        except:
+            return self.error_could_not_unlink_contact_list(kwargs)
+        log.info('Successfully removed user contact list by id.')
+        return kwargs['list_id']
+
     def action_switch_contact_list(self, **kwargs):
         log.debug('')
         if not kwargs.get('list_id'):
@@ -881,19 +889,6 @@ class ResUser(Base):
                 clock_id=kwargs['clock_id']
                 )
 
-    def action_unlink_contact_list(self, **kwargs):
-        log.debug('')
-        if not kwargs.get('list_id'):
-            return self.error_no_contact_list_id_found()
-        log.info('Attempting to fetch user contact list...')
-        _contact_list = self.fetch_contact_list_by_id(kwargs['list_id'])
-        if not _contact_list:
-            return self.warning_could_not_fetch_contact_list()
-        _unlink = self.user_contact_list_archive.pop(kwargs['list_id'])
-        if _unlink:
-            log.info('Successfully removed user contact list by id.')
-        return _unlink
-
     # HANDLERS
 
     def handle_user_action_edit_name(self, **kwargs):
@@ -1018,23 +1013,23 @@ class ResUser(Base):
 
     def handle_user_action_unlink(self, **kwargs):
         log.debug('')
-        if not kwargs.get('target'):
+        if not kwargs.get('unlink'):
             return self.error_no_user_action_unlink_target_specified()
-        _handlers = {
-                'credit_wallet': self.action_unlink_credit_wallet,
-                'credit_clock': self.action_unlink_credit_clock,
-                'contact_list': self.action_unlink_contact_list,
-                }
-        return _handlers[kwargs['target']](**kwargs)
+        handlers = {
+            'credit_wallet': self.action_unlink_credit_wallet,
+            'credit_clock': self.action_unlink_credit_clock,
+            'contact_list': self.action_unlink_contact_list,
+        }
+        return handlers[kwargs['unlink']](**kwargs)
 
     def handle_user_event_request(self, **kwargs):
         log.debug('')
         if not kwargs.get('request'):
             return self.error_no_user_event_request_specified()
-        _handlers = {
+        handlers = {
             'credits': self.event_request_credits,
         }
-        return _handlers[kwargs['request']](**kwargs)
+        return handlers[kwargs['request']](**kwargs)
 
     # TODO
     def handle_user_event_notification(self, **kwargs):
@@ -1158,6 +1153,15 @@ class ResUser(Base):
         return False
 
     # ERRORS
+
+    def error_no_contact_list_id_found(self, command_chain):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No contact list id found. Command chain details : {}'\
+                     .format(command_chain),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
 
     def error_could_not_set_contact_list(self, contact_list):
         log.error('Could not set contact list {}.'.format(contact_list))
@@ -1511,10 +1515,6 @@ class ResUser(Base):
 
     def error_no_user_pass_hash_found(self):
         log.error('No user password hash found.')
-        return False
-
-    def error_no_contact_list_id_found(self):
-        log.error('No contact list id found.')
         return False
 
     def error_no_user_action_create_target_specified(self):
