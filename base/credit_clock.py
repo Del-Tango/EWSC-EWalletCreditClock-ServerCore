@@ -1068,6 +1068,24 @@ class CreditClock(Base):
 
     # UNLINKERS
 
+    def unlink_conversion_list(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('list_id'):
+            return self.error_no_conversion_list_id_specified(kwargs)
+        try:
+            kwargs['active_session'].query(
+                CreditClockConversionSheet
+            ).filter_by(
+                conversion_sheet_id=kwargs['list_id']
+            ).delete()
+        except:
+            self.error_could_not_remove_conversion_sheet(kwargs)
+        command_chain_response = {
+            'failed': False,
+            'conversion_sheet': kwargs['list_id'],
+        }
+        return command_chain_response
+
     def unlink_time_record(self, **kwargs):
         log.debug('')
         if not kwargs.get('record_id'):
@@ -1129,7 +1147,7 @@ class CreditClock(Base):
         if not kwargs.get('conversion'):
             return self.error_no_credit_clock_unlink_conversion_target_specified(kwargs)
         handlers = {
-#           'list':
+            'list': self.unlink_conversion_list,
             'record': self.unlink_conversion_record,
         }
         return handlers[kwargs['conversion']](**kwargs)
@@ -1305,6 +1323,24 @@ class CreditClock(Base):
         return False
 
     # ERRORS
+
+    def error_could_not_remove_conversion_sheet(self, command_chain):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Something went wrong. Could not remove conversion sheet. Command chain details : {}'\
+                     .format(command_chain),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_no_invoice_list_id_specified(self, command_chain):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No invoice list id specified. Command chain details : {}'\
+                     .format(command_chain),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
 
     def error_no_time_sheet_record_id_found(self, command_chain):
         command_chain_response = {

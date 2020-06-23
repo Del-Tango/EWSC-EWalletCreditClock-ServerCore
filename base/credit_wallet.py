@@ -702,7 +702,7 @@ class CreditEWallet(Base):
         if not kwargs.get('conversion'):
             return self.error_no_credit_ewallet_unlink_conversion_target_specified(kwargs)
         handlers = {
-#           'list':
+            'list': self.unlink_conversion_list,
             'record': self.unlink_conversion_record,
         }
         return handlers[kwargs['conversion']](**kwargs)
@@ -784,6 +784,23 @@ class CreditEWallet(Base):
         )
 
     # UNLINKERS
+
+#   @pysnooper.snoop()
+    def unlink_conversion_list(self, **kwargs):
+        log.debug('')
+        credit_clock = self.fetch_credit_ewallet_credit_clock()
+        if not credit_clock:
+            return self.error_could_not_fetch_ewallet_credit_clock(kwargs)
+        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
+            kwargs, 'controller', 'ctype', 'action', 'unlink', 'conversion'
+        )
+        unlink = credit_clock.main_controller(
+            controller='user', ctype='action', action='unlink', unlink='conversion',
+            conversion='list', **sanitized_command_chain
+        )
+        return self.warning_could_not_unlink_conversion_sheet(kwargs) \
+            if not unlink or isinstance(unlink, dict) and unlink.get('failed') \
+            else unlink
 
     def unlink_invoice_list(self, **kwargs):
         log.debug('')
@@ -993,11 +1010,20 @@ class CreditEWallet(Base):
 
     # WARNINGS
 
+    def warning_could_not_unlink_conversion_sheet(self, command_chain):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Something went wrong. Could not unlink conversion sheet. '\
+                       'Command chain details : {}'.format(command_chain),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
+
     def warning_could_not_unlink_time_record(self, command_chain):
         command_chain_response = {
             'failed': True,
-            'warning': 'Could not unlink time sheet record. Command chain details : {}'\
-                       .format(command_chain),
+            'warning': 'Something went wrong. Could not unlink time sheet record. '\
+                       'Command chain details : {}'.format(command_chain),
         }
         log.warning(command_chain_response['warning'])
         return command_chain_response
@@ -1159,14 +1185,23 @@ class CreditEWallet(Base):
 
     # ERRORS
 
-    def error_no_invoice_list_id_specified(self, command_chain):
-        command_chain_response = {
-            'failed': True,
-            'error': 'No invoice list id specified. Command chain details : {}'\
-                     .format(command_chain),
-        }
-        log.error(command_chain_response['error'])
-        return command_chain_response
+#   def error_could_not_remove_conversion_sheet(self, command_chain):
+#       command_chain_response = {
+#           'failed': True,
+#           'error': 'Something went wrong. Could not remove conversion sheet. Command chain details : {}'\
+#                    .format(command_chain),
+#       }
+#       log.error(command_chain_response['error'])
+#       return command_chain_response
+
+#   def error_no_invoice_list_id_specified(self, command_chain):
+#       command_chain_response = {
+#           'failed': True,
+#           'error': 'No invoice list id specified. Command chain details : {}'\
+#                    .format(command_chain),
+#       }
+#       log.error(command_chain_response['error'])
+#       return command_chain_response
 
     def error_could_not_remove_invoice_sheet(self, command_chain):
         command_chain_response = {
