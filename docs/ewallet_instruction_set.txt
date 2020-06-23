@@ -785,6 +785,24 @@
             'warning': <msg>,
         }
 
+* User action Unlink Time Sheet:
+    * Controller Instruction Set:
+        session_manager_controller(
+            controller='client', ctype='action', action='unlink', unlink='time',
+            time='list', list_id=<id>, client_id=<client-id>,
+            session_token=<token>
+        )
+    * Returns:
+        * [ OK  ]: {
+            'failed': False,
+            'time_sheet': <id>,
+        }
+        * [ NOK ]: {
+            'failed': True,
+            'error': <msg>,
+            'warning': <msg>,
+        }
+
 ################################################################################
 # EWallet Session (Command Chain)
 ################################################################################

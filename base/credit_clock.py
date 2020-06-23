@@ -1068,6 +1068,24 @@ class CreditClock(Base):
 
     # UNLINKERS
 
+    def unlink_time_list(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('list_id'):
+            return self.error_no_time_list_id_specified(kwargs)
+        try:
+            kwargs['active_session'].query(
+                CreditClockTimeSheet
+            ).filter_by(
+                time_sheet_id=kwargs['list_id']
+            ).delete()
+        except:
+            self.error_could_not_remove_time_sheet(kwargs)
+        command_chain_response = {
+            'failed': False,
+            'time_sheet': kwargs['list_id'],
+        }
+        return command_chain_response
+
     def unlink_conversion_list(self, **kwargs):
         log.debug('')
         if not kwargs.get('list_id'):
@@ -1114,7 +1132,7 @@ class CreditClock(Base):
         if not kwargs.get('time'):
             return self.error_no_credit_clock_unlink_time_target_specified(kwargs)
         handlers = {
-#           'list':
+            'list': self.unlink_time_list,
             'record': self.unlink_time_record,
         }
         return handlers[kwargs['time']](**kwargs)
@@ -1323,6 +1341,24 @@ class CreditClock(Base):
         return False
 
     # ERRORS
+
+    def error_no_time_list_id_specified(self, command_chain):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No time list id specified. Command chain details : {}'\
+                     .format(command_chain),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_could_not_remove_time_sheet(self, command_chain):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Something went wrong. Could not remove time sheet. Command chain details : {}'\
+                     .format(command_chain),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
 
     def error_could_not_remove_conversion_sheet(self, command_chain):
         command_chain_response = {
