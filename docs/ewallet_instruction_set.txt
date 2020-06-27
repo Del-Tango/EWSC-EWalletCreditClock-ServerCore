@@ -874,6 +874,24 @@
             'warning': <msg>,
         }
 
+* User action View Login Records:
+    * Controller Instruction Set:
+        session_manager_controller(
+            controller='client', ctype='action', action='view', view='login',
+            client_id=<client-id>, session_token=<token>
+        )
+    * Returns:
+        * [ OK  ]: {
+            'failed': False,
+            'user_account': <id>,
+            'login_records': <user-login-records>,
+        }
+        * [ NOK ]: {
+            'failed': True,
+            'error': <msg>,
+            'warning': <msg>,
+        }
+
 
 ################################################################################
 # EWallet Session (Command Chain)

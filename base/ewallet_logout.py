@@ -9,11 +9,11 @@ from sqlalchemy import Table, Column, String, Integer, Float, Boolean, ForeignKe
 from sqlalchemy import orm
 from sqlalchemy.orm import relationship
 
-from base.res_user import ResUser
-from base.credit_wallet import CreditEWallet
-from base.contact_list import ContactList
-from base.res_utils import ResUtils, Base
-from base.config import Config
+from .res_user import ResUser
+from .credit_wallet import CreditEWallet
+from .contact_list import ContactList
+from .res_utils import ResUtils, Base
+from .config import Config
 
 log_config = Config().log_config
 log = logging.getLogger(log_config['log_name'])

@@ -4,8 +4,8 @@ from sqlalchemy import Table, Column, String, Integer, ForeignKey, Date, DateTim
 from sqlalchemy.orm import relationship, backref
 
 from base.res_user import ResUser
-from ewallet_login import EWalletLogin
-from ewallet_logout import EWalletLogout
+from base.ewallet_login import EWalletLogin, EWalletCreateUser
+from base.ewallet_logout import EWalletLogout
 from base.res_utils import ResUtils, Base
 from base.credit_wallet import CreditEWallet
 from base.contact_list import ContactList
@@ -380,6 +380,29 @@ class EWallet(Base):
     '''
     [ NOTE ]: Command chain responses are formatted here.
     '''
+
+    def action_view_login_records(self, **kwargs):
+        log.debug('')
+        active_user = self.fetch_active_session_user()
+        if not active_user:
+            return self.error_could_not_fetch_active_session_user(kwargs)
+        try:
+            login_records = list(kwargs['active_session'].query(
+                EWalletLogin
+            ).filter_by(user_id=active_user.fetch_user_id()))
+        except:
+            return self.warning_could_not_view_login_records(
+                active_user.fetch_user_name(), kwargs
+            )
+        command_chain_response = {
+            'failed': False,
+            'user_account': active_user.fetch_user_id(),
+            'login_records': {
+                item.login_id: item.login_date.strftime("%d-%m-%Y %H:%M ") \
+                for item in login_records
+            },
+        }
+        return command_chain_response
 
 #   @pysnooper.snoop('logs/ewallet.log')
     def action_unlink_user_account(self, **kwargs):
@@ -1429,7 +1452,7 @@ class EWallet(Base):
         credit_wallet = self.fetch_active_session_credit_wallet()
         if not credit_wallet or not kwargs.get('record_id'):
             return self.error_handler_action_view_time_record(
-                credit_wallet=_credit_wallet,
+                credit_wallet=credit_wallet,
                 record_id=kwargs.get('record_id'),
             )
         log.info('Attempting to fetch active credit clock...')
@@ -1889,14 +1912,14 @@ class EWallet(Base):
         log.debug('')
         if not self.active_user or not kwargs.get('user_pass'):
             return self.error_no_user_password_found()
-        _pass_check_func = EWalletCreateAccount().check_user_pass
-        _pass_hash_func = EWalletLogin().hash_password
+        pass_check_func = EWalletCreateUser().check_user_pass
+        pass_hash_func = EWalletLogin().hash_password
         return self.active_user.user_controller(
-                ctype='action', action='reset', target='field', field='user_pass',
-                password=kwargs['user_pass'],
-                pass_check_func=_pass_check_func,
-                pass_hash_func=_pass_hash_func,
-                )
+            ctype='action', action='reset', target='field', field='user_pass',
+            password=kwargs['user_pass'],
+            pass_check_func=pass_check_func,
+            pass_hash_func=pass_hash_func,
+        )
 
     def action_reset_user_email(self, **kwargs):
         '''
@@ -1907,12 +1930,12 @@ class EWallet(Base):
         log.debug('')
         if not self.active_user or not kwargs.get('user_email'):
             return self.error_no_user_email_found()
-        _email_check_func = EwalletCreateAccount().check_user_email
+        email_check_func = EWalletCreateUser().check_user_email
         return self.active_user.user_controller(
-                ctype='action', action='reset', target='field', field='user_email',
-                email=kwargs['user_email'],
-                email_check_func=_email_check_func,
-                )
+            ctype='action', action='reset', target='field', field='user_email',
+            email=kwargs['user_email'],
+            email_check_func=email_check_func,
+        )
 
     def action_reset_user_alias(self, **kwargs):
         '''
@@ -2484,6 +2507,8 @@ class EWallet(Base):
             'transfer': self.action_view_transfer,
             'time': self.action_view_time,
             'conversion': self.action_view_conversion,
+            'login': self.action_view_login_records,
+#           'logout':
         }
         return _handlers[kwargs['view']](**kwargs)
 
@@ -2697,6 +2722,15 @@ class EWallet(Base):
         return _controllers[kwargs['controller']](**kwargs)
 
     # WARNINGS
+
+    def warning_could_not_view_login_records(self, user_name, command_chain):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Something went wrong. Could not view login records for user {}. '\
+                       'Command chain details : {}'.format(user_name, command_chain),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
 
     def warning_could_not_unlink_user_account(self, user_name, command_chain):
         command_chain_response = {
@@ -3422,7 +3456,7 @@ class EWallet(Base):
         return False
 
     def error_handler_action_view_conversion_record(self, **kwargs):
-        _reasons_and_handlers = {
+        reasons_and_handlers = {
                 'reasons': {
                     'credit_wallet': kwargs.get('credit_wallet'),
                     'record_id': kwargs.get('record_id'),
@@ -3432,12 +3466,21 @@ class EWallet(Base):
                     'record_id': self.error_no_conversion_record_id_found,
                     },
                 }
-        for item in _reasons_and_handlers['reasons']:
-            if not _reasons_and_handlers['reasons'][item]:
-                return_reasons_and_handlers['handlers'][item]()
+        for item in reasons_and_handlers['reasons']:
+            if not reasons_and_handlers['reasons'][item]:
+                return reasons_and_handlers['handlers'][item]()
         return False
 
     # ERRORS
+
+    def error_could_not_fetch_active_session_user(self, command_chain):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Something went wrong. Could not fetch active session user. '\
+                     'Command chain details : {}'.format(command_chain),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
 
     def error_could_not_unlink_user_account(self, command_chain):
         command_chain_response = {
@@ -3461,7 +3504,7 @@ class EWallet(Base):
         command_chain_response = {
             'failed': True,
             'error': 'Could not fetch active session credit ewallet. Command chain details : {}'\
-                    .format(instruction_set),
+                     .format(command_chain),
         }
         log.error(command_chain_response['error'])
         return command_chain_response
@@ -3572,7 +3615,7 @@ class EWallet(Base):
                      .format(command_chain),
         }
         log.error(command_chain_response['error'])
-        return command_chain_respons
+        return command_chain_response
 
     def error_no_user_action_edit_target_specified(self, command_chain):
         command_chain_response = {
@@ -4206,6 +4249,20 @@ if __name__ == '__main__':
 ################################################################################
 # CODE DUMP
 ################################################################################
+#       sanitized_command_chain = res_utils.remove_tags_from_command_chain(
+#           kwargs, 'ctype', 'action', 'view',
+#       )
+#       view_login_records = active_user.user_controller(
+#           ctype='action', action='view', view='login',
+#           **sanitized_command_chain
+#       )
+#       if not view_login_records or isinstance(view_login_records, dict) and \
+#               view_login_records.get('failed'):
+#           kwargs['active_session'].rollback()
+#           return self.warning_could_not_view_login_records(
+#               active_user.fetch_user_name(), kwargs
+#           )
+#       kwargs['active_session'].commit()
 
 #       if not self.session_credit_wallet or not kwargs.get('record_id'):
 #           return self.error_handler_action_unlink_conversion_record(

@@ -1,9 +1,5 @@
-import datetime
-import random
-import logging
-import pysnooper
-from itertools import count
-from sqlalchemy import Table, Column, String, Integer, Float, ForeignKey, Date, DateTime
+# from itertools import count
+from sqlalchemy import Column, String, Integer, ForeignKey, DateTime #Table,Float,Date,
 from sqlalchemy.orm import relationship
 
 from .credit_wallet import CreditEWallet
@@ -12,6 +8,11 @@ from .res_user_pass_hash_archive import ResUserPassHashArchive
 from .res_utils import ResUtils, Base
 from .config import Config
 from .transaction_handler import EWalletTransactionHandler
+#from .ewallet_login import EWalletLogin
+import datetime
+# import random
+import logging
+import pysnooper
 
 res_utils, config = ResUtils(), Config()
 log_config = config.log_config
@@ -335,7 +336,7 @@ class ResUser(Base):
 
     # TODO - Refactor
     def set_user_pass(self, **kwargs):
-        log.debug('')
+        log.debug('TODO')
         if not kwargs.get('password') or not kwargs.get('pass_check_func') \
                 or not kwargs.get('pass_hash_func'):
             return self.error_handler_set_user_pass(
@@ -343,21 +344,21 @@ class ResUser(Base):
                 pass_check_func=kwargs.get('pass_check_func'),
                 pass_hash_func=kwargs.get('pass_hash_func'),
             )
-        log.info('Performing user password checks...')
-        check = kwargs['pass_check_func'](kwargs['password'])
-        if not check:
-            return _create_user.error_invalid_user_pass()
-        log.info('Password coresponds with security standards. Hashing...')
-        pass_hash = kwargs['pass_hash_func'](kwargs['password'])
-        hash_record = self.create_user_pass_hash_record(
-                pass_hash=pass_hash, **kwargs
-                )
-        self.user_pass = pass_hash
-        kwargs['active_session'].add(hash_record)
-        kwargs['active_session'].commit()
-        self.set_user_write_date()
-        log.info('Successfully set user password.')
-        return True
+#       log.info('Performing user password checks...')
+#       check = kwargs['pass_check_func'](kwargs['password'])
+#       if not check:
+#           return create_user.error_invalid_user_pass()
+#       log.info('Password coresponds with security standards. Hashing...')
+#       pass_hash = kwargs['pass_hash_func'](kwargs['password'])
+#       hash_record = self.create_user_pass_hash_record(
+#               pass_hash=pass_hash, **kwargs
+#               )
+#       self.user_pass = pass_hash
+#       kwargs['active_session'].add(hash_record)
+#       kwargs['active_session'].commit()
+#       self.set_user_write_date()
+#       log.info('Successfully set user password.')
+#       return True
 
     def set_user_alias(self, **kwargs):
         log.debug('')
@@ -436,24 +437,25 @@ class ResUser(Base):
         log.info('Successfully set user phone.')
         return True
 
+    # TODO
     def set_user_email(self, **kwargs):
-        log.debug('')
+        log.debug('TODO')
         if not kwargs.get('email') or not kwargs.get('email_check_func'):
             return self.error_handler_set_user_email(
                     email=kwargs.get('email'),
                     email_check_func=kwargs.get('email_check_func'),
                     )
-        log.info('Performing user email validation checks...')
-        _check = kwargs['email_check_func'](kwargs['email'], severity=1)
-        if not _check:
-            return _create_user.error_invalid_user_email(
-                    user_email=kwargs['email']
-                    )
-        log.info('User email validated.')
-        self.user_email = kwargs['email']
-        self.set_user_write_date()
-        log.info('Successfully set user email.')
-        return True
+#       log.info('Performing user email validation checks...')
+#       _check = kwargs['email_check_func'](kwargs['email'], severity=1)
+#       if not _check:
+#           return _create_user.error_invalid_user_email(
+#                   user_email=kwargs['email']
+#                   )
+#       log.info('User email validated.')
+#       self.user_email = kwargs['email']
+#       self.set_user_write_date()
+#       log.info('Successfully set user email.')
+#       return True
 
     def set_user_credit_wallet(self, **kwargs):
         log.debug('')
@@ -1165,6 +1167,24 @@ class ResUser(Base):
         return False
 
     # ERRORS
+
+    def error_could_not_view_login_records(self, command_chain):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Something went wrong. Could not view user account login records. '\
+                     'Command chain details : {}'.format(command_chain),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_no_user_action_view_target_specified(self, command_chain):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No user action view target specified. Command chain details : {}'\
+                     .format(command_chain),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
 
     def error_no_credit_clock_id_found(self, command_chain):
         command_chain_response = {
