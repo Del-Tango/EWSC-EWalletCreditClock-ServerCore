@@ -78,6 +78,23 @@ class EWallet(Base):
 
     # FETCHERS
 
+    def fetch_active_session_values(self):
+        log.debug('')
+        values = {
+            'name': self.name,
+            'orm_session': self.session,
+            'create_date': self.create_date,
+            'write_date': self.write_date,
+            'contact_list': self.fetch_active_session_contact_list(),
+            'credit_ewallet': self.fetch_active_session_credit_wallet(),
+            'user_account': self.fetch_active_session_user(),
+            'user_account_archive': {
+                item.fetch_user_id(): item.fetch_user_name() for item in \
+                self.fetch_active_session_user_account_archive()
+            }
+        }
+        return values
+
     def fetch_user_account_from_active_session_user_archive(self, **kwargs):
         log.debug('')
         account_archive = self.fetch_active_session_user_account_archive()
@@ -403,6 +420,26 @@ class EWallet(Base):
     '''
     [ NOTE ]: Command chain responses are formatted here.
     '''
+
+#   @pysnooper.snoop('logs/ewallet.log')
+    def action_system_user_logout(self, **kwargs):
+        '''
+        [ NOTE   ]: System action 'user logout', accessible from external api call.
+        [ RETURN ]: (Next user in login stack | True if login stack empty | False)
+        '''
+        log.debug('')
+        user = self.fetch_active_session_user()
+        if not user:
+            return self.error_no_active_session_user_found(kwargs)
+        set_user_state = user.set_user_state(set_by='code', state_code=0)
+        search_user_for_session = self.fetch_next_active_session_user(active_user=user)
+        clear_user_data = self.clear_active_session_user_data({
+            'active_user': True if not search_user_for_session else False,
+            'credit_wallet': True,
+            'contact_list': True,
+        })
+        return True if not search_user_for_session \
+            else search_user_for_session
 
     def action_view_logout_records(self, **kwargs):
         log.debug('')
@@ -1684,27 +1721,6 @@ class EWallet(Base):
     def action_receive_transfer_record(self, **kwargs):
         pass
 
-#   @pysnooper.snoop('logs/ewallet.log')
-    def action_system_user_logout(self, **kwargs):
-        '''
-        [ NOTE   ]: System action 'user logout', accessible from external api call.
-        [ RETURN ]: (Next user in login stack | True if login stack empty | False)
-        '''
-        log.debug('')
-        _user = self.fetch_active_session_user()
-        if not _user:
-            return False
-        _set_user_state = _user.set_user_state(
-                set_by='code', state_code=0
-                )
-        _search_user_for_session = self.fetch_next_active_session_user(active_user=_user)
-        _clear_user_data = self.clear_active_session_user_data({
-            'active_user':True if not _search_user_for_session else False,
-            'credit_wallet':True, 'contact_list':True,
-            })
-        return True if not _search_user_for_session \
-                else _search_user_for_session
-
     def action_system_user_update(self, **kwargs):
         '''
         [ NOTE   ]: System action 'user update'. Allows multiple logged in users to switch.
@@ -2245,6 +2261,44 @@ class EWallet(Base):
 
     # HANDLERS
 
+    def handle_user_action_logout(self, **kwargs):
+        '''
+        [ NOTE   ]: High level manager for user action logout.
+        [ INPUT  ]:
+        [ RETURN ]: True if no other users loged in. If loged in users found in
+                    user account archive, returns next.
+        '''
+        log.debug('')
+        user = self.fetch_active_session_user()
+        session_logout = self.action_system_user_logout()
+        logout_record = EWalletLogout(
+            user_id=user.fetch_user_id(),
+            logout_status=False if not session_logout else True,
+        )
+        kwargs['active_session'].add(logout_record)
+        if not session_logout:
+            kwargs['active_session'].rollback()
+            return self.warning_could_not_logout_user_account(kwargs)
+        update_next = False if isinstance(session_logout, bool) \
+                else self.action_system_user_update(user=session_logout)
+        try:
+            self.user_account_archive.remove(user)
+        except:
+            kwargs['active_session'].rollback()
+            return self.error_could_not_remove_user_from_account_archive(kwargs)
+        kwargs['active_session'].commit()
+        session_values = self.fetch_active_session_values()
+        command_chain_response = {
+            'failed': False,
+            'user_account': user.fetch_user_id(),
+            'session_data': {
+                'session_user_account': session_values['user_account'].fetch_user_id(),
+                'session_credit_ewallet': session_values['credit_ewallet'].fetch_credit_ewallet_id(),
+                'session_contact_list': session_values['contact_list'].fetch_contact_list_id(),
+            }
+        }
+        return command_chain_response
+
     def handle_user_action_switch_active_user_account(self, **kwargs):
         log.debug('')
         new_account = self.interogate_active_session_user_archive_for_user_account(**kwargs)
@@ -2659,35 +2713,6 @@ class EWallet(Base):
     def handle_system_event_request(self, **kwargs):
         pass
 
-    def handle_user_action_logout(self, **kwargs):
-        '''
-        [ NOTE   ]: High level manager for user action logout.
-        [ INPUT  ]:
-        [ RETURN ]: True if no other users loged in. If loged in users found in
-                    user account archive, returns next.
-        '''
-        log.debug('')
-        user = self.fetch_active_session_user()
-        session_logout = self.action_system_user_logout()
-        logout_record = EWalletLogout(
-            user_id=user.fetch_user_id(),
-            logout_status=False if not session_logout else True,
-        )
-        self.session.add(logout_record)
-        if not session_logout:
-            self.session.rollback()
-            return self.warning_could_not_logout()
-        update_next = False if isinstance(session_logout, bool) \
-                else self.action_system_user_update(user=session_logout)
-        try:
-            self.user_account_archive.remove(user)
-        except:
-            self.session.rollback()
-            return self.error_could_not_remove_user_from_account_archive()
-        self.session.commit()
-        log.info('User successfully loged out.')
-        return update_next or True
-
     # CONTROLLERS
 
     def ewallet_user_action_controller(self, **kwargs):
@@ -2808,6 +2833,15 @@ class EWallet(Base):
         return _controllers[kwargs['controller']](**kwargs)
 
     # WARNINGS
+
+    def warning_could_not_logout_user_account(self, command_chain):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Something went wrong. Could not logout user account from ewallet session. '\
+                       'Command chain details : {}'.format(command_chain),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
 
     def warning_could_not_find_user_action_switch_target_account(self, command_chain):
         command_chain_response = {
@@ -3164,15 +3198,6 @@ class EWallet(Base):
         log.warning(
             'No user account found. Details : {}'.format(command_chain)
         )
-        return False
-
-    def warning_could_not_logout(self, **kwargs):
-        log.warning(
-                'Something went wrong. '
-                'Logout subroutine failure for user {}.'.format(
-                    self.active_user.fetch_user_name()
-                    )
-                )
         return False
 
     def warning_could_not_fetch_conversion_record(self):
@@ -3598,6 +3623,15 @@ class EWallet(Base):
 
     # ERRORS
 
+    def error_could_not_remove_user_from_account_archive(self, command_chain):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Something went wrong. Could not remove user account from active session account archive. '\
+                     'Command chain details : {}'.format(command_chain),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
     def error_user_account_does_not_belong_to_active_session_archive(self, command_chain):
         command_chain_response = {
             'failed': True,
@@ -3862,10 +3896,6 @@ class EWallet(Base):
 
     def error_could_not_resume_credit_clock_timer(self):
         log.error('Could not resume credit clock timer.')
-        return False
-
-    def error_could_not_remove_user_from_account_archive(self):
-        log.error('Could not remove user from account archive.')
         return False
 
     def error_no_partner_account_found(self):

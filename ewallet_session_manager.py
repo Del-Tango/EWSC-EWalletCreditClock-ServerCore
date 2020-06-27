@@ -622,6 +622,22 @@ class EWalletSessionManager():
 
     '''
 
+    def action_logout_user_account(self, ewallet_session, instruction_set):
+        log.debug('')
+        orm_session = ewallet_session.fetch_active_session()
+        sanitized_instruction_set = res_utils.remove_tags_from_command_chain(
+            instruction_set, 'controller', 'ctype', 'action',
+        )
+        active_session_user = ewallet_session.fetch_active_session_user()
+        logout_account = ewallet_session.ewallet_controller(
+            controller='user', ctype='action', action='logout',
+            active_session=orm_session, **sanitized_instruction_set
+        )
+        return self.warning_could_not_logout_user_account(
+            ewallet_session, instruction_set
+        ) if not logout_account or logout_account.get('failed') \
+            else logout_account
+
     def action_switch_active_session_user_account(self, ewallet_session, instruction_set):
         log.debug('')
         orm_session = ewallet_session.fetch_active_session()
@@ -1498,6 +1514,21 @@ class EWalletSessionManager():
     '''
     [ NOTE ]: Instruction set validation and sanitizations are performed here.
     '''
+
+    def handle_client_action_logout(self, **kwargs):
+        log.debug('')
+        instruction_set_validation = self.validate_instruction_set(kwargs)
+        if not instruction_set_validation:
+            return False
+        ewallet = self.fetch_ewallet_session_for_client_action_using_instruction_set(
+            kwargs
+        )
+        if not ewallet:
+            return False
+        logout_account = self.action_logout_user_account(
+            ewallet['ewallet_session'], ewallet['sanitized_instruction_set']
+        )
+        return logout_account
 
     def handle_client_action_switch_user_account(self, **kwargs):
         log.debug('')
@@ -2875,6 +2906,7 @@ class EWalletSessionManager():
             'edit': self.handle_client_action_edit,
             'switch': self.handle_client_action_switch,
             'unlink': self.handle_client_action_unlink,
+            'logout': self.handle_client_action_logout,
         }
         return handlers[kwargs['action']](**kwargs)
 
@@ -2979,6 +3011,15 @@ class EWalletSessionManager():
         return handlers[kwargs['controller']](**kwargs)
 
     # WARNINGS
+
+    def warning_could_not_logout_user_account(self, ewallet_session, instruction_set):
+        instruction_set_response = {
+            'failed': True,
+            'warning': 'Something went wrong. Could not logout user account in ewallet session {}. '\
+                       'Instruction set details : {}'.format(ewallet_session, instruction_set),
+        }
+        log.warning(instruction_set_response['warning'])
+        return instruction_set_response
 
     def warning_could_not_switch_active_session_user_account(self, ewallet_session, instruction_set):
         instruction_set_response = {
@@ -4574,6 +4615,15 @@ class EWalletSessionManager():
         print(str(_switch) + '\n')
         return _switch
 
+    def test_user_action_logout_account(self, **kwargs):
+        print('[ * ]: User action Logout Account')
+        _logout = self.session_manager_controller(
+            controller='client', ctype='action', action='logout',
+            client_id=kwargs['client_id'], session_token=kwargs['session_token']
+        )
+        print(str(_logout) + '\n')
+        return _logout
+
     def test_session_manager_controller(self, **kwargs):
         print('[ TEST ] Session Manager')
 #       open_in_port = self.test_open_instruction_listener_port()
@@ -4592,12 +4642,12 @@ class EWalletSessionManager():
             user_name='test_user', user_pass='1234@!xxA'
         )
 
-        print('\n\n[ 2 ]: Second user create.')
+        print('[ 2 ]: Second user create.')
         create_account2 = self.test_user_action_create_account(
             client_id=client_id['client_id'], session_token=session_token['session_token'],
             user_name='test_user_dinosaur', user_pass='1234@!xxA', user_email='testuserdinosaur@mail.com'
         )
-        print('\n\n[ 2 ]: Second user login.')
+        print('[ 2 ]: Second user login.')
         session_login2 = self.test_user_action_session_login(
             client_id=client_id['client_id'], session_token=session_token['session_token'],
             user_name='test_user_dinosaur', user_pass='1234@!xxA'
@@ -4807,6 +4857,9 @@ class EWalletSessionManager():
         switch_active_account = self.test_user_action_switch_active_session_user(
             client_id=client_id['client_id'], session_token=session_token['session_token'],
             account_id=29
+        )
+        logout_account = self.test_user_action_logout_account(
+            client_id=client_id['client_id'], session_token=session_token['session_token'],
         )
 
 if __name__ == '__main__':
