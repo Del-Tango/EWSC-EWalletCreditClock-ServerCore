@@ -609,6 +609,21 @@ class ResUser(Base):
 
     # ACTIONS
 
+    def action_unlink_credit_wallet(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('ewallet_id'):
+            return self.error_no_ewallet_id_found(kwargs)
+        try:
+            kwargs['active_session'].query(
+                CreditEWallet
+            ).filter_by(
+                wallet_id=kwargs['ewallet_id']
+            ).delete()
+        except:
+            return self.error_could_not_unlink_credit_ewallet(kwargs)
+        log.info('Successfully removed user credit ewallet by id.')
+        return kwargs['ewallet_id']
+
     def action_unlink_contact_list(self, **kwargs):
         log.debug('')
         if not kwargs.get('list_id'):
@@ -866,19 +881,6 @@ class ResUser(Base):
             return self.warning_could_not_fetch_credit_clock()
         log.info('Successfully switched user credit clock.')
         return clock_switch
-
-    def action_unlink_credit_wallet(self, **kwargs):
-        log.debug('')
-        if not kwargs.get('wallet_id'):
-            return self.error_no_wallet_id_found()
-        log.info('Attempting to fetch user credit wallet...')
-        _wallet = self.fetch_credit_wallet_by_id(kwargs['wallet_id'])
-        if not _wallet:
-            return self.warning_could_not_fetch_credit_wallet()
-        _unlink = self.user_credit_wallet_archive.pop(kwargs['wallet_id'])
-        if _unlink:
-            log.info('Successfully removed user credit wallet by id.')
-        return _unlink
 
     def action_unlink_credit_clock(self, **kwargs):
         log.debug('')
@@ -1153,6 +1155,24 @@ class ResUser(Base):
         return False
 
     # ERRORS
+
+    def error_could_not_unlink_credit_ewallet(self, command_chain):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Something went wrong. Could not unlink credit ewallet. '\
+                     'Command chain details : {}'.format(command_chain),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_no_ewallet_id_found(self, command_chain):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No ewallet id found. Command chain details : {}'\
+                     .format(command_chain),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
 
     def error_no_user_contact_list_found(self):
         log.error('No user contact list found.')
@@ -1443,10 +1463,6 @@ class ResUser(Base):
                     wallet.reference
                     )
                 )
-        return False
-
-    def error_no_wallet_id_found(self):
-        log.error('No wallet id found.')
         return False
 
     def error_no_clock_id_found(self):

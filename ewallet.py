@@ -377,6 +377,36 @@ class EWallet(Base):
     [ NOTE ]: Command chain responses are formatted here.
     '''
 
+    def action_unlink_credit_wallet(self, **kwargs):
+        '''
+        [ NOTE   ]: User action 'unlink credit wallet', accessible from external api calls.
+        [ INPUT  ]: wallet_id=<id>
+        [ RETURN ]: (True | False)
+        '''
+        log.debug('')
+        active_user = self.fetch_active_session_user()
+        if not active_user:
+            return self.error_could_not_fetch_active_session_user(kwargs)
+        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
+            kwargs, 'ctype', 'action', 'unlink',
+        )
+        unlink_ewallet = active_user.user_controller(
+            ctype='action', action='unlink', unlink='credit_wallet',
+            **sanitized_command_chain
+        )
+        if not unlink_ewallet or isinstance(unlink_ewallet, dict) and \
+                unlink_ewallet.get('failed'):
+            kwargs['active_session'].rollback()
+            return self.warning_could_not_unlink_credit_ewallet(
+                active_user.fetch_user_name(), kwargs
+            )
+        kwargs['active_session'].commit()
+        command_chain_response = {
+            'failed': False,
+            'credit_ewallet': kwargs['ewallet_id'],
+        }
+        return command_chain_response
+
     def action_unlink_contact_list(self, **kwargs):
         '''
         [ NOTE   ]: User action 'unlink contact list', accessible from external api calls.
@@ -2106,23 +2136,6 @@ class EWallet(Base):
         return True if _unlink else \
                 self.warning_could_not_unlink_user_account()
 
-    def action_unlink_credit_wallet(self, **kwargs):
-        '''
-        [ NOTE   ]: User action 'unlink credit wallet', accessible from external api calls.
-        [ INPUT  ]: wallet_id=<id>
-        [ RETURN ]: (True | False)
-        '''
-        log.debug('')
-        if not self.active_user or not kwargs.get('wallet_id'):
-            return self.error_handler_action_unlink_credit_wallet(
-                    session_user=self.active_user,
-                    wallet_id=kwargs.get('wallet_id'),
-                    )
-        return self.active_user.user_controller(
-                ctype='action', action='unlink', target='credit_wallet',
-                wallet_id=kwargs['wallet_id'],
-                )
-
     # HANDLERS
 
     def handle_user_action_switch_contact_list(self, **kwargs):
@@ -2658,6 +2671,15 @@ class EWallet(Base):
         return _controllers[kwargs['controller']](**kwargs)
 
     # WARNINGS
+
+    def warning_could_not_unlink_credit_ewallet(self, user_name, command_chain):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Something went wrong. Could not unlink credit ewallet for user {}. '\
+                       'Command chain details : {}'.format(user_name, command_chain),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
 
     def warning_could_not_switch_transfer_sheet(self, user_name, command_chain):
         command_chain_response = {
