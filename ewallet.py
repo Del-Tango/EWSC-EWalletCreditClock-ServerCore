@@ -78,6 +78,11 @@ class EWallet(Base):
 
     # FETCHERS
 
+    def fetch_active_session_user_account_archive(self):
+        log.debug('')
+        return False if not self.user_account_archive \
+            else self.user_account_archive
+
     def fetch_active_session_contact_list(self):
         log.debug('')
         return False if not self.contact_list else \
@@ -347,12 +352,12 @@ class EWallet(Base):
         '''
         log.debug('')
         if not kwargs.get('user'):
-            return self.error_no_user_object_found()
+            return self.error_no_user_object_found(kwargs)
         self.user_account_archive.append(kwargs['user'])
         log.info(
-                'Successfully updated session user account archive with user {}.' \
-                .format(kwargs['user'].fetch_user_name())
-                )
+            'Successfully updated session user account archive with user {}.' \
+            .format(kwargs['user'].fetch_user_name())
+        )
         return self.user_account_archive
 
     # UNLINKERS
@@ -2210,6 +2215,35 @@ class EWallet(Base):
 
     # HANDLERS
 
+#   @pysnooper.snoop('logs/ewallet.log')
+    def handle_user_action_login(self, **kwargs):
+        '''
+        [ NOTE   ]: High level manager for user action login.
+        [ INPUT  ]: user_name=<name>, user_pass=<pass>
+        [ RETURN ]: Logged in user if login action succesful, else False.
+        '''
+        log.debug('')
+        login_record = EWalletLogin()
+        kwargs['active_session'].add(login_record)
+        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
+            kwargs, 'action'
+        )
+        session_login = login_record.ewallet_login_controller(
+           action='login', user_archive=self.fetch_active_session_user_account_archive(),
+            **sanitized_command_chain
+        )
+        if not session_login:
+            return self.warning_could_not_login_user_account(kwargs)
+        update_archive = self.update_user_account_archive(user=session_login)
+        update_session = self.action_system_user_update(user=session_login)
+        kwargs['active_session'].commit()
+        log.info('User successfully logged in.')
+        command_chain_response = {
+            'failed': False,
+            'user_account': session_login.fetch_user_id(),
+        }
+        return command_chain_response
+
     def handle_user_action_switch_contact_list(self, **kwargs):
         log.debug('')
         if not kwargs.get('list_id'):
@@ -2572,30 +2606,6 @@ class EWallet(Base):
     def handle_system_event_request(self, **kwargs):
         pass
 
-#   @pysnooper.snoop('logs/ewallet.log')
-    def handle_user_action_login(self, **kwargs):
-        '''
-        [ NOTE   ]: High level manager for user action login.
-        [ INPUT  ]: user_name=<name>, user_pass=<pass>
-        [ RETURN ]: Logged in user if login action succesful, else False.
-        '''
-        log.debug('')
-        _login_record = EWalletLogin()
-        session_login = _login_record.ewallet_login_controller(
-           action='login', user_name=kwargs.get('user_name'),
-           user_pass=kwargs.get('user_pass'),
-           user_archive=self.user_account_archive,
-           active_session=self.session,
-        )
-        if not session_login:
-            return self.warning_could_not_login()
-        self.session.add(_login_record)
-        self.user_account_archive.append(session_login)
-        self.action_system_user_update(user=session_login)
-        self.session.commit()
-        log.info('User successfully loged in.')
-        return session_login
-
     def handle_user_action_logout(self, **kwargs):
         '''
         [ NOTE   ]: High level manager for user action logout.
@@ -2745,6 +2755,15 @@ class EWallet(Base):
         return _controllers[kwargs['controller']](**kwargs)
 
     # WARNINGS
+
+    def warning_could_not_login_user_account(self, command_chain):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Something went wrong. Could not login user account. '\
+                       'Command chain details : {}'.format(command_chain),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
 
     def warning_could_not_view_logout_records(self, user_name, command_chain):
         command_chain_response = {
@@ -3064,13 +3083,6 @@ class EWallet(Base):
         log.warning(
             'No user account found. Details : {}'.format(command_chain)
         )
-        return False
-
-    def warning_could_not_login(self):
-        log.warning(
-                'Something went wrong. '
-                'Login subroutine failure.'
-                )
         return False
 
     def warning_could_not_logout(self, **kwargs):
@@ -3505,6 +3517,15 @@ class EWallet(Base):
 
     # ERRORS
 
+    def error_no_user_object_found(self, command_chain):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No user object found. Command chain details : {}'\
+                     .format(command_chain),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
     def error_no_user_action_view_target_specified(self, command_chain):
         command_chain_response = {
             'failed': True,
@@ -3878,10 +3899,6 @@ class EWallet(Base):
 
     def error_no_session_active_user_found(self):
         log.error('No session active user found.')
-        return False
-
-    def error_no_user_object_found(self):
-        log.error('No user object found.')
         return False
 
     def error_no_user_password_found(self):
