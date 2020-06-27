@@ -839,6 +839,24 @@
             'warning': <msg>,
         }
 
+* User action Unlink Credit Clock:
+    * Controller Instruction Set:
+        session_manager_controller(
+            controller='client', ctype='action', action='unlink', unlink='credit',
+            credit='clock', clock_id=<id>, client_id=<client-id>,
+            session_token=<token>
+        )
+    * Returns:
+        * [ OK  ]: {
+            'failed': False,
+            'credit_clock': <id>,
+        }
+        * [ NOK ]: {
+            'failed': True,
+            'error': <msg>,
+            'warning': <msg>,
+        }
+
 
 ################################################################################
 # EWallet Session (Command Chain)

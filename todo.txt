@@ -7,8 +7,6 @@
 ###############################################################################
 # EWallet Session Manager
 ###############################################################################
-# TODO - User action Unlink Credit EWallet
-# TODO - User action Unlink Credit Clock
 # TODO - User action Session Login (2)
 
 

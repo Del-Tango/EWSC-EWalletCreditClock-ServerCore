@@ -693,6 +693,21 @@ class CreditEWallet(Base):
 
     # ACTIONS
 
+    def action_unlink_clock(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('clock_id'):
+            return self.error_no_credit_clock_id_found(kwargs)
+        try:
+            unlink = kwargs['active_session'].query(
+                CreditClock
+            ).filter_by(
+                clock_id=kwargs['clock_id']
+            ).delete()
+        except:
+            return self.error_could_not_unlink_credit_clock(kwargs)
+        log.info('Successfully unlinked credit ewallet credit clock by id.')
+        return kwargs['clock_id']
+
     def action_unlink_time(self, **kwargs):
         log.debug('')
         if not kwargs.get('time'):
@@ -742,7 +757,7 @@ class CreditEWallet(Base):
             'invoice': self.action_unlink_invoice,
             'conversion': self.action_unlink_conversion,
             'time': self.action_unlink_time,
-#           'clock':
+            'clock': self.action_unlink_clock,
         }
         return handlers[kwargs['unlink']](**kwargs)
 
@@ -1208,6 +1223,24 @@ class CreditEWallet(Base):
         return False
 
     # ERRORS
+
+    def error_could_not_unlink_credit_clock(self, command_chain):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Something went wrong. Could not unlink credit clock. '\
+                     'Command chain details : {}'.format(command_chain),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_no_credit_clock_id_found(self, command_chain):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No credit ewallet credit clock id found. '\
+                     'Command chain details : {}'.format(command_chain),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
 
     def error_no_credit_ewallet_transfer_sheet_found(self):
         log.error('No credit ewallet transfer sheet found.')

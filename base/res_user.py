@@ -609,6 +609,25 @@ class ResUser(Base):
 
     # ACTIONS
 
+    def action_unlink_credit_clock(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('clock_id'):
+            return self.error_no_credit_clock_id_found(kwargs)
+        log.info('Attempting to fetch user credit ewallet...')
+        credit_ewallet = self.fetch_user_credit_wallet()
+        if not credit_ewallet:
+            return self.error_could_not_fetch_user_credit_ewallet(kwargs)
+        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
+            kwargs, 'controller', 'action', 'unlink',
+        )
+        unlink = credit_ewallet.main_controller(
+            controller='user', action='unlink', unlink='clock',
+            **sanitized_command_chain
+        )
+        if unlink:
+            log.info('Successfully unlinked ewallet credit clock.')
+        return unlink
+
     def action_unlink_credit_wallet(self, **kwargs):
         log.debug('')
         if not kwargs.get('ewallet_id'):
@@ -882,15 +901,6 @@ class ResUser(Base):
         log.info('Successfully switched user credit clock.')
         return clock_switch
 
-    def action_unlink_credit_clock(self, **kwargs):
-        log.debug('')
-        if not kwargs.get('clock_id'):
-            return self.error_no_credit_clock_id_found()
-        return self.credit_wallet.main_controller(
-                controller='system', action='unlink_clock',
-                clock_id=kwargs['clock_id']
-                )
-
     # HANDLERS
 
     def handle_user_action_edit_name(self, **kwargs):
@@ -1155,6 +1165,15 @@ class ResUser(Base):
         return False
 
     # ERRORS
+
+    def error_no_credit_clock_id_found(self, command_chain):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No ewallet credit clock id found. Command chain details : {}'\
+                     .format(command_chain),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
 
     def error_could_not_unlink_credit_ewallet(self, command_chain):
         command_chain_response = {

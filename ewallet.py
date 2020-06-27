@@ -377,6 +377,31 @@ class EWallet(Base):
     [ NOTE ]: Command chain responses are formatted here.
     '''
 
+    def action_unlink_credit_clock(self, **kwargs):
+        log.debug('')
+        active_user = self.fetch_active_session_user()
+        if not active_user:
+            return self.error_could_not_fetch_active_session_user(kwargs)
+        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
+            kwargs, 'ctype', 'action', 'unlink',
+        )
+        unlink_clock = active_user.user_controller(
+            ctype='action', action='unlink', unlink='credit_clock',
+            **sanitized_command_chain
+        )
+        if not unlink_clock or isinstance(unlink_clock, dict) and \
+                unlink_clock.get('failed'):
+            kwargs['active_session'].rollback()
+            return self.warning_could_not_unlink_credit_clock(
+                active_user.fetch_user_name(), kwargs
+            )
+        kwargs['active_session'].commit()
+        command_chain_response = {
+            'failed': False,
+            'credit_clock': kwargs['clock_id'],
+        }
+        return command_chain_response
+
     def action_unlink_credit_wallet(self, **kwargs):
         '''
         [ NOTE   ]: User action 'unlink credit wallet', accessible from external api calls.
@@ -2110,11 +2135,6 @@ class EWallet(Base):
         active_session.rollback()
         return self.error_pay_type_transfer_failure(kwargs)
 
-    # TODO
-    def action_unlink_credit_clock(self, **kwargs):
-        log.debug('')
-        return False
-
 #   @pysnooper.snoop('logs/ewallet.log')
     def action_unlink_user_account(self, **kwargs):
         '''
@@ -2671,6 +2691,15 @@ class EWallet(Base):
         return _controllers[kwargs['controller']](**kwargs)
 
     # WARNINGS
+
+    def warning_could_not_unlink_credit_clock(self, user_name, command_chain):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Somethin went wrong. Could not unlink credit clock for user {}. '\
+                       'Command chain details : {}'.format(user_name, command_chain),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
 
     def warning_could_not_unlink_credit_ewallet(self, user_name, command_chain):
         command_chain_response = {

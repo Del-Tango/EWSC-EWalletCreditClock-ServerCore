@@ -619,6 +619,21 @@ class EWalletSessionManager():
     [ NOTE ]: SqlAlchemy ORM sessions are fetched here.
     '''
 
+    def action_unlink_credit_clock(self, ewallet_session, instruction_set):
+        log.debug('')
+        orm_session = ewallet_session.fetch_active_session()
+        sanitized_instruction_set = res_utils.remove_tags_from_command_chain(
+            instruction_set, 'controller', 'ctype', 'action', 'unlink', 'credit'
+        )
+        unlink_credit_clock = ewallet_session.ewallet_controller(
+            controller='user', ctype='action', action='unlink', unlink='credit_clock',
+            active_session=orm_session, **sanitized_instruction_set
+        )
+        return self.warning_could_not_unlink_credit_clock(
+            ewallet_session, instruction_set
+        ) if not unlink_credit_clock or unlink_credit_clock.get('failed') \
+        else unlink_credit_clock
+
     def action_unlink_credit_ewallet(self, ewallet_session, instruction_set):
         log.debug('')
         orm_session = ewallet_session.fetch_active_session()
@@ -1417,6 +1432,21 @@ class EWalletSessionManager():
     [ NOTE ]: Instruction set validation and sanitizations are performed here.
     '''
 
+    def handle_client_action_unlink_credit_clock(self, **kwargs):
+        log.debug('')
+        instruction_set_validation = self.validate_instruction_set(kwargs)
+        if not instruction_set_validation:
+            return False
+        ewallet = self.fetch_ewallet_session_for_client_action_using_instruction_set(
+            kwargs
+        )
+        if not ewallet:
+            return False
+        unlink_credit_clock = self.action_unlink_credit_clock(
+            ewallet['ewallet_session'], ewallet['sanitized_instruction_set']
+        )
+        return unlink_credit_clock
+
     def handle_client_action_unlink_credit_ewallet(self, **kwargs):
         log.debug('')
         instruction_set_validation = self.validate_instruction_set(kwargs)
@@ -1438,7 +1468,7 @@ class EWalletSessionManager():
             return self.error_no_client_action_unlink_credit_target_specified(kwargs)
         handlers = {
             'ewallet': self.handle_client_action_unlink_credit_ewallet,
-#           'clock':
+            'clock': self.handle_client_action_unlink_credit_clock,
         }
         return handlers[kwargs['credit']](**kwargs)
 
@@ -2818,6 +2848,15 @@ class EWalletSessionManager():
         return handlers[kwargs['controller']](**kwargs)
 
     # WARNINGS
+
+    def warning_could_not_unlink_credit_clock(self, ewallet_session, instruction_set):
+        instruction_set_response = {
+            'failed': True,
+            'warning': 'Something went wrong. Could not unlink credit ewallet credit clock in ewallet session {}. '\
+                       'Instruction set details :  {}'.format(ewallet_session, instruction_set),
+        }
+        log.warning(instruction_set_response['warning'])
+        return instruction_set_response
 
     def warning_could_not_unlink_credit_ewallet(self, ewallet_session, instruction_set):
         instruction_set_response = {
@@ -4321,6 +4360,16 @@ class EWalletSessionManager():
         print(str(_unlink) + '\n')
         return _unlink
 
+    def test_user_action_unlink_credit_clock(self, **kwargs):
+        print('[ * ]: User action Unlink Credit Clock')
+        _unlink = self.session_manager_controller(
+            controller='client', ctype='action', action='unlink', unlink='credit',
+            credit='clock', clock_id=kwargs['clock_id'], client_id=kwargs['client_id'],
+            session_token=kwargs['session_token']
+        )
+        print(str(_unlink) + '\n')
+        return _unlink
+
     def test_session_manager_controller(self, **kwargs):
         print('[ TEST ] Session Manager')
 #       open_in_port = self.test_open_instruction_listener_port()
@@ -4525,6 +4574,10 @@ class EWalletSessionManager():
         unlink_credit_ewallet = self.test_user_action_unlink_credit_ewallet(
             client_id=client_id['client_id'], session_token=session_token['session_token'],
             ewallet_id=2
+        )
+        unlink_credit_clock = self.test_user_action_unlink_credit_clock(
+            client_id=client_id['client_id'], session_token=session_token['session_token'],
+            clock_id=2
         )
 
 if __name__ == '__main__':
