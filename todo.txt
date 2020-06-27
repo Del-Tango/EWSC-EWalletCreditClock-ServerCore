@@ -7,8 +7,6 @@
 ###############################################################################
 # EWallet Session Manager
 ###############################################################################
-# TODO - User action View User Login Records
-# TODO - User action View User Logout Records
 # TODO - User action Session Login (2)
 # TODO - System action Spawn Worker (2)
 # TODO - System action Interogate Session

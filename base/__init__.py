@@ -10,3 +10,5 @@ from . import time_sheet
 from . import transfer_sheet
 from . import invoice_sheet
 from . import socket_handler
+from . import ewallet_login
+from . import ewallet_logout

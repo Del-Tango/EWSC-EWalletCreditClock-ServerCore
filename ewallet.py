@@ -381,6 +381,29 @@ class EWallet(Base):
     [ NOTE ]: Command chain responses are formatted here.
     '''
 
+    def action_view_logout_records(self, **kwargs):
+        log.debug('')
+        active_user = self.fetch_active_session_user()
+        if not active_user:
+            return self.error_could_not_fetch_active_session_user(kwargs)
+        try:
+            logout_records = list(kwargs['active_session'].query(
+                EWalletLogout
+            ).filter_by(user_id=active_user.fetch_user_id()))
+        except:
+            return self.warning_could_not_view_logout_records(
+                active_user.fetch_user_name(), kwargs
+            )
+        command_chain_response = {
+            'failed': False,
+            'user_account': active_user.fetch_user_id(),
+            'logout_records': {
+                item.logout_id: item.logout_date.strftime("%d-%m-%Y %H:%M ") \
+                for item in logout_records
+            },
+        }
+        return command_chain_response
+
     def action_view_login_records(self, **kwargs):
         log.debug('')
         active_user = self.fetch_active_session_user()
@@ -2497,8 +2520,8 @@ class EWallet(Base):
         '''
         log.debug('')
         if not kwargs.get('view'):
-            return self.error_no_view_target_specified()
-        _handlers = {
+            return self.error_no_user_action_view_target_specified(kwargs)
+        handlers = {
             'account': self.action_view_user_account,
             'credit_wallet': self.action_view_credit_wallet,
             'credit_clock': self.action_view_credit_clock,
@@ -2508,9 +2531,9 @@ class EWallet(Base):
             'time': self.action_view_time,
             'conversion': self.action_view_conversion,
             'login': self.action_view_login_records,
-#           'logout':
+            'logout': self.action_view_logout_records,
         }
-        return _handlers[kwargs['view']](**kwargs)
+        return handlers[kwargs['view']](**kwargs)
 
     def handle_user_action_unlink(self, **kwargs):
         '''
@@ -2722,6 +2745,15 @@ class EWallet(Base):
         return _controllers[kwargs['controller']](**kwargs)
 
     # WARNINGS
+
+    def warning_could_not_view_logout_records(self, user_name, command_chain):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Something went wrong. Could not view account logout records for user {}. '\
+                       'Command chain details : {}'.format(user_name, command_chain),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
 
     def warning_could_not_view_login_records(self, user_name, command_chain):
         command_chain_response = {
@@ -3473,6 +3505,15 @@ class EWallet(Base):
 
     # ERRORS
 
+    def error_no_user_action_view_target_specified(self, command_chain):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No user action view target specified. '\
+                     'Command chain details : {}'.format(command_chain),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
     def error_could_not_fetch_active_session_user(self, command_chain):
         command_chain_response = {
             'failed': True,
@@ -3737,10 +3778,6 @@ class EWallet(Base):
 
     def error_no_user_specified(self):
         log.error('No user specified.')
-        return False
-
-    def error_no_view_target_specified(self):
-        log.error('No view target specified.')
         return False
 
     def error_no_transfer_target_specified(self):

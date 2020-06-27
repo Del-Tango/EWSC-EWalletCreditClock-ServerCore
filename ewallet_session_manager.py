@@ -620,6 +620,22 @@ class EWalletSessionManager():
 
     '''
 
+    def action_view_logout_records(self, ewallet_session, instruction_set):
+        log.debug('')
+        orm_session = ewallet_session.fetch_active_session()
+        sanitized_instruction_set = res_utils.remove_tags_from_command_chain(
+            instruction_set, 'controller', 'ctype', 'action', 'view',
+        )
+        active_session_user = ewallet_session.fetch_active_session_user()
+        user_logout_records = ewallet_session.ewallet_controller(
+            controller='user', ctype='action', action='view', view='logout',
+            active_session=orm_session, **sanitized_instruction_set
+        )
+        return self.warning_could_not_view_user_logout_records(
+            ewallet_session, instruction_set
+        ) if not user_logout_records or user_logout_records.get('failed') \
+            else user_logout_records
+
     def action_view_login_records(self, ewallet_session, instruction_set):
         log.debug('')
         orm_session = ewallet_session.fetch_active_session()
@@ -634,7 +650,7 @@ class EWalletSessionManager():
         return self.warning_could_not_view_user_login_records(
             ewallet_session, instruction_set
         ) if not user_login_records or user_login_records.get('failed') \
-        else user_login_records
+            else user_login_records
 
     def action_unlink_user_account(self, ewallet_session, instruction_set):
         log.debug('')
@@ -650,7 +666,7 @@ class EWalletSessionManager():
         return self.warning_could_not_unlink_user_account(
             ewallet_session, instruction_set
         ) if not unlink_user_account or unlink_user_account.get('failed') \
-        else unlink_user_account
+            else unlink_user_account
 
     def action_unlink_credit_clock(self, ewallet_session, instruction_set):
         log.debug('')
@@ -665,7 +681,7 @@ class EWalletSessionManager():
         return self.warning_could_not_unlink_credit_clock(
             ewallet_session, instruction_set
         ) if not unlink_credit_clock or unlink_credit_clock.get('failed') \
-        else unlink_credit_clock
+            else unlink_credit_clock
 
     def action_unlink_credit_ewallet(self, ewallet_session, instruction_set):
         log.debug('')
@@ -680,7 +696,7 @@ class EWalletSessionManager():
         return self.warning_could_not_unlink_credit_ewallet(
             ewallet_session, instruction_set
         ) if not unlink_credit_ewallet or unlink_credit_ewallet.get('failed') \
-        else unlink_credit_ewallet
+            else unlink_credit_ewallet
 
     def action_unlink_contact_list(self, ewallet_session, instruction_set):
         log.debug('')
@@ -695,7 +711,7 @@ class EWalletSessionManager():
         return self.warning_could_not_unlink_contact_list(
             ewallet_session, instruction_set
         ) if not unlink_contact_list or unlink_contact_list.get('failed') \
-        else unlink_contact_list
+            else unlink_contact_list
 
     def action_unlink_time_sheet(self, ewallet_session, instruction_set):
         log.debug('')
@@ -710,7 +726,7 @@ class EWalletSessionManager():
         return self.warning_could_not_unlink_time_sheet(
             ewallet_session, instruction_set
         ) if not unlink_time_sheet or unlink_time_sheet.get('failed') \
-        else unlink_time_sheet
+            else unlink_time_sheet
 
     def action_unlink_conversion_sheet(self, ewallet_session, instruction_set):
         log.debug('')
@@ -725,7 +741,7 @@ class EWalletSessionManager():
         return self.warning_could_not_unlink_conversion_sheet(
             ewallet_session, instruction_set
         ) if not unlink_conversion_sheet or unlink_conversion_sheet.get('failed') \
-        else unlink_conversion_sheet
+            else unlink_conversion_sheet
 
     def action_unlink_invoice_sheet(self, ewallet_session, instruction_set):
         log.debug('')
@@ -740,7 +756,7 @@ class EWalletSessionManager():
         return self.warning_could_not_unlink_invoice_sheet(
             ewallet_session, instruction_set
         ) if not unlink_invoice_sheet or unlink_invoice_sheet.get('failed') \
-        else unlink_invoice_sheet
+            else unlink_invoice_sheet
 
     def action_unlink_transfer_sheet(self, ewallet_session, instruction_set):
         log.debug('')
@@ -755,7 +771,7 @@ class EWalletSessionManager():
         return self.warning_could_not_unlink_transfer_sheet(
             ewallet_session, instruction_set
         ) if not unlink_transfer_sheet or unlink_transfer_sheet.get('failed') \
-        else unlink_transfer_sheet
+            else unlink_transfer_sheet
 
 #   @pysnooper.snoop()
     def action_unlink_contact_list_record(self, ewallet_session, instruction_set):
@@ -771,7 +787,7 @@ class EWalletSessionManager():
         return self.warning_could_not_unlink_contact_list_record(
             ewallet_session, instruction_set
         ) if not unlink_contact_record or unlink_contact_record.get('failed') \
-        else unlink_contact_record
+            else unlink_contact_record
 
     def action_unlink_time_sheet_record(self, ewallet_session, instruction_set):
         log.debug('')
@@ -786,7 +802,7 @@ class EWalletSessionManager():
         return self.warning_could_not_unlink_time_sheet_record(
             ewallet_session, instruction_set
         ) if not unlink_time_record or unlink_time_record.get('failed') \
-        else unlink_time_record
+            else unlink_time_record
 
     def action_unlink_conversion_sheet_record(self, ewallet_session, instruction_set):
         log.debug('')
@@ -801,7 +817,7 @@ class EWalletSessionManager():
         return self.warning_could_not_unlink_conversion_sheet_record(
             ewallet_session, instruction_set
         ) if not unlink_conversion_record or unlink_conversion_record.get('failed') \
-        else unlink_conversion_record
+            else unlink_conversion_record
 
     def action_unlink_invoice_sheet_record(self, ewallet_session, instruction_set):
         log.debug('')
@@ -816,7 +832,7 @@ class EWalletSessionManager():
         return self.warning_could_not_unlink_invoice_sheet_record(
             ewallet_session, instruction_set
         ) if not unlink_invoice_record or unlink_invoice_record.get('failed') \
-        else unlink_invoice_record
+            else unlink_invoice_record
 
     def action_unlink_transfer_sheet_record(self, ewallet_session, instruction_set):
         log.debug('')
@@ -831,7 +847,7 @@ class EWalletSessionManager():
         return self.warning_could_not_unlink_transfer_sheet_record(
             ewallet_session, instruction_set
         ) if not unlink_transfer_record or unlink_transfer_record.get('failed') \
-        else unlink_transfer_record
+            else unlink_transfer_record
 
     def action_switch_contact_list(self, ewallet_session, instruction_set):
         log.debug('')
@@ -845,8 +861,8 @@ class EWalletSessionManager():
         )
         return self.warning_could_not_switch_contact_list(
             ewallet_session, instruction_set
-        ) if not switch_contact_list or switch_contact_list.get('failed') else \
-        switch_contact_list
+        ) if not switch_contact_list or switch_contact_list.get('failed') \
+            else switch_contact_list
 
     def action_switch_time_sheet(self, ewallet_session, instruction_set):
         log.debug('')
@@ -1464,6 +1480,21 @@ class EWalletSessionManager():
     '''
     [ NOTE ]: Instruction set validation and sanitizations are performed here.
     '''
+
+    def handle_client_action_view_logout_records(self, **kwargs):
+        log.debug('')
+        instruction_set_validation = self.validate_instruction_set(kwargs)
+        if not instruction_set_validation:
+            return False
+        ewallet = self.fetch_ewallet_session_for_client_action_using_instruction_set(
+            kwargs
+        )
+        if not ewallet:
+            return False
+        view_logout_records = self.action_view_logout_records(
+            ewallet['ewallet_session'], ewallet['sanitized_instruction_set']
+        )
+        return view_logout_records
 
     def handle_client_action_view_login_records(self, **kwargs):
         log.debug('')
@@ -2372,6 +2403,7 @@ class EWalletSessionManager():
             'invoice': self.handle_client_action_view_invoice,
             'account': self.handle_client_action_view_account,
             'login': self.handle_client_action_view_login_records,
+            'logout': self.handle_client_action_view_logout_records,
         }
         return handlers[kwargs['view']](**kwargs)
 
@@ -2913,6 +2945,15 @@ class EWalletSessionManager():
         return handlers[kwargs['controller']](**kwargs)
 
     # WARNINGS
+
+    def warning_could_not_view_user_logout_records(self, ewallet_session, instruction_set):
+        instruction_set_response = {
+            'failed': True,
+            'warning': 'Something went wrong. Could not view user account logout records in ewallet session {}. '\
+                       'Instruction set details : {}'.format(ewallet_session, instruction_set),
+        }
+        log.warning(instruction_set_response['warning'])
+        return instruction_set_response
 
     def warning_could_not_view_user_login_records(self, ewallet_session, instruction_set):
         instruction_set_response = {
@@ -4471,6 +4512,15 @@ class EWalletSessionManager():
         print(str(_view) + '\n')
         return _view
 
+    def test_user_action_view_logout_records(self, **kwargs):
+        print('[ * ]: User action View Logout Records')
+        _view = self.session_manager_controller(
+            controller='client', ctype='action', action='view', view='logout',
+            client_id=kwargs['client_id'], session_token=kwargs['session_token']
+        )
+        print(str(_view) + '\n')
+        return _view
+
     def test_session_manager_controller(self, **kwargs):
         print('[ TEST ] Session Manager')
 #       open_in_port = self.test_open_instruction_listener_port()
@@ -4684,6 +4734,9 @@ class EWalletSessionManager():
             client_id=client_id['client_id'], session_token=session_token['session_token'],
         )
         view_login_records = self.test_user_action_view_login_records(
+            client_id=client_id['client_id'], session_token=session_token['session_token'],
+        )
+        view_logout_records = self.test_user_action_view_logout_records(
             client_id=client_id['client_id'], session_token=session_token['session_token'],
         )
 
