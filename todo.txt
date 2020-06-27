@@ -7,7 +7,11 @@
 ###############################################################################
 # EWallet Session Manager
 ###############################################################################
+# TODO - User action View User Login Records
+# TODO - User action View User Logout Records
 # TODO - User action Session Login (2)
+# TODO - System action Spawn Worker (2)
+# TODO - System action Interogate Session
 
 
 ###############################################################################
@@ -19,25 +23,15 @@
 ###############################################################################
 # EWallet Session
 ###############################################################################
-# TODO - BUG Report - Record id's don't autoincrement
-
-# TODO - Persistent storage with SQLAlchemy ORM
-- refactor session commit points
-- session cleanup
-- orm contact list record creation
-- orm transfer record creation
-- orm conversion record creation
-- orm time record creation
-- orm invoice record creation
-- system action view session
-
 # TODO - Remove redundant error handlers
 # TODO - Add full test cases
-# TODO - Manage initialisation and sqlalchemy sessions
 # TODO - PEP8-it
-# TODO - BUG FIX - Ewallet Record Sequencer
+
+
+###############################################################################
+# Res User
+###############################################################################
 # TODO - User Deletion order with 30 day pending
-# TODO - EWallet report an issue system
 
 
 ###############################################################################
@@ -45,7 +39,6 @@
 ###############################################################################
 # TODO - Add ACL permission sheet
 # TODO - Attach software liscence agreement
-
 # TODO - EWallet Client
 # TODO - EWallet Client Interface
 # TODO - EWallet Client user account security

@@ -185,11 +185,11 @@ class EWallet(Base):
             return self.error_no_active_session_found()
         return self.session
 
-    def fetch_active_session_user(self):
+    def fetch_active_session_user(self, obj=True):
         log.debug('')
         if not len(self.active_user):
             return self.error_no_session_active_user_found()
-        return self.active_user[0]
+        return self.active_user[0] if obj else self.active_user[0].fetch_user_id()
 
     def fetch_active_session_credit_wallet(self):
         log.debug('')
@@ -364,18 +364,45 @@ class EWallet(Base):
         [ RETURN ]:
         '''
         log.debug('')
-        if not kwargs.get('active_session'):
-            return self.error_no_active_session_found()
-        _user_id = kwargs.get('user_id') or \
-                self.fetch_active_session_user().fetch_user_ids()
-        return kwargs['active_session'].query(ResUser) \
-                .filter_by(user_id=_user_id) \
-                .delete()
+        if not kwargs.get('user_id'):
+            return self.error_no_user_account_id_found(kwargs)
+        try:
+            kwargs['active_session'].query(
+                ResUser
+            ).filter_by(
+                user_id=kwargs['user_id']
+            ).delete()
+        except:
+            return self.error_could_not_unlink_user_account(kwargs)
+        return kwargs['user_id']
 
     # ACTIONS
     '''
     [ NOTE ]: Command chain responses are formatted here.
     '''
+
+#   @pysnooper.snoop('logs/ewallet.log')
+    def action_unlink_user_account(self, **kwargs):
+        '''
+        [ NOTE   ]: User action 'unlink user account', accessible from external api calls.
+        [ INPUT  ]: user=<user>, active_session=<session>
+        [ RETURN ]: (True | False)
+        '''
+        log.debug('')
+        user_id = kwargs.get('user_id') or self.fetch_active_session_user(obj=False)
+        if not user_id:
+            return self.error_no_user_account_id_found(kwargs)
+        unlink_account = self.unlink_user_account(user_id=user_id, **kwargs)
+        if not unlink_account or isinstance(unlink_account, dict) and \
+                unlink_account.get('failed'):
+            kwargs['active_session'].rollback()
+            return self.warning_could_not_unlink_user_account(user_id, **kwargs)
+        kwargs['active_session'].commit()
+        command_chain_response = {
+            'failed': False,
+            'user_id': user_id,
+        }
+        return command_chain_response
 
     def action_unlink_credit_clock(self, **kwargs):
         log.debug('')
@@ -2135,27 +2162,6 @@ class EWallet(Base):
         active_session.rollback()
         return self.error_pay_type_transfer_failure(kwargs)
 
-#   @pysnooper.snoop('logs/ewallet.log')
-    def action_unlink_user_account(self, **kwargs):
-        '''
-        [ NOTE   ]: User action 'unlink user account', accessible from external api calls.
-        [ INPUT  ]: user=<user>, active_session=<session>
-        [ RETURN ]: (True | False)
-        '''
-        log.debug('')
-        _user = kwargs.get('user') or self.fetch_active_session_user()
-        if not _user:
-            return self.error_no_user_account_found()
-        _active_session = kwargs.get('active_session') or \
-                self.fetch_active_session()
-        _unlink = self.unlink_user_account(
-                user_id=_user.fetch_user_id(),
-                active_session=_active_session,
-                )
-        _active_session.commit()
-        return True if _unlink else \
-                self.warning_could_not_unlink_user_account()
-
     # HANDLERS
 
     def handle_user_action_switch_contact_list(self, **kwargs):
@@ -2692,10 +2698,19 @@ class EWallet(Base):
 
     # WARNINGS
 
+    def warning_could_not_unlink_user_account(self, user_name, command_chain):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Something went wrong. Could not unlink user account {}. '\
+                       'Command chain details : {}'.format(user_name, command_chain),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
+
     def warning_could_not_unlink_credit_clock(self, user_name, command_chain):
         command_chain_response = {
             'failed': True,
-            'warning': 'Somethin went wrong. Could not unlink credit clock for user {}. '\
+            'warning': 'Something went wrong. Could not unlink credit clock for user {}. '\
                        'Command chain details : {}'.format(user_name, command_chain),
         }
         log.warning(command_chain_response['warning'])
@@ -2984,9 +2999,6 @@ class EWallet(Base):
             'No user account found. Details : {}'.format(command_chain)
         )
         return False
-
-    def warning_could_not_unlink_user_account(self):
-        log.warning('Something went wrong. Could not unlink user account.')
 
     def warning_could_not_login(self):
         log.warning(
@@ -3427,6 +3439,24 @@ class EWallet(Base):
 
     # ERRORS
 
+    def error_could_not_unlink_user_account(self, command_chain):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Could not unlink user account. Command chain details : {}'\
+                     .format(command_chain),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_no_user_account_id_found(self, command_chain):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No user account id found. Command chain details : {}'\
+                     .format(command_chain),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
     def error_could_not_fetch_active_session_credit_ewallet(self, command_chain):
         command_chain_response = {
             'failed': True,
@@ -3596,10 +3626,6 @@ class EWallet(Base):
 
     def error_could_not_remove_user_from_account_archive(self):
         log.error('Could not remove user from account archive.')
-        return False
-
-    def error_no_user_account_found(self):
-        log.error('No user account found.')
         return False
 
     def error_no_partner_account_found(self):
