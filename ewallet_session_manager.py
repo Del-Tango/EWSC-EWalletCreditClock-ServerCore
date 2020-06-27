@@ -1175,7 +1175,7 @@ class EWalletSessionManager():
         return self.warning_could_not_view_contact_list(
             ewallet_session, instruction_set
         ) if not view_contact_list or isinstance(view_contact_list, dict) and \
-        view_cotact_list.get('failed') else view_contact_list
+        view_contact_list.get('failed') else view_contact_list
 
     def action_view_contact_record(self, ewallet_session, instruction_set):
         log.debug('')
@@ -4331,20 +4331,20 @@ class EWalletSessionManager():
             session_token=session_token['session_token'],
             pay='system.core@alvearesolutions.com'
         )
-#       view_contact_list = self.test_user_action_view_contact_list(
-#           client_id=client_id['client_id'],
-#           session_token=session_token['session_token'],
-#       )
-#       add_contact_record = self.test_user_action_add_contact_record(
-#           client_id=client_id['client_id'], session_token=session_token['session_token'],
-#           contact_list=view_contact_list['contact_list'],
-#           user_name='This is bob', user_email='example@example.com', user_phone='095551234',
-#           user_reference='That weird guy coding wallets.', notes='WOOHO.'
-#       )
-#       view_contact_record = self.test_user_action_view_contact_record(
-#           client_id=client_id['client_id'], session_token=session_token['session_token'],
-#           record=add_contact_record['contact_record']
-#       )
+        view_contact_list = self.test_user_action_view_contact_list(
+            client_id=client_id['client_id'],
+            session_token=session_token['session_token'],
+        )
+        add_contact_record = self.test_user_action_add_contact_record(
+            client_id=client_id['client_id'], session_token=session_token['session_token'],
+            contact_list=view_contact_list['contact_list'],
+            user_name='This is bob', user_email='example@example.com', user_phone='095551234',
+            user_reference='That weird guy coding wallets.', notes='WOOHO.'
+        )
+        view_contact_record = self.test_user_action_view_contact_record(
+            client_id=client_id['client_id'], session_token=session_token['session_token'],
+            record=add_contact_record['contact_record']
+        )
         transfer_credits = self.test_user_action_transfer_credits(
             client_id=client_id['client_id'], session_token=session_token['session_token'],
             transfer_to='example@example.com', credits=50
