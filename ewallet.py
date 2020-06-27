@@ -78,6 +78,30 @@ class EWallet(Base):
 
     # FETCHERS
 
+    def fetch_user_account_from_active_session_user_archive(self, **kwargs):
+        log.debug('')
+        account_archive = self.fetch_active_session_user_account_archive()
+        account_ids = False if not account_archive \
+            else [account.fetch_user_id() for account in account_archive]
+        if not account_ids:
+            return self.error_active_session_account_archive_empty(kwargs)
+        user_account = self.fetch_user_by_id(**kwargs)
+        return self.error_user_account_does_not_belong_to_active_session_archive(kwargs) \
+            if user_account.fetch_user_id() not in account_ids else user_account
+
+    def fetch_user_by_id(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('account_id'):
+            return self.error_no_user_account_id_found(kwargs)
+        try:
+            user_account = list(kwargs['active_session'].query(
+                ResUser
+            ).filter_by(user_id=kwargs['account_id']))
+        except:
+            return self.error_could_not_fetch_user_account_by_id(kwargs)
+        log.info('Successfully fetched user by id.')
+        return user_account[0]
+
     def fetch_active_session_user_account_archive(self):
         log.debug('')
         return False if not self.user_account_archive \
@@ -120,14 +144,6 @@ class EWallet(Base):
                 self.fetch_active_session()
         score_account = active_session.query(ResUser).filter_by(user_id=1)
         return False if not score_account else score_account[0]
-
-    # TODO - Apply ORM
-    def fetch_user_by_id(self, **kwargs):
-        log.debug('')
-        if not kwargs.get('code'):
-            return self.error_no_user_id_found()
-        log.info('Successfully fetched user by id.')
-        return self.user_account_archive.get(kwargs['code'])
 
     # TODO - Apply ORM
     def fetch_user_by_name(self, **kwargs):
@@ -275,15 +291,17 @@ class EWallet(Base):
         [ RETURN ]: ({'active_user': <user>, 'credit_wallet': <wallet>, 'contact_list': <list>} | False)
         '''
         log.debug('')
-        _handlers = {
-                'active_user': self.set_session_active_user,
-                'credit_wallet': self.set_session_credit_wallet,
-                'contact_list': self.set_session_contact_list,
-                }
+        handlers = {
+            'active_user': self.set_session_active_user,
+            'credit_wallet': self.set_session_credit_wallet,
+            'contact_list': self.set_session_contact_list,
+        }
         for item in data_dct:
-            if item in _handlers and data_dct[item]:
-                _handlers[item](data_dct[item])
+            if item in handlers and data_dct[item]:
+                handlers[item](data_dct[item])
         return data_dct
+
+    # CLEANERS
 
     def clear_session_active_user(self):
         log.debug('')
@@ -322,7 +340,7 @@ class EWallet(Base):
                 _handlers[item]()
         return data_dct
 
-    # UPDATES
+    # UPDATERS
 
     def update_session_from_user(self, **kwargs):
         '''
@@ -333,15 +351,15 @@ class EWallet(Base):
         log.debug('')
         if not kwargs.get('session_active_user'):
             return self.error_no_session_active_user_found()
-        _user = kwargs['session_active_user']
-        _session_data = {
-                'active_user': _user,
-                'credit_wallet': _user.fetch_user_credit_wallet(),
-                'contact_list': _user.fetch_user_contact_list(),
-                }
-        _set_data = self.set_session_data(_session_data)
+        user = kwargs['session_active_user']
+        session_data = {
+            'active_user': user,
+            'credit_wallet': user.fetch_user_credit_wallet(),
+            'contact_list': user.fetch_user_contact_list(),
+        }
+        set_data = self.set_session_data(session_data)
         log.info('Successfully updated ewallet session from current active user.')
-        return True
+        return session_data
 
 #   @pysnooper.snoop()
     def update_user_account_archive(self, **kwargs):
@@ -2213,7 +2231,41 @@ class EWallet(Base):
         active_session.rollback()
         return self.error_pay_type_transfer_failure(kwargs)
 
+    # INTEROGATORS
+
+    def interogate_active_session_user_archive_for_user_account(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('account_id'):
+            return self.error_no_user_action_switch_active_account_id_specified(kwargs)
+        search_account = self.fetch_user_account_from_active_session_user_archive(**kwargs)
+        if not search_account or isinstance(search_account, dict) and \
+                search_account.get('failed'):
+            return self.warning_could_not_fetch_user_account_from_session_archive(kwargs)
+        return search_account
+
     # HANDLERS
+
+    def handle_user_action_switch_active_user_account(self, **kwargs):
+        log.debug('')
+        new_account = self.interogate_active_session_user_archive_for_user_account(**kwargs)
+        if not new_account or isinstance(new_account, dict) and \
+                new_account.get('failed'):
+            return self.warning_could_not_find_user_action_switch_target_account(kwargs)
+        update_session = self.update_session_from_user(session_active_user=new_account)
+        if not update_session or isinstance(update_session, dict) and \
+                update_session.get('failed'):
+            return self.error_could_not_update_ewallet_session_from_user_account(kwargs)
+        kwargs['active_session'].commit()
+        command_chain_response = {
+            'failed': False,
+            'user_account': new_account.fetch_user_id(),
+            'session_data': {
+                'session_user_account': update_session['active_user'].fetch_user_id(),
+                'session_credit_ewallet': update_session['credit_wallet'].fetch_credit_ewallet_id(),
+                'session_contact_list': update_session['contact_list'].fetch_contact_list_id(),
+            }
+        }
+        return command_chain_response
 
 #   @pysnooper.snoop('logs/ewallet.log')
     def handle_user_action_login(self, **kwargs):
@@ -2305,6 +2357,7 @@ class EWallet(Base):
             'conversion_sheet': self.handle_user_action_switch_conversion_sheet,
             'time_sheet': self.handle_user_action_switch_time_sheet,
             'contact_list': self.handle_user_action_switch_contact_list,
+            'account': self.handle_user_action_switch_active_user_account,
         }
         return handlers[kwargs['switch']](**kwargs)
 
@@ -2755,6 +2808,34 @@ class EWallet(Base):
         return _controllers[kwargs['controller']](**kwargs)
 
     # WARNINGS
+
+    def warning_could_not_find_user_action_switch_target_account(self, command_chain):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Something went wrong. Could not find account for user '\
+                       'action switch active session user account. '\
+                       'Command chain details : {}'.format(command_chain),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
+
+    def warning_could_not_fetch_user_account_from_session_archive(self, command_chain):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Something went wrong. Could not fetch user account from active session user archive. '\
+                       'Command chain details : {}'.format(command_chain),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
+
+    def warning_could_not_fetch_user_account_from_session_archive(self, command_chain):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Something went wrong. Could not fetch user account from ewallet session archive. '\
+                       'Command chain details : {}'.format(command_chain),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
 
     def warning_could_not_login_user_account(self, command_chain):
         command_chain_response = {
@@ -3517,6 +3598,60 @@ class EWallet(Base):
 
     # ERRORS
 
+    def error_user_account_does_not_belong_to_active_session_archive(self, command_chain):
+        command_chain_response = {
+            'failed': True,
+            'error': 'User account does not belong to active session {} user account archive. '\
+                     'Command chain details : {}'.format(self, command_chain),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_could_not_update_ewallet_session_from_user_account(self, command_chain):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Something went wrong. Could not update ewallet session from user account. '\
+                     'Command chain details : {}'.format(command_chain),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_active_session_account_archive_empty(self, command_chain):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Active session user account archive is empty. '\
+                     'Command chain response : {}'.format(command_chain),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_could_not_fetch_user_account_by_id(self, command_chain):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Could not fetch user account by id, no database records found. '\
+                     'Command chain details : {}'.format(command_chain),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_no_user_account_id_found(self, command_chain):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No user account id found. Command chain details : {}'\
+                     .format(command_chain),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_no_user_action_switch_active_account_id_specified(self, command_chain):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No user action switch active account id specified. '\
+                     'Command chain details : {}'.format(command_chain),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
     def error_no_user_object_found(self, command_chain):
         command_chain_response = {
             'failed': True,
@@ -3871,10 +4006,6 @@ class EWallet(Base):
 
     def error_no_contact_record_id_found(self):
         log.error('No contact record id found.')
-        return False
-
-    def error_no_user_id_found(self):
-        log.error('No user id found.')
         return False
 
     def error_no_user_name_found(self):

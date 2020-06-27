@@ -359,9 +359,9 @@ class EWalletSessionManager():
         if not isinstance(in_port, int) or not isinstance(out_port, int):
             return self.error_invalid_socket_port(in_port, out_port)
         return EWalletSocketHandler(
-                session_manager=self, in_port=in_port, out_port=out_port,
-                host=self.fetch_socket_handler_default_address()
-                )
+            session_manager=self, in_port=in_port, out_port=out_port,
+            host=self.fetch_socket_handler_default_address()
+        )
 
     def spawn_ewallet_session_worker(self):
         log.debug('')
@@ -621,6 +621,22 @@ class EWalletSessionManager():
     [ NOTE ]: SqlAlchemy ORM sessions are fetched here.
 
     '''
+
+    def action_switch_active_session_user_account(self, ewallet_session, instruction_set):
+        log.debug('')
+        orm_session = ewallet_session.fetch_active_session()
+        sanitized_instruction_set = res_utils.remove_tags_from_command_chain(
+            instruction_set, 'controller', 'ctype', 'action', 'switch',
+        )
+        active_session_user = ewallet_session.fetch_active_session_user()
+        switch_user_account = ewallet_session.ewallet_controller(
+            controller='user', ctype='action', action='switch', switch='account',
+            active_session=orm_session, **sanitized_instruction_set
+        )
+        return self.warning_could_not_switch_active_session_user_account(
+            ewallet_session, instruction_set
+        ) if not switch_user_account or switch_user_account.get('failed') \
+            else switch_user_account
 
     def action_view_logout_records(self, ewallet_session, instruction_set):
         log.debug('')
@@ -1483,6 +1499,21 @@ class EWalletSessionManager():
     [ NOTE ]: Instruction set validation and sanitizations are performed here.
     '''
 
+    def handle_client_action_switch_user_account(self, **kwargs):
+        log.debug('')
+        instruction_set_validation = self.validate_instruction_set(kwargs)
+        if not instruction_set_validation:
+            return False
+        ewallet = self.fetch_ewallet_session_for_client_action_using_instruction_set(
+            kwargs
+        )
+        if not ewallet:
+            return False
+        switch_user_account = self.action_switch_active_session_user_account(
+            ewallet['ewallet_session'], ewallet['sanitized_instruction_set']
+        )
+        return switch_user_account
+
     def handle_client_action_view_logout_records(self, **kwargs):
         log.debug('')
         instruction_set_validation = self.validate_instruction_set(kwargs)
@@ -1909,6 +1940,7 @@ class EWalletSessionManager():
             'conversion_sheet': self.handle_client_action_switch_conversion_sheet,
             'time_sheet': self.handle_client_action_switch_time_sheet,
             'contact_list': self.handle_client_action_switch_contact_list,
+            'account': self.handle_client_action_switch_user_account,
         }
         return handlers[kwargs['switch']](**kwargs)
 
@@ -2947,6 +2979,15 @@ class EWalletSessionManager():
         return handlers[kwargs['controller']](**kwargs)
 
     # WARNINGS
+
+    def warning_could_not_switch_active_session_user_account(self, ewallet_session, instruction_set):
+        instruction_set_response = {
+            'failed': True,
+            'warning': 'Something went wrong. Could not switch active session user account in ewallet session {}. '\
+                       'Instruction set details : {}'.format(ewallet_session, instruction_set),
+        }
+        log.warning(instruction_set_response['warning'])
+        return instruction_set_response
 
     def warning_could_not_view_user_logout_records(self, ewallet_session, instruction_set):
         instruction_set_response = {
@@ -4523,6 +4564,16 @@ class EWalletSessionManager():
         print(str(_view) + '\n')
         return _view
 
+    def test_user_action_switch_active_session_user(self, **kwargs):
+        print('[ * ]: User action Switch Active Session User')
+        _switch = self.session_manager_controller(
+            controller='client', ctype='action', action='switch', switch='account',
+            account_id=kwargs['account_id'], client_id=kwargs['client_id'],
+            session_token=kwargs['session_token']
+        )
+        print(str(_switch) + '\n')
+        return _switch
+
     def test_session_manager_controller(self, **kwargs):
         print('[ TEST ] Session Manager')
 #       open_in_port = self.test_open_instruction_listener_port()
@@ -4541,17 +4592,16 @@ class EWalletSessionManager():
             user_name='test_user', user_pass='1234@!xxA'
         )
 
-        print('\n\n[ 2 ]: Second user create.\n')
+        print('\n\n[ 2 ]: Second user create.')
         create_account2 = self.test_user_action_create_account(
             client_id=client_id['client_id'], session_token=session_token['session_token'],
             user_name='test_user_dinosaur', user_pass='1234@!xxA', user_email='testuserdinosaur@mail.com'
         )
-        print('\n\n[ 2 ]: Second user login.\n')
+        print('\n\n[ 2 ]: Second user login.')
         session_login2 = self.test_user_action_session_login(
             client_id=client_id['client_id'], session_token=session_token['session_token'],
             user_name='test_user_dinosaur', user_pass='1234@!xxA'
         )
-
 
 #       create_credit_ewallet = self.test_user_action_create_credit_ewallet(
 #           client_id=client_id['client_id'], session_token=session_token['session_token'],
@@ -4754,6 +4804,10 @@ class EWalletSessionManager():
 #       view_logout_records = self.test_user_action_view_logout_records(
 #           client_id=client_id['client_id'], session_token=session_token['session_token'],
 #       )
+        switch_active_account = self.test_user_action_switch_active_session_user(
+            client_id=client_id['client_id'], session_token=session_token['session_token'],
+            account_id=29
+        )
 
 if __name__ == '__main__':
     session_manager = EWalletSessionManager()

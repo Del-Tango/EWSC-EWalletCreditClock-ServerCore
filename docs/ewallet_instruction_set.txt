@@ -910,6 +910,27 @@
             'warning': <msg>,
         }
 
+* User action Switch Active User Account:
+    * Controller Instruction Set:
+        session_manager_controller(
+            controller='client', ctype='action', action='switch', switch='account',
+            account_id=<id>, client_id=<client-id>, session_token=<token>
+        )
+    * Returns:
+        * [ OK  ]: {
+            'failed': False,
+            'user_account': <id>,
+            'session_data': {
+                'session_user_account': <id>,
+                'session_credit_ewallet': <id>,
+                'session_contact_list': <id>,
+            },
+        }
+        * [ NOK ]: {
+            'failed': True,
+            'error': <msg>,
+            'warning': <msg>,
+        }
 
 ################################################################################
 # EWallet Session (Command Chain)
