@@ -190,6 +190,9 @@ class CreditEWallet(Base):
 #   @pysnooper.snoop()
     def fetch_credit_ewallet_values(self):
         log.debug('')
+        credit_clock = self.fetch_credit_ewallet_credit_clock()
+        transfer_sheet = self.fetch_credit_ewallet_transfer_sheet()
+        invoice_sheet = self.fetch_credit_ewallet_invoice_sheet()
         values = {
             'id': self.wallet_id,
             'client_id': self.client_id,
@@ -197,17 +200,20 @@ class CreditEWallet(Base):
             'create_date': self.create_date,
             'write_date': self.write_date,
             'credits': self.credits,
-            'credit_clock': self.fetch_credit_ewallet_credit_clock().fetch_credit_clock_id(),
+            'credit_clock': None if not credit_clock else \
+                credit_clock.fetch_credit_clock_id(),
             'credit_clock_archive': {
                 item.fetch_credit_clock_id(): item.fetch_credit_clock_reference() \
                 for item in self.credit_clock_archive
             },
-            'transfer_sheet': self.fetch_credit_ewallet_transfer_sheet().fetch_transfer_sheet_id(),
+            'transfer_sheet': None if not transfer_sheet else \
+                transfer_sheet.fetch_transfer_sheet_id(),
             'transfer_sheet_archive': {
                 item.fetch_transfer_sheet_id(): item.fetch_transfer_sheet_reference() \
                 for item in self.transfer_sheet_archive
             },
-            'invoice_sheet': self.fetch_credit_ewallet_invoice_sheet().fetch_invoice_sheet_id(),
+            'invoice_sheet': None if not invoice_sheet else \
+                invoice_sheet.fetch_invoice_sheet_id(),
             'invoice_sheet_archive': {
                 item.fetch_invoice_sheet_id(): item.fetch_invoice_sheet_reference() \
                 for item in self.invoice_sheet_archive
@@ -1201,32 +1207,15 @@ class CreditEWallet(Base):
                 )
         return False
 
-    def warning_could_not_fetch_invoice_sheet(self, search_code, code):
-        log.warning(
-                'Something went wrong. '
-                'Could not fetch invoice sheet by %s %s.', search_code, code
-                )
-        return False
-
     # ERRORS
 
-#   def error_could_not_remove_conversion_sheet(self, command_chain):
-#       command_chain_response = {
-#           'failed': True,
-#           'error': 'Something went wrong. Could not remove conversion sheet. Command chain details : {}'\
-#                    .format(command_chain),
-#       }
-#       log.error(command_chain_response['error'])
-#       return command_chain_response
+    def error_no_credit_ewallet_transfer_sheet_found(self):
+        log.error('No credit ewallet transfer sheet found.')
+        return False
 
-#   def error_no_invoice_list_id_specified(self, command_chain):
-#       command_chain_response = {
-#           'failed': True,
-#           'error': 'No invoice list id specified. Command chain details : {}'\
-#                    .format(command_chain),
-#       }
-#       log.error(command_chain_response['error'])
-#       return command_chain_response
+    def error_no_credit_ewallet_invoice_sheet_found(self):
+        log.error('No credit ewallet invoice sheet found.')
+        return False
 
     def error_could_not_remove_invoice_sheet(self, command_chain):
         command_chain_response = {

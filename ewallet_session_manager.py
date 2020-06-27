@@ -1169,12 +1169,13 @@ class EWalletSessionManager():
         log.debug('')
         orm_session = ewallet_session.fetch_active_session()
         view_contact_list = ewallet_session.ewallet_controller(
-        controller='user', ctype='action', action='view',
-        active_session=orm_session, **instruction_set
+            controller='user', ctype='action', action='view',
+            active_session=orm_session, **instruction_set
         )
         return self.warning_could_not_view_contact_list(
             ewallet_session, instruction_set
-        ) if not view_contact_list else view_contact_list
+        ) if not view_contact_list or isinstance(view_contact_list, dict) and \
+        view_cotact_list.get('failed') else view_contact_list
 
     def action_view_contact_record(self, ewallet_session, instruction_set):
         log.debug('')
@@ -2778,6 +2779,15 @@ class EWalletSessionManager():
 
     # WARNINGS
 
+    def warning_could_not_switch_conversion_sheet(self, ewallet_session, instruction_set):
+        instruction_set_response = {
+            'failed': True,
+            'warning': 'Something went wrong. Could not switch conversion sheet in ewallet session {}. '\
+                       'Instruction set details : {}'.format(ewallet_session, instruction_set),
+        }
+        log.warning(instruction_set_response['warning'])
+        return instruction_set_response
+
     def warning_could_not_unlink_contact_list(self, ewallet_session, instruction_set):
         instruction_set_response = {
             'failed': True,
@@ -4270,6 +4280,28 @@ class EWalletSessionManager():
 
             user_name='test_user', user_pass='1234@!xxA'
         )
+        create_credit_ewallet = self.test_user_action_create_credit_ewallet(
+            client_id=client_id['client_id'], session_token=session_token['session_token'],
+        )
+        create_credit_clock = self.test_user_action_create_credit_clock(
+            client_id=client_id['client_id'], session_token=session_token['session_token'],
+        )
+        create_transfer_sheet = self.test_user_action_create_transfer_sheet(
+            client_id=client_id['client_id'], session_token=session_token['session_token'],
+        )
+        create_invoice_sheet = self.test_user_action_create_invoice_sheet(
+            client_id=client_id['client_id'], session_token=session_token['session_token'],
+        )
+        create_conversion_sheet = self.test_user_action_create_conversion_sheet(
+            client_id=client_id['client_id'], session_token=session_token['session_token'],
+        )
+        create_time_sheet = self.test_user_action_create_time_sheet(
+            client_id=client_id['client_id'], session_token=session_token['session_token'],
+        )
+        create_contact_list = self.test_user_action_create_contact_list(
+            client_id=client_id['client_id'], session_token=session_token['session_token'],
+        )
+
         supply_credits = self.test_user_action_supply_credits(
             client_id=client_id['client_id'], session_token=session_token['session_token'],
             currency='RON', credits=15, cost=4.74,
@@ -4279,21 +4311,21 @@ class EWalletSessionManager():
             client_id=client_id['client_id'], session_token=session_token['session_token'], credits=5,
             notes='Test Credits To Clock Conversion Notes...'
         )
-#       start_clock_timer = self.test_user_action_start_clock_timer(
-#           client_id=client_id['client_id'], session_token=session_token['session_token']
-#       )
-#       time.sleep(3)
-#       pause_clock_timer = self.test_user_action_pause_clock_timer(
-#           client_id=client_id['client_id'], session_token=session_token['session_token']
-#       )
-#       time.sleep(3)
-#       resume_clock_timer = self.test_user_action_resume_clock_timer(
-#           client_id=client_id['client_id'], session_token=session_token['session_token']
-#       )
-#       time.sleep(3)
-#       stop_clock_timer = self.test_user_action_stop_clock_timer(
-#           client_id=client_id['client_id'], session_token=session_token['session_token']
-#       )
+        start_clock_timer = self.test_user_action_start_clock_timer(
+            client_id=client_id['client_id'], session_token=session_token['session_token']
+        )
+        time.sleep(3)
+        pause_clock_timer = self.test_user_action_pause_clock_timer(
+            client_id=client_id['client_id'], session_token=session_token['session_token']
+        )
+        time.sleep(3)
+        resume_clock_timer = self.test_user_action_resume_clock_timer(
+            client_id=client_id['client_id'], session_token=session_token['session_token']
+        )
+        time.sleep(3)
+        stop_clock_timer = self.test_user_action_stop_clock_timer(
+            client_id=client_id['client_id'], session_token=session_token['session_token']
+        )
         pay_credits = self.test_user_action_pay_credits_to_partner(
             partner_account=1, credits=5, client_id=client_id['client_id'],
             session_token=session_token['session_token'],
@@ -4321,23 +4353,23 @@ class EWalletSessionManager():
             client_id=client_id['client_id'], session_token=session_token['session_token'],
             minutes=13,
         )
-#       view_transfer_sheet = self.test_user_action_view_transfer_sheet(
-#           client_id=client_id['client_id'], session_token=session_token['session_token'],
-#       )
+        view_transfer_sheet = self.test_user_action_view_transfer_sheet(
+            client_id=client_id['client_id'], session_token=session_token['session_token'],
+        )
         view_transfer_record = self.test_user_action_view_transfer_record(
             client_id=client_id['client_id'], session_token=session_token['session_token'],
             record_id=1
         )
-#       view_time_sheet = self.test_user_action_view_time_sheet(
-#           client_id=client_id['client_id'], session_token=session_token['session_token'],
-#       )
+        view_time_sheet = self.test_user_action_view_time_sheet(
+            client_id=client_id['client_id'], session_token=session_token['session_token'],
+        )
         view_time_record = self.test_user_action_view_time_record(
             client_id=client_id['client_id'], session_token=session_token['session_token'],
             record_id=33
         )
-#       view_conversion_sheet = self.test_user_action_view_conversion_sheet(
-#           client_id=client_id['client_id'], session_token=session_token['session_token'],
-#       )
+        view_conversion_sheet = self.test_user_action_view_conversion_sheet(
+            client_id=client_id['client_id'], session_token=session_token['session_token'],
+        )
         view_conversion_record = self.test_user_action_view_conversion_record(
             client_id=client_id['client_id'], session_token=session_token['session_token'],
             record_id=1
@@ -4346,73 +4378,52 @@ class EWalletSessionManager():
             client_id=client_id['client_id'], session_token=session_token['session_token'],
         )
         # TODO - password and email edits not supported
-#       edit_account = self.test_user_action_edit_account(
-#           client_id=client_id['client_id'], session_token=session_token['session_token'],
-#           user_name='New Name', user_phone='555555555', user_alias='New Alias',
-#           user_pass='1234asscdYEEBOY@!', user_email='new@user.mail'
-#       )
+        edit_account = self.test_user_action_edit_account(
+            client_id=client_id['client_id'], session_token=session_token['session_token'],
+            user_name='New Name', user_phone='555555555', user_alias='New Alias',
+            user_pass='1234asscdYEEBOY@!', user_email='new@user.mail'
+        )
         view_credit_ewallet = self.test_user_action_view_credit_ewallet(
             client_id=client_id['client_id'], session_token=session_token['session_token'],
         )
         view_credit_clock = self.test_user_action_view_credit_clock(
             client_id=client_id['client_id'], session_token=session_token['session_token'],
         )
-#       view_invoice_sheet = self.test_user_action_view_invoice_sheet(
-#           client_id=client_id['client_id'], session_token=session_token['session_token'],
-#       )
+        view_invoice_sheet = self.test_user_action_view_invoice_sheet(
+            client_id=client_id['client_id'], session_token=session_token['session_token'],
+        )
         view_invoice_record = self.test_user_action_view_invoice_record(
             client_id=client_id['client_id'], session_token=session_token['session_token'],
             record_id=1
         )
-#       create_credit_ewallet = self.test_user_action_create_credit_ewallet(
-#           client_id=client_id['client_id'], session_token=session_token['session_token'],
-#       )
-#       create_credit_clock = self.test_user_action_create_credit_clock(
-#           client_id=client_id['client_id'], session_token=session_token['session_token'],
-#       )
-#       create_transfer_sheet = self.test_user_action_create_transfer_sheet(
-#           client_id=client_id['client_id'], session_token=session_token['session_token'],
-#       )
-#       create_invoice_sheet = self.test_user_action_create_invoice_sheet(
-#           client_id=client_id['client_id'], session_token=session_token['session_token'],
-#       )
-#       create_conversion_sheet = self.test_user_action_create_conversion_sheet(
-#           client_id=client_id['client_id'], session_token=session_token['session_token'],
-#       )
-#       create_time_sheet = self.test_user_action_create_time_sheet(
-#           client_id=client_id['client_id'], session_token=session_token['session_token'],
-#       )
-#       create_contact_list = self.test_user_action_create_contact_list(
-#           client_id=client_id['client_id'], session_token=session_token['session_token'],
-#       )
-#       switch_credit_ewallet = self.test_user_action_switch_credit_ewallet(
-#           client_id=client_id['client_id'], session_token=session_token['session_token'],
-#           ewallet_id=2
-#       )
-#       switch_credit_clock = self.test_user_action_switch_credit_clock(
-#           client_id=client_id['client_id'], session_token=session_token['session_token'],
-#           clock_id=2
-#       )
-#       switch_transfer_sheet = self.test_user_action_switch_transfer_sheet(
-#           client_id=client_id['client_id'], session_token=session_token['session_token'],
-#           sheet_id=2
-#       )
-#       switch_invoice_sheet = self.test_user_action_switch_invoice_sheet(
-#           client_id=client_id['client_id'], session_token=session_token['session_token'],
-#           sheet_id=2
-#       )
-#       switch_conversion_sheet = self.test_user_action_switch_conversion_sheet(
-#           client_id=client_id['client_id'], session_token=session_token['session_token'],
-#           sheet_id=2
-#       )
-#       switch_time_sheet = self.test_user_action_switch_time_sheet(
-#           client_id=client_id['client_id'], session_token=session_token['session_token'],
-#           sheet_id=2
-#       )
-#       switch_contact_list = self.test_user_action_switch_contact_list(
-#           client_id=client_id['client_id'], session_token=session_token['session_token'],
-#           list_id=2
-#       )
+        switch_credit_ewallet = self.test_user_action_switch_credit_ewallet(
+            client_id=client_id['client_id'], session_token=session_token['session_token'],
+            ewallet_id=2
+        )
+        switch_credit_clock = self.test_user_action_switch_credit_clock(
+            client_id=client_id['client_id'], session_token=session_token['session_token'],
+            clock_id=2
+        )
+        switch_transfer_sheet = self.test_user_action_switch_transfer_sheet(
+            client_id=client_id['client_id'], session_token=session_token['session_token'],
+            sheet_id=2
+        )
+        switch_invoice_sheet = self.test_user_action_switch_invoice_sheet(
+            client_id=client_id['client_id'], session_token=session_token['session_token'],
+            sheet_id=2
+        )
+        switch_conversion_sheet = self.test_user_action_switch_conversion_sheet(
+            client_id=client_id['client_id'], session_token=session_token['session_token'],
+            sheet_id=2
+        )
+        switch_time_sheet = self.test_user_action_switch_time_sheet(
+            client_id=client_id['client_id'], session_token=session_token['session_token'],
+            sheet_id=2
+        )
+        switch_contact_list = self.test_user_action_switch_contact_list(
+            client_id=client_id['client_id'], session_token=session_token['session_token'],
+            list_id=2
+        )
         unlink_transfer_record = self.test_user_action_unlink_transfer_record(
             client_id=client_id['client_id'], session_token=session_token['session_token'],
             record_id=2

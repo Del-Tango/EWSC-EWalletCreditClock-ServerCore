@@ -1154,6 +1154,10 @@ class ResUser(Base):
 
     # ERRORS
 
+    def error_no_user_contact_list_found(self):
+        log.error('No user contact list found.')
+        return False
+
     def error_no_contact_list_id_found(self, command_chain):
         command_chain_response = {
             'failed': True,

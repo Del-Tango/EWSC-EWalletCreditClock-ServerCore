@@ -210,18 +210,22 @@ class CreditClock(Base):
 
     def fetch_credit_clock_values(self):
         log.debug('')
+        time_sheet = self.fetch_credit_clock_time_sheet()
+        conversion_sheet = self.fetch_credit_clock_conversion_sheet()
         values = {
             'id': self.clock_id,
             'wallet_id': self.wallet_id,
             'reference': self.reference,
             'credit_clock': self.credit_clock,
             'credit_clock_state': self.fetch_credit_clock_state(),
-            'time_sheet': self.fetch_credit_clock_time_sheet().fetch_time_sheet_id(),
+            'time_sheet': None if not time_sheet else \
+                time_sheet.fetch_time_sheet_id(),
             'time_sheet_archive': {
                 item.fetch_time_sheet_id(): item.fetch_time_sheet_reference() \
                 for item in self.time_sheet_archive
             },
-            'conversion_sheet': self.fetch_credit_clock_conversion_sheet().fetch_conversion_sheet_id(),
+            'conversion_sheet': None if not conversion_sheet else \
+                conversion_sheet.fetch_conversion_sheet_id(),
             'conversion_sheet_archive': {
                 item.fetch_conversion_sheet_id(): item.fetch_conversion_sheet_reference() \
                 for item in self.conversion_sheet_archive

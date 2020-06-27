@@ -1453,11 +1453,11 @@ class EWallet(Base):
         log.debug('')
         if not kwargs.get('contact'):
             return self.error_no_contact_target_specified()
-        _handlers = {
-                'list': self.action_view_contact_list,
-                'record': self.action_view_contact_record,
-                }
-        return _handlers[kwargs['contact']](**kwargs)
+        handlers = {
+            'list': self.action_view_contact_list,
+            'record': self.action_view_contact_record,
+        }
+        return handlers[kwargs['contact']](**kwargs)
 
     def action_view_invoice(self, **kwargs):
         '''
@@ -2658,6 +2658,15 @@ class EWallet(Base):
         return _controllers[kwargs['controller']](**kwargs)
 
     # WARNINGS
+
+    def warning_could_not_switch_transfer_sheet(self, user_name, command_chain):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Something went wrong. Could not switch transfer sheet for user {}. '\
+                       'Command chain details : {}'.format(user_name, command_chain),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
 
     def warning_could_not_unlink_contact_list(self, user_name, command_chain):
         command_chain_response = {

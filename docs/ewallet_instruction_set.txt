@@ -821,6 +821,25 @@
             'warning': <msg>,
         }
 
+* User action Unlink Credit EWallet:
+    * Controller Instruction Set:
+        session_manager_controller(
+            controller='client', ctype='action', action='unlink', unlink='credit',
+            credit='ewallet', ewallet_id=<id>, client_id=<client-id>,
+            session_token=<token>
+        )
+    * Returns:
+        * [ OK  ]: {
+            'failed': False,
+            'credit_ewallet': <id>,
+        }
+        * [ NOK ]: {
+            'failed': True,
+            'error': <msg>,
+            'warning': <msg>,
+        }
+
+
 ################################################################################
 # EWallet Session (Command Chain)
 ################################################################################
