@@ -13,6 +13,7 @@ import logging
 # import datetime
 import pysnooper
 # import threading
+# import pprint
 
 config, res_utils = Config(), ResUtils()
 log = logging.getLogger(config.log_config['log_name'])
@@ -32,6 +33,11 @@ class EWalletSessionManager():
         self.client_worker_map = kwargs.get('client_worker_map') or {}
 
     # FETCHERS
+
+    def fetch_ewallet_session_manager_worker_pool(self):
+        log.debug('')
+        return self.error_ewallet_session_manager_worker_pool_empty() if not \
+            self.worker_pool else self.worker_pool
 
 #   @pysnooper.snoop()
     def fetch_ewallet_session_by_id(self, ewallet_session_id):
@@ -111,16 +117,22 @@ class EWalletSessionManager():
         if not worker_pool:
             return self.error_worker_pool_empty()
         worker_set = [item for item in worker_pool if ewallet_session in item.session_pool]
+
+        # TODO - Remove
+        log.info('\n\nEWALLET SESSION : {}\n'.format(ewallet_session))
+
         return self.error_no_worker_found_assigned_to_session(ewallet_session)\
             if not worker_set else worker_set[0]
 
     def fetch_first_available_worker(self):
         log.debug('')
-        pool = self.worker_pool
+        pool = self.fetch_ewallet_session_manager_worker_pool()
+        if not pool or isinstance(pool, dict) and pool.get('failed'):
+            return self.error_could_not_fetch_ewallet_session_manager_worker_pool()
         for item in pool:
             if item.session_worker_state_code in [0, 1]:
                 return item
-        return False
+        return self.warning_ewallet_session_manager_worker_pool_empty()
 
     def fetch_ewallet_session_manager_socket_handler(self):
         log.debug('')
@@ -587,11 +599,16 @@ class EWalletSessionManager():
                 controller='system', ctype='action', action='new', new='worker'
             )
             worker = self.fetch_first_available_worker()
+
+        # TODO - Remove
+        log.info('\n\nNEW SESSION : {}\n'.format(new_session))
+
         assign_worker = worker.main_controller(
             controller='system', ctype='action', action='add', add='session',
             session=new_session
         )
-        return False if not assign_worker else worker
+        return False if not assign_worker or isinstance(assign_worker, dict) \
+            and assign_worker.get('failed') else worker
 
     def start_instruction_set_listener(self):
         '''
@@ -662,6 +679,21 @@ class EWalletSessionManager():
     [ NOTE ]: SqlAlchemy ORM sessions are fetched here.
 
     '''
+
+    def action_interogate_ewallet_session_workers(self, **kwargs):
+        log.debug('')
+        workers = self.fetch_ewallet_session_manager_worker_pool()
+        if not workers:
+            return self.warning_could_not_interogate_ewallet_session_workers(
+                kwargs
+            )
+        command_chain_response = {
+            'failed': False,
+            'workers': {
+                worker: worker.fetch_session_worker_values() for worker in workers
+            },
+        }
+        return command_chain_response
 
 #   @pysnooper.snoop()
     def action_new_ewallet_session(self, **kwargs):
@@ -1557,15 +1589,19 @@ class EWalletSessionManager():
         new_session = self.session_manager_controller(
             controller='system', ctype='action', action='new', new='session'
         )
-        assigned_worker = self.fetch_ewallet_session_assigned_worker(new_session) or \
-            self.assign_new_ewallet_session_to_worker(new_session)
+        if not new_session or isinstance(new_session, dict) and \
+                new_session.get('failed'):
+            return self.error_could_not_spawn_new_ewallet_session(kwargs)
+        ewallet_session = new_session['ewallet_session']
+        assigned_worker = self.fetch_ewallet_session_assigned_worker(ewallet_session) or \
+            self.assign_new_ewallet_session_to_worker(ewallet_session)
         if not assigned_worker:
-            return self.error_could_not_assign_worker_to_new_ewallet_session(new_session)
+            return self.error_could_not_assign_worker_to_new_ewallet_session(ewallet_session)
         session_token = self.generate_ewallet_session_token()
         if not session_token:
-            return self.error_could_not_generate_ewallet_session_token(new_session)
+            return self.error_could_not_generate_ewallet_session_token(ewallet_session)
         mapping = self.map_client_id_to_ewallet_session(
-            client_id, session_token, assigned_worker, new_session
+            client_id, session_token, assigned_worker, ewallet_session
         )
         return self.error_could_not_map_client_id_to_session_token(client_id, session_token) \
                 if not mapping else {'session_token': session_token}
@@ -1588,6 +1624,10 @@ class EWalletSessionManager():
     '''
     [ NOTE ]: Instruction set validation and sanitizations are performed here.
     '''
+
+    def handle_system_action_interogate_ewallet_workers(self, **kwargs):
+        log.debug('')
+        return self.action_interogate_ewallet_session_workers(**kwargs)
 
 #   @pysnooper.snoop()
     def handle_client_action_login(self, **kwargs):
@@ -1632,7 +1672,7 @@ class EWalletSessionManager():
             return self.error_no_system_action_interogate_target_specified(kwargs)
         handlers = {
             'session': self.handle_system_action_interogate_ewallet_session,
-#           'workers':
+            'workers': self.handle_system_action_interogate_ewallet_workers,
         }
         return handlers[kwargs['interogate']](**kwargs)
 
@@ -3112,6 +3152,23 @@ class EWalletSessionManager():
 
     # WARNINGS
 
+    def warning_could_not_interogate_ewallet_session_workers(self, instruction_set):
+        instruction_set_response = {
+            'failed': True,
+            'warning': 'Something went wrong. Could not interogate ewallet session workers. '\
+                       'Instruction set details : {}'.format(instruction_set),
+        }
+        log.warning(instruction_set_response['warning'])
+        return instruction_set_response
+
+    def warning_ewallet_session_manager_worker_pool_empty(self):
+        instruction_set_response = {
+            'failed': True,
+            'warning': 'Ewallet session manager worker pool empty.'
+        }
+        log.warning(instruction_set_response['warning'])
+        return instruction_set_response
+
     def warning_no_ewallet_session_found_by_id(self, ewallet_session_id):
         instruction_set_response = {
             'failed': True,
@@ -3628,6 +3685,42 @@ class EWalletSessionManager():
         return False
 
     # ERRORS
+
+
+    def error_could_not_spawn_new_ewallet_session(self, instruction_set):
+        instruction_set_response = {
+            'failed': True,
+            'error': 'Something went wrong. Could not spawn new ewallet session. '\
+                     'Instruction set details : {}'.format(instruction_set),
+        }
+        log.error(instruction_set_response['error'])
+        return instruction_set_response
+
+    def error_could_not_assign_worker_to_new_ewallet_session(self, new_session):
+        instruction_set_response = {
+            'failed': True,
+            'error': 'Something went wrong. Could not assign session worker '\
+                     'for new ewallet session {}.'.format(new_session),
+        }
+        log.error(instruction_set_response['error'])
+        return instruction_set_response
+
+    def error_ewallet_session_manager_worker_pool_empty(self):
+        instruction_set_response = {
+            'failed': True,
+            'error': 'EWallet session manager worker pool empty.',
+        }
+        log.error(instruction_set_response['error'])
+        return instruction_set_response
+
+    def error_could_not_fetch_ewallet_session_manager_worker_pool(self):
+        instruction_set_response = {
+            'failed': True,
+            'error': 'Something went wrong. Could not fetch ewallet '\
+                     'session manager worker pool.',
+        }
+        log.warning(instruction_set_response['error'])
+        return instruction_set_response
 
     def error_invalid_ewallet_session_id(self, ewallet_session_id):
         instruction_set_response = {
@@ -4821,6 +4914,17 @@ class EWalletSessionManager():
         print(str(_interogate) + '\n')
         return _interogate
 
+    def test_system_action_interogate_ewallet_workers(self, **kwargs):
+        print('[ * ]: System action Interogate EWallet Workers')
+        _interogate = self.session_manager_controller(
+            controller='system', ctype='action', action='interogate',
+            interogate='workers'
+        )
+#       pp = pprint.PrettyPrinter(indent=4)
+#       pp.pprint(str(_interogate) + '\n')
+        print(str(_interogate) + '\n')
+        return _interogate
+
     def test_session_manager_controller(self, **kwargs):
         print('[ TEST ] Session Manager')
 #       open_in_port = self.test_open_instruction_listener_port()
@@ -5063,6 +5167,7 @@ class EWalletSessionManager():
         interogate_session = self.test_system_action_interogate_ewallet_session(
             session_id=1
         )
+        interogate_workers = self.test_system_action_interogate_ewallet_workers()
 
 if __name__ == '__main__':
     session_manager = EWalletSessionManager()

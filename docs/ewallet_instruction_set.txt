@@ -958,8 +958,7 @@
     * Controller Instruction Set:
         session_manager_controller = {
             controller='system', ctype='action', action='interogate',
-            interogate='session', client_id=<client-id>,
-            session_token=<token>
+            interogate='session', session_id=<id>
         }
     * Returns:
         * [ OK  ]: {
@@ -975,6 +974,23 @@
                 'user_account': <id>,
                 'user_account_archive': <session-account-archive>,
             },
+        }
+        * [ NOK ]: {
+            'failed': True,
+            'error': <msg>,
+            'warning': <msg>,
+        }
+
+* System action Interogate Ewallet Workers:
+    * Controller Instruction Set:
+        session_manager_controller = {
+            controller='system', ctype='action', action='interogate',
+            interogate='workers',
+        }
+    * Returns:
+        * [ OK  ]: {
+            'failed': False,
+            'workers': <worker-value-set>,
         }
         * [ NOK ]: {
             'failed': True,

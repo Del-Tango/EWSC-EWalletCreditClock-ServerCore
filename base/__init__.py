@@ -1,4 +1,5 @@
 from . import config
+from . import ewallet
 from . import res_user
 from . import res_utils
 from . import res_user_pass_hash_archive

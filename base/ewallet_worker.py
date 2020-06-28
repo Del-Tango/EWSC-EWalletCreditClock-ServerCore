@@ -34,6 +34,30 @@ class EWalletWorker():
 
     # FETCHERS
 
+    def fetch_session_worker_values(self):
+        log.debug('')
+        session_pool = {}
+        for session in self.session_pool:
+
+            # TODO - Remove
+            log.info('\n\nEWALLET SESSION : {}\n'.format(session))
+
+            session_id = session.fetch_active_session_id()
+            user_account = session.fetch_active_session_user()
+            session_pool.update({
+                session_id: None if not user_account else user_account.fetch_user_id()
+            })
+        values = {
+            'create_date': self.create_date,
+            'state_code': self.session_worker_state_code,
+            'state_label': self.session_worker_state_label,
+            'state_timestamp': self.session_worker_state_timestamp,
+            'session_pool': session_pool,
+            'token_session_map': {} if not self.token_session_map else \
+                self.token_session_map
+        }
+        return values
+
     def fetch_create_date(self):
         log.debug('')
         return self.create_date
@@ -67,6 +91,8 @@ class EWalletWorker():
 
     def set_new_ewallet_session_to_pool(self, ewallet_session):
         log.debug('')
+        if isinstance(ewallet_session, dict):
+            return self.error_invalid_ewallet_session_for_worker_session_pool(ewallet_session)
         try:
             self.session_pool.append(ewallet_session)
         except:
@@ -218,6 +244,14 @@ class EWalletWorker():
 
     # HANDLERS
 
+    def handle_system_action_search_session(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('session_token'):
+            return self.error_no_session_token_found()
+        ewallet_session = self.search_ewallet_session(kwargs['session_token'])
+        return self.warning_session_token_not_mapped(kwargs['session_token']) \
+                if not ewallet_session else ewallet_session
+
     def handle_system_action_search(self, **kwargs):
         log.debug('')
         if not kwargs.get('search'):
@@ -227,23 +261,15 @@ class EWalletWorker():
         }
         return handlers[kwargs['search']](**kwargs)
 
-    def handle_system_action_search_session(self, **kwargs):
-        log.debug('')
-        if not kwargs.get('session_token'):
-            return self.error_no_session_token_found()
-        ewallet_session = self.search_ewallet_session(kwargs['session_token'])
-        return self.warning_session_token_not_mapped(kwargs['session_token']) \
-                if not ewallet_session else ewallet_session
-
     def handle_system_action_add(self, **kwargs):
         log.debug('')
         if not kwargs.get('add'):
             return self.error_no_worker_action_new_target_specified()
-        _handlers = {
-                'session': self.action_add_new_session,
-                'session_map': self.action_add_client_id_session_token_map_entry,
-                }
-        return _handlers[kwargs['add']](**kwargs)
+        handlers = {
+            'session': self.action_add_new_session,
+            'session_map': self.action_add_client_id_session_token_map_entry,
+        }
+        return handlers[kwargs['add']](**kwargs)
 
     # CONTROLLERS
 
@@ -299,6 +325,15 @@ class EWalletWorker():
         return False
 
     # ERRORS
+
+    def error_invalid_ewallet_session_for_worker_session_pool(self, ewallet_session):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Invalid ewallet session {} for worker session pool.'\
+                     .format(ewallet_session),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
 
     def error_no_session_token_found(self):
         log.error('No session token found.')
