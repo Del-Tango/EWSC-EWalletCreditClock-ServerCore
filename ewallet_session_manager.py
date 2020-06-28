@@ -1,4 +1,4 @@
-from ewallet import EWallet
+from base.ewallet import EWallet
 from base.config import Config
 from base.res_utils import ResUtils
 from base.ewallet_worker import EWalletWorker
@@ -33,22 +33,52 @@ class EWalletSessionManager():
 
     # FETCHERS
 
-#   #@pysnooper.snoop()
+#   @pysnooper.snoop()
+    def fetch_ewallet_session_by_id(self, ewallet_session_id):
+        log.debug('')
+        if not ewallet_session_id or not isinstance(ewallet_session_id, int):
+            return self.error_invalid_ewallet_session_id(ewallet_session_id)
+        try:
+            orm_session = res_utils.session_factory()
+            ewallet_session = list(orm_session.query(
+                EWallet
+            ).filter_by(id=ewallet_session_id))
+            set_orm = None if not ewallet_session else \
+                ewallet_session[0].set_orm_session(orm_session)
+        except:
+            return self.error_could_not_fetch_ewallet_session_by_id(ewallet_session_id)
+        return self.warning_no_ewallet_session_found_by_id(ewallet_session_id) \
+            if not ewallet_session else ewallet_session[0]
+
+    def fetch_ewallet_session_for_system_action_using_id(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('session_id'):
+            return self.error_no_session_id_found(kwargs)
+        ewallet_session = self.fetch_ewallet_session_by_id(kwargs['session_id'])
+        return self.warning_no_ewallet_session_found_by_id(kwargs) if not \
+            ewallet_session else ewallet_session
+
+#   @pysnooper.snoop()
     def fetch_ewallet_session_for_client_action_using_instruction_set(self, instruction_set):
         log.debug('')
         session_manager_worker = self.fetch_client_id_mapped_session_worker(
-                instruction_set['client_id']
-                )
+            instruction_set['client_id']
+        )
         sanitized_instruction_set = res_utils.remove_tags_from_command_chain(
-                instruction_set, 'controller', 'ctype', 'action'
-                )
+            instruction_set, 'controller', 'ctype', 'action'
+        )
         ewallet_session = self.fetch_ewallet_session_from_worker(
-                session_manager_worker, sanitized_instruction_set
-                )
+            session_manager_worker, sanitized_instruction_set
+        )
+        if ewallet_session and isinstance(ewallet_session, dict) and \
+                not ewallet_session.get('failed'):
+            ewallet_session = self.fetch_ewallet_session_by_id(
+                ewallet_session['ewallet_session'].fetch_active_session_id()
+            )
         value_set = {
-                'sanitized_instruction_set': sanitized_instruction_set,
-                'ewallet_session': ewallet_session,
-                }
+            'sanitized_instruction_set': sanitized_instruction_set,
+            'ewallet_session': ewallet_session,
+        }
         return False if False in value_set.keys() else value_set
 
     def fetch_ewallet_session_from_worker(self, session_manager_worker, instruction_set):
@@ -453,7 +483,7 @@ class EWalletSessionManager():
         time_stamp = client_id[2]
         return True
 
-#   #@pysnooper.snoop()
+#   @pysnooper.snoop()
     def validate_session_token(self, session_token):
         session_token_segmented = session_token.split(':')
         if len(session_token_segmented) != 3:
@@ -493,6 +523,7 @@ class EWalletSessionManager():
 
     # CREATORS
 
+#   @pysnooper.snoop()
     def create_ewallet_user_account_in_session(self, ewallet_session, instruction_set):
         '''
         [ NOTE   ]: Uses EWallet Session object to carry out command chain user action Create Account.
@@ -500,17 +531,27 @@ class EWalletSessionManager():
         [ RETURN ]: (ResUser object | False)
         '''
         log.debug('')
+        if not ewallet_session or isinstance(ewallet_session, dict) and \
+                ewallet_session.get('failed'):
+            return ewallet_session
+        orm_session = ewallet_session.fetch_active_session()
         new_account = ewallet_session.ewallet_controller(
             controller='user', ctype='action', action='create', create='account',
-            **instruction_set
+            active_session=orm_session, **instruction_set
         )
         return self.warning_could_not_create_new_user_account(
              ewallet_session, instruction_set
         ) if not new_account else new_account
 
-    def create_new_ewallet_session(self):
+#   @pysnooper.snoop()
+    def create_new_ewallet_session(self, **kwargs):
         log.debug('')
-        return EWallet()
+        orm_session = res_utils.session_factory()
+        ewallet_session = EWallet(
+            name=kwargs.get('reference'), session=orm_session
+        )
+        orm_session.add(ewallet_session)
+        return ewallet_session
 
     # GENERAL
 
@@ -621,6 +662,39 @@ class EWalletSessionManager():
     [ NOTE ]: SqlAlchemy ORM sessions are fetched here.
 
     '''
+
+#   @pysnooper.snoop()
+    def action_new_ewallet_session(self, **kwargs):
+        log.debug('')
+        new_session = self.create_new_ewallet_session(**kwargs)
+        if not new_session or isinstance(new_session, dict) and \
+                new_session.get('failed'):
+            return self.warning_could_not_create_new_ewallet_session(kwargs)
+        orm_session = new_session.fetch_active_session()
+        orm_session.commit()
+        assign_worker = self.assign_new_ewallet_session_to_worker(new_session)
+        if not assign_worker or isinstance(assign_worker, dict) and \
+                assign_worker.get('failed'):
+            orm_session.rollback()
+            return self.warning_ewallet_session_worker_assignment_failure(kwargs)
+        instruction_set_response = {
+            'failed': False,
+            'ewallet_session': new_session,
+            'session_data': new_session.fetch_active_session_values(),
+        }
+        return instruction_set_response
+
+    def action_interogate_ewallet_session(self, ewallet_session, instruction_set):
+        log.debug('')
+        orm_session = ewallet_session.fetch_active_session()
+        interogate_session = ewallet_session.ewallet_controller(
+            controller='system', ctype='action', action='interogate',
+            interogate='session', active_session=orm_session, **instruction_set
+        )
+        return self.warning_could_not_interogate_ewallet_session(
+            ewallet_session, instruction_set
+        ) if not interogate_session or isinstance(interogate_session, dict) and \
+            interogate_session.get('failed') else interogate_session
 
     def action_logout_user_account(self, ewallet_session, instruction_set):
         log.debug('')
@@ -1514,6 +1588,53 @@ class EWalletSessionManager():
     '''
     [ NOTE ]: Instruction set validation and sanitizations are performed here.
     '''
+
+#   @pysnooper.snoop()
+    def handle_client_action_login(self, **kwargs):
+        log.debug('')
+        instruction_set_validation = self.validate_instruction_set(kwargs)
+        if not instruction_set_validation:
+            return False
+        ewallet = self.fetch_ewallet_session_for_client_action_using_instruction_set(
+            kwargs
+        )
+        if not ewallet:
+            return False
+        user_login = self.login_ewallet_user_account_in_session(
+            ewallet['ewallet_session'], ewallet['sanitized_instruction_set']
+        )
+        return user_login
+
+    def handle_system_action_new_session(self, **kwargs):
+        log.debug('')
+        return self.action_new_ewallet_session(**kwargs)
+
+    def handle_system_action_interogate_ewallet_session(self, **kwargs):
+        log.debug('')
+        active_session = res_utils.session_factory()
+        ewallet_session = self.fetch_ewallet_session_for_system_action_using_id(
+            active_session=active_session, **kwargs
+        )
+        if not ewallet_session or isinstance(ewallet_session, dict) and \
+                ewallet_session.get('failed'):
+            return self.warning_could_not_fetch_ewallet_session(kwargs)
+        sanitized_instruction_set = res_utils.remove_tags_from_command_chain(
+            kwargs, 'controller', 'ctype', 'action', 'interogate'
+        )
+        interogate_session = self.action_interogate_ewallet_session(
+            ewallet_session, sanitized_instruction_set
+        )
+        return interogate_session
+
+    def handle_system_action_interogate(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('interogate'):
+            return self.error_no_system_action_interogate_target_specified(kwargs)
+        handlers = {
+            'session': self.handle_system_action_interogate_ewallet_session,
+#           'workers':
+        }
+        return handlers[kwargs['interogate']](**kwargs)
 
     def handle_client_action_logout(self, **kwargs):
         log.debug('')
@@ -2562,21 +2683,6 @@ class EWalletSessionManager():
         )
         return conversion
 
-    def handle_client_action_login(self, **kwargs):
-        log.debug('')
-        instruction_set_validation = self.validate_instruction_set(kwargs)
-        if not instruction_set_validation:
-            return False
-        ewallet = self.fetch_ewallet_session_for_client_action_using_instruction_set(
-            kwargs
-        )
-        if not ewallet:
-            return False
-        user_login = self.login_ewallet_user_account_in_session(
-            ewallet['ewallet_session'], ewallet['sanitized_instruction_set']
-        )
-        return user_login
-
 #   #@pysnooper.snoop()
     def handle_client_action_supply_credits(self, **kwargs):
         log.debug('')
@@ -2640,13 +2746,6 @@ class EWalletSessionManager():
             ewallet['ewallet_session'], ewallet['sanitized_instruction_set']
         )
         return new_account
-
-#   #@pysnooper.snoop()
-    def handle_system_action_new_session(self, **kwargs):
-        log.debug('')
-        new_session = self.create_new_ewallet_session()
-        assign_worker = self.assign_new_ewallet_session_to_worker(new_session)
-        return new_session or False
 
     def handle_system_action_start_instruction_listener(self, **kwargs):
         '''
@@ -2923,17 +3022,18 @@ class EWalletSessionManager():
         log.debug('')
         if not kwargs.get('action'):
             return self.error_no_system_session_manager_action_specified()
-        _handlers = {
-                'new': self.handle_system_action_new,
-                'start': self.handle_system_action_start,
-                'scrape': self.handle_system_action_scrape,
-                'search': self.handle_system_action_search,
-                'view': self.handle_system_action_view,
-                'request': self.handle_system_action_request,
-                'open': self.handle_system_action_open,
-                'close': self.handle_system_action_close,
-                }
-        return _handlers[kwargs['action']](**kwargs)
+        handlers = {
+            'new': self.handle_system_action_new,
+            'start': self.handle_system_action_start,
+            'scrape': self.handle_system_action_scrape,
+            'search': self.handle_system_action_search,
+            'view': self.handle_system_action_view,
+            'request': self.handle_system_action_request,
+            'open': self.handle_system_action_open,
+            'close': self.handle_system_action_close,
+            'interogate': self.handle_system_action_interogate,
+        }
+        return handlers[kwargs['action']](**kwargs)
 
     # TODO
     def client_session_manager_event_controller(self, **kwargs):
@@ -2956,11 +3056,11 @@ class EWalletSessionManager():
         log.debug('')
         if not kwargs.get('event'):
             return self.error_no_system_session_manager_event_specified()
-        _handlers = {
-                'timeout': self.handle_system_event_timout,
-                'expire': self.handle_system_event_expire,
-                }
-        return _handlers[kwargs['event']](**kwargs)
+        handlers = {
+            'timeout': self.handle_system_event_timout,
+            'expire': self.handle_system_event_expire,
+        }
+        return handlers[kwargs['event']](**kwargs)
 
     def client_session_manager_controller(self, **kwargs):
         '''
@@ -2972,11 +3072,11 @@ class EWalletSessionManager():
         log.debug('')
         if not kwargs.get('ctype'):
             return self.error_no_client_session_manager_controller_specified()
-        _handlers = {
-                'action': self.client_session_manager_action_controller,
-                'event': self.client_session_manager_event_controller,
-                }
-        return _handlers[kwargs['ctype']](**kwargs)
+        handlers = {
+            'action': self.client_session_manager_action_controller,
+            'event': self.client_session_manager_event_controller,
+        }
+        return handlers[kwargs['ctype']](**kwargs)
 
     def system_session_manager_controller(self, **kwargs):
         '''
@@ -2988,11 +3088,11 @@ class EWalletSessionManager():
         log.debug('')
         if not kwargs.get('ctype'):
             return self.error_no_system_session_manager_controller_specified()
-        _handlers = {
-                'action': self.system_session_manager_action_controller,
-                'event': self.system_session_manager_event_controller,
-                }
-        return _handlers[kwargs['ctype']](**kwargs)
+        handlers = {
+            'action': self.system_session_manager_action_controller,
+            'event': self.system_session_manager_event_controller,
+        }
+        return handlers[kwargs['ctype']](**kwargs)
 
     def session_manager_controller(self, *args, **kwargs):
         '''
@@ -3011,6 +3111,59 @@ class EWalletSessionManager():
         return handlers[kwargs['controller']](**kwargs)
 
     # WARNINGS
+
+    def warning_no_ewallet_session_found_by_id(self, ewallet_session_id):
+        instruction_set_response = {
+            'failed': True,
+            'warning': 'No ewallet session found by id {}.'.format(ewallet_session_id),
+        }
+        log.warning(instruction_set_response['warning'])
+        return instruction_set_response
+
+    def warning_could_not_create_new_ewallet_session(self, instruction_set):
+        instruction_set_response = {
+            'failed': True,
+            'warning': 'Something went wrong. Could not create new ewallet session. '\
+                       'Instruction set details : {}'.format(instruction_set),
+        }
+        log.warning(instruction_set_response['warning'])
+        return instruction_set_response
+
+    def warning_ewallet_session_worker_assignment_failure(self, instruction_set):
+        instruction_set_response = {
+            'failed': True,
+            'warning': 'Something went wrong. Could not assign ewallet session to session manager worker. '\
+                       'Instruction set details : {}'.format(instruction_set),
+        }
+        log.warning(instruction_set_response['warning'])
+        return instruction_set_response
+
+    def warning_no_ewallet_session_found_by_id(self, instruction_set):
+        instruction_set_response = {
+            'failed': True,
+            'warning': 'No ewallet session found by id. Instruction set details : {}'\
+                       .format(instruction_set),
+        }
+        log.warning(instruction_set_response['warning'])
+        return instruction_set_response
+
+    def warning_could_not_interogate_ewallet_session(self, ewallet_session, instruction_set):
+        instruction_set_response = {
+            'failed': True,
+            'warning': 'Something went wrong. Could not interogate ewallet session {}. '\
+                       'Instruction set details : {}'.format(ewallet_session, instruction_set),
+        }
+        log.warning(instruction_set_response['warning'])
+        return instruction_set_response
+
+    def warning_could_not_fetch_ewallet_session(self, instruction_set):
+        instruction_set_response = {
+            'failed': True,
+            'warning': 'Something went wrong. Could not fetch ewallet session. '\
+                       'Instruction set details : {}'.format(instruction_set),
+        }
+        log.warning(instruction_set_response['warning'])
+        return instruction_set_response
 
     def warning_could_not_logout_user_account(self, ewallet_session, instruction_set):
         instruction_set_response = {
@@ -3475,6 +3628,41 @@ class EWalletSessionManager():
         return False
 
     # ERRORS
+
+    def error_invalid_ewallet_session_id(self, ewallet_session_id):
+        instruction_set_response = {
+            'failed': True,
+            'error': 'Invalid ewallet session id {}.'.format(ewallet_session_id),
+        }
+        log.error(instruction_set_response['error'])
+        return instruction_set_response
+
+    def error_could_not_fetch_ewallet_session_by_id(self, ewallet_session_id):
+        instruction_set_response = {
+            'failed': True,
+            'error': 'Something went wrong. Could not fetch ewallet session by id {}.'\
+                     .format(ewallet_session_id),
+        }
+        log.error(instruction_set_response['error'])
+        return instruction_set_response
+
+    def error_no_session_id_found(self, instruction_set):
+        instruction_set_response = {
+            'failed': True,
+            'error': 'No ewallet session id found. Instruction set details : {}'\
+                     .format(instruction_set),
+        }
+        log.error(instruction_set_response['error'])
+        return instruction_set_response
+
+    def error_no_system_action_interogate_target_specified(self, instruction_set):
+        instruction_set_response = {
+            'failed': True,
+            'error': 'No system action interogate target specified. '\
+                     'Instruction set details : {}'.format(instruction_set),
+        }
+        log.error(instruction_set_response['error'])
+        return instruction_set_response
 
     def error_no_client_action_unlink_time_target_specified(self, instruction_set):
         instruction_set_response = {
@@ -4624,6 +4812,15 @@ class EWalletSessionManager():
         print(str(_logout) + '\n')
         return _logout
 
+    def test_system_action_interogate_ewallet_session(self, **kwargs):
+        print('[ * ]: System action Interogate EWallet Session')
+        _interogate = self.session_manager_controller(
+            controller='system', ctype='action', action='interogate',
+            interogate='session', session_id=kwargs['session_id']
+        )
+        print(str(_interogate) + '\n')
+        return _interogate
+
     def test_session_manager_controller(self, **kwargs):
         print('[ TEST ] Session Manager')
 #       open_in_port = self.test_open_instruction_listener_port()
@@ -4652,6 +4849,8 @@ class EWalletSessionManager():
             client_id=client_id['client_id'], session_token=session_token['session_token'],
             user_name='test_user_dinosaur', user_pass='1234@!xxA'
         )
+        print('[ 2 ]: Second worker spawned')
+        worker2 = self.test_new_worker()
 
 #       create_credit_ewallet = self.test_user_action_create_credit_ewallet(
 #           client_id=client_id['client_id'], session_token=session_token['session_token'],
@@ -4856,10 +5055,13 @@ class EWalletSessionManager():
 #       )
         switch_active_account = self.test_user_action_switch_active_session_user(
             client_id=client_id['client_id'], session_token=session_token['session_token'],
-            account_id=29
+            account_id=2
         )
         logout_account = self.test_user_action_logout_account(
             client_id=client_id['client_id'], session_token=session_token['session_token'],
+        )
+        interogate_session = self.test_system_action_interogate_ewallet_session(
+            session_id=1
         )
 
 if __name__ == '__main__':
@@ -4867,4 +5069,13 @@ if __name__ == '__main__':
     session_manager.session_manager_controller(controller='test')
 
 # CODE DUMP
+#   def error_could_not_fetch_ewallet_session(self, instruction_set):
+#       instruction_set_response = {
+#           'failed': True,
+#           'error': 'Something went wrong. Could not fetch ewallet session. '\
+#                    'Instruction set details : {}'.format(instruction_set),
+#       }
+#       log.error(instruction_set_response['error'])
+#       return instruction_set_response
+
 

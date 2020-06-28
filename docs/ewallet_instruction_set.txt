@@ -919,7 +919,7 @@
     * Returns:
         * [ OK  ]: {
             'failed': False,
-            'user_account': <id>,
+            'user_account': <email>,
             'session_data': {
                 'session_user_account': <id>,
                 'session_credit_ewallet': <id>,
@@ -941,11 +941,39 @@
     * Returns:
         * [ OK  ]: {
             'failed': False,
-            'user_account': <id>,
+            'user_account': <email>,
             'session_data': {
                 'session_user_account': <id>,
                 'session_credit_ewallet': <id>,
                 'session_contact_list': <id>,
+            },
+        }
+        * [ NOK ]: {
+            'failed': True,
+            'error': <msg>,
+            'warning': <msg>,
+        }
+
+* System action Interogate EWallet Session:
+    * Controller Instruction Set:
+        session_manager_controller = {
+            controller='system', ctype='action', action='interogate',
+            interogate='session', client_id=<client-id>,
+            session_token=<token>
+        }
+    * Returns:
+        * [ OK  ]: {
+            'failed': False,
+            'ewallet_session': <id>,
+            'session_data': {
+                'name': <ewallet-session-reference>,
+                'orm_session': <sqlalchemy-session>,
+                'create_date': <datetime>,
+                'write_date': <datetime>,
+                'contact_list': <id>,
+                'credit_ewallet': <id>,
+                'user_account': <id>,
+                'user_account_archive': <session-account-archive>,
             },
         }
         * [ NOK ]: {

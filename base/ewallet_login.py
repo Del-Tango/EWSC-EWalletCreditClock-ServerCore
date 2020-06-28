@@ -333,13 +333,13 @@ class EWalletCreateUser(EWalletLogin):
         '''
         log.debug('')
         if not active_session:
-            return self.error_no_active_session_found()
-        _user_names = [
-                str(item.user_name) for item in self.fetch_all_user_records(
-                    active_session=active_session
-                )
-            ]
-        return _user_names
+            return self.error_no_active_session_found(active_session)
+        user_names = [
+            str(item.user_name) for item in self.fetch_all_user_records(
+                active_session=active_session
+            )
+        ]
+        return user_names
 
 #   @pysnooper.snoop()
     def check_user_name_ensure_one(self, user_name, user_names):
@@ -513,8 +513,7 @@ class EWalletCreateUser(EWalletLogin):
         '''
         log.debug('')
         if not kwargs.get('active_session'):
-            log.error('No session found.')
-            return False
+            return self.error_no_active_session_found(kwargs)
         pass_hash = self.hash_password(kwargs['user_pass'])
         new_user = ResUser(
             user_name=kwargs['user_name'],
@@ -532,6 +531,8 @@ class EWalletCreateUser(EWalletLogin):
         kwargs['active_session'].commit()
         return new_user
 
+    # ACTIONS
+
     def action_create_new_user(self, **kwargs):
         '''
         [ NOTE   ]: User action 'create new user', accessible from external api call.
@@ -542,60 +543,18 @@ class EWalletCreateUser(EWalletLogin):
         log.debug('')
         if not kwargs.get('user_name') or not kwargs.get('user_pass'):
             return self.error_handler_action_create_new_user(
-                    user_name=kwargs.get('user_name'),
-                    user_pass=kwargs.get('user_pass'),
-                    )
-        _parameter_checks = self.perform_new_user_checks(**kwargs)
-        if False in _parameter_checks.values():
+                user_name=kwargs.get('user_name'),
+                user_pass=kwargs.get('user_pass'),
+            )
+        parameter_checks = self.perform_new_user_checks(**kwargs)
+        if False in parameter_checks.values():
             return self.warning_handler_action_create_new_user(
-                    parameter_checks=_parameter_checks
-                    )
-        _new_user = self.create_res_user(**kwargs)
-        return _new_user
+                parameter_checks=parameter_checks
+            )
+        new_user = self.create_res_user(**kwargs)
+        return new_user
 
-    def warning_handler_action_create_new_user(self, **kwargs):
-        _handlers = {
-                'user_name': self.warning_duplicate_user_name,
-                'user_pass': self.warning_invalid_user_pass,
-                'user_email': self.warning_invalid_user_email,
-                }
-        _warning_type = [
-                item for item in kwargs['parameter_checks']
-                if not kwargs['parameter_checks'][item]
-                ]
-        return _handlers[_warning_type[0]]()
-
-    def error_handler_action_create_new_user(self, **kwargs):
-        _reasons_and_handlers = {
-                'reasons': {
-                    'user_name': kwargs.get('user_name'),
-                    'user_pass': kwargs.get('user_pass'),
-                    },
-                'handlers': {
-                    'user_name': self.error_no_user_name_found,
-                    'user_pass': self.error_no_user_pass_found,
-                    },
-                }
-        for item in _reasons_and_handlers['reasons']:
-            if not _reasons_and_handlers['reasons'][item]:
-                return _reasons_and_handlers['handlers'][item]()
-        return False
-
-    def error_no_user_name_found(self):
-        log.error('No user name found.')
-        return False
-
-    def error_no_user_password_found(self):
-        log.error('No user password found.')
-        return False
-
-    def error_invalid_user_email_check_severity(self):
-        log.error('Invalid user email check severity.')
-        return False
-
-    def error_no_active_session_found(self):
-        log.error('No active session found.')
-        return False
+    # WARNINGS
 
     def warning_duplicate_user_name(self):
         log.warning('Invalid user name. Already taken.')
@@ -626,6 +585,57 @@ class EWalletCreateUser(EWalletLogin):
                 'Invalid user password. '
                 'Length does not corespond to security standards.'
                 )
+        return False
+
+    def warning_handler_action_create_new_user(self, **kwargs):
+        _handlers = {
+                'user_name': self.warning_duplicate_user_name,
+                'user_pass': self.warning_invalid_user_pass,
+                'user_email': self.warning_invalid_user_email,
+                }
+        _warning_type = [
+                item for item in kwargs['parameter_checks']
+                if not kwargs['parameter_checks'][item]
+                ]
+        return _handlers[_warning_type[0]]()
+
+    # ERRORS
+
+    def error_no_active_session_found(self, command_chain):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No active sqlalchemy orm session found. Command chain details : {}'\
+                     .format(command_chain),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_handler_action_create_new_user(self, **kwargs):
+        _reasons_and_handlers = {
+                'reasons': {
+                    'user_name': kwargs.get('user_name'),
+                    'user_pass': kwargs.get('user_pass'),
+                    },
+                'handlers': {
+                    'user_name': self.error_no_user_name_found,
+                    'user_pass': self.error_no_user_pass_found,
+                    },
+                }
+        for item in _reasons_and_handlers['reasons']:
+            if not _reasons_and_handlers['reasons'][item]:
+                return _reasons_and_handlers['handlers'][item]()
+        return False
+
+    def error_no_user_name_found(self):
+        log.error('No user name found.')
+        return False
+
+    def error_no_user_password_found(self):
+        log.error('No user password found.')
+        return False
+
+    def error_invalid_user_email_check_severity(self):
+        log.error('Invalid user email check severity.')
         return False
 
 
