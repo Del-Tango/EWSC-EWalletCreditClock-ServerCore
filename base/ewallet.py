@@ -2869,6 +2869,15 @@ class EWallet(Base):
 
     # WARNINGS
 
+    def warning_could_not_create_user_account(self, user_name):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Something went wrong. Could not create user account '\
+                       'for {}.'.format(user_name),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
+
     def warning_no_user_account_found_by_id(self, command_chain):
         command_chain_response = {
             'failed': True,
@@ -3341,13 +3350,6 @@ class EWallet(Base):
 
     def warning_no_user_acount_found(self, search_code, code):
         log.warning('No user account found by %s %s.', search_code, code)
-        return False
-
-    def warning_could_not_create_user_account(self, user_name):
-        log.warning(
-                'Something went wrong. '
-                'Could not create new user account for %s.', user_name
-                )
         return False
 
     def warning_could_not_create_contact_list(self, user_name):

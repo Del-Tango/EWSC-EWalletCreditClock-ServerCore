@@ -7,7 +7,6 @@
 ###############################################################################
 # EWallet Session Manager
 ###############################################################################
-# TODO - BUG FIX - State code change on session worker
 # TODO - System action Cleanup Session Workers
 # TODO - System action Expire Session Token
 # TODO - System action Cleanup EWallet Session

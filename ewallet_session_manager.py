@@ -117,10 +117,6 @@ class EWalletSessionManager():
         if not worker_pool:
             return self.error_worker_pool_empty()
         worker_set = [item for item in worker_pool if ewallet_session in item.session_pool]
-
-        # TODO - Remove
-        log.info('\n\nEWALLET SESSION : {}\n'.format(ewallet_session))
-
         return self.error_no_worker_found_assigned_to_session(ewallet_session)\
             if not worker_set else worker_set[0]
 
@@ -1572,7 +1568,14 @@ class EWalletSessionManager():
         log.debug('')
         client_id = self.generate_client_id()
         set_to_pool = self.set_new_client_id_to_pool(client_id)
-        return {'client_id': client_id}
+        if not client_id or not set_to_pool or isinstance(set_to_pool, dict) \
+                and set_to_pool.get('failed'):
+            return self.warning_could_not_fulfill_client_id_request()
+        instruction_set_response = {
+            'failed': False,
+            'client_id': client_id,
+        }
+        return instruction_set_response
 
     def action_request_session_token(self, **kwargs):
         '''
@@ -1603,8 +1606,15 @@ class EWalletSessionManager():
         mapping = self.map_client_id_to_ewallet_session(
             client_id, session_token, assigned_worker, ewallet_session
         )
-        return self.error_could_not_map_client_id_to_session_token(client_id, session_token) \
-                if not mapping else {'session_token': session_token}
+        if not mapping or isinstance(mapping, dict) and mapping.get('failed'):
+            return self.error_could_not_map_client_id_to_session_token(
+                client_id, session_token
+            )
+        instruction_set_response = {
+            'failed': False,
+            'session_token': session_token,
+        }
+        return instruction_set_response
 
     # EVENTS
 
@@ -1624,6 +1634,21 @@ class EWalletSessionManager():
     '''
     [ NOTE ]: Instruction set validation and sanitizations are performed here.
     '''
+
+    def handle_system_action_new_worker(self, **kwargs):
+        '''
+        [ NOTE   ]: Creates new EWallet Session Manager Worker object and sets
+                    it to worker pool.
+        [ RETURN ]: (EWalletWorker object | False)
+        '''
+        log.debug('')
+        worker = self.action_new_worker()
+        set_to_pool = self.set_worker_to_pool(worker)
+        instruction_set_response = {
+            'failed': False,
+            'worker': worker,
+        }
+        return instruction_set_response
 
     def handle_system_action_interogate_ewallet_workers(self, **kwargs):
         log.debug('')
@@ -2815,17 +2840,6 @@ class EWalletSessionManager():
         log.debug('')
         return self.unset_socket_handler()
 
-    def handle_system_action_new_worker(self, **kwargs):
-        '''
-        [ NOTE   ]: Creates new EWallet Session Manager Worker object and sets
-                    it to worker pool.
-        [ RETURN ]: (EWalletWorker object | False)
-        '''
-        log.debug('')
-        worker = self.action_new_worker()
-        set_to_pool = self.set_worker_to_pool(worker)
-        return worker or False
-
     # TODO
     def handle_system_event_session_timeout(self, **kwargs):
         _timeout = self.event_session_timeout()
@@ -3151,6 +3165,15 @@ class EWalletSessionManager():
         return handlers[kwargs['controller']](**kwargs)
 
     # WARNINGS
+
+    def warning_could_not_fulfill_client_id_request(self):
+        instruction_set_response = {
+            'failed': True,
+            'warning': 'Something went wrong. Could not fulfill '\
+                       'client id request.'
+        }
+        log.warning(instruction_set_response['warning'])
+        return instruction_set_response
 
     def warning_could_not_interogate_ewallet_session_workers(self, instruction_set):
         instruction_set_response = {
@@ -3686,6 +3709,14 @@ class EWalletSessionManager():
 
     # ERRORS
 
+    def error_could_not_set_client_pool(self, client_id):
+        instruction_set_response = {
+            'failed': True,
+            'error': 'Something went wrong. Could not set client id {} to pool.'\
+                     .format(client_id),
+        }
+        log.error(instruction_set_response['error'])
+        return instruction_set_response
 
     def error_could_not_spawn_new_ewallet_session(self, instruction_set):
         instruction_set_response = {
@@ -4189,10 +4220,6 @@ class EWalletSessionManager():
         log.error('Something went wrong. Could not set worker pool : {}'.format(worker_pool))
         return False
 
-    def error_could_not_set_client_pool(self, client_pool):
-        log.error('Something went wrong. Could not set client pool : {}'.format(client_pool))
-        return False
-
     def error_could_not_set_client_worker_map(self, cw_map):
         log.error('Something went wrong. Could not set client worker manp : {}'.format(cw_map))
         return False
@@ -4471,6 +4498,7 @@ class EWalletSessionManager():
         return _transfer
 
     def test_user_action_convert_clock_to_credits(self, **kwargs):
+        log.debug('')
         print('[ * ]: User action Convert Clock To Credits')
         _convert = self.session_manager_controller(
             controller='client', ctype='action', action='convert', convert='clock2credits',
@@ -4481,6 +4509,7 @@ class EWalletSessionManager():
         return _convert
 
     def test_user_action_view_transfer_sheet(self, **kwargs):
+        log.debug('')
         print('[ * ]: User action View Transfer Sheet')
         _view = self.session_manager_controller(
             controller='client', ctype='action', action='view', view='transfer',
@@ -4490,6 +4519,7 @@ class EWalletSessionManager():
         return _view
 
     def test_user_action_view_transfer_record(self, **kwargs):
+        log.debug('')
         print('[ * ]: User action View Transfer Sheet Record')
         _view = self.session_manager_controller(
             controller='client', ctype='action', action='view', view='transfer',
@@ -4500,6 +4530,7 @@ class EWalletSessionManager():
         return _view
 
     def test_user_action_view_time_sheet(self, **kwargs):
+        log.debug('')
         print('[ * ]: User action View Time Sheet')
         _view = self.session_manager_controller(
             controller='client', ctype='action', action='view', view='time',
@@ -4509,6 +4540,7 @@ class EWalletSessionManager():
         return _view
 
     def test_user_action_view_time_record(self, **kwargs):
+        log.debug('')
         print('[ * ]: User action View Time Sheet Record')
         _view = self.session_manager_controller(
             controller='client', ctype='action', action='view', view='time',
@@ -4519,6 +4551,7 @@ class EWalletSessionManager():
         return _view
 
     def test_user_action_view_conversion_sheet(self, **kwargs):
+        log.debug('')
         print('[ * ]: User action View Conversion Sheet')
         _view = self.session_manager_controller(
             controller='client', ctype='action', action='view', view='conversion',
@@ -4529,6 +4562,7 @@ class EWalletSessionManager():
         return _view
 
     def test_user_action_view_conversion_record(self, **kwargs):
+        log.debug('')
         print('[ * ]: User action View Conversion Record')
         _view = self.session_manager_controller(
             controller='client', ctype='action', action='view', view='conversion',
@@ -4539,6 +4573,7 @@ class EWalletSessionManager():
         return _view
 
     def test_user_action_view_account(self, **kwargs):
+        log.debug('')
         print('[ * ]: User action View Account')
         _view = self.session_manager_controller(
             controller='client', ctype='action', action='view', view='account',
@@ -4548,6 +4583,7 @@ class EWalletSessionManager():
         return _view
 
     def test_user_action_edit_account(self, **kwargs):
+        log.debug('')
         print('[ * ]: User action Edit Account')
         _edit = self.session_manager_controller(
             controller='client', ctype='action', action='edit', edit='account',
@@ -4560,6 +4596,7 @@ class EWalletSessionManager():
         return _edit
 
     def test_user_action_view_credit_ewallet(self, **kwargs):
+        log.debug('')
         print('[ * ]: User action View Credit EWallet')
         _view = self.session_manager_controller(
             controller='client', ctype='action', action='view', view='credit',
@@ -4570,6 +4607,7 @@ class EWalletSessionManager():
         return _view
 
     def test_user_action_view_credit_clock(self, **kwargs):
+        log.debug('')
         print('[ * ]: User action View Credit Clock')
         _view = self.session_manager_controller(
             controller='client', ctype='action', action='view', view='credit',
@@ -4580,6 +4618,7 @@ class EWalletSessionManager():
         return _view
 
     def test_user_action_view_invoice_sheet(self, **kwargs):
+        log.debug('')
         print('[ * ]: User action View Invoice Sheet')
         _view = self.session_manager_controller(
             controller='client', ctype='action', action='view', view='invoice',
@@ -4590,6 +4629,7 @@ class EWalletSessionManager():
         return _view
 
     def test_user_action_view_invoice_record(self, **kwargs):
+        log.debug('')
         print('[ * ]: User action View Invoice Record')
         _view = self.session_manager_controller(
             controller='client', ctype='action', action='view', view='invoice',
@@ -4600,6 +4640,7 @@ class EWalletSessionManager():
         return _view
 
     def test_user_action_create_credit_ewallet(self, **kwargs):
+        log.debug('')
         print('[ * ]: User action Create Credit EWallet')
         _create = self.session_manager_controller(
             controller='client', ctype='action', action='new', new='credit',
@@ -4610,6 +4651,7 @@ class EWalletSessionManager():
         return _create
 
     def test_user_action_create_credit_clock(self, **kwargs):
+        log.debug('')
         print('[ * ]: User action Create Credit Clock')
         _create = self.session_manager_controller(
             controller='client', ctype='action', action='new', new='credit',
@@ -4620,6 +4662,7 @@ class EWalletSessionManager():
         return _create
 
     def test_user_action_create_transfer_sheet(self, **kwargs):
+        log.debug('')
         print('[ * ]: User action Create Transfer Sheet')
         _create = self.session_manager_controller(
             controller='client', ctype='action', action='new', new='transfer',
@@ -4630,6 +4673,7 @@ class EWalletSessionManager():
         return _create
 
     def test_user_action_create_invoice_sheet(self, **kwargs):
+        log.debug('')
         print('[ * ]: User action Create Invoice Sheet')
         _create = self.session_manager_controller(
             controller='client', ctype='action', action='new', new='invoice',
@@ -4640,6 +4684,7 @@ class EWalletSessionManager():
         return _create
 
     def test_user_action_create_conversion_sheet(self, **kwargs):
+        log.debug('')
         print('[ * ]: User action Create Conversion Sheet')
         _create = self.session_manager_controller(
             controller='client', ctype='action', action='new', new='conversion',
@@ -4650,6 +4695,7 @@ class EWalletSessionManager():
         return _create
 
     def test_user_action_create_time_sheet(self, **kwargs):
+        log.debug('')
         print('[ * ]: User action Create Time Sheet')
         _create = self.session_manager_controller(
             controller='client', ctype='action', action='new', new='time',
@@ -4660,6 +4706,7 @@ class EWalletSessionManager():
         return _create
 
     def test_user_action_create_contact_list(self, **kwargs):
+        log.debug('')
         print('[ * ]: User action Create Contact List')
         _create = self.session_manager_controller(
             controller='client', ctype='action', action='new', new='contact',
@@ -4670,6 +4717,7 @@ class EWalletSessionManager():
         return _create
 
     def test_user_action_switch_credit_ewallet(self, **kwargs):
+        log.debug('')
         print('[ * ]: User action Switch Credit EWallet')
         _switch = self.session_manager_controller(
             controller='client', ctype='action', action='switch', switch='credit',
@@ -4680,6 +4728,7 @@ class EWalletSessionManager():
         return _switch
 
     def test_user_action_switch_credit_clock(self, **kwargs):
+        log.debug('')
         print('[ * ]: User action Switch Credit Clock')
         _switch = self.session_manager_controller(
             controller='client', ctype='action', action='switch', switch='credit',
@@ -4690,6 +4739,7 @@ class EWalletSessionManager():
         return _switch
 
     def test_user_action_switch_transfer_sheet(self, **kwargs):
+        log.debug('')
         print('[ * ]: User action Switch Transfer Sheet')
         _switch = self.session_manager_controller(
             controller='client', ctype='action', action='switch', switch='transfer_sheet',
@@ -4700,6 +4750,7 @@ class EWalletSessionManager():
         return _switch
 
     def test_user_action_switch_invoice_sheet(self, **kwargs):
+        log.debug('')
         print('[ * ]: User action Switch Invoice Sheet')
         _switch = self.session_manager_controller(
             controller='client', ctype='action', action='switch', switch='invoice_sheet',
@@ -4710,6 +4761,7 @@ class EWalletSessionManager():
         return _switch
 
     def test_user_action_switch_conversion_sheet(self, **kwargs):
+        log.debug('')
         print('[ * ]: User action Switch Conversion Sheet')
         _switch = self.session_manager_controller(
             controller='client', ctype='action', action='switch', switch='conversion_sheet',
@@ -4720,6 +4772,7 @@ class EWalletSessionManager():
         return _switch
 
     def test_user_action_switch_time_sheet(self, **kwargs):
+        log.debug('')
         print('[ * ]: User action Switch Time Sheet')
         _switch = self.session_manager_controller(
             controller='client', ctype='action', action='switch', switch='time_sheet',
@@ -4730,6 +4783,7 @@ class EWalletSessionManager():
         return _switch
 
     def test_user_action_switch_contact_list(self, **kwargs):
+        log.debug('')
         print('[ * ]: User action Switch Contact List')
         _switch = self.session_manager_controller(
             controller='client', ctype='action', action='switch', switch='contact_list',
@@ -4740,6 +4794,7 @@ class EWalletSessionManager():
         return _switch
 
     def test_user_action_unlink_transfer_record(self, **kwargs):
+        log.debug('')
         print('[ * ]: User action Unlink Transfer Record')
         _unlink = self.session_manager_controller(
             controller='client', ctype='action', action='unlink', unlink='transfer',
@@ -4750,6 +4805,7 @@ class EWalletSessionManager():
         return _unlink
 
     def test_user_action_unlink_invoice_record(self, **kwargs):
+        log.debug('')
         print('[ * ]: User action Unlink Invoice Record')
         _unlink = self.session_manager_controller(
             controller='client', ctype='action', action='unlink', unlink='invoice',
@@ -4760,6 +4816,7 @@ class EWalletSessionManager():
         return _unlink
 
     def test_user_action_unlink_conversion_record(self, **kwargs):
+        log.debug('')
         print('[ * ]: User action Unlink Conversion Record')
         _unlink = self.session_manager_controller(
             controller='client', ctype='action', action='unlink', unlink='conversion',
@@ -4770,6 +4827,7 @@ class EWalletSessionManager():
         return _unlink
 
     def test_user_action_unlink_time_record(self, **kwargs):
+        log.debug('')
         print('[ * ]: User action Unlink Time Record')
         _unlink = self.session_manager_controller(
             controller='client', ctype='action', action='unlink', unlink='time',
@@ -4780,6 +4838,7 @@ class EWalletSessionManager():
         return _unlink
 
     def test_user_action_unlink_contact_record(self, **kwargs):
+        log.debug('')
         print('[ * ]: User action Unlink Contact Record')
         _unlink = self.session_manager_controller(
             controller='client', ctype='action', action='unlink', unlink='contact',
@@ -4790,6 +4849,7 @@ class EWalletSessionManager():
         return _unlink
 
     def test_user_action_unlink_transfer_sheet(self, **kwargs):
+        log.debug('')
         print('[ * ]: User action Unlink Transfer Sheet')
         _unlink = self.session_manager_controller(
             controller='client', ctype='action', action='unlink', unlink='transfer',
@@ -4800,6 +4860,7 @@ class EWalletSessionManager():
         return _unlink
 
     def test_user_action_unlink_invoice_sheet(self, **kwargs):
+        log.debug('')
         print('[ * ]: User action Unlink Invoice Sheet')
         _unlink = self.session_manager_controller(
             controller='client', ctype='action', action='unlink', unlink='invoice',
@@ -4810,6 +4871,7 @@ class EWalletSessionManager():
         return _unlink
 
     def test_user_action_unlink_conversion_sheet(self, **kwargs):
+        log.debug('')
         print('[ * ]: User action Unlink Conversion Sheet')
         _unlink = self.session_manager_controller(
             controller='client', ctype='action', action='unlink', unlink='conversion',
@@ -4820,6 +4882,7 @@ class EWalletSessionManager():
         return _unlink
 
     def test_user_action_unlink_time_sheet(self, **kwargs):
+        log.debug('')
         print('[ * ]: User action Unlink Time Sheet')
         _unlink = self.session_manager_controller(
             controller='client', ctype='action', action='unlink', unlink='time',
@@ -4830,6 +4893,7 @@ class EWalletSessionManager():
         return _unlink
 
     def test_user_action_unlink_contact_list(self, **kwargs):
+        log.debug('')
         print('[ * ]: User action Unlink Contact List')
         _unlink = self.session_manager_controller(
             controller='client', ctype='action', action='unlink', unlink='contact',
@@ -4840,6 +4904,7 @@ class EWalletSessionManager():
         return _unlink
 
     def test_user_action_unlink_credit_ewallet(self, **kwargs):
+        log.debug('')
         print('[ * ]: User action Unlink Credit EWallet')
         _unlink = self.session_manager_controller(
             controller='client', ctype='action', action='unlink', unlink='credit',
@@ -4850,6 +4915,7 @@ class EWalletSessionManager():
         return _unlink
 
     def test_user_action_unlink_credit_clock(self, **kwargs):
+        log.debug('')
         print('[ * ]: User action Unlink Credit Clock')
         _unlink = self.session_manager_controller(
             controller='client', ctype='action', action='unlink', unlink='credit',
@@ -4860,6 +4926,7 @@ class EWalletSessionManager():
         return _unlink
 
     def test_user_action_unlink_user_account(self, **kwargs):
+        log.debug('')
         print('[ * ]: User action Unlink Account')
         _unlink = self.session_manager_controller(
             controller='client', ctype='action', action='unlink', unlink='account',
@@ -4869,6 +4936,7 @@ class EWalletSessionManager():
         return _unlink
 
     def test_user_action_view_login_records(self, **kwargs):
+        log.debug('')
         print('[ * ]: User action View Login Records')
         _view = self.session_manager_controller(
             controller='client', ctype='action', action='view', view='login',
@@ -4878,6 +4946,7 @@ class EWalletSessionManager():
         return _view
 
     def test_user_action_view_logout_records(self, **kwargs):
+        log.debug('')
         print('[ * ]: User action View Logout Records')
         _view = self.session_manager_controller(
             controller='client', ctype='action', action='view', view='logout',
@@ -4887,6 +4956,7 @@ class EWalletSessionManager():
         return _view
 
     def test_user_action_switch_active_session_user(self, **kwargs):
+        log.debug('')
         print('[ * ]: User action Switch Active Session User')
         _switch = self.session_manager_controller(
             controller='client', ctype='action', action='switch', switch='account',
@@ -4897,6 +4967,7 @@ class EWalletSessionManager():
         return _switch
 
     def test_user_action_logout_account(self, **kwargs):
+        log.debug('')
         print('[ * ]: User action Logout Account')
         _logout = self.session_manager_controller(
             controller='client', ctype='action', action='logout',
@@ -4906,6 +4977,7 @@ class EWalletSessionManager():
         return _logout
 
     def test_system_action_interogate_ewallet_session(self, **kwargs):
+        log.debug('')
         print('[ * ]: System action Interogate EWallet Session')
         _interogate = self.session_manager_controller(
             controller='system', ctype='action', action='interogate',
@@ -4915,6 +4987,7 @@ class EWalletSessionManager():
         return _interogate
 
     def test_system_action_interogate_ewallet_workers(self, **kwargs):
+        log.debug('')
         print('[ * ]: System action Interogate EWallet Workers')
         _interogate = self.session_manager_controller(
             controller='system', ctype='action', action='interogate',
@@ -4942,7 +5015,6 @@ class EWalletSessionManager():
             client_id=client_id['client_id'], session_token=session_token['session_token'],
             user_name='test_user', user_pass='1234@!xxA'
         )
-
         print('[ 2 ]: Second user create.')
         create_account2 = self.test_user_action_create_account(
             client_id=client_id['client_id'], session_token=session_token['session_token'],
@@ -4955,7 +5027,6 @@ class EWalletSessionManager():
         )
         print('[ 2 ]: Second worker spawned')
         worker2 = self.test_new_worker()
-
 #       create_credit_ewallet = self.test_user_action_create_credit_ewallet(
 #           client_id=client_id['client_id'], session_token=session_token['session_token'],
 #       )
@@ -5157,16 +5228,16 @@ class EWalletSessionManager():
 #       view_logout_records = self.test_user_action_view_logout_records(
 #           client_id=client_id['client_id'], session_token=session_token['session_token'],
 #       )
-        switch_active_account = self.test_user_action_switch_active_session_user(
-            client_id=client_id['client_id'], session_token=session_token['session_token'],
-            account_id=2
-        )
-        logout_account = self.test_user_action_logout_account(
-            client_id=client_id['client_id'], session_token=session_token['session_token'],
-        )
-        interogate_session = self.test_system_action_interogate_ewallet_session(
-            session_id=1
-        )
+#       switch_active_account = self.test_user_action_switch_active_session_user(
+#           client_id=client_id['client_id'], session_token=session_token['session_token'],
+#           account_id=2
+#       )
+#       logout_account = self.test_user_action_logout_account(
+#           client_id=client_id['client_id'], session_token=session_token['session_token'],
+#       )
+#       interogate_session = self.test_system_action_interogate_ewallet_session(
+#           session_id=1
+#       )
         interogate_workers = self.test_system_action_interogate_ewallet_workers()
 
 if __name__ == '__main__':

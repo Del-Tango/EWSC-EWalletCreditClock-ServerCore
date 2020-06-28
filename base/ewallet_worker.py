@@ -34,14 +34,14 @@ class EWalletWorker():
 
     # FETCHERS
 
+    def fetch_session_worker_ewallet_session_pool(self):
+        log.debug('')
+        return self.session_pool
+
     def fetch_session_worker_values(self):
         log.debug('')
         session_pool = {}
         for session in self.session_pool:
-
-            # TODO - Remove
-            log.info('\n\nEWALLET SESSION : {}\n'.format(session))
-
             session_id = session.fetch_active_session_id()
             user_account = session.fetch_active_session_user()
             session_pool.update({
@@ -82,12 +82,20 @@ class EWalletWorker():
         return self.token_session_map
 
     # TODO
-    def fetch_session_pool(self):
-        pass
     def fetch_ewallet_session(self, session_id=None):
         pass
 
     # SETTERS
+
+    def set_session_worker_token_session_map_entry(self, map_entry):
+        log.debug('')
+        if not isinstance(map_entry, dict):
+            return self.error_invalid_session_worker_token_session_map_entry(map_entry)
+        try:
+            self.token_session_map.update(map_entry)
+        except:
+            return self.error_could_not_set_session_worker_token_session_map_entry(map_entry)
+        return True
 
     def set_new_ewallet_session_to_pool(self, ewallet_session):
         log.debug('')
@@ -96,7 +104,7 @@ class EWalletWorker():
         try:
             self.session_pool.append(ewallet_session)
         except:
-            return self.error_could_not_add_new_session_to_pool()
+            return self.error_could_not_add_new_session_to_pool(ewallet_session)
         return True
 
     def set_create_date(self, create_date):
@@ -112,13 +120,12 @@ class EWalletWorker():
         [ NOTE   ]: State codes are used by the session manager to decide what worker
                     to place a new session in, what workers are idle, and what workers need to
                     be scraped.
-        [ INPUT  ]: (0 | 1 | 2), code_map=[0, 1, 2]
+        [ INPUT  ]: (0 | 1 | 2)
         [ RETURN ]: (True | False)
         '''
         log.debug('')
-        if state_code not in kwargs.get('code_map') or \
-                self.fetch_session_worker_state_code_label_map().keys():
-            return self.error_invalid_session_worker_state_code()
+        if state_code not in self.fetch_session_worker_state_code_label_map().keys():
+            return self.error_invalid_session_worker_state_code(state_code)
         self.session_worker_state_code = state_code
         return True
 
@@ -205,12 +212,6 @@ class EWalletWorker():
         _working_session.close()
         return True
 
-    # ACTIONS
-
-    def action_add_new_session(self, **kwargs):
-        log.debug('')
-        return self.set_new_ewallet_session_to_pool(kwargs.get('session'))
-
     # GENERAL
 
     def search_ewallet_session(self, session_token):
@@ -222,6 +223,21 @@ class EWalletWorker():
             if token_map[client_id]['token'] == session_token:
                 return token_map[client_id]['session']
         return self.warning_no_ewallet_session_found_by_session_token(session_token)
+
+    # ACTIONS
+
+    def action_add_new_session(self, **kwargs):
+        log.debug('')
+        set_to_pool = self.set_new_ewallet_session_to_pool(kwargs.get('session'))
+        if not set_to_pool or isinstance(set_to_pool, dict) and \
+                set_to_pool.get('failed'):
+            return self.error_could_not_add_new_ewallet_session_to_session_pool(kwargs)
+        self.handle_system_action_session_worker_state_check()
+        instruction_set_response = {
+            'failed': False,
+            'ewallet_session': kwargs['session'].fetch_active_session_id(),
+        }
+        return instruction_set_response
 
 #   @pysnooper.snoop()
     def action_add_client_id_session_token_map_entry(self, **kwargs):
@@ -239,10 +255,35 @@ class EWalletWorker():
             'session': kwargs['session']
             }
         }
-        self.token_session_map.update(map_entry)
-        return map_entry
+        set_entry = self.set_session_worker_token_session_map_entry(map_entry)
+        if set_entry or isinstance(set_entry, dict) and not set_entry.get('failed'):
+            self.handle_system_action_session_worker_state_check()
+        instruction_set_response = {
+            'failed': False,
+            'map_entry': map_entry,
+        }
+        return self.warning_could_not_set_session_worker_ewallet_session_token_map_entry(kwargs) \
+            if not set_entry or isinstance(set_entry, dict) and \
+            set_entry.get('failed') else instruction_set_response
 
     # HANDLERS
+
+    def handle_system_action_session_worker_state_check(self):
+        log.debug('')
+        session_pool = self.fetch_session_worker_ewallet_session_pool()
+        current_state = self.fetch_session_worker_state_code()
+        if current_state is 2:
+            return self.warning_session_worker_ewallet_session_pool_full(current_state)
+        set_state = self.set_session_worker_state_code(
+            1 if len(session_pool) >= 1 else 0
+        )
+        instruction_set_response = {
+            'failed': False,
+            'worker_state': current_state,
+        }
+        return self.warning_could_not_perform_session_worker_state_check(session_pool) \
+            if not set_state or isinstance(set_state, dict) and set_state.get('failed') \
+            else instruction_set_response
 
     def handle_system_action_search_session(self, **kwargs):
         log.debug('')
@@ -308,6 +349,24 @@ class EWalletWorker():
 
     # WARNINGS
 
+    def warning_could_not_perform_session_worker_state_check(self, session_pool):
+        instruction_set_response = {
+            'failed': True,
+            'warning': 'Something went wrong. Could not perform session worker '\
+                       'state check. Session pool details : {}'.format(session_pool),
+        }
+        log.warning(instruction_set_response['warning'])
+        return instruction_set_response
+
+    def warning_session_worker_ewallet_session_pool_full(self, current_state):
+        instruction_set_response = {
+            'failed': True,
+            'warning': 'Session worker state {}. Ewallet session pool full.'\
+                       .formaT(current_state),
+        }
+        log.warning(instruction_set_response['warning'])
+        return instruction_set_response
+
     def warning_no_ewallet_session_found_by_session_token(self, session_token):
         instruction_set_response = {
             'failed': True,
@@ -325,6 +384,51 @@ class EWalletWorker():
         return False
 
     # ERRORS
+
+    def error_could_not_add_new_ewallet_session_to_session_pool(self, instruction_set):
+        instruction_set_response = {
+            'failed': False,
+            'error': 'Something went wrong. Could not add new ewallet session to '\
+                     'worker session pool. Instruction set details : {}'\
+                     .format(instruction_set),
+        }
+        log.error(instruction_set_response['error'])
+        return instruction_set_response
+
+    def error_invalid_session_worker_state_code(self, state_code):
+        instruction_set_response = {
+            'failed': True,
+            'error': 'Invalid state code {} for session worker.'.format(state_code),
+        }
+        log.error(instruction_set_response['error'])
+        return instruction_set_response
+
+    def error_could_not_add_new_session_to_pool(self, ewallet_session):
+        instruction_set_response = {
+            'failed': True,
+            'error': 'Something went wrong. Could not add new EWallet Session {} '\
+                     'to worker session pool.'.format(ewallet_session),
+        }
+        log.error(instruction_set_response['error'])
+        return instruction_set_response
+
+    def error_invalid_session_worker_token_session_map_entry(self, map_entry):
+        instruction_set_response = {
+            'failed': True,
+            'error': 'Invalid token session map entry {} for session worker.'\
+                     .format(map_entry),
+        }
+        log.error(instruction_set_response['error'])
+        return instruction_set_response
+
+    def error_could_not_set_session_worker_token_session_map_entru(self, map_entry):
+        instruction_set_response = {
+            'failed': True,
+            'error': 'Something went wrong. Could not set token session map '\
+                     'entry {} to session worker.'.format(map_entry),
+        }
+        log.error(instruction_set_response['error'])
+        return instruction_set_response
 
     def error_invalid_ewallet_session_for_worker_session_pool(self, ewallet_session):
         command_chain_response = {
@@ -351,13 +455,6 @@ class EWalletWorker():
         log.error('Something went wrong. Could not set worker create date.')
         return False
 
-    def error_could_not_add_new_session_to_pool(self, ewallet_sesion):
-        log.error(
-                'Something went wrong. Could not set new EWallet Session {} to worker session pool.'\
-                .format(ewallet_session)
-                )
-        return False
-
     def error_no_worker_action_new_target_specified(self):
         log.error('No worker action new target specified.')
         return False
@@ -368,10 +465,6 @@ class EWalletWorker():
 
     def error_no_session_manager_controller_specified(self):
         log.error('No session manager worker controller specified.')
-        return False
-
-    def error_invalid_session_worker_state_code(self):
-        log.error('Invalid session worker state code.')
         return False
 
     def error_invalid_session_worker_state_label(self):
