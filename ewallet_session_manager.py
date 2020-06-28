@@ -34,6 +34,37 @@ class EWalletSessionManager():
 
     # FETCHERS
 
+#   @pysnooper.snoop()
+    def fetch_ewallet_sessions_past_expiration_date(self, **kwargs):
+        log.debug('')
+        worker_pool = self.fetch_ewallet_session_manager_worker_pool()
+        if not worker_pool:
+            return self.error_could_not_fetch_session_worker_pool(kwargs)
+        now, expired_sessions = datetime.datetime.now(), []
+        for worker in worker_pool:
+            try:
+                worker_interogation = worker.main_controller(
+                    controller='system', ctype='action', action='interogate',
+                    interogate='session_pool',
+                )
+                if not worker_interogation or isinstance(worker_interogation, dict) and \
+                        worker_interogation.get('failed'):
+                    self.warning_could_not_interogate_worker_session_pool(worker)
+                    continue
+                expired_sessions += [
+                    session for session in worker_interogation['session_pool'] \
+                    if now > session.fetch_active_session_expiration_date()
+                ]
+            except:
+                self.warning_could_not_fetch_expired_ewallet_sessions_from_worker(worker)
+                continue
+            log.info(
+                'Successfully fetched expired ewallet sessions from worker {}.'\
+                .format(worker),
+            )
+        return self.warning_no_expired_ewallet_sessions_found(kwargs) \
+            if not expired_sessions else expired_sessions
+
     def fetch_ewallet_session_manager_worker_pool(self):
         log.debug('')
         return self.error_ewallet_session_manager_worker_pool_empty() if not \
@@ -749,6 +780,21 @@ class EWalletSessionManager():
     [ NOTE ]: SqlAlchemy ORM sessions are fetched here.
 
     '''
+
+    def action_sweep_cleanup_ewallet_sessions(self, **kwargs):
+        log.debug('')
+        expired_sessions = self.fetch_ewallet_sessions_past_expiration_date(
+            **kwargs
+        )
+        if not expired_sessions or isinstance(expired_sessions, dict) and \
+                expired_sessions.get('failed'):
+            return self.warning_could_not_fetch_expired_ewallet_sessions(kwargs)
+        sweep_cleanup = self.cleanup_ewallet_sessions(
+            ewallet_sessions=expired_sessions, **kwargs
+        )
+        return self.warning_could_not_sweep_cleanup_ewallet_sessions(kwargs) \
+            if not sweep_cleanup or isinstance(sweep_cleanup, dict) and \
+            sweep_cleanup.get('failed') else sweep_cleanup
 
     def action_cleanup_ewallet_session_by_id(self, **kwargs):
         log.debug('')
@@ -1738,6 +1784,10 @@ class EWalletSessionManager():
     [ NOTE ]: Instruction set validation and sanitizations are performed here.
     '''
 
+    def handle_system_action_sweep_cleanup_ewallet_sessions(self, **kwargs):
+        log.debug('')
+        return self.action_sweep_cleanup_ewallet_sessions(**kwargs)
+
     def handle_system_action_cleanup_target_ewallet_session(self, **kwargs):
         log.debug('')
         return self.action_cleanup_ewallet_session_by_id(**kwargs)
@@ -1747,7 +1797,7 @@ class EWalletSessionManager():
         cleanup_mode = 'target' if kwargs.get('session_id') else 'sweep'
         handlers = {
             'target': self.handle_system_action_cleanup_target_ewallet_session,
-#           'sweep':
+            'sweep': self.handle_system_action_sweep_cleanup_ewallet_sessions,
         }
         return handlers[cleanup_mode](**kwargs)
 
@@ -3297,6 +3347,51 @@ class EWalletSessionManager():
 
     # WARNINGS
 
+    def warning_could_not_fetch_expired_ewallet_sessions_from_worker(self, session_worker):
+        instruction_set_response = {
+            'failed': True,
+            'warning': 'Could not fetch expired ewallet sessions from worker {}.'\
+                       .format(session_worker),
+        }
+        log.warning(instruction_set_response['warning'])
+        return instruction_set_response
+
+    def warning_could_not_interogate_worker_session_pool(self, session_worker):
+        instruction_set_response = {
+            'failed': True,
+            'warning': 'Something went wrong. Could not interogate session worker '\
+                       '{} ewallet session pool.'.format(session_worker),
+        }
+        log.warning(instruction_set_response['warning'])
+        return instruction_set_response
+
+    def warning_no_expired_ewallet_sessions_found(self, instruction_set):
+        instruction_set_response = {
+            'failed': True,
+            'warning': 'No expired ewallet sessions found. Instruction set details : {}'\
+                     .format(instruction_set),
+        }
+        log.warning(instruction_set_response['warning'])
+        return instruction_set_response
+
+    def warning_could_not_fetch_expired_ewallet_sessions(self, instruction_set):
+        instruction_set_response = {
+            'failed': True,
+            'warning': 'Something went wrong. Could not fetch expired ewallet sessions. '\
+                       'Instruction set details : {}'.format(instruction_set),
+        }
+        log.warning(instruction_set_response['warning'])
+        return instruction_set_response
+
+    def warning_could_not_sweep_cleanup_ewallet_sessions(self, instruction_set):
+        instruction_set_response = {
+            'failed': True,
+            'warning': 'Something went wrong. Could not sweep clean ewallet sessions. '\
+                       'Instruction set details : {}'.format(instruction_set),
+        }
+        log.error(instruction_set_response['warning'])
+        return instruction_set_response
+
     def warning_could_not_clean_ewallet_session(self, ewallet_session):
         instruction_set_response = {
             'failed': True,
@@ -3875,6 +3970,15 @@ class EWalletSessionManager():
         return False
 
     # ERRORS
+
+    def error_could_not_fetch_session_worker_pool(self, **kwargs):
+        instruction_set_response = {
+            'failed': True,
+            'error': 'Something went wrong. Could not fetch session worker pool. '\
+                     'Instruction set details : {}'.format(kwargs),
+        }
+        log.error(instruction_set_response['error'])
+        return instruction_set_response
 
     def error_could_not_scrape_ewallet_session(self, ewallet_session):
         instruction_set_response = {
@@ -5248,6 +5352,16 @@ class EWalletSessionManager():
         print(str(_clean) + '\n')
         return _clean
 
+    def test_system_action_sweep_cleanup_ewallet_sessions(self, **kwargs):
+        log.debug('')
+        print('[ * ]: System action Sweep Cleanup Ewallet Sessions')
+        _clean = self.session_manager_controller(
+            controller='system', ctype='action', action='cleanup',
+            cleanup='sessions',
+        )
+        print(str(_clean) + '\n')
+        return _clean
+
     def test_session_manager_controller(self, **kwargs):
         print('[ TEST ] Session Manager')
 #       open_in_port = self.test_open_instruction_listener_port()
@@ -5493,6 +5607,7 @@ class EWalletSessionManager():
         cleanup_target_session = self.test_system_action_cleanup_target_session(
             session_id=2
         )
+        sweep_cleanup_sessions = self.test_system_action_sweep_cleanup_ewallet_sessions()
 
 if __name__ == '__main__':
     session_manager = EWalletSessionManager()

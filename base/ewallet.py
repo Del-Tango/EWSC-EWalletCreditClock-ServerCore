@@ -48,6 +48,7 @@ class EWallet(Base):
     name = Column(String)
     create_date = Column(Date)
     write_date = Column(Date)
+    expiration_date = Column(DateTime)
     session = None
     # O2O
     contact_list = relationship(
@@ -68,16 +69,30 @@ class EWallet(Base):
 #           config.log_config['log_dir'] + '/' + config.log_config['log_file']
 #           )
     def __init__(self, **kwargs):
+        now = datetime.datetime.now()
         self.name = kwargs.get('name')
         self.session = kwargs.get('session') or res_utils.session_factory()
         self.create_date = datetime.datetime.now()
         self.write_date = datetime.datetime.now()
+        self.expiration_date = kwargs.get('expiration_date') or \
+            now + datetime.timedelta(
+                hours=self.fetch_default_ewallet_session_validity_interval_in_hours()
+            )
         self.contact_list = kwargs.get('contact_list') or []
         self.credit_wallet = kwargs.get('credit_wallet') or []
         self.active_user = kwargs.get('active_user') or []
         self.user_account_archive = kwargs.get('user_account_archive') or []
 
     # FETCHERS
+
+    def fetch_active_session_expiration_date(self):
+        log.debug('')
+        return self.expiration_date
+
+    # TODO - Fetch value from config file
+    def fetch_default_ewallet_session_validity_interval_in_hours(self):
+        log.debug('TODO')
+        return 24
 
     def fetch_active_session_values(self):
         log.debug('')
@@ -88,6 +103,7 @@ class EWallet(Base):
             'orm_session': self.session,
             'create_date': self.create_date,
             'write_date': self.write_date,
+            'expiration_date': self.expiration_date,
             'contact_list': self.fetch_active_session_contact_list(),
             'credit_ewallet': self.fetch_active_session_credit_wallet(),
             'user_account': self.fetch_active_session_user(),

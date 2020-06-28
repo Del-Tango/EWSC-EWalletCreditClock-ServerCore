@@ -7,7 +7,6 @@
 ###############################################################################
 # EWallet Session Manager
 ###############################################################################
-# TODO - System action Cleanup Ewallet Sessions
 # TODO - System action Expire Session Token
 # TODO - System action Expire Client ID
 

@@ -267,6 +267,18 @@ class EWalletWorker():
 
     # ACTIONS
 
+    def action_interogate_session_pool(self, **kwargs):
+        log.debug('')
+        session_pool = self.fetch_session_worker_ewallet_session_pool()
+        if not session_pool or isinstance(session_pool, dict) and \
+                session_pool.get('failed'):
+            return self.error_could_not_fetch_ewallet_session_pool(kwargs)
+        instruction_set_response = {
+            'failed': False,
+            'session_pool': session_pool,
+        }
+        return instruction_set_response
+
     def action_add_new_session(self, **kwargs):
         log.debug('')
         set_to_pool = self.set_new_ewallet_session_to_pool(kwargs.get('session'))
@@ -308,6 +320,19 @@ class EWalletWorker():
             set_entry.get('failed') else instruction_set_response
 
     # HANDLERS
+
+    def handle_system_action_interogate_session_pool(self, **kwargs):
+        log.debug('')
+        return self.action_interogate_session_pool(**kwargs)
+
+    def handle_system_action_interogate(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('interogate'):
+            return self.error_no_worker_action_interogate_target_specified(kwargs)
+        handlers = {
+            'session_pool': self.handle_system_action_interogate_session_pool,
+        }
+        return handlers[kwargs['interogate']](**kwargs)
 
     def handle_system_action_remove_session_map_by_ewallet_session(self, **kwargs):
         log.debug('')
@@ -425,6 +450,7 @@ class EWalletWorker():
         handlers = {
             'add': self.handle_system_action_add,
             'search': self.handle_system_action_search,
+            'interogate': self.handle_system_action_interogate,
             'remove': self.handle_system_action_remove,
         }
         return handlers[kwargs['action']](**kwargs)
@@ -447,10 +473,10 @@ class EWalletWorker():
         log.debug('')
         if not kwargs.get('controller'):
             return self.error_no_session_manager_worker_controller_specified()
-        _handlers = {
-                'system': self.system_controller,
-                }
-        return _handlers[kwargs['controller']](**kwargs)
+        handlers = {
+            'system': self.system_controller,
+        }
+        return handlers[kwargs['controller']](**kwargs)
 
     # WARNINGS
 
@@ -517,6 +543,15 @@ class EWalletWorker():
         return False
 
     # ERRORS
+
+    def error_could_not_fetch_ewallet_session_pool(self, instruction_set):
+        instruction_set_response = {
+            'failed': True,
+            'error': 'Something went wrong. Could not fetch ewallet session pool. '\
+                     'Instruction set details : {}'.format(instruction_set),
+        }
+        log.error(instruction_set_response['error'])
+        return instruction_set_response
 
     def error_could_not_remove_session_token_map_entry(self, client_id):
         instruction_set_response = {
