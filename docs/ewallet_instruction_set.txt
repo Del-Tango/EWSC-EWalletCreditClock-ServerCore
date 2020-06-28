@@ -998,6 +998,25 @@
             'warning': <msg>,
         }
 
+* System action Cleanup Session Workers:
+    * Controller Instruction Set:
+        session_manager_controller = {
+            controller='system', ctype='action', action='cleanup',
+            cleanup='workers'
+        }
+    * Returns:
+        * [ OK  ]: {
+            'failed': False,
+            'workers_cleaned': <count>,
+            'worker_reserved': <session-worker>,
+            'worker_pool': <session-worker-pool>,
+        }
+        * [ NOK ]: {
+            'failed': True,
+            'error': <msg>,
+            'warning': <msg>,
+        }
+
 
 ################################################################################
 # EWallet Session (Command Chain)
