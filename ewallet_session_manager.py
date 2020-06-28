@@ -412,18 +412,30 @@ class EWalletSessionManager():
 
     # SCRAPERS
 
+    def scrape_ewallet_session(self, ewallet_session):
+        log.debug('')
+        session_worker = self.fetch_ewallet_session_assigned_worker(
+            ewallet_session
+        )
+        if not session_worker or isinstance(session_worker, dict) and \
+                session_worker.get('failed'):
+            return self.error_could_not_fetch_session_worker_for_ewallet_session(
+                ewallet_session
+            )
+        remove_from_pool = session_worker.main_controller(
+            controller='system', ctype='action', action='remove',
+            remove='session', session=ewallet_session
+        )
+        return self.error_could_not_scrape_ewallet_session(ewallet_session) \
+            if not remove_from_pool or isinstance(remove_from_pool, dict) and \
+            remove_from_pool.get('failed') else True
+
     def scrape_ewallet_session_worker(self, session_worker):
         log.debug('')
         remove_from_pool = self.remove_session_worker_from_pool(session_worker)
         return self.error_could_not_scrape_ewallet_session_worker(session_worker) \
             if not remove_from_pool or isinstance(remove_from_pool, dict) and \
             remove_from_pool.get('failed') else True
-
-    # TODO
-    def scrape_ewallet_session_worker(self):
-        pass
-    def scrape_ewallet_session(self):
-        pass
 
     # MAPPERS
 
@@ -570,6 +582,24 @@ class EWalletSessionManager():
 
     # GENERAL
 
+    def cleanup_ewallet_sessions(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('ewallet_sessions'):
+            return self.error_no_ewallet_sessions_found(kwargs)
+        session_count = len(kwargs['ewallet_sessions'])
+        for session in kwargs['ewallet_sessions']:
+            clean = self.scrape_ewallet_session(session)
+            if not clean or isinstance(clean, dict) and clean.get('failed'):
+                self.warning_could_not_clean_ewallet_session(session)
+                session_count -= 1
+                continue
+            log.info('Successfully scraped ewallet session.')
+        instruction_set_response = {
+            'failed': False,
+            'sessions_cleaned': session_count,
+        }
+        return instruction_set_response
+
     def remove_session_worker_from_pool(self, session_worker):
         log.debug('')
         try:
@@ -596,11 +626,12 @@ class EWalletSessionManager():
             clean = self.scrape_ewallet_session_worker(worker)
             if not clean or isinstance(clean, dict) and clean.get('failed'):
                 self.warning_could_not_cleanup_ewallet_session_worker(worker)
+                worker_count -= 1
                 continue
-            log.info('Successfully scraped ewallet session worker')
+            log.info('Successfully scraped ewallet session worker.')
         instruction_set_response = {
             'failed': False,
-            'worker_cleaned': worker_count,
+            'workers_cleaned': worker_count,
             'worker_reserved': reserved_buffer_worker,
             'worker_pool': self.fetch_ewallet_session_manager_worker_pool(),
         }
@@ -718,6 +749,18 @@ class EWalletSessionManager():
     [ NOTE ]: SqlAlchemy ORM sessions are fetched here.
 
     '''
+
+    def action_cleanup_ewallet_session_by_id(self, **kwargs):
+        log.debug('')
+        ewallet_session = self.fetch_ewallet_session_by_id(kwargs['session_id'])
+        if not ewallet_session:
+            return self.warning_could_not_fetch_ewallet_session(kwargs)
+        cleanup_session = self.cleanup_ewallet_sessions(
+            ewallet_sessions=[ewallet_session], **kwargs
+        )
+        return self.warning_could_not_cleanup_target_ewallet_session(kwargs) \
+            if not cleanup_session or isinstance(cleanup_session, dict) and \
+            cleanup_session.get('failed') else cleanup_session
 
     def action_cleanup_session_workers(self, **kwargs):
         log.debug('')
@@ -1695,6 +1738,19 @@ class EWalletSessionManager():
     [ NOTE ]: Instruction set validation and sanitizations are performed here.
     '''
 
+    def handle_system_action_cleanup_target_ewallet_session(self, **kwargs):
+        log.debug('')
+        return self.action_cleanup_ewallet_session_by_id(**kwargs)
+
+    def handle_system_action_cleanup_ewallet_sessions(self, **kwargs):
+        log.debug('')
+        cleanup_mode = 'target' if kwargs.get('session_id') else 'sweep'
+        handlers = {
+            'target': self.handle_system_action_cleanup_target_ewallet_session,
+#           'sweep':
+        }
+        return handlers[cleanup_mode](**kwargs)
+
     def handle_system_action_cleanup_session_workers(self, **kwargs):
         log.debug('')
         return self.action_cleanup_session_workers(**kwargs)
@@ -1705,7 +1761,7 @@ class EWalletSessionManager():
             return self.error_no_system_action_cleanup_target_specified(kwargs)
         handlers = {
             'workers': self.handle_system_action_cleanup_session_workers,
-#           'sesions':
+            'sessions': self.handle_system_action_cleanup_ewallet_sessions,
         }
         return handlers[kwargs['cleanup']](**kwargs)
 
@@ -3241,6 +3297,24 @@ class EWalletSessionManager():
 
     # WARNINGS
 
+    def warning_could_not_clean_ewallet_session(self, ewallet_session):
+        instruction_set_response = {
+            'failed': True,
+            'warning': 'Something went wrong. Could not clean ewallet session {}.'\
+                       .format(ewallet_session),
+        }
+        log.warning(instruction_set_response['warning'])
+        return instruction_set_response
+
+    def warning_could_not_cleanup_target_ewallet_session(self, instruction_set):
+        instruction_set_response = {
+            'failed': True,
+            'warning': 'Something went wrong. Could not clean up target ewallet '\
+                       'session. Instruction set details : {}'.format(instruction_set),
+        }
+        log.warning(instruction_set_response['warning'])
+        return instruction_set_response
+
     def warning_could_not_cleanup_ewallet_session_worker(self, session_worker):
         instruction_set_response = {
             'failed': True,
@@ -3801,6 +3875,33 @@ class EWalletSessionManager():
         return False
 
     # ERRORS
+
+    def error_could_not_scrape_ewallet_session(self, ewallet_session):
+        instruction_set_response = {
+            'failed': True,
+            'error': 'Something went wrong. Could not scrape ewallet session {}.'\
+                     .format(ewallet_session),
+        }
+        log.error(instruction_set_response['error'])
+        return instruction_set_response
+
+    def error_no_ewallet_sessions_found(self, instruction_set):
+        instruction_set_response = {
+            'failed': True,
+            'error': 'No ewallet sessions found. Instruction set details : {}'\
+                     .format(instruction_set),
+        }
+        log.error(instruction_set_response['error'])
+        return instruction_set_response
+
+    def error_could_not_fetch_session_worker_for_ewallet_session(self, ewallet_session):
+        instruction_set_response = {
+            'failed': True,
+            'error': 'Something went wrong. Could not fetch session worker for '\
+                     'ewallet session {}.'.format(ewallet_session),
+        }
+        log.error(instruction_set_response['error'])
+        return instruction_set_response
 
     def error_could_not_remove_ewallet_session_worker_from_pool(self, session_worker):
         instruction_set_response = {
@@ -5137,6 +5238,16 @@ class EWalletSessionManager():
         print(str(_clean) + '\n')
         return _clean
 
+    def test_system_action_cleanup_target_session(self, **kwargs):
+        log.debug('')
+        print('[ * ]: System action Cleanup Target Ewallet Session')
+        _clean = self.session_manager_controller(
+            controller='system', ctype='action', action='cleanup',
+            cleanup='sessions', session_id=kwargs['session_id']
+        )
+        print(str(_clean) + '\n')
+        return _clean
+
     def test_session_manager_controller(self, **kwargs):
         print('[ TEST ] Session Manager')
 #       open_in_port = self.test_open_instruction_listener_port()
@@ -5379,6 +5490,9 @@ class EWalletSessionManager():
 #       )
         interogate_workers = self.test_system_action_interogate_ewallet_workers()
         cleanup_workers = self.test_system_action_cleanup_worker()
+        cleanup_target_session = self.test_system_action_cleanup_target_session(
+            session_id=2
+        )
 
 if __name__ == '__main__':
     session_manager = EWalletSessionManager()

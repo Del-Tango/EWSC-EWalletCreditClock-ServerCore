@@ -1017,6 +1017,23 @@
             'warning': <msg>,
         }
 
+* System action Cleanup Target EWallet Session:
+    * Controller Instruction Set:
+        session_manager_controller = {
+            controller='system', ctype='action', action='cleanup',
+            cleanup='session', session_id=<id>
+        }
+    * Returns:
+        * [ OK  ]: {
+            'failed': False,
+            'sessions_cleaned': <count>,
+        }
+        * [ NOK ]: {
+            'failed': True,
+            'error': <msg>,
+            'warning': <msg>,
+        }
+
 
 ################################################################################
 # EWallet Session (Command Chain)

@@ -1,14 +1,14 @@
 from base.config import Config
 from base.res_utils import ResUtils
+from base.ewallet import EWallet
 
-import time
+# import time
 import datetime
-import random
-import hashlib
+# import random
+# import hashlib
 import logging
-import datetime
 import pysnooper
-import threading
+# import threading
 
 config, res_utils = Config(), ResUtils()
 log = logging.getLogger(config.log_config['log_name'])
@@ -33,6 +33,19 @@ class EWalletWorker():
         self.session_worker_state_timestamp = _now
 
     # FETCHERS
+
+    def fetch_ewallet_session_map_client_id_by_ewallet_session(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('session'):
+            return self.error_no_ewallet_session_found(kwargs)
+        token_session_map = self.fetch_session_token_map()
+        for client_id in token_session_map:
+            details = token_session_map[client_id]
+            if kwargs['session'] is details['session']:
+                return client_id
+        return self.warning_ewallet_session_associated_client_id_not_found_in_map(
+            kwargs
+        )
 
     def fetch_session_worker_ewallet_session_pool(self):
         log.debug('')
@@ -201,18 +214,46 @@ class EWalletWorker():
         [ RETURN ]: (True | False)
         '''
         if not ewallet_session:
-            return self.error_no_ewallet_session_found()
-        _working_session = ewallet_session.fetch_active_session()
-        if not _working_session:
-            return self.error_no_sqlalchemy_active_session_found()
-        _working_session.query(EWallet) \
-                        .filter_by(id=ewallet.fetch_active_session_id()) \
-                        .delete()
-        _working_session.commit()
-        _working_session.close()
+            return self.error_no_ewallet_session_found(ewallet_session)
+        working_session = ewallet_session.fetch_active_session()
+        if not working_session:
+            return self.error_no_sqlalchemy_active_session_found(ewallet_session)
+        working_session.query(
+            EWallet
+        ).filter_by(
+            id=ewallet_session.fetch_active_session_id()
+        ).delete()
+        working_session.commit()
+        working_session.close()
         return True
 
     # GENERAL
+
+    def remove_session_token_map_entry(self, client_id):
+        log.debug('')
+        try:
+            del self.token_session_map[client_id]
+        except:
+            return self.error_could_not_remove_session_token_map_entry(client_id)
+        instruction_set_response = {
+            'failed': False,
+            'session_token_map': self.fetch_session_token_map(),
+        }
+        return instruction_set_response
+
+    def remove_ewallet_session_from_worker_pool(self, ewallet_session):
+        log.debug('')
+        try:
+            self.session_pool.remove(ewallet_session)
+        except:
+            return self.error_could_not_remove_ewallet_session_from_worker_session_pool(
+                ewallet_session
+            )
+        instruction_set_response = {
+            'failed': False,
+            'session_pool': self.fetch_session_worker_ewallet_session_pool(),
+        }
+        return instruction_set_response
 
     def search_ewallet_session(self, session_token):
         log.debug('')
@@ -268,12 +309,75 @@ class EWalletWorker():
 
     # HANDLERS
 
+    def handle_system_action_remove_session_map_by_ewallet_session(self, **kwargs):
+        log.debug('')
+        client_id = self.fetch_ewallet_session_map_client_id_by_ewallet_session(**kwargs)
+        if not client_id or isinstance(client_id, dict) and client_id.get('failed'):
+            return self.warning_could_not_fetch_ewallet_associated_client_id_from_map(
+                kwargs
+            )
+        remove_entry = self.remove_session_token_map_entry(client_id)
+        if not remove_entry or isinstance(remove_entry, dict) and \
+                remove_entry.get('failed'):
+            return self.warning_could_not_remove_session_token_map_entry(**kwargs)
+        instruction_set_response = {
+            'failed': False,
+            'session_token_map': remove_entry['session_token_map'],
+        }
+        return instruction_set_response
+
+    def handle_system_action_remove_session_map(self, **kwargs):
+        log.debug('TODO')
+        if not kwargs.get('identifier'):
+            return self.error_no_worker_action_remove_session_map_identifier_specified(
+                kwargs
+            )
+        handlers = {
+            'ewallet_session': self.handle_system_action_remove_session_map_by_ewallet_session,
+#           'session_token': self.handle_system_action_remove_session_map_by_session_token,
+#           'client_id': self.handle_system_action_remove_session_map_by_client_id,
+        }
+        return handlers[kwargs['identifier']](**kwargs)
+
+    def handle_system_action_remove_session(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('session'):
+            return self.error_no_worker_action_remove_session_specified(kwargs)
+        remove_from_pool = self.remove_ewallet_session_from_worker_pool(kwargs)
+        sanitized_instruction_set = res_utils.remove_tags_from_command_chain(
+            kwargs, 'ctype', 'action', 'remove'
+        )
+        remove_from_map = self.system_controller(
+            ctype='action', action='remove', remove='session_map',
+            identifier='ewallet_session', **sanitized_instruction_set
+        )
+        clean_session = self.cleanup_session(kwargs['session'])
+        if clean_session:
+            update_state = self.handle_system_action_session_worker_state_check()
+        instruction_chain_response = {
+            'failed': False,
+            'worker_state': self.fetch_session_worker_state_code()
+        }
+        return self.warning_could_not_remove_ewallet_session(kwargs) \
+            if not clean_session or isinstance(clean_session, dict) and \
+            clean_session.get('failed') else instruction_chain_response
+
+    def handle_system_action_remove(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('remove'):
+            return self.error_no_worker_action_remove_target_specified(kwargs)
+        handlers = {
+            'session': self.handle_system_action_remove_session,
+            'session_map': self.handle_system_action_remove_session_map,
+        }
+        return handlers[kwargs['remove']](**kwargs)
+
     def handle_system_action_session_worker_state_check(self):
         log.debug('')
-        session_pool = self.fetch_session_worker_ewallet_session_pool()
         current_state = self.fetch_session_worker_state_code()
         if current_state is 2:
             return self.warning_session_worker_ewallet_session_pool_full(current_state)
+        session_pool = self.fetch_session_worker_ewallet_session_pool()
         set_state = self.set_session_worker_state_code(
             1 if len(session_pool) >= 1 else 0
         )
@@ -321,6 +425,7 @@ class EWalletWorker():
         handlers = {
             'add': self.handle_system_action_add,
             'search': self.handle_system_action_search,
+            'remove': self.handle_system_action_remove,
         }
         return handlers[kwargs['action']](**kwargs)
 
@@ -348,6 +453,34 @@ class EWalletWorker():
         return _handlers[kwargs['controller']](**kwargs)
 
     # WARNINGS
+
+    def warning_could_not_remove_session_token_map_entry(self, instruction_set):
+        instruction_set_response = {
+            'failed': True,
+            'warning': 'Something went wrong.Could not remove session token map entry. '\
+                       'Instruction set details : {}'.format(instruction_set),
+        }
+        log.warning(instruction_set_response['warning'])
+        return instruction_set_response
+
+    def warning_could_not_fetch_ewallet_associated_client_id_from_map(self, instruction_set):
+        instruction_set_response = {
+            'failed': True,
+            'warning': 'Something went wrong. Could not fetch ewallet session '\
+                       'associated client id from session token map. '\
+                       'Instruction set details : {}'.format(instruction_set),
+        }
+        log.warning(instruction_set_response['warning'])
+        return instruction_set_response
+
+    def warning_ewallet_session_associated_client_id_not_found_in_map(self, instruction_set):
+        instruction_set_response = {
+            'failed': True,
+            'warning': 'No ewallet session client id found in session token map. '\
+                       'Instruction set details : {}'.format(instruction_set),
+        }
+        log.warning(instruction_set_response['warning'])
+        return instruction_set_response
 
     def warning_could_not_perform_session_worker_state_check(self, session_pool):
         instruction_set_response = {
@@ -384,6 +517,69 @@ class EWalletWorker():
         return False
 
     # ERRORS
+
+    def error_could_not_remove_session_token_map_entry(self, client_id):
+        instruction_set_response = {
+            'failed': True,
+            'error': 'Something went wrong. Could not remove session token map entry '\
+                     'by client id {}.'.format(client_id),
+        }
+        log.error(instruction_set_response['error'])
+        return instruction_set_response
+
+    def error_no_ewallet_session_found(self, instruction_set):
+        instruction_set_response = {
+            'failed': True,
+            'error': 'No ewallet session found. Instruction set details : {}'\
+                     .format(instruction_set),
+        }
+        log.error(instruction_set_response['error'])
+        return instruction_set_response
+
+    def error_no_worker_action_remove_session_map_identifier_specified(self, instruction_set):
+        instruction_set_response = {
+            'failed': True,
+            'error': 'No session map identifier specified for session worker action remove. '\
+                     'Instruction set details : {}'.format(instruction_set),
+        }
+        log.error(instruction_set_response['error'])
+        return instruction_set_response
+
+    def error_no_sqlalchemy_active_session_found(self, ewallet_session):
+        instruction_set_response = {
+            'failed': True,
+            'error': 'No active SqlAlchemy session found associated with '\
+                     'ewallet session {}.'.format(ewallet_session),
+        }
+        log.error(instruction_set_response['error'])
+        return instruction_set_response
+
+    def error_could_not_remove_ewallet_session_from_worker_session_pool(self, ewallet_session):
+        instruction_set_response = {
+            'failed': True,
+            'error': 'Something went wrong. Could not remove ewallet session {} '\
+                     'from worker session pool.'.format(ewallet_session),
+        }
+        log.error(instruction_set_response['error'])
+        return instruction_set_response
+
+    def error_no_worker_action_remove_target_specified(self, instruction_set):
+        instruction_set_response = {
+            'failed': True,
+            'error': 'No worker action remove target specified. '\
+                     'Instruction set details : {}'.format(instruction_set),
+        }
+        log.error(instruction_set_response['error'])
+        return instruction_set_response
+
+    def error_no_worker_action_remove_session_specified(self, instruction_set):
+        instruction_set_response = {
+            'failed': True,
+            'error': 'No ewallet session specified for worker action remove. '\
+                     'Instruction set details : {}'.format(instruction_set),
+        }
+        log.error(instruction_set_response['error'])
+        return instruction_set_response
 
     def error_could_not_add_new_ewallet_session_to_session_pool(self, instruction_set):
         instruction_set_response = {
@@ -469,14 +665,6 @@ class EWalletWorker():
 
     def error_invalid_session_worker_state_label(self):
         log.error('Invalid session worker state label.')
-        return False
-
-    def error_no_ewallet_session_found(self):
-        log.error('No EWallet session found.')
-        return False
-
-    def error_no_sqlalchemy_active_session_found(self):
-        log.error('No sqlalchemt active session found.')
         return False
 
     # TESTS

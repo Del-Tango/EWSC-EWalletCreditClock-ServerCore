@@ -7,15 +7,17 @@
 ###############################################################################
 # EWallet Session Manager
 ###############################################################################
+# TODO - System action Cleanup Ewallet Sessions
 # TODO - System action Expire Session Token
-# TODO - System action Cleanup EWallet Session
 # TODO - System action Expire Client ID
 
 
 ###############################################################################
 # EWallet Session Worker
 ###############################################################################
-# TODO - System Action Scrape Session
+# TODO - System action Remove Session Map by Ewallet Session
+# TODO - System action Remove Session Map by Session Token
+# TODO - System action Remove Session Map by Client ID
 
 
 ###############################################################################
