@@ -48,7 +48,7 @@ class ResUser(Base):
        'CreditEWallet', back_populates='client',
        )
     # M2M
-    user_session_archive = relationship('EWallet', secondary='session_user')
+    user_session_archive = relationship('EWallet', secondary='ewallet_session_user')
     # O2M
     user_pass_hash_archive = relationship('ResUserPassHashArchive')
     # O2M
@@ -224,7 +224,7 @@ class ResUser(Base):
     def fetch_user_credit_wallet(self):
         log.debug('')
         if not len(self.user_credit_wallet):
-            return self.error_no_user_credit_wallet_found()
+            return self.error_no_credit_wallet_found()
         return self.user_credit_wallet[0]
 
     def fetch_user_contact_list(self):
@@ -270,27 +270,27 @@ class ResUser(Base):
         values = {
             'id': self.user_id,
             'user_name': self.user_name,
-            'user_create_date': self.user_create_date,
-            'user_write_date': self.user_write_date,
-            'user_create_uid': self.user_create_uid,
-            'user_write_uid': self.user_write_uid,
-            'user_credit_wallet': self.fetch_user_credit_wallet().fetch_credit_ewallet_id(),
-            'user_contact_list': self.fetch_user_contact_list().fetch_contact_list_id(),
+            'create_date': self.user_create_date.strftime('%d-%m-%Y %H:%M:%s'),
+            'write_date': self.user_write_date.strftime('%d-%m-%Y %H:%M:%s'),
+#           'user_create_uid': self.user_create_uid,
+#           'user_write_uid': self.user_write_uid,
+            'credit_wallet': self.fetch_user_credit_wallet().fetch_credit_ewallet_id(),
+            'contact_list': self.fetch_user_contact_list().fetch_contact_list_id(),
 #           'user_pass_hash': self.user_pass_hash,
             'user_email': self.user_email,
             'user_phone': self.user_phone,
             'user_alias': self.user_alias,
-            'user_state_code': self.user_state_code,
-            'user_state_name': self.user_state_name,
+            'state_code': self.user_state_code,
+            'state_name': self.user_state_name,
 #           'user_pass_hash_archive': {
 #               item.fetch_pass_hash_archive_id(): item.fetch_pass_hash_archive_pass_hash() \
 #               for item in self.user_pass_hash_archive
 #           },
-            'user_credit_wallet_archive': {
+            'credit_wallet_archive': {
                 item.fetch_credit_ewallet_id(): item.fetch_credit_ewallet_reference() \
                 for item in self.user_credit_wallet_archive
             },
-            'user_contact_list_archive': {
+            'contact_list_archive': {
                 item.fetch_contact_list_id(): item.fetch_contact_list_reference() \
                 for item in self.user_contact_list_archive
             },
@@ -604,12 +604,87 @@ class ResUser(Base):
         )
         transaction_handler = self.create_transaction_handler(creation_values)
         transaction = transaction_handler.action_init_transaction(
-            active_session=active_session,
-            **sanitized_command_chain
+            active_session=active_session, **sanitized_command_chain
         )
         return transaction
 
     # ACTIONS
+
+    def action_create_credit_clock(self, **kwargs):
+        log.debug('')
+        credit_wallet = self.fetch_user_credit_wallet()
+        if not credit_wallet or isinstance(credit_wallet, dict) and \
+                credit_wallet.get('failed'):
+            return self.error_could_not_fetch_user_credit_wallet(kwargs)
+        active_session = kwargs.get('active_session') or \
+                self.fetch_user_active_session(stype='orm')
+        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
+            kwargs, 'active_session', 'controller', 'action'
+        )
+        new_credit_clock = credit_wallet.main_controller(
+            controller='system', action='create_clock',
+            active_session=active_session, **sanitized_command_chain
+        )
+        log.info('Successfully created new user credit clock.')
+        return new_credit_clock
+
+#   @pysnooper.snoop('logs/ewallet.log')
+    def action_create_credit_wallet(self, **kwargs):
+        log.debug('')
+        active_session = kwargs.get('active_session') or \
+                self.fetch_user_active_session(stype='orm')
+        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
+            kwargs, 'active_session'
+        )
+        creation_values = self.fetch_credit_ewallet_creation_values(**kwargs)
+        new_credit_wallet = self.create_credit_ewallet(
+            creation_values, active_session=active_session,
+            **sanitized_command_chain
+        )
+        active_session.add(new_credit_wallet)
+        update_archive = self.update_user_credit_wallet_archive(
+            new_credit_wallet
+        )
+        return new_credit_wallet
+
+    def action_transfer_credits_to_partner_account(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('transfer_to'):
+            return self.error_no_user_action_transfer_credits_target_partner_account_specified(
+                kwargs
+            )
+        active_session = kwargs.get('active_session') or \
+                self.fetch_user_active_session(stype='orm')
+        if not active_session or isinstance(active_session, dict) and \
+                active_session.get('failed'):
+            return self.error_could_not_fetch_active_orm_session(kwargs)
+        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
+            kwargs, 'active_session'
+        )
+        creation_values = self.fetch_transaction_handler_creation_values_for_action_transfer(
+            active_session=active_session, **sanitized_command_chain
+        )
+        transaction_handler = self.create_transaction_handler(creation_values)
+        transaction = transaction_handler.action_init_transaction(**sanitized_command_chain)
+        return transaction
+
+    def action_pay_partner_account(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('pay'):
+            return self.error_no_user_action_pay_target_partner_account_found()
+        active_session = kwargs.get('active_session') or \
+                self.fetch_user_active_session(stype='orm')
+        if not active_session:
+            return self.error_could_not_fetch_active_orm_session(kwargs)
+        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
+            kwargs, 'active_session'
+        )
+        creation_values = self.fetch_transaction_handler_creation_values_for_action_pay(
+            active_session=active_session, **sanitized_command_chain
+        )
+        transaction_handler = self.create_transaction_handler(creation_values)
+        transaction = transaction_handler.action_init_transaction(**sanitized_command_chain)
+        return transaction
 
     def action_unlink_credit_clock(self, **kwargs):
         log.debug('')
@@ -758,39 +833,6 @@ class ResUser(Base):
             log.info('Successfully switched credit ewallet by id.')
         return ewallet
 
-    def action_create_credit_clock(self, **kwargs):
-        log.debug('')
-        credit_wallet = self.fetch_user_credit_wallet()
-        if not credit_wallet:
-            return self.error_could_not_fetch_user_credit_wallet(kwargs)
-        active_session = kwargs.get('active_session') or \
-                self.fetch_user_active_session(stype='orm')
-        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
-            kwargs, 'active_session', 'controller', 'action'
-        )
-        new_credit_clock = credit_wallet.main_controller(
-            controller='system', action='create_clock',
-            active_session=active_session, **sanitized_command_chain
-        )
-        log.info('Successfully created new user credit clock.')
-        return new_credit_clock
-
-#   @pysnooper.snoop('logs/ewallet.log')
-    def action_create_credit_wallet(self, **kwargs):
-        log.debug('')
-        active_session = kwargs.get('active_session') or \
-                self.fetch_user_active_session(stype='orm')
-        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
-            kwargs, 'active_session'
-        )
-        creation_values = self.fetch_credit_ewallet_creation_values(**kwargs)
-        new_credit_wallet = self.create_credit_ewallet(
-            creation_values, active_session=active_session, **sanitized_command_chain
-        )
-        active_session.add(new_credit_wallet)
-        update_archive = self.update_user_credit_wallet_archive(new_credit_wallet)
-        return new_credit_wallet
-
     def action_edit_user_name(self, **kwargs):
         log.debug('')
         set_user_name = self.set_user_name(name=kwargs['user_name'])
@@ -835,42 +877,6 @@ class ResUser(Base):
                 'failed': False,
                 'user_phone': set_user_phone,
             }
-
-    def action_transfer_credits_to_partner_account(self, **kwargs):
-        log.debug('')
-        if not kwargs.get('transfer_to'):
-            return self.error_no_user_action_transfer_credits_target_partner_account_specified(kwargs)
-        active_session = kwargs.get('active_session') or \
-                self.fetch_user_active_session(stype='orm')
-        if not active_session:
-            return self.error_could_not_fetch_active_orm_session()
-        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
-            kwargs, 'active_session'
-        )
-        creation_values = self.fetch_transaction_handler_creation_values_for_action_transfer(
-            active_session=active_session, **sanitized_command_chain
-        )
-        transaction_handler = self.create_transaction_handler(creation_values)
-        transaction = transaction_handler.action_init_transaction(**sanitized_command_chain)
-        return transaction
-
-    def action_pay_partner_account(self, **kwargs):
-        log.debug('')
-        if not kwargs.get('pay'):
-            return self.error_no_user_action_pay_target_partner_account_found()
-        active_session = kwargs.get('active_session') or \
-                self.fetch_user_active_session(stype='orm')
-        if not active_session:
-            return self.error_could_not_fetch_active_orm_session()
-        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
-            kwargs, 'active_session'
-        )
-        creation_values = self.fetch_transaction_handler_creation_values_for_action_pay(
-            active_session=active_session, **sanitized_command_chain
-        )
-        transaction_handler = self.create_transaction_handler(creation_values)
-        transaction = transaction_handler.action_init_transaction(**sanitized_command_chain)
-        return transaction
 
     def action_create_contact_list(self, **kwargs):
         log.debug('')
@@ -958,8 +964,8 @@ class ResUser(Base):
         if not kwargs.get('ttype'):
             return self.error_no_user_action_transfer_type_specified(kwargs)
         handlers = {
-                'payment': self.action_pay_partner_account,
-                'transfer': self.action_transfer_credits_to_partner_account,
+            'payment': self.action_pay_partner_account,
+            'transfer': self.action_transfer_credits_to_partner_account,
         }
         return handlers[kwargs['ttype']](**kwargs)
 
@@ -967,63 +973,63 @@ class ResUser(Base):
         log.debug('')
         if not kwargs.get('target'):
             return self.error_no_user_action_create_target_specified()
-        _handlers = {
-                'credit_wallet': self.action_create_credit_wallet,
-                'credit_clock': self.action_create_credit_clock,
-                'contact_list': self.action_create_contact_list,
-                }
-        return _handlers[kwargs['target']](**kwargs)
+        handlers = {
+            'credit_wallet': self.action_create_credit_wallet,
+            'credit_clock': self.action_create_credit_clock,
+            'contact_list': self.action_create_contact_list,
+        }
+        return handlers[kwargs['target']](**kwargs)
 
     def handle_action_reset_field(self, **kwargs):
         log.debug('')
         if not kwargs.get('field'):
             return self.error_no_user_action_reset_field_target_specified()
-        _handlers = {
-                'user_name': self.set_user_name,
-                'user_pass': self.set_user_pass,
-                'user_credit_wallet': self.set_user_credit_wallet,
-                'user_contact_list': self.set_user_contact_list,
-                'user_email': self.set_user_email,
-                'user_phone': self.set_user_phone,
-                'user_alias': self.set_user_alias,
-                }
-        return _handlers[kwargs['field']](**kwargs)
+        handlers = {
+            'user_name': self.set_user_name,
+            'user_pass': self.set_user_pass,
+            'user_credit_wallet': self.set_user_credit_wallet,
+            'user_contact_list': self.set_user_contact_list,
+            'user_email': self.set_user_email,
+            'user_phone': self.set_user_phone,
+            'user_alias': self.set_user_alias,
+        }
+        return handlers[kwargs['field']](**kwargs)
 
     def handle_action_reset_archive(self, **kwargs):
         log.debug('')
         if not kwargs.get('archive'):
             return self.error_no_user_action_reset_archive_target_specified()
-        _handlers = {
-                'password': self.set_user_pass_hash_archive,
-                'credit_wallet': self.set_user_credit_wallet_archive,
-                'contact_list': self.set_user_contact_list_archive,
-                }
-        return _handlers[kwargs['archive']](kwargs.get('value'))
+        handlers = {
+            'password': self.set_user_pass_hash_archive,
+            'credit_wallet': self.set_user_credit_wallet_archive,
+            'contact_list': self.set_user_contact_list_archive,
+        }
+        return handlers[kwargs['archive']](kwargs.get('value'))
 
     def handle_user_action_reset(self, **kwargs):
         log.debug('')
         if not kwargs.get('target'):
             return self.error_no_user_action_reset_target_specified()
-        _handlers = {
-                'field': self.handle_action_reset_field,
-                'archive': self.handle_action_reset_archive,
-                }
-        return _handlers[kwargs['target']](**kwargs)
+        handlers = {
+            'field': self.handle_action_reset_field,
+            'archive': self.handle_action_reset_archive,
+        }
+        return handlers[kwargs['target']](**kwargs)
 
     def handle_user_action_switch(self, **kwargs):
         log.debug('')
         if not kwargs.get('target'):
             return self.error_no_user_action_switch_target_specified()
-        _handlers = {
-                'credit_wallet': self.action_switch_credit_wallet,
-                'credit_clock': self.action_switch_credit_clock,
-                'contact_list': self.action_switch_contact_list,
-                'transfer_sheet': self.action_switch_transfer_sheet,
-                'invoice_sheet': self.action_switch_invoice_sheet,
-                'conversion_sheet': self.action_switch_conversion_sheet,
-                'time_sheet': self.action_switch_time_sheet,
-                }
-        return _handlers[kwargs['target']](**kwargs)
+        handlers = {
+            'credit_wallet': self.action_switch_credit_wallet,
+            'credit_clock': self.action_switch_credit_clock,
+            'contact_list': self.action_switch_contact_list,
+            'transfer_sheet': self.action_switch_transfer_sheet,
+            'invoice_sheet': self.action_switch_invoice_sheet,
+            'conversion_sheet': self.action_switch_conversion_sheet,
+            'time_sheet': self.action_switch_time_sheet,
+        }
+        return handlers[kwargs['target']](**kwargs)
 
     def handle_user_action_unlink(self, **kwargs):
         log.debug('')
@@ -1167,6 +1173,15 @@ class ResUser(Base):
         return False
 
     # ERRORS
+
+    def error_could_not_fetch_active_orm_session(self, command_chain):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Something went wrong. Could not fetch active orm session. '\
+                     'Command chain details : {}'.format(command_chain),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
 
     def error_could_not_view_login_records(self, command_chain):
         command_chain_response = {
@@ -1389,10 +1404,6 @@ class ResUser(Base):
         log.error('No user action pay target partner account found.')
         return False
 
-    def error_could_not_fetch_active_orm_session(self):
-        log.error('Something went wrong. Could not fetch active orm session.')
-        return False
-
     def error_no_active_ewallet_user_session_found(self):
         log.error('No active EWallet user session found.')
         return False
@@ -1522,10 +1533,6 @@ class ResUser(Base):
 
     def error_no_user_name_found(self):
         log.error('No user name found.')
-        return False
-
-    def error_no_credit_wallet_found(self):
-        log.error('No credit wallet found.')
         return False
 
     def error_no_contact_list_found(self):

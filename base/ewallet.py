@@ -1,16 +1,3 @@
-#from validate_email import validate_email
-from itertools import count
-from sqlalchemy import Table, Column, String, Integer, ForeignKey, Date, DateTime
-from sqlalchemy.orm import relationship, backref
-
-from base.res_user import ResUser
-from base.ewallet_login import EWalletLogin, EWalletCreateUser
-from base.ewallet_logout import EWalletLogout
-from base.res_utils import ResUtils, Base
-from base.credit_wallet import CreditEWallet
-from base.contact_list import ContactList
-from base.config import Config
-
 import time
 import datetime
 import random
@@ -20,22 +7,35 @@ import datetime
 import pysnooper
 import threading
 
+#from validate_email import validate_email
+from itertools import count
+from sqlalchemy import Table, Column, String, Integer, ForeignKey, Date, DateTime
+from sqlalchemy.orm import relationship, backref
+
+from .res_user import ResUser
+from .ewallet_login import EWalletLogin, EWalletCreateUser
+from .ewallet_logout import EWalletLogout
+from .res_utils import ResUtils, Base
+from .credit_wallet import CreditEWallet
+from .contact_list import ContactList
+from .config import Config
+
 config = Config()
 res_utils = ResUtils()
 log = logging.getLogger(config.log_config['log_name'])
 
 
-class SessionUser(Base):
+class EWalletSessionUser(Base):
     '''
     [ NOTE ]: Many2many table for user sessions.
     '''
-    __tablename__ = 'session_user'
+    __tablename__ = 'ewallet_session_user'
     id = Column(Integer, primary_key=True)
     session_id = Column(Integer, ForeignKey('ewallet.id'))
     user_id = Column(Integer, ForeignKey('res_user.user_id'))
     datetime = Column(DateTime, default=datetime.datetime.now())
-    user = relationship('ResUser', backref=backref('session_user', cascade='all, delete-orphan'))
-    session = relationship('EWallet', backref=backref('session_user', cascade='all, delete-orphan'))
+    user = relationship('ResUser', backref=backref('ewallet_session_user', cascade='all, delete-orphan'))
+    session = relationship('EWallet', backref=backref('ewallet_session_user', cascade='all, delete-orphan'))
 
 
 class EWallet(Base):
@@ -63,14 +63,14 @@ class EWallet(Base):
        'ResUser', back_populates='active_session',
        )
     # M2M
-    user_account_archive = relationship('ResUser', secondary='session_user')
+    user_account_archive = relationship(
+        'ResUser', secondary='ewallet_session_user'
+    )
 
-#   @pysnooper.snoop(
-#           config.log_config['log_dir'] + '/' + config.log_config['log_file']
-#           )
+#   @pysnooper.snoop()
     def __init__(self, **kwargs):
         now = datetime.datetime.now()
-        self.name = kwargs.get('name')
+        self.name = kwargs.get('reference')
         self.session = kwargs.get('session') or res_utils.session_factory()
         self.create_date = datetime.datetime.now()
         self.write_date = datetime.datetime.now()
@@ -84,6 +84,10 @@ class EWallet(Base):
         self.user_account_archive = kwargs.get('user_account_archive') or []
 
     # FETCHERS
+
+    def fetch_active_session_reference(self):
+        log.debug('')
+        return self.name
 
     def fetch_active_session_expiration_date(self):
         log.debug('')
@@ -108,7 +112,7 @@ class EWallet(Base):
             'credit_ewallet': self.fetch_active_session_credit_wallet(),
             'user_account': self.fetch_active_session_user(),
             'user_account_archive': {} if not user_account_archive else {
-                item.fetch_user_id(): item.fetch_user_name() for item in \
+                item.fetch_user_email(): item.fetch_user_name() for item in \
                 user_account_archive
             }
         }
@@ -168,7 +172,11 @@ class EWallet(Base):
         if not active_session:
             return self.error_no_active_session_found()
         user_account = list(
-            active_session.query(ResUser).filter_by(user_email=kwargs['email'])
+            active_session.query(
+                ResUser
+            ).filter_by(
+                user_email=kwargs['email']
+            )
         )
         return self.warning_no_user_account_found(kwargs) \
                 if not user_account else user_account[0]
@@ -255,7 +263,10 @@ class EWallet(Base):
     def fetch_active_session_credit_wallet(self):
         log.debug('')
         if not len(self.credit_wallet):
-            return self.error_no_session_credit_wallet_found()
+            self.error_no_session_credit_wallet_found({
+                'credit_wallet': self.credit_wallet
+            })
+            return False
         return self.credit_wallet[0]
 
     def fetch_active_session_credit_clock(self, **kwargs):
@@ -373,15 +384,15 @@ class EWallet(Base):
         [ RETURN ]: ({'field-name': (True | False), ...} | False)
         '''
         log.debug('')
-        _handlers = {
-                'active_user': self.clear_session_active_user,
-                'credit_wallet': self.clear_session_credit_wallet,
-                'contact_list': self.clear_session_contact_list,
-                'user_account_archive': self.clear_session_user_account_archive,
-                }
+        handlers = {
+            'active_user': self.clear_session_active_user,
+            'credit_wallet': self.clear_session_credit_wallet,
+            'contact_list': self.clear_session_contact_list,
+            'user_account_archive': self.clear_session_user_account_archive,
+        }
         for item in data_dct:
-            if item in _handlers and data_dct[item]:
-                _handlers[item]()
+            if item in handlers and data_dct[item]:
+                handlers[item]()
         return data_dct
 
     # UPDATERS
@@ -396,12 +407,14 @@ class EWallet(Base):
         if not kwargs.get('session_active_user'):
             return self.error_no_session_active_user_found()
         user = kwargs['session_active_user']
+        orm_session = self.fetch_active_session()
         session_data = {
             'active_user': user,
             'credit_wallet': user.fetch_user_credit_wallet(),
             'contact_list': user.fetch_user_contact_list(),
         }
         set_data = self.set_session_data(session_data)
+        orm_session.commit()
         log.info('Successfully updated ewallet session from current active user.')
         return session_data
 
@@ -448,6 +461,947 @@ class EWallet(Base):
     [ NOTE ]: Command chain responses are formatted here.
     '''
 
+    def action_create_new_time_sheet(self, **kwargs):
+        log.debug('')
+        credit_wallet = self.fetch_active_session_credit_wallet()
+        if not credit_wallet or isinstance(credit_wallet, dict) and \
+                credit_wallet.get('failed'):
+            return self.error_could_not_fetch_active_session_credit_wallet(kwargs)
+        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
+            kwargs, 'controller', 'ctype', 'action', 'create', 'time'
+        )
+        new_time_sheet = credit_wallet.main_controller(
+            controller='system', ctype='action', action='create_sheet', sheet='time',
+            **sanitized_command_chain
+        )
+        if not new_time_sheet or isinstance(new_time_sheet, dict) and \
+                new_time_sheet.get('failed'):
+            kwargs['active_session'].rollback()
+            return self.warning_could_not_create_conversion_sheet(kwargs)
+        kwargs['active_session'].commit()
+        log.info('Successfully created new time sheet.')
+        command_chain_response = {
+            'failed': False,
+            'time_sheet': new_time_sheet.fetch_time_sheet_id(),
+            'sheet_data': new_time_sheet.fetch_time_sheet_values(),
+        }
+        return command_chain_response
+
+    def action_create_new_conversion_sheet(self, **kwargs):
+        log.debug('')
+        credit_wallet = self.fetch_active_session_credit_wallet()
+        if not credit_wallet or isinstance(credit_wallet, dict) and \
+                credit_wallet.get('failed'):
+            return self.error_could_not_fetch_active_session_credit_wallet(kwargs)
+        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
+            kwargs, 'controller', 'ctype', 'action', 'create', 'conversion'
+        )
+        new_conversion_sheet = credit_wallet.main_controller(
+            controller='system', ctype='action', action='create_sheet', sheet='conversion',
+            **sanitized_command_chain
+        )
+        if not new_conversion_sheet or isinstance(new_conversion_sheet, dict) and \
+                new_conversion_sheet.get('failed'):
+            kwargs['active_session'].rollback()
+            return self.warning_could_not_create_conversion_sheet(kwargs)
+        kwargs['active_session'].commit()
+        log.info('Successfully created new conversion sheet.')
+        command_chain_response = {
+            'failed': False,
+            'conversion_sheet': new_conversion_sheet.fetch_conversion_sheet_id(),
+            'sheet_data': new_conversion_sheet.fetch_conversion_sheet_values(),
+        }
+        return command_chain_response
+
+    def action_create_new_transfer_sheet(self, **kwargs):
+        log.debug('')
+        credit_wallet = self.fetch_active_session_credit_wallet()
+        if not credit_wallet or isinstance(credit_wallet, dict) and \
+                credit_wallet.get('failed'):
+            return self.error_could_not_fetch_active_session_credit_wallet(kwargs)
+        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
+            kwargs, 'controller', 'ctype', 'action', 'create', 'transfer'
+        )
+        new_transfer_sheet = credit_wallet.main_controller(
+            controller='system', ctype='action', action='create_sheet', sheet='transfer',
+            **sanitized_command_chain
+        )
+        if not new_transfer_sheet or isinstance(new_transfer_sheet, dict) and \
+                new_transfer_sheet.get('failed'):
+            kwargs['active_session'].rollback()
+            return self.warning_could_not_create_transfer_sheet(kwargs)
+        kwargs['active_session'].commit()
+        log.info('Successfully created new transfer sheet.')
+        command_chain_response = {
+            'failed': False,
+            'transfer_sheet': new_transfer_sheet.fetch_transfer_sheet_id(),
+            'sheet_data': new_transfer_sheet.fetch_transfer_sheet_values(),
+        }
+        return command_chain_response
+
+    def action_create_new_credit_clock(self, **kwargs):
+        '''
+        [ NOTE   ]: User action 'create new credit clock', accessible from external api calls.
+        [ INPUT  ]: reference=<ref>, credit_clock=<clock credits>
+        [ RETURN ]: (CreditClock object | False)
+        '''
+        log.debug('')
+        active_user = self.fetch_active_session_user()
+        if not active_user or isinstance(active_user, dict) and \
+                active_user.get('failed'):
+            return self.error_no_session_active_user_found()
+        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
+            kwargs, 'ctype', 'action', 'target'
+        )
+        new_clock = active_user.user_controller(
+            ctype='action', action='create', target='credit_clock',
+            **sanitized_command_chain
+        )
+        if not new_clock or isinstance(new_clock, dict) and \
+                new_clock.get('failed'):
+            kwargs['active_session'].rollback()
+            return self.warning_could_not_create_credit_clock(
+                active_user.fetch_user_name(), kwargs
+            )
+        kwargs['active_session'].commit()
+        log.info('Successfully created new credit clock.')
+        command_chain_response = {
+            'failed': False,
+            'credit_clock': new_clock.fetch_credit_clock_id(),
+            'clock_data': new_clock.fetch_credit_clock_values(),
+        }
+        return command_chain_response
+
+    def action_create_new_credit_wallet(self, **kwargs):
+        '''
+        [ NOTE   ]: User action 'create new credit wallet', accessible from external api calls.
+        [ INPUT  ]: reference=<ref>, credits=<wallet credits>
+        [ RETURN ]: (CreditWallet object | False)
+        '''
+        log.debug('')
+        active_user = self.fetch_active_session_user()
+        if not active_user or isinstance(active_user, dict) and \
+                active_user.get('failed'):
+            return self.error_no_session_active_user_found()
+        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
+            kwargs, 'ctype', 'action', 'target'
+        )
+        new_wallet = active_user.user_controller(
+            ctype='action', action='create', target='credit_wallet',
+            **sanitized_command_chain
+        )
+        if not new_wallet or isinstance(new_wallet, dict) and \
+                new_wallet.get('failed'):
+            kwargs['active_session'].rollback()
+            return self.warning_could_not_create_credit_wallet(
+                active_user.fetch_user_name(), kwargs
+            )
+        kwargs['active_session'].commit()
+        log.info('Successfully created new credit wallet.')
+        command_chain_response = {
+            'failed': False,
+            'credit_ewallet': new_wallet.fetch_credit_ewallet_id(),
+            'ewallet_data': new_wallet.fetch_credit_ewallet_values(),
+        }
+        return command_chain_response
+
+#   @pysnooper.snoop()
+    def action_view_invoice_record(self, **kwargs):
+        '''
+        [ NOTE   ]: User action 'view invoice record', accessible from external api call.
+        [ INPUT  ]: record_id=<id>
+        [ RETURN ]: (Invoice record values | False)
+        '''
+        log.debug('')
+        if not kwargs.get('record_id'):
+            return self.error_no_invoice_record_id_specified(kwargs)
+        credit_wallet = self.fetch_active_session_credit_wallet()
+        if not credit_wallet or isinstance(credit_wallet, dict) and \
+                credit_wallet.get('failed'):
+            return self.warning_could_not_fetch_credit_ewallet(kwargs)
+        log.info('Attempting to fetch active invoice sheet...')
+        invoice_sheet = credit_wallet.fetch_credit_ewallet_invoice_sheet()
+        if not invoice_sheet or isinstance(invoice_sheet, dict) and \
+                invoice_sheet.get('failed'):
+            return self.warning_could_not_fetch_invoice_sheet(kwargs)
+        log.info('Attempting to fetch invoice record by id...')
+        record = invoice_sheet.fetch_credit_invoice_records(
+            search_by='id', code=kwargs['record_id'], **kwargs
+        )
+        if not record or isinstance(record, dict) and \
+                record.get('failed'):
+            return self.warning_could_not_fetch_invoice_sheet_record(kwargs)
+        command_chain_response = {
+            'failed': False,
+            'invoice_sheet': invoice_sheet.fetch_invoice_sheet_id(),
+            'invoice_record': record.fetch_record_id(),
+            'record_data': record.fetch_record_values(),
+        }
+        return command_chain_response
+
+    def action_view_invoice_list(self, **kwargs):
+        '''
+        [ NOTE   ]: User action 'view invoice list', accessible from external api call.
+        [ RETURN ]: (Invoice sheet values | False)
+        '''
+        log.debug('')
+        credit_wallet = self.fetch_active_session_credit_wallet()
+        if not credit_wallet or isinstance(credit_wallet, dict) and \
+                credit_wallet.get('failed'):
+            return self.error_no_session_credit_wallet_found(kwargs)
+        log.info('Attempting to fetch active invoice sheet...')
+        invoice_sheet = credit_wallet.fetch_credit_ewallet_invoice_sheet()
+        if not invoice_sheet or isinstance(invoice_sheet, dict) and \
+                invoice_sheet.get('failed'):
+            return self.warning_could_not_fetch_invoice_sheet(kwargs)
+        command_chain_response = {
+            'failed': False,
+            'invoice_sheet': invoice_sheet.fetch_invoice_sheet_id(),
+            'sheet_data': invoice_sheet.fetch_invoice_sheet_values(),
+        }
+        return command_chain_response
+
+    def action_view_credit_clock(self, **kwargs):
+        '''
+        [ NOTE   ]: User action 'view credit clock', accessible from external api call.
+        [ RETURN ]: (Credit clock values | False)
+        '''
+        log.debug('')
+        credit_wallet = self.fetch_active_session_credit_wallet()
+        if not credit_wallet or isinstance(credit_wallet, dict) and \
+                credit_wallet.get('failed'):
+            return self.error_no_session_credit_wallet_found(kwargs)
+        log.info('Attempting to fetch active credit clock...')
+        credit_clock = credit_wallet.fetch_credit_ewallet_credit_clock()
+        if not credit_clock or isinstance(credit_clock, dict) and \
+                credit_clock.get('failed'):
+            return self.warning_could_not_fetch_credit_clock(kwargs)
+        command_chain_response = {
+            'failed': False,
+            'credit_clock': credit_clock.fetch_credit_clock_id(),
+            'clock_data': credit_clock.fetch_credit_clock_values(),
+        }
+        return command_chain_response
+
+    def action_view_credit_wallet(self, **kwargs):
+        '''
+        [ NOTE   ]: User action 'view credit wallet', accessible from external api call.
+        [ RETURN ]: (Credit wallet values | False)
+        '''
+        log.debug('')
+        credit_wallet = self.fetch_active_session_credit_wallet()
+        if not credit_wallet or isinstance(credit_wallet, dict) and \
+                credit_wallet.get('failed'):
+            return self.error_no_session_credit_wallet_found(kwargs)
+        command_chain_response = {
+            'failed': False,
+            'credit_ewallet': credit_wallet.fetch_credit_ewallet_id(),
+            'ewallet_data': credit_wallet.fetch_credit_ewallet_values(),
+        }
+        return command_chain_response
+
+    def action_edit_account_user_name(self, **kwargs):
+        log.debug('')
+        active_user = self.fetch_active_session_user()
+        if not active_user or isinstance(active_user, dict) and \
+                active_user.get('failed'):
+            return self.warning_could_not_fetch_ewallet_session_active_user(kwargs)
+        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
+            kwargs, 'ctype', 'action', 'edit'
+        )
+        edit_user_name = active_user.user_controller(
+            ctype='action', action='edit', edit='user_name',
+            **sanitized_command_chain
+        )
+        return self.warning_could_not_edit_account_user_name(kwargs) if \
+            edit_user_name.get('failed') else edit_user_name
+
+    def action_edit_account_user_pass(self, **kwargs):
+        log.debug('TODO')
+        active_user = self.fetch_active_session_user()
+        if not active_user or isinstance(active_user, dict) and \
+                active_user.get('failed'):
+            return self.warning_could_not_fetch_ewallet_session_active_user(kwargs)
+        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
+            kwargs, 'ctype', 'action', 'edit'
+        )
+        edit_user_pass = active_user.user_controller(
+            ctype='action', action='edit', edit='user_pass',
+            **sanitized_command_chain
+        )
+        return self.warning_could_not_edit_account_user_pass(kwargs) if \
+            edit_user_pass.get('failed') else edit_user_pass
+
+    def action_edit_account_user_alias(self, **kwargs):
+        log.debug('')
+        active_user = self.fetch_active_session_user()
+        if not active_user or isinstance(active_user, dict) and \
+                active_user.get('failed'):
+            return self.warning_could_not_fetch_ewallet_session_active_user(kwargs)
+        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
+            kwargs, 'ctype', 'action', 'edit'
+        )
+        edit_user_alias = active_user.user_controller(
+            ctype='action', action='edit', edit='user_alias',
+            **sanitized_command_chain
+        )
+        return self.warning_could_not_edit_account_user_alias(kwargs) if \
+            edit_user_alias.get('failed') else edit_user_alias
+
+    def action_edit_account_user_email(self, **kwargs):
+        log.debug('')
+        active_user = self.fetch_active_session_user()
+        if not active_user or isinstance(active_user, dict) and \
+                active_user.get('failed'):
+            return self.warning_could_not_fetch_ewallet_session_active_user(kwargs)
+        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
+            kwargs, 'ctype', 'action', 'edit'
+        )
+        edit_user_email = active_user.user_controller(
+            ctype='action', action='edit', edit='user_email',
+            **sanitized_command_chain
+        )
+        return self.warning_could_not_edit_account_user_email(kwargs) if \
+            edit_user_email.get('failed') else edit_user_email
+
+    def action_edit_account_user_phone(self, **kwargs):
+        log.debug('')
+        active_user = self.fetch_active_session_user()
+        if not active_user or isinstance(active_user, dict) and \
+                active_user.get('failed'):
+            return self.warning_could_not_fetch_ewallet_session_active_user(kwargs)
+        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
+            kwargs, 'ctype', 'action', 'edit'
+        )
+        edit_user_phone = active_user.user_controller(
+            ctype='action', action='edit', edit='user_phone',
+            **sanitized_command_chain
+        )
+        return self.warning_could_not_edit_account_user_phone(kwargs) if \
+            edit_user_phone.get('failed') else edit_user_phone
+
+    def action_create_new_user_account(self, **kwargs):
+        '''
+        [ NOTE   ]: User action create new account, accessible from external user api calls.
+        [ INPUT  ]: user_name=<name> user_pass=<pass> user_email=<email> user_alias=<alias>
+        [ RETURN ]: (ResUser object | False)
+        '''
+        log.debug('')
+        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
+            kwargs, 'action'
+        )
+        session_create_account = EWalletLogin().ewallet_login_controller(
+            action='new_account', **sanitized_command_chain
+        )
+        if not session_create_account or isinstance(session_create_account, dict) and \
+                session_create_account.get('failed'):
+            return self.warning_could_not_create_user_account(
+                kwargs['user_name'], kwargs
+            )
+        kwargs['active_session'].add(session_create_account)
+        log.info('Successfully created new user account.')
+        self.update_user_account_archive(
+            user=session_create_account,
+        )
+        self.update_session_from_user(
+            session_active_user=session_create_account,
+        )
+        kwargs['active_session'].commit()
+        command_chain_response = {
+            'failed': False,
+            'account': kwargs['user_email'],
+            'account_data': session_create_account.fetch_user_values(),
+        }
+        return command_chain_response
+
+    def action_view_user_account(self, **kwargs):
+        '''
+        [ NOTE   ]: User action 'view user account', accessible from external api call.
+        [ RETURN ]: (Active user values | False)
+        '''
+        log.debug('')
+        active_user = self.fetch_active_session_user()
+        if not active_user or isinstance(active_user, dict) and \
+                active_user.get('failed'):
+            return self.warning_could_not_fetch_ewallet_session_active_user(
+                kwargs
+            )
+        command_chain_response = {
+            'failed': False,
+            'account': active_user.fetch_user_name(),
+            'account_data': active_user.fetch_user_values(),
+        }
+        return command_chain_response
+
+    def action_view_conversion_record(self, **kwargs):
+        '''
+        [ NOTE   ]: User action 'view conversion record', accessible from external api call.
+        [ INPUT  ]: record_id=<id>
+        [ RETURN ]: (Conversion record values | False)
+        '''
+        log.debug('')
+        if not kwargs.get('record_id'):
+            return self.error_no_conversion_record_id_found(kwargs)
+        credit_wallet = self.fetch_active_session_credit_wallet()
+        if not credit_wallet or isinstance(credit_wallet, dict) and \
+                credit_wallet.get('failed'):
+            return self.warning_could_not_fetch_active_session_credit_ewallet(kwargs)
+        log.info('Attempting to fetch active credit clock...')
+        credit_clock = credit_wallet.fetch_credit_ewallet_credit_clock()
+        if not credit_clock or isinstance(credit_clock, dict) and credit_clock.get('failed'):
+            return self.warning_could_not_fetch_credit_clock()
+        log.info('Attempting to fetch active conversion sheet...')
+        conversion_sheet = credit_clock.fetch_credit_clock_conversion_sheet()
+        if not conversion_sheet or isinstance(conversion_sheet, dict) and \
+                conversion_sheet.get('failed'):
+            return self.warning_could_not_fetch_conversion_sheet(kwargs)
+        log.info('Attempting to fetch conversion record by id...')
+        record = conversion_sheet.fetch_conversion_sheet_record(
+            identifier='id', **kwargs
+        )
+        if not record or isinstance(record, dict) and record.get('failed'):
+            return self.warning_could_not_fetch_conversion_record(kwargs)
+        command_chain_response = {
+            'failed': False,
+            'conversion_sheet': conversion_sheet.fetch_conversion_sheet_id(),
+            'conversion_record': record.fetch_record_id(),
+            'record_data': record.fetch_record_values(),
+        }
+        return command_chain_response
+
+    def action_create_new_conversion_credits_to_clock(self, **kwargs):
+        '''
+        [ NOTE   ]: User action 'convert credits to clock', accessible from external api calls.
+        [ INPUT  ]: credit_ewallet=<wallet>, active_session=<session>,
+        [ RETURN ]: Post conversion value.
+        '''
+        log.debug('')
+        credit_wallet = kwargs.get('credit_ewallet') or \
+                self.fetch_active_session_credit_wallet()
+        if not credit_wallet or isinstance(credit_wallet, dict) and \
+                credit_wallet.get('failed'):
+            return self.error_could_not_fetch_active_session_credit_wallet(
+                kwargs
+            )
+        credits_before = self.fetch_credit_wallet_credits()
+        active_session = kwargs.get('active_session') or self.fetch_active_session()
+        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
+            kwargs, 'controller', 'action', 'conversion', 'credit_ewallet',
+            'active_session'
+        )
+        convert = credit_wallet.main_controller(
+            controller='system', action='convert', conversion='to_minutes',
+            conversion_type='credits2clock', credit_ewallet=credit_wallet,
+            active_session=active_session, **sanitized_command_chain
+        )
+        if not convert or isinstance(convert, dict) and \
+                convert.get('failed'):
+            active_session.rollback()
+            return self.error_could_not_convert_credits_to_minutes(kwargs)
+        active_session.commit()
+        return convert
+
+    def action_view_conversion_list(self, **kwargs):
+        '''
+        [ NOTE   ]: User action 'view conversion list', accessible from external api call.
+        [ RETURN ]: (Conversion sheet values | False)
+        '''
+        log.debug('')
+        credit_clock = self.fetch_active_session_credit_clock()
+        if not credit_clock or isinstance(credit_clock, dict) and \
+                credit_clock.get('failed'):
+            return self.warning_could_not_fetch_credit_clock(kwargs)
+        log.info('Attempting to fetch active conversion sheet...')
+        conversion_sheet = credit_clock.fetch_credit_clock_conversion_sheet()
+        if not conversion_sheet or isinstance(conversion_sheet, dict) and \
+                conversion_sheet.get('failed'):
+            return self.warning_could_not_fetch_conversion_sheet(kwargs)
+        command_chain_response = {
+            'failed': False,
+            'conversion_sheet': conversion_sheet.fetch_conversion_sheet_id(),
+            'sheet_data': conversion_sheet.fetch_conversion_sheet_values(),
+        }
+        return command_chain_response
+
+    def action_view_time_record(self, **kwargs):
+        '''
+        [ NOTE   ]: User action 'view time record', accessible from external api call.
+        [ INPUT  ]: record_id=<id>
+        [ RETURN ]: (Time record values | False)
+        '''
+        log.debug('')
+        if not kwargs.get('record_id'):
+            return self.error_no_time_record_id_found(kwargs)
+        credit_wallet = self.fetch_active_session_credit_wallet()
+        if not credit_wallet:
+            return self.error_could_not_fetch_credit_ewallet(kwargs)
+        log.info('Attempting to fetch active credit clock...')
+        credit_clock = credit_wallet.fetch_credit_ewallet_credit_clock()
+        if not credit_clock or isinstance(credit_clock, dict) and \
+                credit_clock.get('failed'):
+            return self.warning_could_not_fetch_credit_clock(kwargs)
+        log.info('Attempting to fetch active time sheet...')
+        time_sheet = credit_clock.fetch_credit_clock_time_sheet()
+        if not time_sheet or isinstance(time_sheet, dict) and \
+                time_sheet.get('failed'):
+            return self.warning_could_not_fetch_time_sheet(kwargs)
+        log.info('Attempting to fetch time record...')
+        record = time_sheet.fetch_time_sheet_record(
+            identifier='id', **kwargs
+        )
+        if not record or isinstance(record, dict) and record.get('failed'):
+            return self.warning_could_not_fetch_time_sheet_record(kwargs)
+        command_chain_response = {
+            'failed': False,
+            'time_sheet': time_sheet.fetch_time_sheet_id(),
+            'time_record': record.fetch_record_id(),
+            'record_data': record.fetch_record_values(),
+        }
+        return command_chain_response
+
+    def action_view_time_list(self, **kwargs):
+        '''
+        [ NOTE   ]: User action 'view time list', accessible from external api call.
+        [ RETURN ]: (Time sheet values | False)
+        '''
+        log.debug('')
+        credit_wallet = self.fetch_active_session_credit_wallet()
+        if not credit_wallet or isinstance(credit_wallet, dict) and \
+                credit_wallet.get('failed'):
+            return self.error_no_session_credit_wallet_found(kwargs)
+        log.info('Attempting to fetch active credit clock...')
+        credit_clock = credit_wallet.fetch_credit_ewallet_credit_clock()
+        if not credit_clock or isinstance(credit_clock, dict) and \
+                credit_clock.get('failed'):
+            return self.warning_could_not_fetch_credit_clock(kwargs)
+        log.info('Attempting to fetch active time sheet...')
+        time_sheet = credit_clock.fetch_credit_clock_time_sheet()
+        if not time_sheet or isinstance(time_sheet, dict) and \
+                time_sheet.get('failed'):
+            return self.warning_could_not_fetch_time_sheet(kwargs)
+        command_chain_response = {
+            'failed': False,
+            'time_sheet': time_sheet.fetch_time_sheet_id(),
+            'sheet_data': time_sheet.fetch_time_sheet_values(),
+        }
+        return command_chain_response
+
+    def action_view_transfer_record(self, **kwargs):
+        '''
+        [ NOTE   ]: User action 'view transfer record', accessible from external api call.
+        [ INPUT  ]: record_id=<id>
+        [ RETURN ]: (Transfer record values | False)
+        '''
+        log.debug('')
+        if not kwargs.get('record_id'):
+            return self.error_no_transfer_sheet_record_id_found(kwargs)
+        credit_wallet = self.fetch_active_session_credit_wallet()
+        if not credit_wallet or isinstance(credit_wallet, dict) and \
+                credit_wallet.get('failed'):
+            return self.error_could_not_fetch_credit_ewallet(kwargs)
+        log.info('Attempting to fetch active transfer sheet...')
+        transfer_sheet = credit_wallet.fetch_credit_ewallet_transfer_sheet()
+        if not transfer_sheet or isinstance(transfer_sheet, dict) and \
+                transfer_sheet.get('failed'):
+            return self.warning_could_not_fetch_transfer_sheet(kwargs)
+        log.info('Attempting to fetch transfer record by id...')
+        record = transfer_sheet.fetch_transfer_sheet_records(
+            search_by='id', code=kwargs['record_id'], active_session=self.session
+        )
+        if not record or isinstance(record, dict) and \
+                record.get('failed'):
+            return self.warning_could_not_fetch_transfer_sheet_record(kwargs)
+        record_values = record.fetch_record_values()
+        record_values['transfer_from'] = self.fetch_user(
+            identifier='id', account_id=record_values['transfer_from'], **kwargs
+        ).fetch_user_email()
+        record_values['transfer_to'] = self.fetch_user(
+            identifier='id', account_id=record_values['transfer_to'], **kwargs
+        ).fetch_user_email()
+        command_chain_response = {
+            'failed': False,
+            'transfer_sheet': transfer_sheet.fetch_transfer_sheet_id(),
+            'transfer_record': record.fetch_record_id(),
+            'record_data': record_values,
+        }
+        return command_chain_response
+
+    def action_view_transfer_list(self, **kwargs):
+        '''
+        [ NOTE   ]: User action 'view transfer list', accessible from external api call.
+        [ RETURN ]: (Transfer sheet values | False)
+        '''
+        log.debug('')
+        credit_wallet = self.fetch_active_session_credit_wallet()
+        if not credit_wallet or isinstance(credit_wallet, dict) and \
+                credit_wallet.get('false'):
+            return self.error_no_session_credit_wallet_found(kwargs)
+        log.info('Attempting to fetch active transfer sheet...')
+        transfer_sheet = credit_wallet.fetch_credit_ewallet_transfer_sheet()
+        if not transfer_sheet or isinstance(transfer_sheet, dict) and \
+                transfer_sheet.get('failed'):
+            return self.warning_could_not_fetch_transfer_sheet(kwargs)
+        command_chain_response = {
+            'failed': False,
+            'transfer_sheet': transfer_sheet.fetch_transfer_sheet_id(),
+            'sheet_data': transfer_sheet.fetch_transfer_sheet_values(),
+        }
+        return command_chain_response
+
+#   @pysnooper.snoop()
+    def action_create_new_transfer_type_transfer(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('transfer_to'):
+            return self.error_no_user_action_transfer_credits_target_specified(
+                kwargs
+            )
+        active_session = kwargs.get('active_session') or \
+            self.fetch_active_session()
+        partner_account = kwargs.get('partner_account') or \
+            self.fetch_user(identifier='email', email=kwargs['transfer_to'])
+        if not partner_account:
+            return self.error_could_not_fetch_partner_account(kwargs)
+        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
+            kwargs, 'ctype', 'action', 'ttype', 'partner_account', 'pay',
+            'transfer_to'
+        )
+        credits_before = self.fetch_credit_wallet_credits()
+        current_account = self.fetch_active_session_user()
+        action_transfer = current_account.user_controller(
+            ctype='action', action='transfer', ttype='transfer',
+            transfer_to=partner_account, **sanitized_command_chain
+        )
+        active_session.commit()
+        credits_after = self.fetch_credit_wallet_credits()
+        if str(credits_after) != str(credits_before - kwargs.get('credits')):
+            active_session.rollback()
+            return self.error_transfer_type_transfer_failure(kwargs)
+        command_chain_response = {
+            'failed': False,
+            'transfered_to': kwargs['transfer_to'],
+        }
+        if action_transfer and isinstance(action_transfer, dict):
+            command_chain_response.update(action_transfer)
+        return command_chain_response
+
+#   @pysnooper.snoop()
+    def action_view_contact_record(self, **kwargs):
+        '''
+        [ NOTE   ]: User action 'view contact record', accessible from external user api call.
+        [ INPUT  ]: record_id=<id>
+        [ RETURN ]: (Contact record values | False)
+        '''
+        log.debug('')
+        if not kwargs.get('record'):
+            return self.error_no_contact_record_id_found(kwargs)
+        contact_list = self.fetch_active_session_contact_list()
+        if not contact_list or isinstance(contact_list, dict) and \
+                contact_list.get('failed'):
+            return self.error_could_not_fetch_contact_list(kwargs)
+        log.info('Attempting to fetch contact record by id...')
+        record = contact_list.fetch_contact_list_record(
+            search_by='id' if not kwargs.get('search_by') else kwargs['search_by'],
+            code=kwargs['record'], active_session=self.fetch_active_session()
+        )
+        if not record or isinstance(record, dict) and \
+                record.get('failed'):
+            return self.warning_could_not_fetch_contact_record(kwargs)
+        contact_record_data = record.fetch_record_values()
+        command_chain_response = {
+            'failed': False,
+            'contact_list': contact_list.fetch_contact_list_id(),
+            'contact_record': kwargs['record'],
+            'record_data': contact_record_data,
+        }
+        return command_chain_response
+
+    def action_view_contact_list(self, **kwargs):
+        '''
+        [ NOTE   ]: User action 'view contact list', accessible from external api call.
+        [ RETURN ]: (Contact list values | False)
+        '''
+        log.debug('')
+        contact_list = self.fetch_active_session_contact_list()
+        if not contact_list:
+            return self.error_no_session_contact_list_found(kwargs)
+        command_chain_response = {
+            'failed': False,
+            'contact_list': contact_list.fetch_contact_list_id(),
+            'list_data': contact_list.fetch_contact_list_values(),
+        }
+        return command_chain_response
+
+    def action_create_new_contact_record(self, **kwargs):
+        '''
+        [ NOTE   ]: User action 'create new contact record', accessible from external api calls.
+        [ INPUT  ]: user_name=<name>, user_email=<email>, user_phone=<phone>, notes=<notes>
+        [ RETURN ]: (ContactRecord object | False)
+        '''
+        log.debug('')
+        contact_list = self.fetch_active_session_contact_list()
+        if not contact_list:
+            return self.error_no_active_session_contact_list_found(
+                self.active_user.fetch_user_name(), kwargs
+            )
+        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
+            kwargs, 'action'
+        )
+        new_record = contact_list.contact_list_controller(
+            action='create', **sanitized_command_chain
+        )
+        if not new_record or isinstance(new_record, dict) and \
+                new_record.get('failed'):
+            kwargs['active_session'].rollback()
+            return self.warning_could_not_create_contact_record(
+                self.active_user.fetch_user_name(), kwargs
+            )
+        kwargs['active_session'].commit()
+        log.info('Successfully created new contact record.')
+        command_chain_response = {
+            'failed': False,
+            'contact_record': new_record.fetch_record_id(),
+            'contact_list': contact_list.fetch_contact_list_id()
+        }
+        return command_chain_response
+
+    @pysnooper.snoop('logs/ewallet.log')
+    def action_create_new_transfer_type_pay(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('pay'):
+            return self.error_no_user_action_pay_target_specified()
+        active_session = kwargs.get('active_session') or \
+            self.fetch_active_session()
+        partner_account = kwargs.get('partner_account') or \
+            self.fetch_user(identifier='email', email=kwargs['pay'])
+        if not partner_account:
+            return self.error_handler_create_new_transfer(
+                partner_account=partner_account,
+            )
+        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
+            kwargs, 'ctype', 'action', 'ttype', 'partner_account', 'pay'
+        )
+        credits_before = self.fetch_credit_wallet_credits()
+        current_account = self.fetch_active_session_user()
+        action_pay = current_account.user_controller(
+            ctype='action', action='transfer', ttype='payment',
+            pay=partner_account, **sanitized_command_chain
+        )
+        credits_after = self.fetch_credit_wallet_credits()
+        if str(credits_after) != str(credits_before - kwargs.get('credits')) or \
+                not action_pay or isinstance(action_pay, dict) and \
+                action_pay.get('failed'):
+            active_session.rollback()
+            return self.error_pay_type_transfer_failure(kwargs)
+
+        # TODO - REMOVE
+        log.info(
+            '\n\nCREDITS BEFORE : {}\n'\
+            'CURRENT ACCOUNT : {}\n'\
+            'ACTION PAY : {}\n'\
+            'CREDITS AFTER : {}\n'.format(credits_before, current_account, action_pay, credits_after)
+        )
+
+        active_session.commit()
+        command_chain_response = {
+            'failed': False,
+            'payed': kwargs['pay'],
+            'ewallet_credits': action_pay['ewallet_credits'],
+            'spent_credits': kwargs['credits'],
+            'invoice_record': action_pay['invoice_record'].fetch_record_id(),
+            'transfer_record': action_pay['transfer_record'].fetch_record_id(),
+        }
+        return command_chain_response
+
+#   @pysnooper.snoop()
+    def action_create_new_transfer_type_supply(self, **kwargs):
+        '''
+        [ NOTE   ]: User action 'supply credits' for active session user becomes
+                    User event 'request credits' for SystemCore account.
+                    Accessible from external api calls.
+        [ INPUT  ]: active_session=<orm-session>, partner_account=<partner>,
+                    credits=<credits>
+        [ RETURN ]: ({'ewallet_credits': <count>, 'supplied_credits': <count>} | False)
+        '''
+        log.debug('')
+        active_session = kwargs.get('active_session') or \
+                self.fetch_active_session()
+        partner_account = kwargs.get('partner_account') or \
+                self.fetch_system_core_user_account(**kwargs)
+        if not partner_account:
+            return self.error_could_not_fetch_partner_account_for_transfer_type_supply(
+                kwargs
+            )
+        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
+            kwargs, 'ctype', 'partner_account', 'active_session'
+        )
+        credits_before = self.fetch_credit_wallet_credits()
+        credit_request = partner_account.user_controller(
+            ctype='event', event='request', request='credits',
+            partner_account=self.fetch_active_session_user(),
+            active_session=active_session, **sanitized_command_chain
+        )
+        credits_after = self.fetch_credit_wallet_credits()
+        if str(credits_after) != str(credits_before + kwargs.get('credits')):
+            active_session.rollback()
+            return self.error_supply_type_transfer_failure(kwargs)
+        active_session.commit()
+        command_chain_response = {
+            'failed': False,
+            'ewallet_credits': credits_after,
+            'supplied_credits': kwargs['credits'],
+            'transfer_record': credit_request['transfer_record'].fetch_record_id(),
+            'invoice_record': credit_request['invoice_record'].fetch_record_id(),
+        }
+        return command_chain_response
+
+    def action_stop_credit_clock_timer(self, **kwargs):
+        '''
+        [ NOTE   ]: User action 'stop credit clock timer', accessible from external api call.
+        [ INPUT  ]: credit_clock=<clock>, active_session=<session>
+        [ RETURN ]: (Credit clock elapsed time | False)
+        '''
+        log.debug('')
+        credit_clock = kwargs.get('credit_clock') or \
+                self.fetch_active_session_credit_clock()
+        if not credit_clock:
+            return self.warning_could_not_fetch_credit_clock(kwargs)
+        active_session = kwargs.get('active_session') or self.session
+        if not active_session:
+            return self.error_no_active_session_found(kwargs)
+        active_session.add(credit_clock)
+        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
+            kwargs, 'controller', 'action', 'active_session'
+        )
+        active_user = self.fetch_active_session_user()
+        user_id = active_user.fetch_user_id()
+        stop = credit_clock.main_controller(
+            controller='user', action='stop', active_session=active_session,
+            uid=user_id, **sanitized_command_chain
+        )
+        if not stop or isinstance(stop, dict) and stop.get('failed'):
+            active_session.rollback()
+            return self.error_could_not_stop_credit_clock_timer(kwargs)
+        active_session.commit()
+        command_chain_response = {
+            'failed': False,
+            'credit_clock': credit_clock.fetch_credit_clock_id(),
+        }
+        if isinstance(stop, dict):
+            command_chain_response.update(stop)
+        return command_chain_response
+
+#   @pysnooper.snoop()
+    def action_resume_credit_clock_timer(self, **kwargs):
+        '''
+        [ NOTE   ]: User action 'resume credit clock timer', accessible from external api call.
+        [ INPUT  ]: credit_clock=<clock>, active_session=<session>
+        [ RETURN ]: (Elapsed clock time | False)
+        '''
+        log.debug('')
+        credit_clock = kwargs.get('credit_clock') or \
+                self.fetch_active_session_credit_clock()
+        if not credit_clock:
+            return self.warning_could_not_fetch_credit_clock(kwargs)
+        active_session = kwargs.get('active_session') or self.session
+        if not active_session:
+            return self.error_no_active_session_found(kwargs)
+        active_session.add(credit_clock)
+        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
+            kwargs, 'controller', 'action', 'active_session'
+        )
+        active_user = self.fetch_active_session_user()
+        user_id = active_user.fetch_user_id()
+        resume = credit_clock.main_controller(
+            controller='user', action='resume',
+            active_session=active_session, uid=user_id,
+            **sanitized_command_chain
+        )
+        if not resume or isinstance(resume, dict) and resume.get('failed'):
+            active_session.rollback()
+            return self.error_could_not_resume_credit_clock_timer(kwargs)
+        active_session.commit()
+        command_chain_response = {
+            'failed': False,
+            'credit_clock': credit_clock.fetch_credit_clock_id(),
+        }
+        if resume.get('write_uid'):
+            del resume['write_uid']
+        command_chain_response.update(resume)
+        return command_chain_response
+
+    def action_pause_credit_clock_timer(self, **kwargs):
+        '''
+        [ NOTE   ]: User action 'pause credit clock timer', accessible from external api call.
+        [ INPUT  ]: credit_clock=<clock>, active_session=<session>
+        [ RETURN ]: (Pause count | False)
+        '''
+        log.debug('')
+        credit_clock = kwargs.get('credit_clock') or \
+                self.fetch_active_session_credit_clock()
+        if not credit_clock:
+            return self.warning_could_not_fetch_credit_clock(kwargs)
+        active_session = kwargs.get('active_session') or self.session
+        if not active_session:
+            return self.error_no_active_session_found(kwargs)
+        active_session.add(credit_clock)
+        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
+            kwargs, 'controller', 'action', 'active_session'
+        )
+        active_user = self.fetch_active_session_user()
+        user_id = active_user.fetch_user_id()
+        pause = credit_clock.main_controller(
+            controller='user', action='pause',
+            active_session=active_session, uid=user_id, **sanitized_command_chain
+        )
+        if not pause or isinstance(pause, dict) and pause.get('failed'):
+            active_session.rollback()
+            return self.error_could_not_pause_credit_clock_timer(kwargs)
+        active_session.commit()
+        command_chain_response = {
+            'failed': False,
+            'credit_clock': credit_clock.fetch_credit_clock_id(),
+        }
+        if pause.get('write_uid'):
+            del pause['write_uid']
+        command_chain_response.update(pause)
+        return command_chain_response
+
+#   @pysnooper.snoop('logs/ewallet.log')
+    def action_start_credit_clock_timer(self, **kwargs):
+        '''
+        [ NOTE   ]: User action 'start credit clock timer', accessible from external api call.
+        [ INPUT  ]: credit_clock=<clock>, active_session=<session>
+        [ RETURN ]: (Legacy start time | False)
+        '''
+        log.debug('')
+        credit_clock = kwargs.get('credit_clock') or \
+                self.fetch_active_session_credit_clock()
+        if not credit_clock:
+            return self.warning_could_not_fetch_credit_clock(kwargs)
+        active_session = kwargs.get('active_session') or self.session
+        if not active_session:
+            return self.error_no_active_session_found(kwargs)
+        active_session.add(credit_clock)
+        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
+            kwargs, 'controller', 'action', 'active_session'
+        )
+        active_user = self.fetch_active_session_user()
+        user_id = active_user.fetch_user_id()
+        start = credit_clock.main_controller(
+            controller='user', action='start',
+            active_session=active_session, uid=user_id, **sanitized_command_chain
+        )
+        if not start or isinstance(start, dict) and start.get('failed'):
+            active_session.rollback()
+            return self.error_could_not_start_credit_clock_timer(kwargs)
+        active_session.commit()
+        command_chain_response = {
+            'failed': False,
+            'credit_clock': credit_clock.fetch_credit_clock_id(),
+            'start_timestamp': start,
+        }
+        return command_chain_response
+
     def action_interogate_ewallet_session(self, **kwargs):
         log.debug('')
         session_values = self.fetch_active_session_values()
@@ -493,9 +1447,9 @@ class EWallet(Base):
             )
         command_chain_response = {
             'failed': False,
-            'user_account': active_user.fetch_user_id(),
+            'user_account': active_user.fetch_user_email(),
             'logout_records': {
-                item.logout_id: item.logout_date.strftime("%d-%m-%Y %H:%M ") \
+                item.logout_id: item.logout_date.strftime("%d-%m-%Y %H:%M") \
                 for item in logout_records
             },
         }
@@ -516,9 +1470,9 @@ class EWallet(Base):
             )
         command_chain_response = {
             'failed': False,
-            'user_account': active_user.fetch_user_id(),
+            'user_account': active_user.fetch_user_email(),
             'login_records': {
-                item.login_id: item.login_date.strftime("%d-%m-%Y %H:%M ") \
+                item.login_id: item.login_date.strftime("%d-%m-%Y %H:%M") \
                 for item in login_records
             },
         }
@@ -1095,7 +2049,7 @@ class EWallet(Base):
         )
         switch_credit_clock = active_user.user_controller(
             ctype='action', action='switch', target='credit_clock',
-            **sanitized_command_chain,
+            **sanitized_command_chain
         )
         if not switch_credit_clock or isinstance(switch_credit_clock, dict) and \
                 switch_credit_clock.get('failed'):
@@ -1122,7 +2076,7 @@ class EWallet(Base):
         )
         switch_credit_ewallet = active_user.user_controller(
             ctype='action', action='switch', target='credit_wallet',
-            **sanitized_command_chain,
+            **sanitized_command_chain
         )
         if not switch_credit_ewallet:
             kwargs['active_session'].rollback()
@@ -1153,7 +2107,7 @@ class EWallet(Base):
         )
         new_contact_list = active_user.user_controller(
             ctype='action', action='create', target='contact_list',
-            **sanitized_command_chain,
+            **sanitized_command_chain
         )
         if not new_contact_list:
             kwargs['active_session'].rollback()
@@ -1166,54 +2120,6 @@ class EWallet(Base):
             'failed': False,
             'contact_list': new_contact_list.fetch_contact_list_id(),
             'list_data': new_contact_list.fetch_contact_list_values(),
-        }
-        return command_chain_response
-
-    def action_create_new_time_sheet(self, **kwargs):
-        log.debug('')
-        credit_wallet = self.fetch_active_session_credit_wallet()
-        if not credit_wallet:
-            return self.error_could_not_fetch_active_session_credit_wallet(kwargs)
-        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
-            kwargs, 'controller', 'ctype', 'action', 'create', 'time'
-        )
-        new_time_sheet = credit_wallet.main_controller(
-            controller='system', ctype='action', action='create_sheet', sheet='time',
-            **sanitized_command_chain
-        )
-        if not new_time_sheet:
-            kwargs['active_session'].rollback()
-            return self.warning_could_not_create_conversion_sheet(kwargs)
-        kwargs['active_session'].commit()
-        log.info('Successfully created new time sheet.')
-        command_chain_response = {
-            'failed': False,
-            'time_sheet': new_time_sheet.fetch_time_sheet_id(),
-            'sheet_data': new_time_sheet.fetch_time_sheet_values(),
-        }
-        return command_chain_response
-
-    def action_create_new_conversion_sheet(self, **kwargs):
-        log.debug('')
-        credit_wallet = self.fetch_active_session_credit_wallet()
-        if not credit_wallet:
-            return self.error_could_not_fetch_active_session_credit_wallet(kwargs)
-        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
-            kwargs, 'controller', 'ctype', 'action', 'create', 'conversion'
-        )
-        new_conversion_sheet = credit_wallet.main_controller(
-            controller='system', ctype='action', action='create_sheet', sheet='conversion',
-            **sanitized_command_chain
-        )
-        if not new_conversion_sheet:
-            kwargs['active_session'].rollback()
-            return self.warning_could_not_create_conversion_sheet(kwargs)
-        kwargs['active_session'].commit()
-        log.info('Successfully created new conversion sheet.')
-        command_chain_response = {
-            'failed': False,
-            'conversion_sheet': new_conversion_sheet.fetch_conversion_sheet_id(),
-            'sheet_data': new_conversion_sheet.fetch_conversion_sheet_values(),
         }
         return command_chain_response
 
@@ -1240,418 +2146,6 @@ class EWallet(Base):
             'sheet_data': new_invoice_sheet.fetch_invoice_sheet_values(),
         }
         return command_chain_response
-
-    def action_create_new_transfer_sheet(self, **kwargs):
-        log.debug('')
-        credit_wallet = self.fetch_active_session_credit_wallet()
-        if not credit_wallet:
-            return self.error_could_not_fetch_active_session_credit_wallet(kwargs)
-        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
-            kwargs, 'controller', 'ctype', 'action', 'create', 'transfer'
-        )
-        new_transfer_sheet = credit_wallet.main_controller(
-            controller='system', ctype='action', action='create_sheet', sheet='transfer',
-            **sanitized_command_chain
-        )
-        if not new_transfer_sheet:
-            kwargs['active_session'].rollback()
-            return self.warning_could_not_create_transfer_sheet(kwargs)
-        kwargs['active_session'].commit()
-        log.info('Successfully created new transfer sheet.')
-        command_chain_response = {
-            'failed': False,
-            'transfer_sheet': new_transfer_sheet.fetch_transfer_sheet_id(),
-            'sheet_data': new_transfer_sheet.fetch_transfer_sheet_values(),
-        }
-        return command_chain_response
-
-    def action_create_new_credit_clock(self, **kwargs):
-        '''
-        [ NOTE   ]: User action 'create new credit clock', accessible from external api calls.
-        [ INPUT  ]: reference=<ref>, credit_clock=<clock credits>
-        [ RETURN ]: (CreditClock object | False)
-        '''
-        log.debug('')
-        active_user = self.fetch_active_session_user()
-        if not active_user:
-            return self.error_no_session_active_user_found()
-        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
-            kwargs, 'ctype', 'action', 'target'
-        )
-        new_clock = active_user.user_controller(
-            ctype='action', action='create', target='credit_clock',
-            **sanitized_command_chain
-        )
-        if not new_clock:
-            kwargs['active_session'].rollback()
-            return self.warning_could_not_create_credit_clock(
-                active_user.fetch_user_name(), kwargs
-            )
-        kwargs['active_session'].commit()
-        log.info('Successfully created new credit clock.')
-        command_chain_response = {
-            'failed': False,
-            'credit_clock': new_clock.fetch_credit_clock_id(),
-            'clock_data': new_clock.fetch_credit_clock_values(),
-        }
-        return command_chain_response
-
-    def action_create_new_credit_wallet(self, **kwargs):
-        '''
-        [ NOTE   ]: User action 'create new credit wallet', accessible from external api calls.
-        [ INPUT  ]: reference=<ref>, credits=<wallet credits>
-        [ RETURN ]: (CreditWallet object | False)
-        '''
-        log.debug('')
-        active_user = self.fetch_active_session_user()
-        if not active_user:
-            return self.error_no_session_active_user_found()
-        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
-            kwargs, 'ctype', 'action', 'target'
-        )
-        new_wallet = active_user.user_controller(
-            ctype='action', action='create', target='credit_wallet',
-            **sanitized_command_chain
-        )
-        if not new_wallet:
-            kwargs['active_session'].rollback()
-            return self.warning_could_not_create_credit_wallet(
-                active_user.fetch_user_name(), kwargs
-            )
-        kwargs['active_session'].commit()
-        log.info('Successfully created new credit wallet.')
-        command_chain_response = {
-            'failed': False,
-            'credit_ewallet': new_wallet.fetch_credit_ewallet_id(),
-            'ewallet_data': new_wallet.fetch_credit_ewallet_values(),
-        }
-        return command_chain_response
-
-    def action_view_invoice_record(self, **kwargs):
-        '''
-        [ NOTE   ]: User action 'view invoice record', accessible from external api call.
-        [ INPUT  ]: record_id=<id>
-        [ RETURN ]: (Invoice record values | False)
-        '''
-        log.debug('')
-        credit_wallet = self.fetch_active_session_credit_wallet()
-        if not credit_wallet or not kwargs.get('record_id'):
-            return self.error_handler_action_view_invoice_record(
-                credit_wallet=credit_wallet,
-                record_id=kwargs.get('record_id'),
-            )
-        log.info('Attempting to fetch active invoice sheet...')
-        invoice_sheet = credit_wallet.fetch_credit_ewallet_invoice_sheet()
-        if not invoice_sheet:
-            return self.warning_could_not_fetch_invoice_sheet()
-        log.info('Attempting to fetch invoice record by id...')
-        record = invoice_sheet.fetch_credit_invoice_records(
-            search_by='id', code=kwargs['record_id'],
-            active_session=self.session
-        )
-        if not record:
-            return self.warning_could_not_fetch_invoice_sheet_record()
-        command_chain_response = {
-            'failed': False,
-            'invoice_sheet': invoice_sheet.fetch_invoice_sheet_id(),
-            'invoice_record': record.fetch_record_id(),
-            'record_data': record.fetch_record_values(),
-        }
-        return command_chain_response
-
-    def action_view_invoice_list(self, **kwargs):
-        '''
-        [ NOTE   ]: User action 'view invoice list', accessible from external api call.
-        [ RETURN ]: (Invoice sheet values | False)
-        '''
-        log.debug('')
-        credit_wallet = self.fetch_active_session_credit_wallet()
-        if not credit_wallet:
-            return self.error_no_session_credit_wallet_found()
-        log.info('Attempting to fetch active invoice sheet...')
-        invoice_sheet = credit_wallet.fetch_credit_ewallet_invoice_sheet()
-        if not invoice_sheet:
-            return self.warning_could_not_fetch_invoice_sheet()
-        command_chain_response = {
-            'failed': False,
-            'invoice_sheet': invoice_sheet.fetch_invoice_sheet_id(),
-            'sheet_data': invoice_sheet.fetch_invoice_sheet_values(),
-        }
-        return command_chain_response
-
-    def action_view_credit_clock(self, **kwargs):
-        '''
-        [ NOTE   ]: User action 'view credit clock', accessible from external api call.
-        [ RETURN ]: (Credit clock values | False)
-        '''
-        log.debug('')
-        credit_wallet = self.fetch_active_session_credit_wallet()
-        if not credit_wallet:
-            return self.error_no_session_credit_wallet_found()
-        log.info('Attempting to fetch active credit clock...')
-        credit_clock = credit_wallet.fetch_credit_ewallet_credit_clock()
-        if not credit_clock:
-            return self.warning_could_not_fetch_credit_clock()
-        command_chain_response = {
-            'failed': False,
-            'credit_clock': credit_clock.fetch_credit_clock_id(),
-            'clock_data': credit_clock.fetch_credit_clock_values(),
-        }
-        return command_chain_response
-
-    def action_view_credit_wallet(self, **kwargs):
-        '''
-        [ NOTE   ]: User action 'view credit wallet', accessible from external api call.
-        [ RETURN ]: (Credit wallet values | False)
-        '''
-        log.debug('')
-        credit_wallet = self.fetch_active_session_credit_wallet()
-        if not credit_wallet:
-            return self.error_no_session_credit_wallet_found()
-        command_chain_response = {
-            'failed': False,
-            'credit_ewallet': credit_wallet.fetch_credit_ewallet_id(),
-            'ewallet_data': credit_wallet.fetch_credit_ewallet_values(),
-        }
-        return command_chain_response
-
-    def action_edit_account_user_name(self, **kwargs):
-        log.debug('')
-        active_user = self.fetch_active_session_user()
-        if not active_user:
-            return self.warning_could_not_fetch_ewallet_session_active_user()
-        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
-            kwargs, 'ctype', 'action', 'edit'
-        )
-        edit_user_name = active_user.user_controller(
-            ctype='action', action='edit', edit='user_name',
-            **sanitized_command_chain
-        )
-        return self.warning_could_not_edit_account_user_name(kwargs) if \
-            edit_user_name.get('failed') else edit_user_name
-
-    def action_edit_account_user_pass(self, **kwargs):
-        log.debug('TODO')
-        active_user = self.fetch_active_session_user()
-        if not active_user:
-            return self.warning_could_not_fetch_ewallet_session_active_user()
-        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
-            kwargs, 'ctype', 'action', 'edit'
-        )
-        edit_user_pass = active_user.user_controller(
-            ctype='action', action='edit', edit='user_pass',
-            **sanitized_command_chain
-        )
-        return self.warning_could_not_edit_account_user_pass(kwargs) if \
-            edit_user_pass.get('failed') else edit_user_pass
-
-    def action_edit_account_user_alias(self, **kwargs):
-        log.debug('')
-        active_user = self.fetch_active_session_user()
-        if not active_user:
-            return self.warning_could_not_fetch_ewallet_session_active_user()
-        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
-            kwargs, 'ctype', 'action', 'edit'
-        )
-        edit_user_alias = active_user.user_controller(
-            ctype='action', action='edit', edit='user_alias',
-            **sanitized_command_chain
-        )
-        return self.warning_could_not_edit_account_user_alias(kwargs) if \
-            edit_user_alias.get('failed') else edit_user_alias
-
-    def action_edit_account_user_email(self, **kwargs):
-        log.debug('')
-        active_user = self.fetch_active_session_user()
-        if not active_user:
-            return self.warning_could_not_fetch_ewallet_session_active_user()
-        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
-            kwargs, 'ctype', 'action', 'edit'
-        )
-        edit_user_email = active_user.user_controller(
-            ctype='action', action='edit', edit='user_email',
-            **sanitized_command_chain
-        )
-        return self.warning_could_not_edit_account_user_email(kwargs) if \
-            edit_user_email.get('failed') else edit_user_email
-
-    def action_edit_account_user_phone(self, **kwargs):
-        log.debug('')
-        active_user = self.fetch_active_session_user()
-        if not active_user:
-            return self.warning_could_not_fetch_ewallet_session_active_user()
-        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
-            kwargs, 'ctype', 'action', 'edit'
-        )
-        edit_user_phone = active_user.user_controller(
-            ctype='action', action='edit', edit='user_phone',
-            **sanitized_command_chain
-        )
-        return self.warning_could_not_edit_account_user_phone(kwargs) if \
-            edit_user_phone.get('failed') else edit_user_phone
-
-    def action_view_user_account(self, **kwargs):
-        '''
-        [ NOTE   ]: User action 'view user account', accessible from external api call.
-        [ RETURN ]: (Active user values | False)
-        '''
-        log.debug('')
-        active_user = self.fetch_active_session_user()
-        if not active_user:
-            return self.warning_could_not_fetch_ewallet_session_active_user()
-        command_chain_response = {
-            'failed': False,
-            'account': active_user.fetch_user_name(),
-            'account_data': active_user.fetch_user_values(),
-        }
-        return command_chain_response
-
-    def action_view_conversion_record(self, **kwargs):
-        '''
-        [ NOTE   ]: User action 'view conversion record', accessible from external api call.
-        [ INPUT  ]: record_id=<id>
-        [ RETURN ]: (Conversion record values | False)
-        '''
-        log.debug('')
-        credit_wallet = self.fetch_active_session_credit_wallet()
-        if not credit_wallet or not kwargs.get('record_id'):
-            return self.error_handler_action_view_conversion_record(
-                credit_wallet=credit_wallet, record_id=kwargs.get('record_id'),
-            )
-        log.info('Attempting to fetch active credit clock...')
-        credit_clock = credit_wallet.fetch_credit_ewallet_credit_clock()
-        if not credit_clock or isinstance(credit_clock, dict) and credit_clock.get('failed'):
-            return self.warning_could_not_fetch_credit_clock()
-        log.info('Attempting to fetch active conversion sheet...')
-        conversion_sheet = credit_clock.fetch_credit_clock_conversion_sheet()
-        if not conversion_sheet or isinstance(conversion_sheet, dict) and \
-                conversion_sheet.get('failed'):
-            return self.warning_could_not_fetch_conversion_sheet()
-        log.info('Attempting to fetch conversion record by id...')
-        record = conversion_sheet.fetch_conversion_sheet_record(
-            identifier='id', code=kwargs['record_id'],
-            active_session=self.session
-        )
-        if not record or isinstance(record, dict) and record.get('failed'):
-            return self.warning_could_not_fetch_conversion_record()
-        command_chain_response = {
-            'failed': False,
-            'conversion_sheet': conversion_sheet.fetch_conversion_sheet_id(),
-            'conversion_record': record.fetch_record_id(),
-            'record_data': record.fetch_record_values(),
-        }
-        return command_chain_response
-
-    def action_view_conversion_list(self, **kwargs):
-        '''
-        [ NOTE   ]: User action 'view conversion list', accessible from external api call.
-        [ RETURN ]: (Conversion sheet values | False)
-        '''
-        log.debug('')
-        credit_clock = self.fetch_active_session_credit_clock()
-        if not credit_clock:
-            return self.warning_could_not_fetch_credit_clock()
-        log.info('Attempting to fetch active conversion sheet...')
-        conversion_sheet = credit_clock.fetch_credit_clock_conversion_sheet()
-        if not conversion_sheet:
-            return self.warning_could_not_fetch_conversion_sheet()
-        command_chain_response = {
-            'failed': False,
-            'conversion_sheet': conversion_sheet.fetch_conversion_sheet_id(),
-            'sheet_data': conversion_sheet.fetch_conversion_sheet_values(),
-        }
-        return command_chain_response
-
-    def action_view_time_record(self, **kwargs):
-        '''
-        [ NOTE   ]: User action 'view time record', accessible from external api call.
-        [ INPUT  ]: record_id=<id>
-        [ RETURN ]: (Time record values | False)
-        '''
-        log.debug('')
-        credit_wallet = self.fetch_active_session_credit_wallet()
-        if not credit_wallet or not kwargs.get('record_id'):
-            return self.error_handler_action_view_time_record(
-                credit_wallet=credit_wallet,
-                record_id=kwargs.get('record_id'),
-            )
-        log.info('Attempting to fetch active credit clock...')
-        credit_clock = credit_wallet.fetch_credit_ewallet_credit_clock()
-        if not credit_clock:
-            return self.warning_could_not_fetch_credit_clock()
-        log.info('Attempting to fetch active time sheet...')
-        time_sheet = credit_clock.fetch_credit_clock_time_sheet()
-        if not time_sheet:
-            return self.warning_could_not_fetch_time_sheet()
-        log.info('Attempting to fetch time record...')
-        record = time_sheet.fetch_time_sheet_record(
-            search_by='id', code=kwargs['record_id'],
-            active_session=self.session
-        )
-        if not record or isinstance(record, dict) and record.get('failed'):
-            return self.warning_could_not_fetch_time_sheet_record(kwargs)
-        command_chain_response = {
-            'failed': False,
-            'time_sheet': time_sheet.fetch_time_sheet_id(),
-            'time_record': record.fetch_record_id(),
-            'record_data': record.fetch_record_values(),
-        }
-        return command_chain_response
-
-    def action_view_time_list(self, **kwargs):
-        '''
-        [ NOTE   ]: User action 'view time list', accessible from external api call.
-        [ RETURN ]: (Time sheet values | False)
-        '''
-        log.debug('')
-        credit_wallet = self.fetch_active_session_credit_wallet()
-        if not credit_wallet:
-            return self.error_no_session_credit_wallet_found()
-        log.info('Attempting to fetch active credit clock...')
-        credit_clock = credit_wallet.fetch_credit_ewallet_credit_clock()
-        if not credit_clock:
-            return self.warning_could_not_fetch_credit_clock()
-        log.info('Attempting to fetch active time sheet...')
-        time_sheet = credit_clock.fetch_credit_clock_time_sheet()
-        if not time_sheet:
-            return self.warning_could_not_fetch_time_sheet()
-        command_chain_response = {
-            'failed': False,
-            'time_sheet': time_sheet.fetch_time_sheet_id(),
-            'sheet_data': time_sheet.fetch_time_sheet_values(),
-        }
-        return command_chain_response
-
-#   @pysnooper.snoop()
-    def action_create_new_transfer_type_transfer(self, **kwargs):
-        log.debug('')
-        if not kwargs.get('transfer_to'):
-            return self.error_no_user_action_transfer_credits_target_specified(kwargs)
-        active_session = kwargs.get('active_session') or \
-            self.fetch_active_session()
-        partner_account = kwargs.get('partner_account') or \
-            self.fetch_user(identifier='email', email=kwargs['transfer_to'])
-        if not partner_account:
-            return self.error_could_not_fetch_partner_account(kwargs)
-        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
-            kwargs, 'ctype', 'action', 'ttype', 'partner_account', 'pay',
-            'transfer_to'
-        )
-        credits_before = self.fetch_credit_wallet_credits()
-        current_account = self.fetch_active_session_user()
-        action_transfer = current_account.user_controller(
-            ctype='action', action='transfer', ttype='transfer',
-            transfer_to=partner_account, **sanitized_command_chain
-        )
-        credits_after = self.fetch_credit_wallet_credits()
-        if str(credits_after) == str(credits_before - kwargs.get('credits')):
-            active_session.commit()
-            return {
-                'total_credits': credits_after,
-                'transfered_credits': kwargs['credits'],
-            }
-        active_session.rollback()
-        return self.error_transfer_type_transfer_failure(kwargs)
 
     def action_create_new_transfer(self, **kwargs):
         '''
@@ -1784,224 +2278,6 @@ class EWallet(Base):
         update = self.update_session_from_user(**kwargs)
         return update or False
 
-#   @pysnooper.snoop('logs/ewallet.log')
-    def action_start_credit_clock_timer(self, **kwargs):
-        '''
-        [ NOTE   ]: User action 'start credit clock timer', accessible from external api call.
-        [ INPUT  ]: credit_clock=<clock>, active_session=<session>
-        [ RETURN ]: (Legacy start time | False)
-        '''
-        log.debug('')
-        credit_clock = kwargs.get('credit_clock') or \
-                self.fetch_active_session_credit_clock()
-        if not credit_clock:
-            return self.warning_could_not_fetch_credit_clock()
-        active_session = kwargs.get('active_session') or self.session
-        if not active_session:
-            return self.error_no_active_session_found()
-        active_session.add(credit_clock)
-        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
-            kwargs, 'controller', 'action', 'active_session'
-        )
-        active_user = self.fetch_active_session_user()
-        user_id = active_user.fetch_user_id()
-        start = credit_clock.main_controller(
-            controller='user', action='start',
-            active_session=active_session, uid=user_id, **sanitized_command_chain
-        )
-        if not start:
-            active_session.rollback()
-            return self.error_could_not_start_credit_clock_timer()
-        active_session.commit()
-        return start
-
-    def action_pause_credit_clock_timer(self, **kwargs):
-        '''
-        [ NOTE   ]: User action 'pause credit clock timer', accessible from external api call.
-        [ INPUT  ]: credit_clock=<clock>, active_session=<session>
-        [ RETURN ]: (Pause count | False)
-        '''
-        log.debug('')
-        credit_clock = kwargs.get('credit_clock') or \
-                self.fetch_active_session_credit_clock()
-        if not credit_clock:
-            return self.warning_could_not_fetch_credit_clock()
-        active_session = kwargs.get('active_session') or self.session
-        if not active_session:
-            return self.error_no_active_session_found()
-        active_session.add(credit_clock)
-        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
-            kwargs, 'controller', 'action', 'active_session'
-        )
-        active_user = self.fetch_active_session_user()
-        user_id = active_user.fetch_user_id()
-        pause = credit_clock.main_controller(
-            controller='user', action='pause',
-            active_session=active_session, uid=user_id, **sanitized_command_chain
-        )
-        if not pause:
-            active_session.rollback()
-            return self.error_could_not_pause_credit_clock_timer()
-        active_session.commit()
-        return pause
-
-#   @pysnooper.snoop()
-    def action_resume_credit_clock_timer(self, **kwargs):
-        '''
-        [ NOTE   ]: User action 'resume credit clock timer', accessible from external api call.
-        [ INPUT  ]: credit_clock=<clock>, active_session=<session>
-        [ RETURN ]: (Elapsed clock time | False)
-        '''
-        log.debug('')
-        credit_clock = kwargs.get('credit_clock') or \
-                self.fetch_active_session_credit_clock()
-        if not credit_clock:
-            return self.warning_could_not_fetch_credit_clock()
-        active_session = kwargs.get('active_session') or self.session
-        if not active_session:
-            return self.error_no_active_session_found()
-        active_session.add(credit_clock)
-        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
-            kwargs, 'controller', 'action', 'active_session'
-        )
-        active_user = self.fetch_active_session_user()
-        user_id = active_user.fetch_user_id()
-        resume = credit_clock.main_controller(
-            controller='user', action='resume',
-            active_session=active_session, uid=user_id,
-            **sanitized_command_chain
-        )
-        if not isinstance(resume, float):
-            active_session.rollback()
-            return self.error_could_not_resume_credit_clock_timer()
-        active_session.commit()
-        return resume
-
-    def action_stop_credit_clock_timer(self, **kwargs):
-        '''
-        [ NOTE   ]: User action 'stop credit clock timer', accessible from external api call.
-        [ INPUT  ]: credit_clock=<clock>, active_session=<session>
-        [ RETURN ]: (Credit clock elapsed time | False)
-        '''
-        log.debug('')
-        credit_clock = kwargs.get('credit_clock') or \
-                self.fetch_active_session_credit_clock()
-        if not credit_clock:
-            return self.warning_could_not_fetch_credit_clock()
-        active_session = kwargs.get('active_session') or self.session
-        if not active_session:
-            return self.error_no_active_session_found()
-        active_session.add(credit_clock)
-        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
-            kwargs, 'controller', 'action', 'active_session'
-        )
-        active_user = self.fetch_active_session_user()
-        user_id = active_user.fetch_user_id()
-        stop = credit_clock.main_controller(
-            controller='user', action='stop', active_session=active_session,
-            uid=user_id, **sanitized_command_chain
-        )
-        if not stop:
-            active_session.rollback()
-            return self.error_could_not_stop_credit_clock_timer()
-        active_session.commit()
-        return stop
-
-    def action_view_transfer_list(self, **kwargs):
-        '''
-        [ NOTE   ]: User action 'view transfer list', accessible from external api call.
-        [ RETURN ]: (Transfer sheet values | False)
-        '''
-        log.debug('')
-        credit_wallet = self.fetch_active_session_credit_wallet()
-        if not credit_wallet:
-            return self.error_no_session_credit_wallet_found()
-        log.info('Attempting to fetch active transfer sheet...')
-        transfer_sheet = credit_wallet.fetch_credit_ewallet_transfer_sheet()
-        if not transfer_sheet:
-            return self.warning_could_not_fetch_transfer_sheet()
-        command_chain_response = {
-            'failed': False,
-            'transfer_sheet': transfer_sheet.fetch_transfer_sheet_id(),
-            'sheet_data': transfer_sheet.fetch_transfer_sheet_values(),
-        }
-        return command_chain_response
-
-    def action_view_transfer_record(self, **kwargs):
-        '''
-        [ NOTE   ]: User action 'view transfer record', accessible from external api call.
-        [ INPUT  ]: record_id=<id>
-        [ RETURN ]: (Transfer record values | False)
-        '''
-        log.debug('')
-        credit_wallet = self.fetch_active_session_credit_wallet()
-        if not credit_wallet or not kwargs.get('record_id'):
-            return self.error_handler_action_view_transfer_record(
-                credit_wallet=self.session_credit_wallet,
-                record_id=kwargs.get('record_id'),
-            )
-        log.info('Attempting to fetch active transfer sheet...')
-        transfer_sheet = credit_wallet.fetch_credit_ewallet_transfer_sheet()
-        if not transfer_sheet:
-            return self.warning_could_not_fetch_transfer_sheet()
-        log.info('Attempting to fetch transfer record by id...')
-        record = transfer_sheet.fetch_transfer_sheet_records(
-            search_by='id', code=kwargs['record_id'], active_session=self.session
-        )
-        if not record:
-            return self.warning_could_not_fetch_transfer_sheet_record()
-        command_chain_response = {
-            'failed': False,
-            'transfer_sheet': transfer_sheet.fetch_transfer_sheet_id(),
-            'transfer_record': record.fetch_record_id(),
-            'record_data': record.fetch_record_values(),
-        }
-        return command_chain_response
-
-    def action_view_contact_list(self, **kwargs):
-        '''
-        [ NOTE   ]: User action 'view contact list', accessible from external api call.
-        [ RETURN ]: (Contact list values | False)
-        '''
-        log.debug('')
-        contact_list = self.fetch_active_session_contact_list()
-        if not contact_list:
-            return self.error_no_session_contact_list_found()
-        return {
-            'failed': False,
-            'contact_list': contact_list.fetch_contact_list_id(),
-            'list_data': contact_list.fetch_contact_list_values(),
-        }
-
-#   @pysnooper.snoop()
-    def action_view_contact_record(self, **kwargs):
-        '''
-        [ NOTE   ]: User action 'view contact record', accessible from external user api call.
-        [ INPUT  ]: record_id=<id>
-        [ RETURN ]: (Contact record values | False)
-        '''
-        log.debug('')
-        contact_list = self.fetch_active_session_contact_list()
-        if not contact_list or not kwargs.get('record'):
-            return self.error_handler_action_view_contact_record(
-                contact_list=contact_list,
-                record_id=kwargs.get('record'),
-            )
-        log.info('Attempting to fetch contact record by id...')
-        record = contact_list.fetch_contact_list_record(
-            search_by='id' if not kwargs.get('search_by') else kwargs['search_by'],
-            code=kwargs['record'], active_session=self.fetch_active_session()
-        )
-        if not record:
-            return self.warning_could_not_fetch_contact_record()
-        contact_record_data = record.fetch_record_values()
-        log.debug(contact_record_data)
-        return {
-            'contact_list': contact_list.fetch_contact_list_id(),
-            'contact_record': kwargs['record'],
-            'record_data': contact_record_data,
-        }
-
     def action_reset_user_password(self, **kwargs):
         '''
         [ NOTE   ]: User action 'reser user account password', accessible from external user api calls.
@@ -2064,62 +2340,6 @@ class EWallet(Base):
                 phone=kwargs['user_phone']
                 )
 
-    def action_create_new_user_account(self, **kwargs):
-        '''
-        [ NOTE   ]: User action create new account, accessible from external user api calls.
-        [ INPUT  ]: user_name=<name> user_pass=<pass> user_email=<email> user_alias=<alias>
-        [ RETURN ]: (ResUser object | False)
-        '''
-        log.debug('')
-        session_create_account = EWalletLogin().ewallet_login_controller(
-                action='new_account',
-                user_name=kwargs.get('user_name'),
-                user_pass=kwargs.get('user_pass'),
-                user_email=kwargs.get('user_email'),
-                user_alias=kwargs.get('user_alias'),
-                active_session=self.session,
-                )
-        if not session_create_account:
-            return self.warning_could_not_create_user_account(kwargs['user_name'])
-        self.session.add(session_create_account)
-        log.info('Successfully created new user account.')
-        self.update_user_account_archive(
-                user=session_create_account,
-                )
-        self.update_session_from_user(
-                session_active_user=session_create_account,
-                )
-        self.session.commit()
-        return session_create_account
-
-    def action_create_new_conversion_credits_to_clock(self, **kwargs):
-        '''
-        [ NOTE   ]: User action 'convert credits to clock', accessible from external api calls.
-        [ INPUT  ]: credit_ewallet=<wallet>, active_session=<session>,
-        [ RETURN ]: Post conversion value.
-        '''
-        log.debug('')
-        credit_wallet = kwargs.get('credit_ewallet') or \
-                self.fetch_active_session_credit_wallet()
-        if not credit_wallet:
-            return self.error_could_not_fetch_active_session_credit_wallet()
-        credits_before = self.fetch_credit_wallet_credits()
-        active_session = kwargs.get('active_session') or self.fetch_active_session()
-        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
-            kwargs, 'controller', 'action', 'conversion', 'credit_ewallet',
-            'active_session'
-        )
-        convert = credit_wallet.main_controller(
-            controller='system', action='convert', conversion='to_minutes',
-            credit_ewallet=credit_wallet, active_session=active_session,
-            **sanitized_command_chain
-        )
-        if not convert:
-            active_session.rollback()
-            return self.error_could_not_convert_credits_to_minutes()
-        active_session.commit()
-        return convert
-
 #   @pysnooper.snoop()
     def action_create_new_conversion_clock_to_credits(self, **kwargs):
         '''
@@ -2168,36 +2388,6 @@ class EWallet(Base):
                 }
         return _handlers[kwargs['conversion']](**kwargs)
 
-    def action_create_new_contact_record(self, **kwargs):
-        '''
-        [ NOTE   ]: User action 'create new contact record', accessible from external api calls.
-        [ INPUT  ]: user_name=<name>, user_email=<email>, user_phone=<phone>, notes=<notes>
-        [ RETURN ]: (ContactRecord object | False)
-        '''
-        log.debug('')
-        contact_list = self.fetch_active_session_contact_list()
-        if not contact_list:
-            return self.error_no_active_session_contact_list_found(
-                self.active_user.fetch_user_name()
-            )
-        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
-            kwargs, 'action'
-        )
-        new_record = contact_list.contact_list_controller(
-            action='create', **sanitized_command_chain
-        )
-        if not new_record:
-            kwargs['active_session'].rollback()
-            return self.warning_could_not_create_contact_record(
-                self.active_user.fetch_user_name()
-            )
-        kwargs['active_session'].commit()
-        log.info('Successfully created new contact record.')
-        return {
-            'contact_record': new_record.fetch_record_id(),
-            'contact_list': contact_list.fetch_contact_list_id()
-        }
-
     def action_create_new_contact(self, **kwargs):
         '''
         [ NOTE   ]: Jump table for user action 'create new contact', accessible
@@ -2214,76 +2404,6 @@ class EWallet(Base):
         }
         return handlers[kwargs['contact']](**kwargs)
 
-#   @pysnooper.snoop()
-    def action_create_new_transfer_type_supply(self, **kwargs):
-        '''
-        [ NOTE   ]: User action 'supply credits' for active session user becomes
-                    User event 'request credits' for SystemCore account.
-                    Accessible from external api calls.
-        [ INPUT  ]: active_session=<orm-session>, partner_account=<partner>,
-                    credits=<credits>
-        [ RETURN ]: ({'total_credits': <count>, 'supplied_credits': <count>} | False)
-        '''
-        log.debug('')
-        active_session = kwargs.get('active_session') or \
-                self.fetch_active_session()
-        partner_account = kwargs.get('partner_account') or \
-                self.fetch_system_core_user_account(**kwargs)
-        if not partner_account:
-            return self.error_handler_create_new_transfer(
-                partner_account=partner_account,
-            )
-        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
-            kwargs, 'ctype', 'partner_account', 'active_session'
-        )
-        credits_before = self.fetch_credit_wallet_credits()
-        credit_request = partner_account.user_controller(
-            ctype='event', event='request', request='credits',
-            partner_account=self.fetch_active_session_user(),
-            active_session=active_session, **sanitized_command_chain
-        )
-        credits_after = self.fetch_credit_wallet_credits()
-        if str(credits_after) == str(credits_before + kwargs.get('credits')):
-            active_session.commit()
-            return {
-                'total_credits': credits_after,
-                'supplied_credits': kwargs['credits'],
-            }
-        active_session.rollback()
-        return self.error_supply_type_transfer_failure(kwargs)
-
-#   @pysnooper.snoop()
-    def action_create_new_transfer_type_pay(self, **kwargs):
-        log.debug('')
-        if not kwargs.get('pay'):
-            return self.error_no_user_action_pay_target_specified()
-        active_session = kwargs.get('active_session') or \
-            self.fetch_active_session()
-        partner_account = kwargs.get('partner_account') or \
-            self.fetch_user(identifier='email', email=kwargs['pay'])
-        if not partner_account:
-            return self.error_handler_create_new_transfer(
-                partner_account=partner_account,
-            )
-        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
-            kwargs, 'ctype', 'action', 'ttype', 'partner_account', 'pay'
-        )
-        credits_before = self.fetch_credit_wallet_credits()
-        current_account = self.fetch_active_session_user()
-        action_pay = current_account.user_controller(
-            ctype='action', action='transfer', ttype='payment', pay=partner_account,
-            **sanitized_command_chain,
-        )
-        credits_after = self.fetch_credit_wallet_credits()
-        if str(credits_after) == str(credits_before - kwargs.get('credits')):
-            active_session.commit()
-            return {
-                'total_credits': credits_after,
-                'spent_credits': kwargs['credits'],
-            }
-        active_session.rollback()
-        return self.error_pay_type_transfer_failure(kwargs)
-
     # INTEROGATORS
 
     def interogate_active_session_user_archive_for_user_account(self, **kwargs):
@@ -2297,6 +2417,42 @@ class EWallet(Base):
         return search_account
 
     # HANDLERS
+
+    def handle_user_action_switch_active_user_account(self, **kwargs):
+        log.debug('')
+        account_record = self.fetch_user_by_email(email=kwargs.get('account'))
+        if not account_record or isinstance(account_record, dict) and \
+                account_record.get('failed'):
+            return self.warning_user_account_not_found_in_database(kwargs)
+        new_account = self.interogate_active_session_user_archive_for_user_account(
+            account_id=account_record.fetch_user_id(), **kwargs
+        )
+        if not new_account or isinstance(new_account, dict) and \
+                new_account.get('failed'):
+            return self.warning_could_not_find_user_action_switch_target_account(kwargs)
+        update_session = self.update_session_from_user(session_active_user=new_account)
+        if not update_session or isinstance(update_session, dict) and \
+                update_session.get('failed'):
+            return self.error_could_not_update_ewallet_session_from_user_account(kwargs)
+        kwargs['active_session'].commit()
+        account_archive = self.fetch_active_session_user_account_archive()
+        command_chain_response = {
+            'failed': False,
+            'user_account': new_account.fetch_user_email(),
+            'session_data': {
+                'session_user_account': None if not update_session['active_user'] \
+                    else update_session['active_user'].fetch_user_email(),
+                'session_credit_ewallet': None if not update_session['credit_wallet'] \
+                    else update_session['credit_wallet'].fetch_credit_ewallet_id(),
+                'session_contact_list': None if not update_session['contact_list'] \
+                    else update_session['contact_list'].fetch_contact_list_id(),
+                'session_account_archive': None if not account_archive else {
+                    item.fetch_user_email(): item.fetch_user_name()
+                    for item in account_archive
+                }
+            }
+        }
+        return command_chain_response
 
     def handle_system_action_interogate_ewallet_session(self, **kwargs):
         log.debug('')
@@ -2342,31 +2498,14 @@ class EWallet(Base):
             'failed': False,
             'user_account': user.fetch_user_email(),
             'session_data': {
-                'session_user_account': session_values['user_account'].fetch_user_id(),
-                'session_credit_ewallet': session_values['credit_ewallet'].fetch_credit_ewallet_id(),
-                'session_contact_list': session_values['contact_list'].fetch_contact_list_id(),
-            }
-        }
-        return command_chain_response
-
-    def handle_user_action_switch_active_user_account(self, **kwargs):
-        log.debug('')
-        new_account = self.interogate_active_session_user_archive_for_user_account(**kwargs)
-        if not new_account or isinstance(new_account, dict) and \
-                new_account.get('failed'):
-            return self.warning_could_not_find_user_action_switch_target_account(kwargs)
-        update_session = self.update_session_from_user(session_active_user=new_account)
-        if not update_session or isinstance(update_session, dict) and \
-                update_session.get('failed'):
-            return self.error_could_not_update_ewallet_session_from_user_account(kwargs)
-        kwargs['active_session'].commit()
-        command_chain_response = {
-            'failed': False,
-            'user_account': new_account.fetch_user_email(),
-            'session_data': {
-                'session_user_account': update_session['active_user'].fetch_user_id(),
-                'session_credit_ewallet': update_session['credit_wallet'].fetch_credit_ewallet_id(),
-                'session_contact_list': update_session['contact_list'].fetch_contact_list_id(),
+                'session_user_account': None if not session_values['user_account'] \
+                    else session_values['user_account'].fetch_user_email(),
+                'session_credit_ewallet': None if not session_values['credit_ewallet'] \
+                    else session_values['credit_ewallet'].fetch_credit_ewallet_id(),
+                'session_contact_list': None if not session_values['contact_list'] \
+                    else session_values['contact_list'].fetch_contact_list_id(),
+                'session_account_archive': None if not session_values['user_account_archive'] \
+                    else session_values['user_account_archive']
             }
         }
         return command_chain_response
@@ -2396,7 +2535,7 @@ class EWallet(Base):
         log.info('User successfully logged in.')
         command_chain_response = {
             'failed': False,
-            'user_account': session_login.fetch_user_email(),
+            'account': session_login.fetch_user_email(),
         }
         return command_chain_response
 
@@ -2885,11 +3024,132 @@ class EWallet(Base):
 
     # WARNINGS
 
-    def warning_could_not_create_user_account(self, user_name):
+    def warning_user_account_not_found_in_database(self, command_chain):
         command_chain_response = {
             'failed': True,
-            'warning': 'Something went wrong. Could not create user account '\
-                       'for {}.'.format(user_name),
+            'warning': 'User account not found in EWallet database. '\
+                       'Command chain details : {}'.format(command_chain),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
+
+    def warning_could_not_fetch_invoice_sheet_record(self, command_chain):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Something went wrong. Could not fetch invoice sheet record. '\
+                       'Command chain details : {}'.format(command_chain),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
+
+    def warning_could_not_fetch_invoice_sheet(self, command_chain):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Something went wrong. Could not fetch credit wallet invoice sheet. '\
+                       'Command chain details : {}'.format(command_chain),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
+
+    def warning_could_not_create_user_account(self, user_name, command_chain):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Something went wrong. Could not create user account. '\
+                       'for {}. Command chain details : {}'.format(
+                           user_name, command_chain
+                       ),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
+
+    def warning_could_not_fetch_ewallet_session_active_user(self, command_chain):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Something went wrong. Could not fetch ewallet session active user. '\
+                       'Command chain details : {}'.format(command_chain),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
+
+    def warning_could_not_fetch_conversion_record(self, command_chain):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Something went wrong. Could not fetch conversion sheet record. '\
+                       'Command chain details : {}'.format(command_chain),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
+
+    def warning_could_not_fetch_active_session_credit_ewallet(self, command_chain):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Something went wrong. Could not fetch active session credit ewallet. '\
+                       'Command chain details : {}'.format(command_chain),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
+
+    def warning_could_not_fetch_conversion_sheet(self, command_chain):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Something went wrong. Could not fetch credit clock conversion sheet. '\
+                       'Command chain details : {}'.format(command_chain),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
+
+    def warning_could_not_fetch_time_sheet(self, command_chain):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Something went wrong. Could not fetch time sheet '\
+                       'Command chain details : {}'.format(command_chain),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
+
+    def warning_could_not_fetch_transfer_sheet_record(self, command_chain):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Something went wrong. Could not fetch transfer sheet record. '\
+                       'Command chain details : {}'.format(command_chain),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
+
+    def warning_could_not_fetch_transfer_sheet(self, command_chain):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'something went wrong. could not fetch credit wallet transfer sheet. '\
+                       'command chain details : {}'.format(command_chain),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
+
+    def warning_could_not_fetch_contact_record(self, command_chain):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Something went wrong. Could not fetch contact record. '\
+                       'Command chain details : {}'.format(command_chain),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
+
+    def warning_could_not_create_contact_record(self, user_name, command_chain):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Something went wrong. Could not create new contact record '\
+                       'for {}. Command chain details : {}'.format(
+                            user_name, command_chain
+                       ),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
+
+    def warning_could_not_fetch_credit_clock(self, command_chain):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Something went wrong. Could not fetch credit clock. '\
+                       'Command chain response : {}'.format(command_chain),
         }
         log.warning(command_chain_response['warning'])
         return command_chain_response
@@ -3255,25 +3515,10 @@ class EWallet(Base):
         log.warning(command_chain_response['warning'])
         return command_chain_response
 
-    def warning_could_not_fetch_ewallet_session_active_user(self):
-        command_chain_response = {
-            'failed': True,
-            'warning': 'Something went wrong. Could not fetch ewallet session active user.'
-        }
-        log.warning(command_chain_response['warning'])
-        return command_chain_response
-
     def warning_no_user_account_found(self, command_chain):
         log.warning(
             'No user account found. Details : {}'.format(command_chain)
         )
-        return False
-
-    def warning_could_not_fetch_conversion_record(self):
-        log.warning(
-                'Something went wrong. '
-                'Could not fetch conversion sheet record.'
-                )
         return False
 
     def warning_user_not_in_session_archive(self):
@@ -3290,63 +3535,7 @@ class EWallet(Base):
     def warning_could_not_fetch_time_sheet(self):
         log.warning(
                 'Something went wrong. '
-                'Could not fetch time sheet.'
-                )
-        return False
-
-    def warning_could_not_fetch_transfer_sheet_record(self):
-        log.warning(
-                'Something went wrong. '
-                'Could not fetch transfer sheet record.'
-                )
-        return False
-
-    def warning_could_not_fetch_transfer_sheet(self):
-        log.warning(
-                'Something went wrong. '
-                'Could not fetch credit wallet transfer sheet.'
-                )
-        return False
-
-    def warning_could_not_fetch_invoice_sheet_record(self):
-        log.warning(
-                'Something went wrong. '
-                'Could not fetch invoice sheet record.'
-                )
-        return False
-
-    def warning_could_not_fetch_invoice_sheet(self):
-        log.warning(
-                'Something went wrong. '
-                'Could not fetch credit wallet invoice sheet.'
-                )
-        return False
-
-    def warning_could_not_fetch_contact_record(self):
-        log.warning(
-                'Something went wrong. '
-                'Could not fetch contact record.'
-                )
-        return False
-
-    def warning_could_not_fetch_conversion_sheet(self):
-        log.warning(
-                'Something went wrong. '
-                'Could not fetch credit clock conversion sheet.'
-                )
-        return False
-
-    def warning_could_not_fetch_time_sheet(self):
-        log.warning(
-                'Something went wrong. '
                 'Could not fetch credit clock time sheet.'
-                )
-        return False
-
-    def warning_could_not_fetch_credit_clock(self):
-        log.warning(
-                'Something went wrong. '
-                'Could not fetch credit clock.'
                 )
         return False
 
@@ -3372,13 +3561,6 @@ class EWallet(Base):
         log.warning(
                 'Something went wrong. '
                 'Could not create new contact list for user %s.', user_name
-                )
-        return False
-
-    def warning_could_not_create_contact_record(self, user_name):
-        log.warning(
-                'Something went wrong. '
-                'Could not create new contact record for %s contact list.', user_name
                 )
         return False
 
@@ -3685,6 +3867,160 @@ class EWallet(Base):
 
     # ERRORS
 
+    def error_no_invoice_record_id_specified(self, command_chain):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No invoice record id specified. Command chain details : {}'\
+                     .format(command_chain),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_could_not_convert_credits_to_minutes(self, command_chain):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Something went wrong. Could not convert credits to minutes. '\
+                     'Command chain details : {}'.format(command_chain),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_no_conversion_record_id_found(self, command_chain):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No conversion record id found. '\
+                     'Command chain details : {}'.format(command_chain),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_no_time_record_id_found(self, command_chain):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No time sheet record id found. '\
+                     'Command chain details : {}'.format(command_chain),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_could_not_fetch_credit_ewallet(self, command_chain):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Something went wrong. Could not fetch credit ewallet. '\
+                     'Command chain details : {}'.format(command_chain),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_no_transfer_sheet_record_id_found(self, command_chain):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No transfer sheet record id found. Command chain details : {}'\
+                     .format(command_chain),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_no_session_credit_wallet_found(self, command_chain):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No session credit wallet found. Command chain details : {}'\
+                     .format(command_chain),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_transfer_type_transfer_failure(self, command_chain):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Something went wrong. Transfer type transaction failure. '\
+                     'Command chain details : {}'.format(command_chain),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_could_not_fetch_partner_account(self, command_chain):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Something went wrong. Could not fetch partner account. '\
+                     'Command chain details : {}'.format(command_chain),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_no_user_action_transfer_credits_target_specified(self, command_chain):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No user action transfer credits target specified. '\
+                     'Command chain details : {}'.format(command_chain),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_no_contact_record_id_found(self, command_chain):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No contact record id found. Command chain details : {}'\
+                     .format(command_chain),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_could_not_fetch_contact_list(self, command_chain):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Something went wrong. Could not fetch contact list. '\
+                     'Command chain details : {}'.format(command_chain),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_no_active_session_contact_list_found(self, user_name, command_chain):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No active session contact list found for user {}. '\
+                     'Command chain details : {}'.format(user_name, command_chain),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_could_not_fetch_partner_account_for_transfer_type_supply(self, command_chain):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Something went wrong. Could not fetch partner account '\
+                     'for transfer type supply. Command chain details : {}'\
+                     .format(command_chain)
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_could_not_resume_credit_clock_timer(self, command_chain):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Something went wrong. Could not resume credit clock timer. '\
+                     'Command chain details : {}'.format(command_chain)
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_could_not_start_credit_clock_timer(self, command_chain):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Something went wrong. Could not start credit clock timer. '\
+                     'Command chain details : {}'.format(command_chain)
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_no_active_session_found(self, command_chain):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No active session found. Command chain details : {}'\
+                     .format(command_chain)
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
     def error_no_system_action_interogate_target_specified(self, command_chain):
         command_chain_response = {
             'failed': True,
@@ -3928,25 +4264,6 @@ class EWallet(Base):
         log.error(command_chain_response['error'])
         return command_chain_response
 
-
-    def error_could_not_fetch_partner_account(self, command_chain):
-        log.error('Could not fetch partner account. Details : {}'.format(command_chain))
-        return False
-
-    def error_no_user_action_transfer_credits_target_specified(self, command_chain):
-        log.error(
-            'No user action transfer credits target specified. Details : {}'\
-            .format(command_chain)
-        )
-        return False
-
-    def error_transfer_type_transfer_failure(self, command_chain):
-        log.error(
-            'Transfer type transaction failure. Details : {}'\
-            .format(command_chain)
-        )
-        return False
-
     def error_pay_type_transfer_failure(self, command_chain):
         log.error(
             'Credit payment failure. Details : {}'.format(command_chain)
@@ -3963,10 +4280,6 @@ class EWallet(Base):
 
     def error_could_not_pause_credit_clock_timer(self):
         log.error('Could not pause credit clock timer.')
-        return False
-
-    def error_could_not_resume_credit_clock_timer(self):
-        log.error('Could not resume credit clock timer.')
         return False
 
     def error_no_partner_account_found(self):
@@ -4049,14 +4362,6 @@ class EWallet(Base):
         log.error('No conversion target specified.')
         return False
 
-    def error_no_conversion_record_id_found(self):
-        log.error('No conversion record id found.')
-        return False
-
-    def error_no_time_record_id_found(self):
-        log.error('No time sheet record id found.')
-        return False
-
     def error_no_transfer_record_id_found(self):
         log.error('No transfer record_id_found.')
         return False
@@ -4105,10 +4410,6 @@ class EWallet(Base):
         log.error('No active session contact list found.')
         return False
 
-    def error_no_contact_record_id_found(self):
-        log.error('No contact record id found.')
-        return False
-
     def error_no_user_name_found(self):
         log.error('No user name found.')
         return False
@@ -4141,22 +4442,12 @@ class EWallet(Base):
         log.error('No contact found.')
         return False
 
-    def error_no_session_credit_wallet_found(self):
-        log.error('No session credit wallet found.')
-        return False
-
     def error_no_transfer_type_found(self):
         log.error('No transfer type found.')
         return False
 
     def error_no_partner_credit_wallet_found(self):
         log.error('No partner credit wallet found.')
-        return False
-
-    def error_no_active_session_contact_list_found(self, user_name):
-        log.error(
-            'No active session contact list found for user %s', user_name
-            )
         return False
 
     def error_empty_session_user_account_archive(self):
@@ -4191,20 +4482,8 @@ class EWallet(Base):
         log.error('No transfer type specified.')
         return False
 
-    def error_could_not_convert_credits_to_minutes(self):
-        log.error('Could not convert credits to minutes.')
-        return False
-
     def error_could_not_convert_minutes_to_credits(self):
         log.error('Could not convert minutes to credits.')
-        return False
-
-    def error_no_active_session_found(self):
-        log.error('No active session found.')
-        return False
-
-    def error_could_not_start_credit_clock_timer(self):
-        log.error('Could not start credit clock timer.')
         return False
 
     def error_could_not_stop_credit_clock_timer(self):
@@ -4521,50 +4800,20 @@ class EWallet(Base):
         self.test_ewallet_system_controller()
         self.test_orm()
 
-Base.metadata.create_all(res_utils.engine)
-
-_working_session = res_utils.session_factory()
-ewallet = EWallet(session=_working_session)
-_working_session.add(ewallet)
-_working_session.commit()
-system_user = res_utils.create_system_user(ewallet)
-
 if __name__ == '__main__':
+
+    # TODO - Uncommend, needed for init
+    Base.metadata.create_all(res_utils.engine)
+
+    _working_session = res_utils.session_factory()
+    ewallet = EWallet(session=_working_session, reference='SystemCore Primary Session')
+    _working_session.add(ewallet)
+    _working_session.commit()
+    system_user = res_utils.create_system_user(ewallet)
+
     ewallet.ewallet_controller(controller='test')
 
 ################################################################################
 # CODE DUMP
 ################################################################################
-#       sanitized_command_chain = res_utils.remove_tags_from_command_chain(
-#           kwargs, 'ctype', 'action', 'view',
-#       )
-#       view_login_records = active_user.user_controller(
-#           ctype='action', action='view', view='login',
-#           **sanitized_command_chain
-#       )
-#       if not view_login_records or isinstance(view_login_records, dict) and \
-#               view_login_records.get('failed'):
-#           kwargs['active_session'].rollback()
-#           return self.warning_could_not_view_login_records(
-#               active_user.fetch_user_name(), kwargs
-#           )
-#       kwargs['active_session'].commit()
-
-#       if not self.session_credit_wallet or not kwargs.get('record_id'):
-#           return self.error_handler_action_unlink_conversion_record(
-#                   credit_wallet=self.session_credit_wallet,
-#                   record_id=kwargs.get('record_id'),
-#                   )
-#       log.info('Attempting to fetch active credit clock...')
-#       _credit_clock = self.session_credit_wallet.fetch_credit_ewallet_credit_clock()
-#       if not _credit_clock:
-#           return self.warning_could_not_fetch_credit_clock()
-#       log.info('Attempting to fetch active conversion sheet...')
-#       _conversion_list = _credit_clock.fetch_credit_clock_conversion_sheet()
-#       if not _conversion_list:
-#           return self.warning_could_not_fetch_conversion_sheet()
-#       return _conversion_list.credit_clock_conversion_sheet_controller(
-#               action='remove', record_id=kwargs['record_id']
-#               )
-
 

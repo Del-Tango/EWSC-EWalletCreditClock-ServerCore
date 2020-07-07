@@ -7,8 +7,28 @@
 ###############################################################################
 # EWallet Session Manager
 ###############################################################################
-# TODO - System action Expire Session Token
-# TODO - System action Expire Client ID
+# TODO - User action Start Clock Timer - Format timestamp
+# TODO - User action Pause Clock Timer - Format timestamp
+# TODO - User action Resume Clock Timer - Format timestamp
+# TODO - User action Stop Clock Timer - Format timestamp
+
+[ 0 ]: TODO - BUG FIX - Functional Issue
+
+    - System action Cleanup EWallet Sessions
+        - On EWallet session removal, Session Worker does not change state to
+          vacant if empty
+
+    - User action Request Session Token
+        - No checks are performed to see if client-id is already mapped to
+          session token.
+
+    - User action view invoice record
+        - No seller id found.
+
+[ 1 ]: TODO - BUG FIX - Report Issue
+
+    - System action Cleanup Workers
+        - Reserved worker included in cleaned_workers.
 
 
 ###############################################################################
@@ -36,6 +56,7 @@
 ###############################################################################
 # General
 ###############################################################################
+# TODO - Add unit tests
 # TODO - Add ACL permission sheet
 # TODO - Attach software liscence agreement
 # TODO - EWallet Client

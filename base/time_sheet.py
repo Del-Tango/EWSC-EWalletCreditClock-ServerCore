@@ -45,9 +45,9 @@ class TimeSheetRecord(Base):
         self.reference = kwargs.get('reference') or 'Time Sheet Record'
         self.time_start = kwargs.get('time_start')
         self.time_stop = kwargs.get('time_stop')
-        self.time_spent = kwargs.get('time_spent')
-        self.time_pending = kwargs.get('time_pending')
-        self.pending_count = kwargs.get('pending_count')
+        self.time_spent = kwargs.get('time_spent') or 0.00
+        self.time_pending = kwargs.get('time_pending') or 0.00
+        self.pending_count = kwargs.get('pending_count') or 0
         self.time_sheet_id = kwargs.get('time_sheet_id')
         self.credit_clock_id = kwargs.get('credit_clock_id')
 
@@ -123,10 +123,8 @@ class TimeSheetRecord(Base):
             'record_id': self.record_id,
             'time_sheet_id': self.time_sheet_id,
             'reference': self.reference,
-            'create_date': self.create_date,
-            'write_date': self.write_date,
-            'create_uid': self.create_uid,
-            'write_uid': self.write_uid,
+            'create_date': self.create_date.strftime('%d-%m-%Y %H:%M:%s'),
+            'write_date': self.write_date.strftime('%d-%m-%Y %H:%M:%s'),
             'time_start': self.time_start,
             'time_stop': self.time_stop,
             'time_spent': self.time_spent,
@@ -397,8 +395,8 @@ class CreditClockTimeSheet(Base):
             'time_sheet_id': self.time_sheet_id,
             'clock_id': self.clock_id,
             'reference': self.reference,
-            'create_date': self.create_date,
-            'write_date': self.write_date,
+            'create_date': self.create_date.strftime('%d-%m-%Y %H:%M:%s'),
+            'write_date': self.write_date.strftime('%d-%m-%Y %H:%M:%s'),
             'records': {
                 record.fetch_record_id(): record.fetch_record_reference()
                 for record in self.records
@@ -514,6 +512,18 @@ class CreditClockTimeSheet(Base):
 
     # ACTIONS
 
+#   @pysnooper.snoop('logs/ewallet.log')
+    def action_add_time_sheet_record(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('active_session'):
+            return self.error_no_active_session_found(kwargs)
+        values = self.fetch_time_record_creation_values(**kwargs)
+        record = TimeSheetRecord(**values)
+        updated_records = self.update_time_sheet_records(record)
+        if record:
+            log.info('Successfully added new time record.')
+        return record or False
+
     def action_remove_time_sheet_record(self, **kwargs):
         log.debug('')
         if not kwargs.get('record_id'):
@@ -535,19 +545,6 @@ class CreditClockTimeSheet(Base):
         _clear = self.set_time_sheet_records(records={})
         log.info('Successfully cleared all time sheet records.')
         return _clear
-
-#   @pysnooper.snoop('logs/ewallet.log')
-    def action_add_time_sheet_record(self, **kwargs):
-        log.debug('')
-        if not kwargs.get('active_session'):
-            return self.error_no_active_session_found()
-        _values = self.fetch_time_record_creation_values(**kwargs)
-        _record = TimeSheetRecord(**_values)
-#       kwargs['active_session'].add(_record)
-        _updated_records = self.update_time_sheet_records(_record)
-        if _record:
-            log.info('Successfully added new time record.')
-        return _record or False
 
     def action_interogate_time_sheet_records_by_id(self, **kwargs):
         log.debug('')

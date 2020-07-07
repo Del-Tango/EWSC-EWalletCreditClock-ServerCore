@@ -41,8 +41,8 @@ class CreditInvoiceSheetRecord(Base):
         self.transfer_record_id = kwargs.get('transfer_record_id')
         self.reference = kwargs.get('reference') or 'Invoice Sheet Record'
         self.credits = kwargs.get('credits') or 0
-        self.currency = kwargs.get('currency')
-        self.cost = kwargs.get('cost')
+        self.currency = kwargs.get('currency') or 'RON'
+        self.cost = kwargs.get('cost') or 1
         self.seller_id = kwargs.get('seller_id')
         self.notes = kwargs.get('notes')
 
@@ -70,8 +70,8 @@ class CreditInvoiceSheetRecord(Base):
             'id': self.record_id,
             'invoice_sheet_id': self.invoice_sheet_id,
             'reference': self.reference,
-            'create_date': self.create_date,
-            'write_date': self.write_date,
+            'create_date': res_utils.format_datetime(self.create_date),
+            'write_date': res_utils.format_datetime(self.write_date),
             'credits': self.credits,
             'currency': self.currency,
             'cost': self.cost,
@@ -202,6 +202,41 @@ class CreditInvoiceSheet(Base):
 
     # FETCHERS
 
+    def fetch_credit_invoice_records(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('search_by'):
+            return self.error_no_invoice_record_search_identifier_specified()
+        handlers = {
+            'id': self.fetch_credit_invoice_record_by_id,
+            'reference': self.fetch_credit_invoice_records_by_ref,
+            'date': self.fetch_credit_invoice_records_by_date,
+            'seller': self.fetch_credit_invoice_records_by_seller,
+        }
+        return handlers[kwargs['search_by']](**kwargs)
+
+    def fetch_credit_invoice_record_by_id(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('code'):
+            return self.error_no_invoice_record_id_found(kwargs)
+        if kwargs.get('active_session'):
+            match = list(
+                kwargs['active_session'].query(
+                    CreditInvoiceSheetRecord
+                ).filter_by(
+                    record_id=kwargs['code']
+                )
+            )
+        else:
+            match = [
+                item for item in self.records
+                if item.fetch_record_id() is kwargs['code']
+            ]
+        record = False if not match else match[0]
+        if not record:
+            return self.warning_could_not_fetch_invoice_record(kwargs)
+        log.info('Successfully fetched invoice record by id.')
+        return record
+
     def fetch_invoice_sheet_id(self):
         log.debug('')
         return self.invoice_sheet_id
@@ -224,8 +259,8 @@ class CreditInvoiceSheet(Base):
             'id': self.invoice_sheet_id,
             'wallet_id': self.wallet_id,
             'reference': self.reference,
-            'create_date': self.create_date,
-            'write_date': self.write_date,
+            'create_date': res_utils.format_datetime(self.create_date),
+            'write_date': res_utils.format_datetime(self.write_date),
             'records': {
                 item.fetch_record_id(): item.fetch_record_reference() \
                 for item in self.records
@@ -235,36 +270,16 @@ class CreditInvoiceSheet(Base):
 
     def fetch_invoice_record_creation_values(self, **kwargs):
         log.debug('')
-        _values = {
-                'reference': kwargs.get('reference'),
-                'invoice_sheet_id': self.invoice_sheet_id,
-                'credits': kwargs.get('credits'),
-                'cost': kwargs.get('cost') or 0,
-                'currency': kwargs.get('currency') or 'RON',
-                'seller_id': kwargs.get('seller_id'),
-                'notes': kwargs.get('notes'),
-                }
-        return _values
-
-    def fetch_credit_invoice_record_by_id(self, **kwargs):
-        log.debug('')
-        if not kwargs.get('code'):
-            return self.error_no_invoice_record_id_found()
-        if kwargs.get('active_session'):
-            _match = list(
-                    kwargs['active_session'].query(CreditInvoiceSheetRecord) \
-                            .filter_by(record_id=kwargs['code'])
-            )
-        else:
-            _match = [
-                    item for item in self.records
-                    if item.fetch_record_id() is kwargs['code']
-                    ]
-        _record = False if not _match else _match[0]
-        if not _record:
-            return self.warning_could_not_fetch_invoice_record('id', kwargs['code'])
-        log.info('Successfully fetched invoice record by id.')
-        return _record
+        values = {
+            'reference': kwargs.get('reference'),
+            'invoice_sheet_id': self.invoice_sheet_id,
+            'credits': kwargs.get('credits'),
+            'cost': kwargs.get('cost') or 0,
+            'currency': kwargs.get('currency') or 'RON',
+            'seller_id': kwargs.get('seller_id'),
+            'notes': kwargs.get('notes'),
+        }
+        return values
 
     def fetch_credit_invoice_records_by_ref(self, code):
         log.debug('')
@@ -300,19 +315,6 @@ class CreditInvoiceSheet(Base):
             return self.warning_could_not_fetch_invoice_record('seller', code)
         log.info('Successfully fetched invoice records by seller.')
         return _records
-
-    def fetch_credit_invoice_records(self, **kwargs):
-        log.debug('')
-        if not kwargs.get('search_by'):
-            return self.error_no_invoice_record_search_identifier_specified()
-        _handlers = {
-                'id': self.fetch_credit_invoice_record_by_id,
-                'reference': self.fetch_credit_invoice_records_by_ref,
-                'date': self.fetch_credit_invoice_records_by_date,
-                'seller': self.fetch_credit_invoice_records_by_seller,
-                }
-        _handle = _handlers[kwargs['search_by']](**kwargs)
-        return _handle
 
     # SETTERS
 
@@ -353,7 +355,12 @@ class CreditInvoiceSheet(Base):
 
     def update_records(self, record):
         log.debug('')
-        self.records.append(record)
+        if record in self.records:
+            return self.error_invoice_record_already_in_sheet_record_set(record)
+        try:
+            self.records.append(record)
+        except:
+            return self.error_could_not_update_invoice_sheet_records(record)
         log.info('Successfully updated invoice sheet records.')
         return self.records
 
@@ -361,9 +368,9 @@ class CreditInvoiceSheet(Base):
 
     def interogate_credit_invoice_record_by_id(self, **kwargs):
         log.debug('')
-        _record = self.fetch_credit_invoice_records(**kwargs)
-        _display = self.display_credit_invoice_sheet_records(records=[record])
-        return _record if _display else False
+        record = self.fetch_credit_invoice_records(**kwargs)
+        display = self.display_credit_invoice_sheet_records(records=[record])
+        return record if display else False
 
     def interogate_credit_invoice_records_by_ref(self, **kwargs):
         log.debug('')
@@ -391,6 +398,21 @@ class CreditInvoiceSheet(Base):
 
     # ACTIONS
 
+#   @pysnooper.snoop()
+    def action_add_credit_invoice_sheet_record(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('credits'):
+            return self.error_no_credits_found(kwargs)
+        if not kwargs.get('seller_id'):
+            return self.error_no_seller_id_found(kwargs)
+        values = self.fetch_invoice_record_creation_values(**kwargs)
+        record = CreditInvoiceSheetRecord(**values)
+        kwargs['active_session'].add(record)
+        update = self.update_records(record)
+        log.info('Successfully added new invoice record.')
+        kwargs['active_session'].commit()
+        return record
+
     def action_remove_credit_invoice_sheet_record(self, **kwargs):
         log.debug('')
         if not kwargs.get('record_id'):
@@ -405,23 +427,9 @@ class CreditInvoiceSheet(Base):
             return self.error_could_not_remove_credit_invoice_sheet_record(kwargs)
         return True
 
-#   @pysnooper.snoop()
-    def action_add_credit_invoice_sheet_record(self, **kwargs):
-        log.debug('')
-        if not kwargs.get('credits') or not kwargs.get('seller'):
-            return self.error_handler_add_credit_invoice_sheet_record(
-                credits=kwargs.get('credits'),
-                seller_id=kwargs['seller'].fetch_user_id(),
-            )
-        values = self.fetch_invoice_record_creation_values(**kwargs)
-        record = CreditInvoiceSheetRecord(**values)
-        update = self.update_records(record)
-        log.info('Successfully added new invoice record.')
-        return record
-
     def action_interogate_credit_invoice_sheet_records(self, **kwargs):
         log.debug('')
-        if not kwrags.get('search_by'):
+        if not kwargs.get('search_by'):
             return self.error_no_invoice_record_interogation_identifier_specified()
         handlers = {
             'id': self.interogate_credit_invoice_record_by_id,
@@ -474,20 +482,57 @@ class CreditInvoiceSheet(Base):
 
     # WARNINGS
 
-    def warning_could_not_fetch_invoice_record(self, search_code, code):
-        log.warning(
-                'Something went wrong. '
-                'Could not fetch invoice record by %s %s.', search_code, code
-                )
-        return False
+    def warning_could_not_fetch_invoice_record(self, command_chain, *args, **kwargs):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Something went wrong. Could not fetch invoice sheet record. '\
+                       'Command chain details : {}'.format(command_chain),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
 
     # ERRORS
+
+    def error_invoice_record_already_in_sheet_record_set(self, record):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Duplicated invoice record. Could not update invoice sheet records '\
+                     'with {}.'.format(record),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_could_not_update_invoice_sheet_records(self, record):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Something went wrong. Could not update invoice sheet records '\
+                     'with {}.'.format(record),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_no_credits_found(self, command_chain):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No credits found. Command chain details : {}',
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_no_seller_id_found(self, command_chain):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No seller id found. Command chain details : {}',
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
 
     def error_could_not_remove_credit_invoice_sheet_record(self, command_chain):
         command_chain_response = {
             'failed': True,
-            'error': 'Could not remove credit invoice sheet record. Command chain details : {}'\
-                     .format(command_chain),
+            'error': 'Could not remove credit invoice sheet record. '\
+                     'Command chain details : {}'.format(command_chain),
         }
         log.error(command_chain_response['error'])
         return command_chain_response
@@ -527,10 +572,6 @@ class CreditInvoiceSheet(Base):
 
     def error_no_credits_found(self):
         log.error('No credits found.')
-        return False
-
-    def error_no_seller_id_found(self):
-        log.error('No seller id found.')
         return False
 
     def error_no_invoice_record_search_identifier_specified(self):

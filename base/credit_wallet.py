@@ -196,10 +196,10 @@ class CreditEWallet(Base):
         values = {
             'id': self.wallet_id,
             'client_id': self.client_id,
-            'reference': self.reference,
-            'create_date': self.create_date,
-            'write_date': self.write_date,
-            'credits': self.credits,
+            'reference': self.reference or 'Credit EWallet',
+            'create_date': self.create_date.strftime('%d-%m-%Y %H:%M:%s'),
+            'write_date': self.write_date.strftime('%d-%m-%Y %H:%M:%s'),
+            'credits': self.credits or 0,
             'credit_clock': None if not credit_clock else \
                 credit_clock.fetch_credit_clock_id(),
             'credit_clock_archive': {
@@ -590,6 +590,37 @@ class CreditEWallet(Base):
 
     # CREATORS
 
+    def create_transfer_sheet(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('active_session'):
+            return self.error_no_active_session_found()
+        transfer_sheet = CreditTransferSheet(
+            id=self.wallet_id,
+            reference=kwargs.get('reference'),
+            active_session=kwargs['active_session'],
+        )
+        kwargs['active_session'].add(transfer_sheet)
+        self.update_transfer_sheet_archive(transfer_sheet)
+        kwargs['active_session'].commit()
+        log.info('Successfully created transfer sheet.')
+        return transfer_sheet
+
+    def create_clock(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('active_session'):
+            return self.error_no_active_session_found(kwargs)
+        new_credit_clock = CreditClock(
+            wallet_id=self.wallet_id,
+            reference=kwargs.get('reference') or 'Credit Clock',
+            credit_clock=kwargs.get('credit_clock') or 0.0,
+            active_session=kwargs['active_session']
+        )
+        kwargs['active_session'].add(new_credit_clock)
+        self.update_credit_clock_archive(new_credit_clock)
+        kwargs['active_session'].commit()
+        log.info('Successfully created new credit clock.')
+        return new_credit_clock
+
     def create_time_sheet(self, **kwargs):
         log.debug('')
         if not kwargs.get('active_session'):
@@ -632,37 +663,6 @@ class CreditEWallet(Base):
         kwargs['active_session'].commit()
         log.info('Successfully create conversion sheet.')
         return conversion_sheet
-
-    def create_transfer_sheet(self, **kwargs):
-        log.debug('')
-        if not kwargs.get('active_session'):
-            return self.error_no_active_session_found()
-        transfer_sheet = CreditTransferSheet(
-            id=self.wallet_id,
-            reference=kwargs.get('reference'),
-            active_session=kwargs['active_session'],
-        )
-        kwargs['active_session'].add(transfer_sheet)
-        self.update_transfer_sheet_archive(transfer_sheet)
-        kwargs['active_session'].commit()
-        log.info('Successfully created transfer sheet.')
-        return transfer_sheet
-
-    def create_clock(self, **kwargs):
-        log.debug('')
-        if not kwargs.get('active_session'):
-            return self.error_no_active_session_found()
-        new_credit_clock = CreditClock(
-            wallet_id=self.wallet_id,
-            reference=kwargs.get('reference') or 'Credit Clock',
-            credit_clock=kwargs.get('credit_clock') or 0.0,
-            active_session=kwargs['active_session']
-        )
-        kwargs['active_session'].add(new_credit_clock)
-        self.update_credit_clock_archive(new_credit_clock)
-        kwargs['active_session'].commit()
-        log.info('Successfully created new credit clock.')
-        return new_credit_clock
 
     def create_invoice_sheet(self, **kwargs):
         log.debug('')
@@ -1224,6 +1224,15 @@ class CreditEWallet(Base):
 
     # ERRORS
 
+    def error_no_active_session_found(self, command_chain):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No active session found. '\
+                     'Command chain details : {}'.format(command_chain),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
     def error_could_not_unlink_credit_clock(self, command_chain):
         command_chain_response = {
             'failed': True,
@@ -1649,10 +1658,6 @@ class CreditEWallet(Base):
 
     def error_no_controller_type_specified(self):
         log.error('No controller type specified.')
-        return False
-
-    def error_no_active_session_found(self):
-        log.error('No active session found.')
         return False
 
     def error_could_not_fetch_credit_ewallet_credit_clock_archive(self):

@@ -1,22 +1,22 @@
 from .config import Config
 
 import socket
-import sys
+# import sys
 import selectors
 import types
 import logging
 import pysnooper
-import json
+# import json
 
 config = Config()
 log_config = config.log_config
 log = logging.getLogger(log_config['log_name'])
 
 
-'''
-[ NOTE ]: Multiconn socket handler for both server and client sides.
-'''
 class EWalletSocketHandler():
+    '''
+    [ NOTE ]: Multiconn socket handler for both server and client sides.
+    '''
 
     def __init__(self, *args, **kwargs):
         self.session_manager = kwargs.get('session_manager')
@@ -32,15 +32,15 @@ class EWalletSocketHandler():
     #@pysnooper.snoop()
     def fetch_socket_values(self):
         log.debug('')
-        _values = {
-                'in_sock': self.in_sock,
-                'out_sock': self.out_sock,
-                'host': self.host,
-                'in_port': self.in_port,
-                'out_port': self.out_port,
-                'sel': self.sel,
-                }
-        return _values
+        values = {
+            'in_sock': self.in_sock,
+            'out_sock': self.out_sock,
+            'host': self.host,
+            'in_port': self.in_port,
+            'out_port': self.out_port,
+            'sel': self.sel,
+        }
+        return values
 
     # SETTERS
 

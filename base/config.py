@@ -10,30 +10,30 @@ class Config():
         self.current_directory = os.path.dirname(os.path.realpath(__file__))
         self.target_file = 'conf/ewallet.conf'
         self.log_config = {
-                'log_name': 'EWallet',
-                'log_dir': 'logs',
-                'log_level': 'DEBUG',
-                'log_file': 'ewallet.log',
-                'log_record_format': '[ %(asctime)s ] %(name)s ' \
-                    '[ %(levelname)-9s ] - %(filename)s - %(lineno)d: ' \
-                    '%(funcName)s - %(message)s',
-                'log_date_format': "%Y-%m-%d %H:%M:%S",
-                }
+            'log_name': 'EWallet',
+            'log_dir': 'logs',
+            'log_level': 'DEBUG',
+            'log_file': 'ewallet.log',
+            'log_record_format': '[ %(asctime)s ] %(name)s ' \
+                '[ %(levelname)-9s ] - %(filename)s - %(lineno)d: ' \
+                '%(funcName)s - %(message)s',
+            'log_date_format': "%Y-%m-%d %H:%M:%S",
+        }
         self.client_config = {
-                'keep_logged_in': None,
-                }
+            'keep_logged_in': None,
+        }
         self.wallet_config = {
-                'wallet_reference': None,
-               }
+            'wallet_reference': None,
+        }
         self.config_file_parser(self.target_file)
         self.system_user_values = {
-                'user_name': 'SystemCore',
-                'user_create_uid': None,
-                'user_write_uid': None,
-                'user_pass': 'SystemCoreDefaultPassword123!!',
-                'user_email': 'system.core@alvearesolutions.com',
-                'user_alias': 'S:Core',
-                }
+            'user_name': 'SystemCore',
+            'user_create_uid': None,
+            'user_write_uid': None,
+            'user_pass': 'SystemCoreDefaultPassword123!!',
+            'user_email': 'system.core@alvearesolutions.com',
+            'user_alias': 'S:Core',
+        }
 
     def fetch_config_dicts(self, **kwargs):
         return [self.log_config, self.client_config, self.wallet_config]
@@ -58,14 +58,10 @@ class Config():
         if line[0] == '#':
             return False
         key_val = line.split(' : ')
-        dict_search = self.fetch_config_dict_by_key(
-                config_dicts, key_val[0]
-                )
+        dict_search = self.fetch_config_dict_by_key(config_dicts, key_val[0])
         self.set_config_value(
-                dct=dict_search,
-                key=key_val[0],
-                val=str(key_val[1]).strip('\n')
-                )
+            dct=dict_search, key=key_val[0], val=str(key_val[1]).strip('\n')
+        )
         return True
 
 #   @pysnooper.snoop()

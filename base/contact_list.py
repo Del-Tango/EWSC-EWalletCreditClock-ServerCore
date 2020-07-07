@@ -67,18 +67,18 @@ class ContactListRecord(Base):
 
     def fetch_record_values(self):
         log.debug('')
-        _values = {
-                'record_id': self.record_id,
-                'contact_list_id': self.contact_list_id,
-                'reference': self.reference,
-                'create_date': self.create_date,
-                'write_date': self.write_date,
-                'user_name': self.user_name,
-                'user_email': self.user_email,
-                'user_phone': self.user_phone,
-                'notes': self.notes,
-                }
-        return _values
+        values = {
+            'record_id': self.record_id,
+            'contact_list_id': self.contact_list_id,
+            'reference': self.reference,
+            'create_date': self.create_date.strftime('%d-%m-%Y %H:%M:%s'),
+            'write_date': self.write_date.strftime('%d-%m-%Y %H:%M:%s'),
+            'user_name': self.user_name,
+            'user_email': self.user_email,
+            'user_phone': self.user_phone,
+            'notes': self.notes,
+        }
+        return values
 
     def set_record_id(self, **kwargs):
         log.debug('')
@@ -210,8 +210,8 @@ class ContactList(Base):
             'id': self.contact_list_id,
             'client_id': self.client_id,
             'reference': self.reference,
-            'create_date': self.create_date,
-            'write_date': self.write_date,
+            'create_date': self.create_date.strftime('%d-%m-%Y %H:%M:%s'),
+            'write_date': self.write_date.strftime('%d-%m-%Y %H:%M:%s'),
             'records': {
                 item.fetch_record_id(): item.fetch_record_reference() \
                 for item in self.records
@@ -219,11 +219,23 @@ class ContactList(Base):
         }
         return values
 
-    # TODO
-    def fetch_contact_list_records_from_database():
+    def fetch_contact_list_records_from_database(self, **kwargs):
         log.debug('')
-        self.records = {}
-        return self.records
+        if not kwargs.get('active_session'):
+            return self.error_no_active_session_found(kwargs)
+        try:
+            records = list(
+                kwargs['active_session'].query(
+                    ContactListRecord
+                ).filter_by(
+                    contact_list_id=self.fetch_contact_list_id()
+                )
+            )
+        except:
+            return self.error_could_not_fetch_contact_list_records_from_database(
+                kwargs
+            )
+        return records
 
     def update_write_date(self):
         log.debug('')
@@ -538,6 +550,24 @@ class ContactList(Base):
 
     # ERRORS
 
+    def error_no_active_session_found(self, command_chain):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No active SqlAlchemy orm session found. Command chain details : {}'\
+                     .format(command_chain),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_could_not_fetch_contact_list_records_from_database(self, command_chain):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Something went wrong. Could not fetch contact list records from database. '\
+                     'Command chain details : {}'.format(command_chain),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
     def error_no_contact_record_id_found(self, command_chain):
         command_chain_response = {
             'failed': True,
@@ -686,6 +716,7 @@ class ContactList(Base):
         self.test_contact_list_load()
         self.test_contact_list_update()
         self.test_contact_list_interogate()
+
 
 
 #contact_list = ContactList(client_id=1234, reference='Test Contact List')

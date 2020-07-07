@@ -38,6 +38,8 @@ class CreditTransferSheetRecord(Base):
         self.transfer_to = kwargs.get('transfer_to')
         self.credits = kwargs.get('credits') or 0
 
+    # FETCHERS
+
     def fetch_record_id(self):
         log.debug('')
         return self.record_id
@@ -64,14 +66,16 @@ class CreditTransferSheetRecord(Base):
             'id': self.record_id,
             'transfer_sheet_id': self.transfer_sheet_id,
             'reference': self.reference,
-            'create_date': self.create_date,
-            'write_date': self.write_date,
+            'create_date': self.create_date.strftime('%d-%m-%Y %H:%M:%s'),
+            'write_date': self.write_date.strftime('%d-%m-%Y %H:%M:%s'),
             'transfer_type': self.transfer_type,
             'transfer_from': self.transfer_from,
             'transfer_to': self.transfer_to,
             'credits': self.credits,
         }
         return values
+
+    # SETTERS
 
     def set_record_id(self, **kwargs):
         log.debug('')
@@ -122,10 +126,14 @@ class CreditTransferSheetRecord(Base):
         self.credits = kwargs['credits']
         return True
 
+    # UPDATERS
+
     def update_write_date(self):
         log.debug('')
         self.write_date = datetime.datetime.now()
         return self.write_date
+
+    # ERRORS
 
     def error_no_record_id_found(self):
         log.error('No record id found.')
@@ -200,8 +208,8 @@ class CreditTransferSheet(Base):
             'id': self.transfer_sheet_id,
             'wallet_id': self.wallet_id,
             'reference': self.reference,
-            'create_date': self.create_date,
-            'write_date': self.write_date,
+            'create_date': self.create_date.strftime('%d-%m-%Y %H:%M:%s'),
+            'write_date': self.write_date.strftime('%d-%m-%Y %H:%M:%s'),
             'records': {
                 record.fetch_record_id(): record.fetch_record_reference()
                 for record in self.records

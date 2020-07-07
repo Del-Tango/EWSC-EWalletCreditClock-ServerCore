@@ -252,10 +252,6 @@ class EWalletTransactionHandler():
 #   @pysnooper.snoop()
     def journal_transaction_type_transfer(self, **kwargs):
         log.debug('')
-
-        # TODO - REMOVE
-        log.info('COMMAND CHAIN DETAILS : {}'.format(kwargs))
-
         transfer_sheets = self.fetch_credit_wallet_pair_transfer_sheets(
             kwargs['source_credit_wallet'], kwargs['target_credit_wallet'],
         )
@@ -268,6 +264,7 @@ class EWalletTransactionHandler():
             transfer_to=kwargs['target_user_account'].fetch_user_id(),
             **sanitized_command_chain
         )
+        kwargs['active_session'].add(transfer_record)
         return {
             'transfer_sheets': transfer_sheets,
             'transfer_record': transfer_record,
@@ -285,7 +282,8 @@ class EWalletTransactionHandler():
             kwargs, 'action'
         )
         invoice_record = invoice_sheets['source'].credit_invoice_sheet_controller(
-            action='add', seller=kwargs['source_user_account'], **sanitized_command_chain
+            action='add', seller_id=kwargs['source_user_account'].fetch_user_id(),
+            **sanitized_command_chain
         )
         transfer_record = transfer_sheets['source'].credit_transfer_sheet_controller(
             action='add', reference=kwargs.get('reference'),
@@ -300,7 +298,12 @@ class EWalletTransactionHandler():
             'invoice_record': invoice_record,
         }
 
+#   @pysnooper.snoop()
     def journal_transaction_type_pay(self, **kwargs):
+        '''
+        [ NOTE ]: Source user account - Client performing the payment.
+        [ NOTE ]: Target user account - Supplier
+        '''
         log.debug('')
         invoice_sheets = self.fetch_credit_wallet_pair_invoice_sheets(
             kwargs['source_credit_wallet'], kwargs['target_credit_wallet']
@@ -312,13 +315,16 @@ class EWalletTransactionHandler():
             kwargs, 'action'
         )
         invoice_record = invoice_sheets['source'].credit_invoice_sheet_controller(
-            action='add', seller=kwargs['pay'], **sanitized_command_chain
+            action='add', seller=kwargs['pay'],
+            seller_id=kwargs['pay'].fetch_user_id(),
+            **sanitized_command_chain
         )
         transfer_record = transfer_sheets['source'].credit_transfer_sheet_controller(
             action='add', reference=kwargs.get('reference'),
             credits=kwargs['credits'], transfer_type='payment',
             transfer_from=kwargs['source_user_account'].fetch_user_id(),
             transfer_to=kwargs['pay'].fetch_user_id(),
+            seller_id=kwargs['pay'].fetch_user_id(),
         )
         return {
             'transfer_sheets': transfer_sheets,
@@ -337,24 +343,8 @@ class EWalletTransactionHandler():
         kwargs['active_session'].add(share['transfer_record'])
         return {
             'ewallet_credits': kwargs['source_credit_wallet'].fetch_credit_ewallet_credits(),
-            'spent_credits': compute['extract'],
-            'transfer_record': journal['transfer_record'],
-        }
-
-#   @pysnooper.snoop()
-    def handle_action_start_transaction_type_supply(self, **kwargs):
-        log.debug('')
-        compute = self.compute_transaction_type_supply(**kwargs)
-        journal = self.journal_transaction_type_supply(**kwargs)
-        share = self.share_partner_transaction_supply_journal_records(journal, **kwargs)
-        kwargs['active_session'].add(
-            share['transfer_record'], share['invoice_record']
-        )
-        return {
-            'ewallet_credits': kwargs['source_credit_wallet'].fetch_credit_ewallet_credits(),
-            'supplied_credits': compute['supply'],
-            'transfer_record': journal['transfer_record'],
-            'invoice_record': journal['invoice_record'],
+            'transfered_credits': kwargs['credits'],
+            'transfer_record': journal['transfer_record'].fetch_record_id(),
         }
 
 #   @pysnooper.snoop()
@@ -372,6 +362,23 @@ class EWalletTransactionHandler():
             'transfer_record': journal['transfer_record'],
             'invoice_record': journal['invoice_record'],
         }
+
+#   @pysnooper.snoop()
+    def handle_action_start_transaction_type_supply(self, **kwargs):
+        log.debug('')
+        compute = self.compute_transaction_type_supply(**kwargs)
+        journal = self.journal_transaction_type_supply(**kwargs)
+        share = self.share_partner_transaction_supply_journal_records(journal, **kwargs)
+        kwargs['active_session'].add(
+            share['transfer_record'], share['invoice_record']
+        )
+        command_chain_response = {
+            'ewallet_credits': kwargs['source_credit_wallet'].fetch_credit_ewallet_credits(),
+            'supplied_credits': compute['supply'],
+            'transfer_record': journal['transfer_record'],
+            'invoice_record': journal['invoice_record'],
+        }
+        return command_chain_response
 
     def handle_action_start_transaction(self, **kwargs):
         log.debug('')
@@ -402,7 +409,7 @@ class EWalletTransactionHandler():
     def action_start_transaction(self, **kwargs):
         log.debug('')
         validation_checks = self.validate_transaction_handler_value_set(kwargs)
-        return self.error_invalid_transaction_handler_value_set() \
+        return self.error_invalid_transaction_handler_value_set(kwargs) \
             if not validation_checks else self.handle_action_start_transaction(
                 **kwargs
             )
@@ -431,6 +438,15 @@ class EWalletTransactionHandler():
         return False
 
     # ERRORS
+
+    def error_invalid_transaction_handler_value_set(self, command_chain):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Invalid transaction handler values set. Command chain details : {}'\
+                     .format(command_chain),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
 
     def error_could_not_fetch_wallet_invoice_sheet(self, credit_wallet):
         log.error('Could not fetch invoice sheet from credit wallet {}.'.format(credit_wallet))

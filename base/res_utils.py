@@ -18,6 +18,12 @@ class ResUtils():
     engine = create_engine('sqlite:///data/ewallet.db')
     _SessionFactory = sessionmaker(bind=engine)
 
+    def format_timestamp(self, timestamp):
+        return time.strftime('%d-%m-%Y %H:%M:%s', time.localtime(timestamp))
+
+    def format_datetime(self, datetime_obj):
+        return datetime_obj.strftime('%d-%m-%Y %H:%M:%s')
+
     def remove_tags_from_command_chain(self, command_chain, *args):
         sanitized_command_chain = command_chain.copy()
         for item in args:
@@ -29,13 +35,11 @@ class ResUtils():
 
     #@pysnooper.snoop('logs/ewallet.log')
     def create_system_user(self, ewallet_session):
-        if not ewallet_session:
-            return False
-        _system_user_values = config.system_user_values
+        system_user_values = config.system_user_values
         score = ewallet_session.ewallet_controller(
-                controller='user', ctype='action', action='create', create='account',
-                **_system_user_values
-                )
+            controller='user', ctype='action', action='create', create='account',
+            **system_user_values
+        )
         return score
 
     def session_factory(self):

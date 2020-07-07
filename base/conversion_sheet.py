@@ -37,6 +37,8 @@ class CreditClockConversionSheetRecord(Base):
         self.minutes = kwargs.get('minutes')
         self.credits = kwargs.get('credits')
 
+    # FETCHERS
+
     def fetch_record_id(self):
         log.debug('')
         return self.record_id
@@ -75,13 +77,15 @@ class CreditClockConversionSheetRecord(Base):
             'id': self.record_id,
             'conversion_sheet_id': self.conversion_sheet_id,
             'reference': self.reference,
-            'create_date': self.create_date,
-            'write_date': self.write_date,
+            'create_date': self.create_date.strftime('%d-%m-%Y %H:%M:%s'),
+            'write_date': self.write_date.strftime('%d-%m-%Y %H:%M:%s'),
             'conversion_type': self.conversion_type,
             'minutes': self.minutes,
             'credits': self.credits,
         }
         return values
+
+    # SETTERS
 
     def set_conversion_sheet_id(self, **kwargs):
         log.debug('')
@@ -125,10 +129,14 @@ class CreditClockConversionSheetRecord(Base):
         self.credits = kwargs['credits']
         return True
 
+    # UPDATERS
+
     def update_write_date(self):
         log.debug('')
         _write_date = datetime.datetime.now()
         return self.set_write_date(write_date=_write_date)
+
+    # ERRORS
 
     def error_no_credits_found(self):
         log.error('No credits found.')
@@ -234,8 +242,8 @@ class CreditClockConversionSheet(Base):
             'id': self.conversion_sheet_id,
             'clock_id': self.clock_id,
             'reference': self.reference,
-            'create_date': self.create_date,
-            'write_date': self.write_date,
+            'create_date': self.create_date.strftime('%d-%m-%Y %H:%M:%s'),
+            'write_date': self.write_date.strftime('%d-%m-%Y %H:%M:%s'),
             'records': {
                 item.fetch_record_id(): item.fetch_record_reference() \
                 for item in self.records
@@ -405,31 +413,33 @@ class CreditClockConversionSheet(Base):
         self.update_conversion_sheet_records(record=_record)
         return _record
 
-    def interogate_conversion_sheet_records_by_id(self, **kwargs):
-        log.debug('')
-        if not kwargs.get('code'):
-            return self.error_no_conversion_record_id_found()
-        _record = self.fetch_conversion_sheet_record(
-                identifier='id', code=kwargs['code'],
-                )
-        if not _record:
-            return self.warning_could_not_fetch_conversion_record(
-                    'id', kwargs['code']
-                    )
-        return _record or False
+    # INTEROGATORS
 
     def interogate_conversion_sheet_records_by_ref(self, **kwargs):
         log.debug('')
         if not kwargs.get('code'):
             return self.error_no_conversion_record_reference_found()
-        _records = self.fetch_conversion_sheet_record(
-                identifier='reference', code=kwargs['code']
-                )
-        if not _record:
+        records = self.fetch_conversion_sheet_record(
+            identifier='reference', code=kwargs['code']
+        )
+        if not records:
             return self.warning_could_not_fetch_conversion_record(
-                    'reference', kwargs['code']
-                    )
-        return _records
+                'reference', kwargs['code']
+            )
+        return records
+
+    def interogate_conversion_sheet_records_by_id(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('code'):
+            return self.error_no_conversion_record_id_found()
+        record = self.fetch_conversion_sheet_record(
+            identifier='id', code=kwargs['code'],
+        )
+        if not record:
+            return self.warning_could_not_fetch_conversion_record(
+                'id', kwargs['code']
+            )
+        return record or False
 
     def search_conversion_sheet_records_by_date(self, **kwargs):
         log.debug('')
