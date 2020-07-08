@@ -1,0 +1,192 @@
+[ * ]: User Action Pause Clock Timer
+{'failed': False, 'credit_clock': 2, 'pending_time': 0.0, 'start_timestamp': 1594235960.8891933, 'pause_timestamp': 1594235961.2086642, 'pending_count': 1}
+
+[ * ]: User Action Resume Clock Timer
+{'failed': False, 'credit_clock': 2, 'pending_time': 0.0, 'pause_timestamp': 1594235966.2967906, 'resume_timestamp': 1594235965.9870045, 'pending_count': 1}
+
+[ * ]: User Action Start Clock Timer
+{'failed': False, 'credit_clock': 2, 'start_timestamp': 1594235972.2840366}
+
+[ * ]: User Action Stop Clock Timer
+{'failed': False, 'credit_clock': 2, 'pending_count': 1, 'pending_time': 0.0, 'start_timestamp': 1594235977.568046, 'stop_timestamp': 1594235978.4794421, 'minutes_spent': 0.02, 'time_record': 1, 'record_data': {'record_id': 1, 'time_sheet_id': 2, 'reference': 'Time Sheet Record', 'create_date': '08-07-2020 22:19:1594235977', 'write_date': '08-07-2020 22:19:1594235978', 'time_start': 1594235977.568046, 'time_stop': 1594235978.4794421, 'time_spent': 0.02, 'time_pending': 0.0, 'pending_count': 1}}
+
+[ * ]: System action Interogate EWallet Session
+{'failed': False, 'ewallet_session': 1, 'session_data': {'id': 1, 'name': None, 'orm_session': <sqlalchemy.orm.session.Session object at 0xb691d688>, 'create_date': datetime.date(2020, 7, 8), 'write_date': datetime.date(2020, 7, 8), 'expiration_date': datetime.datetime(2020, 7, 9, 22, 19, 40, 922787), 'contact_list': False, 'credit_ewallet': False, 'user_account': False, 'user_account_archive': {}}}
+
+[ * ]: System action Interogate EWallet Workers
+{'failed': False, 'workers': {<base.ewallet_worker.EWalletWorker object at 0xb696b610>: {'create_date': datetime.datetime(2020, 7, 8, 22, 19, 41, 75847), 'state_code': 1, 'state_label': 'vacant', 'state_timestamp': datetime.datetime(2020, 7, 8, 22, 19, 41, 75847), 'session_pool': {1: 2}, 'token_session_map': {'ewsm-uid:CIqlb6Q9sJF8dxKuV3zg:1594235956.6067274': {'token': 'ewsm-st:fYnOiqPrpq17chbrYfml:1594235958.4716966', 'session': <base.ewallet.EWallet object at 0xb6b06c28>}, 'ewsm-uid:uaqaT5Sadn2Y7yRLqDa2:1594235961.4012206': {'token': 'ewsm-st:8C9H97G3v2jlcA2NCZNx:1594235963.50321', 'session': <base.ewallet.EWallet object at 0xb696bee0>}, 'ewsm-uid:TcPzEdeXZgSe90Nz8T4Y:1594235966.771332': {'token': 'ewsm-st:1KJnoLRDjeAS9qP8x40L:1594235969.582578', 'session': <base.ewallet.EWallet object at 0xb690be38>}, 'ewsm-uid:4JL7FXVsZ4ScJrhuPfQR:1594235972.5471563': {'token': 'ewsm-st:4l6E9O6aTD3kg6JY3FQ1:1594235974.7481487', 'session': <base.ewallet.EWallet object at 0xb690bc28>}}}}}
+
+[ * ]: System Action New Session
+{'failed': False, 'ewallet_session': <base.ewallet.EWallet object at 0xb691d4d8>, 'session_data': {'id': 2, 'name': None, 'orm_session': <sqlalchemy.orm.session.Session object at 0xb691d388>, 'create_date': datetime.date(2020, 7, 8), 'write_date': datetime.date(2020, 7, 8), 'expiration_date': datetime.datetime(2020, 7, 9, 22, 19, 45, 384409), 'contact_list': False, 'credit_ewallet': False, 'user_account': False, 'user_account_archive': {}}}
+
+[ * ]: System Action New Worker
+{'failed': False, 'worker': <base.ewallet_worker.EWalletWorker object at 0xb690b328>}
+
+[ * ]: System action Sweep Cleanup Ewallet Sessions
+{'failed': False, 'sessions_cleaned': 1}
+
+[ * ]: System action Cleanup Target Ewallet Session
+{'failed': False, 'sessions_cleaned': 1}
+
+[ * ]: System action Cleanup Session Workers
+{'failed': False, 'workers_cleaned': 3, 'worker_reserved': <base.ewallet_worker.EWalletWorker object at 0xb690b988>, 'worker_pool': [<base.ewallet_worker.EWalletWorker object at 0xb690b988>]}
+
+[ * ]: User action Logout Account
+{'failed': False, 'user_account': 'ewallet2@alvearesolutions.ro', 'session_data': {'session_user_account': 'ewallet1@alvearesolutions.ro', 'session_credit_ewallet': 1, 'session_contact_list': 1, 'session_account_archive': {'ewallet1@alvearesolutions.ro': 'TestEWalletUser1'}}}
+
+[ * ]: User Action Add Contact List Record
+{'failed': False, 'contact_record': 1, 'contact_list': 2}
+
+[ * ]: User action Convert Clock To Credits
+{'failed': False, 'conversion_record_id': 2, 'ewallet_credits': 90, 'credit_clock': 10.0, 'converted_minutes': 10}
+
+[ * ]: User Action Convert Credits To Clock
+{'failed': False, 'conversion_record_id': 1, 'ewallet_credits': 80, 'credit_clock': 20.0, 'converted_credits': 20}
+
+[ * ]: User action Create Contact List
+{'failed': False, 'contact_list': 3, 'list_data': {'id': 3, 'client_id': 2, 'reference': 'Contact List', 'create_date': '08-07-2020 22:20:1594236022', 'write_date': '08-07-2020 22:20:1594236022', 'records': {}}}
+
+[ * ]: User action Create Conversion Sheet
+{'failed': False, 'conversion_sheet': 3, 'sheet_data': {'id': 3, 'clock_id': 2, 'reference': 'Conversion Sheet', 'create_date': '08-07-2020 22:20:1594236025', 'write_date': '08-07-2020 22:20:1594236025', 'records': {}}}
+
+[ * ]: User action Create Credit Clock
+{'failed': False, 'credit_clock': 3, 'clock_data': {'id': 3, 'wallet_id': 2, 'reference': 'Credit Clock', 'create_date': '08-07-2020 22:20:1594236030', 'write_date': '08-07-2020 22:20:1594236030', 'credit_clock': 0.0, 'credit_clock_state': 'inactive', 'time_sheet': 3, 'time_sheet_archive': {3: 'Time Sheet'}, 'conversion_sheet': 3, 'conversion_sheet_archive': {3: 'Conversion Sheet'}}}
+
+[ * ]: User action Create Credit EWallet
+{'failed': False, 'credit_ewallet': 3, 'ewallet_data': {'id': 3, 'client_id': 2, 'reference': 'Credit EWallet', 'create_date': '08-07-2020 22:20:1594236036', 'write_date': '08-07-2020 22:20:1594236036', 'credits': 0, 'credit_clock': 3, 'credit_clock_archive': {3: 'Credit Clock'}, 'transfer_sheet': 3, 'transfer_sheet_archive': {3: 'Transfer Sheet'}, 'invoice_sheet': 3, 'invoice_sheet_archive': {3: 'Invoice Sheet'}}}
+
+[ * ]: User action Create Invoice Sheet
+{'failed': False, 'invoice_sheet': 3, 'sheet_data': {'id': 3, 'wallet_id': 2, 'reference': 'Invoice Sheet', 'create_date': '08-07-2020 22:20:1594236040', 'write_date': '08-07-2020 22:20:1594236040', 'records': {}}}
+
+[ * ]: User action Create Time Sheet
+{'failed': False, 'time_sheet': 3, 'sheet_data': {'time_sheet_id': 3, 'clock_id': 2, 'reference': 'Time Sheet', 'create_date': '08-07-2020 22:20:1594236045', 'write_date': '08-07-2020 22:20:1594236045', 'records': {}}}
+
+[ * ]: User action Create Transfer Sheet
+{'failed': False, 'transfer_sheet': 3, 'sheet_data': {'id': 3, 'wallet_id': 2, 'reference': 'Transfer Sheet', 'create_date': '08-07-2020 22:20:1594236052', 'write_date': '08-07-2020 22:20:1594236052', 'records': {}}}
+
+[ * ]: User action Edit Account
+{'failed': False, 'account': 'Edited', 'edit': {'user_name': True, 'user_pass': False, 'user_alias': True, 'user_email': False, 'user_phone': True}, 'account_data': {'id': 2, 'user_name': 'Edited', 'create_date': '08-07-2020 22:20:1594236056', 'write_date': '08-07-2020 22:20:1594236057', 'credit_wallet': 2, 'contact_list': 2, 'user_email': 'ewallet2@alvearesolutions.ro', 'user_phone': 'Edited', 'user_alias': 'Edited', 'state_code': 1, 'state_name': 'LoggedIn', 'credit_wallet_archive': {2: 'Credit EWallet'}, 'contact_list_archive': {2: 'Contact List'}}}
+
+[ * ]: User Action Pay Credits To Partner
+{'failed': False, 'payed': 'ewallet1@alvearesolutions.ro', 'ewallet_credits': 90, 'spent_credits': 10, 'invoice_record': 2, 'transfer_record': 3}
+
+[ * ]: User Action Request Client ID
+{'failed': False, 'client_id': 'ewsm-uid:Zkw1aJgI69ICcUS2jaL9:1594236062.3019567'}
+
+[ * ]: User action Request Session Token
+{'failed': False, 'session_token': 'ewsm-st:DNaukdXwZNr2tePDQ1LP:1594236064.719406'}
+
+[ * ]: User Action Supply Credits
+{'failed': False, 'ewallet_credits': 100, 'supplied_credits': 100, 'transfer_record': 1, 'invoice_record': 1}
+
+[ * ]: User action Switch Active Session User
+{'failed': False, 'user_account': 'ewallet2@alvearesolutions.ro', 'session_data': {'session_user_account': 'ewallet2@alvearesolutions.ro', 'session_credit_ewallet': 2, 'session_contact_list': 2, 'session_account_archive': {'ewallet1@alvearesolutions.ro': 'TestEWalletUser1', 'ewallet2@alvearesolutions.ro': 'TestEWalletUser2'}}}
+
+[ * ]: User action Switch Contact List
+{'failed': False, 'contact_list': 2, 'list_data': {'id': 2, 'client_id': 2, 'reference': 'Contact List', 'create_date': '08-07-2020 22:21:1594236076', 'write_date': '08-07-2020 22:21:1594236076', 'records': {}}}
+
+[ * ]: User action Switch Conversion Sheet
+{'failed': False, 'conversion_sheet': 2, 'sheet_data': {'id': 2, 'clock_id': 2, 'reference': 'Conversion Sheet', 'create_date': '08-07-2020 22:21:1594236080', 'write_date': '08-07-2020 22:21:1594236080', 'records': {}}}
+
+[ * ]: User action Switch Credit Clock
+{'failed': False, 'credit_clock': 2, 'clock_data': {'id': 2, 'wallet_id': 2, 'reference': 'Credit Clock', 'create_date': '08-07-2020 22:21:1594236086', 'write_date': '08-07-2020 22:21:1594236086', 'credit_clock': 0.0, 'credit_clock_state': 'inactive', 'time_sheet': 2, 'time_sheet_archive': {2: 'Time Sheet'}, 'conversion_sheet': 2, 'conversion_sheet_archive': {2: 'Conversion Sheet'}}}
+
+[ * ]: User action Switch Credit EWallet
+{'failed': False, 'credit_ewallet': 2, 'ewallet_data': {'id': 2, 'client_id': 2, 'reference': 'Credit EWallet', 'create_date': '08-07-2020 22:21:1594236093', 'write_date': '08-07-2020 22:21:1594236093', 'credits': 0, 'credit_clock': 2, 'credit_clock_archive': {2: 'Credit Clock'}, 'transfer_sheet': 2, 'transfer_sheet_archive': {2: 'Transfer Sheet'}, 'invoice_sheet': 2, 'invoice_sheet_archive': {2: 'Invoice Sheet'}}}
+
+[ * ]: User action Switch Invoice Sheet
+{'failed': False, 'invoice_sheet': 2, 'sheet_data': {'id': 2, 'wallet_id': 2, 'reference': 'Invoice Sheet', 'create_date': '08-07-2020 22:21:1594236098', 'write_date': '08-07-2020 22:21:1594236098', 'records': {}}}
+
+[ * ]: User action Switch Time Sheet
+{'failed': False, 'time_sheet': 2, 'sheet_data': {'time_sheet_id': 2, 'clock_id': 2, 'reference': 'Time Sheet', 'create_date': '08-07-2020 22:21:1594236102', 'write_date': '08-07-2020 22:21:1594236102', 'records': {}}}
+
+[ * ]: User action Switch Transfer Sheet
+{'failed': False, 'transfer_sheet': 2, 'sheet_data': {'id': 2, 'wallet_id': 2, 'reference': 'Transfer Sheet', 'create_date': '08-07-2020 22:21:1594236107', 'write_date': '08-07-2020 22:21:1594236107', 'records': {}}}
+
+[ * ]: User action Transfer Credits.
+{'failed': False, 'transfered_to': 'ewallet1@alvearesolutions.ro', 'ewallet_credits': 70, 'transfered_credits': 30, 'transfer_record': 3}
+
+[ * ]: User action Unlink Account
+{'failed': False, 'user_id': 2}
+
+[ * ]: User action Unlink Contact List
+{'failed': False, 'contact_list': 2}
+
+[ * ]: User action Unlink Contact Record
+{'failed': False, 'contact_list': 2, 'contact_record': 1}
+
+[ * ]: User action Unlink Conversion Record
+{'failed': False, 'conversion_sheet': 2, 'conversion_record': 1}
+
+[ * ]: User action Unlink Conversion Sheet
+{'failed': False, 'conversion_sheet': 2}
+
+[ * ]: User action Unlink Credit Clock
+{'failed': False, 'credit_clock': 2}
+
+[ * ]: User action Unlink Credit EWallet
+{'failed': False, 'credit_ewallet': 2}
+
+[ * ]: User action Unlink Invoice Record
+{'failed': False, 'invoice_sheet': 2, 'invoice_record': 1}
+
+[ * ]: User action Unlink Invoice Sheet
+{'failed': False, 'invoice_sheet': 2}
+
+[ * ]: User action Unlink Time Record
+{'failed': False, 'time_sheet': 2, 'time_record': 1}
+
+[ * ]: User action Unlink Time Sheet
+{'failed': False, 'time_sheet': 2}
+
+[ * ]: User action Unlink Transfer Record
+{'failed': False, 'transfer_sheet': 2, 'transfer_record': 1}
+
+[ * ]: User action Unlink Transfer Sheet
+{'failed': False, 'transfer_sheet': 2}
+
+[ * ]: User action View Account
+{'failed': False, 'account': 'TestEWalletUser2', 'account_data': {'id': 2, 'user_name': 'TestEWalletUser2', 'create_date': '08-07-2020 22:23:1594236185', 'write_date': '08-07-2020 22:23:1594236187', 'credit_wallet': 2, 'contact_list': 2, 'user_email': 'ewallet2@alvearesolutions.ro', 'user_phone': '123454321', 'user_alias': 'Test Alias', 'state_code': 1, 'state_name': 'LoggedIn', 'credit_wallet_archive': {2: 'Credit EWallet'}, 'contact_list_archive': {2: 'Contact List'}}}
+
+[ * ]: User Action View Active Contact List
+{'failed': False, 'contact_list': 2, 'list_data': {'id': 2, 'client_id': 2, 'reference': 'Contact List', 'create_date': '08-07-2020 22:23:1594236192', 'write_date': '08-07-2020 22:23:1594236192', 'records': {1: 'Contact List Record'}}}
+
+[ * ]: User Action View Active Contact List Record
+{'failed': False, 'contact_list': 2, 'contact_record': 1, 'record_data': {'record_id': 1, 'contact_list_id': 2, 'reference': 'Contact List Record', 'create_date': '08-07-2020 22:23:1594236197', 'write_date': '08-07-2020 22:23:1594236197', 'user_name': 'Test User Name', 'user_email': 'ewallet1@alvearesolutions.ro', 'user_phone': '123454321', 'notes': 'Notes added by functional test'}}
+
+[ * ]: User action View Conversion Record
+{'failed': False, 'conversion_sheet': 2, 'conversion_record': 1, 'record_data': {'id': 1, 'conversion_sheet_id': 2, 'reference': 'Conversion Sheet Record', 'create_date': '08-07-2020 22:23:1594236204', 'write_date': '08-07-2020 22:23:1594236204', 'conversion_type': 'credits2clock', 'minutes': 20.0, 'credits': 20}}
+
+[ * ]: User action View Conversion Sheet
+{'failed': False, 'conversion_sheet': 2, 'sheet_data': {'id': 2, 'clock_id': 2, 'reference': 'Conversion Sheet', 'create_date': '08-07-2020 22:23:1594236207', 'write_date': '08-07-2020 22:23:1594236207', 'records': {1: 'Conversion Sheet Record'}}}
+
+[ * ]: User action View Credit Clock
+{'failed': False, 'credit_clock': 2, 'clock_data': {'id': 2, 'wallet_id': 2, 'reference': 'Credit Clock', 'create_date': '08-07-2020 22:23:1594236211', 'write_date': '08-07-2020 22:23:1594236211', 'credit_clock': 0.0, 'credit_clock_state': 'inactive', 'time_sheet': 2, 'time_sheet_archive': {2: 'Time Sheet'}, 'conversion_sheet': 2, 'conversion_sheet_archive': {2: 'Conversion Sheet'}}}
+
+[ * ]: User action View Credit EWallet
+{'failed': False, 'credit_ewallet': 2, 'ewallet_data': {'id': 2, 'client_id': 2, 'reference': 'Credit EWallet', 'create_date': '08-07-2020 22:23:1594236215', 'write_date': '08-07-2020 22:23:1594236216', 'credits': 0, 'credit_clock': 2, 'credit_clock_archive': {2: 'Credit Clock'}, 'transfer_sheet': 2, 'transfer_sheet_archive': {2: 'Transfer Sheet'}, 'invoice_sheet': 2, 'invoice_sheet_archive': {2: 'Invoice Sheet'}}}
+
+[ * ]: User action View Invoice Record
+{'failed': False, 'invoice_sheet': 2, 'invoice_record': 1, 'record_data': {'id': 1, 'invoice_sheet_id': 1, 'reference': 'Invoice Sheet Record', 'create_date': '08-07-2020 22:23:1594236221', 'write_date': '08-07-2020 22:23:1594236221', 'credits': 100, 'currency': 'RON', 'cost': 4.7, 'seller_id': 1, 'notes': 'EWallet user action Supply notes added by functional test suit.'}}
+
+[ * ]: User action View Invoice Sheet
+{'failed': False, 'invoice_sheet': 2, 'sheet_data': {'id': 2, 'wallet_id': 2, 'reference': 'Invoice Sheet', 'create_date': '08-07-2020 22:23:1594236225', 'write_date': '08-07-2020 22:23:1594236226', 'records': {}}}
+
+[ * ]: User action View Login Records
+{'failed': False, 'user_account': 'ewallet2@alvearesolutions.ro', 'login_records': {1: '08-07-2020 22:19'}}
+
+[ * ]: User action View Logout Records
+{'failed': False, 'user_account': 'ewallet2@alvearesolutions.ro', 'logout_records': {1: '08-07-2020 22:19'}}
+
+[ * ]: User action View Time Sheet Record
+{'failed': False, 'time_sheet': 2, 'time_record': 1, 'record_data': {'record_id': 1, 'time_sheet_id': 2, 'reference': 'Time Sheet Record', 'create_date': '08-07-2020 22:24:1594236242', 'write_date': '08-07-2020 22:24:1594236245', 'time_start': 1594236242.1580951, 'time_stop': 1594236245.4365175, 'time_spent': 0.05, 'time_pending': 0.0, 'pending_count': 0}}
+
+[ * ]: User action View Time Sheet
+{'failed': False, 'time_sheet': 2, 'sheet_data': {'time_sheet_id': 2, 'clock_id': 2, 'reference': 'Time Sheet', 'create_date': '08-07-2020 22:24:1594236248', 'write_date': '08-07-2020 22:24:1594236248', 'records': {1: 'Time Sheet Record'}}}
+
+[ * ]: User action View Transfer Sheet Record
+{'failed': False, 'transfer_sheet': 2, 'transfer_record': 3, 'record_data': {'id': 3, 'transfer_sheet_id': 2, 'reference': 'Transfer Sheet Record', 'create_date': '08-07-2020 22:24:1594236259', 'write_date': '08-07-2020 22:24:1594236259', 'transfer_type': 'transfer', 'transfer_from': 'ewallet2@alvearesolutions.ro', 'transfer_to': 'ewallet1@alvearesolutions.ro', 'credits': 30}}
+
+[ * ]: User action View Transfer Sheet
+{'failed': False, 'transfer_sheet': 2, 'sheet_data': {'id': 2, 'wallet_id': 2, 'reference': 'Transfer Sheet', 'create_date': '08-07-2020 22:24:1594236262', 'write_date': '08-07-2020 22:24:1594236264', 'records': {2: 'Transfer Sheet Record', 3: 'Transfer Sheet Record'}}}
+
