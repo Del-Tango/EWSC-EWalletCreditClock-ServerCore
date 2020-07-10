@@ -9,9 +9,11 @@ class TestEWalletUserActionRequestSessionToken(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
+        print('[ + ]: Prerequisites -')
         # Create new EWallet Session Manager instance
         session_manager = manager.EWalletSessionManager()
         # Request client id for session token request
+        print('[...]: User action Request Client ID')
         client_id = session_manager.session_manager_controller(
             controller='client', ctype='action', action='request',
             request='client_id'
@@ -28,11 +30,17 @@ class TestEWalletUserActionRequestSessionToken(unittest.TestCase):
 
     def test_user_request_session_token_functionality(self):
         print('[ * ]: User action Request Session Token')
+        instruction_set = {
+            'controller': 'client', 'ctype': 'action', 'action': 'request',
+            'request': 'session_token', 'client_id': self.client_id
+        }
         session_token = self.session_manager.session_manager_controller(
-            controller='client', ctype='action', action='request',
-            request='session_token', client_id=self.client_id
+            **instruction_set
         )
-        print(str(session_token) + '\n')
+        print(
+            '[ > ]: Instruction Set: ' + str(instruction_set) +
+            '\n[ < ]: Response: ' + str(session_token) + '\n'
+        )
         self.assertTrue(isinstance(session_token, dict))
         self.assertEqual(len(session_token.keys()), 2)
         self.assertFalse(session_token.get('failed'))

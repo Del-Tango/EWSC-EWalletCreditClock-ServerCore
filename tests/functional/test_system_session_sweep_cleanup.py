@@ -9,9 +9,11 @@ class TestEWalletSessionManagerSystemSessionCleanupSweep(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
+        print('[ + ]: Prerequisites -')
         # Create new EWallet Session Manager instance
         session_manager = manager.EWalletSessionManager()
         # Create first EWallet Session Worker
+        print('[...]: System action New Session Worker')
         worker = session_manager.session_manager_controller(
             controller='system', ctype='action', action='new', new='worker'
         )
@@ -20,10 +22,12 @@ class TestEWalletSessionManagerSystemSessionCleanupSweep(unittest.TestCase):
         past_date = datetime.datetime.now() - datetime.timedelta(hours=30)
         # Spawn 3 client ids to create 3 different session tokens with. Mocks 3
         # EWallet Server users
+        print('[...]: User action Request Client ID')
         client_id = session_manager.session_manager_controller(
             controller='client', ctype='action', action='request',
             request='client_id'
         )
+        print('[...]: User action Request Session Token')
         session_token = session_manager.session_manager_controller(
             controller='client', ctype='action', action='request', request='session_token',
             client_id=client_id['client_id'], expiration_date=past_date
@@ -54,11 +58,17 @@ class TestEWalletSessionManagerSystemSessionCleanupSweep(unittest.TestCase):
     def test_system_action_sweep_cleanup_ewallet_sessions(self):
         # Create EWallet Session with expiration date 30 days in the past
         print('[ * ]: System action Sweep Cleanup Ewallet Sessions')
+        instruction_set = {
+            'controller': 'system', 'ctype': 'action', 'action': 'cleanup',
+            'cleanup': 'sessions'
+        }
         clean = self.session_manager.session_manager_controller(
-            controller='system', ctype='action', action='cleanup',
-            cleanup='sessions',
+            **instruction_set
         )
-        print(str(clean) + '\n')
+        print(
+            '[ > ]: Instruction Set: ' + str(instruction_set) +
+            '\n[ < ]: Response: ' + str(clean) + '\n'
+        )
         self.assertTrue(isinstance(clean, dict))
         self.assertEqual(len(clean.keys()), 2)
         self.assertFalse(clean.get('failed'))

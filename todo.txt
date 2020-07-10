@@ -7,10 +7,905 @@
 ###############################################################################
 # EWallet Session Manager
 ###############################################################################
-# TODO - User action Start Clock Timer - Format timestamp
-# TODO - User action Pause Clock Timer - Format timestamp
-# TODO - User action Resume Clock Timer - Format timestamp
-# TODO - User action Stop Clock Timer - Format timestamp
+
+[ 0 ]: TODO - Improvement - Instruction Set Response
+
+    - User action Pause Clock Timer
+        - NOTES: Format timestamps
+        - NOTES: Round datetime seconds to 2
+        - NOTES: Rename tag 'credit_clock' to 'clock'
+        - NOK: Response: {
+            'failed': False, 'credit_clock': 2, 'pending_time': 0.0,
+            'start_timestamp': 1594331059.5589046,
+            'pause_timestamp': 1594331059.8594315, 'pending_count': 1
+        }
+        - OK: Response: {
+            'failed': False, 'clock': 2, 'pending_time': 0.0,
+            'start_timestamp': '07-07-2020 13:45:00',
+            'pause_timestamp': '07-07-2020 13:47:00', 'pending_count': 1
+        }
+
+    - Use action Resume Clock Timer
+        - NOTES: Format timestamps
+        - NOTES: Round datetime seconds to 2
+        - NOTES: Rename tag 'credit_clock' to 'clock'
+        - NOK: Response: {
+            'failed': False, 'credit_clock': 2, 'pending_time': 0.0,
+            'pause_timestamp': 1594331064.5037122,
+            'resume_timestamp': 1594331064.2266042, 'pending_count': 1
+        }
+        - OK: Response: {
+            'failed': False, 'clock': 2, 'pending_time': 0.0,
+            'pause_timestamp': '07-07-2020 13:48:00',
+            'resume_timestamp': '07-07-2020 13:52:00', 'pending_count': 1
+        }
+
+    - User action Start Clock Timer
+        - NOTES: Format timestamps
+        - NOTES: Round datetime seconds to 2
+        - NOK: Response: {
+            'failed': False, 'credit_clock': 2,
+            'start_timestamp': 1594331069.9427772
+        }
+        - OK: Response: {
+            'failed': False, 'credit_clock': 2,
+            'start_timestamp': '07-07-2020 13:32:00'
+        }
+
+    - User action Stop Clock Timer
+        - NOTES: Rename tag 'credit_clock' to 'clock'
+        - NOTES: Format timestamps
+        - NOTES: Rename tag 'record_id' to 'id'
+        - NOTES: Rename tag 'time_sheet_id' to 'time_sheet'
+        - NOTES: Round datetime seconds to 2
+        - NOK: Response: {
+            'failed': False, 'credit_clock': 2, 'pending_count': 1,
+            'pending_time': 0.0, 'start_timestamp': 1594331074.723416,
+            'stop_timestamp': 1594331075.470843, 'minutes_spent': 0.01,
+            'time_record': 1, 'record_data': {
+                'record_id': 1, 'time_sheet_id': 2,
+                'reference': 'Time Sheet Record',
+                'create_date': '10-07-2020 00:44:1594331074',
+                'write_date': '10-07-2020 00:44:1594331075',
+                'time_start': 1594331074.723416,
+                'time_stop': 1594331075.470843,
+                'time_spent': 0.01,
+                'time_pending': 0.0,
+                'pending_count': 1
+            }
+        }
+        - OK: Response: {
+            'failed': False, 'clock': 2, 'pending_count': 1,
+            'pending_time': 0.0, 'start_timestamp': '07-07-2020 13:32:00',
+            'stop_timestamp': '07-07-2020 13:57:00', 'minutes_spent': 0.01,
+            'time_record': 1, 'record_data': {
+                'id': 1, 'time_sheet': 2,
+                'reference': 'Time Sheet Record',
+                'create_date': '10-07-2020 00:44:00',
+                'write_date': '10-07-2020 00:44:00',
+                'time_start': '07-07-2020 13:32:00',
+                'time_stop': '07-07-2020 13:57:00',
+                'time_spent': 0.01,
+                'time_pending': 0.0,
+                'pending_count': 1
+            }
+        }
+
+    - User action Account Login
+        - NOTES: Add session data tag to response
+        - NOK: Response: {
+            'failed': False, 'account': 'ewallet1@alvearesolutions.ro',
+        }
+        - OK: Response: {
+            'failed': False, 'account': 'ewallet1@alvearesolutions.ro',
+            'session_data': {
+                'session_user_account': 'ewallet1@alvearesolutions.ro',
+                'session_credit_ewallet': 1,
+                'session_contact_list': 1,
+                'session_account_archive': {
+                    'ewallet1@alvearesolutions.ro': 'TestEWalletUser1'
+                }
+            }
+        }
+
+    - User action Account Logout
+        - NOTES: Change 'user_account' tag to 'account'
+        - NOK: Response: {
+            'failed': False, 'user_account': 'ewallet2@alvearesolutions.ro',
+            'session_data': {
+                'session_user_account': 'ewallet1@alvearesolutions.ro',
+                'session_credit_ewallet': 1,
+                'session_contact_list': 1,
+                'session_account_archive': {
+                    'ewallet1@alvearesolutions.ro': 'TestEWalletUser1'
+                }
+            }
+        }
+        - OK: Response: {
+            'failed': False, 'account': 'ewallet2@alvearesolutions.ro',
+            'session_data': {
+                'session_user_account': 'ewallet1@alvearesolutions.ro',
+                'session_credit_ewallet': 1,
+                'session_contact_list': 1,
+                'session_account_archive': {
+                    'ewallet1@alvearesolutions.ro': 'TestEWalletUser1'
+                }
+            }
+        }
+
+    - User action Convert Clock To Credits
+        - NOTES: Rename tag 'conversion_record_id' to 'conversion_record'
+        - NOK: Response: {
+            'failed': False, 'conversion_record_id': 2, 'ewallet_credits': 90,
+            'credit_clock': 10.0, 'converted_minutes': 10
+        }
+        - OK: Response: {
+            'failed': False, 'conversion_record': 2, 'ewallet_credits': 90,
+            'credit_clock': 10.0, 'converted_minutes': 10
+        }
+
+    - User action Convert Credits To Clock
+        - NOTES: Rename tag 'conversion_record_id' to 'conversion_record'
+        - NOK: Response: {
+            'failed': False, 'conversion_record_id': 1, 'ewallet_credits': 80,
+            'credit_clock': 20.0, 'converted_credits': 20
+        }
+        - OK: Response: {
+            'failed': False, 'conversion_record': 1, 'ewallet_credits': 80,
+            'credit_clock': 20.0, 'converted_credits': 20
+        }
+
+    - User action Create New Account
+        - NOTES: Rename tag 'credit_wallet' to 'ewallet'
+        - NOTES: Rename tag 'user_name' to 'name'
+        - NOTES: Rename tag 'user_email' to 'email'
+        - NOTES: Rename tag 'user_phone' to 'phone'
+        - NOTES: Rename tag 'user_alias' to 'alias'
+        - NOTES: Rename tag 'credit_wallet_archive' to 'credit_ewallet_archive'
+        - NOTES: Round datetime seconds to 2
+        - NOK: Response: {
+            'failed': False, 'account': 'ewallet1@alvearesolutions.ro',
+            'account_data': {
+                'id': 1, 'user_name': 'TestEWalletUser1',
+                'create_date': '10-07-2020 00:45:1594331116',
+                'write_date': '10-07-2020 00:45:1594331116',
+                'credit_wallet': 1, 'contact_list': 1,
+                'user_email': 'ewallet1@alvearesolutions.ro',
+                'user_phone': None, 'user_alias': None, 'state_code': 0,
+                'state_name': 'LoggedOut', 'credit_wallet_archive': {
+                    1: 'Credit EWallet'
+                }, 'contact_list_archive': {
+                    1: 'Contact List'
+                }
+            }
+        }
+        - OK: Response: {
+            'failed': False, 'account': 'ewallet1@alvearesolutions.ro',
+            'account_data': {
+                'id': 1, 'name': 'TestEWalletUser1',
+                'create_date': '10-07-2020 00:45:15',
+                'write_date': '10-07-2020 00:45:15',
+                'ewallet': 1, 'contact_list': 1,
+                'email': 'ewallet1@alvearesolutions.ro',
+                'phone': None, 'alias': None, 'state_code': 0,
+                'state_name': 'LoggedOut', 'credit_ewallet_archive': {
+                    1: 'Credit EWallet'
+                }, 'contact_list_archive': {
+                    1: 'Contact List'
+                }
+            }
+        }
+
+    - User action Create Contact List
+        - NOTES: Rename tag 'client_id' to 'user'
+        - NOTES: Round datetime seconds to 2
+        - NOK: Response: {
+            'failed': False, 'contact_list': 3, 'list_data': {
+                'id': 3, 'client_id': 2, 'reference': 'Contact List',
+                'create_date': '10-07-2020 00:45:1594331122',
+                'write_date': '10-07-2020 00:45:1594331122',
+                'records': {}
+            }
+        }
+        - OK: Response: {
+            'failed': False, 'contact_list': 3, 'list_data': {
+                'id': 3, 'user': 2, 'reference': 'Contact List',
+                'create_date': '10-07-2020 00:45:15',
+                'write_date': '10-07-2020 00:45:15',
+                'records': {}
+            }
+        }
+
+    - User action Create Conversion Sheet
+        - NOTES: Rename tag 'clock_id' to 'clock'
+        - NOTES: Round datetime seconds to 2
+        - NOK: Response: {
+            'failed': False, 'conversion_sheet': 3, 'sheet_data': {
+                'id': 3, 'clock_id': 2, 'reference': 'Conversion Sheet',
+                'create_date': '10-07-2020 00:45:1594331127',
+                'write_date': '10-07-2020 00:45:1594331127', 'records': {}
+            }
+        }
+        - OK: Response: {
+            'failed': False, 'conversion_sheet': 3, 'sheet_data': {
+                'id': 3, 'clock': 2, 'reference': 'Conversion Sheet',
+                'create_date': '10-07-2020 00:45:15',
+                'write_date': '10-07-2020 00:45:15', 'records': {}
+            }
+        }
+
+    - User action Create Credit Clock
+        - NOTES: Rename tag 'credit_clock' to 'clock'
+        - NOTES: Rename tag 'wallet_id' to 'ewallet'
+        - NOTES: Rename tag 'credit_clock_state' to 'clock_state'
+        - NOTES: Round datetime seconds to 2
+        - NOK: Response: {
+            'failed': False, 'credit_clock': 3, 'clock_data': {
+                'id': 3, 'wallet_id': 2, 'reference': 'Credit Clock',
+                'create_date': '10-07-2020 00:45:1594331133',
+                'write_date': '10-07-2020 00:45:1594331134', 'credit_clock': 0.0,
+                'credit_clock_state': 'inactive', 'time_sheet': 3,
+                'time_sheet_archive': {3: 'Time Sheet'}, 'conversion_sheet': 3,
+                'conversion_sheet_archive': {3: 'Conversion Sheet'}
+            }
+        }
+        - OK: Response: {
+            'failed': False, 'clock': 3, 'clock_data': {
+                'id': 3, 'ewallet': 2, 'reference': 'Credit Clock',
+                'create_date': '10-07-2020 00:45:15',
+                'write_date': '10-07-2020 00:45:15', 'credit_clock': 0.0,
+                'credit_clock_state': 'inactive', 'time_sheet': 3,
+                'time_sheet_archive': {3: 'Time Sheet'}, 'conversion_sheet': 3,
+                'conversion_sheet_archive': {3: 'Conversion Sheet'}
+            }
+        }
+
+    - User action Create Credit EWallet
+        - NOTES: Rename tag 'credit_clock' to 'clock'
+        - NOTES: Rename tag 'credit_ewallet' to 'ewallet'
+        - NOTES: Rename tag 'client_id' to 'user'
+        - NOTES: Rename tag 'credit_clock_archive' to 'clock_archive'
+        - NOTES: Round datetime seconds to 2
+        - NOK: Response: {
+            'failed': False, 'credit_ewallet': 3, 'ewallet_data': {
+                'id': 3, 'client_id': 2, 'reference': 'Credit EWallet',
+                'create_date': '10-07-2020 00:45:1594331138',
+                'write_date': '10-07-2020 00:45:1594331139', 'credits': 0,
+                'credit_clock': 3, 'credit_clock_archive': {3: 'Credit Clock'},
+                'transfer_sheet': 3,
+                'transfer_sheet_archive': {3: 'Transfer Sheet'},
+                'invoice_sheet': 3,
+                'invoice_sheet_archive': {3: 'Invoice Sheet'}
+            }
+        }
+        - OK: Response: {
+            'failed': False, 'ewallet': 3, 'ewallet_data': {
+                'id': 3, 'user': 2, 'reference': 'Credit EWallet',
+                'create_date': '10-07-2020 00:45:15',
+                'write_date': '10-07-2020 00:45:15', 'credits': 0,
+                'clock': 3, 'clock_archive': {3: 'Credit Clock'},
+                'transfer_sheet': 3,
+                'transfer_sheet_archive': {3: 'Transfer Sheet'},
+                'invoice_sheet': 3,
+                'invoice_sheet_archive': {3: 'Invoice Sheet'}
+            }
+        }
+
+    - User action Create Invoice Sheet
+        - NOTES: Rename tag 'wallet_id' to 'ewallet'
+        - NOTES: Round datetime seconds to 2'
+        - NOK: Response: {
+            'failed': False, 'invoice_sheet': 3, 'sheet_data': {
+                'id': 3, 'wallet_id': 2, 'reference': 'Invoice Sheet',
+                'create_date': '10-07-2020 00:45:1594331143',
+                'write_date': '10-07-2020 00:45:1594331143', 'records': {}
+            }
+        }
+        - OK:: Response: {
+            'failed': False, 'invoice_sheet': 3, 'sheet_data': {
+                'id': 3, 'ewallet': 2, 'reference': 'Invoice Sheet',
+                'create_date': '10-07-2020 00:45:15',
+                'write_date': '10-07-2020 00:45:15', 'records': {}
+            }
+        }
+
+    - User action Create Time Sheet
+        - NOTES: Rename tag 'time_sheet_id' to 'time_sheet'
+        - NOTES: Rename tag 'clock_id' to 'clock'
+        - NOTES: Round datetime seconds to 2
+        - NOK: Response: {
+            'failed': False, 'time_sheet': 3, 'sheet_data': {
+                'time_sheet_id': 3, 'clock_id': 2, 'reference': 'Time Sheet',
+                'create_date': '10-07-2020 00:45:1594331148',
+                'write_date': '10-07-2020 00:45:1594331148', 'records': {}
+            }
+        }
+        - OK: Response: {
+            'failed': False, 'time_sheet': 3, 'sheet_data': {
+                'time_sheet': 3, 'clock': 2, 'reference': 'Time Sheet',
+                'create_date': '10-07-2020 00:45:15',
+                'write_date': '10-07-2020 00:45:15', 'records': {}
+            }
+        }
+
+    - User action Create Transfer Sheet
+        - NOTES: Rename tag 'wallet_id' to 'ewallet'
+        - NOTES: Round datetime seconds to 2
+        - NOK: Response: {
+            'failed': False, 'transfer_sheet': 3, 'sheet_data': {
+                'id': 3, 'wallet_id': 2, 'reference': 'Transfer Sheet',
+                'create_date': '10-07-2020 00:45:1594331153',
+                'write_date': '10-07-2020 00:45:1594331153', 'records': {}
+            }
+        }
+        - OK: Response: {
+            'failed': False, 'transfer_sheet': 3, 'sheet_data': {
+                'id': 3, 'ewallet': 2, 'reference': 'Transfer Sheet',
+                'create_date': '10-07-2020 00:45:15',
+                'write_date': '10-07-2020 00:45:15', 'records': {}
+            }
+        }
+
+    - User action Edit Account
+        - NOTES: Rename tags 'user_name', 'user_pass', 'user_alias',
+          'user_email', 'user_phone' to 'name', 'pass', 'alias', 'email', 'phone',
+        - NOTES: Rename tag 'credit_wallet' to 'ewallet'
+        - NOTES: Rename tag 'credit_wallet_archive' to 'ewallet_archive'
+        - NOTES: Round datetime seconds to 2
+        - NOK: Response: {
+            'failed': False, 'account': 'Edited', 'edit': {
+                'user_name': True, 'user_pass': False, 'user_alias': True,
+                'user_email': False, 'user_phone': True
+            }, 'account_data': {
+                'id': 2, 'user_name': 'Edited',
+                'create_date': '10-07-2020 00:45:1594331156',
+                'write_date': '10-07-2020 00:45:1594331158',
+                'credit_wallet': 2, 'contact_list': 2,
+                'user_email': 'ewallet2@alvearesolutions.ro',
+                'user_phone': 'Edited', 'user_alias': 'Edited',
+                'state_code': 1, 'state_name': 'LoggedIn',
+                'credit_wallet_archive': {2: 'Credit EWallet'},
+                'contact_list_archive': {2: 'Contact List'}
+            }
+        }
+        - OK: Response: {
+            'failed': False, 'account': 'Edited', 'edit': {
+                'name': True, 'pass': False, 'alias': True,
+                'email': False, 'phone': True
+            }, 'account_data': {
+                'id': 2, 'name': 'Edited',
+                'create_date': '10-07-2020 00:45:15',
+                'write_date': '10-07-2020 00:45:15',
+                'ewallet': 2, 'contact_list': 2,
+                'email': 'ewallet2@alvearesolutions.ro',
+                'phone': 'Edited', 'alias': 'Edited',
+                'state_code': 1, 'state_name': 'LoggedIn',
+                'ewallet_archive': {2: 'Credit EWallet'},
+                'contact_list_archive': {2: 'Contact List'}
+            }
+        }
+
+    - User action Switch Contact List
+        - NOTES: Rename tag 'client_id' to 'user'
+        - NOTES: Round datetime seconds to 2
+        - NOK: Response: {
+            'failed': False, 'contact_list': 2, 'list_data': {
+                'id': 2, 'client_id': 2, 'reference': 'Contact List',
+                'create_date': '10-07-2020 00:46:1594331179',
+                'write_date': '10-07-2020 00:46:1594331179', 'records': {}
+            }
+        }
+        - OK: Response: {
+            'failed': False, 'contact_list': 2, 'list_data': {
+                'id': 2, 'user': 2, 'reference': 'Contact List',
+                'create_date': '10-07-2020 00:46:15',
+                'write_date': '10-07-2020 00:46:15', 'records': {}
+            }
+        }
+
+    - User action Switch Conversion Sheet
+        - NOTES: Rename tag 'clock_id' to 'clock'
+        - NOTES: Round datetime seconds to 2
+        - NOK: Response: {
+            'failed': False, 'conversion_sheet': 2, 'sheet_data': {
+                'id': 2, 'clock_id': 2, 'reference': 'Conversion Sheet',
+                'create_date': '10-07-2020 00:46:1594331184',
+                'write_date': '10-07-2020 00:46:1594331184', 'records': {}
+            }
+        }
+        - OK: Response: {
+            'failed': False, 'conversion_sheet': 2, 'sheet_data': {
+                'id': 2, 'clock': 2, 'reference': 'Conversion Sheet',
+                'create_date': '10-07-2020 00:46:15',
+                'write_date': '10-07-2020 00:46:15', 'records': {}
+            }
+        }
+
+    - User action Switch Credit Clock
+        - NOTES: Rename tag 'wallet_id' to 'ewallet'
+        - NOTES: Rename tag 'credit_clock' to 'clock'
+        - NOTES: Rename tag 'credit_clock_state' to 'clock_state'
+        - NOTES: Round datetime seconds to 2
+        - NOK: Response: {
+            'failed': False, 'credit_clock': 2, 'clock_data': {
+                'id': 2, 'wallet_id': 2, 'reference': 'Credit Clock',
+                'create_date': '10-07-2020 00:46:1594331189',
+                'write_date': '10-07-2020 00:46:1594331189',
+                'credit_clock': 0.0, 'credit_clock_state': 'inactive',
+                'time_sheet': 2, 'time_sheet_archive': {2: 'Time Sheet'},
+                'conversion_sheet': 2,
+                'conversion_sheet_archive': {2: 'Conversion Sheet'}
+            }
+        }
+        - OK: Response: {
+            'failed': False, 'clock': 2, 'clock_data': {
+                'id': 2, 'ewallet': 2, 'reference': 'Credit Clock',
+                'create_date': '10-07-2020 00:46:15',
+                'write_date': '10-07-2020 00:46:15',
+                'credit_clock': 0.0, 'clock_state': 'inactive',
+                'time_sheet': 2, 'time_sheet_archive': {2: 'Time Sheet'},
+                'conversion_sheet': 2,
+                'conversion_sheet_archive': {2: 'Conversion Sheet'}
+            }
+        }
+
+    - User action Switch Credit EWallet
+        - NOTES: Rename tag 'client_id' to 'user'
+        - NOTES: Rename tag 'credit_ewallet' to 'ewallet'
+        - NOTES: Rename tag 'credit_clock' to 'clock'
+        - NOTES: Rename tag 'credit_clock_archive' to 'clock_archive'
+        - NOTES: Round datetime seconds to 2
+        - NOK: Response: {
+            'failed': False, 'credit_ewallet': 2, 'ewallet_data': {
+                'id': 2, 'client_id': 2, 'reference': 'Credit EWallet',
+                'create_date': '10-07-2020 00:46:1594331196',
+                'write_date': '10-07-2020 00:46:1594331197', 'credits': 0,
+                'credit_clock': 2, 'credit_clock_archive': {2: 'Credit Clock'},
+                'transfer_sheet': 2,
+                'transfer_sheet_archive': {2: 'Transfer Sheet'},
+                'invoice_sheet': 2,
+                'invoice_sheet_archive': {2: 'Invoice Sheet'}
+            }
+        }
+        - OK: Response: {
+            'failed': False, 'ewallet': 2, 'ewallet_data': {
+                'id': 2, 'user': 2, 'reference': 'Credit EWallet',
+                'create_date': '10-07-2020 00:46:15',
+                'write_date': '10-07-2020 00:46:15', 'credits': 0,
+                'clock': 2, 'clock_archive': {2: 'Credit Clock'},
+                'transfer_sheet': 2,
+                'transfer_sheet_archive': {2: 'Transfer Sheet'},
+                'invoice_sheet': 2,
+                'invoice_sheet_archive': {2: 'Invoice Sheet'}
+            }
+        }
+
+    - User action Switch Invoice Sheet
+        - NOTES: Rename tag 'wallet_id' to 'ewallet'
+        - NOTES: Round datetime seconds to 2
+        - NOK: Response: {
+            'failed': False, 'invoice_sheet': 2, 'sheet_data': {
+                'id': 2, 'wallet_id': 2, 'reference': 'Invoice Sheet',
+                'create_date': '10-07-2020 00:46:1594331203',
+                'write_date': '10-07-2020 00:46:1594331203', 'records': {}
+            }
+        }
+        - OK: Response: {
+            'failed': False, 'invoice_sheet': 2, 'sheet_data': {
+                'id': 2, 'ewallet': 2, 'reference': 'Invoice Sheet',
+                'create_date': '10-07-2020 00:46:15',
+                'write_date': '10-07-2020 00:46:15', 'records': {}
+            }
+        }
+
+    - User action Switch Time Sheet
+        - NOTES: Rename tag 'time_sheet_id' to 'time_sheet'
+        - NOTES: Rename tag 'clock_id' to 'clock'
+        - NOTES: Round datetime seconds to 2
+        - NOK: Response: {
+            'failed': False, 'time_sheet': 2, 'sheet_data': {
+                'time_sheet_id': 2, 'clock_id': 2, 'reference': 'Time Sheet',
+                'create_date': '10-07-2020 00:46:1594331210',
+                'write_date': '10-07-2020 00:46:1594331210', 'records': {}
+            }
+        }
+        - OK: Response: {
+            'failed': False, 'time_sheet': 2, 'sheet_data': {
+                'time_sheet': 2, 'clock': 2, 'reference': 'Time Sheet',
+                'create_date': '10-07-2020 00:46:15',
+                'write_date': '10-07-2020 00:46:15', 'records': {}
+            }
+        }
+
+    - User action Switch Transfer Sheet
+        - NOTES: Rename tag 'wallet_id' to 'ewallet'
+        - NOTES: Round datetime seconds to 2
+        - NOK: Response: {
+            'failed': False, 'transfer_sheet': 2, 'sheet_data': {
+                'id': 2, 'wallet_id': 2, 'reference': 'Transfer Sheet',
+                'create_date': '10-07-2020 00:46:1594331216',
+                'write_date': '10-07-2020 00:46:1594331216', 'records': {}
+            }
+        }
+        - OK: Response: {
+            'failed': False, 'transfer_sheet': 2, 'sheet_data': {
+                'id': 2, 'ewallet': 2, 'reference': 'Transfer Sheet',
+                'create_date': '10-07-2020 00:46:15',
+                'write_date': '10-07-2020 00:46:15', 'records': {}
+            }
+        }
+
+    - User action Unlink Account
+        - NOTES: Change key pair 'user_id:<id>' to 'account:<email>'
+        - NOK: Response: {'failed': False, 'user_id': 2}
+        - OK: Response: {'failed': False, 'account': ewallet2@alvearesolutions.ro}
+
+    - User action View Account
+        - NOTES: Change key value 'account:<name>' to 'account:<email>'
+        - NOTES: Rename tags 'user_name', 'credit_wallet', 'user_email',
+          'user_phone', 'user_alias', 'credit_wallet_archive' to 'name',
+          'credit_ewallet', 'email', 'phone', 'alias', 'credit_ewallet_archive'
+        - NOTES: Rename tag 'credit_ewallet' to 'ewallet'
+        - NOTES: Round datetime seconds to 2
+        - NOTES: Rename tag 'credit_ewallet_archive' to 'ewallet_archive'
+        - NOK: Response: {
+            'failed': False, 'account': 'TestEWalletUser2', 'account_data': {
+                'id': 2, 'user_name': 'TestEWalletUser2',
+                'create_date': '10-07-2020 00:48:1594331294',
+                'write_date': '10-07-2020 00:48:1594331295',
+                'credit_wallet': 2, 'contact_list': 2,
+                'user_email': 'ewallet2@alvearesolutions.ro',
+                'user_phone': '123454321', 'user_alias': 'Test Alias',
+                'state_code': 1, 'state_name': 'LoggedIn',
+                'credit_wallet_archive': {2: 'Credit EWallet'},
+                'contact_list_archive': {2: 'Contact List'}
+            }
+        }
+        - OK: Response: {
+            'failed': False, 'account': 'ewallet2@alvearesolutions.ro',
+            'account_data': {
+                'id': 2, 'name': 'TestEWalletUser2',
+                'create_date': '10-07-2020 00:48:15',
+                'write_date': '10-07-2020 00:48:15',
+                'ewallet': 2, 'contact_list': 2,
+                'email': 'ewallet2@alvearesolutions.ro',
+                'phone': '123454321', 'alias': 'Test Alias',
+                'state_code': 1, 'state_name': 'LoggedIn',
+                'credit_ewallet_archive': {2: 'Credit EWallet'},
+                'contact_list_archive': {2: 'Contact List'}
+            }
+        }
+
+    - User action View Contact List
+        - NOTES: Rename tag 'client_id' to 'user'
+        - NOTES: Round datetime seconds to 2
+        - NOK: Response: {
+            'failed': False, 'contact_list': 2, 'list_data': {
+                'id': 2, 'client_id': 2, 'reference': 'Contact List',
+                'create_date': '10-07-2020 00:48:1594331299',
+                'write_date': '10-07-2020 00:48:1594331299',
+                'records': {1: 'Contact List Record'}
+            }
+        }
+        - OK: Response: {
+            'failed': False, 'contact_list': 2, 'list_data': {
+                'id': 2, 'user': 2, 'reference': 'Contact List',
+                'create_date': '10-07-2020 00:48:15',
+                'write_date': '10-07-2020 00:48:15',
+                'records': {1: 'Contact List Record'}
+            }
+        }
+
+    - User action View Contact Record
+        - NOTES: Rename tag 'record_id' to 'id'
+        - NOTES: Rename tag 'contact_list_id' to 'contact_list'
+        - NOTES: Rename tags 'user_name', 'user_email', 'user_phone' to
+          'name', 'email', 'phone'
+        - NOK: Response: {
+            'failed': False, 'contact_list': 2, 'contact_record': 1,
+            'record_data': {
+                'record_id': 1, 'contact_list_id': 2,
+                'reference': 'Contact List Record',
+                'create_date': '10-07-2020 00:48:1594331303',
+                'write_date': '10-07-2020 00:48:1594331303',
+                'user_name': 'Test User Name',
+                'user_email': 'ewallet1@alvearesolutions.ro',
+                'user_phone': '123454321',
+                'notes': 'Notes added by functional test'
+            }
+        }
+        - OK: Response: {
+            'failed': False, 'contact_list': 2, 'contact_record': 1,
+            'record_data': {
+                'id': 1, 'contact_list': 2,
+                'reference': 'Contact List Record',
+                'create_date': '10-07-2020 00:48:15',
+                'write_date': '10-07-2020 00:48:15',
+                'name': 'Test User Name',
+                'email': 'ewallet1@alvearesolutions.ro',
+                'phone': '123454321',
+                'notes': 'Notes added by functional test'
+            }
+        }
+
+    - User action View Conversion Record
+        - NOTES: Rename tag 'conversion_sheet_id' to 'conversion_sheet'
+        - NOTES: Round datetime seconds to 2
+        - NOK: Response: {
+            'failed': False, 'conversion_sheet': 2, 'conversion_record': 1,
+            'record_data': {
+                'id': 1, 'conversion_sheet_id': 2,
+                'reference': 'Conversion Sheet Record',
+                'create_date': '10-07-2020 00:48:1594331308',
+                'write_date': '10-07-2020 00:48:1594331308',
+                'conversion_type': 'credits2clock', 'minutes': 20.0,
+                'credits': 20
+            }
+        }
+        - OK: Response: {
+            'failed': False, 'conversion_sheet': 2, 'conversion_record': 1,
+            'record_data': {
+                'id': 1, 'conversion_sheet': 2,
+                'reference': 'Conversion Sheet Record',
+                'create_date': '10-07-2020 00:48:15',
+                'write_date': '10-07-2020 00:48:15',
+                'conversion_type': 'credits2clock', 'minutes': 20.0,
+                'credits': 20
+            }
+        }
+
+    - User action View Conversion Sheet
+        - NOTES: Rename tag 'clock_id' to 'clock'
+        - NOTES: Round datetime seconds to 2
+        - NOK: Response: {
+            'failed': False, 'conversion_sheet': 2, 'sheet_data': {
+                'id': 2, 'clock_id': 2, 'reference': 'Conversion Sheet',
+                'create_date': '10-07-2020 00:48:1594331312',
+                'write_date': '10-07-2020 00:48:1594331312',
+                'records': {1: 'Conversion Sheet Record'}
+            }
+        }
+        - OK: Response: {
+            'failed': False, 'conversion_sheet': 2, 'sheet_data': {
+                'id': 2, 'clock': 2, 'reference': 'Conversion Sheet',
+                'create_date': '10-07-2020 00:48:15',
+                'write_date': '10-07-2020 00:48:15',
+                'records': {1: 'Conversion Sheet Record'}
+            }
+        }
+
+    - User action View Credit Clock
+        - NOTES: Rename tag 'wallet_id' to 'ewallet'
+        - NOTES: Rename tag 'credit_clock' to 'clock' (header)
+        - NOTES: Rename tag 'credit_clock_state' to 'clock_state'
+        - NOTES: Round datetime seconds to 2
+        - NOK: Response: {
+            'failed': False, 'credit_clock': 2, 'clock_data': {
+                'id': 2, 'wallet_id': 2, 'reference': 'Credit Clock',
+                'create_date': '10-07-2020 00:48:1594331316',
+                'write_date': '10-07-2020 00:48:1594331316',
+                'credit_clock': 0.0, 'credit_clock_state': 'inactive',
+                'time_sheet': 2, 'time_sheet_archive': {2: 'Time Sheet'},
+                'conversion_sheet': 2,
+                'conversion_sheet_archive': {2: 'Conversion Sheet'}
+            }
+        }
+        - OK: Response: {
+            'failed': False, 'clock': 2, 'clock_data': {
+                'id': 2, 'ewallet': 2, 'reference': 'Credit Clock',
+                'create_date': '10-07-2020 00:48:15',
+                'write_date': '10-07-2020 00:48:15',
+                'credit_clock': 0.0, 'clock_state': 'inactive',
+                'time_sheet': 2, 'time_sheet_archive': {2: 'Time Sheet'},
+                'conversion_sheet': 2,
+                'conversion_sheet_archive': {2: 'Conversion Sheet'}
+            }
+        }
+
+    - User action View Credit EWallet
+        - NOTES: Rename tag 'credit_clock' to 'clock'
+        - NOTES: Rename tag 'client_id' to 'user'
+        - NOTES: Rename tag 'credit_ewallet' to 'ewallet'
+        - NOTES: Rename tag 'credit_clock_archive' to 'clock_archive'
+        - NOTES: Round datetime seconds to 2
+        - NOK: Response: {
+            'failed': False, 'credit_ewallet': 2, 'ewallet_data': {
+                'id': 2, 'client_id': 2, 'reference': 'Credit EWallet',
+                'create_date': '10-07-2020 00:48:1594331320',
+                'write_date': '10-07-2020 00:48:1594331321', 'credits': 0,
+                'credit_clock': 2, 'credit_clock_archive': {2: 'Credit Clock'},
+                'transfer_sheet': 2,
+                'transfer_sheet_archive': {2: 'Transfer Sheet'},
+                'invoice_sheet': 2,
+                'invoice_sheet_archive': {2: 'Invoice Sheet'}
+            }
+        }
+        - OK: Response: {
+            'failed': False, 'ewallet': 2, 'ewallet_data': {
+                'id': 2, 'user': 2, 'reference': 'Credit EWallet',
+                'create_date': '10-07-2020 00:48:15',
+                'write_date': '10-07-2020 00:48:15', 'credits': 0,
+                'clock': 2, 'clock_archive': {2: 'Credit Clock'},
+                'transfer_sheet': 2,
+                'transfer_sheet_archive': {2: 'Transfer Sheet'},
+                'invoice_sheet': 2,
+                'invoice_sheet_archive': {2: 'Invoice Sheet'}
+            }
+        }
+
+    - User action View Invoice Record
+        - NOTES: Rename tag 'invoice_shet_id' to 'invoice_sheet'
+        - NOTES: Round datetime seconds to 2
+        - NOTES: Rename key pair 'seller_id:<id>' to 'seller:<name>'
+        - NOK: Response: {
+            'failed': False, 'invoice_sheet': 2, 'invoice_record': 1,
+            'record_data': {
+                'id': 1, 'invoice_sheet_id': 1,
+                'reference': 'Invoice Sheet Record',
+                'create_date': '10-07-2020 00:48:1594331325',
+                'write_date': '10-07-2020 00:48:1594331325',
+                'credits': 100, 'currency': 'RON', 'cost': 4.7, 'seller_id': 1,
+                'notes': 'EWallet user action Supply notes added by functional test suit.'
+            }
+        }
+        - OK: Response: {
+            'failed': False, 'invoice_sheet': 2, 'invoice_record': 1,
+            'record_data': {
+                'id': 1, 'invoice_sheet': 1,
+                'reference': 'Invoice Sheet Record',
+                'create_date': '10-07-2020 00:48:15',
+                'write_date': '10-07-2020 00:48:15',
+                'credits': 100, 'currency': 'RON', 'cost': 4.7,
+                'seller': TestEWalletUser,
+                'notes': 'EWallet user action Supply notes added by functional test suit.'
+            }
+        }
+
+    - User action View Invoice Sheet
+        - NOTES: Rename tag 'wallet_id' to 'ewallet'
+        - NOTES: Round datetime seconds to 2
+        - NOK: Response: {
+            'failed': False, 'invoice_sheet': 2, 'sheet_data': {
+                'id': 2, 'wallet_id': 2, 'reference': 'Invoice Sheet',
+                'create_date': '10-07-2020 00:48:1594331330',
+                'write_date': '10-07-2020 00:48:1594331331', 'records': {}
+            }
+        }
+        - OK: Response: {
+            'failed': False, 'invoice_sheet': 2, 'sheet_data': {
+                'id': 2, 'ewallet': 2, 'reference': 'Invoice Sheet',
+                'create_date': '10-07-2020 00:48:15',
+                'write_date': '10-07-2020 00:48:15', 'records': {}
+            }
+        }
+
+    - User action View Login Records
+        - NOTES: Rename tag 'user_account' to 'account'
+        - NOTES: Round datetime seconds to 2
+        - NOK: Response: {
+            'failed': False, 'user_account': 'ewallet2@alvearesolutions.ro',
+            'login_records': {1: '10-07-2020 00:44'}
+        }
+        - OK: Response: {
+            'failed': False, 'account': 'ewallet2@alvearesolutions.ro',
+            'login_records': {1: '10-07-2020 00:44:00'}
+        }
+
+    - User action View Logout Records
+        - NOTES: Rename tag 'user_account' to 'account'
+        - NOTES: Round datetime seconds to 2
+        - NOK: Response: {
+            'failed': False, 'user_account': 'ewallet2@alvearesolutions.ro',
+            'logout_records': {1: '10-07-2020 00:44'}
+        }
+        - OK: {
+            'failed': False, 'account': 'ewallet2@alvearesolutions.ro',
+            'logout_records': {1: '10-07-2020 00:44:00'}
+        }
+
+    - User action View Time Record
+        - NOTES: Format timestamps
+        - NOTES: Round datetime seconds to 2
+        - NOTES: Rename tag 'record_id' to 'id'
+        - NOTES: Rename tag 'time_sheet_id' to 'time_sheet'
+        - NOK: Response: {
+            'failed': False, 'time_sheet': 2, 'time_record': 1,
+            'record_data': {
+                'record_id': 1, 'time_sheet_id': 2,
+                'reference': 'Time Sheet Record',
+                'create_date': '10-07-2020 00:49:1594331344',
+                'write_date': '10-07-2020 00:49:1594331348',
+                'time_start': 1594331344.6732152,
+                'time_stop': 1594331348.1969407, 'time_spent': 0.06,
+                'time_pending': 0.0, 'pending_count': 0
+            }
+        }
+        - OK: Response: {
+            'failed': False, 'time_sheet': 2, 'time_record': 1,
+            'record_data': {
+                'id': 1, 'time_sheet': 2,
+                'reference': 'Time Sheet Record',
+                'create_date': '10-07-2020 00:49:15',
+                'write_date': '10-07-2020 00:49:15',
+                'time_start': '10-07-2020 00:49:15',
+                'time_stop': '10-07-2020 00:49:15', 'time_spent': 0.06,
+                'time_pending': 0.0, 'pending_count': 0
+            }
+        }
+
+    - User action View Time Sheet
+        - NOTES: Rename tag 'time_sheet_id' to 'id'
+        - NOTES: Rename tag 'clock_id' to 'clock'
+        - NOTES: Round datetime seconds to 2
+        - NOK: Response: {
+            'failed': False, 'time_sheet': 2, 'sheet_data': {
+                'time_sheet_id': 2, 'clock_id': 2, 'reference': 'Time Sheet',
+                'create_date': '10-07-2020 00:49:1594331351',
+                'write_date': '10-07-2020 00:49:1594331351',
+                'records': {1: 'Time Sheet Record'}
+            }
+        }
+        - OK: Response: {
+            'failed': False, 'time_sheet': 2, 'sheet_data': {
+                'id': 2, 'clock': 2, 'reference': 'Time Sheet',
+                'create_date': '10-07-2020 00:49:15',
+                'write_date': '10-07-2020 00:49:15',
+                'records': {1: 'Time Sheet Record'}
+            }
+        }
+
+    - User action View Transfer Record
+        - NOTES: Rename tag 'transfer_sheet_id' to 'transfer_sheet'
+        - NOTES: Round datetime seconds to 2
+        - NOK: Response: {
+            'failed': False, 'transfer_sheet': 2, 'transfer_record': 3,
+            'record_data': {
+                'id': 3, 'transfer_sheet_id': 2,
+                'reference': 'Transfer Sheet Record',
+                'create_date': '10-07-2020 00:49:1594331361',
+                'write_date': '10-07-2020 00:49:1594331361',
+                'transfer_type': 'transfer',
+                'transfer_from': 'ewallet2@alvearesolutions.ro',
+                'transfer_to': 'ewallet1@alvearesolutions.ro', 'credits': 30
+            }
+        }
+        - OK: Response: {
+            'failed': False, 'transfer_sheet': 2, 'transfer_record': 3,
+            'record_data': {
+                'id': 3, 'transfer_sheet': 2,
+                'reference': 'Transfer Sheet Record',
+                'create_date': '10-07-2020 00:49:15',
+                'write_date': '10-07-2020 00:49:15',
+                'transfer_type': 'transfer',
+                'transfer_from': 'ewallet2@alvearesolutions.ro',
+                'transfer_to': 'ewallet1@alvearesolutions.ro', 'credits': 30
+            }
+        }
+
+    - User action View Transfer Sheet
+        - NOTES: Rename tag 'wallet_id' to 'ewallet'
+        - NOTES: Round datetime seconds to 2
+        - NOK: Response: {
+            'failed': False, 'transfer_sheet': 2, 'sheet_data': {
+                'id': 2, 'wallet_id': 2, 'reference': 'Transfer Sheet',
+                'create_date': '10-07-2020 00:49:1594331366',
+                'write_date': '10-07-2020 00:49:1594331367',
+                'records': {
+                    2: 'Transfer Sheet Record', 3: 'Transfer Sheet Record'
+                }
+            }
+        }
+        - OK: Response: {
+            'failed': False, 'transfer_sheet': 2, 'sheet_data': {
+                'id': 2, 'ewallet': 2, 'reference': 'Transfer Sheet',
+                'create_date': '10-07-2020 00:49:15',
+                'write_date': '10-07-2020 00:49:15',
+                'records': {
+                    2: 'Transfer Sheet Record', 3: 'Transfer Sheet Record'
+                }
+            }
+        }
+
 
 [ 0 ]: TODO - BUG FIX - Functional Issue
 
@@ -25,10 +920,9 @@
     - User action view invoice record
         - No seller id found.
 
-[ 1 ]: TODO - BUG FIX - Report Issue
+    - Resource write dates not updated on most resources
 
-    - System action Cleanup Workers
-        - Reserved worker included in cleaned_workers.
+[ 1 ]: TODO - BUG FIX - Report Issue
 
 
 ###############################################################################

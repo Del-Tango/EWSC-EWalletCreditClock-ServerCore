@@ -16,14 +16,17 @@ class TestEWalletSessionManageUserActionTransferCredits(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
+        print('[ + ]: Prerequisites -')
         # Create new EWallet Session Manager instance
         session_manager = manager.EWalletSessionManager()
         # Generate new Client ID to be able to request a Session Token
+        print('[...]: User action Request Client ID')
         client_id = session_manager.session_manager_controller(
             controller='client', ctype='action', action='request',
             request='client_id'
         )
         # Request a Session Token to be able to operate within a EWallet Session
+        print('[...]: User action Request Session Token')
         session_token = session_manager.session_manager_controller(
             controller='client', ctype='action', action='request', request='session_token',
             client_id=client_id['client_id']
@@ -33,6 +36,7 @@ class TestEWalletSessionManageUserActionTransferCredits(unittest.TestCase):
         cls.client_id = client_id['client_id']
         cls.session_token = session_token['session_token']
         # Create new user account to use as SystemCore account mockup
+        print('[...]: User action Create New Account')
         new_account = session_manager.session_manager_controller(
             controller='client', ctype='action', action='new',
             new='account', client_id=cls.client_id,
@@ -47,12 +51,14 @@ class TestEWalletSessionManageUserActionTransferCredits(unittest.TestCase):
             user_pass=cls.user_pass_2, user_email=cls.user_email_2
         )
         # Login to new user account
+        print('[...]: User action Account Login')
         login = session_manager.session_manager_controller(
             controller='client', ctype='action', action='login',
             client_id=cls.client_id, session_token=cls.session_token,
             user_name=cls.user_name_2, user_pass=cls.user_pass_2,
         )
         # Add new contact record to populate active contact list
+        print('[...]: User action New Contact Record')
         add_contact_record = session_manager.session_manager_controller(
             controller='client', ctype='action', action='new', new='contact',
             contact='record', client_id=cls.client_id,
@@ -62,13 +68,13 @@ class TestEWalletSessionManageUserActionTransferCredits(unittest.TestCase):
             notes='Notes added by functional test',
         )
         # Supply EWallet with credits to have available for transfer
+        print('[...]: User action Supply EWallet Credits')
         supply = session_manager.session_manager_controller(
             controller='client', ctype='action', action='supply', supply='credits',
             client_id=cls.client_id, session_token=cls.session_token,
             currency='RON', credits=100, cost=4.7,
             notes='EWallet user action Supply notes added by functional test suit.'
         )
-
 
     @classmethod
     def tearDownClass(cls):
@@ -78,13 +84,19 @@ class TestEWalletSessionManageUserActionTransferCredits(unittest.TestCase):
 
     def test_user_action_transfer_credits(self):
         print('[ * ]: User action Transfer Credits.')
+        instruction_set = {
+            'controller': 'client', 'ctype': 'action', 'action': 'transfer',
+            'transfer': 'credits', 'client_id': self.client_id,
+            'session_token': self.session_token, 'transfer_to': self.user_email_1,
+            'credits': 30
+        }
         transfer = self.session_manager.session_manager_controller(
-            controller='client', ctype='action', action='transfer',
-            transfer='credits', client_id=self.client_id,
-            session_token=self.session_token, transfer_to=self.user_email_1,
-            credits=30
+            **instruction_set
         )
-        print(str(transfer) + '\n')
+        print(
+            '[ > ]: Instruction Set: ' + str(instruction_set) +
+            '\n[ < ]: Response: ' + str(transfer) + '\n'
+        )
         self.assertTrue(isinstance(transfer, dict))
         self.assertEqual(len(transfer.keys()), 5)
         self.assertFalse(transfer.get('failed'))

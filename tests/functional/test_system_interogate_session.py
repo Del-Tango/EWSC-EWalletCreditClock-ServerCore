@@ -29,11 +29,17 @@ class TestEWalletSessionManagerSystemActionInterogateSession(unittest.TestCase):
 
     def test_system_action_interogate_ewallet_session_functionality(self):
         print('[ * ]: System action Interogate EWallet Session')
+        instruction_set = {
+            'controller': 'system', 'ctype': 'action', 'action': 'interogate',
+            'interogate': 'session', 'session_id': 1
+        }
         interogate = self.session_manager.session_manager_controller(
-            controller='system', ctype='action', action='interogate',
-            interogate='session', session_id=1
+            **instruction_set
         )
-        print(str(interogate) + '\n')
+        print(
+            '[ > ] Instruction Set: ' + str(instruction_set) +
+            '\n[ < ] Response: ' + str(interogate) + '\n'
+        )
         self.assertTrue(isinstance(interogate, dict))
         self.assertEqual(len(interogate.keys()), 3)
         self.assertFalse(interogate.get('failed'))

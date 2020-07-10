@@ -21,12 +21,18 @@ class TestEWalletUserActionRequestClientId(unittest.TestCase):
             os.remove('data/ewallet.db')
 
     def test_user_request_client_id_functionality(self):
-        print('[ * ]: User Action Request Client ID')
+        print('[ * ]: User action Request Client ID')
+        instruction_set = {
+            'controller': 'client', 'ctype': 'action', 'action': 'request',
+            'request': 'client_id'
+        }
         client_id = self.session_manager.session_manager_controller(
-            controller='client', ctype='action', action='request',
-            request='client_id'
+            **instruction_set
         )
-        print(str(client_id) + '\n')
+        print(
+            '[ > ]: Instruction Set: ' + str(instruction_set) +
+            '\n[ < ]: Response: ' + str(client_id) + '\n'
+        )
         self.assertTrue(isinstance(client_id, dict))
         self.assertEqual(len(client_id.keys()), 2)
         self.assertFalse(client_id.get('failed'))

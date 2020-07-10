@@ -16,14 +16,17 @@ class TestEWalletSessionManageUserActionAddContactRecord(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
+        print('[ + ]: Prerequisites -')
         # Create new EWallet Session Manager instance
         session_manager = manager.EWalletSessionManager()
         # Generate new Client ID to be able to request a Session Token
+        print('[...]: User action Request Client ID')
         client_id = session_manager.session_manager_controller(
             controller='client', ctype='action', action='request',
             request='client_id'
         )
         # Request a Session Token to be able to operate within a EWallet Session
+        print('[...]: User action Request Session Token')
         session_token = session_manager.session_manager_controller(
             controller='client', ctype='action', action='request', request='session_token',
             client_id=client_id['client_id']
@@ -33,6 +36,7 @@ class TestEWalletSessionManageUserActionAddContactRecord(unittest.TestCase):
         cls.client_id = client_id['client_id']
         cls.session_token = session_token['session_token']
         # Create new user account to use as SystemCore account mockup
+        print('[...]: User action Create New Account')
         new_account = session_manager.session_manager_controller(
             controller='client', ctype='action', action='new',
             new='account', client_id=cls.client_id,
@@ -47,6 +51,7 @@ class TestEWalletSessionManageUserActionAddContactRecord(unittest.TestCase):
             user_pass=cls.user_pass_2, user_email=cls.user_email_2
         )
         # Login to new user account
+        print('[...]: User action Account Login')
         login = session_manager.session_manager_controller(
             controller='client', ctype='action', action='login',
             client_id=cls.client_id, session_token=cls.session_token,
@@ -60,16 +65,22 @@ class TestEWalletSessionManageUserActionAddContactRecord(unittest.TestCase):
             os.remove('data/ewallet.db')
 
     def test_user_action_add_contact_record(self):
-        print('[ * ]: User Action Add Contact List Record')
+        print('[ * ]: User action Add Contact List Record')
+        instruction_set = {
+            'controller': 'client', 'ctype': 'action', 'action': 'new',
+            'new': 'contact', 'contact': 'record', 'client_id': self.client_id,
+            'session_token': self.session_token, 'contact_list': 2,
+            'user_name': 'Test User Name', 'user_email': self.user_email_1,
+            'user_phone': '123454321', 'user_reference': 'Test Mockup',
+            'notes': 'Notes added by functional test',
+        }
         add_record = self.session_manager.session_manager_controller(
-            controller='client', ctype='action', action='new', new='contact',
-            contact='record', client_id=self.client_id,
-            session_token=self.session_token, contact_list=2,
-            user_name='Test User Name', user_email=self.user_email_1,
-            user_phone='123454321', user_reference='Test Mockup',
-            notes='Notes added by functional test',
+            **instruction_set
         )
-        print(str(add_record) + '\n')
+        print(
+            '[ > ]: Instruction Set: ' + str(instruction_set) +
+            '\n[ < ]: Response: ' + str(add_record) + '\n'
+        )
         self.assertTrue(isinstance(add_record, dict))
         self.assertEqual(len(add_record.keys()), 3)
         self.assertFalse(add_record.get('failed'))

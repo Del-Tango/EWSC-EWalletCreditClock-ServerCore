@@ -16,14 +16,17 @@ class TestEWalletSessionManageUserActionSwitchContactList(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
+        print('[ + ]: Prerequisites -')
         # Create new EWallet Session Manager instance
         session_manager = manager.EWalletSessionManager()
         # Generate new Client ID to be able to request a Session Token
+        print('[...]: User action Request Client ID')
         client_id = session_manager.session_manager_controller(
             controller='client', ctype='action', action='request',
             request='client_id'
         )
         # Request a Session Token to be able to operate within a EWallet Session
+        print('[...]: User action Request Session Token')
         session_token = session_manager.session_manager_controller(
             controller='client', ctype='action', action='request', request='session_token',
             client_id=client_id['client_id']
@@ -33,6 +36,7 @@ class TestEWalletSessionManageUserActionSwitchContactList(unittest.TestCase):
         cls.client_id = client_id['client_id']
         cls.session_token = session_token['session_token']
         # Create new user account to use as SystemCore account mockup
+        print('[...]: User action Create New Account')
         new_account = session_manager.session_manager_controller(
             controller='client', ctype='action', action='new',
             new='account', client_id=cls.client_id,
@@ -47,12 +51,14 @@ class TestEWalletSessionManageUserActionSwitchContactList(unittest.TestCase):
             user_pass=cls.user_pass_2, user_email=cls.user_email_2
         )
         # Login to new user account
+        print('[...]: User action Account Login')
         login = session_manager.session_manager_controller(
             controller='client', ctype='action', action='login',
             client_id=cls.client_id, session_token=cls.session_token,
             user_name=cls.user_name_2, user_pass=cls.user_pass_2,
         )
         # Create second contact list to have for user action switch
+        print('[...]: User action Create Contact List')
         create = session_manager.session_manager_controller(
             controller='client', ctype='action', action='new', new='contact',
             contact='list', client_id=cls.client_id,
@@ -68,12 +74,18 @@ class TestEWalletSessionManageUserActionSwitchContactList(unittest.TestCase):
 
     def test_user_action_switch_contact_list(self):
         print('[ * ]: User action Switch Contact List')
+        instruction_set = {
+            'controller': 'client', 'ctype': 'action', 'action': 'switch',
+            'switch': 'contact_list', 'list_id': 2, 'client_id': self.client_id,
+            'session_token': self.session_token
+        }
         switch = self.session_manager.session_manager_controller(
-            controller='client', ctype='action', action='switch', switch='contact_list',
-            list_id=2, client_id=self.client_id,
-            session_token=self.session_token
+            **instruction_set
         )
-        print(str(switch) + '\n')
+        print(
+            '[ > ]: Instruction Set: ' + str(instruction_set) +
+            '\n[ < ]: Response: ' + str(switch) + '\n'
+        )
         self.assertTrue(isinstance(switch, dict))
         self.assertEqual(len(switch.keys()), 3)
         self.assertFalse(switch.get('failed'))

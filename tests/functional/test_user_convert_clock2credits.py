@@ -16,14 +16,17 @@ class TestEWalletSessionManagerUserConvertClockToCredits(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
+        print('[ + ]: Prerequisites -')
         # Create new EWallet Session Manager instance
         session_manager = manager.EWalletSessionManager()
         # Generate new Client ID to be able to request a Session Token
+        print('[...]: User action Request Client ID')
         client_id = session_manager.session_manager_controller(
             controller='client', ctype='action', action='request',
             request='client_id'
         )
         # Request a Session Token to be able to operate within a EWallet Session
+        print('[...]: User action Request Session Token')
         session_token = session_manager.session_manager_controller(
             controller='client', ctype='action', action='request', request='session_token',
             client_id=client_id['client_id']
@@ -33,6 +36,7 @@ class TestEWalletSessionManagerUserConvertClockToCredits(unittest.TestCase):
         cls.client_id = client_id['client_id']
         cls.session_token = session_token['session_token']
         # Create new user account to use as SystemCore account mockup
+        print('[...]: User action Create New Account')
         new_account = session_manager.session_manager_controller(
             controller='client', ctype='action', action='new',
             new='account', client_id=cls.client_id,
@@ -47,12 +51,14 @@ class TestEWalletSessionManagerUserConvertClockToCredits(unittest.TestCase):
             user_pass=cls.user_pass_2, user_email=cls.user_email_2
         )
         # Login to new user account
+        print('[...]: User action Account Login')
         login = session_manager.session_manager_controller(
             controller='client', ctype='action', action='login',
             client_id=cls.client_id, session_token=cls.session_token,
             user_name=cls.user_name_2, user_pass=cls.user_pass_2,
         )
         # Supply credits to logged in account EWallet
+        print('[...]: User action Supply EWallet Credits')
         supply = session_manager.session_manager_controller(
             controller='client', ctype='action', action='supply', supply='credits',
             client_id=cls.client_id, session_token=cls.session_token,
@@ -60,13 +66,13 @@ class TestEWalletSessionManagerUserConvertClockToCredits(unittest.TestCase):
             notes='EWallet user action Supply notes added by functional test suit.'
         )
         # Convert credits 2 clock
+        print('[...]: User action Convert Credits To Clock')
         convert = session_manager.session_manager_controller(
             controller='client', ctype='action', action='convert',
             convert='credits2clock', client_id=cls.client_id,
             session_token=cls.session_token, credits=20,
             notes='EWallet user action Convert Credits To Clock notes added by functional test suit.'
         )
-
 
     @classmethod
     def tearDownClass(cls):
@@ -76,12 +82,18 @@ class TestEWalletSessionManagerUserConvertClockToCredits(unittest.TestCase):
 
     def test_user_action_convert_clock_to_credits(self):
         print('[ * ]: User action Convert Clock To Credits')
+        instruction_set = {
+            'controller': 'client', 'ctype': 'action', 'action': 'convert',
+            'convert': 'clock2credits', 'client_id': self.client_id,
+            'session_token': self.session_token, 'minutes': 10
+        }
         convert = self.session_manager.session_manager_controller(
-            controller='client', ctype='action', action='convert', convert='clock2credits',
-            client_id=self.client_id, session_token=self.session_token,
-            minutes=10
+            **instruction_set
         )
-        print(str(convert) + '\n')
+        print(
+            '[ > ]: Instruction Set: ' + str(instruction_set) +
+            '\n[ < ]: Response: ' + str(convert) + '\n'
+        )
         self.assertTrue(isinstance(convert, dict))
         self.assertEqual(len(convert.keys()), 5)
         self.assertFalse(convert.get('failed'))

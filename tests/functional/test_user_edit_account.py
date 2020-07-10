@@ -16,14 +16,17 @@ class TestEWalletSessionManageUserActionEditAccount(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
+        print('[ + ]: Prerequisites -')
         # Create new EWallet Session Manager instance
         session_manager = manager.EWalletSessionManager()
         # Generate new Client ID to be able to request a Session Token
+        print('[...]: User action Request Client ID')
         client_id = session_manager.session_manager_controller(
             controller='client', ctype='action', action='request',
             request='client_id'
         )
         # Request a Session Token to be able to operate within a EWallet Session
+        print('[...]: User action Request Session Token')
         session_token = session_manager.session_manager_controller(
             controller='client', ctype='action', action='request', request='session_token',
             client_id=client_id['client_id']
@@ -33,6 +36,7 @@ class TestEWalletSessionManageUserActionEditAccount(unittest.TestCase):
         cls.client_id = client_id['client_id']
         cls.session_token = session_token['session_token']
         # Create new user account to use as SystemCore account mockup
+        print('[...]: User action Create New Account')
         new_account = session_manager.session_manager_controller(
             controller='client', ctype='action', action='new',
             new='account', client_id=cls.client_id,
@@ -48,6 +52,7 @@ class TestEWalletSessionManageUserActionEditAccount(unittest.TestCase):
             user_phone='123454321', user_alias='Test Alias'
         )
         # Login to new user account
+        print('[...]: User action Account Login')
         login = session_manager.session_manager_controller(
             controller='client', ctype='action', action='login',
             client_id=cls.client_id, session_token=cls.session_token,
@@ -62,14 +67,20 @@ class TestEWalletSessionManageUserActionEditAccount(unittest.TestCase):
 
     def test_user_action_edit_account(self):
         print('[ * ]: User action Edit Account')
+        instruction_set = {
+            'controller': 'client', 'ctype': 'action', 'action': 'edit',
+            'edit': 'account', 'client_id': self.client_id,
+            'session_token': self.session_token, 'user_name': 'Edited',
+            'user_phone': 'Edited', 'user_email': 'Edited', 'user_pass': 'Edited',
+            'user_alias': 'Edited'
+        }
         edit = self.session_manager.session_manager_controller(
-            controller='client', ctype='action', action='edit', edit='account',
-            client_id=self.client_id, session_token=self.session_token,
-            user_name='Edited', user_phone='Edited',
-            user_email='Edited', user_pass='Edited',
-            user_alias='Edited'
+            **instruction_set
         )
-        print(str(edit) + '\n')
+        print(
+            '[ > ]: Instruction Set: ' + str(instruction_set) +
+            '\n[ < ]: Response: ' + str(edit) + '\n'
+        )
         self.assertTrue(isinstance(edit, dict))
         self.assertEqual(len(edit.keys()), 4)
         self.assertFalse(edit.get('failed'))

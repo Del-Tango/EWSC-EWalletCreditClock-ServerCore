@@ -16,14 +16,17 @@ class TestEWalletSessionManageUserActionCreateTransferSheet(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
+        print('[ + ]: Prerequisites -')
         # Create new EWallet Session Manager instance
         session_manager = manager.EWalletSessionManager()
         # Generate new Client ID to be able to request a Session Token
+        print('[...]: User action Request Client ID')
         client_id = session_manager.session_manager_controller(
             controller='client', ctype='action', action='request',
             request='client_id'
         )
         # Request a Session Token to be able to operate within a EWallet Session
+        print('[...]: User action Request Session Token')
         session_token = session_manager.session_manager_controller(
             controller='client', ctype='action', action='request', request='session_token',
             client_id=client_id['client_id']
@@ -33,6 +36,7 @@ class TestEWalletSessionManageUserActionCreateTransferSheet(unittest.TestCase):
         cls.client_id = client_id['client_id']
         cls.session_token = session_token['session_token']
         # Create new user account to use as SystemCore account mockup
+        print('[...]: User action Create New Account')
         new_account = session_manager.session_manager_controller(
             controller='client', ctype='action', action='new',
             new='account', client_id=cls.client_id,
@@ -47,6 +51,7 @@ class TestEWalletSessionManageUserActionCreateTransferSheet(unittest.TestCase):
             user_pass=cls.user_pass_2, user_email=cls.user_email_2
         )
         # Login to new user account
+        print('[...]: User action Account Login')
         login = session_manager.session_manager_controller(
             controller='client', ctype='action', action='login',
             client_id=cls.client_id, session_token=cls.session_token,
@@ -59,15 +64,20 @@ class TestEWalletSessionManageUserActionCreateTransferSheet(unittest.TestCase):
         if os.path.isfile('data/ewallet.db'):
             os.remove('data/ewallet.db')
 
-
     def test_user_action_create_transfer_sheet(self):
         print('[ * ]: User action Create Transfer Sheet')
+        instruction_set = {
+            'controller': 'client', 'ctype': 'action', 'action': 'new',
+            'new': 'transfer', 'transfer': 'list', 'client_id': self.client_id,
+            'session_token': self.session_token
+        }
         create = self.session_manager.session_manager_controller(
-            controller='client', ctype='action', action='new', new='transfer',
-            transfer='list', client_id=self.client_id,
-            session_token=self.session_token
+            **instruction_set
         )
-        print(str(create) + '\n')
+        print(
+            '[ > ]: Instruction Set: ' + str(instruction_set) +
+            '\n[ < ]: Response: ' + str(create) + '\n'
+        )
         self.assertTrue(isinstance(create, dict))
         self.assertEqual(len(create.keys()), 3)
         self.assertFalse(create.get('failed'))

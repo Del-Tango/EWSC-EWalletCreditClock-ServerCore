@@ -8,14 +8,17 @@ class TestEWalletSessionManagerSocketHandler(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
+        print('[ + ]: Prerequisites -')
         # Create new EWallet Session Manager instance
         session_manager = manager.EWalletSessionManager()
         # Create first EWallet Session Worker
+        print('[...]: System action New Session Worker')
         worker = session_manager.session_manager_controller(
             controller='system', ctype='action', action='new', new='worker'
         )
         cls.session_manager = session_manager
         # Spawn new EWallet Session with no active user or session token
+        print('[...]: System action New EWallet Session')
         session = session_manager.session_manager_controller(
             controller='system', ctype='action', action='new', new='session',
             reference='EWallet Session Test'

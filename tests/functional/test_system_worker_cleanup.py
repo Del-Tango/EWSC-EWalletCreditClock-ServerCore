@@ -8,17 +8,18 @@ class TestEWalletSessionManagerSystemWorkerCleanup(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
+        print('[ + ]: Prerequisites -')
         # Create new EWallet Session Manager instance
         session_manager = manager.EWalletSessionManager()
-        # Create first EWallet Session Worker
-        worker = session_manager.session_manager_controller(
-            controller='system', ctype='action', action='new', new='worker'
-        )
         cls.session_manager = session_manager
-        # Spawn 3 EWallet Session Workers
+        # Spawn 4 EWallet Session Workers
         # [ NOTE ]: On cleanup, one of the vacant workers should be reserved if
         # not passed over worker limit defined in config file to handle new
         # session token requests
+        print('[...]: System action New Session Worker')
+        worker = session_manager.session_manager_controller(
+            controller='system', ctype='action', action='new', new='worker'
+        )
         worker = session_manager.session_manager_controller(
             controller='system', ctype='action', action='new', new='worker'
         )
@@ -37,11 +38,17 @@ class TestEWalletSessionManagerSystemWorkerCleanup(unittest.TestCase):
 
     def test_system_action_cleanup_worker_functionality(self):
         print('[ * ]: System action Cleanup Session Workers')
+        instruction_set = {
+            'controller': 'system', 'ctype': 'action', 'action': 'cleanup',
+            'cleanup': 'workers'
+        }
         clean = self.session_manager.session_manager_controller(
-            controller='system', ctype='action', action='cleanup',
-            cleanup='workers'
+            **instruction_set
         )
-        print(str(clean) + '\n')
+        print(
+            '[ > ]: Instruction Set: ' + str(instruction_set) +
+            '\n[ < ]: Response: ' + str(clean) + '\n'
+        )
         self.assertTrue(isinstance(clean, dict))
         self.assertEqual(len(clean.keys()), 4)
         self.assertFalse(clean.get('failed'))

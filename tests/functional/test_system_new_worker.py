@@ -10,16 +10,8 @@ class TestEWalletSessionManagerSystemActionNewWorker(unittest.TestCase):
     def setUpClass(cls):
         # Create new EWallet Session Manager instance
         session_manager = manager.EWalletSessionManager()
-        # Create first EWallet Session Worker
-        worker = session_manager.session_manager_controller(
-            controller='system', ctype='action', action='new', new='worker'
-        )
+        # Set global values
         cls.session_manager = session_manager
-        # Spawn new EWallet Session with no active user or session token
-        session = session_manager.session_manager_controller(
-            controller='system', ctype='action', action='new', new='session',
-            reference='EWallet Session Test'
-        )
 
     @classmethod
     def tearDownClass(cls):
@@ -28,11 +20,18 @@ class TestEWalletSessionManagerSystemActionNewWorker(unittest.TestCase):
             os.remove('data/ewallet.db')
 
     def test_system_new_worker_functionality(self):
-        print('[ * ]: System Action New Worker')
+        print('[ * ]: System action New Session Worker')
+        instruction_set = {
+            'controller': 'system', 'ctype': 'action', 'action': 'new',
+            'new': 'worker'
+        }
         worker = self.session_manager.session_manager_controller(
-            controller='system', ctype='action', action='new', new='worker'
+            **instruction_set
         )
-        print(str(worker) + '\n')
+        print(
+            '[ > ]: Instruction Set: ' + str(instruction_set) +
+            '\n[ < ]: Response: ' + str(worker) + '\n'
+        )
         self.assertTrue(isinstance(worker, dict))
         self.assertEqual(len(worker.keys()), 2)
         self.assertFalse(worker.get('failed'))

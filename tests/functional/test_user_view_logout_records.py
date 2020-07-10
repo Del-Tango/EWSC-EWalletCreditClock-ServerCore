@@ -16,14 +16,17 @@ class TestEWalletSessionManageUserActionViewLogoutRecords(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
+        print('[ + ]: Prerequisits -')
         # Create new EWallet Session Manager instance
         session_manager = manager.EWalletSessionManager()
         # Generate new Client ID to be able to request a Session Token
+        print('[...]: User action Request Client ID')
         client_id = session_manager.session_manager_controller(
             controller='client', ctype='action', action='request',
             request='client_id'
         )
         # Request a Session Token to be able to operate within a EWallet Session
+        print('[...]: User action Request Session Token')
         session_token = session_manager.session_manager_controller(
             controller='client', ctype='action', action='request', request='session_token',
             client_id=client_id['client_id']
@@ -33,6 +36,7 @@ class TestEWalletSessionManageUserActionViewLogoutRecords(unittest.TestCase):
         cls.client_id = client_id['client_id']
         cls.session_token = session_token['session_token']
         # Create new user account to use as SystemCore account mockup
+        print('[...]: User action Create New Account')
         new_account = session_manager.session_manager_controller(
             controller='client', ctype='action', action='new',
             new='account', client_id=cls.client_id,
@@ -47,16 +51,19 @@ class TestEWalletSessionManageUserActionViewLogoutRecords(unittest.TestCase):
             user_pass=cls.user_pass_2, user_email=cls.user_email_2
         )
         # Login to new user account
+        print('[...]: User action Account Login(1)')
         login = session_manager.session_manager_controller(
             controller='client', ctype='action', action='login',
             client_id=cls.client_id, session_token=cls.session_token,
             user_name=cls.user_name_2, user_pass=cls.user_pass_2,
         )
         # Log out account to generate logout record for action view
+        print('[...]: User action Account Logout')
         logout = session_manager.session_manager_controller(
             controller='client', ctype='action', action='logout',
             client_id=cls.client_id, session_token=cls.session_token
         )
+        print('[...]: User action Account Login (2)')
         login = session_manager.session_manager_controller(
             controller='client', ctype='action', action='login',
             client_id=cls.client_id, session_token=cls.session_token,
@@ -71,11 +78,18 @@ class TestEWalletSessionManageUserActionViewLogoutRecords(unittest.TestCase):
 
     def test_user_action_view_logout_records(self):
         print('[ * ]: User action View Logout Records')
+        instruction_set = {
+            'controller': 'client', 'ctype': 'action', 'action': 'view',
+            'view': 'logout', 'client_id': self.client_id,
+            'session_token': self.session_token
+        }
         view = self.session_manager.session_manager_controller(
-            controller='client', ctype='action', action='view', view='logout',
-            client_id=self.client_id, session_token=self.session_token
+            **instruction_set
         )
-        print(str(view) + '\n')
+        print(
+            '[ > ]: Instruction Set: ' + str(instruction_set) +
+            '\n[ < ]: Response: ' + str(view) + '\n'
+        )
         self.assertTrue(isinstance(view, dict))
         self.assertEqual(len(view.keys()), 3)
         self.assertFalse(view.get('failed'))
