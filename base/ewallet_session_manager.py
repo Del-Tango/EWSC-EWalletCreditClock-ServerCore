@@ -46,41 +46,19 @@ class EWalletSessionManager():
         return self.error_no_worker_found_assigned_to_session(ewallet_session)\
             if not worker_set else worker_set[0]
 
-    # TODO
 #   @pysnooper.snoop()
     def fetch_ewallet_sessions_past_expiration_date(self, **kwargs):
-        log.debug('TODO')
+        log.debug('')
         worker_pool = self.fetch_ewallet_session_manager_worker_pool()
-
-        # TODO - REMOVE
-        log.info('\n\nWORKER POOL : {}\n'.format(worker_pool))
-
         if not worker_pool:
             return self.error_could_not_fetch_session_worker_pool(kwargs)
         now, expired_sessions = datetime.datetime.now(), []
         for worker in worker_pool:
-
-            # TODO - REMOVE
-            log.info(
-                '\n\nSESSION POOL : {}\n'\
-                'EXPIRATION DATES : {}\n'\
-                .format(
-                    [item.fetch_active_session_id() for item in worker.session_pool],
-                    [item.expiration_date.strftime('%d-%m-%Y %H:%M:%s') for item in worker.session_pool]
-                )
-            )
-
-
             try:
                 worker_interogation = worker.main_controller(
                     controller='system', ctype='action', action='interogate',
                     interogate='session_pool',
                 )
-
-
-                # TODO - REMOVE
-                log.info('\n\nWORKER INTEROGATION : {}\n'.format(worker_interogation))
-
                 if not worker_interogation or isinstance(worker_interogation, dict) and \
                         worker_interogation.get('failed'):
                     self.warning_could_not_interogate_worker_session_pool(worker)
@@ -166,16 +144,6 @@ class EWalletSessionManager():
             return self.error_no_mapped_session_worker_found_for_client_id(client_id)
         return self.client_worker_map[client_id]
 
-    # TODO - Fetch configuration values for config file
-    def fetch_session_token_default_prefix(self):
-        log.debug('')
-        return 'ewsm-st'
-
-    # TODO - Fetch configuration values for config file
-    def fetch_session_token_default_length(self):
-        log.debug('')
-        return 20
-
     def fetch_first_available_worker(self):
         log.debug('')
         pool = self.fetch_ewallet_session_manager_worker_pool()
@@ -189,6 +157,16 @@ class EWalletSessionManager():
     def fetch_ewallet_session_manager_socket_handler(self):
         log.debug('')
         return self.socket_handler
+
+    # TODO - Fetch configuration values for config file
+    def fetch_session_token_default_prefix(self):
+        log.debug('')
+        return 'ewsm-st'
+
+    # TODO - Fetch configuration values for config file
+    def fetch_session_token_default_length(self):
+        log.debug('')
+        return 20
 
     # TODO - Fetch configuration values for config file
     def fetch_socket_handler_default_address(self):
@@ -356,9 +334,9 @@ class EWalletSessionManager():
         '''
         log.debug('')
         values = {
-                'session_manager': {user_id: worker},
-                'worker': {user_id: session_token},
-                }
+            'session_manager': {user_id: worker},
+            'worker': {user_id: session_token},
+        }
         try:
             self.client_worker_map.update(values['session_manager'])
             worker.token_session_map.update(values['worker'])
@@ -378,8 +356,8 @@ class EWalletSessionManager():
         if not worker_pool:
             return self.error_no_worker_pool_found()
         return self.error_invalid_worker_pool(worker_pool) \
-                if not isinstance(worker_pool, list) else \
-                self.set_worker_pool(worker_pool)
+            if not isinstance(worker_pool, list) else \
+            self.set_worker_pool(worker_pool)
 
     def update_client_pool(self, client_pool):
         '''
@@ -391,8 +369,8 @@ class EWalletSessionManager():
         if not client_pool:
             return self.error_client_pool_not_found()
         return self.error_invalid_client_pool(client_pool) \
-                if not isinstance(client_pool, list) else \
-                self.set_client_pool(client_pool)
+            if not isinstance(client_pool, list) else \
+            self.set_client_pool(client_pool)
 
     def update_client_worker_map(self, cw_map):
         '''
@@ -404,8 +382,8 @@ class EWalletSessionManager():
         if not cw_map:
             return self.error_client_worker_map_not_found()
         return self.error_invalid_client_worker_map(cw_map) \
-                if not isinstance(cw_map, dict) else \
-                self.set_client_worker_session_map(cw_map)
+            if not isinstance(cw_map, dict) else \
+            self.set_client_worker_session_map(cw_map)
 
     # CHECKERS
 
@@ -430,10 +408,10 @@ class EWalletSessionManager():
         log.debug('')
         client_id_segmented = client_id.split(':')
         checks = {
-                'timestamp': self.check_client_id_timestamp(client_id_segmented[2]),
-                'prefix': self.check_client_id_prefix(client_id_segmented[0]),
-                'code': self.check_client_id_code(client_id_segmented[1]),
-                }
+            'timestamp': self.check_client_id_timestamp(client_id_segmented[2]),
+            'prefix': self.check_client_id_prefix(client_id_segmented[0]),
+            'code': self.check_client_id_code(client_id_segmented[1]),
+        }
         return False if False in checks.values() else True
 
     def check_command_chain_session_token(self):
@@ -516,10 +494,6 @@ class EWalletSessionManager():
         '''
         [ NOTE   ]: Maps Client ID to Worker for Session Manager and Client ID
                     with Session Token and EWallet Session object for Worker.
-        [ INPUT  ]: <client-id>, <session-token>, <assigned-worker>, <ewallet-session>
-        [ RETURN ]: ([{client_id: assigned_worker},
-                      {client_id: {'token': session_token, 'session': EWalletSession}
-                    }] | False)
         '''
         log.debug('')
         mappers = {
@@ -614,8 +588,6 @@ class EWalletSessionManager():
     def create_ewallet_user_account_in_session(self, ewallet_session, instruction_set):
         '''
         [ NOTE   ]: Uses EWallet Session object to carry out command chain user action Create Account.
-        [ INPUT  ]: <ewallet-session>, <instruction-set>
-        [ RETURN ]: (ResUser object | False)
         '''
         log.debug('')
         if not ewallet_session or isinstance(ewallet_session, dict) and \
@@ -701,8 +673,6 @@ class EWalletSessionManager():
         '''
         [ NOTE   ]: Sets user state to LoggedIn (state code 1), and updates given
                     EWallet Session with user data.
-        [ INPUT  ]: EWallet Session object, Instruction set
-        [ RETURN ]: (ResUser object | False)
         '''
         log.debug('')
         orm_session = ewallet_session.fetch_active_session()
@@ -720,8 +690,6 @@ class EWalletSessionManager():
         [ NOTE   ]: Adds new EWallet Session to one of the workers session pool.
                     The worker is simply the neares available worker in pool, and
                     if none is found, one is created.
-        [ INPUT  ]: EWallet Session object
-        [ RETURN ]: (EWallet Worker object | False)
         '''
         log.debug('')
         worker = self.fetch_first_available_worker()
@@ -740,8 +708,7 @@ class EWalletSessionManager():
     def start_instruction_set_listener(self):
         '''
         [ NOTE   ]: Starts socket based command chain instruction set listener.
-        [ NOTE   ]: Programs hangs here untill interrupt.
-        [ RETURN ]: (True | False)
+        [ NOTE   ]: Program hangs here until interrupt.
         '''
         log.debug('')
         socket_handler = self.fetch_ewallet_session_manager_socket_handler()
@@ -757,7 +724,6 @@ class EWalletSessionManager():
     def open_ewallet_session_manager_sockets(self, **kwargs):
         '''
         [ NOTE   ]: Creates new EWalletSocketHandler object using default configuration values.
-        [ RETURN ]: (EWalletSocketHandler object | False)
         '''
         log.debug('')
         in_port = kwargs.get('in_port') or self.fetch_default_ewallet_command_chain_instruction_port()
@@ -771,7 +737,6 @@ class EWalletSessionManager():
         '''
         [ NOTE   ]: Generates a new unique client id using default format and prefix.
         [ NOTE   ]: User ID follows the following format <prefix-string>:<code>:<timestamp>
-        [ RETURN ]: User ID
         '''
         log.debug('')
         prefix = self.fetch_client_id_default_prefix()
@@ -785,7 +750,6 @@ class EWalletSessionManager():
         '''
         [ NOTE   ]: Generates a new unique session token using default format and prefix.
         [ NOTE   ]: Session Token follows the following format <prefix-string>:<code>:<timestamp>
-        [ RETURN ]: Session Token
         '''
         log.debug('')
         prefix = self.fetch_session_token_default_prefix()
@@ -1137,8 +1101,6 @@ class EWalletSessionManager():
         '''
         [ NOTE   ]: Resumes active credit clock consumption timer if clock is in
                     appropriate state.
-        [ INPUT  ]: EWallet Session object, Instruction set
-        [ RETURN ]: (Legacy elapsed time since user action start | False)
         '''
         log.debug('')
         orm_session = ewallet_session.fetch_active_session()
@@ -1156,8 +1118,6 @@ class EWalletSessionManager():
         '''
         [ NOTE   ]: Pauses active credit clock consumption timer if clock is in
                     appropriate state.
-        [ INPUT  ]: EWallet Session object, Instruction set
-        [ RETURN ]: (Clock session pause count | False)
         '''
         log.debug('')
         orm_session = ewallet_session.fetch_active_session()
@@ -1175,8 +1135,6 @@ class EWalletSessionManager():
         '''
         [ NOTE   ]: Starts active credit clock consumption timer if clock is in
                     appropriate state.
-        [ INPUT  ]: EWallet Session object, Instruction set
-        [ RETURN ]: (Legacy timestamp | False)
         '''
         log.debug('')
         orm_session = ewallet_session.fetch_active_session()
@@ -1218,7 +1176,7 @@ class EWalletSessionManager():
 
 #   @pysnooper.snoop('logs/ewallet.log')
     def action_cleanup_session_workers(self, **kwargs):
-        log.debug('TODO')
+        log.debug('')
         session_workers = self.fetch_ewallet_session_manager_worker_pool()
         if not session_workers or isinstance(session_workers, dict) and \
                 session_workers.get('failed'):
@@ -1670,8 +1628,6 @@ class EWalletSessionManager():
                     a credit transaction between two wallets resulting in S:Core having
                     a decreased credit count and the active user having an equivalent
                     increase in credits.
-        [ INPUT  ]: EWallet Session object, Instruction set
-        [ RETURN ]: ({'extract': -<count>, 'supply': <count>} | False)
         '''
         log.debug('')
         score = ewallet_session.fetch_system_core_user_account()
@@ -1690,8 +1646,6 @@ class EWalletSessionManager():
         '''
         [ NOTE   ]: Executes credits to credit clock conversion and returns
                     curent active credit ewallet credits and credit clock time left.
-        [ INPUT  ]: EWallet Session object, Instruction set
-        [ RETURN ]: ({'ewallet_credits': <credits>, 'credit_clock': <time>} | False)
         '''
         log.debug('')
         if not instruction_set.get('credits'):
@@ -1752,8 +1706,6 @@ class EWalletSessionManager():
         [ NOTE   ]: Creates new EWallet Session object, assigns it an existing
                     available worker or creates a new worker if none found,
                     generates a new session token and maps it to the Client ID.
-        [ INPUT  ]: client_id=<id>
-        [ RETURN ]: ({session_token: <token>} | False)
         '''
         log.debug('')
         if not kwargs.get('client_id'):
@@ -1845,7 +1797,6 @@ class EWalletSessionManager():
         '''
         [ NOTE   ]: Creates new EWallet Session Manager Worker object and sets
                     it to worker pool.
-        [ RETURN ]: (EWalletWorker object | False)
         '''
         log.debug('')
         worker = self.action_new_worker()
@@ -3000,9 +2951,6 @@ class EWalletSessionManager():
         [ NOTE   ]: Validates received instruction set, searches for worker and session
                     and proceeds to create new User Account in said session. Requiers
                     valid Client ID and Session Token.
-        [ INPUT  ]: client_id=<id>, session_token=<token>, user_name=<name>
-                    user_pass=<pass>, user_email=<email>
-        [ RETURN ]: (ResUser object | False)
         '''
         log.debug('')
         instruction_set_validation = self.validate_instruction_set(kwargs)
@@ -3022,7 +2970,6 @@ class EWalletSessionManager():
         '''
         [ NOTE   ]: Turn Session Manager into server listenning for socket based instructions.
         [ NOTE   ]: System hangs here until interrupt.
-        [ RETURN ]: True
         '''
         log.debug('')
         return self.start_instruction_set_listener()
@@ -3030,7 +2977,6 @@ class EWalletSessionManager():
     def handle_system_action_open_sockets(self, **kwargs):
         '''
         [ NOTE   ]: Create and setups Session Manager Socket Handler.
-        [ RETURN ]: EWalletSocketHandler object.
         '''
         log.debug('')
         socket_handler = self.open_ewallet_session_manager_sockets(**kwargs)
@@ -3041,7 +2987,6 @@ class EWalletSessionManager():
     def handle_system_action_close_sockets(self, **kwargs):
         '''
         [ NOTE   ]: Desociates Ewallet Socket Handler from Session Manager.
-        [ RETURN ]: True
         '''
         log.debug('')
         return self.unset_socket_handler()
@@ -3089,28 +3034,24 @@ class EWalletSessionManager():
     def handle_client_action_new(self, **kwargs):
         '''
         [ NOTE   ]: Client action handler for new type actions.
-        [ INPUT  ]: new='account'
-        [ RETURN ]: Action variable correspondent.
         '''
         log.debug('')
         if not kwargs.get('new'):
             return self.error_no_client_action_new_target_specified()
-        _handlers = {
-                'account': self.handle_client_action_new_account,
-                'contact': self.handle_client_action_new_contact,
-                'credit': self.handle_client_action_new_credit,
-                'transfer': self.handle_client_action_new_transfer,
-                'invoice': self.handle_client_action_new_invoice,
-                'conversion': self.handle_client_action_new_conversion,
-                'time': self.handle_client_action_new_time,
-                }
-        return _handlers[kwargs['new']](**kwargs)
+        handlers = {
+            'account': self.handle_client_action_new_account,
+            'contact': self.handle_client_action_new_contact,
+            'credit': self.handle_client_action_new_credit,
+            'transfer': self.handle_client_action_new_transfer,
+            'invoice': self.handle_client_action_new_invoice,
+            'conversion': self.handle_client_action_new_conversion,
+            'time': self.handle_client_action_new_time,
+        }
+        return handlers[kwargs['new']](**kwargs)
 
     def handle_client_action_request(self, **kwargs):
         '''
         [ NOTE   ]: Client action handler for request type actions.
-        [ INPUT  ]: request=('client_id' | 'session_token')
-        [ RETURN ]: Action variable correspondent.
         '''
         log.debug('')
         if not kwargs.get('request'):
@@ -3124,8 +3065,6 @@ class EWalletSessionManager():
     def handle_system_action_new(self, **kwargs):
         '''
         [ NOTE   ]: System action handler for new type actions.
-        [ INPUT  ]: new=('worker' | 'session')
-        [ RETURN ]: Action variable correspondent.
         '''
         log.debug('')
         if not kwargs.get('new'):
@@ -3148,8 +3087,6 @@ class EWalletSessionManager():
     def handle_system_action_start(self, **kwargs):
         '''
         [ NOTE   ]: System action handler for start type actions.
-        [ INPUT  ]: start=('instruction_listener')
-        [ RETURN ]: Action variable correspondent.
         '''
         log.debug('')
         if not kwargs.get('start'):
@@ -3162,8 +3099,6 @@ class EWalletSessionManager():
     def handle_system_action_open(self, **kwargs):
         '''
         [ NOTE   ]: System action handler for open type actions.
-        [ INPUT  ]: opening=('sockets')
-        [ RETURN ]: Action variable correspondent.
         '''
         log.debug('')
         if not kwargs.get('opening'):
@@ -3176,8 +3111,6 @@ class EWalletSessionManager():
     def handle_system_action_close(self, **kwargs):
         '''
         [ NOTE   ]: System action handler for close type actions.
-        [ INPUT  ]: closing=('sockets')
-        [ RETURN ]: Action variable correspondent.
         '''
         log.debug('')
         if not kwargs.get('closing'):
@@ -3190,8 +3123,6 @@ class EWalletSessionManager():
     def handle_system_event_client_timeout(self, **kwargs):
         '''
         [ NOTE   ]: System event handler for client timeout events.
-        [ INPUT  ]: target='client_ack'
-        [ RETURN ]: Event variable correspondent.
         '''
         log.debug('')
         if not kwargs.get('target'):
@@ -3204,8 +3135,6 @@ class EWalletSessionManager():
     def handle_system_event_expire(self, **kwargs):
         '''
         [ NOTE   ]: System event handler for expire type events.
-        [ INPUT  ]: expire=('client_id' | 'session_token')+
-        [ RETURN ]: Event variable correspondent.
         '''
         log.debug('')
         if not kwargs.get('expire'):
@@ -3219,8 +3148,6 @@ class EWalletSessionManager():
     def handle_system_event_timeout(self, **kwargs):
         '''
         [ NOTE   ]: System event handler for timeout type events.
-        [ INPUT  ]: timeout=('session' | 'worker' | 'client')+
-        [ RETURN ]: Event variable correspondent.
         '''
         log.debug('')
         if not kwargs.get('timeout'):
@@ -3238,11 +3165,6 @@ class EWalletSessionManager():
         '''
         [ NOTE   ]: Client action controller for the EWallet Session Manager, accessible
                     to regular user api calls.
-        [ INPUT  ]: action=(
-                    'new' | 'scrape' | 'search' | 'view' | 'request' | 'login' |
-                    'supply' | 'convert | start | pause | resume | stop | pay'
-                    )+
-        [ RETURN ]: Action variable correspondent.
         '''
         log.debug('')
         if not kwargs.get('action'):
@@ -3273,11 +3195,7 @@ class EWalletSessionManager():
         '''
         [ NOTE   ]: System action controller for the EWallet Session Manager, not accessible
                     to regular user api calls.
-        [ INPUT  ]: action=('new' | 'scrape' | 'search' | 'view' | 'request' |
         [ NOTE   ]: Pauses active credit clock consumption timer.
-        [ INPUT  ]: EWallet Session object, Instruction set
-                    'open' | 'close')+
-        [ RETURN ]: Action variable correspondent.
         '''
         log.debug('')
         if not kwargs.get('action'):
@@ -3302,7 +3220,6 @@ class EWalletSessionManager():
         [ NOTE   ]: Client event controller for the EWallet Session Manager, accessible
                     to regular user api calls.
         [ INPUT  ]: event=('timeout' | 'expire')+
-        [ RETURN ]: Event variable correspondent.
         [ WARNING ]: Unimplemented
         '''
         pass
@@ -3311,8 +3228,6 @@ class EWalletSessionManager():
         '''
         [ NOTE   ]: System event controller for the EWallet Session Manager, not accessible
                     to regular user api calls.
-        [ INPUT  ]: event=('timeout' | 'expire')+
-        [ RETURN ]: Event variable correspondent.
         '''
         log.debug('')
         if not kwargs.get('event'):
@@ -3327,8 +3242,6 @@ class EWalletSessionManager():
         '''
         [ NOTE   ]: Main client controller for the EWallet Session Manager, accessible
                     to regular user api calls.
-        [ INPUT  ]: ctype=('action' | 'event')+
-        [ RETURN ]: Action variable correspondent.
         '''
         log.debug('')
         if not kwargs.get('ctype'):
@@ -3343,8 +3256,6 @@ class EWalletSessionManager():
         '''
         [ NOTE   ]: Main system controller for the EWallet Session Manager, not accessible
                     to regular user api calls.
-        [ INPUT  ]: ctype=('action' | 'event')+
-        [ RETURN ]: Action variable correspondent.
         '''
         log.debug('')
         if not kwargs.get('ctype'):
@@ -3358,8 +3269,6 @@ class EWalletSessionManager():
     def session_manager_controller(self, *args, **kwargs):
         '''
         [ NOTE   ]: Main controller for the EWallet Session Manager.
-        [ INPUT  ]: controller=('client' | 'system' | 'test')+
-        [ RETURN ]: Action variable correspondent.
         '''
         log.debug('')
         if not kwargs.get('controller'):

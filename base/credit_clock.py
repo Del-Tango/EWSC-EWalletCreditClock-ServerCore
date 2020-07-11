@@ -213,12 +213,12 @@ class CreditClock(Base):
 
     def fetch_active_time_record_start_time(self, **kwargs):
         log.debug('')
-        _time_record = kwargs.get('time_record') or \
+        time_record = kwargs.get('time_record') or \
                 self.fetch_active_credit_clock_time_record()
-        if not _time_record:
+        if not time_record:
             return self.error_no_active_time_record_found()
-        _start_time = _time_record.fetch_time_start()
-        return _start_time or False
+        start_time = time_record.fetch_time_start()
+        return start_time or False
 
     def fetch_credit_clock_stop_time(self):
         log.debug('')
@@ -236,12 +236,12 @@ class CreditClock(Base):
         conversion_sheet = self.fetch_credit_clock_conversion_sheet()
         values = {
             'id': self.clock_id,
-            'wallet_id': self.wallet_id,
+            'ewallet': self.wallet_id,
             'reference': self.reference or 'Credit Clock',
             'create_date': res_utils.format_datetime(self.create_date),
             'write_date': res_utils.format_datetime(self.write_date),
             'credit_clock': self.credit_clock or 0.00,
-            'credit_clock_state': self.fetch_credit_clock_state(),
+            'clock_state': self.fetch_credit_clock_state(),
             'time_sheet': None if not time_sheet else \
                 time_sheet.fetch_time_sheet_id(),
             'time_sheet_archive': {
@@ -576,9 +576,8 @@ class CreditClock(Base):
         kwargs['active_session'].commit()
         command_chain_response = {
             'failed': False,
-            'conversion_record_id': conversion_record.fetch_record_id(),
+            'conversion_record': conversion_record.fetch_record_id(),
         }
-
         if isinstance(conversion, dict):
             command_chain_response.update(conversion)
         else:
@@ -903,8 +902,12 @@ class CreditClock(Base):
             'failed': False,
             'pending_count': self.fetch_credit_clock_pending_count(),
             'pending_time': self.fetch_credit_clock_pending_time(),
-            'start_timestamp': start_time,
-            'stop_timestamp': stop_time,
+            'start_timestamp': time.strftime(
+                '%d-%m-%Y %H:%M:%S', time.localtime(start_time)
+            ),
+            'stop_timestamp': time.strftime(
+                '%d-%m-%Y %H:%M:%S', time.localtime(stop_time)
+            ),
             'minutes_spent': compute_used_time,
             'time_record': time_record.fetch_record_id(),
             'record_data': time_record.fetch_record_values(),
@@ -954,8 +957,16 @@ class CreditClock(Base):
         command_chain_response = {
             'failed': False,
             'pending_time': self.fetch_credit_clock_pending_time(),
-            'pause_timestamp': self.fetch_credit_clock_stop_time(),
-            'resume_timestamp': self.fetch_active_time_record_start_time(),
+            'pause_timestamp': time.strftime(
+                '%d-%m-%Y %H:%M:%S', time.localtime(
+                    self.fetch_credit_clock_stop_time()
+                )
+            ),
+            'resume_timestamp': time.strftime(
+                '%d-%m-%Y %H:%M:%S', time.localtime(
+                    self.fetch_active_time_record_start_time()
+                )
+            ),
             'pending_count': self.fetch_credit_clock_pending_count(),
         }
         return command_chain_response
@@ -999,8 +1010,16 @@ class CreditClock(Base):
         set_pending = self.set_credit_clock_state(clock_state='pending')
         command_chain_response = {
             'pending_time': self.fetch_credit_clock_pending_time(),
-            'start_timestamp': self.fetch_active_time_record_start_time(),
-            'pause_timestamp': self.fetch_credit_clock_stop_time(),
+            'start_timestamp': time.strftime(
+                '%d-%m-%Y %H:%M:%S', time.localtime(
+                    self.fetch_active_time_record_start_time()
+                )
+            ),
+            'pause_timestamp': time.strftime(
+                '%d-%m-%Y %H:%M:%S', time.localtime(
+                    self.fetch_credit_clock_stop_time()
+                )
+            ),
         }
         command_chain_response.update(record_update_values)
         return command_chain_response

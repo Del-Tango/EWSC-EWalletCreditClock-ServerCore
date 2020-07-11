@@ -1,15 +1,14 @@
-import time
 import datetime
-import random
 import logging
 import pysnooper
-from itertools import count
+
 from sqlalchemy import Table, Column, String, Integer, Float, ForeignKey, Date, DateTime
 from sqlalchemy.orm import relationship
 
 from .res_utils import ResUtils, Base
 from .config import Config
 
+res_utils = ResUtils()
 log_config = Config().log_config
 log = logging.getLogger(log_config['log_name'])
 
@@ -64,10 +63,10 @@ class CreditTransferSheetRecord(Base):
         log.debug('')
         values = {
             'id': self.record_id,
-            'transfer_sheet_id': self.transfer_sheet_id,
+            'transfer_sheet': self.transfer_sheet_id,
             'reference': self.reference,
-            'create_date': self.create_date.strftime('%d-%m-%Y %H:%M:%s'),
-            'write_date': self.write_date.strftime('%d-%m-%Y %H:%M:%s'),
+            'create_date': res_utils.format_datetime(self.create_date),
+            'write_date': res_utils.format_datetime(self.write_date),
             'transfer_type': self.transfer_type,
             'transfer_from': self.transfer_from,
             'transfer_to': self.transfer_to,
@@ -206,10 +205,10 @@ class CreditTransferSheet(Base):
         log.debug('')
         values = {
             'id': self.transfer_sheet_id,
-            'wallet_id': self.wallet_id,
+            'ewallet': self.wallet_id,
             'reference': self.reference,
-            'create_date': self.create_date.strftime('%d-%m-%Y %H:%M:%s'),
-            'write_date': self.write_date.strftime('%d-%m-%Y %H:%M:%s'),
+            'create_date': res_utils.format_datetime(self.create_date),
+            'write_date': res_utils.format_datetime(self.write_date),
             'records': {
                 record.fetch_record_id(): record.fetch_record_reference()
                 for record in self.records

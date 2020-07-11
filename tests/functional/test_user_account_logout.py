@@ -80,5 +80,5 @@ class TestEWalletSessionManageUserActionAccountLogout(unittest.TestCase):
         self.assertTrue(isinstance(logout, dict))
         self.assertEqual(len(logout.keys()), 3)
         self.assertFalse(logout.get('failed'))
-        self.assertTrue(isinstance(logout.get('user_account'), str))
+        self.assertTrue(isinstance(logout.get('account'), str))
         self.assertTrue(isinstance(logout.get('session_data'), dict))

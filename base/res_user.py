@@ -269,24 +269,24 @@ class ResUser(Base):
         log.debug('')
         values = {
             'id': self.user_id,
-            'user_name': self.user_name,
-            'create_date': self.user_create_date.strftime('%d-%m-%Y %H:%M:%s'),
-            'write_date': self.user_write_date.strftime('%d-%m-%Y %H:%M:%s'),
+            'name': self.user_name,
+            'create_date': self.user_create_date.strftime('%d-%m-%Y %H:%M:%S'),
+            'write_date': self.user_write_date.strftime('%d-%m-%Y %H:%M:%S'),
 #           'user_create_uid': self.user_create_uid,
 #           'user_write_uid': self.user_write_uid,
-            'credit_wallet': self.fetch_user_credit_wallet().fetch_credit_ewallet_id(),
+            'ewallet': self.fetch_user_credit_wallet().fetch_credit_ewallet_id(),
             'contact_list': self.fetch_user_contact_list().fetch_contact_list_id(),
 #           'user_pass_hash': self.user_pass_hash,
-            'user_email': self.user_email,
-            'user_phone': self.user_phone,
-            'user_alias': self.user_alias,
+            'email': self.user_email,
+            'phone': self.user_phone,
+            'alias': self.user_alias,
             'state_code': self.user_state_code,
             'state_name': self.user_state_name,
 #           'user_pass_hash_archive': {
 #               item.fetch_pass_hash_archive_id(): item.fetch_pass_hash_archive_pass_hash() \
 #               for item in self.user_pass_hash_archive
 #           },
-            'credit_wallet_archive': {
+            'ewallet_archive': {
                 item.fetch_credit_ewallet_id(): item.fetch_credit_ewallet_reference() \
                 for item in self.user_credit_wallet_archive
             },

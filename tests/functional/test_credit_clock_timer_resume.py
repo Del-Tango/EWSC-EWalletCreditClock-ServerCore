@@ -110,8 +110,8 @@ class TestEWalletSessionManageUserActionResumeTimer(unittest.TestCase):
         self.assertTrue(isinstance(resume, dict))
         self.assertEqual(len(resume.keys()), 6)
         self.assertFalse(resume.get('failed'))
-        self.assertTrue(isinstance(resume.get('credit_clock'), int))
+        self.assertTrue(isinstance(resume.get('clock'), int))
         self.assertTrue(isinstance(resume.get('pending_count'), int))
-        self.assertTrue(isinstance(resume.get('resume_timestamp'), float))
-        self.assertTrue(isinstance(resume.get('pause_timestamp'), float))
+        self.assertTrue(isinstance(resume.get('resume_timestamp'), str))
+        self.assertTrue(isinstance(resume.get('pause_timestamp'), str))
 

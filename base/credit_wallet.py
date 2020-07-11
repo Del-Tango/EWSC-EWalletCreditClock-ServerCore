@@ -195,14 +195,14 @@ class CreditEWallet(Base):
         invoice_sheet = self.fetch_credit_ewallet_invoice_sheet()
         values = {
             'id': self.wallet_id,
-            'client_id': self.client_id,
+            'user': self.client_id,
             'reference': self.reference or 'Credit EWallet',
-            'create_date': self.create_date.strftime('%d-%m-%Y %H:%M:%s'),
-            'write_date': self.write_date.strftime('%d-%m-%Y %H:%M:%s'),
+            'create_date': res_utils.format_datetime(self.create_date),
+            'write_date': res_utils.format_datetime(self.write_date),
             'credits': self.credits or 0,
-            'credit_clock': None if not credit_clock else \
+            'clock': None if not credit_clock else \
                 credit_clock.fetch_credit_clock_id(),
-            'credit_clock_archive': {
+            'clock_archive': {
                 item.fetch_credit_clock_id(): item.fetch_credit_clock_reference() \
                 for item in self.credit_clock_archive
             },

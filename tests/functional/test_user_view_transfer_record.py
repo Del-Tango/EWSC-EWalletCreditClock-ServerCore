@@ -111,7 +111,7 @@ class TestEWalletSessionManageUserActionViewTransferRecord(unittest.TestCase):
         self.assertTrue(isinstance(view.get('transfer_record'), int))
         self.assertTrue(isinstance(view.get('record_data'), dict))
         self.assertTrue(isinstance(view['record_data'].get('id'), int))
-        self.assertTrue(isinstance(view['record_data'].get('transfer_sheet_id'), int))
+        self.assertTrue(isinstance(view['record_data'].get('transfer_sheet'), int))
         self.assertTrue(isinstance(view['record_data'].get('reference'), str))
         self.assertTrue(isinstance(view['record_data'].get('create_date'), str))
         self.assertTrue(isinstance(view['record_data'].get('write_date'), str))

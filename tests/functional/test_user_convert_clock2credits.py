@@ -97,6 +97,7 @@ class TestEWalletSessionManagerUserConvertClockToCredits(unittest.TestCase):
         self.assertTrue(isinstance(convert, dict))
         self.assertEqual(len(convert.keys()), 5)
         self.assertFalse(convert.get('failed'))
+        self.assertTrue(isinstance(convert.get('conversion_record'), int))
         self.assertEqual(convert.get('ewallet_credits'), 90)
         self.assertEqual(convert.get('credit_clock'), 10)
         self.assertEqual(convert.get('converted_minutes'), 10)

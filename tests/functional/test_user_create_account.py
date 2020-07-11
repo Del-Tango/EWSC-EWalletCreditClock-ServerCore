@@ -1,5 +1,4 @@
 import os
-import datetime
 import unittest
 from base import ewallet_session_manager as manager
 
@@ -61,5 +60,10 @@ class TestEWalletSessionManagerUserCreateAccount(unittest.TestCase):
         self.assertEqual(new_account.get('account'), self.user_email_1)
         self.assertTrue(isinstance(new_account.get('account_data'), dict))
         self.assertTrue(isinstance(new_account['account_data']['id'], int))
-        self.assertTrue(isinstance(new_account['account_data']['credit_wallet'], int))
+        self.assertTrue(isinstance(new_account['account_data']['email'], str))
+        self.assertTrue(isinstance(new_account['account_data']['ewallet'], int))
         self.assertTrue(isinstance(new_account['account_data']['contact_list'], int))
+        self.assertTrue(isinstance(new_account['account_data']['state_code'], int))
+        self.assertTrue(isinstance(new_account['account_data']['state_name'], str))
+        self.assertTrue(isinstance(new_account['account_data']['ewallet_archive'], dict))
+        self.assertTrue(isinstance(new_account['account_data']['contact_list_archive'], dict))

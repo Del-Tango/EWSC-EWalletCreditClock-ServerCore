@@ -97,7 +97,7 @@ class TestEWalletSessionManagerUserActionStartTimer(unittest.TestCase):
         self.assertTrue(isinstance(start, dict))
         self.assertEqual(len(start.keys()), 3)
         self.assertFalse(start.get('failed'))
-        self.assertTrue(isinstance(start.get('credit_clock'), int))
-        self.assertTrue(isinstance(start.get('start_timestamp'), float))
+        self.assertTrue(isinstance(start.get('clock'), int))
+        self.assertTrue(isinstance(start.get('start_timestamp'), str))
 
 

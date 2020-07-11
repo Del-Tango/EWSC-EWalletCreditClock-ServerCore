@@ -91,9 +91,8 @@ class TestEWalletSessionManageUserActionSwitchInvoiceSheet(unittest.TestCase):
         self.assertTrue(isinstance(switch.get('invoice_sheet'), int))
         self.assertTrue(isinstance(switch.get('sheet_data'), dict))
         self.assertTrue(isinstance(switch['sheet_data'].get('id'), int))
-        self.assertTrue(isinstance(switch['sheet_data'].get('wallet_id'), int))
+        self.assertTrue(isinstance(switch['sheet_data'].get('ewallet'), int))
         self.assertTrue(isinstance(switch['sheet_data'].get('reference'), str))
         self.assertTrue(isinstance(switch['sheet_data'].get('create_date'), str))
         self.assertTrue(isinstance(switch['sheet_data'].get('write_date'), str))
         self.assertTrue(isinstance(switch['sheet_data'].get('records'), dict))
-

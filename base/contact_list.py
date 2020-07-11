@@ -1,14 +1,13 @@
-import random
 import datetime
 import pysnooper
 import logging
-from itertools import count
 from sqlalchemy import Table, Column, String, Integer, Float, ForeignKey, Date, DateTime
 from sqlalchemy.orm import relationship
 
 from .config import Config
 from .res_utils import ResUtils, Base
 
+res_utils = ResUtils()
 log_config = Config().log_config
 log = logging.getLogger(log_config['log_name'])
 
@@ -68,14 +67,14 @@ class ContactListRecord(Base):
     def fetch_record_values(self):
         log.debug('')
         values = {
-            'record_id': self.record_id,
-            'contact_list_id': self.contact_list_id,
+            'id': self.record_id,
+            'contact_list': self.contact_list_id,
             'reference': self.reference,
-            'create_date': self.create_date.strftime('%d-%m-%Y %H:%M:%s'),
-            'write_date': self.write_date.strftime('%d-%m-%Y %H:%M:%s'),
-            'user_name': self.user_name,
-            'user_email': self.user_email,
-            'user_phone': self.user_phone,
+            'create_date': res_utils.format_datetime(self.create_date),
+            'write_date': res_utils.format_datetime(self.write_date),
+            'name': self.user_name,
+            'email': self.user_email,
+            'phone': self.user_phone,
             'notes': self.notes,
         }
         return values
@@ -208,10 +207,10 @@ class ContactList(Base):
         log.debug('')
         values = {
             'id': self.contact_list_id,
-            'client_id': self.client_id,
+            'user': self.client_id,
             'reference': self.reference,
-            'create_date': self.create_date.strftime('%d-%m-%Y %H:%M:%s'),
-            'write_date': self.write_date.strftime('%d-%m-%Y %H:%M:%s'),
+            'create_date': res_utils.format_datetime(self.create_date),
+            'write_date': res_utils.format_datetime(self.write_date),
             'records': {
                 item.fetch_record_id(): item.fetch_record_reference() \
                 for item in self.records

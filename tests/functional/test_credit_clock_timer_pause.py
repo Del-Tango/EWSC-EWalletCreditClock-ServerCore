@@ -1,5 +1,4 @@
 import os
-import datetime
 import unittest
 from base import ewallet_session_manager as manager
 
@@ -104,8 +103,8 @@ class TestEWalletSessionManageUserActionPauseTimer(unittest.TestCase):
         self.assertTrue(isinstance(pause, dict))
         self.assertEqual(len(pause.keys()), 6)
         self.assertFalse(pause.get('failed'))
-        self.assertTrue(isinstance(pause.get('credit_clock'), int))
+        self.assertTrue(isinstance(pause.get('clock'), int))
         self.assertTrue(isinstance(pause.get('pending_count'), int))
-        self.assertTrue(isinstance(pause.get('start_timestamp'), float))
-        self.assertTrue(isinstance(pause.get('pause_timestamp'), float))
+        self.assertTrue(isinstance(pause.get('start_timestamp'), str))
+        self.assertTrue(isinstance(pause.get('pause_timestamp'), str))
 

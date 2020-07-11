@@ -93,5 +93,5 @@ class TestEWalletSessionManageUserActionViewLogoutRecords(unittest.TestCase):
         self.assertTrue(isinstance(view, dict))
         self.assertEqual(len(view.keys()), 3)
         self.assertFalse(view.get('failed'))
-        self.assertTrue(isinstance(view.get('user_account'), str))
+        self.assertTrue(isinstance(view.get('account'), str))
         self.assertTrue(isinstance(view.get('logout_records'), dict))

@@ -63,7 +63,8 @@ class TestEWalletSessionManagerUserAccountLogin(unittest.TestCase):
             '\n[ < ]: Response: ' + str(login) + '\n'
         )
         self.assertTrue(isinstance(login, dict))
-        self.assertEqual(len(login.keys()), 2)
+        self.assertEqual(len(login.keys()), 3)
         self.assertFalse(login.get('failed'))
         self.assertTrue(isinstance(login.get('account'), str))
         self.assertEqual(login.get('account'), self.user_email_1)
+        self.assertTrue(isinstance(login.get('session_data'), dict))

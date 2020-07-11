@@ -85,7 +85,7 @@ class TestEWalletSessionManageUserActionCreateContactList(unittest.TestCase):
         self.assertTrue(isinstance(create.get('contact_list'), int))
         self.assertTrue(isinstance(create.get('list_data'), dict))
         self.assertTrue(isinstance(create['list_data'].get('id'), int))
-        self.assertTrue(isinstance(create['list_data'].get('client_id'), int))
+        self.assertTrue(isinstance(create['list_data'].get('user'), int))
         self.assertTrue(isinstance(create['list_data'].get('reference'), str))
         self.assertTrue(isinstance(create['list_data'].get('create_date'), str))
         self.assertTrue(isinstance(create['list_data'].get('write_date'), str))

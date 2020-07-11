@@ -101,7 +101,7 @@ class TestEWalletSessionManageUserActionViewConversionSheet(unittest.TestCase):
         self.assertTrue(isinstance(view.get('conversion_sheet'), int))
         self.assertTrue(isinstance(view.get('sheet_data'), dict))
         self.assertTrue(isinstance(view['sheet_data'].get('id'), int))
-        self.assertTrue(isinstance(view['sheet_data'].get('clock_id'), int))
+        self.assertTrue(isinstance(view['sheet_data'].get('clock'), int))
         self.assertTrue(isinstance(view['sheet_data'].get('reference'), str))
         self.assertTrue(isinstance(view['sheet_data'].get('create_date'), str))
         self.assertTrue(isinstance(view['sheet_data'].get('write_date'), str))

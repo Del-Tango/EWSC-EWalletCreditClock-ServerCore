@@ -92,7 +92,7 @@ class TestEWalletSessionManageUserActionSwitchContactList(unittest.TestCase):
         self.assertTrue(isinstance(switch.get('contact_list'), int))
         self.assertTrue(isinstance(switch.get('list_data'), dict))
         self.assertTrue(isinstance(switch['list_data'].get('id'), int))
-        self.assertTrue(isinstance(switch['list_data'].get('client_id'), int))
+        self.assertTrue(isinstance(switch['list_data'].get('user'), int))
         self.assertTrue(isinstance(switch['list_data'].get('reference'), str))
         self.assertTrue(isinstance(switch['list_data'].get('create_date'), str))
         self.assertTrue(isinstance(switch['list_data'].get('write_date'), str))

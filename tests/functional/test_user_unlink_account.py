@@ -81,4 +81,4 @@ class TestEWalletSessionManageUserActionUnlinkAccount(unittest.TestCase):
         self.assertTrue(isinstance(unlink, dict))
         self.assertEqual(len(unlink.keys()), 2)
         self.assertFalse(unlink.get('failed'))
-        self.assertTrue(isinstance(unlink.get('user_id'), int))
+        self.assertTrue(isinstance(unlink.get('account'), str))

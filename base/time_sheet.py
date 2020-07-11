@@ -10,6 +10,7 @@ from sqlalchemy.orm import relationship
 from .res_utils import ResUtils, Base
 from .config import Config
 
+res_utils = ResUtils()
 log_config = Config().log_config
 log = logging.getLogger(log_config['log_name'])
 
@@ -120,13 +121,17 @@ class TimeSheetRecord(Base):
     def fetch_record_values(self):
         log.debug('')
         values = {
-            'record_id': self.record_id,
-            'time_sheet_id': self.time_sheet_id,
+            'id': self.record_id,
+            'time_sheet': self.time_sheet_id,
             'reference': self.reference,
-            'create_date': self.create_date.strftime('%d-%m-%Y %H:%M:%s'),
-            'write_date': self.write_date.strftime('%d-%m-%Y %H:%M:%s'),
-            'time_start': self.time_start,
-            'time_stop': self.time_stop,
+            'create_date': self.create_date.strftime('%d-%m-%Y %H:%M:%S'),
+            'write_date': self.write_date.strftime('%d-%m-%Y %H:%M:%S'),
+            'time_start': time.strftime(
+                '%d-%m-%Y %H:%M:%S', time.localtime(self.time_start)
+            ),
+            'time_stop': time.strftime(
+                '%d-%m-%Y %H:%M:%S', time.localtime(self.time_stop)
+            ),
             'time_spent': self.time_spent,
             'time_pending': self.time_pending,
             'pending_count': self.pending_count,
@@ -342,6 +347,25 @@ class CreditClockTimeSheet(Base):
 
     # FETCHERS
 
+    def fetch_time_record_creation_values(self, **kwargs):
+        log.debug('')
+        values = {
+            'record_id': kwargs.get('record_id'),
+            'create_uid': kwargs.get('create_uid'),
+            'write_uid': kwargs.get('write_uid'),
+            'time_sheet_id': self.time_sheet_id,
+            'reference': kwargs.get('reference'),
+            'credit_clock': kwargs.get('credit_clock'),
+            'time_start': kwargs.get('time_start'),
+            'time_stop': kwargs.get('time_stop'),
+            'time_spent': kwargs.get('time_spent'),
+        }
+
+        # TODO - REMOVE
+        log.info('TIME RECORD CREATION VALUES : {}'.format(values))
+
+        return values
+
     def fetch_time_sheet_record_by_id(self, **kwargs):
         log.debug('')
         if not kwargs.get('record_id'):
@@ -392,30 +416,15 @@ class CreditClockTimeSheet(Base):
     def fetch_time_sheet_values(self):
         log.debug('')
         values = {
-            'time_sheet_id': self.time_sheet_id,
-            'clock_id': self.clock_id,
+            'id': self.time_sheet_id,
+            'clock': self.clock_id,
             'reference': self.reference,
-            'create_date': self.create_date.strftime('%d-%m-%Y %H:%M:%s'),
-            'write_date': self.write_date.strftime('%d-%m-%Y %H:%M:%s'),
+            'create_date': res_utils.format_datetime(self.create_date),
+            'write_date': res_utils.format_datetime(self.write_date),
             'records': {
                 record.fetch_record_id(): record.fetch_record_reference()
                 for record in self.records
             },
-        }
-        return values
-
-    def fetch_time_record_creation_values(self, **kwargs):
-        log.debug('')
-        values = {
-            'record_id': kwargs.get('record_id'),
-            'create_uid': kwargs.get('create_uid'),
-            'write_uid': kwargs.get('write_uid'),
-            'time_sheet_id': self.time_sheet_id,
-            'reference': kwargs.get('reference'),
-            'credit_clock': kwargs.get('credit_clock'),
-            'time_start': kwargs.get('time_start'),
-            'time_stop': kwargs.get('time_stop'),
-            'time_spent': kwargs.get('time_spent'),
         }
         return values
 

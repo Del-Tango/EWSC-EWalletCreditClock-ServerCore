@@ -19,10 +19,10 @@ class ResUtils():
     _SessionFactory = sessionmaker(bind=engine)
 
     def format_timestamp(self, timestamp):
-        return time.strftime('%d-%m-%Y %H:%M:%s', time.localtime(timestamp))
+        return time.strftime('%d-%m-%Y %H:%M:%S', time.localtime(timestamp))
 
     def format_datetime(self, datetime_obj):
-        return datetime_obj.strftime('%d-%m-%Y %H:%M:%s')
+        return datetime_obj.strftime('%d-%m-%Y %H:%M:%S')
 
     def remove_tags_from_command_chain(self, command_chain, *args):
         sanitized_command_chain = command_chain.copy()

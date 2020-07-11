@@ -1,14 +1,9 @@
 import time
 import datetime
-import random
-import hashlib
 import logging
-import datetime
 import pysnooper
-import threading
 
-#from validate_email import validate_email
-from itertools import count
+# from validate_email import validate_email
 from sqlalchemy import Table, Column, String, Integer, ForeignKey, Date, DateTime
 from sqlalchemy.orm import relationship, backref
 
@@ -132,6 +127,7 @@ class EWallet(Base):
         return self.error_user_account_does_not_belong_to_active_session_archive(kwargs) \
             if user_account.fetch_user_id() not in account_ids else user_account
 
+#   @pysnooper.snoop('logs/ewallet.log')
     def fetch_user_by_id(self, **kwargs):
         log.debug('')
         if not kwargs.get('account_id'):
@@ -307,12 +303,12 @@ class EWallet(Base):
         log.debug('')
         if not len(self.user_account_archive):
             return self.error_empty_session_user_account_archive()
-        _active_user = kwargs.get('active_user')
-        _filtered = [
-                item for item in self.user_account_archive
-                if item is not _active_user
-                ]
-        return [] if not _filtered else _filtered[0]
+        active_user = kwargs.get('active_user')
+        filtered = [
+            item for item in self.user_account_archive
+            if item is not active_user
+        ]
+        return [] if not filtered else filtered[0]
 
     # SETTERS
 
@@ -567,7 +563,7 @@ class EWallet(Base):
         log.info('Successfully created new credit clock.')
         command_chain_response = {
             'failed': False,
-            'credit_clock': new_clock.fetch_credit_clock_id(),
+            'clock': new_clock.fetch_credit_clock_id(),
             'clock_data': new_clock.fetch_credit_clock_values(),
         }
         return command_chain_response
@@ -600,7 +596,7 @@ class EWallet(Base):
         log.info('Successfully created new credit wallet.')
         command_chain_response = {
             'failed': False,
-            'credit_ewallet': new_wallet.fetch_credit_ewallet_id(),
+            'ewallet': new_wallet.fetch_credit_ewallet_id(),
             'ewallet_data': new_wallet.fetch_credit_ewallet_values(),
         }
         return command_chain_response
@@ -678,7 +674,7 @@ class EWallet(Base):
             return self.warning_could_not_fetch_credit_clock(kwargs)
         command_chain_response = {
             'failed': False,
-            'credit_clock': credit_clock.fetch_credit_clock_id(),
+            'clock': credit_clock.fetch_credit_clock_id(),
             'clock_data': credit_clock.fetch_credit_clock_values(),
         }
         return command_chain_response
@@ -695,7 +691,7 @@ class EWallet(Base):
             return self.error_no_session_credit_wallet_found(kwargs)
         command_chain_response = {
             'failed': False,
-            'credit_ewallet': credit_wallet.fetch_credit_ewallet_id(),
+            'ewallet': credit_wallet.fetch_credit_ewallet_id(),
             'ewallet_data': credit_wallet.fetch_credit_ewallet_values(),
         }
         return command_chain_response
@@ -828,7 +824,7 @@ class EWallet(Base):
             )
         command_chain_response = {
             'failed': False,
-            'account': active_user.fetch_user_name(),
+            'account': active_user.fetch_user_email(),
             'account_data': active_user.fetch_user_values(),
         }
         return command_chain_response
@@ -1106,12 +1102,11 @@ class EWallet(Base):
         if not record or isinstance(record, dict) and \
                 record.get('failed'):
             return self.warning_could_not_fetch_contact_record(kwargs)
-        contact_record_data = record.fetch_record_values()
         command_chain_response = {
             'failed': False,
             'contact_list': contact_list.fetch_contact_list_id(),
             'contact_record': kwargs['record'],
-            'record_data': contact_record_data,
+            'record_data': record.fetch_record_values(),
         }
         return command_chain_response
 
@@ -1284,7 +1279,7 @@ class EWallet(Base):
         active_session.commit()
         command_chain_response = {
             'failed': False,
-            'credit_clock': credit_clock.fetch_credit_clock_id(),
+            'clock': credit_clock.fetch_credit_clock_id(),
         }
         if isinstance(stop, dict):
             command_chain_response.update(stop)
@@ -1322,7 +1317,7 @@ class EWallet(Base):
         active_session.commit()
         command_chain_response = {
             'failed': False,
-            'credit_clock': credit_clock.fetch_credit_clock_id(),
+            'clock': credit_clock.fetch_credit_clock_id(),
         }
         if resume.get('write_uid'):
             del resume['write_uid']
@@ -1359,7 +1354,7 @@ class EWallet(Base):
         active_session.commit()
         command_chain_response = {
             'failed': False,
-            'credit_clock': credit_clock.fetch_credit_clock_id(),
+            'clock': credit_clock.fetch_credit_clock_id(),
         }
         if pause.get('write_uid'):
             del pause['write_uid']
@@ -1397,8 +1392,10 @@ class EWallet(Base):
         active_session.commit()
         command_chain_response = {
             'failed': False,
-            'credit_clock': credit_clock.fetch_credit_clock_id(),
-            'start_timestamp': start,
+            'clock': credit_clock.fetch_credit_clock_id(),
+            'start_timestamp': time.strftime(
+                '%d-%m-%Y %H:%M:%S', time.localtime(start)
+            )
         }
         return command_chain_response
 
@@ -1447,9 +1444,9 @@ class EWallet(Base):
             )
         command_chain_response = {
             'failed': False,
-            'user_account': active_user.fetch_user_email(),
+            'account': active_user.fetch_user_email(),
             'logout_records': {
-                item.logout_id: item.logout_date.strftime("%d-%m-%Y %H:%M") \
+                item.logout_id: res_utils.format_datetime(item.logout_date)\
                 for item in logout_records
             },
         }
@@ -1470,9 +1467,9 @@ class EWallet(Base):
             )
         command_chain_response = {
             'failed': False,
-            'user_account': active_user.fetch_user_email(),
+            'account': active_user.fetch_user_email(),
             'login_records': {
-                item.login_id: item.login_date.strftime("%d-%m-%Y %H:%M") \
+                item.login_id: res_utils.format_datetime(item.login_date) \
                 for item in login_records
             },
         }
@@ -1487,8 +1484,14 @@ class EWallet(Base):
         '''
         log.debug('')
         user_id = kwargs.get('user_id') or self.fetch_active_session_user(obj=False)
-        if not user_id:
+        if not user_id or isinstance(user_id, dict) and \
+                user_id.get('failed'):
             return self.error_no_user_account_id_found(kwargs)
+        user_account = self.fetch_user_by_id(account_id=user_id, **kwargs)
+        if not user_account or isinstance(user_account, dict) and \
+                user_account.get('failed'):
+            return self.warning_could_not_fetch_user_account_by_id(kwargs)
+        user_email = user_account.fetch_user_email()
         unlink_account = self.unlink_user_account(user_id=user_id, **kwargs)
         if not unlink_account or isinstance(unlink_account, dict) and \
                 unlink_account.get('failed'):
@@ -1497,7 +1500,7 @@ class EWallet(Base):
         kwargs['active_session'].commit()
         command_chain_response = {
             'failed': False,
-            'user_id': user_id,
+            'account': user_email,
         }
         return command_chain_response
 
@@ -2061,7 +2064,7 @@ class EWallet(Base):
         log.info('Successfully switched credit clock.')
         command_chain_response = {
             'failed': False,
-            'credit_clock': switch_credit_clock.fetch_credit_clock_id(),
+            'clock': switch_credit_clock.fetch_credit_clock_id(),
             'clock_data': switch_credit_clock.fetch_credit_clock_values(),
         }
         return command_chain_response
@@ -2087,7 +2090,7 @@ class EWallet(Base):
         log.info('Successfully switched credit ewallet.')
         command_chain_response = {
             'failed': False,
-            'credit_ewallet': switch_credit_ewallet.fetch_credit_ewallet_id(),
+            'ewallet': switch_credit_ewallet.fetch_credit_ewallet_id(),
             'ewallet_data': switch_credit_ewallet.fetch_credit_ewallet_values(),
         }
         return command_chain_response
@@ -2496,7 +2499,7 @@ class EWallet(Base):
         session_values = self.fetch_active_session_values()
         command_chain_response = {
             'failed': False,
-            'user_account': user.fetch_user_email(),
+            'account': user.fetch_user_email(),
             'session_data': {
                 'session_user_account': None if not session_values['user_account'] \
                     else session_values['user_account'].fetch_user_email(),
@@ -2533,9 +2536,20 @@ class EWallet(Base):
         update_session = self.action_system_user_update(user=session_login)
         kwargs['active_session'].commit()
         log.info('User successfully logged in.')
+        session_values = self.fetch_active_session_values()
         command_chain_response = {
             'failed': False,
             'account': session_login.fetch_user_email(),
+            'session_data': {
+                'session_user_account': None if not session_values['user_account'] \
+                    else session_values['user_account'].fetch_user_email(),
+                'session_credit_ewallet': None if not session_values['credit_ewallet'] \
+                    else session_values['credit_ewallet'].fetch_credit_ewallet_id(),
+                'session_contact_list': None if not session_values['contact_list'] \
+                    else session_values['contact_list'].fetch_contact_list_id(),
+                'session_account_archive': None if not session_values['user_account_archive'] \
+                    else session_values['user_account_archive']
+            }
         }
         return command_chain_response
 
@@ -2643,11 +2657,11 @@ class EWallet(Base):
         log.debug('')
         user = self.fetch_active_session_user()
         edit_value_set = {
-            'user_name': self.handle_user_action_edit_account_user_name(**kwargs),
-            'user_pass': self.handle_user_action_edit_account_user_pass(**kwargs),
-            'user_alias': self.handle_user_action_edit_account_user_alias(**kwargs),
-            'user_email': self.handle_user_action_edit_account_user_email(**kwargs),
-            'user_phone': self.handle_user_action_edit_account_user_phone(**kwargs),
+            'name': self.handle_user_action_edit_account_user_name(**kwargs),
+            'pass': self.handle_user_action_edit_account_user_pass(**kwargs),
+            'alias': self.handle_user_action_edit_account_user_alias(**kwargs),
+            'email': self.handle_user_action_edit_account_user_email(**kwargs),
+            'phone': self.handle_user_action_edit_account_user_phone(**kwargs),
         }
         return self.warning_no_user_account_values_edited(kwargs) if True not in \
             edit_value_set.values() else {
@@ -3023,6 +3037,15 @@ class EWallet(Base):
         return _controllers[kwargs['controller']](**kwargs)
 
     # WARNINGS
+
+    def warning_could_not_fetch_user_account_by_id(self, command_chain):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Something went wrong. Could not fetch user account by id. '\
+                       'Command chain details : {}'.format(command_chain),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
 
     def warning_user_account_not_found_in_database(self, command_chain):
         command_chain_response = {

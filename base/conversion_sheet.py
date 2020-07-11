@@ -10,6 +10,7 @@ from sqlalchemy.orm import relationship
 from .res_utils import ResUtils, Base
 from .config import Config
 
+res_utils = ResUtils()
 log_config = Config().log_config
 log = logging.getLogger(log_config['log_name'])
 
@@ -75,10 +76,10 @@ class CreditClockConversionSheetRecord(Base):
         log.debug('')
         values = {
             'id': self.record_id,
-            'conversion_sheet_id': self.conversion_sheet_id,
+            'conversion_sheet': self.conversion_sheet_id,
             'reference': self.reference,
-            'create_date': self.create_date.strftime('%d-%m-%Y %H:%M:%s'),
-            'write_date': self.write_date.strftime('%d-%m-%Y %H:%M:%s'),
+            'create_date': res_utils.format_datetime(self.create_date),
+            'write_date': res_utils.format_datetime(self.write_date),
             'conversion_type': self.conversion_type,
             'minutes': self.minutes,
             'credits': self.credits,
@@ -240,10 +241,10 @@ class CreditClockConversionSheet(Base):
         log.debug('')
         values = {
             'id': self.conversion_sheet_id,
-            'clock_id': self.clock_id,
+            'clock': self.clock_id,
             'reference': self.reference,
-            'create_date': self.create_date.strftime('%d-%m-%Y %H:%M:%s'),
-            'write_date': self.write_date.strftime('%d-%m-%Y %H:%M:%s'),
+            'create_date': res_utils.format_datetime(self.create_date),
+            'write_date': res_utils.format_datetime(self.write_date),
             'records': {
                 item.fetch_record_id(): item.fetch_record_reference() \
                 for item in self.records
