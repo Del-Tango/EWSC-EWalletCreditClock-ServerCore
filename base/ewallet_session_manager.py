@@ -3918,6 +3918,14 @@ class EWalletSessionManager():
 
     # ERRORS
 
+    def error_no_session_manager_controller_specified(self):
+        instruction_set_response = {
+            'failed': True,
+            'error': 'Invalid EWallet controller.'
+        }
+        log.error(instruction_set_response['error'])
+        return instruction_set_response
+
     def error_could_not_fetch_session_worker_pool(self, **kwargs):
         instruction_set_response = {
             'failed': True,
@@ -4551,10 +4559,6 @@ class EWalletSessionManager():
 
     def error_no_system_session_manager_controller_specified(self):
         log.error('No system session manager controller specified.')
-        return False
-
-    def error_no_session_manager_controller_specified(self):
-        log.error('No session manager controller specified.')
         return False
 
 # CODE DUMP

@@ -79,7 +79,7 @@ class TestEWalletSessionManageUserActionViewContactRecord(unittest.TestCase):
         instruction_set = {
             'controller': 'client', 'ctype': 'action', 'action': 'view',
             'view': 'contact', 'contact': 'record', 'client_id': self.client_id,
-            'session_token': self.session_token, 'record': 1
+            'session_token': self.session_token, 'record_id': 1
         }
         view_record = self.session_manager.session_manager_controller(
             **instruction_set

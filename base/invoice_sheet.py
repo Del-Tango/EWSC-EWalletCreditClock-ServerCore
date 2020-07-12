@@ -68,14 +68,14 @@ class CreditInvoiceSheetRecord(Base):
         log.debug('')
         values = {
             'id': self.record_id,
-            'invoice_sheet_id': self.invoice_sheet_id,
+            'invoice_sheet': self.invoice_sheet_id,
             'reference': self.reference,
             'create_date': res_utils.format_datetime(self.create_date),
             'write_date': res_utils.format_datetime(self.write_date),
             'credits': self.credits,
             'currency': self.currency,
             'cost': self.cost,
-            'seller_id': self.seller_id,
+            'seller': self.seller_id,
             'notes': self.notes,
         }
         return values
@@ -257,7 +257,7 @@ class CreditInvoiceSheet(Base):
         log.debug('')
         values = {
             'id': self.invoice_sheet_id,
-            'wallet_id': self.wallet_id,
+            'ewallet': self.wallet_id,
             'reference': self.reference,
             'create_date': res_utils.format_datetime(self.create_date),
             'write_date': res_utils.format_datetime(self.write_date),

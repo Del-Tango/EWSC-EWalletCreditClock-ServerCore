@@ -1088,7 +1088,7 @@ class EWallet(Base):
         [ RETURN ]: (Contact record values | False)
         '''
         log.debug('')
-        if not kwargs.get('record'):
+        if not kwargs.get('record_id'):
             return self.error_no_contact_record_id_found(kwargs)
         contact_list = self.fetch_active_session_contact_list()
         if not contact_list or isinstance(contact_list, dict) and \
@@ -1097,7 +1097,7 @@ class EWallet(Base):
         log.info('Attempting to fetch contact record by id...')
         record = contact_list.fetch_contact_list_record(
             search_by='id' if not kwargs.get('search_by') else kwargs['search_by'],
-            code=kwargs['record'], active_session=self.fetch_active_session()
+            code=kwargs['record_id'], active_session=self.fetch_active_session()
         )
         if not record or isinstance(record, dict) and \
                 record.get('failed'):
@@ -1105,7 +1105,7 @@ class EWallet(Base):
         command_chain_response = {
             'failed': False,
             'contact_list': contact_list.fetch_contact_list_id(),
-            'contact_record': kwargs['record'],
+            'contact_record': kwargs['record_id'],
             'record_data': record.fetch_record_values(),
         }
         return command_chain_response
