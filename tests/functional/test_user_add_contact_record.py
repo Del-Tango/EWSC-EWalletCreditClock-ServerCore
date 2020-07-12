@@ -65,7 +65,7 @@ class TestEWalletSessionManageUserActionAddContactRecord(unittest.TestCase):
             os.remove('data/ewallet.db')
 
     def test_user_action_add_contact_record(self):
-        print('[ * ]: User action Add Contact List Record')
+        print('\n[ * ]: User action Add Contact List Record')
         instruction_set = {
             'controller': 'client', 'ctype': 'action', 'action': 'new',
             'new': 'contact', 'contact': 'record', 'client_id': self.client_id,

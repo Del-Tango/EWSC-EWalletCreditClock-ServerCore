@@ -65,7 +65,7 @@ class TestEWalletSessionManageUserActionCreateTransferSheet(unittest.TestCase):
             os.remove('data/ewallet.db')
 
     def test_user_action_create_transfer_sheet(self):
-        print('[ * ]: User action Create Transfer Sheet')
+        print('\n[ * ]: User action Create Transfer Sheet')
         instruction_set = {
             'controller': 'client', 'ctype': 'action', 'action': 'new',
             'new': 'transfer', 'transfer': 'list', 'client_id': self.client_id,

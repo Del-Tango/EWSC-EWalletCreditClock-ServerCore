@@ -81,7 +81,7 @@ class TestEWalletSessionManagerUserActionStartTimer(unittest.TestCase):
             os.remove('data/ewallet.db')
 
     def test_user_action_start_clock_timer(self):
-        print('[ * ]: User action Start Clock Timer')
+        print('\n[ * ]: User action Start Clock Timer')
         instruction_set = {
             'controller': 'client', 'ctype': 'action', 'action': 'start',
             'start': 'clock_timer', 'client_id': self.client_id,

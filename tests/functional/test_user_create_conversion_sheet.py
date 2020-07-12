@@ -65,7 +65,7 @@ class TestEWalletSessionManageUserActionCreateConversionSheet(unittest.TestCase)
             os.remove('data/ewallet.db')
 
     def test_user_action_create_conversion_sheet(self):
-        print('[ * ]: User action Create Conversion Sheet')
+        print('\n[ * ]: User action Create Conversion Sheet')
         instruction_set = {
             'controller': 'client', 'ctype': 'action', 'action': 'new',
             'new': 'conversion', 'conversion': 'list',

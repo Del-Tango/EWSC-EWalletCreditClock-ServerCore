@@ -65,7 +65,7 @@ class TestEWalletSessionManageUserActionCreateInvoiceSheet(unittest.TestCase):
             os.remove('data/ewallet.db')
 
     def test_user_action_create_invoice_sheet(self):
-        print('[ * ]: User action Create Invoice Sheet')
+        print('\n[ * ]: User action Create Invoice Sheet')
         instruction_set = {
             'controller': 'client', 'ctype': 'action', 'action': 'new',
             'new': 'invoice', 'invoice': 'list', 'client_id': self.client_id,

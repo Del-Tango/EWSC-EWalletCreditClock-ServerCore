@@ -82,7 +82,7 @@ class TestEWalletSessionManageUserActionViewConversionRecord(unittest.TestCase):
             os.remove('data/ewallet.db')
 
     def test_user_action_view_conversion_record(self):
-        print('[ * ]: User action View Conversion Record')
+        print('\n[ * ]: User action View Conversion Record')
         instruction_set = {
             'controller': 'client', 'ctype': 'action', 'action': 'view',
             'view': 'conversion', 'conversion': 'record', 'record_id': 1,

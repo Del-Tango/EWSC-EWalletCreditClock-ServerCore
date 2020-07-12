@@ -72,7 +72,7 @@ class TestEWalletSessionManageUserActionUnlinkInvoiceSheet(unittest.TestCase):
             os.remove('data/ewallet.db')
 
     def test_user_action_unlink_invoice_sheet(self):
-        print('[ * ]: User action Unlink Invoice Sheet')
+        print('\n[ * ]: User action Unlink Invoice Sheet')
         instruction_set = {
             'controller': 'client', 'ctype': 'action', 'action': 'unlink',
             'unlink': 'invoice', 'invoice': 'list', 'list_id': 2,

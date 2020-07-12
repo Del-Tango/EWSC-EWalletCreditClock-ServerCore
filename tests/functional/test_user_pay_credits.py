@@ -77,7 +77,7 @@ class TestEWalletSessionManageUserActionPayCredits(unittest.TestCase):
         [ NOTE ]: Instruction Set Details
             - pay = Target user email address
         '''
-        print('[ * ]: User action Pay Credits')
+        print('\n[ * ]: User action Pay Credits')
         instruction_set = {
             'controller': 'client', 'ctype': 'action', 'action': 'pay',
             'pay': 'ewallet1@alvearesolutions.ro', 'credits': 10,

@@ -72,7 +72,7 @@ class TestEWalletSessionManageUserActionUnlinkCreditClock(unittest.TestCase):
             os.remove('data/ewallet.db')
 
     def test_user_action_unlink_credit_clock(self):
-        print('[ * ]: User action Unlink Credit Clock')
+        print('\n[ * ]: User action Unlink Credit Clock')
         instruction_set = {
             'controller': 'client', 'ctype': 'action', 'action': 'unlink',
             'unlink': 'credit', 'credit': 'clock', 'clock_id': 2,

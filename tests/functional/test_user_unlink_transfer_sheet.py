@@ -73,7 +73,7 @@ class TestEWalletSessionManageUserActionUnlinkTransferSheet(unittest.TestCase):
 
 
     def test_user_action_unlink_transfer_sheet(self):
-        print('[ * ]: User action Unlink Transfer Sheet')
+        print('\n[ * ]: User action Unlink Transfer Sheet')
         instruction_set = {
             'controller': 'client', 'ctype': 'action', 'action': 'unlink',
             'unlink': 'transfer', 'transfer': 'list', 'list_id': 2,

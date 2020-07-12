@@ -8,14 +8,17 @@ class TestEWalletSessionManagerSystemActionInterogateSession(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
+        print('[ + ]: Prerequisits:')
         # Create new EWallet Session Manager instance
         session_manager = manager.EWalletSessionManager()
         # Create first EWallet Session Worker
+        print('[...]: System action New Session Worker')
         worker = session_manager.session_manager_controller(
             controller='system', ctype='action', action='new', new='worker'
         )
         cls.session_manager = session_manager
         # Spawn new EWallet Session with no active user or session token
+        print('[...]: System action New Session')
         session = session_manager.session_manager_controller(
             controller='system', ctype='action', action='new', new='session',
             reference='EWallet Session Test'
@@ -28,7 +31,7 @@ class TestEWalletSessionManagerSystemActionInterogateSession(unittest.TestCase):
             os.remove('data/ewallet.db')
 
     def test_system_action_interogate_ewallet_session_functionality(self):
-        print('[ * ]: System action Interogate EWallet Session')
+        print('\n[ * ]: System action Interogate EWallet Session')
         instruction_set = {
             'controller': 'system', 'ctype': 'action', 'action': 'interogate',
             'interogate': 'session', 'session_id': 1

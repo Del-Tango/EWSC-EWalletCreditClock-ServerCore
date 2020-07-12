@@ -71,9 +71,8 @@ class TestEWalletSessionManageUserActionSwitchContactList(unittest.TestCase):
         if os.path.isfile('data/ewallet.db'):
             os.remove('data/ewallet.db')
 
-
     def test_user_action_switch_contact_list(self):
-        print('[ * ]: User action Switch Contact List')
+        print('\n[ * ]: User action Switch Contact List')
         instruction_set = {
             'controller': 'client', 'ctype': 'action', 'action': 'switch',
             'switch': 'contact_list', 'list_id': 2, 'client_id': self.client_id,

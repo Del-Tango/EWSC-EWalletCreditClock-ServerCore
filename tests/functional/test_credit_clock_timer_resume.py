@@ -94,7 +94,7 @@ class TestEWalletSessionManageUserActionResumeTimer(unittest.TestCase):
             os.remove('data/ewallet.db')
 
     def test_user_action_resume_clock_timer(self):
-        print('[ * ]: User action Resume Clock Timer')
+        print('\n[ * ]: User action Resume Clock Timer')
         instruction_set = {
             'controller': 'client', 'ctype': 'action', 'action': 'resume',
             'resume': 'clock_timer', 'client_id': self.client_id,

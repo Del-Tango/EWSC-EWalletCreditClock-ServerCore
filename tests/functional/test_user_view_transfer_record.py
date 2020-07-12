@@ -91,7 +91,7 @@ class TestEWalletSessionManageUserActionViewTransferRecord(unittest.TestCase):
             os.remove('data/ewallet.db')
 
     def test_user_action_view_transfer_record(self):
-        print('[ * ]: User action View Transfer Record')
+        print('\n[ * ]: User action View Transfer Record')
         instruction_set = {
             'controller': 'client', 'ctype': 'action', 'action': 'view',
             'view': 'transfer', 'transfer': 'record', 'record_id': 3,

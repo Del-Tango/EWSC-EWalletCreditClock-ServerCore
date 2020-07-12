@@ -72,7 +72,7 @@ class TestEWalletSessionManageUserActionSwitchCreditEWallet(unittest.TestCase):
             os.remove('data/ewallet.db')
 
     def test_user_action_switch_credit_ewallet(self):
-        print('[ * ]: User action Switch Credit EWallet')
+        print('\n[ * ]: User action Switch Credit EWallet')
         instruction_set = {
             'controller': 'client', 'ctype': 'action', 'action': 'switch',
             'switch': 'credit', 'credit': 'ewallet', 'ewallet_id': 2,

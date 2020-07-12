@@ -72,7 +72,7 @@ class TestEWalletSessionManageUserActionSwitchTimeSheet(unittest.TestCase):
             os.remove('data/ewallet.db')
 
     def test_user_action_switch_time_sheet(self):
-        print('[ * ]: User action Switch Time Sheet')
+        print('\n[ * ]: User action Switch Time Sheet')
         instruction_set = {
             'controller': 'client', 'ctype': 'action', 'action': 'switch',
             'switch': 'time_sheet', 'sheet_id': 2, 'client_id': self.client_id,

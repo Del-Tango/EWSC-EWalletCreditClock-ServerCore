@@ -65,7 +65,7 @@ class TestEWalletSessionManageUserActionViewLoginRecords(unittest.TestCase):
             os.remove('data/ewallet.db')
 
     def test_user_action_view_login_records(self):
-        print('[ * ]: User action View Login Records')
+        print('\n[ * ]: User action View Login Records')
         instruction_set = {
             'controller': 'client', 'ctype': 'action', 'action': 'view',
             'view': 'login', 'client_id': self.client_id,

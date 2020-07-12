@@ -56,7 +56,7 @@ class TestEWalletSessionManagerSystemSessionCleanupTarget(unittest.TestCase):
             os.remove('data/ewallet.db')
 
     def test_system_action_cleanup_target_session(self):
-        print('[ * ]: System action Cleanup Target Ewallet Session')
+        print('\n[ * ]: System action Cleanup Target Ewallet Session')
         instruction_set = {
             'controller': 'system', 'ctype': 'action', 'action': 'cleanup',
             'cleanup': 'sessions', 'session_id': 3
@@ -73,5 +73,3 @@ class TestEWalletSessionManagerSystemSessionCleanupTarget(unittest.TestCase):
         self.assertFalse(clean.get('failed'))
         self.assertTrue(isinstance(clean['sessions_cleaned'], int))
         self.assertEqual(clean['sessions_cleaned'], 1)
-
-

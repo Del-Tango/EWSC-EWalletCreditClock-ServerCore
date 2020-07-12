@@ -73,7 +73,7 @@ class TestEWalletSessionManageUserActionViewInvoiceSheet(unittest.TestCase):
             os.remove('data/ewallet.db')
 
     def test_user_action_view_invoice_sheet(self):
-        print('[ * ]: User action View Invoice Sheet')
+        print('\n[ * ]: User action View Invoice Sheet')
         instruction_set = {
             'controller': 'client', 'ctype': 'action', 'action': 'view',
             'view': 'invoice', 'invoice': 'list', 'client_id': self.client_id,

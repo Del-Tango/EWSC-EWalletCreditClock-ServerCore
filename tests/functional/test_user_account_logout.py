@@ -65,7 +65,7 @@ class TestEWalletSessionManageUserActionAccountLogout(unittest.TestCase):
             os.remove('data/ewallet.db')
 
     def test_user_action_logout_account(self):
-        print('[ * ]: User action Account Logout')
+        print('\n[ * ]: User action Account Logout')
         instruction_set = {
             'controller': 'client', 'ctype': 'action', 'action': 'logout',
             'client_id': self.client_id, 'session_token': self.session_token

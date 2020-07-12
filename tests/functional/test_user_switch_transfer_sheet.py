@@ -72,7 +72,7 @@ class TestEWalletSessionManageUserActionSwitchTransferSheet(unittest.TestCase):
             os.remove('data/ewallet.db')
 
     def test_user_action_switch_transfer_sheet(self):
-        print('[ * ]: User action Switch Transfer Sheet')
+        print('\n[ * ]: User action Switch Transfer Sheet')
         instruction_set = {
             'controller': 'client', 'ctype': 'action', 'action': 'switch',
             'switch': 'transfer_sheet', 'client_id': self.client_id,

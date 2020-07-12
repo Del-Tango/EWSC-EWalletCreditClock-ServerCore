@@ -87,7 +87,7 @@ class TestEWalletSessionManageUserActionPauseTimer(unittest.TestCase):
             os.remove('data/ewallet.db')
 
     def test_user_action_pause_clock_timer(self):
-        print('[ * ]: User action Pause Clock Timer')
+        print('\n[ * ]: User action Pause Clock Timer')
         instruction_set = {
             'controller': 'client', 'ctype': 'action', 'action': 'pause',
             'pause': 'clock_timer', 'client_id': self.client_id,

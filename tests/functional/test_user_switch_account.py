@@ -73,7 +73,7 @@ class TestEWalletSessionManageUserActionSwitchAccount(unittest.TestCase):
             os.remove('data/ewallet.db')
 
     def test_user_action_switch_active_session_user(self):
-        print('[ * ]: User action Switch Active Session User')
+        print('\n[ * ]: User action Switch Active Session User')
         instruction_set = {
             'controller': 'client', 'ctype': 'action', 'action': 'switch',
             'switch': 'account', 'account': self.user_email_2,
@@ -89,5 +89,5 @@ class TestEWalletSessionManageUserActionSwitchAccount(unittest.TestCase):
         self.assertTrue(isinstance(switch, dict))
         self.assertEqual(len(switch.keys()), 3)
         self.assertFalse(switch.get('failed'))
-        self.assertTrue(isinstance(switch.get('user_account'), str))
+        self.assertTrue(isinstance(switch.get('account'), str))
         self.assertTrue(isinstance(switch.get('session_data'), dict))

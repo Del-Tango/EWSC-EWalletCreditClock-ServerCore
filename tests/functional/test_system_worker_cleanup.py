@@ -37,7 +37,7 @@ class TestEWalletSessionManagerSystemWorkerCleanup(unittest.TestCase):
             os.remove('data/ewallet.db')
 
     def test_system_action_cleanup_worker_functionality(self):
-        print('[ * ]: System action Cleanup Session Workers')
+        print('\n[ * ]: System action Cleanup Session Workers')
         instruction_set = {
             'controller': 'system', 'ctype': 'action', 'action': 'cleanup',
             'cleanup': 'workers'

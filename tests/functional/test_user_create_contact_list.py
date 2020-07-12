@@ -66,7 +66,7 @@ class TestEWalletSessionManageUserActionCreateContactList(unittest.TestCase):
 
 
     def test_user_action_create_contact_list(self):
-        print('[ * ]: User action Create Contact List')
+        print('\n[ * ]: User action Create Contact List')
         instruction_set = {
             'controller': 'client', 'ctype': 'action', 'action': 'new',
             'new': 'contact', 'contact': 'list', 'client_id': self.client_id,

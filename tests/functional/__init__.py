@@ -3,6 +3,9 @@ from . import test_system_session_sweep_cleanup
 from . import test_system_session_target_cleanup
 from . import test_system_worker_cleanup
 
+from . import test_user_request_clientid
+from . import test_user_request_stoken
+
 from . import test_user_create_account
 from . import test_user_account_login
 from . import test_user_supply_credits

@@ -81,7 +81,7 @@ class TestEWalletSessionManagerUserConvertClockToCredits(unittest.TestCase):
             os.remove('data/ewallet.db')
 
     def test_user_action_convert_clock_to_credits(self):
-        print('[ * ]: User action Convert Clock To Credits')
+        print('\n[ * ]: User action Convert Clock To Credits')
         instruction_set = {
             'controller': 'client', 'ctype': 'action', 'action': 'convert',
             'convert': 'clock2credits', 'client_id': self.client_id,

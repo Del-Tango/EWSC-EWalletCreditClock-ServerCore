@@ -95,7 +95,7 @@ class TestEWalletSessionManageUserActionViewTimeRecord(unittest.TestCase):
 
 
     def test_user_action_view_time_record(self):
-        print('[ * ]: User action View Time Record')
+        print('\n[ * ]: User action View Time Record')
         instruction_set = {
             'controller': 'client', 'ctype': 'action', 'action': 'view',
             'view': 'time', 'time': 'record', 'record_id': 1,

@@ -66,7 +66,7 @@ class TestEWalletSessionManagerUserSupplyCredits(unittest.TestCase):
             os.remove('data/ewallet.db')
 
     def test_user_action_supply_credits_functionality(self):
-        print('[ * ]: User action Supply Credits')
+        print('\n[ * ]: User action Supply Credits')
         instruction_set = {
             'controller': 'client', 'ctype': 'action', 'action': 'supply',
             'supply': 'credits', 'client_id': self.client_id,

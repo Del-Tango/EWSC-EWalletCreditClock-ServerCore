@@ -29,7 +29,7 @@ class TestEWalletUserActionRequestSessionToken(unittest.TestCase):
             os.remove('data/ewallet.db')
 
     def test_user_request_session_token_functionality(self):
-        print('[ * ]: User action Request Session Token')
+        print('\n[ * ]: User action Request Session Token')
         instruction_set = {
             'controller': 'client', 'ctype': 'action', 'action': 'request',
             'request': 'session_token', 'client_id': self.client_id

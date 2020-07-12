@@ -94,7 +94,7 @@ class TestEWalletSessionManageUserActionViewTimeSheet(unittest.TestCase):
             os.remove('data/ewallet.db')
 
     def test_user_action_view_time_sheet(self):
-        print('[ * ]: User action View Time Sheet')
+        print('\n[ * ]: User action View Time Sheet')
         instruction_set = {
             'controller': 'client', 'ctype': 'action', 'action': 'view',
             'view': 'time', 'time': 'list', 'client_id': self.client_id,

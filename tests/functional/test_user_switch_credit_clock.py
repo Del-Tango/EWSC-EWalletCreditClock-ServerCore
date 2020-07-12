@@ -72,7 +72,7 @@ class TestEWalletSessionManageUserActionSwitchCreditClock(unittest.TestCase):
             os.remove('data/ewallet.db')
 
     def test_user_action_switch_credit_clock(self):
-        print('[ * ]: User action Switch Credit Clock')
+        print('\n[ * ]: User action Switch Credit Clock')
         instruction_set = {
             'controller': 'client', 'ctype': 'action', 'action': 'switch',
             'switch': 'credit', 'credit': 'clock', 'clock_id': 2,

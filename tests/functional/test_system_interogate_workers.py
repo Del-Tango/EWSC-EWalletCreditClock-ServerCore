@@ -31,7 +31,7 @@ class TestEWalletSessionManagerSystemActionInterogateWorkers(unittest.TestCase):
             os.remove('data/ewallet.db')
 
     def test_system_action_interogate_ewallet_workers_functionality(self):
-        print('[ * ]: System action Interogate EWallet Workers')
+        print('\n[ * ]: System action Interogate EWallet Workers')
         instruction_set = {
             'controller': 'system', 'ctype': 'action', 'action': 'interogate',
             'interogate': 'workers'

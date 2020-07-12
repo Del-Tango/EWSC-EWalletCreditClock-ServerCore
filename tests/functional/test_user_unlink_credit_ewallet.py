@@ -72,7 +72,7 @@ class TestEWalletSessionManageUserActionUnlinkCreditEWallet(unittest.TestCase):
             os.remove('data/ewallet.db')
 
     def test_user_action_unlink_credit_ewallet(self):
-        print('[ * ]: User action Unlink Credit EWallet')
+        print('\n[ * ]: User action Unlink Credit EWallet')
         instruction_set = {
             'controller': 'client', 'ctype': 'action', 'action': 'unlink',
             'unlink': 'credit', 'credit': 'ewallet', 'ewallet_id': 2,

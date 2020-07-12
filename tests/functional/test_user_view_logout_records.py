@@ -77,7 +77,7 @@ class TestEWalletSessionManageUserActionViewLogoutRecords(unittest.TestCase):
             os.remove('data/ewallet.db')
 
     def test_user_action_view_logout_records(self):
-        print('[ * ]: User action View Logout Records')
+        print('\n[ * ]: User action View Logout Records')
         instruction_set = {
             'controller': 'client', 'ctype': 'action', 'action': 'view',
             'view': 'logout', 'client_id': self.client_id,

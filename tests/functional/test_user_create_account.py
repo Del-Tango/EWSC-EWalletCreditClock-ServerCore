@@ -40,7 +40,7 @@ class TestEWalletSessionManagerUserCreateAccount(unittest.TestCase):
             os.remove('data/ewallet.db')
 
     def test_user_action_create_account_functionality(self):
-        print('[ * ]: User action Create New Account')
+        print('\n[ * ]: User action Create New Account')
         instruction_set = {
             'controller': 'client', 'ctype': 'action', 'action': 'new',
             'new': 'account', 'client_id': self.client_id,

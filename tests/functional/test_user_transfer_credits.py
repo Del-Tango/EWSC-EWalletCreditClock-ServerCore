@@ -83,7 +83,7 @@ class TestEWalletSessionManageUserActionTransferCredits(unittest.TestCase):
             os.remove('data/ewallet.db')
 
     def test_user_action_transfer_credits(self):
-        print('[ * ]: User action Transfer Credits.')
+        print('\n[ * ]: User action Transfer Credits.')
         instruction_set = {
             'controller': 'client', 'ctype': 'action', 'action': 'transfer',
             'transfer': 'credits', 'client_id': self.client_id,

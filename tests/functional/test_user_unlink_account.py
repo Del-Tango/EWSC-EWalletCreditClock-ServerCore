@@ -65,7 +65,7 @@ class TestEWalletSessionManageUserActionUnlinkAccount(unittest.TestCase):
             os.remove('data/ewallet.db')
 
     def test_user_action_unlink_user_account(self):
-        print('[ * ]: User action Unlink Account')
+        print('\n[ * ]: User action Unlink Account')
         instruction_set = {
             'controller': 'client', 'ctype': 'action', 'action': 'unlink',
             'unlink': 'account', 'client_id': self.client_id,

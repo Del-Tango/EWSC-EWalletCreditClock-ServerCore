@@ -70,8 +70,6 @@
 
     - Resource write dates not updated on most resources
 
-    + Check discrepancies between function test report and ewallet_dox
-
 [ 1 ]: TODO - BUG FIX - Report Issue
 
 

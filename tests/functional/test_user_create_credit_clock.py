@@ -65,7 +65,7 @@ class TestEWalletSessionManageUserActionCreateCreditClock(unittest.TestCase):
             os.remove('data/ewallet.db')
 
     def test_user_action_create_credit_clock(self):
-        print('[ * ]: User action Create Credit Clock')
+        print('\n[ * ]: User action Create Credit Clock')
         instruction_set = {
             'controller': 'client', 'ctype': 'action', 'action': 'new',
             'new': 'credit', 'credit': 'clock', 'client_id': self.client_id,

@@ -25,7 +25,7 @@ class TestEWalletSessionManagerSystemActionNewSession(unittest.TestCase):
             os.remove('data/ewallet.db')
 
     def test_system_new_session_functionality(self):
-        print('[ * ]: System action New EWallet Session')
+        print('\n[ * ]: System action New EWallet Session')
         instruction_set = {
             'controller': 'system', 'ctype': 'action', 'action': 'new',
             'new': 'session', 'reference': 'EWallet Session Test'

@@ -75,7 +75,7 @@ class TestEWalletSessionManageUserActionViewContactRecord(unittest.TestCase):
             os.remove('data/ewallet.db')
 
     def test_user_action_view_contact_record(self):
-        print('[ * ]: User action View Contact Record')
+        print('\n[ * ]: User action View Contact Record')
         instruction_set = {
             'controller': 'client', 'ctype': 'action', 'action': 'view',
             'view': 'contact', 'contact': 'record', 'client_id': self.client_id,

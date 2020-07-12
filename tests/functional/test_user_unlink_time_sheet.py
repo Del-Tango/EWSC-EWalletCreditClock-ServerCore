@@ -72,7 +72,7 @@ class TestEWalletSessionManageUserActionUnlinkTimeSheet(unittest.TestCase):
             os.remove('data/ewallet.db')
 
     def test_user_action_unlink_time_sheet(self):
-        print('[ * ]: User action Unlink Time Sheet')
+        print('\n[ * ]: User action Unlink Time Sheet')
         instruction_set = {
             'controller': 'client', 'ctype': 'action', 'action': 'unlink',
             'unlink': 'time', 'time': 'list', 'list_id': 2,

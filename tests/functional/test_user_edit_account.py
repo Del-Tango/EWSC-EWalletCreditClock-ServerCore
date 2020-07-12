@@ -66,7 +66,7 @@ class TestEWalletSessionManageUserActionEditAccount(unittest.TestCase):
             os.remove('data/ewallet.db')
 
     def test_user_action_edit_account(self):
-        print('[ * ]: User action Edit Account')
+        print('\n[ * ]: User action Edit Account')
         instruction_set = {
             'controller': 'client', 'ctype': 'action', 'action': 'edit',
             'edit': 'account', 'client_id': self.client_id,

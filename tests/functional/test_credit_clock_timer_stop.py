@@ -101,7 +101,7 @@ class TestEWalletSessionManageUserActionStopTimer(unittest.TestCase):
             os.remove('data/ewallet.db')
 
     def test_user_action_stop_clock_timer(self):
-        print('[ * ]: User action Stop Clock Timer')
+        print('\n[ * ]: User action Stop Clock Timer')
         instruction_set = {
             'controller': 'client', 'ctype': 'action', 'action': 'stop',
             'stop': 'clock_timer', 'client_id': self.client_id,

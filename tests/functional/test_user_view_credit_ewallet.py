@@ -66,7 +66,7 @@ class TestEWalletSessionManageUserActionViewCreditEWallet(unittest.TestCase):
             os.remove('data/ewallet.db')
 
     def test_user_action_view_credit_ewallet(self):
-        print('[ * ]: User action View Credit EWallet')
+        print('\n[ * ]: User action View Credit EWallet')
         instruction_set = {
             'controller': 'client', 'ctype': 'action', 'action': 'view',
             'view': 'credit', 'credit': 'ewallet', 'client_id': self.client_id,

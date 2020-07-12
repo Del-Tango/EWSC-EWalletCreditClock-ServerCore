@@ -78,7 +78,7 @@ class TestEWalletSessionManageUserActionUnlinkTimeRecord(unittest.TestCase):
 
 
     def test_user_action_unlink_time_record(self):
-        print('[ * ]: User action Unlink Time Record')
+        print('\n[ * ]: User action Unlink Time Record')
         instruction_set = {
             'controller': 'client', 'ctype': 'action', 'action': 'unlink',
             'unlink': 'time', 'time': 'record', 'record_id': 1,

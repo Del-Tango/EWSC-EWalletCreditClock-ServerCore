@@ -73,7 +73,7 @@ class TestEWalletSessionManageUserActionUnlinkConversionRecord(unittest.TestCase
             os.remove('data/ewallet.db')
 
     def test_user_action_unlink_conversion_record(self):
-        print('[ * ]: User action Unlink Conversion Record')
+        print('\n[ * ]: User action Unlink Conversion Record')
         instruction_set = {
             'controller': 'client', 'ctype': 'action', 'action': 'unlink',
             'unlink': 'conversion', 'conversion': 'record', 'record_id': 1,

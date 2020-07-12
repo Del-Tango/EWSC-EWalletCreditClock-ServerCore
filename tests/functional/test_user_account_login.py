@@ -49,7 +49,7 @@ class TestEWalletSessionManagerUserAccountLogin(unittest.TestCase):
             os.remove('data/ewallet.db')
 
     def test_user_action_session_login_functionality(self):
-        print('[ * ]: User action Account Login')
+        print('\n[ * ]: User action Account Login')
         instruction_set = {
             'controller': 'client', 'ctype': 'action', 'action': 'login',
             'client_id': self.client_id, 'session_token': self.session_token,
