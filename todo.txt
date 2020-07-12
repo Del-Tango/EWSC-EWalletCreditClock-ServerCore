@@ -70,9 +70,7 @@
 
     - Resource write dates not updated on most resources
 
-    - User action View Contact Record
-        - Change 'record' tag to 'record_id'
-        + Check discrepancies between function test report and ewallet_dox
+    + Check discrepancies between function test report and ewallet_dox
 
 [ 1 ]: TODO - BUG FIX - Report Issue
 

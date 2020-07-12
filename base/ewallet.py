@@ -2441,7 +2441,7 @@ class EWallet(Base):
         account_archive = self.fetch_active_session_user_account_archive()
         command_chain_response = {
             'failed': False,
-            'user_account': new_account.fetch_user_email(),
+            'account': new_account.fetch_user_email(),
             'session_data': {
                 'session_user_account': None if not update_session['active_user'] \
                     else update_session['active_user'].fetch_user_email(),
