@@ -534,7 +534,7 @@
 [...]: User action Create New Account
 [...]: User action Account Login
 [ * ]: User action View Credit EWallet
-[ > ]: Instruction Setx : {'controller': 'client', 'ctype': 'action', 'action': 'view', 'view': 'credit', 'credit': 'ewallet', 'client_id': 'ewsm-uid:wZlL18V8qjgXDNBg6U4i:1594433683.7634487', 'session_token': 'ewsm-st:0HcmDlGogQ28ccZvJwHf:1594433686.963383'}
+[ > ]: Instruction Set : {'controller': 'client', 'ctype': 'action', 'action': 'view', 'view': 'credit', 'credit': 'ewallet', 'client_id': 'ewsm-uid:wZlL18V8qjgXDNBg6U4i:1594433683.7634487', 'session_token': 'ewsm-st:0HcmDlGogQ28ccZvJwHf:1594433686.963383'}
 [ < ]: Response: {'failed': False, 'ewallet': 2, 'ewallet_data': {'id': 2, 'user': 2, 'reference': 'Credit EWallet', 'create_date': '11-07-2020 05:14:47', 'write_date': '11-07-2020 05:14:48', 'credits': 0, 'clock': 2, 'clock_archive': {2: 'Credit Clock'}, 'transfer_sheet': 2, 'transfer_sheet_archive': {2: 'Transfer Sheet'}, 'invoice_sheet': 2, 'invoice_sheet_archive': {2: 'Invoice Sheet'}}}
 
 [ + ]: Prerequisits -

@@ -1,4 +1,52 @@
 ###############################################################################
+# EWallet Credit Clock Server Core (EWSC)
+###############################################################################
+# TODO - Pass down ResUtils(), Config() and SqlAlchemy() objects on
+         POST /ewallet/instruction_set
+# TODO - Add 'controller' tag with value 'client' from ewallet server to all
+         external instruction sets
+# TODO - Remove controller options from ewallet_dox
+# TODO - Implement basic HTTP authorization
+
+[ NOTES ] - Request types
+
+    - GET /ewallet
+        - Display introduction
+
+    - GET /ewallet/instruction_set
+        - Display available options
+
+    - GET /ewallet/instruction_set/
+        - Display available options
+        - Body: {
+            'option': 'action',
+            'action': 'user-action-label',
+        }
+            - Display action example
+        - Body: {
+            'option': 'event',
+            'action': 'user-event-label',
+        }
+            - Display event example
+
+    - POST /ewallet/instruction_set
+        - Execute instruction set and return response
+
+
+###############################################################################
+# EWallet Credit Clock Python Client Core (EWPCC)
+###############################################################################
+# TODO - Create separate project
+# TODO - Add HTTP request handler
+# TODO - Add functional tests
+# TODO - Add interactive ewallet session
+
+###############################################################################
+# EWallet Credit Clock API Tutor (EWAT)
+###############################################################################
+# TODO - Implement script
+
+###############################################################################
 # EWallet Socket Handler
 ###############################################################################
 # TODO - Hangs on first incomming connection
@@ -7,9 +55,6 @@
 ###############################################################################
 # EWallet Session Manager
 ###############################################################################
-
-[ 0 ]: TODO - Improvement - Instruction Set Response
-
 
 [ 0 ]: TODO - BUG FIX - Functional Issue
 
@@ -21,10 +66,13 @@
         - No checks are performed to see if client-id is already mapped to
           session token.
 
-    - User action view invoice record
-        - No seller id found.
+    - Implement expired ewallet session removal cron
 
     - Resource write dates not updated on most resources
+
+    - User action View Contact Record
+        - Change 'record' tag to 'record_id'
+        + Check discrepancies between function test report and ewallet_dox
 
 [ 1 ]: TODO - BUG FIX - Report Issue
 

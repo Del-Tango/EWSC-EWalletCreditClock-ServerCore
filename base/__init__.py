@@ -14,3 +14,4 @@ from . import invoice_sheet
 from . import socket_handler
 from . import ewallet_login
 from . import ewallet_logout
+from . import ewallet_dox
