@@ -7,6 +7,7 @@
          external instruction sets
 # TODO - Remove controller options from ewallet_dox
 # TODO - Implement basic HTTP authorization
+# TODO - Add .conf file
 
 [ NOTES ] - Request types
 
@@ -41,10 +42,13 @@
 # TODO - Add functional tests
 # TODO - Add interactive ewallet session
 
+
 ###############################################################################
 # EWallet Credit Clock API Tutor (EWAT)
 ###############################################################################
-# TODO - Implement script
+# TODO - Add support for events
+# TODO - Add .conf file
+
 
 ###############################################################################
 # EWallet Socket Handler
@@ -72,6 +76,8 @@
 
 [ 1 ]: TODO - BUG FIX - Report Issue
 
+    - User action Pay Credits
+        - Rename tag 'payed' to 'paid'
 
 ###############################################################################
 # EWallet Session Worker

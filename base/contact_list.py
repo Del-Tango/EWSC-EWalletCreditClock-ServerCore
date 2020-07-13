@@ -7,9 +7,8 @@ from sqlalchemy.orm import relationship
 from .config import Config
 from .res_utils import ResUtils, Base
 
-res_utils = ResUtils()
-log_config = Config().log_config
-log = logging.getLogger(log_config['log_name'])
+res_utils, config = ResUtils(), Config()
+log = logging.getLogger(config.log_config['log_name'])
 
 
 class ContactListRecord(Base):
@@ -18,7 +17,7 @@ class ContactListRecord(Base):
     record_id = Column(Integer, primary_key=True)
     contact_list_id = Column(
         Integer, ForeignKey('contact_list.contact_list_id')
-        )
+    )
     create_date = Column(DateTime)
     write_date = Column(DateTime)
     user_id = Column(Integer, ForeignKey('res_user.user_id'))
@@ -38,7 +37,8 @@ class ContactListRecord(Base):
         self.user_email = kwargs.get('user_email')
         self.user_phone = kwargs.get('user_phone')
         self.notes = kwargs.get('notes')
-        self.reference = kwargs.get('reference') or 'Contact List Record'
+        self.reference = kwargs.get('reference') or \
+            config.contact_list_config['contact_record_reference']
 
     def fetch_record_id(self):
         log.debug('')
@@ -69,7 +69,8 @@ class ContactListRecord(Base):
         values = {
             'id': self.record_id,
             'contact_list': self.contact_list_id,
-            'reference': self.reference,
+            'reference': self.reference or \
+                config.contact_list_config['contact_record_reference'],
             'create_date': res_utils.format_datetime(self.create_date),
             'write_date': res_utils.format_datetime(self.write_date),
             'name': self.user_name,
@@ -183,7 +184,8 @@ class ContactList(Base):
         self.create_date = datetime.datetime.now()
         self.write_date = datetime.datetime.now()
         self.client_id = kwargs.get('client_id')
-        self.reference = kwargs.get('reference') or 'Contact List'
+        self.reference = kwargs.get('reference') or \
+            config.contact_list_config['contact_list_reference']
         self.active_session_id = kwargs.get('active_session_id')
         self.records = kwargs.get('records') or []
 
@@ -208,7 +210,8 @@ class ContactList(Base):
         values = {
             'id': self.contact_list_id,
             'user': self.client_id,
-            'reference': self.reference,
+            'reference': self.reference or \
+                config.contact_list_config['contact_list_reference'],
             'create_date': res_utils.format_datetime(self.create_date),
             'write_date': res_utils.format_datetime(self.write_date),
             'records': {

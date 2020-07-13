@@ -8,9 +8,8 @@ from sqlalchemy.orm import relationship
 from .res_utils import ResUtils, Base
 from .config import Config
 
-res_utils = ResUtils()
-log_config = Config().log_config
-log = logging.getLogger(log_config['log_name'])
+res_utils, config = ResUtils(), Config()
+log = logging.getLogger(config.log_config['log_name'])
 
 
 class CreditTransferSheetRecord(Base):
@@ -31,7 +30,8 @@ class CreditTransferSheetRecord(Base):
     def __init__(self, **kwargs):
         self.create_date = datetime.datetime.now()
         self.write_date = datetime.datetime.now()
-        self.reference = kwargs.get('reference') or 'Transfer Sheet Record'
+        self.reference = kwargs.get('reference') or \
+            config.transfer_sheet_config['transfer_record_reference']
         self.transfer_type = kwargs.get('transfer_type')
         self.transfer_from = kwargs.get('transfer_from')
         self.transfer_to = kwargs.get('transfer_to')
@@ -180,7 +180,8 @@ class CreditTransferSheet(Base):
         self.create_date = datetime.datetime.now()
         self.write_date = datetime.datetime.now()
         self.wallet_id = kwargs.get('wallet_id')
-        self.reference = kwargs.get('reference') or 'Transfer Sheet'
+        self.reference = kwargs.get('reference') or \
+            config.transfer_sheet_config['transfer_sheet_reference']
         self.records = kwargs.get('records') or []
 
     # FETCHERS
@@ -206,7 +207,8 @@ class CreditTransferSheet(Base):
         values = {
             'id': self.transfer_sheet_id,
             'ewallet': self.wallet_id,
-            'reference': self.reference,
+            'reference': self.reference or
+                config.transfer_sheet_config['transfer_sheet_reference'],
             'create_date': res_utils.format_datetime(self.create_date),
             'write_date': res_utils.format_datetime(self.write_date),
             'records': {
@@ -222,7 +224,8 @@ class CreditTransferSheet(Base):
         '''
         log.debug('')
         values = {
-            'reference': kwargs.get('reference'),
+            'reference': kwargs.get('reference') or
+                config.transfer_sheet_config['transfer_record_reference'],
             'transfer_sheet': self,
             'transfer_type': kwargs.get('transfer_type'),
             'transfer_from': kwargs.get('transfer_from'),
@@ -237,8 +240,8 @@ class CreditTransferSheet(Base):
             return self.error_no_transfer_record_id_found()
         if kwargs.get('active_session'):
             _match = list(
-                kwargs['active_session'].query(CreditTransferSheetRecord) \
-                        .filter_by(record_id=kwargs['code'])
+                kwargs['active_session'].query(CreditTransferSheetRecord)\
+                .filter_by(record_id=kwargs['code'])
             )
         else:
             _match = [
@@ -248,8 +251,8 @@ class CreditTransferSheet(Base):
         _record = False if not _match else _match[0]
         if not _record:
             return self.warning_could_not_fetch_transfer_record(
-                    'id', kwargs['code']
-                    )
+                'id', kwargs['code']
+            )
         log.info('Successfully fetched transfer record by id.')
         return _record
 
@@ -450,31 +453,33 @@ class CreditTransferSheet(Base):
         log.debug('')
         if not kwargs.get('action'):
             return self.error_no_transfer_sheet_controller_action_specified()
-        _handlers = {
-                'add': self.add_transfer_sheet_record,
-                'remove': self.remove_transfer_sheet_record,
-                'append': self.append_transfer_sheet_record,
-                'interogate': self.interogate_transfer_sheet_records,
-                'clear': self.clear_transfer_sheet_records,
-                }
-        _handle = _handlers[kwargs['action']](**kwargs)
-        if _handle and kwargs['action'] != 'interogate':
+        handlers = {
+            'add': self.add_transfer_sheet_record,
+            'remove': self.remove_transfer_sheet_record,
+            'append': self.append_transfer_sheet_record,
+            'interogate': self.interogate_transfer_sheet_records,
+            'clear': self.clear_transfer_sheet_records,
+        }
+        handle = handlers[kwargs['action']](**kwargs)
+        if handle and kwargs['action'] != 'interogate':
             self.update_write_date()
-        return _handle
+        return handle
 
     # ERRORS
 
     def error_could_not_remove_transfer_sheet_record(self, command_chain):
         command_chain_response = {
             'failed': True,
-            'error': 'Could not remove transfer sheet record. Command chain details : {}'\
-                     .format(command_chain),
+            'error': 'Could not remove transfer sheet record. '\
+                     'Command chain details : {}'.format(command_chain),
         }
         log.error(command_chain_response['error'])
         return command_chain_response
 
     def error_could_not_update_transfer_sheet_records(self, record):
-        log.error('Could not update transfer sheet records with {}.'.format(record))
+        log.error(
+            'Could not update transfer sheet records with {}.'.format(record)
+        )
         return False
 
     def error_handler_add_transfer_sheet_record(self, **kwargs):

@@ -10,9 +10,8 @@ from sqlalchemy.orm import relationship
 from .res_utils import ResUtils, Base
 from .config import Config
 
-res_utils = ResUtils()
-log_config = Config().log_config
-log = logging.getLogger(log_config['log_name'])
+res_utils, config = ResUtils(), Config()
+log = logging.getLogger(config.log_config['log_name'])
 
 
 class TimeSheetRecord(Base):
@@ -20,7 +19,7 @@ class TimeSheetRecord(Base):
 
     record_id = Column(
         Integer, primary_key=True, nullable=False, autoincrement=True
-        )
+    )
     reference = Column(String)
     create_date = Column(DateTime)
     write_date = Column(DateTime)
@@ -33,17 +32,18 @@ class TimeSheetRecord(Base):
     pending_count = Column(Integer)
     time_sheet_id = Column(
         Integer, ForeignKey('credit_clock_time_sheet.time_sheet_id')
-        )
+    )
     credit_clock_id = Column(
         Integer, ForeignKey('credit_clock.clock_id')
-        )
+    )
 
     def __init__(self, **kwargs):
         self.create_date = datetime.datetime.now()
         self.write_date = datetime.datetime.now()
         self.create_uid = kwargs.get('create_uid')
         self.write_uid = kwargs.get('write_uid')
-        self.reference = kwargs.get('reference') or 'Time Sheet Record'
+        self.reference = kwargs.get('reference') or \
+            config.time_sheet_config['time_record_reference']
         self.time_start = kwargs.get('time_start')
         self.time_stop = kwargs.get('time_stop')
         self.time_spent = kwargs.get('time_spent') or 0.00
@@ -123,15 +123,12 @@ class TimeSheetRecord(Base):
         values = {
             'id': self.record_id,
             'time_sheet': self.time_sheet_id,
-            'reference': self.reference,
-            'create_date': self.create_date.strftime('%d-%m-%Y %H:%M:%S'),
-            'write_date': self.write_date.strftime('%d-%m-%Y %H:%M:%S'),
-            'time_start': time.strftime(
-                '%d-%m-%Y %H:%M:%S', time.localtime(self.time_start)
-            ),
-            'time_stop': time.strftime(
-                '%d-%m-%Y %H:%M:%S', time.localtime(self.time_stop)
-            ),
+            'reference': self.reference or \
+                config.time_sheet_config['time_record_reference'],
+            'create_date': res_utils.format_datetime(self.create_date),
+            'write_date': res_utils.format_datetime(self.write_date),
+            'time_start': res_utils.format_timestamp(self.time_start),
+            'time_stop': res_utils.format_timestamp(self.time_stop),
             'time_spent': self.time_spent,
             'time_pending': self.time_pending,
             'pending_count': self.pending_count,
@@ -229,19 +226,19 @@ class TimeSheetRecord(Base):
     def update_record_values(self, values, **kwargs):
         log.debug('')
         _set = {
-                'time_start': self.set_time_start,
-                'time_stop': self.set_time_stop,
-                'time_spent': self.set_time_spent,
-                'time_pending': self.set_time_pending,
-                'pending_count': self.set_pending_count,
-                'write_uid': self.set_write_uid,
-                }
+            'time_start': self.set_time_start,
+            'time_stop': self.set_time_stop,
+            'time_spent': self.set_time_spent,
+            'time_pending': self.set_time_pending,
+            'pending_count': self.set_pending_count,
+            'write_uid': self.set_write_uid,
+        }
         for field_name, field_value in values.items():
             try:
-                _set[field_name](
-                        active_session=kwargs['active_session'],
-                        **{field_name: field_value}
-                        )
+                 _set[field_name](
+                    active_session=kwargs['active_session'],
+                    **{field_name: field_value}
+                )
             except KeyError:
                 log.warning(
                     'Invalid field name for action update time sheet record values.'

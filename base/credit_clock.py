@@ -1,9 +1,7 @@
 import time
-# import random
 import datetime
 import logging
 import pysnooper
-#from itertools import count
 
 from sqlalchemy import Table, Column, String, Integer, Float, ForeignKey, Date, DateTime
 from sqlalchemy.orm import relationship
@@ -13,8 +11,8 @@ from .conversion_sheet import CreditClockConversionSheet
 from .res_utils import ResUtils, Base
 from .config import Config
 
-res_utils, log_config = ResUtils(), Config().log_config
-log = logging.getLogger(log_config['log_name'])
+res_utils, config = ResUtils(), Config()
+log = logging.getLogger(config.log_config['log_name'])
 
 
 class CreditClock(Base):
@@ -40,7 +38,7 @@ class CreditClock(Base):
     # O2O
     conversion_sheet = relationship(
        'CreditClockConversionSheet', back_populates='clock',
-       )
+    )
     # O2M
     time_sheet_archive = relationship('CreditClockTimeSheet')
     # O2M
@@ -63,7 +61,8 @@ class CreditClock(Base):
                 active_session=kwargs['active_session']
             )
         self.wallet_id = kwargs.get('wallet_id')
-        self.reference = kwargs.get('reference')
+        self.reference = kwargs.get('reference') or \
+            config.clock_config['clock_reference']
         self.credit_clock = kwargs.get('credit_clock') or 0.00
         self.credit_clock_state = kwargs.get('credit_clock_state') or 'inactive'
         self.time_spent = kwargs.get('time_spent') or 0.00
@@ -88,7 +87,8 @@ class CreditClock(Base):
             'write_date': kwargs.get('write_date') or datetime.datetime.now(),
             'create_uid': kwargs.get('uid') or None,
             'write_uid': kwargs.get('uid') or None,
-            'reference': kwargs.get('reference') or 'Time Sheet Record',
+            'reference': kwargs.get('reference') or
+                config.time_sheet_config['time_record_reference'],
             'time_start': kwargs.get('time_start') or time.time(),
             'time_stop': kwargs.get('time_stop') or None,
             'time_spent': kwargs.get('time_spent') or None,
@@ -137,12 +137,12 @@ class CreditClock(Base):
 
     def fetch_action_stop_time_record_update_values(self, **kwargs):
         log.debug('')
-        _values = {
-                'time_stop': kwargs.get('time_stop'),
-                'time_spent': kwargs.get('time_spent'),
-                'write_uid': kwargs.get('write_uid'),
-                }
-        return _values
+        values = {
+            'time_stop': kwargs.get('time_stop'),
+            'time_spent': kwargs.get('time_spent'),
+            'write_uid': kwargs.get('write_uid'),
+        }
+        return values
 
     def fetch_credit_clock_pending_time(self):
         log.debug('')
@@ -237,7 +237,8 @@ class CreditClock(Base):
         values = {
             'id': self.clock_id,
             'ewallet': self.wallet_id,
-            'reference': self.reference or 'Credit Clock',
+            'reference': self.reference or
+                config.clock_config['clock_reference'],
             'create_date': res_utils.format_datetime(self.create_date),
             'write_date': res_utils.format_datetime(self.write_date),
             'credit_clock': self.credit_clock or 0.00,
@@ -258,22 +259,24 @@ class CreditClock(Base):
         return values
 
     def fetch_time_sheet_creation_values(self, **kwargs):
-        _values = {
-                'time_sheet_id': kwargs.get('time_sheet_id'),
-                'clock_id': self.clock_id,
-                'reference': kwargs.get('reference'),
-                'records': kwargs.get('records'),
-                }
-        return _values
+        values = {
+            'time_sheet_id': kwargs.get('time_sheet_id'),
+            'clock_id': self.clock_id,
+            'reference': kwargs.get('reference') or
+                config.time_sheet_config['time_sheet_reference'],
+            'records': kwargs.get('records'),
+        }
+        return values
 
     def fetch_conversion_sheet_creation_values(self, **kwargs):
-        _values = {
-                'conversion_sheet_id': kwargs.get('conversion_sheet_id'),
-                'clock_id': self.clock_id,
-                'reference': kwargs.get('reference'),
-                'records': kwargs.get('records'),
-                }
-        return _values
+        values = {
+            'conversion_sheet_id': kwargs.get('conversion_sheet_id'),
+            'clock_id': self.clock_id,
+            'reference': kwargs.get('reference') or
+                config.conversion_sheet_config['conversion_sheet_reference'],
+            'records': kwargs.get('records'),
+        }
+        return values
 
     def fetch_credit_clock_time_sheet_by_ref(self, code):
         log.debug('')
@@ -331,7 +334,8 @@ class CreditClock(Base):
             'create_date': kwargs.get('create_date') or datetime.datetime.now(),
             'write_date': kwargs.get('write_date') or datetime.datetime.now(),
             'conversion_sheet_id': kwargs.get('conversion_sheet_id'),
-            'reference': kwargs.get('reference') or 'Conversion Sheet Record',
+            'reference': kwargs.get('reference') or
+                config.conversion_sheet_config['conversion_record_reference'],
             'conversion_type': kwargs.get('conversion_type'),
             'minutes': kwargs.get('minutes') or kwargs.get('credits'),
             'credits': kwargs.get('credits'),

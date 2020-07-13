@@ -1,4 +1,5 @@
 import logging
+import pysnooper
 
 from base.config import Config
 from base.res_utils import ResUtils
@@ -2429,10 +2430,12 @@ available_user_actions = {
 }
 
 # DISPLAY
+
+#@pysnooper.snoop('logs/ewallet.log')
 def display_ewallet_session_manager_instruction_set_options():
-    log.debug('TODO - Not all user actions supported')
+    log.debug('')
     return {
-        'available_actions': available_user_actions.keys(),
+        'available_actions': list(available_user_actions.keys()),
         'available_events': ['[ WARNING ]: User events not supported.'],
         'help': {
             'option': '( action | event )',
@@ -2448,13 +2451,13 @@ def display_ewallet_session_manager_instruction_set_actions(**kwargs):
         return error_invalid_ewallet_instruction_set_action(kwargs)
     return available_user_actions[kwargs['action']](**kwargs)
 
+# TODO - Document EWallet Session Manger User Events
 def display_ewallet_session_manager_instruction_set_events(**kwargs):
     log.debug('TODO')
-    events = {
+    return {
         'failed': True,
         'warning': 'EWallet user events not yet supported.'
     }
-    return events
 
 def display_ewallet_session_manager_instruction_set_option(**kwargs):
     log.debug('')
@@ -2496,72 +2499,5 @@ def error_invalid_ewallet_instruction_set_option(instruction_set):
     log.error(instruction_set_response['error'])
     return instruction_set_response
 
-
 # CODE DUMP
 
-#   [ * ]: User action Pause Clock Timer
-#   [ * ]: User action Resume Clock Timer
-#   [ * ]: User action Start Clock Timer
-#   [ * ]: User action Stop Clock Timer
-#   [ * ]: System action Interogate EWallet Session
-#   [ * ]: System action Interogate EWallet Workers
-#   [ * ]: System action New EWallet Session
-#   [ * ]: System action New Session Worker
-#   [ * ]: System action Sweep Cleanup Ewallet Sessions
-#   [ * ]: System action Cleanup Target Ewallet Session
-#   [ * ]: System action Cleanup Session Workers
-#   [ * ]: User action Account Login
-#   [ * ]: User action Account Logout
-#   [ * ]: User action Add Contact List Record
-#   [ * ]: User action Convert Clock To Credits
-#   [ * ]: User Action Convert Credits To Clock
-#   [ * ]: User action Create New Account
-#   [ * ]: User action Create Contact List
-#   [ * ]: User action Create Conversion Sheet
-#   [ * ]: User action Create Credit Clock
-#   [ * ]: User action Create Credit EWallet
-#   [ * ]: User action Create Invoice Sheet
-#   [ * ]: User action Create Time Sheet
-#   [ * ]: User action Create Transfer Sheet
-#   [ * ]: User action Edit Account
-#   [ * ]: User action Pay Credits
-#   [ * ]: User action Request Client ID
-#   [ * ]: User action Request Session Token
-#   [ * ]: User action Supply Credits
-#   [ * ]: User action Switch Active Session User
-#   [ * ]: User action Switch Contact List
-#   [ * ]: User action Switch Conversion Sheet
-#   [ * ]: User action Switch Credit Clock
-#   [ * ]: User action Switch Credit EWallet
-#   [ * ]: User action Switch Invoice Sheet
-#   [ * ]: User action Switch Time Sheet
-#   [ * ]: User action Switch Transfer Sheet
-#   [ * ]: User action Transfer Credits.
-#   [ * ]: User action Unlink Account
-#   [ * ]: User action Unlink Contact List
-#   [ * ]: User action Unlink Contact Record
-#   [ * ]: User action Unlink Conversion Record
-#   [ * ]: User action Unlink Conversion Sheet
-#   [ * ]: User action Unlink Credit Clock
-#   [ * ]: User action Unlink Credit EWallet
-#   [ * ]: User action Unlink Invoice Record
-#   [ * ]: User action Unlink Invoice Sheet
-#   [ * ]: User action Unlink Time Record
-#   [ * ]: User action Unlink Time Sheet
-#   [ * ]: User action Unlink Transfer Record
-#   [ * ]: User action Unlink Transfer Sheet
-#   [ * ]: User action View Account
-#   [ * ]: User action View Contact List
-#   [ * ]: User action View Contact Record
-#   [ * ]: User action View Conversion Record
-#   [ * ]: User action View Conversion Sheet
-#   [ * ]: User action View Credit Clock
-#   [ * ]: User action View Credit EWallet
-#   [ * ]: User action View Invoice Record
-#   [ * ]: User action View Invoice Sheet
-#   [ * ]: User action View Login Records
-#   [ * ]: User action View Logout Records
-#   [ * ]: User action View Time Record
-#   [ * ]: User action View Time Sheet
-#   [ * ]: User action View Transfer Record
-#   [ * ]: User action View Transfer Sheet

@@ -13,8 +13,8 @@ from .invoice_sheet import CreditInvoiceSheet
 from .res_utils import ResUtils, Base
 from .config import Config
 
-res_utils, log_config = ResUtils(), Config().log_config
-log = logging.getLogger(log_config['log_name'])
+res_utils, config = ResUtils(), Config()
+log = logging.getLogger(config.log_config['log_name'])
 
 
 class CreditEWallet(Base):
@@ -34,15 +34,15 @@ class CreditEWallet(Base):
     # O2O
     credit_clock = relationship(
        'CreditClock', back_populates='wallet',
-       )
+    )
     # O2O
     transfer_sheet = relationship(
        'CreditTransferSheet', back_populates='wallet',
-       )
+    )
     # O2O
     invoice_sheet = relationship(
        'CreditInvoiceSheet', back_populates='wallet',
-       )
+    )
     # O2M
     credit_clock_archive = relationship('CreditClock')
     # O2M
@@ -75,7 +75,8 @@ class CreditEWallet(Base):
                 active_session=kwargs['active_session']
             )
         self.active_session_id = kwargs.get('active_session_id')
-        self.reference = kwargs.get('reference')
+        self.reference = kwargs.get('reference') or \
+            config.wallet_config['wallet_reference']
         self.credits = kwargs.get('credits')
         self.credit_clock = [credit_clock]
         self.transfer_sheet = [transfer_sheet]
@@ -196,7 +197,7 @@ class CreditEWallet(Base):
         values = {
             'id': self.wallet_id,
             'user': self.client_id,
-            'reference': self.reference or 'Credit EWallet',
+            'reference': self.reference or config.wallet_config['wallet_reference'],
             'create_date': res_utils.format_datetime(self.create_date),
             'write_date': res_utils.format_datetime(self.write_date),
             'credits': self.credits or 0,

@@ -1,18 +1,15 @@
-import time
-import random
 import datetime
 import logging
 import pysnooper
-from itertools import count
+
 from sqlalchemy import Table, Column, String, Integer, Float, ForeignKey, Date, DateTime
 from sqlalchemy.orm import relationship
 
 from .res_utils import ResUtils, Base
 from .config import Config
 
-res_utils = ResUtils()
-log_config = Config().log_config
-log = logging.getLogger(log_config['log_name'])
+res_utils, config = ResUtils(), Config()
+log = logging.getLogger(config.log_config['log_name'])
 
 
 class CreditClockConversionSheetRecord(Base):
@@ -33,7 +30,8 @@ class CreditClockConversionSheetRecord(Base):
         self.create_date = datetime.datetime.now()
         self.write_date = datetime.datetime.now()
         self.conversion_sheet_id = kwargs.get('conversion_sheet_id')
-        self.reference = kwargs.get('reference') or 'Conversion Sheet Record'
+        self.reference = kwargs.get('reference') or \
+            config.conversion_sheet_config['conversion_record_reference']
         self.conversion_type = kwargs.get('conversion_type')
         self.minutes = kwargs.get('minutes')
         self.credits = kwargs.get('credits')
@@ -181,7 +179,8 @@ class CreditClockConversionSheet(Base):
         self.create_date = datetime.datetime.now()
         self.write_date = datetime.datetime.now()
         self.clock_id = kwargs.get('clock_id')
-        self.reference = kwargs.get('reference') or 'Conversion Sheet'
+        self.reference = kwargs.get('reference') or \
+            config.conversion_sheet_config['conversion_sheet_reference']
         self.records = kwargs.get('records') or []
 
     # FETCHERS
@@ -276,7 +275,7 @@ class CreditClockConversionSheet(Base):
                 )
 
     def fetch_conversion_sheet_records_by_date(self, **kwargs):
-        log.debug('')
+        log.debug('TODO')
         if not kwargs.get('code'):
             return self.error_no_conversion_record_date_found()
         _records = [
@@ -291,7 +290,7 @@ class CreditClockConversionSheet(Base):
         return _records
 
     def fetch_conversion_sheet_records_by_credits(self, **kwargs):
-        log.debug('')
+        log.debug('TODO')
         if not kwargs.get('code'):
             return self.error_no_conversion_record_credits_found()
         _records = [
@@ -306,7 +305,7 @@ class CreditClockConversionSheet(Base):
         return _records
 
     def fetch_conversion_sheet_records_by_minutes(self, **kwargs):
-        log.debug('')
+        log.debug('TODO')
         if not kwargs.get('code'):
             return self.error_no_conversion_record_minutes_found()
         _records = [
@@ -321,7 +320,7 @@ class CreditClockConversionSheet(Base):
         return _records
 
     def fetch_conversion_sheet_records_by_type(self, **kwargs):
-        log.debug('')
+        log.debug('TODO')
         if not kwargs.get('code'):
             return self.error_no_conversion_record_type_found()
         _records = [
@@ -334,10 +333,6 @@ class CreditClockConversionSheet(Base):
                     )
         log.info('Successfully fetched conversion records by type.')
         return _records
-
-    def fetch_conversion_sheet_records(self, **kwargs):
-        log.debug('')
-        return self.records.values()
 
     def set_clock_id(self, **kwargs):
         log.debug('')
@@ -404,15 +399,15 @@ class CreditClockConversionSheet(Base):
 
     def action_add_conversion_sheet_record(self, **kwargs):
         log.debug('')
-        _record = CreditClockConversionSheetRecord(
-                conversion_sheet_id=self.conversion_sheet_id,
-                reference=kwargs.get('reference'),
-                conversion_type=kwargs.get('conversion_type'),
-                minutes=kwargs.get('minutes'),
-                credits=kwargs.get('credits'),
-                )
-        self.update_conversion_sheet_records(record=_record)
-        return _record
+        record = CreditClockConversionSheetRecord(
+            conversion_sheet_id=self.conversion_sheet_id,
+            reference=kwargs.get('reference'),
+            conversion_type=kwargs.get('conversion_type'),
+            minutes=kwargs.get('minutes'),
+            credits=kwargs.get('credits'),
+        )
+        self.update_conversion_sheet_records(record=record)
+        return record
 
     # INTEROGATORS
 

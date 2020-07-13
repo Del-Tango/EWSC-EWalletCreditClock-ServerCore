@@ -9,18 +9,14 @@ import datetime
 import logging
 import pysnooper
 
-config, res_utils = Config(), ResUtils()
-log = logging.getLogger(config.log_config['log_name'])
+log = logging.getLogger(Config().log_config['log_name'])
 
 
 class EWalletSessionManager():
 
-    socket_handler = None
-    worker_pool = []
-    client_pool = []
-    client_worker_map = {}
-
     def __init__(self, *args, **kwargs):
+        self.config = kwargs.get('config') or Config()
+        self.res_utils = kwargs.get('res_utils') or ResUtils()
         self.socket_handler = kwargs.get('socket_handler')  or self.open_ewallet_session_manager_sockets()
         self.worker_pool = kwargs.get('worker_pool') or []
         self.client_pool = kwargs.get('client_pool') or []
@@ -88,7 +84,7 @@ class EWalletSessionManager():
         if not ewallet_session_id or not isinstance(ewallet_session_id, int):
             return self.error_invalid_ewallet_session_id(ewallet_session_id)
         try:
-            orm_session = res_utils.session_factory()
+            orm_session = self.res_utils.session_factory()
             ewallet_session = list(orm_session.query(
                 EWallet
             ).filter_by(id=ewallet_session_id))
@@ -113,7 +109,7 @@ class EWalletSessionManager():
         session_manager_worker = self.fetch_client_id_mapped_session_worker(
             instruction_set['client_id']
         )
-        sanitized_instruction_set = res_utils.remove_tags_from_command_chain(
+        sanitized_instruction_set = self.res_utils.remove_tags_from_command_chain(
             instruction_set, 'controller', 'ctype', 'action'
         )
         ewallet_session = self.fetch_ewallet_session_from_worker(
@@ -158,40 +154,34 @@ class EWalletSessionManager():
         log.debug('')
         return self.socket_handler
 
-    # TODO - Fetch configuration values for config file
     def fetch_session_token_default_prefix(self):
         log.debug('')
-        return 'ewsm-st'
+        return self.config.client_config.get('session_token_prefix')
 
-    # TODO - Fetch configuration values for config file
     def fetch_session_token_default_length(self):
         log.debug('')
-        return 20
+        return int(self.config.client_config.get('session_token_length'))
 
-    # TODO - Fetch configuration values for config file
     def fetch_socket_handler_default_address(self):
         log.debug('')
-        return '127.0.0.1'
+        return self.config.system_config.get('socket_handler_address')
 
-    # TODO - Fetch configuration values for config file
     def fetch_client_id_default_length(self):
         log.debug('')
-        return 20
+        return int(self.config.client_config.get('client_id_length'))
 
-    # TODO - fetch data from configurations file
     def fetch_client_id_default_prefix(self):
         log.debug('')
-        return 'ewsm-uid'
+        return self.config.client_config.get('client_id_prefix')
 
-    # TODO : Fetch port number from configurations file
     def fetch_default_ewallet_command_chain_reply_port(self):
         log.debug('')
-        return 8081
+        return int(self.config.system_config.get('esm_instruction_port'))
 
-    # TODO : Fetch port number from configurations file
+#   @pysnooper.snoop('logs/ewallet.log')
     def fetch_default_ewallet_command_chain_instruction_port(self):
         log.debug('')
-        return 8080
+        return int(self.config.system_config.get('esm_response_port'))
 
     def fetch_worker_pool(self):
         log.debug('')
@@ -605,7 +595,7 @@ class EWalletSessionManager():
 #   @pysnooper.snoop()
     def create_new_ewallet_session(self, **kwargs):
         log.debug('')
-        orm_session = res_utils.session_factory()
+        orm_session = self.res_utils.session_factory()
         ewallet_session = self.spawn_ewallet_session(orm_session, **kwargs)
         orm_session.add(ewallet_session)
         orm_session.commit()
@@ -742,7 +732,9 @@ class EWalletSessionManager():
         prefix = self.fetch_client_id_default_prefix()
         length = self.fetch_client_id_default_length()
         timestamp = str(time.time())
-        uid_code = res_utils.generate_random_alpha_numeric_string(string_length=length)
+        uid_code = self.res_utils.generate_random_alpha_numeric_string(
+            string_length=length
+        )
         user_id = prefix + ':' + uid_code + ':' + timestamp
         return user_id
 
@@ -755,7 +747,9 @@ class EWalletSessionManager():
         prefix = self.fetch_session_token_default_prefix()
         length = self.fetch_session_token_default_length()
         timestamp = str(time.time())
-        st_code = res_utils.generate_random_alpha_numeric_string(string_length=length)
+        st_code = self.res_utils.generate_random_alpha_numeric_string(
+            string_length=length
+        )
         session_token = prefix + ':' + st_code + ':' + timestamp
         return session_token
 
@@ -774,7 +768,7 @@ class EWalletSessionManager():
     def action_switch_active_session_user_account(self, ewallet_session, instruction_set):
         log.debug('')
         orm_session = ewallet_session.fetch_active_session()
-        sanitized_instruction_set = res_utils.remove_tags_from_command_chain(
+        sanitized_instruction_set = self.res_utils.remove_tags_from_command_chain(
             instruction_set, 'controller', 'ctype', 'action', 'switch',
         )
         active_session_user = ewallet_session.fetch_active_session_user()
@@ -790,7 +784,7 @@ class EWalletSessionManager():
     def action_new_time_sheet(self, ewallet_session, instruction_set):
         log.debug('')
         orm_session = ewallet_session.fetch_active_session()
-        sanitized_instruction_set = res_utils.remove_tags_from_command_chain(
+        sanitized_instruction_set = self.res_utils.remove_tags_from_command_chain(
             instruction_set, 'controller', 'ctype', 'action', 'new', 'time'
         )
         new_time_sheet = ewallet_session.ewallet_controller(
@@ -804,7 +798,7 @@ class EWalletSessionManager():
     def action_new_conversion_sheet(self, ewallet_session, instruction_set):
         log.debug('')
         orm_session = ewallet_session.fetch_active_session()
-        sanitized_instruction_set = res_utils.remove_tags_from_command_chain(
+        sanitized_instruction_set = self.res_utils.remove_tags_from_command_chain(
             instruction_set, 'controller', 'ctype', 'action', 'new', 'conversion'
         )
         new_conversion_sheet = ewallet_session.ewallet_controller(
@@ -818,7 +812,7 @@ class EWalletSessionManager():
     def action_new_transfer_sheet(self, ewallet_session, instruction_set):
         log.debug('')
         orm_session = ewallet_session.fetch_active_session()
-        sanitized_instruction_set = res_utils.remove_tags_from_command_chain(
+        sanitized_instruction_set = self.res_utils.remove_tags_from_command_chain(
             instruction_set, 'controller', 'ctype', 'action', 'new', 'transfer'
         )
         new_transfer_sheet = ewallet_session.ewallet_controller(
@@ -832,7 +826,7 @@ class EWalletSessionManager():
     def action_new_credit_clock(self, ewallet_session, instruction_set):
         log.debug('')
         orm_session = ewallet_session.fetch_active_session()
-        sanitized_instruction_set = res_utils.remove_tags_from_command_chain(
+        sanitized_instruction_set = self.res_utils.remove_tags_from_command_chain(
             instruction_set, 'controller', 'ctype', 'action', 'new', 'credit'
         )
         new_credit_clock = ewallet_session.ewallet_controller(
@@ -846,7 +840,7 @@ class EWalletSessionManager():
     def action_new_credit_ewallet(self, ewallet_session, instruction_set):
         log.debug('')
         orm_session = ewallet_session.fetch_active_session()
-        sanitized_instruction_set = res_utils.remove_tags_from_command_chain(
+        sanitized_instruction_set = self.res_utils.remove_tags_from_command_chain(
             instruction_set, 'controller', 'ctype', 'action', 'new', 'credit'
         )
         new_credit_ewallet = ewallet_session.ewallet_controller(
@@ -860,7 +854,7 @@ class EWalletSessionManager():
     def action_view_invoice_record(self, ewallet_session, instruction_set):
         log.debug('')
         orm_session = ewallet_session.fetch_active_session()
-        sanitized_instruction_set = res_utils.remove_tags_from_command_chain(
+        sanitized_instruction_set = self.res_utils.remove_tags_from_command_chain(
             instruction_set, 'controller', 'ctype', 'action', 'view', 'invoice'
         )
         view_invoice_record = ewallet_session.ewallet_controller(
@@ -874,7 +868,7 @@ class EWalletSessionManager():
     def action_view_invoice_sheet(self, ewallet_session, instruction_set):
         log.debug('')
         orm_session = ewallet_session.fetch_active_session()
-        sanitized_instruction_set = res_utils.remove_tags_from_command_chain(
+        sanitized_instruction_set = self.res_utils.remove_tags_from_command_chain(
             instruction_set, 'controller', 'ctype', 'action', 'view', 'invoice'
         )
         view_invoice_sheet = ewallet_session.ewallet_controller(
@@ -888,7 +882,7 @@ class EWalletSessionManager():
     def action_view_credit_clock(self, ewallet_session, instruction_set):
         log.debug('')
         orm_session = ewallet_session.fetch_active_session()
-        sanitized_instruction_set = res_utils.remove_tags_from_command_chain(
+        sanitized_instruction_set = self.res_utils.remove_tags_from_command_chain(
             instruction_set, 'controller', 'ctype', 'action', 'view', 'credit'
         )
         view_credit_clock = ewallet_session.ewallet_controller(
@@ -902,7 +896,7 @@ class EWalletSessionManager():
     def action_view_credit_ewallet(self, ewallet_session, instruction_set):
         log.debug('')
         orm_session = ewallet_session.fetch_active_session()
-        sanitized_instruction_set = res_utils.remove_tags_from_command_chain(
+        sanitized_instruction_set = self.res_utils.remove_tags_from_command_chain(
             instruction_set, 'controller', 'ctype', 'action', 'view', 'credit'
         )
         view_credit_ewallet = ewallet_session.ewallet_controller(
@@ -916,7 +910,7 @@ class EWalletSessionManager():
     def action_edit_user_account(self, ewallet_session, instruction_set):
         log.debug('')
         orm_session = ewallet_session.fetch_active_session()
-        sanitized_instruction_set = res_utils.remove_tags_from_command_chain(
+        sanitized_instruction_set = self.res_utils.remove_tags_from_command_chain(
             instruction_set, 'controller', 'ctype', 'action', 'edit',
         )
         edit_account = ewallet_session.ewallet_controller(
@@ -930,7 +924,7 @@ class EWalletSessionManager():
     def action_view_user_account(self, ewallet_session, instruction_set):
         log.debug('')
         orm_session = ewallet_session.fetch_active_session()
-        sanitized_instruction_set = res_utils.remove_tags_from_command_chain(
+        sanitized_instruction_set = self.res_utils.remove_tags_from_command_chain(
             instruction_set, 'controller', 'ctype', 'action', 'view',
         )
         view_account = ewallet_session.ewallet_controller(
@@ -944,7 +938,7 @@ class EWalletSessionManager():
     def action_view_conversion_record(self, ewallet_session, instruction_set):
         log.debug('')
         orm_session = ewallet_session.fetch_active_session()
-        sanitized_instruction_set = res_utils.remove_tags_from_command_chain(
+        sanitized_instruction_set = self.res_utils.remove_tags_from_command_chain(
             instruction_set, 'controller', 'ctype', 'action', 'view', 'conversion',
         )
         view_conversion_record = ewallet_session.ewallet_controller(
@@ -960,7 +954,7 @@ class EWalletSessionManager():
     def action_view_conversion_sheet(self, ewallet_session, instruction_set):
         log.debug('')
         orm_session = ewallet_session.fetch_active_session()
-        sanitized_instruction_set = res_utils.remove_tags_from_command_chain(
+        sanitized_instruction_set = self.res_utils.remove_tags_from_command_chain(
             instruction_set, 'controller', 'ctype', 'action', 'view', 'conversion',
         )
         view_conversion_sheet = ewallet_session.ewallet_controller(
@@ -974,7 +968,7 @@ class EWalletSessionManager():
     def action_view_time_sheet_record(self, ewallet_session, instruction_set):
         log.debug('')
         orm_session = ewallet_session.fetch_active_session()
-        sanitized_instruction_set = res_utils.remove_tags_from_command_chain(
+        sanitized_instruction_set = self.res_utils.remove_tags_from_command_chain(
             instruction_set, 'controller', 'ctype', 'action', 'view', 'time',
         )
         view_time_record = ewallet_session.ewallet_controller(
@@ -988,7 +982,7 @@ class EWalletSessionManager():
     def action_view_time_sheet(self, ewallet_session, instruction_set):
         log.debug('')
         orm_session = ewallet_session.fetch_active_session()
-        sanitized_instruction_set = res_utils.remove_tags_from_command_chain(
+        sanitized_instruction_set = self.res_utils.remove_tags_from_command_chain(
             instruction_set, 'controller', 'ctype', 'action', 'view', 'time',
         )
         view_time_sheet = ewallet_session.ewallet_controller(
@@ -1002,7 +996,7 @@ class EWalletSessionManager():
     def action_view_transfer_sheet_record(self, ewallet_session, instruction_set):
         log.debug('')
         orm_session = ewallet_session.fetch_active_session()
-        sanitized_instruction_set = res_utils.remove_tags_from_command_chain(
+        sanitized_instruction_set = self.res_utils.remove_tags_from_command_chain(
             instruction_set, 'controller', 'ctype', 'action', 'view', 'transfer',
         )
         view_transfer_record = ewallet_session.ewallet_controller(
@@ -1016,7 +1010,7 @@ class EWalletSessionManager():
     def action_view_transfer_sheet(self, ewallet_session, instruction_set):
         log.debug('')
         orm_session = ewallet_session.fetch_active_session()
-        sanitized_instruction_set = res_utils.remove_tags_from_command_chain(
+        sanitized_instruction_set = self.res_utils.remove_tags_from_command_chain(
             instruction_set, 'controller', 'ctype', 'action', 'view', 'transfer',
         )
         view_transfer_sheet = ewallet_session.ewallet_controller(
@@ -1245,7 +1239,7 @@ class EWalletSessionManager():
     def action_logout_user_account(self, ewallet_session, instruction_set):
         log.debug('')
         orm_session = ewallet_session.fetch_active_session()
-        sanitized_instruction_set = res_utils.remove_tags_from_command_chain(
+        sanitized_instruction_set = self.res_utils.remove_tags_from_command_chain(
             instruction_set, 'controller', 'ctype', 'action',
         )
         active_session_user = ewallet_session.fetch_active_session_user()
@@ -1261,7 +1255,7 @@ class EWalletSessionManager():
     def action_view_logout_records(self, ewallet_session, instruction_set):
         log.debug('')
         orm_session = ewallet_session.fetch_active_session()
-        sanitized_instruction_set = res_utils.remove_tags_from_command_chain(
+        sanitized_instruction_set = self.res_utils.remove_tags_from_command_chain(
             instruction_set, 'controller', 'ctype', 'action', 'view',
         )
         active_session_user = ewallet_session.fetch_active_session_user()
@@ -1277,7 +1271,7 @@ class EWalletSessionManager():
     def action_view_login_records(self, ewallet_session, instruction_set):
         log.debug('')
         orm_session = ewallet_session.fetch_active_session()
-        sanitized_instruction_set = res_utils.remove_tags_from_command_chain(
+        sanitized_instruction_set = self.res_utils.remove_tags_from_command_chain(
             instruction_set, 'controller', 'ctype', 'action', 'view',
         )
         active_session_user = ewallet_session.fetch_active_session_user()
@@ -1293,7 +1287,7 @@ class EWalletSessionManager():
     def action_unlink_user_account(self, ewallet_session, instruction_set):
         log.debug('')
         orm_session = ewallet_session.fetch_active_session()
-        sanitized_instruction_set = res_utils.remove_tags_from_command_chain(
+        sanitized_instruction_set = self.res_utils.remove_tags_from_command_chain(
             instruction_set, 'controller', 'ctype', 'action', 'unlink',
         )
         active_session_user = ewallet_session.fetch_active_session_user()
@@ -1309,7 +1303,7 @@ class EWalletSessionManager():
     def action_unlink_credit_clock(self, ewallet_session, instruction_set):
         log.debug('')
         orm_session = ewallet_session.fetch_active_session()
-        sanitized_instruction_set = res_utils.remove_tags_from_command_chain(
+        sanitized_instruction_set = self.res_utils.remove_tags_from_command_chain(
             instruction_set, 'controller', 'ctype', 'action', 'unlink', 'credit'
         )
         unlink_credit_clock = ewallet_session.ewallet_controller(
@@ -1324,7 +1318,7 @@ class EWalletSessionManager():
     def action_unlink_credit_ewallet(self, ewallet_session, instruction_set):
         log.debug('')
         orm_session = ewallet_session.fetch_active_session()
-        sanitized_instruction_set = res_utils.remove_tags_from_command_chain(
+        sanitized_instruction_set = self.res_utils.remove_tags_from_command_chain(
             instruction_set, 'controller', 'ctype', 'action', 'unlink', 'credit'
         )
         unlink_credit_ewallet = ewallet_session.ewallet_controller(
@@ -1339,7 +1333,7 @@ class EWalletSessionManager():
     def action_unlink_contact_list(self, ewallet_session, instruction_set):
         log.debug('')
         orm_session = ewallet_session.fetch_active_session()
-        sanitized_instruction_set = res_utils.remove_tags_from_command_chain(
+        sanitized_instruction_set = self.res_utils.remove_tags_from_command_chain(
             instruction_set, 'controller', 'ctype', 'action', 'unlink', 'contact'
         )
         unlink_contact_list = ewallet_session.ewallet_controller(
@@ -1354,7 +1348,7 @@ class EWalletSessionManager():
     def action_unlink_time_sheet(self, ewallet_session, instruction_set):
         log.debug('')
         orm_session = ewallet_session.fetch_active_session()
-        sanitized_instruction_set = res_utils.remove_tags_from_command_chain(
+        sanitized_instruction_set = self.res_utils.remove_tags_from_command_chain(
             instruction_set, 'controller', 'ctype', 'action', 'unlink', 'time'
         )
         unlink_time_sheet = ewallet_session.ewallet_controller(
@@ -1369,7 +1363,7 @@ class EWalletSessionManager():
     def action_unlink_conversion_sheet(self, ewallet_session, instruction_set):
         log.debug('')
         orm_session = ewallet_session.fetch_active_session()
-        sanitized_instruction_set = res_utils.remove_tags_from_command_chain(
+        sanitized_instruction_set = self.res_utils.remove_tags_from_command_chain(
             instruction_set, 'controller', 'ctype', 'action', 'unlink', 'conversion'
         )
         unlink_conversion_sheet = ewallet_session.ewallet_controller(
@@ -1384,7 +1378,7 @@ class EWalletSessionManager():
     def action_unlink_invoice_sheet(self, ewallet_session, instruction_set):
         log.debug('')
         orm_session = ewallet_session.fetch_active_session()
-        sanitized_instruction_set = res_utils.remove_tags_from_command_chain(
+        sanitized_instruction_set = self.res_utils.remove_tags_from_command_chain(
             instruction_set, 'controller', 'ctype', 'action', 'unlink', 'invoice'
         )
         unlink_invoice_sheet = ewallet_session.ewallet_controller(
@@ -1399,7 +1393,7 @@ class EWalletSessionManager():
     def action_unlink_transfer_sheet(self, ewallet_session, instruction_set):
         log.debug('')
         orm_session = ewallet_session.fetch_active_session()
-        sanitized_instruction_set = res_utils.remove_tags_from_command_chain(
+        sanitized_instruction_set = self.res_utils.remove_tags_from_command_chain(
             instruction_set, 'controller', 'ctype', 'action', 'unlink', 'transfer'
         )
         unlink_transfer_sheet = ewallet_session.ewallet_controller(
@@ -1415,7 +1409,7 @@ class EWalletSessionManager():
     def action_unlink_contact_list_record(self, ewallet_session, instruction_set):
         log.debug('')
         orm_session = ewallet_session.fetch_active_session()
-        sanitized_instruction_set = res_utils.remove_tags_from_command_chain(
+        sanitized_instruction_set = self.res_utils.remove_tags_from_command_chain(
             instruction_set, 'controller', 'ctype', 'action', 'unlink', 'contact'
         )
         unlink_contact_record = ewallet_session.ewallet_controller(
@@ -1430,7 +1424,7 @@ class EWalletSessionManager():
     def action_unlink_time_sheet_record(self, ewallet_session, instruction_set):
         log.debug('')
         orm_session = ewallet_session.fetch_active_session()
-        sanitized_instruction_set = res_utils.remove_tags_from_command_chain(
+        sanitized_instruction_set = self.res_utils.remove_tags_from_command_chain(
             instruction_set, 'controller', 'ctype', 'action', 'unlink', 'time'
         )
         unlink_time_record = ewallet_session.ewallet_controller(
@@ -1445,7 +1439,7 @@ class EWalletSessionManager():
     def action_unlink_conversion_sheet_record(self, ewallet_session, instruction_set):
         log.debug('')
         orm_session = ewallet_session.fetch_active_session()
-        sanitized_instruction_set = res_utils.remove_tags_from_command_chain(
+        sanitized_instruction_set = self.res_utils.remove_tags_from_command_chain(
             instruction_set, 'controller', 'ctype', 'action', 'unlink', 'conversion'
         )
         unlink_conversion_record = ewallet_session.ewallet_controller(
@@ -1460,7 +1454,7 @@ class EWalletSessionManager():
     def action_unlink_invoice_sheet_record(self, ewallet_session, instruction_set):
         log.debug('')
         orm_session = ewallet_session.fetch_active_session()
-        sanitized_instruction_set = res_utils.remove_tags_from_command_chain(
+        sanitized_instruction_set = self.res_utils.remove_tags_from_command_chain(
             instruction_set, 'controller', 'ctype', 'action', 'unlink', 'invoice'
         )
         unlink_invoice_record = ewallet_session.ewallet_controller(
@@ -1475,7 +1469,7 @@ class EWalletSessionManager():
     def action_unlink_transfer_sheet_record(self, ewallet_session, instruction_set):
         log.debug('')
         orm_session = ewallet_session.fetch_active_session()
-        sanitized_instruction_set = res_utils.remove_tags_from_command_chain(
+        sanitized_instruction_set = self.res_utils.remove_tags_from_command_chain(
             instruction_set, 'controller', 'ctype', 'action', 'unlink', 'transfer'
         )
         unlink_transfer_record = ewallet_session.ewallet_controller(
@@ -1490,7 +1484,7 @@ class EWalletSessionManager():
     def action_switch_contact_list(self, ewallet_session, instruction_set):
         log.debug('')
         orm_session = ewallet_session.fetch_active_session()
-        sanitized_instruction_set = res_utils.remove_tags_from_command_chain(
+        sanitized_instruction_set = self.res_utils.remove_tags_from_command_chain(
             instruction_set, 'controller', 'ctype', 'action', 'switch'
         )
         switch_contact_list = ewallet_session.ewallet_controller(
@@ -1505,7 +1499,7 @@ class EWalletSessionManager():
     def action_switch_time_sheet(self, ewallet_session, instruction_set):
         log.debug('')
         orm_session = ewallet_session.fetch_active_session()
-        sanitized_instruction_set = res_utils.remove_tags_from_command_chain(
+        sanitized_instruction_set = self.res_utils.remove_tags_from_command_chain(
             instruction_set, 'controller', 'ctype', 'action', 'switch'
         )
         switch_time_sheet = ewallet_session.ewallet_controller(
@@ -1520,7 +1514,7 @@ class EWalletSessionManager():
     def action_switch_conversion_sheet(self, ewallet_session, instruction_set):
         log.debug('')
         orm_session = ewallet_session.fetch_active_session()
-        sanitized_instruction_set = res_utils.remove_tags_from_command_chain(
+        sanitized_instruction_set = self.res_utils.remove_tags_from_command_chain(
             instruction_set, 'controller', 'ctype', 'action', 'switch'
         )
         switch_conversion_sheet = ewallet_session.ewallet_controller(
@@ -1535,7 +1529,7 @@ class EWalletSessionManager():
     def action_switch_invoice_sheet(self, ewallet_session, instruction_set):
         log.debug('')
         orm_session = ewallet_session.fetch_active_session()
-        sanitized_instruction_set = res_utils.remove_tags_from_command_chain(
+        sanitized_instruction_set = self.res_utils.remove_tags_from_command_chain(
             instruction_set, 'controller', 'ctype', 'action', 'switch'
         )
         switch_invoice_sheet = ewallet_session.ewallet_controller(
@@ -1550,7 +1544,7 @@ class EWalletSessionManager():
     def action_switch_transfer_sheet(self, ewallet_session, instruction_set):
         log.debug('')
         orm_session = ewallet_session.fetch_active_session()
-        sanitized_instruction_set = res_utils.remove_tags_from_command_chain(
+        sanitized_instruction_set = self.res_utils.remove_tags_from_command_chain(
             instruction_set, 'controller', 'ctype', 'action', 'switch'
         )
         switch_transfer_sheet = ewallet_session.ewallet_controller(
@@ -1565,7 +1559,7 @@ class EWalletSessionManager():
     def action_switch_credit_clock(self, ewallet_session, instruction_set):
         log.debug('')
         orm_session = ewallet_session.fetch_active_session()
-        sanitized_instruction_set = res_utils.remove_tags_from_command_chain(
+        sanitized_instruction_set = self.res_utils.remove_tags_from_command_chain(
             instruction_set, 'controller', 'ctype', 'action', 'switch', 'credit'
         )
         switch_credit_clock = ewallet_session.ewallet_controller(
@@ -1580,7 +1574,7 @@ class EWalletSessionManager():
     def action_switch_credit_ewallet(self, ewallet_session, instruction_set):
         log.debug('')
         orm_session = ewallet_session.fetch_active_session()
-        sanitized_instruction_set = res_utils.remove_tags_from_command_chain(
+        sanitized_instruction_set = self.res_utils.remove_tags_from_command_chain(
             instruction_set, 'controller', 'ctype', 'action', 'switch', 'credit'
         )
         switch_credit_ewallet = ewallet_session.ewallet_controller(
@@ -1595,7 +1589,7 @@ class EWalletSessionManager():
     def action_new_contact_list(self, ewallet_session, instruction_set):
         log.debug('')
         orm_session = ewallet_session.fetch_active_session()
-        sanitized_instruction_set = res_utils.remove_tags_from_command_chain(
+        sanitized_instruction_set = self.res_utils.remove_tags_from_command_chain(
             instruction_set, 'controller', 'ctype', 'action', 'new', 'contact'
         )
         new_contact_list = ewallet_session.ewallet_controller(
@@ -1609,7 +1603,7 @@ class EWalletSessionManager():
     def action_new_invoice_sheet(self, ewallet_session, instruction_set):
         log.debug('')
         orm_session = ewallet_session.fetch_active_session()
-        sanitized_instruction_set = res_utils.remove_tags_from_command_chain(
+        sanitized_instruction_set = self.res_utils.remove_tags_from_command_chain(
             instruction_set, 'controller', 'ctype', 'action', 'new', 'invoice'
         )
         new_invoice_sheet = ewallet_session.ewallet_controller(
@@ -1711,7 +1705,7 @@ class EWalletSessionManager():
         if not kwargs.get('client_id'):
             return self.error_no_client_id_found()
         client_id = kwargs['client_id']
-        sanitized_instruction_set = res_utils.remove_tags_from_command_chain(
+        sanitized_instruction_set = self.res_utils.remove_tags_from_command_chain(
             kwargs, 'controller', 'ctype', 'action', 'new'
         )
         new_session = self.session_manager_controller(
@@ -1833,14 +1827,14 @@ class EWalletSessionManager():
 
     def handle_system_action_interogate_ewallet_session(self, **kwargs):
         log.debug('')
-        active_session = res_utils.session_factory()
+        active_session = self.res_utils.session_factory()
         ewallet_session = self.fetch_ewallet_session_for_system_action_using_id(
             active_session=active_session, **kwargs
         )
         if not ewallet_session or isinstance(ewallet_session, dict) and \
                 ewallet_session.get('failed'):
             return self.warning_could_not_fetch_ewallet_session(kwargs)
-        sanitized_instruction_set = res_utils.remove_tags_from_command_chain(
+        sanitized_instruction_set = self.res_utils.remove_tags_from_command_chain(
             kwargs, 'controller', 'ctype', 'action', 'interogate'
         )
         interogate_session = self.action_interogate_ewallet_session(

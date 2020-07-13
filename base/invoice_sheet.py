@@ -1,18 +1,15 @@
-import time
 import datetime
-import random
 import logging
 import pysnooper
-from itertools import count
+
 from sqlalchemy import Table, Column, String, Integer, Float, ForeignKey, Date, DateTime
 from sqlalchemy.orm import relationship
 
 from .res_utils import ResUtils, Base
 from .config import Config
 
-log_config = Config().log_config
-res_utils = ResUtils()
-log = logging.getLogger(log_config['log_name'])
+res_utils, config = ResUtils(), Config()
+log = logging.getLogger(config.log_config['log_name'])
 
 
 class CreditInvoiceSheetRecord(Base):
@@ -39,7 +36,8 @@ class CreditInvoiceSheetRecord(Base):
         self.write_date = datetime.datetime.now()
         self.invoice_sheet_id = kwargs.get('invoice_sheet_id')
         self.transfer_record_id = kwargs.get('transfer_record_id')
-        self.reference = kwargs.get('reference') or 'Invoice Sheet Record'
+        self.reference = kwargs.get('reference') or \
+            config.invoice_sheet_config['invoice_record_reference']
         self.credits = kwargs.get('credits') or 0
         self.currency = kwargs.get('currency') or 'RON'
         self.cost = kwargs.get('cost') or 1
@@ -197,7 +195,8 @@ class CreditInvoiceSheet(Base):
         self.create_date = datetime.datetime.now()
         self.write_date = datetime.datetime.now()
         self.wallet_id = kwargs.get('wallet_id')
-        self.reference = kwargs.get('reference') or 'Invoice Sheet'
+        self.reference = kwargs.get('reference') or \
+            config.invoice_sheet_config['invoice_sheet_reference']
         self.records = kwargs.get('records') or []
 
     # FETCHERS
@@ -271,7 +270,8 @@ class CreditInvoiceSheet(Base):
     def fetch_invoice_record_creation_values(self, **kwargs):
         log.debug('')
         values = {
-            'reference': kwargs.get('reference'),
+            'reference': kwargs.get('reference') or
+                config.invoice_sheet_config['invoice_record_reference'],
             'invoice_sheet_id': self.invoice_sheet_id,
             'credits': kwargs.get('credits'),
             'cost': kwargs.get('cost') or 0,
