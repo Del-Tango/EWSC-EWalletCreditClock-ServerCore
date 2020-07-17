@@ -17,7 +17,7 @@ ewallet_session_manager = EWalletSessionManager(
 
 app = Flask(__name__)
 
-# TODO - Implement Basic HTTP Authentication
+# TODO - Implement Basic HTTP Authentication with SSL Certificate
 
 
 def handle_display_ewallet_session_manager_instruction_set_option(**kwargs):

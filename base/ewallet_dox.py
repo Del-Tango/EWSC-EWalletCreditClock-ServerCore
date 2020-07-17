@@ -301,6 +301,7 @@ def display_user_action_convert_clock_to_credits_instruction_set_example(**kwarg
             'client_id': '<client-id type-str>',
             'session_token': '<session-token type-str>',
             'minutes': '<minutes-to-convert type-float>',
+            'notes': '<notes type-str>',
         },
         'response_ok': {
             'failed': '<flag type-bool value-false>',
@@ -2398,7 +2399,7 @@ available_user_actions = {
     'SwitchInvoiceSheet': display_user_action_switch_invoice_sheet_instruction_set_example,
     'SwitchTimeSheet': display_user_action_switch_time_sheet_instruction_set_example,
     'SwitchTransferSheet': display_user_action_switch_transfer_sheet_instruction_set_example,
-    'TransferCredits.': display_user_action_transfer_credits_instruction_set_example,
+    'TransferCredits': display_user_action_transfer_credits_instruction_set_example,
     'UnlinkAccount': display_user_action_unlink_account_instruction_set_example,
     'UnlinkContactList': display_user_action_unlink_contact_list_instruction_set_example,
     'UnlinkContactRecord': display_user_action_unlink_contact_record_instruction_set_example,

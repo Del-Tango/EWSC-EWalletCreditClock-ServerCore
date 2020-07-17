@@ -1,13 +1,11 @@
 ###############################################################################
 # EWallet Credit Clock Server Core (EWSC)
 ###############################################################################
-# TODO - Pass down ResUtils(), Config() and SqlAlchemy() objects on
-         POST /ewallet/instruction_set
 # TODO - Add 'controller' tag with value 'client' from ewallet server to all
          external instruction sets
 # TODO - Remove controller options from ewallet_dox
 # TODO - Implement basic HTTP authorization
-# TODO - Add .conf file
+# TODO - BUG - Session token generated with invalid client id
 
 [ NOTES ] - Request types
 
