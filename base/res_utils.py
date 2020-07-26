@@ -36,9 +36,10 @@ class ResUtils():
     #@pysnooper.snoop('logs/ewallet.log')
     def create_system_user(self, ewallet_session):
         system_user_values = config.system_user_values
+        active_session = ewallet_session.fetch_active_session()
         score = ewallet_session.ewallet_controller(
             controller='user', ctype='action', action='create', create='account',
-            **system_user_values
+            active_session=active_session, **system_user_values
         )
         return score
 
@@ -76,11 +77,11 @@ def log_init():
     log.setLevel(logging.DEBUG)
     file_handler = logging.FileHandler(
         log_config['log_dir'] + '/' + log_config['log_file'], 'a'
-        )
+    )
     formatter = logging.Formatter(
         log_config['log_record_format'],
         log_config['log_date_format']
-        )
+    )
     logging.Formatter.converter = res_utils.fetch_now_eet
     file_handler.setFormatter(formatter)
     log.addHandler(file_handler)

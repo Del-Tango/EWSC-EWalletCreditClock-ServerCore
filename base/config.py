@@ -62,10 +62,10 @@ class Config():
             'invoice_record_reference': 'InvoiceRecord',
         }
         self.system_user_values = {
-            'system_user_name': 'SystemCore',
-            'system_user_pass': self.generate_pseudorandom_password(),
-            'system_user_email': 'ewsc.systemcore@alvearesolutions.ro',
-            'system_user_alias': 'S:Core',
+            'user_name': 'SystemCore',
+            'user_pass': self.generate_pseudorandom_password(),
+            'user_email': 'ewsc.systemcore@alvearesolutions.ro',
+            'user_alias': 'S:Core',
         }
         self.config_file_parser(
             self.system_config['conf_dir'] + '/' \
@@ -78,7 +78,7 @@ class Config():
     def generate_pseudorandom_password(self, passLen=36):
         character_set = string.ascii_lowercase \
             + string.ascii_uppercase \
-            + string.digits
+            + string.digits + '~!@#$%^&*()_+=-`][\'".,;:}{'
         return ''.join((random.choice(character_set) for i in range(passLen)))
 
     def fetch_config_dicts(self, **kwargs):

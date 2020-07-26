@@ -186,7 +186,7 @@ class EWallet(Base):
         log.debug('')
         active_session = kwargs.get('active_session') or \
                 self.fetch_active_session()
-        score_account = active_session.query(ResUser).filter_by(user_id=1)
+        score_account = list(active_session.query(ResUser).filter_by(user_id=1))
         return False if not score_account else score_account[0]
 
     # TODO - Apply ORM
@@ -1207,7 +1207,7 @@ class EWallet(Base):
         }
         return command_chain_response
 
-#   @pysnooper.snoop()
+    @pysnooper.snoop('logs/ewallet.log')
     def action_create_new_transfer_type_supply(self, **kwargs):
         '''
         [ NOTE   ]: User action 'supply credits' for active session user becomes
@@ -2159,12 +2159,12 @@ class EWallet(Base):
         log.debug('')
         if not kwargs.get('ttype'):
             return self.error_no_transfer_type_specified()
-        _handlers = {
-                'supply': self.action_create_new_transfer_type_supply,
-                'pay': self.action_create_new_transfer_type_pay,
-                'transfer': self.action_create_new_transfer_type_transfer,
-                }
-        return _handlers[kwargs['ttype']](**kwargs)
+        handlers = {
+            'supply': self.action_create_new_transfer_type_supply,
+            'pay': self.action_create_new_transfer_type_pay,
+            'transfer': self.action_create_new_transfer_type_transfer,
+        }
+        return handlers[kwargs['ttype']](**kwargs)
 
     def action_view_contact(self, **kwargs):
         '''
@@ -3890,6 +3890,15 @@ class EWallet(Base):
 
     # ERRORS
 
+    def error_supply_type_transfer_failure(self, command_chain):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Supply type transfer failure. Details : {}'\
+                     .format(command_chain)
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
     def error_no_invoice_record_id_specified(self, command_chain):
         command_chain_response = {
             'failed': True,
@@ -4295,10 +4304,6 @@ class EWallet(Base):
 
     def error_no_user_action_pay_target_specified(self):
         log.error('No user action pay target specified.')
-        return False
-
-    def error_supply_type_transfer_failure(self, command_chain):
-        log.error('Supply type transfer failure. Details : {}'.format(command_chain))
         return False
 
     def error_could_not_pause_credit_clock_timer(self):

@@ -9,20 +9,35 @@ import datetime
 import logging
 import pysnooper
 
+config, res_utils = Config(), ResUtils()
 log = logging.getLogger(Config().log_config['log_name'])
 
 
 class EWalletSessionManager():
 
     def __init__(self, *args, **kwargs):
-        self.config = kwargs.get('config') or Config()
-        self.res_utils = kwargs.get('res_utils') or ResUtils()
-        self.socket_handler = kwargs.get('socket_handler')  or self.open_ewallet_session_manager_sockets()
-        self.worker_pool = kwargs.get('worker_pool') or []
+        self.config = kwargs.get('config') or config
+        self.res_utils = kwargs.get('res_utils') or res_utils
+        self.socket_handler = kwargs.get('socket_handler') or None # self.open_ewallet_session_manager_sockets()
+        self.worker_pool = kwargs.get('worker_pool') or \
+            [self.spawn_ewallet_session_worker()]
         self.client_pool = kwargs.get('client_pool') or []
         self.client_worker_map = kwargs.get('client_worker_map') or {}
 
+        self.primary_session = kwargs.get('primary_session') or \
+            self.create_new_ewallet_session(
+                reference='S:CorePrimary',
+                expiration_date=None,
+            )
+        check_score = self.check_system_core_account_exists()
+        if not check_score:
+            res_utils.create_system_user(self.primary_session)
+
     # FETCHERS
+
+    def fetch_primary_ewallet_session(self):
+        log.debug('')
+        return self.primary_session
 
 #   @pysnooper.snoop()
     def fetch_ewallet_session_assigned_worker(self, ewallet_session):
@@ -106,6 +121,8 @@ class EWalletSessionManager():
 #   @pysnooper.snoop()
     def fetch_ewallet_session_for_client_action_using_instruction_set(self, instruction_set):
         log.debug('')
+        if not instruction_set.get('client_id'):
+            return self.error_no_client_id_found(instruction_set)
         session_manager_worker = self.fetch_client_id_mapped_session_worker(
             instruction_set['client_id']
         )
@@ -128,6 +145,9 @@ class EWalletSessionManager():
 
     def fetch_ewallet_session_from_worker(self, session_manager_worker, instruction_set):
         log.debug('')
+        if not session_manager_worker or isinstance(session_manager_worker, dict) and \
+                session_manager_worker.get('failed'):
+            return self.error_no_session_manager_worker_found(instruction_set)
         ewallet_session = session_manager_worker.main_controller(
             controller='system', ctype='action', action='search', search='session',
             **instruction_set
@@ -209,6 +229,7 @@ class EWalletSessionManager():
 
     # SETTERS
 
+#   @pysnooper.snoop()
     def set_new_client_id_to_pool(self, client_id):
         log.debug('')
         try:
@@ -376,6 +397,12 @@ class EWalletSessionManager():
             self.set_client_worker_session_map(cw_map)
 
     # CHECKERS
+
+    def check_system_core_account_exists(self):
+        log.debug('')
+        ewallet_session = self.fetch_primary_ewallet_session()
+        system_core_account = ewallet_session.fetch_system_core_user_account()
+        return False if not system_core_account else True
 
     def check_client_id_timestamp(self, timestamp):
         log.debug('')
@@ -1703,7 +1730,7 @@ class EWalletSessionManager():
         '''
         log.debug('')
         if not kwargs.get('client_id'):
-            return self.error_no_client_id_found()
+            return self.error_no_client_id_found(kwargs)
         client_id = kwargs['client_id']
         sanitized_instruction_set = self.res_utils.remove_tags_from_command_chain(
             kwargs, 'controller', 'ctype', 'action', 'new'
@@ -1814,8 +1841,10 @@ class EWalletSessionManager():
         ewallet = self.fetch_ewallet_session_for_client_action_using_instruction_set(
             kwargs
         )
-        if not ewallet:
-            return False
+        if not ewallet or not ewallet['ewallet_session'] or \
+                isinstance(ewallet['ewallet_session'], dict) and \
+                ewallet['ewallet_session'].get('failed'):
+            return self.error_no_ewallet_session_found(kwargs)
         user_login = self.login_ewallet_user_account_in_session(
             ewallet['ewallet_session'], ewallet['sanitized_instruction_set']
         )
@@ -1860,8 +1889,10 @@ class EWalletSessionManager():
         ewallet = self.fetch_ewallet_session_for_client_action_using_instruction_set(
             kwargs
         )
-        if not ewallet:
-            return False
+        if not ewallet or not ewallet['ewallet_session'] or \
+                isinstance(ewallet['ewallet_session'], dict) and \
+                ewallet['ewallet_session'].get('failed'):
+            return self.error_no_ewallet_session_found(kwargs)
         logout_account = self.action_logout_user_account(
             ewallet['ewallet_session'], ewallet['sanitized_instruction_set']
         )
@@ -1875,8 +1906,10 @@ class EWalletSessionManager():
         ewallet = self.fetch_ewallet_session_for_client_action_using_instruction_set(
             kwargs
         )
-        if not ewallet:
-            return False
+        if not ewallet or not ewallet['ewallet_session'] or \
+                isinstance(ewallet['ewallet_session'], dict) and \
+                ewallet['ewallet_session'].get('failed'):
+            return self.error_no_ewallet_session_found(kwargs)
         switch_user_account = self.action_switch_active_session_user_account(
             ewallet['ewallet_session'], ewallet['sanitized_instruction_set']
         )
@@ -1890,8 +1923,10 @@ class EWalletSessionManager():
         ewallet = self.fetch_ewallet_session_for_client_action_using_instruction_set(
             kwargs
         )
-        if not ewallet:
-            return False
+        if not ewallet or not ewallet['ewallet_session'] or \
+                isinstance(ewallet['ewallet_session'], dict) and \
+                ewallet['ewallet_session'].get('failed'):
+            return self.error_no_ewallet_session_found(kwargs)
         view_logout_records = self.action_view_logout_records(
             ewallet['ewallet_session'], ewallet['sanitized_instruction_set']
         )
@@ -1905,8 +1940,10 @@ class EWalletSessionManager():
         ewallet = self.fetch_ewallet_session_for_client_action_using_instruction_set(
             kwargs
         )
-        if not ewallet:
-            return False
+        if not ewallet or not ewallet['ewallet_session'] or \
+                isinstance(ewallet['ewallet_session'], dict) and \
+                ewallet['ewallet_session'].get('failed'):
+            return self.error_no_ewallet_session_found(kwargs)
         view_login_records = self.action_view_login_records(
             ewallet['ewallet_session'], ewallet['sanitized_instruction_set']
         )
@@ -1920,8 +1957,10 @@ class EWalletSessionManager():
         ewallet = self.fetch_ewallet_session_for_client_action_using_instruction_set(
             kwargs
         )
-        if not ewallet:
-            return False
+        if not ewallet or not ewallet['ewallet_session'] or \
+                isinstance(ewallet['ewallet_session'], dict) and \
+                ewallet['ewallet_session'].get('failed'):
+            return self.error_no_ewallet_session_found(kwargs)
         unlink_user_account = self.action_unlink_user_account(
             ewallet['ewallet_session'], ewallet['sanitized_instruction_set']
         )
@@ -1935,8 +1974,10 @@ class EWalletSessionManager():
         ewallet = self.fetch_ewallet_session_for_client_action_using_instruction_set(
             kwargs
         )
-        if not ewallet:
-            return False
+        if not ewallet or not ewallet['ewallet_session'] or \
+                isinstance(ewallet['ewallet_session'], dict) and \
+                ewallet['ewallet_session'].get('failed'):
+            return self.error_no_ewallet_session_found(kwargs)
         unlink_credit_clock = self.action_unlink_credit_clock(
             ewallet['ewallet_session'], ewallet['sanitized_instruction_set']
         )
@@ -1950,8 +1991,10 @@ class EWalletSessionManager():
         ewallet = self.fetch_ewallet_session_for_client_action_using_instruction_set(
             kwargs
         )
-        if not ewallet:
-            return False
+        if not ewallet or not ewallet['ewallet_session'] or \
+                isinstance(ewallet['ewallet_session'], dict) and \
+                ewallet['ewallet_session'].get('failed'):
+            return self.error_no_ewallet_session_found(kwargs)
         unlink_credit_ewallet = self.action_unlink_credit_ewallet(
             ewallet['ewallet_session'], ewallet['sanitized_instruction_set']
         )
@@ -1975,8 +2018,10 @@ class EWalletSessionManager():
         ewallet = self.fetch_ewallet_session_for_client_action_using_instruction_set(
             kwargs
         )
-        if not ewallet:
-            return False
+        if not ewallet or not ewallet['ewallet_session'] or \
+                isinstance(ewallet['ewallet_session'], dict) and \
+                ewallet['ewallet_session'].get('failed'):
+            return self.error_no_ewallet_session_found(kwargs)
         unlink_contact_list = self.action_unlink_contact_list(
             ewallet['ewallet_session'], ewallet['sanitized_instruction_set']
         )
@@ -1990,8 +2035,10 @@ class EWalletSessionManager():
         ewallet = self.fetch_ewallet_session_for_client_action_using_instruction_set(
             kwargs
         )
-        if not ewallet:
-            return False
+        if not ewallet or not ewallet['ewallet_session'] or \
+                isinstance(ewallet['ewallet_session'], dict) and \
+                ewallet['ewallet_session'].get('failed'):
+            return self.error_no_ewallet_session_found(kwargs)
         unlink_time_sheet = self.action_unlink_time_sheet(
             ewallet['ewallet_session'], ewallet['sanitized_instruction_set']
         )
@@ -2005,8 +2052,10 @@ class EWalletSessionManager():
         ewallet = self.fetch_ewallet_session_for_client_action_using_instruction_set(
             kwargs
         )
-        if not ewallet:
-            return False
+        if not ewallet or not ewallet['ewallet_session'] or \
+                isinstance(ewallet['ewallet_session'], dict) and \
+                ewallet['ewallet_session'].get('failed'):
+            return self.error_no_ewallet_session_found(kwargs)
         unlink_conversion_sheet = self.action_unlink_conversion_sheet(
             ewallet['ewallet_session'], ewallet['sanitized_instruction_set']
         )
@@ -2020,8 +2069,10 @@ class EWalletSessionManager():
         ewallet = self.fetch_ewallet_session_for_client_action_using_instruction_set(
             kwargs
         )
-        if not ewallet:
-            return False
+        if not ewallet or not ewallet['ewallet_session'] or \
+                isinstance(ewallet['ewallet_session'], dict) and \
+                ewallet['ewallet_session'].get('failed'):
+            return self.error_no_ewallet_session_found(kwargs)
         unlink_invoice_sheet = self.action_unlink_invoice_sheet(
             ewallet['ewallet_session'], ewallet['sanitized_instruction_set']
         )
@@ -2035,8 +2086,10 @@ class EWalletSessionManager():
         ewallet = self.fetch_ewallet_session_for_client_action_using_instruction_set(
             kwargs
         )
-        if not ewallet:
-            return False
+        if not ewallet or not ewallet['ewallet_session'] or \
+                isinstance(ewallet['ewallet_session'], dict) and \
+                ewallet['ewallet_session'].get('failed'):
+            return self.error_no_ewallet_session_found(kwargs)
         unlink_transfer_sheet = self.action_unlink_transfer_sheet(
             ewallet['ewallet_session'], ewallet['sanitized_instruction_set']
         )
@@ -2050,8 +2103,10 @@ class EWalletSessionManager():
         ewallet = self.fetch_ewallet_session_for_client_action_using_instruction_set(
             kwargs
         )
-        if not ewallet:
-            return False
+        if not ewallet or not ewallet['ewallet_session'] or \
+                isinstance(ewallet['ewallet_session'], dict) and \
+                ewallet['ewallet_session'].get('failed'):
+            return self.error_no_ewallet_session_found(kwargs)
         unlink_contact_record = self.action_unlink_contact_list_record(
             ewallet['ewallet_session'], ewallet['sanitized_instruction_set']
         )
@@ -2075,8 +2130,10 @@ class EWalletSessionManager():
         ewallet = self.fetch_ewallet_session_for_client_action_using_instruction_set(
             kwargs
         )
-        if not ewallet:
-            return False
+        if not ewallet or not ewallet['ewallet_session'] or \
+                isinstance(ewallet['ewallet_session'], dict) and \
+                ewallet['ewallet_session'].get('failed'):
+            return self.error_no_ewallet_session_found(kwargs)
         unlink_time_record = self.action_unlink_time_sheet_record(
             ewallet['ewallet_session'], ewallet['sanitized_instruction_set']
         )
@@ -2100,8 +2157,10 @@ class EWalletSessionManager():
         ewallet = self.fetch_ewallet_session_for_client_action_using_instruction_set(
             kwargs
         )
-        if not ewallet:
-            return False
+        if not ewallet or not ewallet['ewallet_session'] or \
+                isinstance(ewallet['ewallet_session'], dict) and \
+                ewallet['ewallet_session'].get('failed'):
+            return self.error_no_ewallet_session_found(kwargs)
         unlink_conversion_record = self.action_unlink_conversion_sheet_record(
             ewallet['ewallet_session'], ewallet['sanitized_instruction_set']
         )
@@ -2125,8 +2184,10 @@ class EWalletSessionManager():
         ewallet = self.fetch_ewallet_session_for_client_action_using_instruction_set(
             kwargs
         )
-        if not ewallet:
-            return False
+        if not ewallet or not ewallet['ewallet_session'] or \
+                isinstance(ewallet['ewallet_session'], dict) and \
+                ewallet['ewallet_session'].get('failed'):
+            return self.error_no_ewallet_session_found(kwargs)
         unlink_invoice_record = self.action_unlink_invoice_sheet_record(
             ewallet['ewallet_session'], ewallet['sanitized_instruction_set']
         )
@@ -2150,8 +2211,10 @@ class EWalletSessionManager():
         ewallet = self.fetch_ewallet_session_for_client_action_using_instruction_set(
             kwargs
         )
-        if not ewallet:
-            return False
+        if not ewallet or not ewallet['ewallet_session'] or \
+                isinstance(ewallet['ewallet_session'], dict) and \
+                ewallet['ewallet_session'].get('failed'):
+            return self.error_no_ewallet_session_found(kwargs)
         unlink_transfer_record = self.action_unlink_transfer_sheet_record(
             ewallet['ewallet_session'], ewallet['sanitized_instruction_set']
         )
@@ -2190,8 +2253,10 @@ class EWalletSessionManager():
         ewallet = self.fetch_ewallet_session_for_client_action_using_instruction_set(
             kwargs
         )
-        if not ewallet:
-            return False
+        if not ewallet or not ewallet['ewallet_session'] or \
+                isinstance(ewallet['ewallet_session'], dict) and \
+                ewallet['ewallet_session'].get('failed'):
+            return self.error_no_ewallet_session_found(kwargs)
         switch_contact_list = self.action_switch_contact_list(
             ewallet['ewallet_session'], ewallet['sanitized_instruction_set']
         )
@@ -2205,8 +2270,10 @@ class EWalletSessionManager():
         ewallet = self.fetch_ewallet_session_for_client_action_using_instruction_set(
             kwargs
         )
-        if not ewallet:
-            return False
+        if not ewallet or not ewallet['ewallet_session'] or \
+                isinstance(ewallet['ewallet_session'], dict) and \
+                ewallet['ewallet_session'].get('failed'):
+            return self.error_no_ewallet_session_found(kwargs)
         switch_time_sheet = self.action_switch_time_sheet(
             ewallet['ewallet_session'], ewallet['sanitized_instruction_set']
         )
@@ -2220,8 +2287,10 @@ class EWalletSessionManager():
         ewallet = self.fetch_ewallet_session_for_client_action_using_instruction_set(
             kwargs
         )
-        if not ewallet:
-            return False
+        if not ewallet or not ewallet['ewallet_session'] or \
+                isinstance(ewallet['ewallet_session'], dict) and \
+                ewallet['ewallet_session'].get('failed'):
+            return self.error_no_ewallet_session_found(kwargs)
         switch_conversion_sheet = self.action_switch_conversion_sheet(
             ewallet['ewallet_session'], ewallet['sanitized_instruction_set']
         )
@@ -2235,8 +2304,10 @@ class EWalletSessionManager():
         ewallet = self.fetch_ewallet_session_for_client_action_using_instruction_set(
             kwargs
         )
-        if not ewallet:
-            return False
+        if not ewallet or not ewallet['ewallet_session'] or \
+                isinstance(ewallet['ewallet_session'], dict) and \
+                ewallet['ewallet_session'].get('failed'):
+            return self.error_no_ewallet_session_found(kwargs)
         switch_invoice_sheet = self.action_switch_invoice_sheet(
             ewallet['ewallet_session'], ewallet['sanitized_instruction_set']
         )
@@ -2250,8 +2321,10 @@ class EWalletSessionManager():
         ewallet = self.fetch_ewallet_session_for_client_action_using_instruction_set(
             kwargs
         )
-        if not ewallet:
-            return False
+        if not ewallet or not ewallet['ewallet_session'] or \
+                isinstance(ewallet['ewallet_session'], dict) and \
+                ewallet['ewallet_session'].get('failed'):
+            return self.error_no_ewallet_session_found(kwargs)
         switch_transfer_sheet = self.action_switch_transfer_sheet(
             ewallet['ewallet_session'], ewallet['sanitized_instruction_set']
         )
@@ -2265,8 +2338,10 @@ class EWalletSessionManager():
         ewallet = self.fetch_ewallet_session_for_client_action_using_instruction_set(
             kwargs
         )
-        if not ewallet:
-            return False
+        if not ewallet or not ewallet['ewallet_session'] or \
+                isinstance(ewallet['ewallet_session'], dict) and \
+                ewallet['ewallet_session'].get('failed'):
+            return self.error_no_ewallet_session_found(kwargs)
         switch_credit_clock = self.action_switch_credit_clock(
             ewallet['ewallet_session'], ewallet['sanitized_instruction_set']
         )
@@ -2280,8 +2355,10 @@ class EWalletSessionManager():
         ewallet = self.fetch_ewallet_session_for_client_action_using_instruction_set(
             kwargs
         )
-        if not ewallet:
-            return False
+        if not ewallet or not ewallet['ewallet_session'] or \
+                isinstance(ewallet['ewallet_session'], dict) and \
+                ewallet['ewallet_session'].get('failed'):
+            return self.error_no_ewallet_session_found(kwargs)
         switch_credit_ewallet = self.action_switch_credit_ewallet(
             ewallet['ewallet_session'], ewallet['sanitized_instruction_set']
         )
@@ -2320,8 +2397,10 @@ class EWalletSessionManager():
         ewallet = self.fetch_ewallet_session_for_client_action_using_instruction_set(
             kwargs
         )
-        if not ewallet:
-            return False
+        if not ewallet or not ewallet['ewallet_session'] or \
+                isinstance(ewallet['ewallet_session'], dict) and \
+                ewallet['ewallet_session'].get('failed'):
+            return self.error_no_ewallet_session_found(kwargs)
         new_contact_list = self.action_new_contact_list(
             ewallet['ewallet_session'], ewallet['sanitized_instruction_set']
         )
@@ -2335,8 +2414,10 @@ class EWalletSessionManager():
         ewallet = self.fetch_ewallet_session_for_client_action_using_instruction_set(
             kwargs
         )
-        if not ewallet:
-            return False
+        if not ewallet or not ewallet['ewallet_session'] or \
+                isinstance(ewallet['ewallet_session'], dict) and \
+                ewallet['ewallet_session'].get('failed'):
+            return self.error_no_ewallet_session_found(kwargs)
         new_time_sheet = self.action_new_time_sheet(
             ewallet['ewallet_session'], ewallet['sanitized_instruction_set'],
         )
@@ -2359,8 +2440,10 @@ class EWalletSessionManager():
         ewallet = self.fetch_ewallet_session_for_client_action_using_instruction_set(
             kwargs
         )
-        if not ewallet:
-            return False
+        if not ewallet or not ewallet['ewallet_session'] or \
+                isinstance(ewallet['ewallet_session'], dict) and \
+                ewallet['ewallet_session'].get('failed'):
+            return self.error_no_ewallet_session_found(kwargs)
         new_conversion_sheet = self.action_new_conversion_sheet(
             ewallet['ewallet_session'], ewallet['sanitized_instruction_set'],
         )
@@ -2383,8 +2466,10 @@ class EWalletSessionManager():
         ewallet = self.fetch_ewallet_session_for_client_action_using_instruction_set(
             kwargs
         )
-        if not ewallet:
-            return False
+        if not ewallet or not ewallet['ewallet_session'] or \
+                isinstance(ewallet['ewallet_session'], dict) and \
+                ewallet['ewallet_session'].get('failed'):
+            return self.error_no_ewallet_session_found(kwargs)
         new_invoice_sheet = self.action_new_invoice_sheet(
             ewallet['ewallet_session'], ewallet['sanitized_instruction_set'],
         )
@@ -2407,8 +2492,10 @@ class EWalletSessionManager():
         ewallet = self.fetch_ewallet_session_for_client_action_using_instruction_set(
             kwargs
         )
-        if not ewallet:
-            return False
+        if not ewallet or not ewallet['ewallet_session'] or \
+                isinstance(ewallet['ewallet_session'], dict) and \
+                ewallet['ewallet_session'].get('failed'):
+            return self.error_no_ewallet_session_found(kwargs)
         new_transfer_sheet = self.action_new_transfer_sheet(
             ewallet['ewallet_session'], ewallet['sanitized_instruction_set'],
         )
@@ -2431,8 +2518,10 @@ class EWalletSessionManager():
         ewallet = self.fetch_ewallet_session_for_client_action_using_instruction_set(
             kwargs
         )
-        if not ewallet:
-            return False
+        if not ewallet or not ewallet['ewallet_session'] or \
+                isinstance(ewallet['ewallet_session'], dict) and \
+                ewallet['ewallet_session'].get('failed'):
+            return self.error_no_ewallet_session_found(kwargs)
         new_credit_clock = self.action_new_credit_clock(
             ewallet['ewallet_session'], ewallet['sanitized_instruction_set'],
         )
@@ -2446,8 +2535,10 @@ class EWalletSessionManager():
         ewallet = self.fetch_ewallet_session_for_client_action_using_instruction_set(
             kwargs
         )
-        if not ewallet:
-            return False
+        if not ewallet or not ewallet['ewallet_session'] or \
+                isinstance(ewallet['ewallet_session'], dict) and \
+                ewallet['ewallet_session'].get('failed'):
+            return self.error_no_ewallet_session_found(kwargs)
         new_credit_ewallet = self.action_new_credit_ewallet(
             ewallet['ewallet_session'], ewallet['sanitized_instruction_set'],
         )
@@ -2471,8 +2562,10 @@ class EWalletSessionManager():
         ewallet = self.fetch_ewallet_session_for_client_action_using_instruction_set(
             kwargs
         )
-        if not ewallet:
-            return False
+        if not ewallet or not ewallet['ewallet_session'] or \
+                isinstance(ewallet['ewallet_session'], dict) and \
+                ewallet['ewallet_session'].get('failed'):
+            return self.error_no_ewallet_session_found(kwargs)
         view_invoice_record = self.action_view_invoice_record(
             ewallet['ewallet_session'], ewallet['sanitized_instruction_set'],
         )
@@ -2486,8 +2579,10 @@ class EWalletSessionManager():
         ewallet = self.fetch_ewallet_session_for_client_action_using_instruction_set(
             kwargs
         )
-        if not ewallet:
-            return False
+        if not ewallet or not ewallet['ewallet_session'] or \
+                isinstance(ewallet['ewallet_session'], dict) and \
+                ewallet['ewallet_session'].get('failed'):
+            return self.error_no_ewallet_session_found(kwargs)
         view_invoice_sheet = self.action_view_invoice_sheet(
             ewallet['ewallet_session'], ewallet['sanitized_instruction_set'],
         )
@@ -2511,8 +2606,10 @@ class EWalletSessionManager():
         ewallet = self.fetch_ewallet_session_for_client_action_using_instruction_set(
             kwargs
         )
-        if not ewallet:
-            return False
+        if not ewallet or not ewallet['ewallet_session'] or \
+                isinstance(ewallet['ewallet_session'], dict) and \
+                ewallet['ewallet_session'].get('failed'):
+            return self.error_no_ewallet_session_found(kwargs)
         view_credit_clock = self.action_view_credit_clock(
             ewallet['ewallet_session'], ewallet['sanitized_instruction_set'],
         )
@@ -2526,8 +2623,10 @@ class EWalletSessionManager():
         ewallet = self.fetch_ewallet_session_for_client_action_using_instruction_set(
             kwargs
         )
-        if not ewallet:
-            return False
+        if not ewallet or not ewallet['ewallet_session'] or \
+                isinstance(ewallet['ewallet_session'], dict) and \
+                ewallet['ewallet_session'].get('failed'):
+            return self.error_no_ewallet_session_found(kwargs)
         view_credit_ewallet = self.action_view_credit_ewallet(
             ewallet['ewallet_session'], ewallet['sanitized_instruction_set'],
         )
@@ -2551,8 +2650,10 @@ class EWalletSessionManager():
         ewallet = self.fetch_ewallet_session_for_client_action_using_instruction_set(
             kwargs
         )
-        if not ewallet:
-            return False
+        if not ewallet or not ewallet['ewallet_session'] or \
+                isinstance(ewallet['ewallet_session'], dict) and \
+                ewallet['ewallet_session'].get('failed'):
+            return self.error_no_ewallet_session_found(kwargs)
         edit_account = self.action_edit_user_account(
             ewallet['ewallet_session'], ewallet['sanitized_instruction_set'],
         )
@@ -2575,8 +2676,10 @@ class EWalletSessionManager():
         ewallet = self.fetch_ewallet_session_for_client_action_using_instruction_set(
             kwargs
         )
-        if not ewallet:
-            return False
+        if not ewallet or not ewallet['ewallet_session'] or \
+                isinstance(ewallet['ewallet_session'], dict) and \
+                ewallet['ewallet_session'].get('failed'):
+            return self.error_no_ewallet_session_found(kwargs)
         view_account = self.action_view_user_account(
             ewallet['ewallet_session'], ewallet['sanitized_instruction_set'],
         )
@@ -2590,8 +2693,10 @@ class EWalletSessionManager():
         ewallet = self.fetch_ewallet_session_for_client_action_using_instruction_set(
             kwargs
         )
-        if not ewallet:
-            return False
+        if not ewallet or not ewallet['ewallet_session'] or \
+                isinstance(ewallet['ewallet_session'], dict) and \
+                ewallet['ewallet_session'].get('failed'):
+            return self.error_no_ewallet_session_found(kwargs)
         view_conversion_record = self.action_view_conversion_record(
             ewallet['ewallet_session'], ewallet['sanitized_instruction_set'],
         )
@@ -2605,8 +2710,10 @@ class EWalletSessionManager():
         ewallet = self.fetch_ewallet_session_for_client_action_using_instruction_set(
             kwargs
         )
-        if not ewallet:
-            return False
+        if not ewallet or not ewallet['ewallet_session'] or \
+                isinstance(ewallet['ewallet_session'], dict) and \
+                ewallet['ewallet_session'].get('failed'):
+            return self.error_no_ewallet_session_found(kwargs)
         view_conversion_sheet = self.action_view_conversion_sheet(
             ewallet['ewallet_session'], ewallet['sanitized_instruction_set'],
         )
@@ -2630,8 +2737,10 @@ class EWalletSessionManager():
         ewallet = self.fetch_ewallet_session_for_client_action_using_instruction_set(
             kwargs
         )
-        if not ewallet:
-            return False
+        if not ewallet or not ewallet['ewallet_session'] or \
+                isinstance(ewallet['ewallet_session'], dict) and \
+                ewallet['ewallet_session'].get('failed'):
+            return self.error_no_ewallet_session_found(kwargs)
         view_time_record = self.action_view_time_sheet_record(
             ewallet['ewallet_session'], ewallet['sanitized_instruction_set'],
         )
@@ -2645,8 +2754,10 @@ class EWalletSessionManager():
         ewallet = self.fetch_ewallet_session_for_client_action_using_instruction_set(
             kwargs
         )
-        if not ewallet:
-            return False
+        if not ewallet or not ewallet['ewallet_session'] or \
+                isinstance(ewallet['ewallet_session'], dict) and \
+                ewallet['ewallet_session'].get('failed'):
+            return self.error_no_ewallet_session_found(kwargs)
         view_time_sheet = self.action_view_time_sheet(
             ewallet['ewallet_session'], ewallet['sanitized_instruction_set'],
         )
@@ -2670,8 +2781,10 @@ class EWalletSessionManager():
         ewallet = self.fetch_ewallet_session_for_client_action_using_instruction_set(
             kwargs
         )
-        if not ewallet:
-            return False
+        if not ewallet or not ewallet['ewallet_session'] or \
+                isinstance(ewallet['ewallet_session'], dict) and \
+                ewallet['ewallet_session'].get('failed'):
+            return self.error_no_ewallet_session_found(kwargs)
         view_transfer_record = self.action_view_transfer_sheet_record(
             ewallet['ewallet_session'], ewallet['sanitized_instruction_set'],
         )
@@ -2685,8 +2798,10 @@ class EWalletSessionManager():
         ewallet = self.fetch_ewallet_session_for_client_action_using_instruction_set(
             kwargs
         )
-        if not ewallet:
-            return False
+        if not ewallet or not ewallet['ewallet_session'] or \
+                isinstance(ewallet['ewallet_session'], dict) and \
+                ewallet['ewallet_session'].get('failed'):
+            return self.error_no_ewallet_session_found(kwargs)
         view_transfer_sheet = self.action_view_transfer_sheet(
             ewallet['ewallet_session'], ewallet['sanitized_instruction_set'],
         )
@@ -2710,8 +2825,10 @@ class EWalletSessionManager():
         ewallet = self.fetch_ewallet_session_for_client_action_using_instruction_set(
             kwargs
         )
-        if not ewallet:
-            return False
+        if not ewallet or not ewallet['ewallet_session'] or \
+                isinstance(ewallet['ewallet_session'], dict) and \
+                ewallet['ewallet_session'].get('failed'):
+            return self.error_no_ewallet_session_found(kwargs)
         credit_transfer = self.action_transfer_credits(
             ewallet['ewallet_session'], ewallet['sanitized_instruction_set'],
         )
@@ -2735,8 +2852,10 @@ class EWalletSessionManager():
         ewallet = self.fetch_ewallet_session_for_client_action_using_instruction_set(
             kwargs
         )
-        if not ewallet:
-            return False
+        if not ewallet or not ewallet['ewallet_session'] or \
+                isinstance(ewallet['ewallet_session'], dict) and \
+                ewallet['ewallet_session'].get('failed'):
+            return self.error_no_ewallet_session_found(kwargs)
         new_contact_record = self.action_new_contact_record(
             ewallet['ewallet_session'], ewallet['sanitized_instruction_set'],
         )
@@ -2760,8 +2879,10 @@ class EWalletSessionManager():
         ewallet = self.fetch_ewallet_session_for_client_action_using_instruction_set(
             kwargs
         )
-        if not ewallet:
-            return False
+        if not ewallet or not ewallet['ewallet_session'] or \
+                isinstance(ewallet['ewallet_session'], dict) and \
+                ewallet['ewallet_session'].get('failed'):
+            return self.error_no_ewallet_session_found(kwargs)
         view_contact_list = self.action_view_contact_list(
             ewallet['ewallet_session'], ewallet['sanitized_instruction_set'],
         )
@@ -2775,8 +2896,10 @@ class EWalletSessionManager():
         ewallet = self.fetch_ewallet_session_for_client_action_using_instruction_set(
             kwargs
         )
-        if not ewallet:
-            return False
+        if not ewallet or not ewallet['ewallet_session'] or \
+                isinstance(ewallet['ewallet_session'], dict) and \
+                ewallet['ewallet_session'].get('failed'):
+            return self.error_no_ewallet_session_found(kwargs)
         view_contact_record = self.action_view_contact_record(
             ewallet['ewallet_session'], ewallet['sanitized_instruction_set'],
         )
@@ -2817,8 +2940,10 @@ class EWalletSessionManager():
         ewallet = self.fetch_ewallet_session_for_client_action_using_instruction_set(
             kwargs
         )
-        if not ewallet:
-            return False
+        if not ewallet or not ewallet['ewallet_session'] or \
+                isinstance(ewallet['ewallet_session'], dict) and \
+                ewallet['ewallet_session'].get('failed'):
+            return self.error_no_ewallet_session_found(kwargs)
         pay_partner = self.action_pay_partner_account(
             ewallet['ewallet_session'], ewallet['sanitized_instruction_set'],
         )
@@ -2832,8 +2957,10 @@ class EWalletSessionManager():
         ewallet = self.fetch_ewallet_session_for_client_action_using_instruction_set(
             kwargs
         )
-        if not ewallet:
-            return False
+        if not ewallet or not ewallet['ewallet_session'] or \
+                isinstance(ewallet['ewallet_session'], dict) and \
+                ewallet['ewallet_session'].get('failed'):
+            return self.error_no_ewallet_session_found(kwargs)
         resume_timer = self.action_resume_credit_clock_timer(
             ewallet['ewallet_session'], ewallet['sanitized_instruction_set'],
         )
@@ -2847,8 +2974,10 @@ class EWalletSessionManager():
         ewallet = self.fetch_ewallet_session_for_client_action_using_instruction_set(
             kwargs
         )
-        if not ewallet:
-            return False
+        if not ewallet or not ewallet['ewallet_session'] or \
+                isinstance(ewallet['ewallet_session'], dict) and \
+                ewallet['ewallet_session'].get('failed'):
+            return self.error_no_ewallet_session_found(kwargs)
         pause_timer = self.action_pause_credit_clock_timer(
             ewallet['ewallet_session'], ewallet['sanitized_instruction_set'],
         )
@@ -2862,8 +2991,10 @@ class EWalletSessionManager():
         ewallet = self.fetch_ewallet_session_for_client_action_using_instruction_set(
             kwargs
         )
-        if not ewallet:
-            return False
+        if not ewallet or not ewallet['ewallet_session'] or \
+                isinstance(ewallet['ewallet_session'], dict) and \
+                ewallet['ewallet_session'].get('failed'):
+            return self.error_no_ewallet_session_found(kwargs)
         stop_timer = self.action_stop_credit_clock_timer(
             ewallet['ewallet_session'], ewallet['sanitized_instruction_set'],
         )
@@ -2877,8 +3008,10 @@ class EWalletSessionManager():
         ewallet = self.fetch_ewallet_session_for_client_action_using_instruction_set(
             kwargs
         )
-        if not ewallet:
-            return False
+        if not ewallet or not ewallet['ewallet_session'] or \
+                isinstance(ewallet['ewallet_session'], dict) and \
+                ewallet['ewallet_session'].get('failed'):
+            return self.error_no_ewallet_session_found(kwargs)
         conversion = self.action_convert_credits_to_credit_clock(
             ewallet['ewallet_session'], ewallet['sanitized_instruction_set'],
         )
@@ -2892,8 +3025,10 @@ class EWalletSessionManager():
         ewallet = self.fetch_ewallet_session_for_client_action_using_instruction_set(
             kwargs
         )
-        if not ewallet:
-            return False
+        if not ewallet or not ewallet['ewallet_session'] or \
+                isinstance(ewallet['ewallet_session'], dict) and \
+                ewallet['ewallet_session'].get('failed'):
+            return self.error_no_ewallet_session_found(kwargs)
         conversion = self.action_convert_credit_clock_to_credits(
             ewallet['ewallet_session'], ewallet['sanitized_instruction_set']
         )
@@ -2908,8 +3043,10 @@ class EWalletSessionManager():
         ewallet = self.fetch_ewallet_session_for_client_action_using_instruction_set(
                 kwargs
                 )
-        if not ewallet:
-            return False
+        if not ewallet or not ewallet['ewallet_session'] or \
+                isinstance(ewallet['ewallet_session'], dict) and \
+                ewallet['ewallet_session'].get('failed'):
+            return self.error_no_ewallet_session_found(kwargs)
         credit_supply = self.action_supply_user_credit_ewallet_in_session(
                 ewallet['ewallet_session'], ewallet['sanitized_instruction_set']
                 )
@@ -2923,8 +3060,10 @@ class EWalletSessionManager():
         ewallet = self.fetch_ewallet_session_for_client_action_using_instruction_set(
                 kwargs
                 )
-        if not ewallet:
-            return False
+        if not ewallet or not ewallet['ewallet_session'] or \
+                isinstance(ewallet['ewallet_session'], dict) and \
+                ewallet['ewallet_session'].get('failed'):
+            return self.error_no_ewallet_session_found(kwargs)
         start_timer = self.action_start_credit_clock_timer(
                 ewallet['ewallet_session'], ewallet['sanitized_instruction_set']
                 )
@@ -2932,13 +3071,12 @@ class EWalletSessionManager():
 
     def handle_client_action_request_client_id(self, **kwargs):
         log.debug('')
-        client_id = self.action_request_client_id()
-        return client_id
+        return self.action_request_client_id()
 
+#   @pysnooper.snoop()
     def handle_client_action_request_session_token(self, **kwargs):
         log.debug('')
-        session_token = self.action_request_session_token(**kwargs)
-        return session_token
+        return self.action_request_session_token(**kwargs)
 
     def handle_client_action_new_account(self, **kwargs):
         '''
@@ -2953,8 +3091,10 @@ class EWalletSessionManager():
         ewallet = self.fetch_ewallet_session_for_client_action_using_instruction_set(
             kwargs
         )
-        if not ewallet:
-            return False
+        if not ewallet or not ewallet.get('ewallet_session') or \
+                isinstance(ewallet['ewallet_session'], dict) and \
+                ewallet['ewallet_session'].get('failed'):
+            return self.error_no_ewallet_session_found(kwargs)
         new_account = self.create_ewallet_user_account_in_session(
             ewallet['ewallet_session'], ewallet['sanitized_instruction_set']
         )
@@ -3912,6 +4052,51 @@ class EWalletSessionManager():
 
     # ERRORS
 
+    def error_no_client_id_found(self, instruction_set):
+        instruction_set_response = {
+            'failed': True,
+            'error': 'No client id found. '\
+                     'Instruction set details : {}.'.format(instruction_set),
+        }
+        log.error(instruction_set_response['error'])
+        return instruction_set_response
+
+    def error_no_ewallet_session_found(self, instruction_set):
+        instruction_set_response = {
+            'failed': True,
+            'error': 'No EWallet session found. '\
+                     'Instruction set details : {}.'.format(instruction_set),
+        }
+        log.error(instruction_set_response['error'])
+        return instruction_set_response
+
+    def error_no_session_manager_worker_found(self, instruction_set):
+        instruction_set_response = {
+            'failed': True,
+            'error': 'No EWallet session manager worker found. '\
+                     'Instruction set details : {}.'.format(instruction_set),
+        }
+        log.error(instruction_set_response['error'])
+        return instruction_set_response
+
+    def error_no_mapped_session_worker_found_for_client_id(self, client_id):
+        instruction_set_response = {
+            'failed': True,
+            'error': 'No mapped session worker found for client id {}.'\
+                     .format(client_id),
+        }
+        log.error(instruction_set_response['error'])
+        return instruction_set_response
+
+    def error_invalid_instruction_set_required_data(self, instruction_set):
+        instruction_set_response = {
+            'failed': True,
+            'error': 'Invalid EWallet session manager instruction set required data. '\
+                     'Instruction set details : {}'.format(instruction_set),
+        }
+        log.error(instruction_set_response['error'])
+        return instruction_set_response
+
     def error_no_session_manager_controller_specified(self):
         instruction_set_response = {
             'failed': True,
@@ -4284,19 +4469,8 @@ class EWalletSessionManager():
                 )
         return False
 
-    def error_no_mapped_session_worker_found_for_client_id(self, client_id):
-        log.error('No mapped session worker found for client id {}.'.format(client_id))
-        return False
-
     def error_invalid_session_token(self, session_token):
         log.error('Invalid session token {}.'.format(session_token))
-        return False
-
-    def error_invalid_instruction_set_required_data(self, instruction_set):
-        log.error(
-                'Invalid EWallet session manager instruction set required data. '
-                'Instruction set : {}'.format(instruction_set)
-                )
         return False
 
     def error_no_client_action_new_target_specified(self):
@@ -4316,10 +4490,6 @@ class EWalletSessionManager():
                 'Something went wrong. Could not update session manager client '
                 'worker map with values { {}:{} }.'.format(client_id, assigned_worker)
                 )
-        return False
-
-    def error_no_client_id_found(self):
-        log.error('No client id found.')
         return False
 
     def error_could_not_assign_worker_to_new_ewallet_sesion(self, new_session):

@@ -54,9 +54,11 @@ def handle_ewallet_session_manager_instruction_set_post_requests():
     log.debug('')
     instruction_set = request.json or None
     if not instruction_set:
-        jsonify({
+        error = 'No EWallet Server Core instruction set found.'
+        log.error(error)
+        return jsonify({
             'failed': True,
-            'error': 'No EWallet instruction set found.'
+            'error': error,
         })
     return jsonify(
         ewallet_session_manager.session_manager_controller(
