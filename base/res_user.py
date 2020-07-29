@@ -1,5 +1,5 @@
 # from itertools import count
-from sqlalchemy import Column, String, Integer, ForeignKey, DateTime #Table,Float,Date,
+from sqlalchemy import Column, String, Integer, ForeignKey, DateTime, Boolean #Table,Float,Date,
 from sqlalchemy.orm import relationship
 
 from .credit_wallet import CreditEWallet
@@ -55,6 +55,8 @@ class ResUser(Base):
     user_credit_wallet_archive = relationship('CreditEWallet')
     # O2M
     user_contact_list_archive = relationship('ContactList')
+    to_unlink = Column(Boolean)
+    to_unlink_timestamp = Column(DateTime)
 
 #   @pysnooper.snoop('logs/ewallet.log')
     def __init__(self, **kwargs):

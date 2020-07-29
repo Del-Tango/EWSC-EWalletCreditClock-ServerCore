@@ -34,6 +34,7 @@ class EWalletLogin(Base):
         self.user_id = kwargs.get('user_id') or None
         self.login_status = kwargs.get('login_status') or False
 
+#   @pysnooper.snoop('logs/ewallet.log')
     def fetch_all_user_records(self, active_session=None):
         '''
         [ NOTE   ]: Fetches all user records from database.
@@ -43,9 +44,10 @@ class EWalletLogin(Base):
         log.debug('')
         if not active_session:
             return self.error_no_active_session_found()
-        _user_records = active_session.query(ResUser).all()
+        _user_records = ResUser.query.all()
         if not _user_records:
             log.info('No user records found.')
+            return False
         return _user_records
 
     def fetch_all_user_names(self, active_session=None):
@@ -300,9 +302,9 @@ class EWalletLogin(Base):
 
     def warning_multiple_user_accounts_found(self, **kwargs):
         log.warning(
-                'Multiple user accounts found for user name {}. '
-                'Fetching first.'.format(kwargs.get('user_name'))
-                )
+            'Multiple user accounts found for user name {}. '
+            'Fetching first.'.format(kwargs.get('user_name'))
+        )
         return False
 
 
@@ -311,6 +313,7 @@ class EWalletCreateUser(EWalletLogin):
     [ NOTE ]: EWallet user account creator.
     '''
 
+#   @pysnooper.snoop('logs/ewallet.log')
     def fetch_all_user_records(self, active_session=None):
         '''
         [ NOTE   ]: Fetches all ResUser objects recorded in database.
@@ -341,7 +344,7 @@ class EWalletCreateUser(EWalletLogin):
         ]
         return user_names
 
-#   @pysnooper.snoop()
+#   @pysnooper.snoop('logs/ewallet.log')
     def check_user_name_ensure_one(self, user_name, user_names):
         '''
         [ NOTE   ]: Checks if given user name already exists in database records associated with a user account.
@@ -349,14 +352,7 @@ class EWalletCreateUser(EWalletLogin):
         [ RETURN ]: (True | False)
         '''
         log.debug('')
-        if not user_names:
-            return True
-        _existing_user_name = [
-                item for item in user_names if user_name == item
-                ]
-        if not _existing_user_name:
-            return True
-        return False
+        return False if not user_names or user_name in user_names else True
 
     def check_user_pass_length(self, user_pass):
         '''
@@ -465,10 +461,10 @@ class EWalletCreateUser(EWalletLogin):
         '''
         log.debug('')
         _severity_handlers = {
-                1: self.check_user_email_is_valid,
-                2: self.check_user_email_host_has_smtp,
-                3: self.check_user_email_host_smtp_has_address,
-                }
+            1: self.check_user_email_is_valid,
+            2: self.check_user_email_host_has_smtp,
+            3: self.check_user_email_host_smtp_has_address,
+        }
         if not severity:
             return _severity_handlers[1](user_email)
         if severity not in _severity_handlers.keys():
@@ -618,7 +614,7 @@ class EWalletCreateUser(EWalletLogin):
                     },
                 'handlers': {
                     'user_name': self.error_no_user_name_found,
-                    'user_pass': self.error_no_user_pass_found,
+                    'user_pass': self.error_no_user_password_found,
                     },
                 }
         for item in _reasons_and_handlers['reasons']:

@@ -15,8 +15,7 @@ from .credit_wallet import CreditEWallet
 from .contact_list import ContactList
 from .config import Config
 
-config = Config()
-res_utils = ResUtils()
+config, res_utils = Config(), ResUtils()
 log = logging.getLogger(config.log_config['log_name'])
 
 
@@ -250,11 +249,18 @@ class EWallet(Base):
             return self.error_no_active_session_found()
         return self.session
 
+
+#   @pysnooper.snoop('logs/ewallet.log')
     def fetch_active_session_user(self, obj=True):
         log.debug('')
-        if not len(self.active_user):
-            return self.error_no_session_active_user_found()
-        return self.active_user[0] if obj else self.active_user[0].fetch_user_id()
+        try:
+            if not self.active_user:
+    #       if not len(self.active_user):
+                return self.error_no_session_active_user_found()
+            return self.active_user[0] if obj else self.active_user[0].fetch_user_id()
+        except:
+            self.fetch_active_session().rollback()
+        return self.error_could_not_fetch_active_session_user({})
 
     def fetch_active_session_credit_wallet(self):
         log.debug('')
@@ -289,7 +295,7 @@ class EWallet(Base):
         log.debug('')
         credit_wallet = kwargs.get('credit_wallet') or \
                 self.fetch_active_session_credit_wallet()
-        return self.error_no_credit_wallet_found() if not credit_wallet else \
+        return self.error_no_credit_wallet_found(kwargs) if not credit_wallet else \
             credit_wallet.main_controller(
                 controller='system', action='view'
             )
@@ -351,6 +357,8 @@ class EWallet(Base):
             if item in handlers and data_dct[item]:
                 handlers[item](data_dct[item])
         return data_dct
+
+    # CHECKERS
 
     # CLEANERS
 
@@ -433,21 +441,35 @@ class EWallet(Base):
 
     # UNLINKERS
 
+#   @pysnooper.snoop('logs/ewallet.log')
     def unlink_user_account(self, **kwargs):
         '''
         [ NOTE   ]: Deletes specific user or active session user.
         [ INPUT  ]: active_session=<session>, user_id=<user_id>
         [ RETURN ]:
         '''
-        log.debug('')
+        log.debug('TODO - Add to_unlink flag.')
         if not kwargs.get('user_id'):
             return self.error_no_user_account_id_found(kwargs)
         try:
-            kwargs['active_session'].query(
+            user_account = kwargs['active_session'].query(
                 ResUser
             ).filter_by(
                 user_id=kwargs['user_id']
-            ).delete()
+            )
+            user = list(user_account)
+            if not user[0].to_unlink:
+                user[0].to_unlink = True
+                user[0].to_unlink_timestamp = datetime.datetime.now()
+                kwargs['active_session'].commit()
+                return kwargs['user_id']
+            check = res_utils.check_days_since_timestamp(
+                user[0].to_unlink_timestamp, 30
+            )
+            if check:
+                user_account.delete()
+                return kwargs['user_id']
+            return self.warning_user_account_pending_deletion(kwargs)
         except:
             return self.error_could_not_unlink_user_account(kwargs)
         return kwargs['user_id']
@@ -456,6 +478,35 @@ class EWallet(Base):
     '''
     [ NOTE ]: Command chain responses are formatted here.
     '''
+
+#   @pysnooper.snoop('logs/ewallet.log')
+    def action_unlink_user_account(self, **kwargs):
+        '''
+        [ NOTE   ]: User action 'unlink user account', accessible from external api calls.
+        [ INPUT  ]: user=<user>, active_session=<session>
+        [ RETURN ]: (True | False)
+        '''
+        log.debug('')
+        user_id = kwargs.get('user_id') or self.fetch_active_session_user(obj=False)
+        if not user_id or isinstance(user_id, dict) and \
+                user_id.get('failed'):
+            return self.error_no_user_account_id_found(kwargs)
+        user_account = self.fetch_user_by_id(account_id=user_id, **kwargs)
+        if not user_account or isinstance(user_account, dict) and \
+                user_account.get('failed'):
+            return self.warning_could_not_fetch_user_account_by_id(kwargs)
+        user_email = user_account.fetch_user_email()
+        unlink_account = self.unlink_user_account(user_id=user_id, **kwargs)
+        if not unlink_account or isinstance(unlink_account, dict) and \
+                unlink_account.get('failed'):
+            kwargs['active_session'].rollback()
+            return self.warning_could_not_unlink_user_account(user_id, kwargs)
+        kwargs['active_session'].commit()
+        command_chain_response = {
+            'failed': False,
+            'account': user_email,
+        }
+        return command_chain_response
 
     def action_create_new_time_sheet(self, **kwargs):
         log.debug('')
@@ -1207,7 +1258,7 @@ class EWallet(Base):
         }
         return command_chain_response
 
-    @pysnooper.snoop('logs/ewallet.log')
+#   @pysnooper.snoop('logs/ewallet.log')
     def action_create_new_transfer_type_supply(self, **kwargs):
         '''
         [ NOTE   ]: User action 'supply credits' for active session user becomes
@@ -1236,6 +1287,9 @@ class EWallet(Base):
             active_session=active_session, **sanitized_command_chain
         )
         credits_after = self.fetch_credit_wallet_credits()
+        if not credits_after or isinstance(credits_after, dict) and \
+                credits_after.get('failed'):
+            return credits_after
         if str(credits_after) != str(credits_before + kwargs.get('credits')):
             active_session.rollback()
             return self.error_supply_type_transfer_failure(kwargs)
@@ -1472,35 +1526,6 @@ class EWallet(Base):
                 item.login_id: res_utils.format_datetime(item.login_date) \
                 for item in login_records
             },
-        }
-        return command_chain_response
-
-#   @pysnooper.snoop('logs/ewallet.log')
-    def action_unlink_user_account(self, **kwargs):
-        '''
-        [ NOTE   ]: User action 'unlink user account', accessible from external api calls.
-        [ INPUT  ]: user=<user>, active_session=<session>
-        [ RETURN ]: (True | False)
-        '''
-        log.debug('')
-        user_id = kwargs.get('user_id') or self.fetch_active_session_user(obj=False)
-        if not user_id or isinstance(user_id, dict) and \
-                user_id.get('failed'):
-            return self.error_no_user_account_id_found(kwargs)
-        user_account = self.fetch_user_by_id(account_id=user_id, **kwargs)
-        if not user_account or isinstance(user_account, dict) and \
-                user_account.get('failed'):
-            return self.warning_could_not_fetch_user_account_by_id(kwargs)
-        user_email = user_account.fetch_user_email()
-        unlink_account = self.unlink_user_account(user_id=user_id, **kwargs)
-        if not unlink_account or isinstance(unlink_account, dict) and \
-                unlink_account.get('failed'):
-            kwargs['active_session'].rollback()
-            return self.warning_could_not_unlink_user_account(user_id, **kwargs)
-        kwargs['active_session'].commit()
-        command_chain_response = {
-            'failed': False,
-            'account': user_email,
         }
         return command_chain_response
 
@@ -3038,6 +3063,15 @@ class EWallet(Base):
 
     # WARNINGS
 
+    def warning_user_account_pending_deletion(self, command_chain):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'User account pending deletion. '
+                       'Command chain details : {}'.format(command_chain)
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
+
     def warning_could_not_fetch_user_account_by_id(self, command_chain):
         command_chain_response = {
             'failed': True,
@@ -3889,6 +3923,15 @@ class EWallet(Base):
         return False
 
     # ERRORS
+
+    def error_no_credit_wallet_found(self, command_chain):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No credit ewallet found. '
+                     'Command chain details: {}'.format(command_chain)
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
 
     def error_supply_type_transfer_failure(self, command_chain):
         command_chain_response = {

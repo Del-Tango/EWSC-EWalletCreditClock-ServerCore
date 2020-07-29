@@ -18,11 +18,30 @@ class ResUtils():
     engine = create_engine('sqlite:///data/ewallet.db')
     _SessionFactory = sessionmaker(bind=engine)
 
+    # FETCHERS
+
+    def fetch_now_eet(*args, **kwargs):
+        now_utc = datetime.datetime.now(timezone('UTC'))
+        now_eet = now_utc.astimezone(timezone('EET'))
+        return now_eet.timetuple()
+
+    # CHECKERS
+
+    def check_days_since_timestamp(self, timestamp, day_count):
+        log.debug('')
+        now = datetime.datetime.now()
+        days_passed = (now - timestamp).days
+        return False if days_passed < day_count else True
+
+    # FORMATTERS
+
     def format_timestamp(self, timestamp):
         return time.strftime('%d-%m-%Y %H:%M:%S', time.localtime(timestamp))
 
     def format_datetime(self, datetime_obj):
         return datetime_obj.strftime('%d-%m-%Y %H:%M:%S')
+
+    # GENERAL
 
     def remove_tags_from_command_chain(self, command_chain, *args):
         sanitized_command_chain = command_chain.copy()
@@ -48,11 +67,6 @@ class ResUtils():
         global _SessionFactory
         Base.metadata.create_all(self.engine)
         return self._SessionFactory()
-
-    def fetch_now_eet(*args, **kwargs):
-        now_utc = datetime.datetime.now(timezone('UTC'))
-        now_eet = now_utc.astimezone(timezone('EET'))
-        return now_eet.timetuple()
 
     def sequencer(self):
         log.debug('')

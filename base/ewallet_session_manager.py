@@ -1,13 +1,13 @@
+import time
+import datetime
+import logging
+import pysnooper
+
 from .ewallet import EWallet
 from .config import Config
 from .res_utils import ResUtils
 from .ewallet_worker import EWalletWorker
 from .socket_handler import EWalletSocketHandler
-
-import time
-import datetime
-import logging
-import pysnooper
 
 config, res_utils = Config(), ResUtils()
 log = logging.getLogger(Config().log_config['log_name'])
@@ -792,6 +792,23 @@ class EWalletSessionManager():
 
     '''
 
+#   @pysnooper.snoop('logs/ewallet.log')
+    def action_unlink_user_account(self, ewallet_session, instruction_set):
+        log.debug('')
+        orm_session = ewallet_session.fetch_active_session()
+        sanitized_instruction_set = self.res_utils.remove_tags_from_command_chain(
+            instruction_set, 'controller', 'ctype', 'action', 'unlink',
+        )
+        active_session_user = ewallet_session.fetch_active_session_user()
+        unlink_user_account = ewallet_session.ewallet_controller(
+            controller='user', ctype='action', action='unlink', unlink='account',
+            active_session=orm_session, **sanitized_instruction_set
+        )
+        return self.warning_could_not_unlink_user_account(
+            ewallet_session, instruction_set
+        ) if not unlink_user_account or unlink_user_account.get('failed') \
+            else unlink_user_account
+
     def action_switch_active_session_user_account(self, ewallet_session, instruction_set):
         log.debug('')
         orm_session = ewallet_session.fetch_active_session()
@@ -1310,22 +1327,6 @@ class EWalletSessionManager():
             ewallet_session, instruction_set
         ) if not user_login_records or user_login_records.get('failed') \
             else user_login_records
-
-    def action_unlink_user_account(self, ewallet_session, instruction_set):
-        log.debug('')
-        orm_session = ewallet_session.fetch_active_session()
-        sanitized_instruction_set = self.res_utils.remove_tags_from_command_chain(
-            instruction_set, 'controller', 'ctype', 'action', 'unlink',
-        )
-        active_session_user = ewallet_session.fetch_active_session_user()
-        unlink_user_account = ewallet_session.ewallet_controller(
-            controller='user', ctype='action', action='unlink', unlink='account',
-            active_session=orm_session, **sanitized_instruction_set
-        )
-        return self.warning_could_not_unlink_user_account(
-            ewallet_session, instruction_set
-        ) if not unlink_user_account or unlink_user_account.get('failed') \
-            else unlink_user_account
 
     def action_unlink_credit_clock(self, ewallet_session, instruction_set):
         log.debug('')
