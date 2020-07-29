@@ -398,6 +398,7 @@ class EWalletSessionManager():
 
     # CHECKERS
 
+#   @pysnooper.snoop('logs/ewallet.log')
     def check_system_core_account_exists(self):
         log.debug('')
         ewallet_session = self.fetch_primary_ewallet_session()

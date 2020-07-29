@@ -15,7 +15,7 @@ config, Base = Config(), declarative_base()
 
 class ResUtils():
 
-    engine = create_engine('sqlite:///data/ewallet.db')
+    engine = create_engine('sqlite:///data/ewallet.db', connect_args={'check_same_thread': False})
     _SessionFactory = sessionmaker(bind=engine)
 
     # FETCHERS

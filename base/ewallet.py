@@ -28,8 +28,8 @@ class EWalletSessionUser(Base):
     session_id = Column(Integer, ForeignKey('ewallet.id'))
     user_id = Column(Integer, ForeignKey('res_user.user_id'))
     datetime = Column(DateTime, default=datetime.datetime.now())
-    user = relationship('ResUser', backref=backref('ewallet_session_user', cascade='all, delete-orphan'))
-    session = relationship('EWallet', backref=backref('ewallet_session_user', cascade='all, delete-orphan'))
+    user = relationship('ResUser', backref=backref('ewallet_session_user')) #, cascade='all, delete-orphan'
+    session = relationship('EWallet', backref=backref('ewallet_session_user')) #, cascade='all, delete-orphan'
 
 
 class EWallet(Base):
@@ -249,13 +249,11 @@ class EWallet(Base):
             return self.error_no_active_session_found()
         return self.session
 
-
 #   @pysnooper.snoop('logs/ewallet.log')
     def fetch_active_session_user(self, obj=True):
         log.debug('')
         try:
             if not self.active_user:
-    #       if not len(self.active_user):
                 return self.error_no_session_active_user_found()
             return self.active_user[0] if obj else self.active_user[0].fetch_user_id()
         except:
@@ -448,7 +446,7 @@ class EWallet(Base):
         [ INPUT  ]: active_session=<session>, user_id=<user_id>
         [ RETURN ]:
         '''
-        log.debug('TODO - Add to_unlink flag.')
+        log.debug('')
         if not kwargs.get('user_id'):
             return self.error_no_user_account_id_found(kwargs)
         try:
@@ -478,6 +476,40 @@ class EWallet(Base):
     '''
     [ NOTE ]: Command chain responses are formatted here.
     '''
+
+#   @pysnooper.snoop('logs/ewallet.log')
+    def action_create_new_user_account(self, **kwargs):
+        '''
+        [ NOTE   ]: User action create new account, accessible from external user api calls.
+        [ INPUT  ]: user_name=<name> user_pass=<pass> user_email=<email> user_alias=<alias>
+        '''
+        log.debug('')
+        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
+            kwargs, 'action'
+        )
+        session_create_account = EWalletCreateUser().action_create_new_user(
+            **sanitized_command_chain
+        )
+        if not session_create_account or isinstance(session_create_account, dict) and \
+                session_create_account.get('failed'):
+            return self.warning_could_not_create_user_account(
+                kwargs['user_name'], kwargs
+            )
+        kwargs['active_session'].add(session_create_account)
+        log.info('Successfully created new user account.')
+        self.update_user_account_archive(
+            user=session_create_account,
+        )
+        self.update_session_from_user(
+            session_active_user=session_create_account,
+        )
+        kwargs['active_session'].commit()
+        command_chain_response = {
+            'failed': False,
+            'account': kwargs['user_email'],
+            'account_data': session_create_account.fetch_user_values(),
+        }
+        return command_chain_response
 
 #   @pysnooper.snoop('logs/ewallet.log')
     def action_unlink_user_account(self, **kwargs):
@@ -826,40 +858,6 @@ class EWallet(Base):
         )
         return self.warning_could_not_edit_account_user_phone(kwargs) if \
             edit_user_phone.get('failed') else edit_user_phone
-
-    def action_create_new_user_account(self, **kwargs):
-        '''
-        [ NOTE   ]: User action create new account, accessible from external user api calls.
-        [ INPUT  ]: user_name=<name> user_pass=<pass> user_email=<email> user_alias=<alias>
-        [ RETURN ]: (ResUser object | False)
-        '''
-        log.debug('')
-        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
-            kwargs, 'action'
-        )
-        session_create_account = EWalletLogin().ewallet_login_controller(
-            action='new_account', **sanitized_command_chain
-        )
-        if not session_create_account or isinstance(session_create_account, dict) and \
-                session_create_account.get('failed'):
-            return self.warning_could_not_create_user_account(
-                kwargs['user_name'], kwargs
-            )
-        kwargs['active_session'].add(session_create_account)
-        log.info('Successfully created new user account.')
-        self.update_user_account_archive(
-            user=session_create_account,
-        )
-        self.update_session_from_user(
-            session_active_user=session_create_account,
-        )
-        kwargs['active_session'].commit()
-        command_chain_response = {
-            'failed': False,
-            'account': kwargs['user_email'],
-            'account_data': session_create_account.fetch_user_values(),
-        }
-        return command_chain_response
 
     def action_view_user_account(self, **kwargs):
         '''
