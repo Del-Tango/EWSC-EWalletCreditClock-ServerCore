@@ -1208,7 +1208,7 @@ class EWallet(Base):
         }
         return command_chain_response
 
-    @pysnooper.snoop('logs/ewallet.log')
+#   @pysnooper.snoop('logs/ewallet.log')
     def action_create_new_transfer_type_pay(self, **kwargs):
         log.debug('')
         if not kwargs.get('pay'):
@@ -1236,21 +1236,12 @@ class EWallet(Base):
                 action_pay.get('failed'):
             active_session.rollback()
             return self.error_pay_type_transfer_failure(kwargs)
-
-        # TODO - REMOVE
-        log.info(
-            '\n\nCREDITS BEFORE : {}\n'\
-            'CURRENT ACCOUNT : {}\n'\
-            'ACTION PAY : {}\n'\
-            'CREDITS AFTER : {}\n'.format(credits_before, current_account, action_pay, credits_after)
-        )
-
         active_session.commit()
         command_chain_response = {
             'failed': False,
             'payed': kwargs['pay'],
             'ewallet_credits': action_pay['ewallet_credits'],
-            'spent_credits': kwargs['credits'],
+            'spent_credits': int(kwargs['credits']),
             'invoice_record': action_pay['invoice_record'].fetch_record_id(),
             'transfer_record': action_pay['transfer_record'].fetch_record_id(),
         }

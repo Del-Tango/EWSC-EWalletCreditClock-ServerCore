@@ -592,10 +592,10 @@ class CreditClock(Base):
         log.debug('')
         if not kwargs.get('minutes'):
             return self.error_no_minutes_found()
-        _minutes = round((self.credit_clock - kwargs.get('minutes')), 2)
-        if _minutes is self.credit_clock:
+        minutes = round((self.credit_clock - float(kwargs.get('minutes'))), 2)
+        if minutes is self.credit_clock:
             return self.error_could_not_extract_credit_clock_minutes()
-        self.credit_clock = _minutes
+        self.credit_clock = minutes
         log.info('Successfully extracted credit clock minutes.')
         return self.credit_clock
 
@@ -603,10 +603,10 @@ class CreditClock(Base):
         log.debug('')
         if not kwargs.get('credits'):
             return self.error_no_credits_found()
-        _minutes = round((self.credit_clock + kwargs['credits']), 2)
-        if _minutes is self.credit_clock:
+        minutes = round((self.credit_clock + float(kwargs['credits'])), 2)
+        if minutes is self.credit_clock:
             return self.error_could_not_supply_credit_clock_with_minutes()
-        self.credit_clock = _minutes
+        self.credit_clock = minutes
         log.info('Successfully supplied credit clock minutes.')
         return self.credit_clock
 
@@ -616,10 +616,10 @@ class CreditClock(Base):
             return self.error_no_ewallet_found()
         if not kwargs.get('credits'):
             return self.error_no_credits_specified()
-        _supply = kwargs['credit_ewallet'].main_controller(
-                controller='system', action='supply', credits=kwargs['credits']
-                )
-        return _supply
+        supply = kwargs['credit_ewallet'].main_controller(
+            controller='system', action='supply', credits=kwargs['credits']
+        )
+        return supply
 
 #   @pysnooper.snoop('logs/ewallet.log')
     def extract_ewallet_credits(self, **kwargs):
@@ -628,10 +628,10 @@ class CreditClock(Base):
             return self.error_no_ewallet_found()
         if not kwargs.get('credits'):
             return self.error_no_credits_specified()
-        _extract = kwargs['credit_ewallet'].main_controller(
-                controller='system', action='extract', credits=kwargs['credits']
-                )
-        return _extract
+        extract = kwargs['credit_ewallet'].main_controller(
+            controller='system', action='extract', credits=kwargs['credits']
+        )
+        return extract
 
 #   @pysnooper.snoop()
     def convert_credits_to_minutes(self, **kwargs):
@@ -645,7 +645,7 @@ class CreditClock(Base):
             'failed': False,
             'ewallet_credits': kwargs['credit_ewallet'].fetch_credit_ewallet_credits(),
             'credit_clock': self.fetch_credit_clock_time_left(),
-            'converted_credits': kwargs.get('credits'),
+            'converted_credits': int(kwargs.get('credits')),
         }
         return command_chain_response
 
@@ -674,7 +674,7 @@ class CreditClock(Base):
             'failed': False,
             'ewallet_credits': kwargs['credit_ewallet'].fetch_credit_ewallet_credits(),
             'credit_clock': self.fetch_credit_clock_time_left(),
-            'converted_minutes': kwargs['minutes'],
+            'converted_minutes': int(kwargs['minutes']),
         }
         return command_chain_response
 
