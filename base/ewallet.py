@@ -1231,7 +1231,7 @@ class EWallet(Base):
             pay=partner_account, **sanitized_command_chain
         )
         credits_after = self.fetch_credit_wallet_credits()
-        if str(credits_after) != str(credits_before - kwargs.get('credits')) or \
+        if str(credits_after) != str(credits_before - int(kwargs.get('credits'))) or \
                 not action_pay or isinstance(action_pay, dict) and \
                 action_pay.get('failed'):
             active_session.rollback()

@@ -425,10 +425,10 @@ class CreditEWallet(Base):
         log.debug('')
         if not kwargs.get('credits'):
             return self.error_no_credits_found()
-        _credits = self.credits + kwargs['credits']
-        if _credits is self.credits:
+        credits = self.credits + int(kwargs['credits'])
+        if self.credits is credits:
             return self.error_could_not_supply_credits_to_credit_ewallet()
-        self.credits = _credits
+        self.credits = credits
         log.info('Successfully supplied wallet with credits.')
         return self.credits
 
@@ -436,10 +436,10 @@ class CreditEWallet(Base):
         log.debug('')
         if not kwargs.get('credits'):
             return self.error_no_credits_found()
-        _credits = self.credits - kwargs['credits']
-        if self.credits is _credits:
+        credits = self.credits - int(kwargs['credits'])
+        if self.credits is credits:
             return self.error_could_not_extract_credits()
-        self.credits = _credits
+        self.credits = credits
         log.info('Successfully extracted credits from wallet.')
         return self.credits
 
