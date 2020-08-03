@@ -659,22 +659,23 @@ class CreditClock(Base):
         log.debug('TODO - FIX ME')
         if not kwargs.get('minutes'):
             return self.error_no_minutes_found()
-        if (self.credit_clock - kwargs['minutes']) < 0:
-            remainder = abs(self.credit_clock - kwargs['minutes'])
+        minutes = float(kwargs['minutes'])
+        if (self.credit_clock - minutes) < 0:
+            remainder = abs(self.credit_clock - minutes)
             extract = self.extract_credit_clock_minutes(
-                clock_credits=(self.credit_clock - kwargs['minutes'] + remainder)
+                clock_credits=(self.credit_clock - minutes + remainder)
             )
             return self.warning_insufficient_time_to_convert(remainder, kwargs)
         extract = self.extract_credit_clock_minutes(**kwargs)
         supply = self.supply_ewallet_credits(
-            credits=kwargs['minutes'], **kwargs
+            credits=minutes, **kwargs
         )
         log.info('Successfully converted minutes to credits.')
         command_chain_response = {
             'failed': False,
             'ewallet_credits': kwargs['credit_ewallet'].fetch_credit_ewallet_credits(),
             'credit_clock': self.fetch_credit_clock_time_left(),
-            'converted_minutes': int(kwargs['minutes']),
+            'converted_minutes': minutes,
         }
         return command_chain_response
 

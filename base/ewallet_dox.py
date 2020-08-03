@@ -261,7 +261,6 @@ def display_user_action_add_contact_list_record_instruction_set_example(**kwargs
             'contact': 'record',
             'client_id': '<client-id type-str>',
             'session_token': '<session-token type-str>',
-            'contact_list': '<contact-list-id type-int>',
             'user_name': '<contact-name type-str>',
             'user_email': '<contact-email type-str>',
             'user_phone': '<contact-phone type-str>',
