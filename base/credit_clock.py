@@ -200,6 +200,7 @@ class CreditClock(Base):
             return self.error_no_credit_clock_conversion_sheet_found()
         return self.conversion_sheet[0]
 
+#   @pysnooper.snoop('logs/ewallet.log')
     def fetch_credit_clock_state(self):
         log.debug('')
         return self.credit_clock_state or \
@@ -474,38 +475,38 @@ class CreditClock(Base):
 
     def check_clock_is_active(self, **kwargs):
         log.debug('')
-        _state = self.fetch_credit_clock_state()
-        if not _state:
+        state = self.fetch_credit_clock_state()
+        if not state:
             return self.error_no_credit_clock_state_found()
-        return True if _state == 'active' else False
+        return True if state == 'active' else False
 
     def check_clock_is_inactive(self, **kwargs):
         log.debug('')
-        _state = self.fetch_credit_clock_state()
-        if not _state:
+        state = self.fetch_credit_clock_state()
+        if not state:
             return self.error_no_credit_clock_state_found()
-        return True if _state == 'inactive' else False
+        return True if state == 'inactive' else False
 
 #   @pysnooper.snoop('logs/ewallet.log')
     def check_clock_state(self, check=None, **kwargs):
         log.debug('')
         if not check:
             return self.error_no_clock_state_check_type_specified()
-        _checkers = {
-                'active': self.check_clock_is_active,
-                'inactive': self.check_clock_is_inactive,
-                'pending': self.check_clock_is_pending,
-                }
+        checkers = {
+            'active': self.check_clock_is_active,
+            'inactive': self.check_clock_is_inactive,
+            'pending': self.check_clock_is_pending,
+        }
         if check not in ('state_is', 'state_not', 'current'):
             return self.error_clock_state_check_type_not_supported()
         if kwargs[check] not in self.fetch_credit_clock_states():
             return self.error_invalid_clock_state()
         if check == 'current':
             return self.fetch_credit_clock_state()
-        _check = _checkers[kwargs[check]](**kwargs)
+        _check = checkers[kwargs[check]](**kwargs)
         if check == 'state_is':
             return _check
-        if _check and check == 'state_not':
+        elif _check and check == 'state_not':
             return False if _check else True
 
     # UPDATES
@@ -753,16 +754,19 @@ class CreditClock(Base):
 #   @pysnooper.snoop('logs/ewallet.log')
     def compute_time_spent(self, **kwargs):
         log.debug('')
-        _start_time = kwargs.get('time_start') or \
+        start_time = kwargs.get('time_start') or \
                 self.fetch_credit_clock_start_time() or \
                 self.fetch_active_time_record_start_time()
-        _stop_time = kwargs.get('time_stop') or self.fetch_credit_clock_stop_time()
-        if not _start_time or not _stop_time:
+        stop_time = kwargs.get('time_stop') or \
+            self.fetch_credit_clock_stop_time()
+        if not isinstance(start_time, float) or \
+                not isinstance(stop_time, float):
             return self.error_could_not_compute_time_spent()
-        _used_time = self.convert_time_to_minutes( _start_time, _stop_time)
-        _set_time_spent = self.set_credit_clock_time_spent(time_spent=_used_time)
-        _reset_timer = self.clear_credit_clock_values('time_start', 'time_stop')
-        return _used_time or self.error_identical_start_and_stop_time()
+        used_time = self.convert_time_to_minutes(start_time, stop_time)
+        set_time_spent = self.set_credit_clock_time_spent(time_spent=used_time)
+        reset_timer = self.clear_credit_clock_values('time_start', 'time_stop')
+        return self.error_identical_start_and_stop_time() if not \
+            isinstance(used_time, float) else used_time
 
 #   @pysnooper.snoop()
     def convert_time_to_minutes(self, start_time=None, end_time=None, ctime=None):
@@ -863,7 +867,7 @@ class CreditClock(Base):
 
     # ACTIONS
 
-#   @pysnooper.snoop()
+#   @pysnooper.snoop('logs/ewallet.log')
     def action_stop_timer(self, **kwargs):
         '''
         [ RETURN ]: Stop time or False.
@@ -1432,8 +1436,8 @@ class CreditClock(Base):
     def error_illegal_credit_clock_state(self, command_chain):
         command_chain_response = {
             'failed': True,
-            'error': 'Illegal credit clock state. Command chain details : {}'\
-                     .format(command_chain),
+            'error': 'Illegal credit clock state {}. Command chain details : {}'\
+                     .format(self.credit_clock_state, command_chain),
         }
         log.error(command_chain_response['error'])
         return command_chain_response
@@ -1843,7 +1847,7 @@ class CreditClock(Base):
         log.warning(command_chain_response['warning'])
         return command_chain_response
 
-    def warning_illegal_credit_clock_state(self, command_chain):
+    def warning_illegal_credit_clock_state(self, command_chain, *args):
         command_chain_response = {
             'failed': True,
             'warning': 'Illegal credit clock state. Command chain details : {}'\

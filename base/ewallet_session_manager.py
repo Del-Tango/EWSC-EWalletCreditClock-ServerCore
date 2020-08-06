@@ -2993,7 +2993,7 @@ class EWalletSessionManager():
         ewallet = self.fetch_ewallet_session_for_client_action_using_instruction_set(
             kwargs
         )
-        if not ewallet or not ewallet['ewallet_session'] or \
+        if not ewallet or not ewallet.get('ewallet_session') or \
                 isinstance(ewallet['ewallet_session'], dict) and \
                 ewallet['ewallet_session'].get('failed'):
             return self.error_no_ewallet_session_found(kwargs)
@@ -3416,6 +3416,42 @@ class EWalletSessionManager():
         return handlers[kwargs['controller']](**kwargs)
 
     # WARNINGS
+
+    def warning_could_not_resume_credit_clock_timer(self, ewallet_session, instruction_set):
+        instruction_set_response = {
+            'failed': True,
+            'warning': 'Something went wrong. Could not resume credit clock timer in session {}. '\
+                       'Details : {}'.format(ewallet_session, instruction_set)
+        }
+        log.warning(instruction_set_response['warning'])
+        return instruction_set_response
+
+    def warning_could_not_pause_credit_clock_timer(self, ewallet_session, instruction_set):
+        instruction_set_response = {
+            'failed': True,
+            'warning': 'Something went wrong. Could not pause credit clock timer in session {}. '\
+                       'Details : {}'.format(ewallet_session, instruction_set)
+        }
+        log.warning(instruction_set_response['warning'])
+        return instruction_set_response
+
+    def warning_could_not_start_credit_clock_timer(self, ewallet_session, instruction_set):
+        instruction_set_response = {
+            'failed': True,
+            'warning': 'Something went wrong. Could not start credit clock timer in session {}. '\
+                       'Details : {}'.format(ewallet_session, instruction_set)
+        }
+        log.warning(instruction_set_response['warning'])
+        return instruction_set_response
+
+    def warning_could_not_stop_credit_clock_timer(self, ewallet_session, instruction_set):
+        instruction_set_response = {
+            'failed': True,
+            'warning': 'Something went wrong. Could not stop credit clock timer in session {}. '\
+                       'Details : {}'.format(ewallet_session, instruction_set),
+        }
+        log.warning(instruction_set_response['warning'])
+        return instruction_set_response
 
     def warning_could_not_convert_credits_to_credit_clock(self, instruction_set):
         instruction_set_response = {
@@ -4001,34 +4037,6 @@ class EWalletSessionManager():
             'Something went wrong. Could not pay partner account in session {}. Details : {}'\
             .format(ewallet_session, instruction_set)
         )
-        return False
-
-    def warning_could_not_stop_credit_clock_timer(self, ewallet_session, instruction_set):
-        log.warning(
-                'Something went wrong. Could not stop credit clock timer in session {}. '\
-                'Details : {}'.format(ewallet_session, instruction_set)
-                )
-        return False
-
-    def warning_could_not_resume_credit_clock_timer(self, ewallet_session, instruction_set):
-        log.warning(
-                'Something went wrong. Could not resume credit clock timer in session {}. '\
-                'Details : {}'.format(ewallet_session, instruction_set)
-                )
-        return False
-
-    def warning_could_not_pause_credit_clock_timer(self, ewallet_session, instruction_set):
-        log.warning(
-                'Something went wrong. Could not pause credit clock timer in session {}. '\
-                'Details : {}'.format(ewallet_session, instruction_set)
-                )
-        return False
-
-    def warning_could_not_start_credit_clock_timer(self, ewallet_session, instruction_set):
-        log.warning(
-                'Something went wrong. Could not start credit clock timer in session {}. '\
-                'Details : {}'.format(ewallet_session, instruction_set)
-                )
         return False
 
     def warning_could_not_supply_user_credit_wallet_with_credits(self, ewallet_session, instruction_set):

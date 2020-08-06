@@ -3913,6 +3913,22 @@ class EWallet(Base):
 
     # ERRORS
 
+    def error_could_not_pause_credit_clock_timer(self, command_chain):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Could not pause credit clock timer.',
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_could_not_stop_credit_clock_timer(self, command_chain):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Could not stop credit clock timer.',
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
     def error_no_credit_wallet_found(self, command_chain):
         command_chain_response = {
             'failed': True,
@@ -4338,10 +4354,6 @@ class EWallet(Base):
         log.error('No user action pay target specified.')
         return False
 
-    def error_could_not_pause_credit_clock_timer(self):
-        log.error('Could not pause credit clock timer.')
-        return False
-
     def error_no_partner_account_found(self):
         log.error('No partner account found.')
         return False
@@ -4544,10 +4556,6 @@ class EWallet(Base):
 
     def error_could_not_convert_minutes_to_credits(self):
         log.error('Could not convert minutes to credits.')
-        return False
-
-    def error_could_not_stop_credit_clock_timer(self):
-        log.error('Could not stop credit clock timer.')
         return False
 
     # TESTS

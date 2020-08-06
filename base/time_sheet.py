@@ -357,10 +357,6 @@ class CreditClockTimeSheet(Base):
             'time_stop': kwargs.get('time_stop'),
             'time_spent': kwargs.get('time_spent'),
         }
-
-        # TODO - REMOVE
-        log.info('TIME RECORD CREATION VALUES : {}'.format(values))
-
         return values
 
     def fetch_time_sheet_record_by_id(self, **kwargs):
