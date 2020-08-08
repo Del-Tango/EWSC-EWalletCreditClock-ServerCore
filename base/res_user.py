@@ -269,6 +269,8 @@ class ResUser(Base):
 
     def fetch_user_values(self):
         log.debug('')
+        credit_ewallet = self.fetch_user_credit_wallet()
+        contact_list = self.fetch_user_contact_list()
         values = {
             'id': self.user_id,
             'name': self.user_name,
@@ -276,8 +278,10 @@ class ResUser(Base):
             'write_date': self.user_write_date.strftime('%d-%m-%Y %H:%M:%S'),
 #           'user_create_uid': self.user_create_uid,
 #           'user_write_uid': self.user_write_uid,
-            'ewallet': self.fetch_user_credit_wallet().fetch_credit_ewallet_id(),
-            'contact_list': self.fetch_user_contact_list().fetch_contact_list_id(),
+            'ewallet': None if not credit_ewallet else \
+                credit_ewallet.fetch_credit_ewallet_id(),
+            'contact_list': None if not contact_list else \
+                contact_list.fetch_contact_list_id(),
 #           'user_pass_hash': self.user_pass_hash,
             'email': self.user_email,
             'phone': self.user_phone,

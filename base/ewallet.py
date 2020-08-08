@@ -477,6 +477,39 @@ class EWallet(Base):
     [ NOTE ]: Command chain responses are formatted here.
     '''
 
+    def action_create_new_contact_record(self, **kwargs):
+        '''
+        [ NOTE   ]: User action 'create new contact record', accessible from external api calls.
+        [ INPUT  ]: user_name=<name>, user_email=<email>, user_phone=<phone>, notes=<notes>
+        [ RETURN ]: (ContactRecord object | False)
+        '''
+        log.debug('')
+        contact_list = self.fetch_active_session_contact_list()
+        if not contact_list:
+            return self.error_no_active_session_contact_list_found(
+                self.fetch_active_session_user().fetch_user_name(), kwargs
+            )
+        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
+            kwargs, 'action'
+        )
+        new_record = contact_list.contact_list_controller(
+            action='create', **sanitized_command_chain
+        )
+        if not new_record or isinstance(new_record, dict) and \
+                new_record.get('failed'):
+            kwargs['active_session'].rollback()
+            return self.warning_could_not_create_contact_record(
+                self.active_user.fetch_user_name(), kwargs
+            )
+        kwargs['active_session'].commit()
+        log.info('Successfully created new contact record.')
+        command_chain_response = {
+            'failed': False,
+            'contact_record': new_record.fetch_record_id(),
+            'contact_list': contact_list.fetch_contact_list_id()
+        }
+        return command_chain_response
+
 #   @pysnooper.snoop('logs/ewallet.log')
     def action_create_new_user_account(self, **kwargs):
         '''
@@ -1184,39 +1217,6 @@ class EWallet(Base):
         }
         return command_chain_response
 
-    def action_create_new_contact_record(self, **kwargs):
-        '''
-        [ NOTE   ]: User action 'create new contact record', accessible from external api calls.
-        [ INPUT  ]: user_name=<name>, user_email=<email>, user_phone=<phone>, notes=<notes>
-        [ RETURN ]: (ContactRecord object | False)
-        '''
-        log.debug('')
-        contact_list = self.fetch_active_session_contact_list()
-        if not contact_list:
-            return self.error_no_active_session_contact_list_found(
-                self.active_user.fetch_user_name(), kwargs
-            )
-        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
-            kwargs, 'action'
-        )
-        new_record = contact_list.contact_list_controller(
-            action='create', **sanitized_command_chain
-        )
-        if not new_record or isinstance(new_record, dict) and \
-                new_record.get('failed'):
-            kwargs['active_session'].rollback()
-            return self.warning_could_not_create_contact_record(
-                self.active_user.fetch_user_name(), kwargs
-            )
-        kwargs['active_session'].commit()
-        log.info('Successfully created new contact record.')
-        command_chain_response = {
-            'failed': False,
-            'contact_record': new_record.fetch_record_id(),
-            'contact_list': contact_list.fetch_contact_list_id()
-        }
-        return command_chain_response
-
 #   @pysnooper.snoop('logs/ewallet.log')
     def action_create_new_transfer_type_pay(self, **kwargs):
         log.debug('')
@@ -1296,8 +1296,10 @@ class EWallet(Base):
             'failed': False,
             'ewallet_credits': credits_after,
             'supplied_credits': kwargs['credits'],
-            'transfer_record': credit_request['transfer_record'].fetch_record_id(),
-            'invoice_record': credit_request['invoice_record'].fetch_record_id(),
+            'transfer_record': None if not credit_request.get('transfer_record') else \
+                credit_request['transfer_record'].fetch_record_id(),
+            'invoice_record': None if not credit_request.get('invoice_record') else \
+                credit_request['invoice_record'].fetch_record_id(),
         }
         return command_chain_response
 
@@ -4353,11 +4355,14 @@ class EWallet(Base):
         log.error(command_chain_response['error'])
         return command_chain_response
 
-    def error_pay_type_transfer_failure(self, command_chain):
-        log.error(
-            'Credit payment failure. Details : {}'.format(command_chain)
-        )
-        return False
+    def error_pay_type_transfer_failure(self, command_chain, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Credit payment failure. Details : {}, {}'
+                     .format(command_chain, args)
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
 
     def error_no_user_action_pay_target_specified(self):
         log.error('No user action pay target specified.')

@@ -378,9 +378,10 @@ class CreditClock(Base):
     def set_credit_clock_active_time_record(self, **kwargs):
         log.debug('')
         if not kwargs.get('active_time_record'):
-            return self.error_no_credit_clock_active_time_record_found()
+            return self.error_no_credit_clock_active_time_record_found(kwargs)
         self.active_time_record = [kwargs['active_time_record']]
-        return self.active_time_record or self.error_could_not_set_active_time_record()
+        return self.active_time_record or \
+            self.error_could_not_set_active_time_record()
 
 #   @pysnooper.snoop()
     def set_credit_clock_state(self, **kwargs):
@@ -1413,6 +1414,24 @@ class CreditClock(Base):
 
     # ERRORS
 
+    def error_no_conversion_list_id_specified(self, command_chain, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No conversion sheet id specified. Details: {}, {}'
+                     .format(command_chain, args)
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_no_credit_clock_active_time_record_found(self, command_chain, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No credit clock active time record found. '
+                     'Details: {}, {}'.format(command_chain, args)
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
     def error_no_credit_conversion_type_specified(self, command_chain):
         command_chain_response = {
             'failed': True,
@@ -1625,10 +1644,6 @@ class CreditClock(Base):
 
     def error_no_credit_clock_unlink_target_specified(self):
         log.error('No credit clock unlink target specified.')
-        return False
-
-    def error_no_time_sheet_record_id_found(self):
-        log.error('No time sheet record id found.')
         return False
 
     def error_no_credit_clock_record_creation_target_specified(self):

@@ -1225,6 +1225,15 @@ class CreditEWallet(Base):
 
     # ERRORS
 
+    def error_transfer_record_id_not_found(self, command_chain, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No transfer record id found. Details: {}, {}'
+                     .format(command_chain, args)
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
     def error_no_active_session_found(self, command_chain):
         command_chain_response = {
             'failed': True,

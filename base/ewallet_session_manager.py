@@ -3417,11 +3417,22 @@ class EWalletSessionManager():
 
     # WARNINGS
 
+    def warning_could_not_pay_partner_account(self, ewallet_session, instruction_set):
+        instruction_set_response = {
+            'failed': True,
+            'warning': 'Something went wrong. '
+                       'Could not pay partner account in session {}. '
+                       'Details : {}'.format(ewallet_session, instruction_set)
+        }
+        log.warning(instruction_set_response['warning'])
+        return instruction_set_response
+
     def warning_could_not_create_new_user_account(self, ewallet_session, instruction_set):
         instruction_set_response = {
             'failed': True,
-            'warning': 'Something went wrong. Could not create new user account in EWallet Session {}.'
-                'Details : {}'.format(ewallet_session, instruction_set)
+            'warning': 'Something went wrong. '
+                       'Could not create new user account in EWallet Session {}. '
+                       'Details : {}'.format(ewallet_session, instruction_set)
         }
         log.warning(instruction_set_response['warning'])
         return instruction_set_response
@@ -4038,13 +4049,6 @@ class EWalletSessionManager():
         log.warning(
             'Something went wrong. Could not view active contact list record for ewallet session {}.'\
             'Details : {}'.format(ewallet_session, instruction_set)
-        )
-        return False
-
-    def warning_could_not_pay_partner_account(self, ewallet_session, instruction_set):
-        log.warning(
-            'Something went wrong. Could not pay partner account in session {}. Details : {}'\
-            .format(ewallet_session, instruction_set)
         )
         return False
 
