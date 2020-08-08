@@ -477,6 +477,56 @@ class EWallet(Base):
     [ NOTE ]: Command chain responses are formatted here.
     '''
 
+#   @pysnooper.snoop()
+    def action_create_new_transfer_type_transfer(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('transfer_to'):
+            return self.error_no_user_action_transfer_credits_target_specified(
+                kwargs
+            )
+        active_session = kwargs.get('active_session') or \
+            self.fetch_active_session()
+        partner_account = kwargs.get('partner_account') or \
+            self.fetch_user(identifier='email', email=kwargs['transfer_to'])
+        if not partner_account or isinstance(partner_account, dict) and \
+                partner_account.get('failed'):
+            return self.error_could_not_fetch_partner_account(kwargs)
+        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
+            kwargs, 'ctype', 'action', 'ttype', 'partner_account', 'pay',
+            'transfer_to'
+        )
+        credits_before = self.fetch_credit_wallet_credits()
+        current_account = self.fetch_active_session_user()
+        if not isinstance(credits_before, int) or isinstance(credits_before, dict) and \
+                credits_before.get('failed') or not current_account or \
+                isinstance(current_account, dict) and current_account.get('failed'):
+            if not isinstance(credits_before, int) or isinstance(credits_before, dict) and \
+                    credits_before.get('failed'):
+                return credits_before
+            elif not current_account or isinstance(current_account, dict) and \
+                    current_account.get('failed'):
+                return current_account
+        action_transfer = current_account.user_controller(
+            ctype='action', action='transfer', ttype='transfer',
+            transfer_to=partner_account, **sanitized_command_chain
+        )
+        if not action_transfer or isinstance(action_transfer, dict) and \
+                action_transfer.get('failed'):
+            active_session.rollback()
+            return self.error_transfer_type_transfer_failure(kwargs)
+        active_session.commit()
+        credits_after = self.fetch_credit_wallet_credits()
+        if str(credits_after) != str(credits_before - int(kwargs.get('credits'))):
+            active_session.rollback()
+            return self.error_transfer_type_transfer_failure(kwargs)
+        command_chain_response = {
+            'failed': False,
+            'transfered_to': kwargs['transfer_to'],
+        }
+        if action_transfer and isinstance(action_transfer, dict):
+            command_chain_response.update(action_transfer)
+        return command_chain_response
+
     def action_create_new_contact_record(self, **kwargs):
         '''
         [ NOTE   ]: User action 'create new contact record', accessible from external api calls.
@@ -1124,51 +1174,6 @@ class EWallet(Base):
             'transfer_sheet': transfer_sheet.fetch_transfer_sheet_id(),
             'sheet_data': transfer_sheet.fetch_transfer_sheet_values(),
         }
-        return command_chain_response
-
-#   @pysnooper.snoop()
-    def action_create_new_transfer_type_transfer(self, **kwargs):
-        log.debug('')
-        if not kwargs.get('transfer_to'):
-            return self.error_no_user_action_transfer_credits_target_specified(
-                kwargs
-            )
-        active_session = kwargs.get('active_session') or \
-            self.fetch_active_session()
-        partner_account = kwargs.get('partner_account') or \
-            self.fetch_user(identifier='email', email=kwargs['transfer_to'])
-        if not partner_account:
-            return self.error_could_not_fetch_partner_account(kwargs)
-        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
-            kwargs, 'ctype', 'action', 'ttype', 'partner_account', 'pay',
-            'transfer_to'
-        )
-        credits_before = self.fetch_credit_wallet_credits()
-        current_account = self.fetch_active_session_user()
-        if not credits_before or isinstance(credits_before, dict) and \
-                credits_before.get('failed') or not current_account or \
-                isinstance(current_account, dict) and current_account.get('failed'):
-            if not credits_before or isinstance(credits_before, dict) and \
-                    credits_before.get('failed'):
-                return credits_before
-            elif not current_account or isinstance(current_account, dict) and \
-                    current_account.get('failed'):
-                return current_account
-        action_transfer = current_account.user_controller(
-            ctype='action', action='transfer', ttype='transfer',
-            transfer_to=partner_account, **sanitized_command_chain
-        )
-        active_session.commit()
-        credits_after = self.fetch_credit_wallet_credits()
-        if str(credits_after) != str(credits_before - int(kwargs.get('credits'))):
-            active_session.rollback()
-            return self.error_transfer_type_transfer_failure(kwargs)
-        command_chain_response = {
-            'failed': False,
-            'transfered_to': kwargs['transfer_to'],
-        }
-        if action_transfer and isinstance(action_transfer, dict):
-            command_chain_response.update(action_transfer)
         return command_chain_response
 
 #   @pysnooper.snoop()

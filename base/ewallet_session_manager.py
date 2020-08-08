@@ -1066,6 +1066,7 @@ class EWalletSessionManager():
             ewallet_session, instruction_set
         ) if view_transfer_sheet.get('failed') else view_transfer_sheet
 
+#   @pysnooper.snoop()
     def action_transfer_credits(self, ewallet_session, instruction_set):
         log.debug('')
         orm_session = ewallet_session.fetch_active_session()
@@ -1075,7 +1076,8 @@ class EWalletSessionManager():
         )
         return self.warning_could_not_transfer_credits_to_partner(
             ewallet_session, instruction_set
-        ) if not transfer_credits else transfer_credits
+        ) if not transfer_credits or isinstance(transfer_credits, dict) and \
+            transfer_credits.get('failed') else transfer_credits
 
     def action_view_contact_record(self, ewallet_session, instruction_set):
         log.debug('')
@@ -3417,6 +3419,16 @@ class EWalletSessionManager():
 
     # WARNINGS
 
+    def warning_could_not_transfer_credits_to_partner(self, ewallet_session, instruction_set):
+        instruction_set_response = {
+            'failed': True,
+            'warning': 'Something went wrong. '
+                       'Could not transfer credits to partner in ewallet session {}. '\
+                       'Details : {}'.format(ewallet_session, instruction_set)
+        }
+        log.warning(instruction_set_response['warning'])
+        return instruction_set_response
+
     def warning_could_not_pay_partner_account(self, ewallet_session, instruction_set):
         instruction_set_response = {
             'failed': True,
@@ -4023,13 +4035,6 @@ class EWalletSessionManager():
         }
         log.warning(instruction_set_response['warning'])
         return instruction_set_response['warning']
-
-    def warning_could_not_transfer_credits_to_partner(self, ewallet_session, instruction_set):
-        log.warning(
-            'Something went wrong. Could not transfer credits to partner in ewallet session {}. '\
-            'Details : {}'.format(ewallet_session, instruction_set)
-        )
-        return False
 
     def warning_could_not_create_new_contact_record(self, ewallet_session, instruction_set):
         log.warning(

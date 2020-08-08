@@ -653,6 +653,7 @@ class ResUser(Base):
         )
         return new_credit_wallet
 
+#   @pysnooper.snoop()
     def action_transfer_credits_to_partner_account(self, **kwargs):
         log.debug('')
         if not kwargs.get('transfer_to'):
