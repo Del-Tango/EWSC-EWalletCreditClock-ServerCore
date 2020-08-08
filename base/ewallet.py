@@ -409,7 +409,8 @@ class EWallet(Base):
         if not kwargs.get('session_active_user'):
             return self.error_no_session_active_user_found()
         user = kwargs['session_active_user']
-        orm_session = self.fetch_active_session()
+        orm_session = kwargs.get('active_session') or \
+            self.fetch_active_session()
         session_data = {
             'active_user': user,
             'credit_wallet': user.fetch_user_credit_wallet(),
@@ -436,6 +437,20 @@ class EWallet(Base):
             .format(kwargs['user'].fetch_user_name())
         )
         return self.user_account_archive
+
+    # GENERAL
+
+#   @pysnooper.snoop()
+    def recover_user_account(self, **kwargs):
+        if not kwargs.get('user'):
+            return self.error_no_user_account_found(kwargs)
+        kwargs['user'].to_unlink = True
+        kwargs['user'].to_unlink_timestamp = None
+        kwargs['active_session'].commit()
+        return {
+            'failed': False,
+            'account': kwargs['user'].fetch_user_email(),
+        }
 
     # UNLINKERS
 
@@ -476,6 +491,33 @@ class EWallet(Base):
     '''
     [ NOTE ]: Command chain responses are formatted here.
     '''
+
+#   @pysnooper.snoop()
+    def action_recover_user_account(self, **kwargs):
+        log.debug('')
+        user_account = kwargs.get('user') or \
+            self.fetch_active_session_user()
+        if not user_account or isinstance(user_account, dict) and \
+                user_account.get('failed'):
+            return self.error_no_user_account_found(kwargs)
+        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
+            kwargs, 'user'
+        )
+        try:
+            user_account.to_unlink = False
+            user_account.to_unlink_timestamp = None
+        except Exception as e:
+            return self.error_could_not_recover_user_account(kwargs, e)
+        if user_account.to_unlink:
+            kwargs['active_session'].rollback()
+            return self.warning_could_not_recover_user_account(user_account, kwargs)
+        kwargs['active_session'].commit()
+        user_email = user_account.fetch_user_email()
+        command_chain_response = {
+            'failed': False,
+            'account': user_email,
+        }
+        return command_chain_response
 
 #   @pysnooper.snoop()
     def action_create_new_transfer_type_transfer(self, **kwargs):
@@ -2451,6 +2493,51 @@ class EWallet(Base):
 
     # HANDLERS
 
+#   @pysnooper.snoop()
+    def handle_user_action_recover_account(self, **kwargs):
+        log.debug('')
+        user = self.fetch_active_session_user()
+        recover_account = self.action_recover_user_account(user=user, **kwargs)
+        if not recover_account or isinstance(recover_account, dict) and \
+                recover_account.get('failed'):
+            kwargs['active_session'].rollback()
+            return self.warning_could_not_recover_user_account(kwargs)
+        update = False if not recover_account or isinstance(recover_account, bool) \
+                or isinstance(recover_account, dict) and recover_account.get('failed') \
+                else self.action_system_user_update(user=user, **kwargs)
+        if not update or isinstance(update, dict) and update.get('failed'):
+            kwargs['active_session'].rollback()
+            return self.error_could_not_update_ewallet_session_from_user_account(kwargs)
+        kwargs['active_session'].commit()
+        session_values = self.fetch_active_session_values()
+        command_chain_response = {
+            'failed': False,
+            'account': user.fetch_user_email(),
+            'account_data': user.fetch_user_values(),
+            'session_data': {
+                'session_user_account': None if not session_values['user_account'] \
+                    else session_values['user_account'].fetch_user_email(),
+                'session_credit_ewallet': None if not session_values['credit_ewallet'] \
+                    else session_values['credit_ewallet'].fetch_credit_ewallet_id(),
+                'session_contact_list': None if not session_values['contact_list'] \
+                    else session_values['contact_list'].fetch_contact_list_id(),
+                'session_account_archive': None if not session_values['user_account_archive'] \
+                    else session_values['user_account_archive']
+            }
+        }
+        return command_chain_response
+
+    def handle_user_action_recover(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('recover'):
+            return self.error_no_user_action_recover_target_specified(kwargs)
+        handlers = {
+            'account': self.handle_user_action_recover_account,
+        }
+        return self.warning_invalid_user_action_recover_target(kwargs) if \
+            kwargs['recover'] not in handlers.keys() else \
+            handlers[kwargs['recover']](**kwargs)
+
     def handle_user_action_switch_active_user_account(self, **kwargs):
         log.debug('')
         account_record = self.fetch_user_by_email(email=kwargs.get('account'))
@@ -2967,6 +3054,7 @@ class EWallet(Base):
             'unlink': self.handle_user_action_unlink,
             'edit': self.handle_user_action_edit,
             'switch': self.handle_user_action_switch,
+            'recover': self.handle_user_action_recover,
         }
         return handlers[kwargs['action']](**kwargs)
 
@@ -3067,6 +3155,24 @@ class EWallet(Base):
         return _controllers[kwargs['controller']](**kwargs)
 
     # WARNINGS
+
+    def warning_invalid_user_action_recover_target(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Invalid user action recover target specified. '
+                       'Details : {}'.format(args)
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
+
+    def warning_could_not_recover_user_account(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Something went wrong. Could not recover user account. '
+                       'Details : {}'.format(args)
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
 
     def warning_user_account_pending_deletion(self, command_chain):
         command_chain_response = {
@@ -3929,10 +4035,40 @@ class EWallet(Base):
 
     # ERRORS
 
+    def error_could_not_recover_user_account(self, command_chain, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Something went wrong. '
+                     'Could not recover user account. '
+                     'Details: {}, {}'.format(command_chain, args)
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_no_user_action_recover_target_specified(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No user action recover target specified. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_no_user_account_found(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No user account found. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
     def error_could_not_pause_credit_clock_timer(self, command_chain):
         command_chain_response = {
             'failed': True,
-            'error': 'Could not pause credit clock timer.',
+            'error': 'Something went wrong. '
+                     'Could not pause credit clock timer. '
+                     'Details: {}'.format(command_chain),
         }
         log.error(command_chain_response['error'])
         return command_chain_response
@@ -3940,7 +4076,9 @@ class EWallet(Base):
     def error_could_not_stop_credit_clock_timer(self, command_chain):
         command_chain_response = {
             'failed': True,
-            'error': 'Could not stop credit clock timer.',
+            'error': 'Something went wrong. '
+                     'Could not stop credit clock timer. '
+                     'Details: {}'.format(command_chain),
         }
         log.error(command_chain_response['error'])
         return command_chain_response

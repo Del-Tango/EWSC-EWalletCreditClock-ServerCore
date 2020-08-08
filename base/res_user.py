@@ -86,6 +86,8 @@ class ResUser(Base):
                 [user_credit_wallet]
         self.user_contact_list_archive = kwargs.get('user_contact_list_archive') or \
                 [user_contact_list]
+        self.to_unlink = False,
+        self.to_unlink_timestamp = None
 
     # FETCHERS
 
@@ -300,6 +302,10 @@ class ResUser(Base):
                 item.fetch_contact_list_id(): item.fetch_contact_list_reference() \
                 for item in self.user_contact_list_archive
             },
+            'to_unlink': self.to_unlink,
+            'to_unlink_timestamp': res_utils.format_timestamp(
+                self.to_unlink_timestamp
+            ),
         }
         return values
 
