@@ -2213,7 +2213,7 @@ class EWalletSessionManager():
         ewallet = self.fetch_ewallet_session_for_client_action_using_instruction_set(
             kwargs
         )
-        if not ewallet or not ewallet['ewallet_session'] or \
+        if not ewallet or not ewallet.get('ewallet_session') or \
                 isinstance(ewallet['ewallet_session'], dict) and \
                 ewallet['ewallet_session'].get('failed'):
             return self.error_no_ewallet_session_found(kwargs)
@@ -3417,6 +3417,15 @@ class EWalletSessionManager():
 
     # WARNINGS
 
+    def warning_could_not_create_new_user_account(self, ewallet_session, instruction_set):
+        instruction_set_response = {
+            'failed': True,
+            'warning': 'Something went wrong. Could not create new user account in EWallet Session {}.'
+                'Details : {}'.format(ewallet_session, instruction_set)
+        }
+        log.warning(instruction_set_response['warning'])
+        return instruction_set_response
+
     def warning_could_not_resume_credit_clock_timer(self, ewallet_session, instruction_set):
         instruction_set_response = {
             'failed': True,
@@ -4051,13 +4060,6 @@ class EWalletSessionManager():
             'Something went wrong. Could not login user account in session {}.'\
             'Details : {}'.format(ewallet_session, instruction_set)
         )
-        return False
-
-    def warning_could_not_create_new_user_account(self, ewallet_session, instruction_set):
-        log.warning(
-                'Something went wrong. Could not create new user account in EWallet Session {}.'
-                'Details : {}'.format(ewallet_session, instruction_set)
-                )
         return False
 
     # ERRORS

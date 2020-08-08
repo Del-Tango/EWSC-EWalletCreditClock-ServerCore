@@ -1112,13 +1112,22 @@ class EWallet(Base):
         )
         credits_before = self.fetch_credit_wallet_credits()
         current_account = self.fetch_active_session_user()
+        if not credits_before or isinstance(credits_before, dict) and \
+                credits_before.get('failed') or not current_account or \
+                isinstance(current_account, dict) and current_account.get('failed'):
+            if not credits_before or isinstance(credits_before, dict) and \
+                    credits_before.get('failed'):
+                return credits_before
+            elif not current_account or isinstance(current_account, dict) and \
+                    current_account.get('failed'):
+                return current_account
         action_transfer = current_account.user_controller(
             ctype='action', action='transfer', ttype='transfer',
             transfer_to=partner_account, **sanitized_command_chain
         )
         active_session.commit()
         credits_after = self.fetch_credit_wallet_credits()
-        if str(credits_after) != str(credits_before - kwargs.get('credits')):
+        if str(credits_after) != str(credits_before - int(kwargs.get('credits'))):
             active_session.rollback()
             return self.error_transfer_type_transfer_failure(kwargs)
         command_chain_response = {

@@ -42,29 +42,41 @@ class EWalletTransactionHandler():
 
     def fetch_credit_wallet_pair_from_user_accounts(self, source_account, target_account):
         log.debug('')
+        if not source_account and not target_account:
+            return self.error_no_user_accounts_found({}, source_account, target_account)
         return {
-            'source': source_account.fetch_user_credit_wallet() or \
-                self.error_could_not_fetch_user_credit_wallet(source_account),
-            'target': target_account.fetch_user_credit_wallet() or \
-                self.error_could_not_fetch_user_credit_wallet(target_account),
+            'source': self.error_could_not_fetch_user_credit_wallet(source_account) \
+                if not source_account \
+                else source_account.fetch_user_credit_wallet(),
+            'target': self.error_could_not_fetch_user_credit_wallet(target_account) \
+                if not target_account \
+                else target_account.fetch_user_credit_wallet(),
         }
 
     def fetch_credit_wallet_pair_invoice_sheets(self, source_wallet, target_wallet):
         log.debug('')
+        if not source_wallet and not target_wallet:
+            return self.error_no_wallets_found({}, source_wallet, target_wallet)
         return {
-            'source': source_wallet.fetch_credit_ewallet_invoice_sheet() or \
-                self.error_could_not_fetch_wallet_invoice_sheet(source_wallet),
-            'target': target_wallet.fetch_credit_ewallet_invoice_sheet() or \
-                self.error_could_not_fetch_wallet_invoice_sheet(target_wallet),
+            'source': self.error_could_not_fetch_wallet_invoice_sheet(source_wallet)\
+                if not source_wallet \
+                else source_wallet.fetch_credit_ewallet_invoice_sheet(),
+            'target': self.error_could_not_fetch_wallet_invoice_sheet(target_wallet)\
+                if not target_wallet \
+                else target_wallet.fetch_credit_ewallet_invoice_sheet(),
         }
 
     def fetch_credit_wallet_pair_transfer_sheets(self, source_wallet, target_wallet):
         log.debug('')
+        if not source_wallet and not target_wallet:
+            return self.error_no_wallets_found({}, source_wallet, target_wallet)
         return {
-            'source': source_wallet.fetch_credit_ewallet_transfer_sheet() or \
-                self.error_could_not_fetch_wallet_transfer_sheet(source_wallet),
-            'target': target_wallet.fetch_credit_ewallet_transfer_sheet() or \
-                self.error_could_not_fetch_wallet_transfer_sheet(target_wallet),
+            'source': self.error_could_not_fetch_wallet_transfer_sheet(source_wallet) \
+                if not source_wallet \
+                else source_wallet.fetch_credit_ewallet_transfer_sheet(),
+            'target': self.error_could_not_fetch_wallet_transfer_sheet(target_wallet) \
+                if not target_wallet \
+                else target_wallet.fetch_credit_ewallet_transfer_sheet(),
         }
 
     def fetch_transaction_handler_value_set(self):
@@ -124,6 +136,13 @@ class EWalletTransactionHandler():
 
     def compute_transaction_type_transfer(self, **kwargs):
         log.debug('')
+        if not kwargs.get('source_credit_wallet') or \
+                not kwargs.get('target_credit_wallet'):
+            if not kwargs.get('source_credit_wallet'):
+                return self.error_no_source_credit_wallet_found(kwargs)
+            elif not kwargs.get('target_credit_wallet'):
+                return self.error_no_target_credit_wallet_found(kwargs)
+            return self.error_no_wallets_found(kwargs)
         sanitized_command_chain = res_utils.remove_tags_from_command_chain(
             kwargs, 'controller', 'action'
         )
@@ -147,6 +166,13 @@ class EWalletTransactionHandler():
             - target_credit_wallet - Supplied credit wallet
         '''
         log.debug('')
+        if not kwargs.get('source_credit_wallet') or \
+                not kwargs.get('target_credit_wallet'):
+            if not kwargs.get('source_credit_wallet'):
+                return self.error_no_source_credit_wallet_found(kwargs)
+            elif not kwargs.get('target_credit_wallet'):
+                return self.error_no_target_credit_wallet_found(kwargs)
+            return self.error_no_wallets_found(kwargs)
         sanitized_command_chain = res_utils.remove_tags_from_command_chain(
             kwargs, 'controller', 'action'
         )
@@ -163,6 +189,13 @@ class EWalletTransactionHandler():
 
     def compute_transaction_type_pay(self, **kwargs):
         log.debug('')
+        if not kwargs.get('source_credit_wallet') or \
+                not kwargs.get('target_credit_wallet'):
+            if not kwargs.get('source_credit_wallet'):
+                return self.error_no_source_credit_wallet_found(kwargs)
+            elif not kwargs.get('target_credit_wallet'):
+                return self.error_no_target_credit_wallet_found(kwargs)
+            return self.error_no_wallets_found(kwargs)
         sanitized_command_chain = res_utils.remove_tags_from_command_chain(
             kwargs, 'controller', 'action'
         )
@@ -181,6 +214,12 @@ class EWalletTransactionHandler():
 
     def share_partner_transaction_transfer_journal_records(self, journal_records, **kwargs):
         log.debug('')
+        if not kwargs.get('transfer_sheets') or not kwargs.get('invoice_sheets'):
+            if not kwargs.get('transfer_sheets'):
+                return self.error_no_transfer_sheets_found(kwargs, journal_records)
+            elif not kwargs.get('invoice_sheets'):
+                return self.error_no_invoice_sheets_found(kwargs, journal_records)
+
         transfer_from = kwargs['source_user_account'].fetch_user_id()
         transfer_to = kwargs['transfer_to'].fetch_user_id()
         sanitized_command_chain = res_utils.remove_tags_from_command_chain(
@@ -203,15 +242,28 @@ class EWalletTransactionHandler():
 
     def share_partner_transaction_supply_journal_records(self, journal_records, **kwargs):
         log.debug('')
+        if not kwargs.get('transfer_sheets') or not kwargs.get('invoice_sheets'):
+            if not kwargs.get('transfer_sheets'):
+                return self.error_no_transfer_sheets_found(kwargs, journal_records)
+            elif not kwargs.get('invoice_sheets'):
+                return self.error_no_invoice_sheets_found(kwargs, journal_records)
         sanitized_command_chain = res_utils.remove_tags_from_command_chain(
             kwargs, 'action'
         )
-        share_transfer_record = journal_records['transfer_sheets']['target'].credit_transfer_sheet_controller(
+        share_transfer_record = journal_records[
+            'transfer_sheets'
+        ][
+            'target'
+        ].credit_transfer_sheet_controller(
             action='add', transfer_type='incoming', **sanitized_command_chain
         )
-        share_invoice_record = journal_records['invoice_sheets']['target'].credit_invoice_sheet_controller(
-            action='add', seller=kwargs['source_user_account'], transfer_record=share_transfer_record,
-            **sanitized_command_chain
+        share_invoice_record = journal_records[
+            'invoice_sheets'
+        ][
+            'target'
+        ].credit_invoice_sheet_controller(
+            action='add', seller=kwargs['source_user_account'],
+            transfer_record=share_transfer_record, **sanitized_command_chain
         )
         if not share_transfer_record or not share_invoice_record:
             return self.warning_credit_transaction_record_share_failure(
@@ -226,6 +278,15 @@ class EWalletTransactionHandler():
 
     def share_partner_transaction_pay_journal_records(self, journal_records, **kwargs):
         log.debug('')
+        if not journal_records.get('transfer_sheets') or \
+                not journal_records.get('invoice_sheets'):
+            if not journal_records.get('transfer_sheets'):
+                return self.error_no_transfer_sheets_found(kwargs, journal_records)
+            elif not journal_records.get('invoice_sheets'):
+                return self.error_no_invoice_sheets_found(kwargs, journal_records)
+        if not journal_records['transfer_sheets'].get('target') or \
+                not journal_records['invoice_sheets'].get('target'):
+            return self.error_no_journal_records_found(kwargs, journal_records)
         sanitized_command_chain = res_utils.remove_tags_from_command_chain(
             kwargs, 'action'
         )
@@ -255,6 +316,11 @@ class EWalletTransactionHandler():
         transfer_sheets = self.fetch_credit_wallet_pair_transfer_sheets(
             kwargs['source_credit_wallet'], kwargs['target_credit_wallet'],
         )
+        if not transfer_sheets or isinstance(transfer_sheets, dict) and \
+                transfer_sheets.get('failed'):
+            return transfer_sheets
+        elif not transfer_sheets.get('source'):
+            return self.error_no_source_transfer_sheet_found(kwargs, transfer_sheets)
         sanitized_command_chain = res_utils.remove_tags_from_command_chain(
             kwargs, 'action', 'transfer_to'
         )
@@ -281,6 +347,18 @@ class EWalletTransactionHandler():
         sanitized_command_chain = res_utils.remove_tags_from_command_chain(
             kwargs, 'action'
         )
+        if not invoice_sheets.get('source') or not transfer_sheets['source']:
+            if not invoice_sheets.get('source'):
+                return self.error_no_source_invoice_sheet_found(
+                    kwargs, invoice_sheets
+                )
+            elif not transfer_sheets.get('source'):
+                return self.error_no_source_transfer_sheet_found(
+                    kwargs, transfer_sheets
+                )
+            return self.error_no_transaction_supply_journal_source_sheets_found(
+                kwargs, invoice_sheets, transfer_sheets
+            )
         invoice_record = invoice_sheets['source'].credit_invoice_sheet_controller(
             action='add', seller_id=kwargs['source_user_account'].fetch_user_id(),
             **sanitized_command_chain
@@ -340,6 +418,10 @@ class EWalletTransactionHandler():
         compute = self.compute_transaction_type_transfer(**kwargs)
         journal = self.journal_transaction_type_transfer(**kwargs)
         share = self.share_partner_transaction_transfer_journal_records(journal, **kwargs)
+        if not share or isinstance(share, dict) and share.get('failed'):
+            return share
+        if not share.get('transfer_records'):
+            return self.error_no_transfer_record_shared(kwargs)
         kwargs['active_session'].add(share['transfer_record'])
         return {
             'ewallet_credits': kwargs['source_credit_wallet'].fetch_credit_ewallet_credits(),
@@ -353,6 +435,13 @@ class EWalletTransactionHandler():
         compute = self.compute_transaction_type_pay(**kwargs)
         journal = self.journal_transaction_type_pay(**kwargs)
         share = self.share_partner_transaction_pay_journal_records(journal, **kwargs)
+        if not share or isinstance(share, dict) and share.get('failed'):
+            return share
+        elif not share.get('transfer_record') or not share.get('invoice_record'):
+            if not share.get('transfer_record'):
+                return self.error_no_transfer_record_found(kwargs)
+            elif not share.get('invoice_record'):
+                return self.error_no_invoice_record_found(kwargs)
         kwargs['active_session'].add(
             share['transfer_record'], share['invoice_record']
         )
@@ -369,6 +458,8 @@ class EWalletTransactionHandler():
         compute = self.compute_transaction_type_supply(**kwargs)
         journal = self.journal_transaction_type_supply(**kwargs)
         share = self.share_partner_transaction_supply_journal_records(journal, **kwargs)
+        if not share or isinstance(share, dict) and share.get('failed'):
+            return share
         kwargs['active_session'].add(
             share['transfer_record'], share['invoice_record']
         )
@@ -438,6 +529,155 @@ class EWalletTransactionHandler():
         return False
 
     # ERRORS
+
+    def error_no_source_transfer_sheet_found(self, command_chain, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No source transfer sheet found. Details: {}, {}'\
+                     .format(command_chain, args)
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_no_transfer_record_shared(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No transfer record shared. Details: {}'.format(args)
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_no_transfer_record_found(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No transfer record found. Details: {}'.format(args)
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_no_invoice_record_found(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No invoice record found. Details: {}'.format(args)
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_no_journal_records_found(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No journal records found. Details: {}'.format(args)
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_no_transfer_sheets_found(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No transfer sheet set found. '
+                     'Details: {}'.format(args)
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_no_invoice_sheets_found(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No invoice sheet set found. '
+                     'Details: {}'.format(args)
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_could_not_fetch_user_credit_wallet(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Something went wrong. Could not fetch user account credit ewallet. '
+                     'Details: {}'.format(args)
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_could_not_fetch_wallet_invoice_sheet(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Something went wrong. Could not fetch user credit ewallet invoice sheet. '
+                     'Details: {}'.format(args)
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_could_not_fetch_wallet_transfer_sheet(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Something went wrong. Could not fetch user credit ewallet transfer sheet. '
+                     'Details: {}'.format(args)
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_no_user_accounts_found(self, command_chain, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No user accounts found. Details: {}, {}'\
+                     .format(command_chain, args)
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_no_source_credit_wallet_found(self, command_chain, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No source credit ewallet found. Details: {}, {}'\
+                     .format(command_chain, args)
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_no_target_credit_wallet_found(self, command_chain, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No target credit ewallet found. Details: {}, {}'\
+                     .format(command_chain, args)
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_no_wallets_found(self, command_chain, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No credit ewallets found. Details: {}, {}'\
+                     .format(command_chain, args)
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_no_source_invoice_sheet_found(self, command_chain, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No source invoice sheet found. Details: {}, {}'\
+                     .format(command_chain, args)
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_no_source_transfer_sheet_found(self, command_chain, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No source transfer sheet found. Details: {}, {}'\
+                     .format(command_chain, args)
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_no_transaction_supply_journal_source_sheets_found(self, command_chain, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No journal source sheets found for transaction type supply. '
+                     'Details: {}, {}'.format(command_chain, args)
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
 
     def error_invalid_transaction_handler_value_set(self, command_chain):
         command_chain_response = {
