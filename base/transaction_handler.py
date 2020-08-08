@@ -125,6 +125,7 @@ class EWalletTransactionHandler():
 
     # VALIDATORS
 
+#   @pysnooper.snoop()
     def validate_transaction_handler_value_set(self, value_set):
         log.debug('')
         for item in value_set:
@@ -212,14 +213,11 @@ class EWalletTransactionHandler():
 
     # GENERAL
 
+#   @pysnooper.snoop()
     def share_partner_transaction_transfer_journal_records(self, journal_records, **kwargs):
         log.debug('')
-        if not kwargs.get('transfer_sheets') or not kwargs.get('invoice_sheets'):
-            if not kwargs.get('transfer_sheets'):
-                return self.error_no_transfer_sheets_found(kwargs, journal_records)
-            elif not kwargs.get('invoice_sheets'):
-                return self.error_no_invoice_sheets_found(kwargs, journal_records)
-
+        if not journal_records.get('transfer_sheets'):
+            return self.error_no_transfer_sheets_found(kwargs, journal_records)
         transfer_from = kwargs['source_user_account'].fetch_user_id()
         transfer_to = kwargs['transfer_to'].fetch_user_id()
         sanitized_command_chain = res_utils.remove_tags_from_command_chain(
@@ -230,13 +228,15 @@ class EWalletTransactionHandler():
             transfer_from=transfer_from, transfer_to=transfer_to,
             **sanitized_command_chain
         )
-        if not share_transfer_record:
+        if not share_transfer_record or isinstance(share_transfer_record, dict) and \
+                share_transfer_record.get('failed'):
             return self.warning_credit_transaction_record_share_failure(
                 share_transfer_record=share_transfer_record,
                 share_invoice_record=None,
                 command_chain=sanitized_command_chain
             )
         return {
+            'failed': False,
             'transfer_record': share_transfer_record,
         }
 
@@ -413,6 +413,7 @@ class EWalletTransactionHandler():
 
     # HANDLERS
 
+#   @pysnooper.snoop()
     def handle_action_start_transaction_type_transfer(self, **kwargs):
         log.debug('')
         compute = self.compute_transaction_type_transfer(**kwargs)
@@ -420,7 +421,7 @@ class EWalletTransactionHandler():
         share = self.share_partner_transaction_transfer_journal_records(journal, **kwargs)
         if not share or isinstance(share, dict) and share.get('failed'):
             return share
-        if not share.get('transfer_records'):
+        if not share.get('transfer_record'):
             return self.error_no_transfer_record_shared(kwargs)
         kwargs['active_session'].add(share['transfer_record'])
         return {
@@ -505,6 +506,8 @@ class EWalletTransactionHandler():
                 **kwargs
             )
 
+
+#   @pysnooper.snoop()
     def action_init_transaction(self, **kwargs):
         log.debug('')
         setup = self.action_setup_transaction_handler()
