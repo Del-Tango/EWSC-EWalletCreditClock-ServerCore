@@ -9,6 +9,66 @@ log = logging.getLogger(config.log_config['log_name'])
 
 # TODO - Fetch user action manual content from doc files, evaluate type
 
+def display_user_action_recover_account_instruction_set_example(**kwargs):
+    log.debug('')
+    instruction_set_response = {
+        'failed': False,
+        'prerequisits': [
+            'RequestClientID',
+            'RequestSessionToken',
+            'CreateAccount',
+            'AccountLogin',
+            'UnlinkAccount',
+        ],
+        'instruction_set': {
+            'controller': 'client',
+            'ctype': 'action',
+            'action': 'recover',
+            'recover': 'account',
+            'client_id': '<client-id type-str>',
+            'session_token': '<session-token type-str>',
+        },
+        'response_ok': {
+            'failed': '<flag type-bool value-false>',
+            'account': '<account-user-email type-str>',
+            'account_data': {
+                'id': '<account-id type-int>',
+                'name': '<account-user-name type-str>',
+                'create_date': '<%d-%m-%Y %H:%M:%S type-str tz-UTC>',
+                'write_date': '<%d-%m-%Y %H:%M:%S type-str tz-UTC>',
+                'ewallet': '<active-ewallet-id type-int>',
+                'contact_list': '<active-contact-list-id type-int>',
+                'email': '<account-user-email type-str>',
+                'phone': '<account-user-phone type-str>',
+                'alias': '<account-user-alias type-str>',
+                'state_code': '<account-state-code type-int>',
+                'state_name': '<account-state-label type-int>',
+                'to_unlink': '<flag type-bool>',
+                'to_unlink_timestamp': '<%d-%m-%Y %H:%M:%S type-str tz-UTC or None>',
+                'ewallet_archive': {
+                    '<ewallet-id type-int>': '<ewallet-reference type-str>'
+                },
+                'contact_list_archive':{
+                    '<contact-list-id type-int>': '<contact-list-reference type-str>'
+                },
+            },
+            'session_data': {
+                'session_user_account': '<account-user-email type-str>',
+                'session_credit_ewallet': '<active-session-ewallet-id type-int>',
+                'session_contact_list': '<active-session-contact-list-id type-int>',
+                'session_account_archive': {
+                    '<account-user-email type-str>': '<account-user-name type-str>',
+                },
+            },
+        },
+        'response_nok': {
+            'failed': '<flag type-bool value-true>',
+            'error': '<error-message type-str>',
+            'warning': '<warning-message type-str>'
+        },
+    }
+    return instruction_set_response
+
 def display_user_action_pause_clock_timer_instruction_set_example(**kwargs):
     log.debug('')
     instruction_set_response = {
@@ -1745,6 +1805,8 @@ def display_user_action_view_account_instruction_set_example(**kwargs):
                 'alias': '<account-user-alias type-str>',
                 'state_code': '<account-state-code type-int>',
                 'state_name': '<account-state-label type-int>',
+                'to_unlink': '<flag type-bool>',
+                'to_unlink_timestamp': '<%d-%m-%Y %H:%M:%S type-str tz-UTC or None>',
                 'ewallet_archive': {
                     '<ewallet-id type-int>': '<ewallet-reference type-str>'
                 },
@@ -2374,6 +2436,7 @@ available_user_actions = {
     'StopClockTimer': display_user_action_stop_clock_timer_instruction_set_example,
     'AccountLogin': display_user_action_account_login_instruction_set_example,
     'AccountLogout': display_user_action_account_logout_instruction_set_example,
+    'RecoverAccount': display_user_action_recover_account_instruction_set_example,
     'AddContactListRecord': display_user_action_add_contact_list_record_instruction_set_example,
     'ConvertClockToCredits': display_user_action_convert_clock_to_credits_instruction_set_example,
     'ConvertCreditsToClock': display_user_action_convert_credits_to_clock_instruction_set_example,
