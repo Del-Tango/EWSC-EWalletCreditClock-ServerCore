@@ -15,10 +15,13 @@ class SessionToken(Token):
 
     def __init__(self, *args, **kwargs):
         self.label = kwargs.get('session_token') or str()
-        self.is_active = kwargs.get('active') or True
-        self.to_unlink = kwargs.get('unlink') or False
+        self.active = kwargs.get('active') or True
+        self.unlink_flag = kwargs.get('unlink') or False
         self.valid_to = kwargs.get('expires_on') or None
-        return super(SessionToken, self).__init__(*args, **kwargs)
+        return super(SessionToken, self).__init__(
+            label=self.label, active=self.active, unlink_flag=self.unlink_flag,
+            valid_to=self.valid_to, *args, **kwargs
+        )
 
     # FETCHERS
 

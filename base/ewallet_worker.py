@@ -20,6 +20,8 @@ class EWalletWorker():
     session_worker_state_label = str()
     session_worker_state_timestamp = None
     session_pool = list()
+    ctoken_pool = list()
+    stoken_pool = list()
     token_session_map = dict()
     instruction_set_recv = None
     instruction_set_resp = None
@@ -36,8 +38,28 @@ class EWalletWorker():
 
     # FETCHERS
 
-    def fetch_ewallet_session_from_pool_by_id(self, ewallet_session_id):
+    def fetch_ctoken_by_label(self, client_id):
+        if not self.rtoken_pool:
+            self.error_empty_client_token_pool(client_id, self.ctoken_pool)
+            return False
+        ctoken = [
+            item for item in self.ctoken_pool if item.label == client_id
+        ]
+        return False if not ctoken else ctoken[0]
+
+    def fetch_stoken_by_label(self, session_token):
         log.debug('')
+        if not self.stoken_pool:
+            self.error_empty_session_token_pool(session_token, self.stoken_pool)
+            return False
+        stoken = [
+            item for item in self.stoken_pool if item.label == session_token
+        ]
+        return False if not stoken else stoken[0]
+
+    # TODO - Remove - DEPRECATED
+    def fetch_ewallet_session_from_pool_by_id(self, ewallet_session_id):
+        log.debug('DEPRECATED')
         session_pool = self.fetch_session_worker_ewallet_session_pool()
         for ewallet_session in session_pool:
             if ewallet_session.fetch_active_session_id() == ewallet_session_id:
@@ -115,6 +137,23 @@ class EWalletWorker():
         pass
 
     # SETTERS
+
+#   @pysnooper.snoop()
+    def set_new_session_token_to_pool(self, session_token):
+        log.debug('')
+        try:
+            self.stoken_pool.append(session_token)
+        except:
+            return self.error_could_not_set_new_session_token_to_pool(session_token)
+        return True
+
+    def set_new_client_token_to_pool(self, client_token):
+        log.debug('')
+        try:
+            self.ctoken_pool.append(client_token)
+        except:
+            return self.error_could_not_add_new_client_token_to_pool(client_token)
+        return True
 
     def set_session_worker_token_session_map_entry(self, map_entry):
         log.debug('')
@@ -290,29 +329,64 @@ class EWalletWorker():
         }
         return instruction_set_response
 
+#   @pysnooper.snoop()
     def search_ewallet_session(self, session_token):
         log.debug('')
         token_map = self.fetch_session_token_map()
         if not token_map:
             return self.warning_empty_session_token_map()
+        stoken = self.fetch_stoken_by_label(session_token)
+        if not stoken or isinstance(stoken, dict) and \
+                stoken.get('failed'):
+            return self.error_could_not_fetch_session_token_by_label(session_token, stoken)
         for client_id in token_map:
-            if token_map[client_id]['token'] == session_token:
+            if token_map[client_id]['token'] == stoken:
                 return token_map[client_id]['session']
         return self.warning_no_ewallet_session_found_by_session_token(session_token)
 
     # ACTIONS
 
-    def action_interogate_session_pool(self, **kwargs):
+#   @pysnooper.snoop()
+    def action_add_client_id(self, **kwargs):
         log.debug('')
-        session_pool = self.fetch_session_worker_ewallet_session_pool()
-        if not session_pool or isinstance(session_pool, dict) and \
-                session_pool.get('failed'):
-            return self.error_could_not_fetch_ewallet_session_pool(kwargs)
+        if not kwargs.get('client_id'):
+            return self.error_no_client_token_found(kwargs)
+        set_to_pool = self.set_new_client_token_to_pool(kwargs['client_id'])
+        return self.error_could_not_add_new_client_token_to_pool(
+                set_to_pool, kwargs,
+            ) if not set_to_pool or isinstance(set_to_pool, dict) and \
+                set_to_pool.get('failed') else {
+                'failed': False,
+                'client_id': kwargs['client_id'],
+            }
+
+#   @pysnooper.snoop()
+    def action_add_client_id_session_token_map_entry(self, **kwargs):
+        '''
+        [ NOTE   ]: Maps an existing client_id with a new session token and object.
+        [ INPUT  ]: client_id=<id>, session_token=<token>, session=<session-obj>
+        [ RETURN ]: {client_id: {'token': session_token, 'session': session}}
+        '''
+        log.debug('')
+        if None in [kwargs.get('client_id'), kwargs.get('session_token'),
+                kwargs.get('session')]:
+            return self.error_required_session_token_map_entry_data_not_found()
+        map_entry = {kwargs['client_id']: {
+            'token': kwargs['session_token'],
+            'session': kwargs['session']
+            }
+        }
+        set_stoken_to_pool = self.set_new_session_token_to_pool(kwargs['session_token'])
+        set_entry = self.set_session_worker_token_session_map_entry(map_entry)
+        if set_entry or isinstance(set_entry, dict) and not set_entry.get('failed'):
+            self.handle_system_action_session_worker_state_check()
         instruction_set_response = {
             'failed': False,
-            'session_pool': session_pool,
+            'map_entry': map_entry,
         }
-        return instruction_set_response
+        return self.warning_could_not_set_session_worker_ewallet_session_token_map_entry(kwargs) \
+            if not set_entry or isinstance(set_entry, dict) and \
+            set_entry.get('failed') else instruction_set_response
 
     def action_add_new_session(self, **kwargs):
         log.debug('')
@@ -332,32 +406,17 @@ class EWalletWorker():
         }
         return instruction_set_response
 
-#   @pysnooper.snoop()
-    def action_add_client_id_session_token_map_entry(self, **kwargs):
-        '''
-        [ NOTE   ]: Maps an existing client_id with a new session token and object.
-        [ INPUT  ]: client_id=<id>, session_token=<token>, session=<session-obj>
-        [ RETURN ]: {client_id: {'token': session_token, 'session': session}}
-        '''
+    def action_interogate_session_pool(self, **kwargs):
         log.debug('')
-        if None in [kwargs.get('client_id'), kwargs.get('session_token'),
-                kwargs.get('session')]:
-            return self.error_required_session_token_map_entry_data_not_found()
-        map_entry = {kwargs['client_id']: {
-            'token': kwargs['session_token'],
-            'session': kwargs['session']
-            }
-        }
-        set_entry = self.set_session_worker_token_session_map_entry(map_entry)
-        if set_entry or isinstance(set_entry, dict) and not set_entry.get('failed'):
-            self.handle_system_action_session_worker_state_check()
+        session_pool = self.fetch_session_worker_ewallet_session_pool()
+        if not session_pool or isinstance(session_pool, dict) and \
+                session_pool.get('failed'):
+            return self.error_could_not_fetch_ewallet_session_pool(kwargs)
         instruction_set_response = {
             'failed': False,
-            'map_entry': map_entry,
+            'session_pool': session_pool,
         }
-        return self.warning_could_not_set_session_worker_ewallet_session_token_map_entry(kwargs) \
-            if not set_entry or isinstance(set_entry, dict) and \
-            set_entry.get('failed') else instruction_set_response
+        return instruction_set_response
 
     # HANDLERS
 
@@ -479,6 +538,7 @@ class EWalletWorker():
         handlers = {
             'session': self.action_add_new_session,
             'session_map': self.action_add_client_id_session_token_map_entry,
+            'client_id': self.action_add_client_id,
         }
         return handlers[kwargs['add']](**kwargs)
 
@@ -487,7 +547,6 @@ class EWalletWorker():
     # TODO
     def worker_init(self):
         log.debug('TODO')
-
 
     def system_action_controller(self, **kwargs):
         log.debug('')
@@ -625,6 +684,62 @@ class EWalletWorker():
         return False
 
     # ERRORS
+
+    def error_could_not_set_new_session_token_to_pool(self, *args):
+        instruction_set_response = {
+            'failed': True,
+            'error': 'Something went wrong. '
+                     'Could not add new session token to pool. '
+                     'Details: {}'.format(args),
+        }
+        log.error(instruction_set_response['error'])
+        return instruction_set_response
+
+    def error_no_client_token_found(self, *args):
+        instruction_set_response = {
+            'failed': True,
+            'error': 'Something went wrong. '
+                     'No client token found. '
+                     'Details: {}'.format(args),
+        }
+        log.error(instruction_set_response['error'])
+        return instruction_set_response
+
+    def error_could_not_add_new_client_token_to_pool(self, *args):
+        instruction_set_response = {
+            'failed': True,
+            'error': 'Something went wrong. '
+                     'Could not add new client token to pool. '
+                     'Details: {}'.format(args),
+        }
+        log.error(instruction_set_response['error'])
+        return instruction_set_response
+
+    def error_could_not_fetch_client_token_by_label(self, client_id, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Something went wrong. Could not fetch client token by label {}. '\
+                     'Details: {}'.format(client_id, args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_empty_session_token_pool(self, *args):
+        instruction_set_response = {
+            'failed': True,
+            'error': 'Empty worker session token pool. Details: {}'.format(args)
+        }
+        log.error(instruction_set_response['error'])
+        return instruction_set_response
+
+    def error_could_not_fetch_session_token_by_label(self, session_token, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Something went wrong. Could not fetch session token by label {}. '\
+                     'Details: {}'.format(session_token, args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
 
     def error_could_not_remove_ewallet_session_from_database(self, ewallet_session):
         command_chain_response = {

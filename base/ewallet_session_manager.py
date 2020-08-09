@@ -8,6 +8,8 @@ from .config import Config
 from .res_utils import ResUtils
 from .ewallet_worker import EWalletWorker
 from .socket_handler import EWalletSocketHandler
+from .client_id import ClientID
+from .session_token import SessionToken
 
 config, res_utils = Config(), ResUtils()
 log = logging.getLogger(Config().log_config['log_name'])
@@ -22,6 +24,7 @@ class EWalletSessionManager():
         self.worker_pool = kwargs.get('worker_pool') or \
             [self.spawn_ewallet_session_worker()]
         self.client_pool = kwargs.get('client_pool') or []
+        self.stoken_pool = kwargs.get('stoken_pool') or []
         self.client_worker_map = kwargs.get('client_worker_map') or {}
 
         self.primary_session = kwargs.get('primary_session') or \
@@ -34,6 +37,57 @@ class EWalletSessionManager():
             res_utils.create_system_user(self.primary_session)
 
     # FETCHERS
+
+#   @pysnooper.snoop()
+    def fetch_client_id_mapped_session_worker(self, client_id):
+        log.debug('')
+        client_token = self.fetch_client_token_by_label(client_id)
+        if not self.client_worker_map.get(client_token):
+            return self.error_no_mapped_session_worker_found_for_client_id(client_id)
+        return self.client_worker_map[client_token]
+
+    def fetch_ewallet_session_from_worker(self, session_manager_worker, instruction_set):
+        log.debug('')
+        if not session_manager_worker or isinstance(session_manager_worker, dict) and \
+                session_manager_worker.get('failed'):
+            return self.error_no_session_manager_worker_found(instruction_set)
+        ewallet_session = session_manager_worker.main_controller(
+            controller='system', ctype='action', action='search', search='session',
+            **instruction_set
+        )
+        return ewallet_session
+
+    def fetch_default_session_token_validity_interval_in_minutes(self):
+        log.debug('')
+        if not self.config:
+            return self.error_no_config_handler_found(self.config)
+        session_token_validity = int(self.config.client_config['client_id_validity'])
+        return session_token_validity
+
+    def fetch_session_token_by_label(self, session_token):
+        log.debug('')
+        stoken = [
+            item for item in self.stoken_pool if item.label == session_token
+        ]
+        if len(stoken) > 1:
+            self.warning_multiple_session_tokens_found_by_label(session_token)
+        return False if not stoken else stoken[0]
+
+    def fetch_client_token_by_label(self, client_id):
+        log.debug('')
+        client_token = [
+            item for item in self.client_pool if item.label == client_id
+        ]
+        if len(client_token) > 1:
+            self.warning_multiple_client_tokens_found_by_label(client_id)
+        return False if not client_token else client_token[0]
+
+    def fetch_default_client_id_validity_interval_in_minutes(self):
+        log.debug('')
+        if not self.config:
+            return self.error_no_config_handler_found(self.config)
+        client_id_token_validity = int(self.config.client_config['client_id_validity'])
+        return client_id_token_validity
 
     def fetch_primary_ewallet_session(self):
         log.debug('')
@@ -143,23 +197,6 @@ class EWalletSessionManager():
         }
         return False if False in value_set.keys() else value_set
 
-    def fetch_ewallet_session_from_worker(self, session_manager_worker, instruction_set):
-        log.debug('')
-        if not session_manager_worker or isinstance(session_manager_worker, dict) and \
-                session_manager_worker.get('failed'):
-            return self.error_no_session_manager_worker_found(instruction_set)
-        ewallet_session = session_manager_worker.main_controller(
-            controller='system', ctype='action', action='search', search='session',
-            **instruction_set
-        )
-        return ewallet_session
-
-    def fetch_client_id_mapped_session_worker(self, client_id):
-        log.debug('')
-        if not self.client_worker_map.get(client_id):
-            return self.error_no_mapped_session_worker_found_for_client_id(client_id)
-        return self.client_worker_map[client_id]
-
     def fetch_first_available_worker(self):
         log.debug('')
         pool = self.fetch_ewallet_session_manager_worker_pool()
@@ -228,6 +265,14 @@ class EWalletSessionManager():
         pass
 
     # SETTERS
+
+    def set_new_session_token_to_pool(self, session_token):
+        log.debug('')
+        try:
+            self.stoken_pool.append(session_token)
+        except Exception as e:
+            return self.error_could_not_set_stoken_pool(session_token)
+        return True
 
 #   @pysnooper.snoop()
     def set_new_client_id_to_pool(self, client_id):
@@ -439,6 +484,19 @@ class EWalletSessionManager():
 
     # SPAWNERS
 
+    # TODO
+    def spawn_ewallet_session_worker(self):
+        log.debug('TODO')
+        return EWalletWorker()
+
+    def spawn_session_token(self, *args, **kwargs):
+        log.debug('')
+        return SessionToken(*args, **kwargs)
+
+    def spawn_client_id(self, *args, **kwargs):
+        log.debug('')
+        return ClientID(*args, **kwargs)
+
     def spawn_ewallet_session_manager_socket_handler(self, in_port, out_port):
         '''
         [ NOTE   ]: Perform port number validity checks and creates a EWallet Socket Handler object.
@@ -452,10 +510,6 @@ class EWalletSessionManager():
             session_manager=self, in_port=in_port, out_port=out_port,
             host=self.fetch_socket_handler_default_address()
         )
-
-    def spawn_ewallet_session_worker(self):
-        log.debug('')
-        return EWalletWorker()
 
     def spawn_ewallet_session(self, orm_session, **kwargs):
         log.debug('')
@@ -494,20 +548,6 @@ class EWalletSessionManager():
 
     # MAPPERS
 
-#   @pysnooper.snoop('logs/ewallet.log')
-    def map_client_id_to_worker(self, client_id, assigned_worker):
-        log.debug('')
-        update_map = self.update_client_worker_map({client_id: assigned_worker})
-        return update_map or False
-
-    def map_client_id_to_session_token(self, client_id, session_token, assigned_worker, ewallet_session):
-        log.debug('')
-        update_map = assigned_worker.main_controller(
-            controller='system', ctype='action', action='add', add='session_map',
-            client_id=client_id, session_token=session_token, session=ewallet_session
-        )
-        return update_map or False
-
     def map_client_id_to_ewallet_session(self, client_id, session_token, assigned_worker, ewallet_session):
         '''
         [ NOTE   ]: Maps Client ID to Worker for Session Manager and Client ID
@@ -524,7 +564,135 @@ class EWalletSessionManager():
         }
         return False if False in mappers.values() else True
 
+#   @pysnooper.snoop('logs/ewallet.log')
+    def map_client_id_to_worker(self, client_id, assigned_worker):
+        log.debug('')
+        update_map = self.update_client_worker_map({client_id: assigned_worker})
+        return update_map or False
+
+    def map_client_id_to_session_token(self, client_id, session_token, assigned_worker, ewallet_session):
+        log.debug('')
+        update_map = assigned_worker.main_controller(
+            controller='system', ctype='action', action='add', add='session_map',
+            client_id=client_id, session_token=session_token, session=ewallet_session
+        )
+        return update_map or False
+
     # VALIDATORS
+
+    # TODO
+    def validate_client_id_timestamp(self, client_id):
+        log.debug('TODO')
+        time_stamp = client_id[2]
+        return True
+
+    # TODO
+    def validate_session_token_timestamp(self, session_token):
+        log.debug('TODO')
+        timestamp = session_token[2]
+        return True
+
+    def validate_session_token_is_active(self, session_token):
+        log.debug('')
+        try:
+            return session_token.is_active()
+        except Exception as e:
+            self.error_could_not_perform_session_token_validity_check(session_token, e)
+            return False
+
+#   @pysnooper.snoop()
+    def validate_session_token_not_marked_for_unlink(self, session_token):
+        log.debug('')
+        try:
+            unlink = session_token.to_unlink()
+            return True if not unlink else False
+        except Exception as e:
+            self.error_could_not_perform_session_token_unlink_check(session_token, e)
+            return False
+
+    def validate_session_token_not_passed_expiration_date(self, session_token):
+        log.debug('')
+        try:
+            expired = session_token.expired()
+            return True if not expired else False
+        except Exception as e:
+            self.error_could_not_perform_session_token_expiration_check(session_token, e)
+            return False
+
+#   @pysnooper.snoop()
+    def validate_session_token(self, session_token):
+        log.debug('')
+        session_token_segmented = session_token.split(':')
+        if len(session_token_segmented) != 3:
+            return self.error_invalid_session_token(session_token)
+        stoken = self.fetch_session_token_by_label(session_token)
+        if not stoken or isinstance(stoken, dict) and \
+                stoken.get('failed'):
+            self.error_could_not_fetch_session_token_from_label(
+                session_token, stoken
+            )
+            return False
+        checks = {
+            'token': stoken,
+            'prefix': self.validate_session_token_prefix(session_token_segmented),
+            'length': self.validate_session_token_length(session_token_segmented),
+            'timestamp': self.validate_session_token_timestamp(session_token_segmented),
+            'active': self.validate_session_token_is_active(stoken),
+            'unlink': self.validate_session_token_not_marked_for_unlink(stoken),
+            'expiration': self.validate_session_token_not_passed_expiration_date(stoken),
+        }
+        return False if False in checks.values() else True
+
+    def validate_client_token_is_active(self, client_token):
+        log.debug('')
+        try:
+            return client_token.is_active()
+        except Exception as e:
+            self.error_could_not_perform_client_token_validity_check(client_token, e)
+            return False
+
+    def validate_client_token_not_marked_for_unlink(self, client_token):
+        log.debug('')
+        try:
+            unlink = client_token.to_unlink()
+            return True if not unlink else False
+        except Exception as e:
+            self.error_could_not_perform_client_token_unlink_check(client_token, e)
+            return False
+
+    def validate_client_token_not_passed_expiration_date(self, client_token):
+        log.debug('')
+        try:
+            expired = client_token.expired()
+            return True if not expired else False
+        except Exception as e:
+            self.error_could_not_perform_client_token_expiration_check(client_token, e)
+            return False
+
+#   @pysnooper.snoop()
+    def validate_client_id(self, client_id):
+        log.debug('')
+        segmented_client_id = client_id.split(':')
+        if len(segmented_client_id) != 3:
+            return self.error_invalid_client_id(client_id)
+        client_token = self.fetch_client_token_by_label(client_id)
+        if not client_token or isinstance(client_token, dict) and \
+                client_token.get('failed'):
+            self.error_could_not_fetch_client_token_from_label(
+                client_id, client_token
+            )
+            return False
+        checks = {
+            'token': client_token,
+            'prefix': self.validate_client_id_prefix(segmented_client_id),
+            'length': self.validate_client_id_length(segmented_client_id),
+            'timestamp': self.validate_client_id_timestamp(segmented_client_id),
+            'pool': self.validate_client_token_in_pool(client_token),
+            'active': self.validate_client_token_is_active(client_token),
+            'unlink': self.validate_client_token_not_marked_for_unlink(client_token),
+            'expiration': self.validate_client_token_not_passed_expiration_date(client_token),
+        }
+        return False if False in checks.values() else True
 
     def validate_session_token_prefix(self, session_token):
         log.debug('')
@@ -536,12 +704,6 @@ class EWalletSessionManager():
         default_length = self.fetch_session_token_default_length()
         return False if len(session_token[1]) is not default_length else True
 
-    # TODO
-    def validate_session_token_timestamp(self, session_token):
-        log.debug('')
-        timestamp = session_token[2]
-        return True
-
     def validate_client_id_prefix(self, client_id):
         log.debug('')
         default_prefix = self.fetch_client_id_default_prefix()
@@ -552,41 +714,9 @@ class EWalletSessionManager():
         default_length = self.fetch_client_id_default_length()
         return False if len(client_id[1]) is not default_length else True
 
-    def validate_client_id_in_pool(self, client_id):
+    def validate_client_token_in_pool(self, client_token):
         log.debug('')
-        return False if client_id not in self.client_pool else True
-
-    # TODO
-    def validate_client_id_timestamp(self, client_id):
-        log.debug('')
-        time_stamp = client_id[2]
-        return True
-
-#   @pysnooper.snoop()
-    def validate_session_token(self, session_token):
-        session_token_segmented = session_token.split(':')
-        if len(session_token_segmented) != 3:
-            return self.error_invalid_session_token(session_token)
-        checks = {
-            'prefix': self.validate_session_token_prefix(session_token_segmented),
-            'length': self.validate_session_token_length(session_token_segmented),
-            'timestamp': self.validate_session_token_timestamp(session_token_segmented),
-        }
-        return False if False in checks.values() else True
-
-#   @pysnooper.snoop()
-    def validate_client_id(self, client_id):
-        log.debug('')
-        segmented_client_id = client_id.split(':')
-        if len(segmented_client_id) != 3:
-            return self.error_invalid_client_id(client_id)
-        checks = {
-            'prefix': self.validate_client_id_prefix(segmented_client_id),
-            'length': self.validate_client_id_length(segmented_client_id),
-            'timestamp': self.validate_client_id_timestamp(segmented_client_id),
-            'pool': self.validate_client_id_in_pool(client_id),
-        }
-        return False if False in checks.values() else True
+        return False if client_token not in self.client_pool else True
 
 #   #@pysnooper.snoop()
     def validate_instruction_set(self, instruction_set):
@@ -630,6 +760,51 @@ class EWalletSessionManager():
         return ewallet_session
 
     # GENERAL
+
+    def generate_ewallet_session_token(self):
+        '''
+        [ NOTE   ]: Generates a new unique session token using default format and prefix.
+        [ NOTE   ]: Session Token follows the following format <prefix-string>:<code>:<timestamp>
+        '''
+        log.debug('')
+        prefix = self.fetch_session_token_default_prefix()
+        length = self.fetch_session_token_default_length()
+        timestamp = str(time.time())
+        st_code = self.res_utils.generate_random_alpha_numeric_string(
+            string_length=length
+        )
+        label = prefix + ':' + st_code + ':' + timestamp
+        session_token = self.spawn_session_token(
+            session_token=label,
+            expires_on=datetime.datetime.now() + \
+            datetime.timedelta(
+                minutes=self.fetch_default_session_token_validity_interval_in_minutes()
+            ),
+        )
+        return session_token
+
+#   @pysnooper.snoop()
+    def generate_client_id(self):
+        '''
+        [ NOTE   ]: Generates a new unique client id using default format and prefix.
+        [ NOTE   ]: User ID follows the following format <prefix-string>:<code>:<timestamp>
+        '''
+        log.debug('')
+        prefix = self.fetch_client_id_default_prefix()
+        length = self.fetch_client_id_default_length()
+        timestamp = str(time.time())
+        uid_code = self.res_utils.generate_random_alpha_numeric_string(
+            string_length=length
+        )
+        label = prefix + ':' + uid_code + ':' + timestamp
+        client_id_token = self.spawn_client_id(
+            client_id=label,
+            expires_on=datetime.datetime.now() + \
+            datetime.timedelta(
+                minutes=self.fetch_default_client_id_validity_interval_in_minutes()
+            ),
+        )
+        return client_id_token
 
 #   @pysnooper.snoop()
     def cleanup_ewallet_sessions(self, **kwargs):
@@ -751,36 +926,6 @@ class EWalletSessionManager():
         socket = self.spawn_ewallet_session_manager_socket_handler(in_port, out_port)
         return self.error_could_not_spawn_socket_handler() if not socket else socket
 
-    def generate_client_id(self):
-        '''
-        [ NOTE   ]: Generates a new unique client id using default format and prefix.
-        [ NOTE   ]: User ID follows the following format <prefix-string>:<code>:<timestamp>
-        '''
-        log.debug('')
-        prefix = self.fetch_client_id_default_prefix()
-        length = self.fetch_client_id_default_length()
-        timestamp = str(time.time())
-        uid_code = self.res_utils.generate_random_alpha_numeric_string(
-            string_length=length
-        )
-        user_id = prefix + ':' + uid_code + ':' + timestamp
-        return user_id
-
-    def generate_ewallet_session_token(self):
-        '''
-        [ NOTE   ]: Generates a new unique session token using default format and prefix.
-        [ NOTE   ]: Session Token follows the following format <prefix-string>:<code>:<timestamp>
-        '''
-        log.debug('')
-        prefix = self.fetch_session_token_default_prefix()
-        length = self.fetch_session_token_default_length()
-        timestamp = str(time.time())
-        st_code = self.res_utils.generate_random_alpha_numeric_string(
-            string_length=length
-        )
-        session_token = prefix + ':' + st_code + ':' + timestamp
-        return session_token
-
     # TODO
     def map_client_id_ewallet_session_token(self):
         pass
@@ -792,6 +937,76 @@ class EWalletSessionManager():
     [ NOTE ]: SqlAlchemy ORM sessions are fetched here.
 
     '''
+
+#   @pysnooper.snoop()
+    def action_request_session_token(self, **kwargs):
+        '''
+        [ NOTE   ]: Creates new EWallet Session object, assigns it an existing
+                    available worker or creates a new worker if none found,
+                    generates a new session token and maps it to the Client ID.
+        '''
+        log.debug('')
+        if not kwargs.get('client_id'):
+            return self.error_no_client_id_found(kwargs)
+        validation = self.validate_client_id(kwargs['client_id'])
+        if not validation or isinstance(validation, dict) and \
+                validation.get('failed'):
+            return self.error_invalid_client_id(kwargs['client_id'], kwargs)
+        sanitized_instruction_set = self.res_utils.remove_tags_from_command_chain(
+            kwargs, 'controller', 'ctype', 'action', 'new'
+        )
+        new_session = self.session_manager_controller(
+            controller='system', ctype='action', action='new', new='session',
+            **sanitized_instruction_set
+        )
+        if not new_session or isinstance(new_session, dict) and \
+                new_session.get('failed'):
+            return self.error_could_not_spawn_new_ewallet_session(kwargs)
+        ewallet_session = new_session['ewallet_session']
+        assigned_worker = self.fetch_ewallet_session_assigned_worker(ewallet_session) or \
+            self.assign_new_ewallet_session_to_worker(ewallet_session)
+        if not assigned_worker or isinstance(assigned_worker, dict) and \
+                assigned_worker.get('failed'):
+            return self.error_could_not_assign_worker_to_new_ewallet_session(ewallet_session)
+        session_token = self.generate_ewallet_session_token()
+        if not session_token or isinstance(session_token, dict) and \
+                session_token.get('failed'):
+            return self.error_could_not_generate_ewallet_session_token(ewallet_session)
+        client_token = self.fetch_client_token_by_label(kwargs['client_id'])
+        if not client_token or isinstance(client_token, dict) and \
+                client_token.get('failed'):
+            return self.error_could_not_fetch_client_token_by_label(
+                kwargs['client_id'], kwargs
+            )
+        set_to_pool = self.set_new_session_token_to_pool(session_token)
+        ctoken_worker_entry = assigned_worker.system_action_controller(
+            action='add', add='client_id', client_id=client_token
+        )
+        mapping = self.map_client_id_to_ewallet_session(
+            client_token, session_token, assigned_worker, ewallet_session
+        )
+        if not mapping or isinstance(mapping, dict) and mapping.get('failed'):
+            return self.error_could_not_map_client_id_to_session_token(
+                client_token, session_token
+            )
+        instruction_set_response = {
+            'failed': False,
+            'session_token': session_token.label,
+        }
+        return instruction_set_response
+
+    def action_request_client_id(self):
+        log.debug('')
+        client_id = self.generate_client_id()
+        set_to_pool = self.set_new_client_id_to_pool(client_id)
+        if not client_id or not set_to_pool or isinstance(set_to_pool, dict) \
+                and set_to_pool.get('failed'):
+            return self.warning_could_not_fulfill_client_id_request()
+        instruction_set_response = {
+            'failed': False,
+            'client_id': client_id.label,
+        }
+        return instruction_set_response
 
     def action_recover_user_account(self, ewallet_session, instruction_set):
         log.debug('')
@@ -1728,62 +1943,6 @@ class EWalletSessionManager():
         session = self.spawn_ewallet_session(**kwargs)
         return session
 
-    def action_request_client_id(self):
-        log.debug('')
-        client_id = self.generate_client_id()
-        set_to_pool = self.set_new_client_id_to_pool(client_id)
-        if not client_id or not set_to_pool or isinstance(set_to_pool, dict) \
-                and set_to_pool.get('failed'):
-            return self.warning_could_not_fulfill_client_id_request()
-        instruction_set_response = {
-            'failed': False,
-            'client_id': client_id,
-        }
-        return instruction_set_response
-
-#   @pysnooper.snoop()
-    def action_request_session_token(self, **kwargs):
-        '''
-        [ NOTE   ]: Creates new EWallet Session object, assigns it an existing
-                    available worker or creates a new worker if none found,
-                    generates a new session token and maps it to the Client ID.
-        '''
-        log.debug('')
-        if not kwargs.get('client_id'):
-            return self.error_no_client_id_found(kwargs)
-        client_id = kwargs['client_id']
-        sanitized_instruction_set = self.res_utils.remove_tags_from_command_chain(
-            kwargs, 'controller', 'ctype', 'action', 'new'
-        )
-        new_session = self.session_manager_controller(
-            controller='system', ctype='action', action='new', new='session',
-            **sanitized_instruction_set
-        )
-        if not new_session or isinstance(new_session, dict) and \
-                new_session.get('failed'):
-            return self.error_could_not_spawn_new_ewallet_session(kwargs)
-        ewallet_session = new_session['ewallet_session']
-        assigned_worker = self.fetch_ewallet_session_assigned_worker(ewallet_session) or \
-            self.assign_new_ewallet_session_to_worker(ewallet_session)
-        if not assigned_worker:
-            return self.error_could_not_assign_worker_to_new_ewallet_session(ewallet_session)
-        session_token = self.generate_ewallet_session_token()
-        if not session_token:
-            return self.error_could_not_generate_ewallet_session_token(ewallet_session)
-        mapping = self.map_client_id_to_ewallet_session(
-            client_id, session_token, assigned_worker, ewallet_session
-        )
-        if not mapping or isinstance(mapping, dict) and mapping.get('failed'):
-            return self.error_could_not_map_client_id_to_session_token(
-                client_id, session_token
-            )
-        instruction_set_response = {
-            'failed': False,
-            'session_token': session_token,
-#           'ewallet_session': ewallet_session,
-        }
-        return instruction_set_response
-
     # EVENTS
 
     # TODO
@@ -1806,8 +1965,10 @@ class EWalletSessionManager():
     def handle_client_action_recover_account(self, **kwargs):
         log.debug('')
         instruction_set_validation = self.validate_instruction_set(kwargs)
-        if not instruction_set_validation:
-            return False
+        if not instruction_set_validation \
+                or isinstance(instruction_set_validation, dict) \
+                and instruction_set_validation.get('failed'):
+            return instruction_set_validation
         ewallet = self.fetch_ewallet_session_for_client_action_using_instruction_set(
             kwargs
         )
@@ -1884,8 +2045,10 @@ class EWalletSessionManager():
     def handle_client_action_login(self, **kwargs):
         log.debug('')
         instruction_set_validation = self.validate_instruction_set(kwargs)
-        if not instruction_set_validation:
-            return False
+        if not instruction_set_validation \
+                or isinstance(instruction_set_validation, dict) \
+                and instruction_set_validation.get('failed'):
+            return instruction_set_validation
         ewallet = self.fetch_ewallet_session_for_client_action_using_instruction_set(
             kwargs
         )
@@ -1932,8 +2095,10 @@ class EWalletSessionManager():
     def handle_client_action_logout(self, **kwargs):
         log.debug('')
         instruction_set_validation = self.validate_instruction_set(kwargs)
-        if not instruction_set_validation:
-            return False
+        if not instruction_set_validation \
+                or isinstance(instruction_set_validation, dict) \
+                and instruction_set_validation.get('failed'):
+            return instruction_set_validation
         ewallet = self.fetch_ewallet_session_for_client_action_using_instruction_set(
             kwargs
         )
@@ -1949,8 +2114,10 @@ class EWalletSessionManager():
     def handle_client_action_switch_user_account(self, **kwargs):
         log.debug('')
         instruction_set_validation = self.validate_instruction_set(kwargs)
-        if not instruction_set_validation:
-            return False
+        if not instruction_set_validation \
+                or isinstance(instruction_set_validation, dict) \
+                and instruction_set_validation.get('failed'):
+            return instruction_set_validation
         ewallet = self.fetch_ewallet_session_for_client_action_using_instruction_set(
             kwargs
         )
@@ -1966,8 +2133,10 @@ class EWalletSessionManager():
     def handle_client_action_view_logout_records(self, **kwargs):
         log.debug('')
         instruction_set_validation = self.validate_instruction_set(kwargs)
-        if not instruction_set_validation:
-            return False
+        if not instruction_set_validation \
+                or isinstance(instruction_set_validation, dict) \
+                and instruction_set_validation.get('failed'):
+            return instruction_set_validation
         ewallet = self.fetch_ewallet_session_for_client_action_using_instruction_set(
             kwargs
         )
@@ -1983,8 +2152,10 @@ class EWalletSessionManager():
     def handle_client_action_view_login_records(self, **kwargs):
         log.debug('')
         instruction_set_validation = self.validate_instruction_set(kwargs)
-        if not instruction_set_validation:
-            return False
+        if not instruction_set_validation \
+                or isinstance(instruction_set_validation, dict) \
+                and instruction_set_validation.get('failed'):
+            return instruction_set_validation
         ewallet = self.fetch_ewallet_session_for_client_action_using_instruction_set(
             kwargs
         )
@@ -2000,8 +2171,10 @@ class EWalletSessionManager():
     def handle_client_action_unlink_account(self, **kwargs):
         log.debug('')
         instruction_set_validation = self.validate_instruction_set(kwargs)
-        if not instruction_set_validation:
-            return False
+        if not instruction_set_validation \
+                or isinstance(instruction_set_validation, dict) \
+                and instruction_set_validation.get('failed'):
+            return instruction_set_validation
         ewallet = self.fetch_ewallet_session_for_client_action_using_instruction_set(
             kwargs
         )
@@ -2017,8 +2190,10 @@ class EWalletSessionManager():
     def handle_client_action_unlink_credit_clock(self, **kwargs):
         log.debug('')
         instruction_set_validation = self.validate_instruction_set(kwargs)
-        if not instruction_set_validation:
-            return False
+        if not instruction_set_validation \
+                or isinstance(instruction_set_validation, dict) \
+                and instruction_set_validation.get('failed'):
+            return instruction_set_validation
         ewallet = self.fetch_ewallet_session_for_client_action_using_instruction_set(
             kwargs
         )
@@ -2034,8 +2209,10 @@ class EWalletSessionManager():
     def handle_client_action_unlink_credit_ewallet(self, **kwargs):
         log.debug('')
         instruction_set_validation = self.validate_instruction_set(kwargs)
-        if not instruction_set_validation:
-            return False
+        if not instruction_set_validation \
+                or isinstance(instruction_set_validation, dict) \
+                and instruction_set_validation.get('failed'):
+            return instruction_set_validation
         ewallet = self.fetch_ewallet_session_for_client_action_using_instruction_set(
             kwargs
         )
@@ -2061,8 +2238,10 @@ class EWalletSessionManager():
     def handle_client_action_unlink_contact_list(self, **kwargs):
         log.debug('')
         instruction_set_validation = self.validate_instruction_set(kwargs)
-        if not instruction_set_validation:
-            return False
+        if not instruction_set_validation \
+                or isinstance(instruction_set_validation, dict) \
+                and instruction_set_validation.get('failed'):
+            return instruction_set_validation
         ewallet = self.fetch_ewallet_session_for_client_action_using_instruction_set(
             kwargs
         )
@@ -2078,8 +2257,10 @@ class EWalletSessionManager():
     def handle_client_action_unlink_time_sheet(self, **kwargs):
         log.debug('')
         instruction_set_validation = self.validate_instruction_set(kwargs)
-        if not instruction_set_validation:
-            return False
+        if not instruction_set_validation \
+                or isinstance(instruction_set_validation, dict) \
+                and instruction_set_validation.get('failed'):
+            return instruction_set_validation
         ewallet = self.fetch_ewallet_session_for_client_action_using_instruction_set(
             kwargs
         )
@@ -2095,8 +2276,10 @@ class EWalletSessionManager():
     def handle_client_action_unlink_conversion_sheet(self, **kwargs):
         log.debug('')
         instruction_set_validation = self.validate_instruction_set(kwargs)
-        if not instruction_set_validation:
-            return False
+        if not instruction_set_validation \
+                or isinstance(instruction_set_validation, dict) \
+                and instruction_set_validation.get('failed'):
+            return instruction_set_validation
         ewallet = self.fetch_ewallet_session_for_client_action_using_instruction_set(
             kwargs
         )
@@ -2112,8 +2295,10 @@ class EWalletSessionManager():
     def handle_client_action_unlink_invoice_sheet(self, **kwargs):
         log.debug('')
         instruction_set_validation = self.validate_instruction_set(kwargs)
-        if not instruction_set_validation:
-            return False
+        if not instruction_set_validation \
+                or isinstance(instruction_set_validation, dict) \
+                and instruction_set_validation.get('failed'):
+            return instruction_set_validation
         ewallet = self.fetch_ewallet_session_for_client_action_using_instruction_set(
             kwargs
         )
@@ -2129,8 +2314,10 @@ class EWalletSessionManager():
     def handle_client_action_unlink_transfer_sheet(self, **kwargs):
         log.debug('')
         instruction_set_validation = self.validate_instruction_set(kwargs)
-        if not instruction_set_validation:
-            return False
+        if not instruction_set_validation \
+                or isinstance(instruction_set_validation, dict) \
+                and instruction_set_validation.get('failed'):
+            return instruction_set_validation
         ewallet = self.fetch_ewallet_session_for_client_action_using_instruction_set(
             kwargs
         )
@@ -2146,8 +2333,10 @@ class EWalletSessionManager():
     def handle_client_action_unlink_contact_record(self, **kwargs):
         log.debug('')
         instruction_set_validation = self.validate_instruction_set(kwargs)
-        if not instruction_set_validation:
-            return False
+        if not instruction_set_validation \
+                or isinstance(instruction_set_validation, dict) \
+                and instruction_set_validation.get('failed'):
+            return instruction_set_validation
         ewallet = self.fetch_ewallet_session_for_client_action_using_instruction_set(
             kwargs
         )
@@ -2173,8 +2362,10 @@ class EWalletSessionManager():
     def handle_client_action_unlink_time_record(self, **kwargs):
         log.debug('')
         instruction_set_validation = self.validate_instruction_set(kwargs)
-        if not instruction_set_validation:
-            return False
+        if not instruction_set_validation \
+                or isinstance(instruction_set_validation, dict) \
+                and instruction_set_validation.get('failed'):
+            return instruction_set_validation
         ewallet = self.fetch_ewallet_session_for_client_action_using_instruction_set(
             kwargs
         )
@@ -2200,8 +2391,10 @@ class EWalletSessionManager():
     def handle_client_action_unlink_conversion_record(self, **kwargs):
         log.debug('')
         instruction_set_validation = self.validate_instruction_set(kwargs)
-        if not instruction_set_validation:
-            return False
+        if not instruction_set_validation \
+                or isinstance(instruction_set_validation, dict) \
+                and instruction_set_validation.get('failed'):
+            return instruction_set_validation
         ewallet = self.fetch_ewallet_session_for_client_action_using_instruction_set(
             kwargs
         )
@@ -2227,8 +2420,10 @@ class EWalletSessionManager():
     def handle_client_action_unlink_invoice_record(self, **kwargs):
         log.debug('')
         instruction_set_validation = self.validate_instruction_set(kwargs)
-        if not instruction_set_validation:
-            return False
+        if not instruction_set_validation \
+                or isinstance(instruction_set_validation, dict) \
+                and instruction_set_validation.get('failed'):
+            return instruction_set_validation
         ewallet = self.fetch_ewallet_session_for_client_action_using_instruction_set(
             kwargs
         )
@@ -2254,8 +2449,10 @@ class EWalletSessionManager():
     def handle_client_action_unlink_transfer_record(self, **kwargs):
         log.debug('')
         instruction_set_validation = self.validate_instruction_set(kwargs)
-        if not instruction_set_validation:
-            return False
+        if not instruction_set_validation \
+                or isinstance(instruction_set_validation, dict) \
+                and instruction_set_validation.get('failed'):
+            return instruction_set_validation
         ewallet = self.fetch_ewallet_session_for_client_action_using_instruction_set(
             kwargs
         )
@@ -2296,8 +2493,10 @@ class EWalletSessionManager():
     def handle_client_action_switch_contact_list(self, **kwargs):
         log.debug('')
         instruction_set_validation = self.validate_instruction_set(kwargs)
-        if not instruction_set_validation:
-            return False
+        if not instruction_set_validation \
+                or isinstance(instruction_set_validation, dict) \
+                and instruction_set_validation.get('failed'):
+            return instruction_set_validation
         ewallet = self.fetch_ewallet_session_for_client_action_using_instruction_set(
             kwargs
         )
@@ -2313,8 +2512,10 @@ class EWalletSessionManager():
     def handle_client_action_switch_time_sheet(self, **kwargs):
         log.debug('')
         instruction_set_validation = self.validate_instruction_set(kwargs)
-        if not instruction_set_validation:
-            return False
+        if not instruction_set_validation \
+                or isinstance(instruction_set_validation, dict) \
+                and instruction_set_validation.get('failed'):
+            return instruction_set_validation
         ewallet = self.fetch_ewallet_session_for_client_action_using_instruction_set(
             kwargs
         )
@@ -2330,8 +2531,10 @@ class EWalletSessionManager():
     def handle_client_action_switch_conversion_sheet(self, **kwargs):
         log.debug('')
         instruction_set_validation = self.validate_instruction_set(kwargs)
-        if not instruction_set_validation:
-            return False
+        if not instruction_set_validation \
+                or isinstance(instruction_set_validation, dict) \
+                and instruction_set_validation.get('failed'):
+            return instruction_set_validation
         ewallet = self.fetch_ewallet_session_for_client_action_using_instruction_set(
             kwargs
         )
@@ -2347,8 +2550,10 @@ class EWalletSessionManager():
     def handle_client_action_switch_invoice_sheet(self, **kwargs):
         log.debug('')
         instruction_set_validation = self.validate_instruction_set(kwargs)
-        if not instruction_set_validation:
-            return False
+        if not instruction_set_validation \
+                or isinstance(instruction_set_validation, dict) \
+                and instruction_set_validation.get('failed'):
+            return instruction_set_validation
         ewallet = self.fetch_ewallet_session_for_client_action_using_instruction_set(
             kwargs
         )
@@ -2364,8 +2569,10 @@ class EWalletSessionManager():
     def handle_client_action_switch_transfer_sheet(self, **kwargs):
         log.debug('')
         instruction_set_validation = self.validate_instruction_set(kwargs)
-        if not instruction_set_validation:
-            return False
+        if not instruction_set_validation \
+                or isinstance(instruction_set_validation, dict) \
+                and instruction_set_validation.get('failed'):
+            return instruction_set_validation
         ewallet = self.fetch_ewallet_session_for_client_action_using_instruction_set(
             kwargs
         )
@@ -2381,8 +2588,10 @@ class EWalletSessionManager():
     def handle_client_action_switch_credit_clock(self, **kwargs):
         log.debug('')
         instruction_set_validation = self.validate_instruction_set(kwargs)
-        if not instruction_set_validation:
-            return False
+        if not instruction_set_validation \
+                or isinstance(instruction_set_validation, dict) \
+                and instruction_set_validation.get('failed'):
+            return instruction_set_validation
         ewallet = self.fetch_ewallet_session_for_client_action_using_instruction_set(
             kwargs
         )
@@ -2398,8 +2607,10 @@ class EWalletSessionManager():
     def handle_client_action_switch_credit_ewallet(self, **kwargs):
         log.debug('')
         instruction_set_validation = self.validate_instruction_set(kwargs)
-        if not instruction_set_validation:
-            return False
+        if not instruction_set_validation \
+                or isinstance(instruction_set_validation, dict) \
+                and instruction_set_validation.get('failed'):
+            return instruction_set_validation
         ewallet = self.fetch_ewallet_session_for_client_action_using_instruction_set(
             kwargs
         )
@@ -2440,8 +2651,10 @@ class EWalletSessionManager():
     def handle_client_action_new_contact_list(self, **kwargs):
         log.debug('')
         instruction_set_validation = self.validate_instruction_set(kwargs)
-        if not instruction_set_validation:
-            return False
+        if not instruction_set_validation \
+                or isinstance(instruction_set_validation, dict) \
+                and instruction_set_validation.get('failed'):
+            return instruction_set_validation
         ewallet = self.fetch_ewallet_session_for_client_action_using_instruction_set(
             kwargs
         )
@@ -2457,8 +2670,10 @@ class EWalletSessionManager():
     def handle_client_action_new_time_sheet(self, **kwargs):
         log.debug('')
         instruction_set_validation = self.validate_instruction_set(kwargs)
-        if not instruction_set_validation:
-            return False
+        if not instruction_set_validation \
+                or isinstance(instruction_set_validation, dict) \
+                and instruction_set_validation.get('failed'):
+            return instruction_set_validation
         ewallet = self.fetch_ewallet_session_for_client_action_using_instruction_set(
             kwargs
         )
@@ -2483,8 +2698,10 @@ class EWalletSessionManager():
     def handle_client_action_new_conversion_sheet(self, **kwargs):
         log.debug('')
         instruction_set_validation = self.validate_instruction_set(kwargs)
-        if not instruction_set_validation:
-            return False
+        if not instruction_set_validation \
+                or isinstance(instruction_set_validation, dict) \
+                and instruction_set_validation.get('failed'):
+            return instruction_set_validation
         ewallet = self.fetch_ewallet_session_for_client_action_using_instruction_set(
             kwargs
         )
@@ -2509,8 +2726,10 @@ class EWalletSessionManager():
     def handle_client_action_new_invoice_sheet(self, **kwargs):
         log.debug('')
         instruction_set_validation = self.validate_instruction_set(kwargs)
-        if not instruction_set_validation:
-            return False
+        if not instruction_set_validation \
+                or isinstance(instruction_set_validation, dict) \
+                and instruction_set_validation.get('failed'):
+            return instruction_set_validation
         ewallet = self.fetch_ewallet_session_for_client_action_using_instruction_set(
             kwargs
         )
@@ -2535,8 +2754,10 @@ class EWalletSessionManager():
     def handle_client_action_new_transfer_sheet(self, **kwargs):
         log.debug('')
         instruction_set_validation = self.validate_instruction_set(kwargs)
-        if not instruction_set_validation:
-            return False
+        if not instruction_set_validation \
+                or isinstance(instruction_set_validation, dict) \
+                and instruction_set_validation.get('failed'):
+            return instruction_set_validation
         ewallet = self.fetch_ewallet_session_for_client_action_using_instruction_set(
             kwargs
         )
@@ -2561,8 +2782,10 @@ class EWalletSessionManager():
     def handle_client_action_new_credit_clock(self, **kwargs):
         log.debug('')
         instruction_set_validation = self.validate_instruction_set(kwargs)
-        if not instruction_set_validation:
-            return False
+        if not instruction_set_validation \
+                or isinstance(instruction_set_validation, dict) \
+                and instruction_set_validation.get('failed'):
+            return instruction_set_validation
         ewallet = self.fetch_ewallet_session_for_client_action_using_instruction_set(
             kwargs
         )
@@ -2578,8 +2801,10 @@ class EWalletSessionManager():
     def handle_client_action_new_credit_ewallet(self, **kwargs):
         log.debug('')
         instruction_set_validation = self.validate_instruction_set(kwargs)
-        if not instruction_set_validation:
-            return False
+        if not instruction_set_validation \
+                or isinstance(instruction_set_validation, dict) \
+                and instruction_set_validation.get('failed'):
+            return instruction_set_validation
         ewallet = self.fetch_ewallet_session_for_client_action_using_instruction_set(
             kwargs
         )
@@ -2605,8 +2830,10 @@ class EWalletSessionManager():
     def handle_client_action_view_invoice_record(self, **kwargs):
         log.debug('')
         instruction_set_validation = self.validate_instruction_set(kwargs)
-        if not instruction_set_validation:
-            return False
+        if not instruction_set_validation \
+                or isinstance(instruction_set_validation, dict) \
+                and instruction_set_validation.get('failed'):
+            return instruction_set_validation
         ewallet = self.fetch_ewallet_session_for_client_action_using_instruction_set(
             kwargs
         )
@@ -2622,8 +2849,10 @@ class EWalletSessionManager():
     def handle_client_action_view_invoice_sheet(self, **kwargs):
         log.debug('')
         instruction_set_validation = self.validate_instruction_set(kwargs)
-        if not instruction_set_validation:
-            return False
+        if not instruction_set_validation \
+                or isinstance(instruction_set_validation, dict) \
+                and instruction_set_validation.get('failed'):
+            return instruction_set_validation
         ewallet = self.fetch_ewallet_session_for_client_action_using_instruction_set(
             kwargs
         )
@@ -2649,8 +2878,10 @@ class EWalletSessionManager():
     def handle_client_action_view_credit_clock(self, **kwargs):
         log.debug('')
         instruction_set_validation = self.validate_instruction_set(kwargs)
-        if not instruction_set_validation:
-            return False
+        if not instruction_set_validation \
+                or isinstance(instruction_set_validation, dict) \
+                and instruction_set_validation.get('failed'):
+            return instruction_set_validation
         ewallet = self.fetch_ewallet_session_for_client_action_using_instruction_set(
             kwargs
         )
@@ -2666,8 +2897,10 @@ class EWalletSessionManager():
     def handle_client_action_view_credit_ewallet(self, **kwargs):
         log.debug('')
         instruction_set_validation = self.validate_instruction_set(kwargs)
-        if not instruction_set_validation:
-            return False
+        if not instruction_set_validation \
+                or isinstance(instruction_set_validation, dict) \
+                and instruction_set_validation.get('failed'):
+            return instruction_set_validation
         ewallet = self.fetch_ewallet_session_for_client_action_using_instruction_set(
             kwargs
         )
@@ -2693,8 +2926,10 @@ class EWalletSessionManager():
     def handle_client_action_edit_account(self, **kwargs):
         log.debug('')
         instruction_set_validation = self.validate_instruction_set(kwargs)
-        if not instruction_set_validation:
-            return False
+        if not instruction_set_validation \
+                or isinstance(instruction_set_validation, dict) \
+                and instruction_set_validation.get('failed'):
+            return instruction_set_validation
         ewallet = self.fetch_ewallet_session_for_client_action_using_instruction_set(
             kwargs
         )
@@ -2719,8 +2954,10 @@ class EWalletSessionManager():
     def handle_client_action_view_account(self, **kwargs):
         log.debug('')
         instruction_set_validation = self.validate_instruction_set(kwargs)
-        if not instruction_set_validation:
-            return False
+        if not instruction_set_validation \
+                or isinstance(instruction_set_validation, dict) \
+                and instruction_set_validation.get('failed'):
+            return instruction_set_validation
         ewallet = self.fetch_ewallet_session_for_client_action_using_instruction_set(
             kwargs
         )
@@ -2736,8 +2973,10 @@ class EWalletSessionManager():
     def handle_client_action_view_conversion_record(self, **kwargs):
         log.debug('')
         instruction_set_validation = self.validate_instruction_set(kwargs)
-        if not instruction_set_validation:
-            return False
+        if not instruction_set_validation \
+                or isinstance(instruction_set_validation, dict) \
+                and instruction_set_validation.get('failed'):
+            return instruction_set_validation
         ewallet = self.fetch_ewallet_session_for_client_action_using_instruction_set(
             kwargs
         )
@@ -2753,8 +2992,10 @@ class EWalletSessionManager():
     def handle_client_action_view_conversion_sheet(self, **kwargs):
         log.debug('')
         instruction_set_validation = self.validate_instruction_set(kwargs)
-        if not instruction_set_validation:
-            return False
+        if not instruction_set_validation \
+                or isinstance(instruction_set_validation, dict) \
+                and instruction_set_validation.get('failed'):
+            return instruction_set_validation
         ewallet = self.fetch_ewallet_session_for_client_action_using_instruction_set(
             kwargs
         )
@@ -2780,8 +3021,10 @@ class EWalletSessionManager():
     def handle_client_action_view_time_record(self, **kwargs):
         log.debug('')
         instruction_set_validation = self.validate_instruction_set(kwargs)
-        if not instruction_set_validation:
-            return False
+        if not instruction_set_validation \
+                or isinstance(instruction_set_validation, dict) \
+                and instruction_set_validation.get('failed'):
+            return instruction_set_validation
         ewallet = self.fetch_ewallet_session_for_client_action_using_instruction_set(
             kwargs
         )
@@ -2797,8 +3040,10 @@ class EWalletSessionManager():
     def handle_client_action_view_time_sheet(self, **kwargs):
         log.debug('')
         instruction_set_validation = self.validate_instruction_set(kwargs)
-        if not instruction_set_validation:
-            return False
+        if not instruction_set_validation \
+                or isinstance(instruction_set_validation, dict) \
+                and instruction_set_validation.get('failed'):
+            return instruction_set_validation
         ewallet = self.fetch_ewallet_session_for_client_action_using_instruction_set(
             kwargs
         )
@@ -2824,8 +3069,10 @@ class EWalletSessionManager():
     def handle_client_action_view_transfer_record(self, **kwargs):
         log.debug('')
         instruction_set_validation = self.validate_instruction_set(kwargs)
-        if not instruction_set_validation:
-            return False
+        if not instruction_set_validation \
+                or isinstance(instruction_set_validation, dict) \
+                and instruction_set_validation.get('failed'):
+            return instruction_set_validation
         ewallet = self.fetch_ewallet_session_for_client_action_using_instruction_set(
             kwargs
         )
@@ -2841,8 +3088,10 @@ class EWalletSessionManager():
     def handle_client_action_view_transfer_sheet(self, **kwargs):
         log.debug('')
         instruction_set_validation = self.validate_instruction_set(kwargs)
-        if not instruction_set_validation:
-            return False
+        if not instruction_set_validation \
+                or isinstance(instruction_set_validation, dict) \
+                and instruction_set_validation.get('failed'):
+            return instruction_set_validation
         ewallet = self.fetch_ewallet_session_for_client_action_using_instruction_set(
             kwargs
         )
@@ -2868,8 +3117,10 @@ class EWalletSessionManager():
     def handle_client_action_transfer_credits(self, **kwargs):
         log.debug('')
         instruction_set_validation = self.validate_instruction_set(kwargs)
-        if not instruction_set_validation:
-            return False
+        if not instruction_set_validation \
+                or isinstance(instruction_set_validation, dict) \
+                and instruction_set_validation.get('failed'):
+            return instruction_set_validation
         ewallet = self.fetch_ewallet_session_for_client_action_using_instruction_set(
             kwargs
         )
@@ -2895,8 +3146,10 @@ class EWalletSessionManager():
     def handle_client_action_new_contact_record(self, **kwargs):
         log.debug('')
         instruction_set_validation = self.validate_instruction_set(kwargs)
-        if not instruction_set_validation:
-            return False
+        if not instruction_set_validation \
+                or isinstance(instruction_set_validation, dict) \
+                and instruction_set_validation.get('failed'):
+            return instruction_set_validation
         ewallet = self.fetch_ewallet_session_for_client_action_using_instruction_set(
             kwargs
         )
@@ -2922,8 +3175,10 @@ class EWalletSessionManager():
     def handle_client_action_view_contact_list(self, **kwargs):
         log.debug('')
         instruction_set_validation = self.validate_instruction_set(kwargs)
-        if not instruction_set_validation:
-            return False
+        if not instruction_set_validation \
+                or isinstance(instruction_set_validation, dict) \
+                and instruction_set_validation.get('failed'):
+            return instruction_set_validation
         ewallet = self.fetch_ewallet_session_for_client_action_using_instruction_set(
             kwargs
         )
@@ -2939,8 +3194,10 @@ class EWalletSessionManager():
     def handle_client_action_view_contact_record(self, **kwargs):
         log.debug('')
         instruction_set_validation = self.validate_instruction_set(kwargs)
-        if not instruction_set_validation:
-            return False
+        if not instruction_set_validation \
+                or isinstance(instruction_set_validation, dict) \
+                and instruction_set_validation.get('failed'):
+            return instruction_set_validation
         ewallet = self.fetch_ewallet_session_for_client_action_using_instruction_set(
             kwargs
         )
@@ -2983,8 +3240,10 @@ class EWalletSessionManager():
     def handle_client_action_pay(self, **kwargs):
         log.debug('')
         instruction_set_validation = self.validate_instruction_set(kwargs)
-        if not instruction_set_validation:
-            return False
+        if not instruction_set_validation \
+                or isinstance(instruction_set_validation, dict) \
+                and instruction_set_validation.get('failed'):
+            return instruction_set_validation
         ewallet = self.fetch_ewallet_session_for_client_action_using_instruction_set(
             kwargs
         )
@@ -3000,8 +3259,10 @@ class EWalletSessionManager():
     def handle_client_action_resume(self, **kwargs):
         log.debug('')
         instruction_set_validation = self.validate_instruction_set(kwargs)
-        if not instruction_set_validation:
-            return False
+        if not instruction_set_validation \
+                or isinstance(instruction_set_validation, dict) \
+                and instruction_set_validation.get('failed'):
+            return instruction_set_validation
         ewallet = self.fetch_ewallet_session_for_client_action_using_instruction_set(
             kwargs
         )
@@ -3017,8 +3278,10 @@ class EWalletSessionManager():
     def handle_client_action_pause(self, **kwargs):
         log.debug('')
         instruction_set_validation = self.validate_instruction_set(kwargs)
-        if not instruction_set_validation:
-            return False
+        if not instruction_set_validation \
+                or isinstance(instruction_set_validation, dict) \
+                and instruction_set_validation.get('failed'):
+            return instruction_set_validation
         ewallet = self.fetch_ewallet_session_for_client_action_using_instruction_set(
             kwargs
         )
@@ -3034,8 +3297,10 @@ class EWalletSessionManager():
     def handle_client_action_stop(self, **kwargs):
         log.debug('')
         instruction_set_validation = self.validate_instruction_set(kwargs)
-        if not instruction_set_validation:
-            return False
+        if not instruction_set_validation \
+                or isinstance(instruction_set_validation, dict) \
+                and instruction_set_validation.get('failed'):
+            return instruction_set_validation
         ewallet = self.fetch_ewallet_session_for_client_action_using_instruction_set(
             kwargs
         )
@@ -3051,8 +3316,10 @@ class EWalletSessionManager():
     def handle_client_action_convert_credits_to_clock(self, **kwargs):
         log.debug('')
         instruction_set_validation = self.validate_instruction_set(kwargs)
-        if not instruction_set_validation:
-            return False
+        if not instruction_set_validation \
+                or isinstance(instruction_set_validation, dict) \
+                and instruction_set_validation.get('failed'):
+            return instruction_set_validation
         ewallet = self.fetch_ewallet_session_for_client_action_using_instruction_set(
             kwargs
         )
@@ -3068,8 +3335,10 @@ class EWalletSessionManager():
     def handle_client_action_convert_clock_to_credits(self, **kwargs):
         log.debug('')
         instruction_set_validation = self.validate_instruction_set(kwargs)
-        if not instruction_set_validation:
-            return False
+        if not instruction_set_validation \
+                or isinstance(instruction_set_validation, dict) \
+                and instruction_set_validation.get('failed'):
+            return instruction_set_validation
         ewallet = self.fetch_ewallet_session_for_client_action_using_instruction_set(
             kwargs
         )
@@ -3086,35 +3355,39 @@ class EWalletSessionManager():
     def handle_client_action_supply_credits(self, **kwargs):
         log.debug('')
         instruction_set_validation = self.validate_instruction_set(kwargs)
-        if not instruction_set_validation:
-            return False
+        if not instruction_set_validation \
+                or isinstance(instruction_set_validation, dict) \
+                and instruction_set_validation.get('failed'):
+            return instruction_set_validation
         ewallet = self.fetch_ewallet_session_for_client_action_using_instruction_set(
-                kwargs
-                )
+            kwargs
+        )
         if not ewallet or not ewallet['ewallet_session'] or \
                 isinstance(ewallet['ewallet_session'], dict) and \
                 ewallet['ewallet_session'].get('failed'):
             return self.error_no_ewallet_session_found(kwargs)
         credit_supply = self.action_supply_user_credit_ewallet_in_session(
-                ewallet['ewallet_session'], ewallet['sanitized_instruction_set']
-                )
+            ewallet['ewallet_session'], ewallet['sanitized_instruction_set']
+        )
         return credit_supply
 
     def handle_client_action_start_clock_timer(self, **kwargs):
         log.debug('')
         instruction_set_validation = self.validate_instruction_set(kwargs)
-        if not instruction_set_validation:
-            return False
+        if not instruction_set_validation \
+                or isinstance(instruction_set_validation, dict) \
+                and instruction_set_validation.get('failed'):
+            return instruction_set_validation
         ewallet = self.fetch_ewallet_session_for_client_action_using_instruction_set(
-                kwargs
-                )
+            kwargs
+        )
         if not ewallet or not ewallet['ewallet_session'] or \
                 isinstance(ewallet['ewallet_session'], dict) and \
                 ewallet['ewallet_session'].get('failed'):
             return self.error_no_ewallet_session_found(kwargs)
         start_timer = self.action_start_credit_clock_timer(
-                ewallet['ewallet_session'], ewallet['sanitized_instruction_set']
-                )
+            ewallet['ewallet_session'], ewallet['sanitized_instruction_set']
+        )
         return start_timer
 
     def handle_client_action_request_client_id(self, **kwargs):
@@ -3134,8 +3407,10 @@ class EWalletSessionManager():
         '''
         log.debug('')
         instruction_set_validation = self.validate_instruction_set(kwargs)
-        if not instruction_set_validation:
-            return False
+        if not instruction_set_validation \
+                or isinstance(instruction_set_validation, dict) \
+                and instruction_set_validation.get('failed'):
+            return instruction_set_validation
         ewallet = self.fetch_ewallet_session_for_client_action_using_instruction_set(
             kwargs
         )
@@ -3175,43 +3450,43 @@ class EWalletSessionManager():
 
     # TODO
     def handle_system_event_session_timeout(self, **kwargs):
-        _timeout = self.event_session_timeout()
+        timeout = self.event_session_timeout()
     def handle_system_event_worker_timeout(self, **kwargs):
-        _timeout = self.event_worker_timeout()
+        timeout = self.event_worker_timeout()
     def handle_system_event_client_ack_timeout(self, **kwargs):
-        _timeout = self.event_client_ack_timeout()
+        timeout = self.event_client_ack_timeout()
     def handle_system_event_client_id_expire(self, **kwargs):
-        _expire = self.event_client_id_expire()
+        expire = self.event_client_id_expire()
     def handle_system_event_session_token_expire(self, **kwargs):
-        _expire = self.event_session_token_expire()
+        expire = self.event_session_token_expire()
 
     def handle_client_action_start(self, **kwargs):
         log.debug('')
         if not kwargs.get('start'):
             return self.error_no_client_action_start_target_specified()
-        _handlers = {
-                'clock_timer': self.handle_client_action_start_clock_timer,
-                }
-        return _handlers[kwargs['start']](**kwargs)
+        handlers = {
+            'clock_timer': self.handle_client_action_start_clock_timer,
+        }
+        return handlers[kwargs['start']](**kwargs)
 
     def handle_client_action_convert(self, **kwargs):
         log.debug('')
         if not kwargs.get('convert'):
             return self.error_no_client_action_convert_target_specified()
-        _handlers = {
+        handlers = {
             'credits2clock': self.handle_client_action_convert_credits_to_clock,
             'clock2credits': self.handle_client_action_convert_clock_to_credits,
         }
-        return _handlers[kwargs['convert']](**kwargs)
+        return handlers[kwargs['convert']](**kwargs)
 
     def handle_client_action_supply(self, **kwargs):
         log.debug('')
         if not kwargs.get('supply'):
             return self.error_no_client_action_supply_target_specified()
-        _handlers = {
-                'credits': self.handle_client_action_supply_credits,
-                }
-        return _handlers[kwargs['supply']](**kwargs)
+        handlers = {
+            'credits': self.handle_client_action_supply_credits,
+        }
+        return handlers[kwargs['supply']](**kwargs)
 
     def handle_client_action_new(self, **kwargs):
         '''
@@ -3463,6 +3738,24 @@ class EWalletSessionManager():
         return handlers[kwargs['controller']](**kwargs)
 
     # WARNINGS
+
+    def warning_multiple_session_tokens_found_by_label(self, session_token, *args):
+        instruction_set_response = {
+            'failed': True,
+            'warning': 'Multiple session tokens found by label {}. '
+                       'Fetching first. Details: {}'.format(session_token, args)
+        }
+        log.warning(instruction_set_response['warning'])
+        return instruction_set_response
+
+    def warning_multiple_client_tokens_found_by_label(self, client_id, *args):
+        instruction_set_response = {
+            'failed': True,
+            'warning': 'Multiple client tokens found by label {}. '
+                       'Fetching first. Details: {}'.format(client_id, args)
+        }
+        log.warning(instruction_set_response['warning'])
+        return instruction_set_response
 
     def warning_could_not_recover_user_account(self, ewallet_session, instruction_set):
         instruction_set_response = {
@@ -4128,6 +4421,123 @@ class EWalletSessionManager():
 
     # ERRORS
 
+    def error_could_not_fetch_client_token_by_label(self, client_id, *args):
+        instruction_set_response = {
+            'failed': True,
+            'error': 'Something went wrong. '
+                     'Could not fetch client token by label {}. '
+                     'Details: {}'.format(client_id, args)
+        }
+        log.error(instruction_set_response['error'])
+        return instruction_set_response
+
+    def error_could_not_set_stoken_pool(self, session_token, *args):
+        instruction_set_response = {
+            'failed': True,
+            'error': 'Something went wrong. '
+                     'Could not set session token {} to pool. '
+                     'Details: {}'.format(session_token, args)
+        }
+        log.error(instruction_set_response['error'])
+        return instruction_set_response
+
+    def error_invalid_client_id(self, client_id, *args):
+        instruction_set_response = {
+            'failed': True,
+            'error': 'Invalid client id {}.'
+                     'Details: {}'.format(client_id, args)
+        }
+        log.error(instruction_set_response['error'])
+        return instruction_set_response
+
+    def error_could_not_fetch_session_token_from_label(self, *args):
+        instruction_set_response = {
+            'failed': True,
+            'error': 'Something went wrong. '
+                     'Could not fetch session token from label. '
+                     'Details: {}'.format(args)
+        }
+        log.error(instruction_set_response['error'])
+        return instruction_set_response
+
+    def error_could_not_perform_session_token_validity_check(self, *args):
+        instruction_set_response = {
+            'failed': True,
+            'error': 'Something went wrong. '
+                     'Could not perform session token validity check. '
+                     'Details: {}'.format(args)
+        }
+        log.error(instruction_set_response['error'])
+        return instruction_set_response
+
+    def error_could_not_perform_session_token_unlink_check(self, *args):
+        instruction_set_response = {
+            'failed': True,
+            'error': 'Something went wrong. '
+                     'Could not perform session token unlink check. '
+                     'Details: {}'.format(args)
+        }
+        log.error(instruction_set_response['error'])
+        return instruction_set_response
+
+    def error_could_not_perform_session_token_expiration_check(self, *args):
+        instruction_set_response = {
+            'failed': True,
+            'error': 'Something went wrong. '
+                     'Could not perform session token validity check. '
+                     'Details: {}'.format(args)
+        }
+        log.error(instruction_set_response['error'])
+        return instruction_set_response
+
+    def error_could_not_perform_client_token_validity_check(self, *args):
+        instruction_set_response = {
+            'failed': True,
+            'error': 'Something went wrong. '
+                     'Could not perform client token validity check. '
+                     'Details: {}'.format(args)
+        }
+        log.error(instruction_set_response['error'])
+        return instruction_set_response
+
+    def error_could_not_perform_client_token_unlink_check(self, *args):
+        instruction_set_response = {
+            'failed': True,
+            'error': 'Something went wrong. '
+                     'Could not perform client token unlink check. '
+                     'Details: {}'.format(args)
+        }
+        log.error(instruction_set_response['error'])
+        return instruction_set_response
+
+    def error_could_not_perform_client_token_expiration_check(self, *args):
+        instruction_set_response = {
+            'failed': True,
+            'error': 'Something went wrong. '
+                     'Could not perform client token expiration check. '
+                     'Details: {}'.format(args)
+        }
+        log.error(instruction_set_response['error'])
+        return instruction_set_response
+
+    def error_could_not_fetch_client_token_from_label(self, client_id, *args):
+        instruction_set_response = {
+            'failed': True,
+            'error': 'Something went wrong. '
+                     'Could not fetch client token from pool by client id {}. '
+                     'Details: {}'.format(client_id, args)
+        }
+        log.error(instruction_set_response['error'])
+        return instruction_set_response
+
+    def error_no_config_handler_found(self, *args):
+        instruction_set_response = {
+            'failed': True,
+            'error': 'No configuration handler found. Details: {}'.format(args)
+        }
+        log.error(instruction_set_response['error'])
+        return instruction_set_response
+
     def error_no_client_id_found(self, instruction_set):
         instruction_set_response = {
             'failed': True,
@@ -4594,10 +5004,6 @@ class EWalletSessionManager():
                 'Something went wrong. Could not set worker {} to session manager worker pool.'\
                     .format(worker)
                 )
-        return False
-
-    def error_invalid_client_id(self, client_id):
-        log.error('Invalid client identifier {}.'.format(client_id))
         return False
 
     def error_could_not_fetch_socket_handler(self):
