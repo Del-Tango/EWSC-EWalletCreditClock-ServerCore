@@ -2,13 +2,9 @@ from .config import Config
 from .res_utils import ResUtils
 from .ewallet import EWallet
 
-# import time
 import datetime
-# import random
-# import hashlib
 import logging
 import pysnooper
-# import threading
 
 config, res_utils = Config(), ResUtils()
 log = logging.getLogger(config.log_config['log_name'])
@@ -19,18 +15,24 @@ class EWalletWorker():
     [ NOTE ]: Worker states [(0, vacant), (1, in_use), (2, full)]
     '''
     create_date = None
+    write_date = None
     session_worker_state_code = int()
     session_worker_state_label = str()
     session_worker_state_timestamp = None
     session_pool = list()
     token_session_map = dict()
+    instruction_set_recv = None
+    instruction_set_resp = None
 
     def __init__(self, *args, **kwargs):
         _now = datetime.datetime.now()
         self.create_date = _now
+        self.write_date = _now
         self.session_worker_state_code = 0
         self.session_worker_state_label = 'vacant'
         self.session_worker_state_timestamp = _now
+        self.instruction_set_recv = kwargs.get('instruction_set_recv')
+        self.instruction_set_resp = kwargs.get('instruction_set_resp')
 
     # FETCHERS
 
@@ -53,18 +55,9 @@ class EWalletWorker():
         if not token_session_map or isinstance(token_session_map, dict) and \
                 token_session_map.get('failed'):
             return self.warning_worker_session_token_map_empty(kwargs)
-
-        # TODO - REMOVE
-        log.info('\n\nTOKEN SESSION MAP : {}\n'.format(token_session_map))
-
-
         for client_id in token_session_map:
             details = token_session_map[client_id]
             if kwargs['session'] is details['session']:
-
-                # TODO - REMOVE
-                log.info('\n\nWOOHOO - CLIENT ID : {}\n'.format(client_id))
-
                 return client_id
         return self.warning_ewallet_session_associated_client_id_not_found_in_map(
             kwargs
@@ -490,6 +483,11 @@ class EWalletWorker():
         return handlers[kwargs['add']](**kwargs)
 
     # CONTROLLERS
+
+    # TODO
+    def worker_init(self):
+        log.debug('TODO')
+
 
     def system_action_controller(self, **kwargs):
         log.debug('')

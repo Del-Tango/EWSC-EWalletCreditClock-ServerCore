@@ -2453,7 +2453,7 @@ available_user_actions = {
     'RequestClientID': display_user_action_request_client_id_instruction_set_example,
     'RequestSessionToken': display_user_action_request_session_token_instruction_set_example,
     'SupplyCredits': display_user_action_supply_credits_instruction_set_example,
-    'SwitchActiveSessionUser': display_user_action_switch_active_session_user_instruction_set_example,
+    'SwitchSessionUser': display_user_action_switch_active_session_user_instruction_set_example,
     'SwitchContactList': display_user_action_switch_contact_list_instruction_set_example,
     'SwitchConversionSheet': display_user_action_switch_conversion_sheet_instruction_set_example,
     'SwitchCreditClock': display_user_action_switch_credit_clock_instruction_set_example,

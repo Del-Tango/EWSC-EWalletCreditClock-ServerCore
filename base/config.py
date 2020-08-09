@@ -18,6 +18,9 @@ class Config():
             'esm_instruction_port': 8080,
             'esm_response_port': 8081,
         }
+        self.worker_config = {
+            'worker_limit': 10
+        }
         self.log_config = {
             'log_name': 'EWallet',
             'log_dir': 'logs',
@@ -32,8 +35,10 @@ class Config():
             'keep_logged_in': 0,
             'client_id_prefix': 'ewsm-uid',
             'client_id_length': 20,
+            'client_id_validity': 30,
             'session_token_prefix': 'ewsm-st',
             'session_token_length': 20,
+            'session_token_validity': 30,
         }
         self.wallet_config = {
             'wallet_reference': 'EWallet',
@@ -87,7 +92,8 @@ class Config():
             self.clock_config, self.time_sheet_config,
             self.conversion_sheet_config, self.transfer_sheet_config,
             self.invoice_sheet_config, self.system_config,
-            self.system_user_values, self.contact_list_config
+            self.system_user_values, self.contact_list_config,
+            self.worker_config,
         ]
 
     def fetch_config_dict_by_key(self, dict_set, key):
