@@ -19,7 +19,8 @@ class Config():
             'esm_response_port': 8081,
         }
         self.worker_config = {
-            'worker_limit': 10
+            'worker_limit': 10,
+            'worker_sigterm': 'terminate_worker',
         }
         self.log_config = {
             'log_name': 'EWallet',

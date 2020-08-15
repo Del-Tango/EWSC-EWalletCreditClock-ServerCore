@@ -33,7 +33,9 @@ class TestEWalletSessionManagerSystemActionNewWorker(unittest.TestCase):
             '\n[ < ]: Response: ' + str(worker) + '\n'
         )
         self.assertTrue(isinstance(worker, dict))
-        self.assertEqual(len(worker.keys()), 2)
+        self.assertEqual(len(worker.keys()), 3)
         self.assertFalse(worker.get('failed'))
-        self.assertTrue(worker.get('worker'))
+        self.assertTrue(isinstance(worker.get('worker'), int))
+        self.assertTrue(isinstance(worker.get('worker_data'), dict))
+        self.assertTrue(list(worker['worker_data'].keys()))
 

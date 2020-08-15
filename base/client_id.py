@@ -7,13 +7,15 @@ from .config import Config
 from .token import Token
 
 res_utils, config = ResUtils(), Config()
-log_config = config.log_config
-log = logging.getLogger(log_config['log_name'])
+log = logging.getLogger(config.log_config['log_name'])
 
 
 class ClientID(Token):
 
+    stoken = None
+
     def __init__(self, *args, **kwargs):
+        self.stoken = kwargs.get('session_token')
         self.label = str() if not kwargs.get('client_id') \
             else kwargs.pop('client_id')
         self.active = True if not kwargs.get('active') \
@@ -29,11 +31,29 @@ class ClientID(Token):
 
     # FETCHERS
 
+    def fetch_stoken(self):
+        log.debug('')
+        return self.stoken
+
+    # SETTERS
+
+    def set_stoken(self, stoken):
+        log.debug('')
+        if not isinstance(stoken, object):
+            return self.error_invalid_session_token(stoken)
+        try:
+            self.stoken = stoken
+        except Exception as e:
+            return self.warning_could_not_set_session_token(stoken, e)
+        return True
+
     # GENERAL
 
     def inspect(self, *args, **kwargs):
         log.debug('')
-        return super(ClientID, self).inspect(*args, **kwargs)
+        return super(ClientID, self).inspect(
+            stoken=self.session_token, *args, **kwargs
+        )
 
     def keep_alive(self, *args, **kwargs):
         log.debug('')
@@ -47,5 +67,25 @@ class ClientID(Token):
         log.debug('')
         return super(ClientID, self).activate(*args, **kwargs)
 
+    # WARNINGS
+
+    def warning_could_not_set_session_token(self, session_token, *args):
+        response = {
+            'failed': True,
+            'warning': 'Something went wrong. '
+                       'Could not set session token {} to client token {}. '
+                       'Details: {}'.format(session_token, self.label, args),
+        }
+        log.warning(response['warning'])
+        return response
+
     # ERRORS
 
+    def error_invalid_session_token(self, session_token, *args):
+        response = {
+            'failed': True,
+            'error': 'Invalid session token {}. Details: {}'
+                     .format(session_token, args),
+        }
+        log.error(response['error'])
+        return response

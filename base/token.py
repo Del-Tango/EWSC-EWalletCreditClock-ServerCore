@@ -6,8 +6,7 @@ from .res_utils import ResUtils, Base
 from .config import Config
 
 res_utils, config = ResUtils(), Config()
-log_config = config.log_config
-log = logging.getLogger(log_config['log_name'])
+log = logging.getLogger(config.log_config['log_name'])
 
 
 class Token():
@@ -64,7 +63,9 @@ class Token():
 
     def inspect(self, *args, **kwargs):
         log.debug('')
-        return self.fetch_token_values()
+        values = self.fetch_token_values()
+        values.update(kwargs)
+        return values
 
     def deactivate(self, *args, **kwargs):
         log.debug('')

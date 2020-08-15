@@ -230,14 +230,14 @@ class EWallet(Base):
         log.debug('')
         if not kwargs.get('identifier'):
             return self.error_no_user_identifier_found()
-        _handlers = {
+        handlers = {
             'id': self.fetch_user_by_id,
             'name': self.fetch_user_by_name,
             'email': self.fetch_user_by_email,
             'phone': self.fetch_user_by_phone,
             'alias': self.fetch_user_by_alias,
-            }
-        return _handlers[kwargs['identifier']](**kwargs)
+        }
+        return handlers[kwargs['identifier']](**kwargs)
 
     def fetch_active_session_id(self):
         log.debug('')
