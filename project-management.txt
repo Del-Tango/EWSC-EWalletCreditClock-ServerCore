@@ -1,0 +1,120 @@
+################################################################################
+- EWallet Credit Clock - Virtual Payment System
+################################################################################
+
+* v.DeltaT (alpha/Core - bleeding edge) - Released
+    - x - EWallet Credit Clock - Virtual Payment System - initial suit version.
+
+* v.Chronos (beta/POC - bleeding edge) - Under development
+    - x - (EWSC) Refactor client id to token object
+    - x - (EWSC) Refactor session token to token object
+    - x - (EWSC) Separater workers on different processes
+    -   - (EWSC) Move all subordonate account action handlers to worker
+    - (EWSC) Update write dates
+    - (EWSC) Journal record grooming
+    - (EWSC) Impose entity ownership restrictions on User action categories View, Switch and Unlink
+    - (EWCC) Perform valid input checks on core subroutine SetResource
+    - (EWSC) Implement ResUser cleaner cron
+    - (EWSC) Implement EWallet Session cleaner cron
+    - (EWSC, EWCC, EWAT) Implement master accounts
+    - (EWSC) Impose user account state restrictions on all user actions
+    - (EWSC, EWCC, EWAT) Implement forced account removal
+    - (EWSC, EWCC, EWAT) Implement EWallet Session keep alive signal
+    - (EWSC, EWCC, EWAT) Implement check client id validity
+    - (EWSC, EWCC, EWAT) Implement check session token validity
+    - (EWSC, EWCC, EWAT) Implement issue report
+    - (EWSC, EWCC, EWAT) Add activity reports
+
+* v.WhiteRabbit (1.0.0/MVP - stable) - Planned
+    - (EWSC, EWCC, EWAT) Add SSL certificates for master accounts
+    - (EWSC) Use PostgreSql
+    - (EWSC, EWCC) Configuration file grooming and refactoring
+    - (EWSC) Impose master account state restrictions on all user actions
+    - (EWSC) Impose master account subordonate account restriction limit
+    - (EWSC, EWCC, EWAT) Add requirements.txt
+    - (EWSC, EWCC, EWAT) Implement exports
+    - (EWSC, EWCC, EWAT) Implement reports
+    - (EWSC, EWCC, EWAT) Add documentation
+
+* v.Tac (2.0.0 - stable) - Planned
+    - (EWSC) Complete refactoring
+    - (EWSC, EWCC, EWAT) Implement user action TransferTime
+    - (EWSC, EWCC, EWAT) Implement credit based software licencing
+    - (EWSC, EWCC, EWAT) Implement clock based software licencing
+    - (EWJCC) Introduce Java Client Core for Android apps
+    - (EWDWC) Introduce Default Web Client as web portal
+    - (EWDMC) Introduce Default Mobile Client as mobile portal
+    - (EWSC, EWJCC, EWDWC, EWDMC) - Add requirements.txt
+    - (EWSC, EWJCC, EWDWC, EWDMC) - Add documentation
+
+################################################################################
+- EWallet Credit Clock - Server Core
+################################################################################
+
+- Move actions to worker
+    - x - Request Session token
+    - x - User action Create Account
+    -   - User action Account Login
+    - User action supply_credits
+    - User action pay_credits
+    - User action convert_credits2clock
+    - User action convert_clock2credits
+    - User action add_contact_record
+    - User action transfer_credits
+    - User action edit_account
+    - User action credit_clock_timer_start
+    - User action credit_clock_timer_pause
+    - User action credit_clock_timer_resume
+    - User action credit_clock_timer_stop
+    - User action view_contact_list
+    - User action view_contact_record
+    - User action view_transfer_sheet
+    - User action view_transfer_record
+    - User action view_time_sheet
+    - User action view_time_record
+    - User action view_conversion_sheet
+    - User action view_conversion_record
+    - User action view_account
+    - User action view_credit_ewallet
+    - User action view_credit_clock
+    - User action view_invoice_sheet
+    - User action view_invoice_record
+    - User action view_login_records
+    - User action view_logout_records
+    - User action create_credit_ewallet
+    - User action create_credit_clock
+    - User action create_transfer_sheet
+    - User action create_invoice_sheet
+    - User action create_conversion_sheet
+    - User action create_time_sheet
+    - User action create_contact_list
+    - User action switch_credit_ewallet
+    - User action switch_credit_clock
+    - User action switch_transfer_sheet
+    - User action switch_invoice_sheet
+    - User action switch_conversion_sheet
+    - User action switch_time_sheet
+    - User action switch_contact_list
+    - User action unlink_account
+    - User action unlink_contact_list
+    - User action unlink_contact_record
+    - User action unlink_conversion_sheet
+    - User action unlink_conversion_record
+    - User action unlink_transfer_sheet
+    - User action unlink_transfer_record
+    - User action unlink_time_sheet
+    - User action unlink_time_record
+    - User action unlink_credit_ewallet
+    - User action unlink_credit_clock
+    - User action RecoverAccount
+
+
+################################################################################
+- EWallet Credit Clock - Client Core
+################################################################################
+
+################################################################################
+- EWallet Credit Clock - API Tutor
+################################################################################
+
+

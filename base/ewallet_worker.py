@@ -27,9 +27,9 @@ class EWalletWorker():
     session_worker_state_label = str() # (vacant | in_use | full)
     session_worker_state_timestamp = None
     session_pool = dict() # {id: <EWallet>}
-    ctoken_pool = dict() # {label: <CToken>}
-    stoken_pool = dict() # {label: <SToken>}
-    token_session_map = dict() # {<CToken>: {<SToken>: <EWallet>}}
+    ctoken_pool = list() # [<CToken.label>]
+    stoken_pool = list() # [<SToken.label>]
+    token_session_map = dict() # {<CToken.label>: {<SToken.label>: <EWallet Session>}}
     instruction_set_recv = None # <multiprocessing.Queue(1)>
     instruction_set_resp = None # <multiprocessing.Queue(1)>
     lock = None # <multiprocessing.Value('i', 0)>
@@ -50,7 +50,45 @@ class EWalletWorker():
 
     # FETCHERS
 
+    # TODO
+    def fetch_default_ewallet_session_validity_interval_in_minutes(self, **kwargs):
+        log.debug('TODO - Fetch value from config file')
+        return 60
+
+    # TODO
+    def fetch_default_ewallet_session_validity_interval_in_hours(self, **kwargs):
+        log.debug('TODO - Fetch value from config file')
+        return 1
+
+    # TODO
+    def fetch_default_ewallet_session_validity_interval_in_days(self, **kwargs):
+        log.debug('TODO - Fetch value from config file')
+        return 0.2
+
+    # TODO - Remove - DEPRECATED
+    def fetch_ewallet_session_from_pool_by_id(self, ewallet_session_id):
+        log.debug('DEPRECATED')
+        session_pool = self.fetch_session_worker_ewallet_session_pool()
+        for ewallet_session in session_pool:
+            if ewallet_session.fetch_active_session_id() == ewallet_session_id:
+                return ewallet_session
+        return self.warning_could_not_fetch_ewallet_session_from_pool_by_id(
+            ewallet_session_id
+        )
+
+    def fetch_ewallet_session_by_client_session_tokens(self, client_id, session_token):
+        log.debug('')
+        st_map = self.fetch_session_token_map()
+        if client_id not in st_map:
+            if client_id not in self.fetch_session_worker_ctoken_pool().keys():
+                return self.error_invalid_client_token(client_id, session_token, st_map)
+            return self.warning_client_token_not_mapped(client_id, session_token, st_map)
+        if session_token not in st_map[client_id]:
+            return self.error_invalid_session_token(client_id, session_token, st_map)
+        return st_map[client_id][session_token]
+
     def fetch_session_token_map(self):
+        log.debug('')
         return self.token_session_map
 
     def fetch_session_worker_ewallet_session_pool(self):
@@ -72,21 +110,6 @@ class EWalletWorker():
         )
         now = datetime.datetime.now()
         return now + datetime.timedelta(hours=validity_hours)
-
-    # TODO
-    def fetch_default_ewallet_session_validity_interval_in_minutes(self, **kwargs):
-        log.debug('TODO - Fetch value from config file')
-        return 60
-
-    # TODO
-    def fetch_default_ewallet_session_validity_interval_in_hours(self, **kwargs):
-        log.debug('TODO - Fetch value from config file')
-        return 1
-
-    # TODO
-    def fetch_default_ewallet_session_validity_interval_in_days(self, **kwargs):
-        log.debug('TODO - Fetch value from config file')
-        return 0.2
 
     def fetch_default_ewallet_session_validity_interval(self, **kwargs):
         log.debug('')
@@ -145,17 +168,6 @@ class EWalletWorker():
             item for item in self.stoken_pool if item.label == session_token
         ]
         return False if not stoken else stoken[0]
-
-    # TODO - Remove - DEPRECATED
-    def fetch_ewallet_session_from_pool_by_id(self, ewallet_session_id):
-        log.debug('DEPRECATED')
-        session_pool = self.fetch_session_worker_ewallet_session_pool()
-        for ewallet_session in session_pool:
-            if ewallet_session.fetch_active_session_id() == ewallet_session_id:
-                return ewallet_session
-        return self.warning_could_not_fetch_ewallet_session_from_pool_by_id(
-            ewallet_session_id
-        )
 
 #   @pysnooper.snoop()
     def fetch_ewallet_session_map_client_id_by_ewallet_session(self, **kwargs):
@@ -391,36 +403,24 @@ class EWalletWorker():
             break
         return True
 
-    def update_client_token_pool(self, map_entry):
+    def update_client_token_pool(self, client_id):
         log.debug('')
-        if not map_entry or not isinstance(map_entry, dict):
-            return self.error_invalid_client_token_pool_map_entry(map_entry)
-        ctoken_pool = self.fetch_session_worker_ctoken_pool()
-        for k, v in map_entry.items():
-            if k in ctoken_pool:
-                ctoken_pool[k].update(v)
-                continue
-            set_entry = self.set_ctoken_pool(map_entry)
-            if not set_entry or isinstance(set_entry, dict) and \
-                    set_entry.get('failed'):
-                return set_entry
-            break
+        try:
+            self.ctoken_pool.append(client_id)
+        except Exception as e:
+            return self.warning_could_not_set_ctoken_pool_entry(
+                client_id, self.ctoken_pool
+            )
         return True
 
-    def update_session_token_pool(self, map_entry):
+    def update_session_token_pool(self, session_token):
         log.debug('')
-        if not map_entry or not isinstance(map_entry, dict):
-            return self.error_invalid_session_token_pool_map_entry(map_entry)
-        stoken_pool = self.fetch_session_worker_stoken_pool()
-        for k, v in map_entry.items():
-            if k in stoken_pool:
-                stoken_pool[k].update(v)
-                continue
-            set_entry = self.set_stoken_pool(map_entry)
-            if not set_entry or isinstance(set_entry, dict) and \
-                    set_entry.get('failed'):
-                return set_entry
-            break
+        try:
+            self.stoken_pool.append(session_token)
+        except Exception as e:
+            return self.warning_could_not_set_stoken_pool_entry(
+                session_token, self.stoken_pool
+            )
         return True
 
     def update_session_worker_state(self, state_code):
@@ -595,6 +595,7 @@ class EWalletWorker():
         }
         return instruction_set_response
 
+    # TODO - Refactor - Efficiency deficit
 #   @pysnooper.snoop()
     def search_ewallet_session(self, session_token):
         log.debug('')
@@ -618,31 +619,29 @@ class EWalletWorker():
             {ewallet_session.fetch_active_session_id(): ewallet_session}
         )
 
-    def map_client_label_token(self, client_token):
+    def map_client_label_token(self, client_id):
         log.debug('')
-        return self.update_client_token_pool(
-            {client_token.label, client_token}
-        )
+        return self.update_client_token_pool(client_id)
 
     def map_session_label_token(self, session_token):
         log.debug('')
-        return self.update_session_token_pool(
-            {session_token.label, session_token}
-        )
+        return self.update_session_token_pool(session_token)
 
-    def map_ewallet_session_token(self, ctoken, stoken, esession):
+    def map_ewallet_session_token(self, client_id, session_token, esession):
         log.debug('')
         return self.update_ewallet_session_token_map(
-            {ctoken: {stoken: esession}}
+            {client_id: {session_token: esession}}
         )
 
-    def map_client_session(self, ctoken, stoken, esession):
+    def map_client_session(self, client_id, session_token, esession):
         log.debug('')
         return {
-            'client_token': self.map_client_label_token(ctoken),
-            'session_token': self.map_session_label_token(stoken),
+            'client_token': self.map_client_label_token(client_id),
+            'session_token': self.map_session_label_token(session_token),
             'session': self.map_ewallet_session(esession),
-            'token_set': self.map_ewallet_session_token(ctoken, stoken, esession),
+            'token_set': self.map_ewallet_session_token(
+                client_id, session_token, esession
+            ),
         }
 
     # SPAWNERS
@@ -666,6 +665,59 @@ class EWalletWorker():
         return ewallet_session
 
     # ACTIONS
+
+    def action_account_login(self, **kwargs):
+        log.debug('')
+        # Fetch ewallet session by token keys
+        ewallet_session = self.fetch_ewallet_session_by_client_session_tokens(
+            kwargs['client_id'], kwargs['session_token']
+        )
+        if not ewallet_session or isinstance(ewallet_session, dict) and \
+                ewallet_session.get('failed'):
+            return ewallet_session
+        sanitized_instruction_set = res_utils.remove_tags_from_command_chain(
+            kwargs, 'controller', 'ctype', 'action', 'active_session'
+        )
+        # Execute action in session
+        orm_session = ewallet_session.fetch_active_session()
+        account_login = ewallet_session.ewallet_controller(
+            controller='user', ctype='action', action='login',
+            active_session=orm_session, **sanitized_instruction_set
+        )
+        # Formulate response
+        response = self.warning_could_not_login_user_account(
+            ewallet_session, kwargs
+        ) if not account_login else account_login
+        # Respond to session manager
+        self.send_instruction_response(response)
+        return response
+
+    def action_create_new_user_account(self, **kwargs):
+        log.debug('')
+        # Fetch ewallet session by token keys
+        ewallet_session = self.fetch_ewallet_session_by_client_session_tokens(
+            kwargs['client_id'], kwargs['session_token']
+        )
+        if not ewallet_session or isinstance(ewallet_session, dict) and \
+                ewallet_session.get('failed'):
+            return ewallet_session
+        sanitized_instruction_set = res_utils.remove_tags_from_command_chain(
+            kwargs, 'controller', 'ctype', 'action', 'create', 'active_session'
+        )
+        # Execute action in session
+        orm_session = ewallet_session.fetch_active_session()
+        new_account = ewallet_session.ewallet_controller(
+            controller='user', ctype='action', action='create', create='account',
+            active_session=orm_session, **sanitized_instruction_set
+        )
+        # Formulate response
+        response = self.warning_could_not_create_new_user_account(
+             new_account, ewallet_session, kwargs
+        ) if not new_account or isinstance(new_account, dict) and \
+            new_account.get('failed') else new_account
+        # Respond to session manager
+        self.send_instruction_response(response)
+        return response
 
     def action_interogate_session_pool(self, **kwargs):
         log.debug('')
@@ -691,7 +743,7 @@ class EWalletWorker():
         )
         # Add map entries
         map_client_session = self.map_client_session(
-            kwargs['client_token'], kwargs['session_token'], ewallet_session
+            kwargs['client_id'], kwargs['session_token'], ewallet_session
         )
         # Formulate instruction response
         response = {
@@ -758,6 +810,23 @@ class EWalletWorker():
             }
 
     # HANDLERS
+
+    def handle_client_action_account_login(self, **kwargs):
+        log.debug('')
+        return self.action_account_login(**kwargs)
+
+    def handle_client_action_new_user_account(self, **kwargs):
+        log.debug('')
+        return self.action_create_new_user_account(**kwargs)
+
+    def handle_client_action_new(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('new'):
+            return self.error_no_session_worker_client_action_new_target_specified(kwargs)
+        handlers = {
+            'account': self.handle_client_action_new_user_account,
+        }
+        return handlers[kwargs['new']](**kwargs)
 
     def handle_system_action_interogate_state_code(self, **kwargs):
         log.debug('')
@@ -927,8 +996,30 @@ class EWalletWorker():
     # CONTROLLERS
 
     # TODO
-    def client_controller(self, args, **kwargs):
-        log.debug('TODO')
+    def system_event_controller(self):
+        log.debug('TODO - No events supported.')
+    def client_event_controller(self, **kwargs):
+        log.debug('TODO - No events supported.')
+
+    def client_action_controller(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('action'):
+            return self.error_no_client_session_manager_worker_action_specified(kwargs)
+        handlers = {
+            'new': self.handle_client_action_new,
+            'login': self.handle_client_action_account_login,
+        }
+        return handlers[kwargs['action']](**kwargs)
+
+    def client_controller(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('ctype'):
+            return self.error_no_system_session_manager_worker_controller_specified()
+        handlers = {
+            'action': self.client_action_controller,
+            'event': self.client_event_controller,
+        }
+        return handlers[kwargs['ctype']](**kwargs)
 
     def system_action_controller(self, **kwargs):
         log.debug('')
@@ -941,10 +1032,6 @@ class EWalletWorker():
             'remove': self.handle_system_action_remove,
         }
         return handlers[kwargs['action']](**kwargs)
-
-    # TODO
-    def system_event_controller(self):
-        pass
 
     def system_controller(self, **kwargs):
         log.debug('')
@@ -967,6 +1054,15 @@ class EWalletWorker():
         return handlers[kwargs['controller']](**kwargs)
 
     # WARNINGS
+
+    def warning_client_token_not_mapped(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Client token not mapped to any ewallet session tokens. '
+                       'Details: {}'.format(args),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
 
     def warning_could_not_set_esession_pool_entry(self, *args):
         command_chain_response = {
@@ -1134,6 +1230,40 @@ class EWalletWorker():
         return False
 
     # ERRORS
+
+    def error_invalid_client_token(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Invalid client token. Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_invalid_session_token(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Invalid session token. Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_no_session_worker_client_action_new_target_specified(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No session worker client action new target specified. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_no_client_session_manager_worker_action_specified(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No session worker client action specified. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
 
     def error_invalid_ewallet_session_token_map_entry(self, *args):
         command_chain_response = {
@@ -1514,4 +1644,31 @@ class EWalletWorker():
 
     # TESTS
 
+    # CODE DUMP
+#       if not map_entry or not isinstance(map_entry, dict):
+#           return self.error_invalid_client_token_pool_map_entry(map_entry)
+#       ctoken_pool = self.fetch_session_worker_ctoken_pool()
+#       for k, v in map_entry.items():
+#           if k in ctoken_pool:
+#               ctoken_pool[k].update(v)
+#               continue
+#           set_entry = self.set_ctoken_pool(map_entry)
+#           if not set_entry or isinstance(set_entry, dict) and \
+#                   set_entry.get('failed'):
+#               return set_entry
+#           break
+#       return True
 
+#       if not map_entry or not isinstance(map_entry, dict):
+#           return self.error_invalid_session_token_pool_map_entry(map_entry)
+#       stoken_pool = self.fetch_session_worker_stoken_pool()
+#       for k, v in map_entry.items():
+#           if k in stoken_pool:
+#               stoken_pool[k].update(v)
+#               continue
+#           set_entry = self.set_stoken_pool(map_entry)
+#           if not set_entry or isinstance(set_entry, dict) and \
+#                   set_entry.get('failed'):
+#               return set_entry
+#           break
+#       return True
