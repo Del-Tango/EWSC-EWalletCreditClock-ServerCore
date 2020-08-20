@@ -56,8 +56,8 @@
     - x - User action Create Account
     - x - User action Account Login
     - x - User action Supply Credits
-    -   - User action Pay Credits
-    - User action convert_credits2clock
+    - x - User action Pay Credits
+    -   - User action Convert Credits2Clock
     - User action convert_clock2credits
     - User action add_contact_record
     - User action transfer_credits

@@ -1426,6 +1426,19 @@ class EWalletSessionManager():
     [ NOTE ]: Instruction set validation and sanitizations are performed here.
     '''
 
+    def handle_client_action_pay(self, **kwargs):
+        log.debug('')
+        instruction_set_validation = self.validate_instruction_set(kwargs)
+        if not instruction_set_validation \
+                or isinstance(instruction_set_validation, dict) \
+                and instruction_set_validation.get('failed'):
+            return instruction_set_validation
+        pay_credits = self.action_execute_user_instruction_set(**kwargs)
+        return self.warning_could_not_pay_partner_account(
+            kwargs, pay_credits
+        ) if not pay_credits or isinstance(pay_credits, dict) and \
+            pay_credits.get('failed') else pay_credits
+
 #   @pysnooper.snoop()
     def handle_client_action_supply_credits(self, **kwargs):
         log.debug('')
@@ -1460,7 +1473,7 @@ class EWalletSessionManager():
                     and proceeds to create new User Account in said session. Requiers
                     valid Client ID and Session Token.
         '''
-        log.debug('TODO - Move to action')
+        log.debug('')
         instruction_set_validation = self.validate_instruction_set(kwargs)
         if not instruction_set_validation \
                 or isinstance(instruction_set_validation, dict) \
@@ -2781,25 +2794,6 @@ class EWalletSessionManager():
         }
         return handlers[kwargs['view']](**kwargs)
 
-    def handle_client_action_pay(self, **kwargs):
-        log.debug('')
-        instruction_set_validation = self.validate_instruction_set(kwargs)
-        if not instruction_set_validation \
-                or isinstance(instruction_set_validation, dict) \
-                and instruction_set_validation.get('failed'):
-            return instruction_set_validation
-        ewallet = self.fetch_ewallet_session_for_client_action_using_instruction_set(
-            kwargs
-        )
-        if not ewallet or not ewallet['ewallet_session'] or \
-                isinstance(ewallet['ewallet_session'], dict) and \
-                ewallet['ewallet_session'].get('failed'):
-            return self.error_no_ewallet_session_found(kwargs)
-        pay_partner = self.action_pay_partner_account(
-            ewallet['ewallet_session'], ewallet['sanitized_instruction_set'],
-        )
-        return pay_partner
-
     def handle_client_action_resume(self, **kwargs):
         log.debug('')
         instruction_set_validation = self.validate_instruction_set(kwargs)
@@ -3234,6 +3228,16 @@ class EWalletSessionManager():
 
     # WARNINGS
 
+    def warning_could_not_pay_partner_account(self, *args):
+        instruction_set_response = {
+            'failed': True,
+            'warning': 'Something went wrong. '
+                       'Could not pay partner account in EWallet Session. '
+                       'Details : {}'.format(args)
+        }
+        log.warning(instruction_set_response['warning'])
+        return instruction_set_response
+
     def warning_could_not_supply_user_credit_ewallet(self, *args):
         instruction_set_response = {
             'failed': True,
@@ -3360,16 +3364,6 @@ class EWalletSessionManager():
             'failed': True,
             'warning': 'Something went wrong. '
                        'Could not transfer credits to partner in ewallet session {}. '\
-                       'Details : {}'.format(ewallet_session, instruction_set)
-        }
-        log.warning(instruction_set_response['warning'])
-        return instruction_set_response
-
-    def warning_could_not_pay_partner_account(self, ewallet_session, instruction_set):
-        instruction_set_response = {
-            'failed': True,
-            'warning': 'Something went wrong. '
-                       'Could not pay partner account in session {}. '
                        'Details : {}'.format(ewallet_session, instruction_set)
         }
         log.warning(instruction_set_response['warning'])
@@ -5717,18 +5711,6 @@ class EWalletSessionManager():
         return self.warning_could_not_create_new_contact_record(
             ewallet_session, instruction_set
         ) if not new_contact_record else new_contact_record
-
-    def action_pay_partner_account(self, ewallet_session, instruction_set):
-        log.debug('')
-        orm_session = ewallet_session.fetch_active_session()
-        pay_partner = ewallet_session.ewallet_controller(
-            controller='user', ctype='action', action='create', create='transfer',
-            ttype='pay', **instruction_set
-        )
-        return self.warning_could_not_pay_partner_account(
-            ewallet_session, instruction_set
-        ) if not pay_partner or isinstance(pay_partner, dict) and \
-            pay_partner.get('failed') else pay_partner
 
     def action_stop_credit_clock_timer(self, ewallet_session, instruction_set):
         log.debug('')

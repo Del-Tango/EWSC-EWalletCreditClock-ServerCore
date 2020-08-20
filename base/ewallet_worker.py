@@ -666,6 +666,35 @@ class EWalletWorker():
 
     # ACTIONS
 
+    def action_pay_partner_account(self, **kwargs):
+        log.debug('')
+        # Fetch ewallet session by token keys
+        ewallet_session = self.fetch_ewallet_session_by_client_session_tokens(
+            kwargs['client_id'], kwargs['session_token']
+        )
+        if not ewallet_session or isinstance(ewallet_session, dict) and \
+                ewallet_session.get('failed'):
+            return ewallet_session
+        sanitized_instruction_set = res_utils.remove_tags_from_command_chain(
+            kwargs, 'controller', 'ctype', 'action', 'create',
+            'ttype', 'active_session'
+        )
+        # Execute action in session
+        orm_session = ewallet_session.fetch_active_session()
+        pay_credits = ewallet_session.ewallet_controller(
+            controller='user', ctype='action', action='create',
+            create='transfer', ttype='pay', active_session=orm_session,
+            **sanitized_instruction_set
+        )
+        # Formulate response
+        response = self.warning_could_not_supply_user_credit_ewallet(
+            ewallet_session, kwargs, pay_credits
+        ) if not pay_credits or isinstance(pay_credits, dict) and \
+            pay_credits.get('failed') else pay_credits
+        # Respond to session manager
+        self.send_instruction_response(response)
+        return response
+
     def action_supply_user_credit_ewallet(self, **kwargs):
         log.debug('')
         # Fetch ewallet session by token keys
@@ -677,7 +706,7 @@ class EWalletWorker():
             return ewallet_session
         sanitized_instruction_set = res_utils.remove_tags_from_command_chain(
             kwargs, 'controller', 'ctype', 'action', 'supply', 'create',
-            'transfer', 'active_session'
+            'ttype', 'active_session'
         )
         # Execute action in session
         orm_session = ewallet_session.fetch_active_session()
@@ -838,6 +867,10 @@ class EWalletWorker():
             }
 
     # HANDLERS
+
+    def handle_client_action_pay(self, **kwargs):
+        log.debug('')
+        return self.action_pay_partner_account(**kwargs)
 
     def handle_client_action_supply_credits(self, **kwargs):
         log.debug('')
@@ -1050,6 +1083,7 @@ class EWalletWorker():
             'new': self.handle_client_action_new,
             'login': self.handle_client_action_account_login,
             'supply': self.handle_client_action_supply,
+            'pay': self.handle_client_action_pay,
         }
         return handlers[kwargs['action']](**kwargs)
 
