@@ -1426,19 +1426,6 @@ class EWalletSessionManager():
     [ NOTE ]: Instruction set validation and sanitizations are performed here.
     '''
 
-    def handle_client_action_convert_credits_to_clock(self, **kwargs):
-        log.debug('')
-        instruction_set_validation = self.validate_instruction_set(kwargs)
-        if not instruction_set_validation \
-                or isinstance(instruction_set_validation, dict) \
-                and instruction_set_validation.get('failed'):
-            return instruction_set_validation
-        convert_credits2clock = self.action_execute_user_instruction_set(**kwargs)
-        return self.warning_could_not_convert_credits_to_credit_clock(
-            kwargs, convert_credits2clock
-        ) if not convert_credits2clock or isinstance(convert_credits2clock, dict) and \
-            convert_credits2clock.get('failed') else convert_credits2clock
-
     def handle_client_action_convert_clock_to_credits(self, **kwargs):
         log.debug('')
         instruction_set_validation = self.validate_instruction_set(kwargs)
@@ -1451,6 +1438,19 @@ class EWalletSessionManager():
             kwargs, convert_clock2credits
         ) if not convert_clock2credits or isinstance(convert_clock2credits, dict) and \
             convert_clock2credits.get('failed') else convert_clock2credits
+
+    def handle_client_action_convert_credits_to_clock(self, **kwargs):
+        log.debug('')
+        instruction_set_validation = self.validate_instruction_set(kwargs)
+        if not instruction_set_validation \
+                or isinstance(instruction_set_validation, dict) \
+                and instruction_set_validation.get('failed'):
+            return instruction_set_validation
+        convert_credits2clock = self.action_execute_user_instruction_set(**kwargs)
+        return self.warning_could_not_convert_credits_to_credit_clock(
+            kwargs, convert_credits2clock
+        ) if not convert_credits2clock or isinstance(convert_credits2clock, dict) and \
+            convert_credits2clock.get('failed') else convert_credits2clock
 
     def handle_client_action_pay(self, **kwargs):
         log.debug('')
@@ -4964,23 +4964,6 @@ class EWalletSessionManager():
 
 
 # CODE DUMP
-
-    def action_convert_credit_clock_to_credits(self, ewallet_session, instruction_set):
-        log.debug('')
-        if not instruction_set.get('minutes'):
-            return self.error_no_conversion_credit_clock_time_specified(
-                ewallet_session, instruction_set
-            )
-        orm_session = ewallet_session.fetch_active_session()
-        conversion = ewallet_session.ewallet_controller(
-            controller='user', ctype='action', action='create',
-            create='conversion', conversion='clock2credits',
-            active_session=orm_session, **instruction_set
-        )
-        return self.warning_could_not_convert_credit_clock_time_to_credits(
-            instruction_set) if conversion.get('failed') else conversion
-
-
 
     def action_logout_user_account(self, ewallet_session, instruction_set):
         log.debug('')

@@ -666,6 +666,36 @@ class EWalletWorker():
 
     # ACTIONS
 
+    def action_convert_clock_to_credits(self, **kwargs):
+        log.debug('')
+        # Fetch ewallet session by token keys
+        ewallet_session = self.fetch_ewallet_session_by_client_session_tokens(
+            kwargs['client_id'], kwargs['session_token']
+        )
+        if not ewallet_session or isinstance(ewallet_session, dict) and \
+                ewallet_session.get('failed'):
+            return ewallet_session
+        sanitized_instruction_set = res_utils.remove_tags_from_command_chain(
+            kwargs, 'controller', 'ctype', 'action', 'create',
+            'conversion', 'active_session'
+        )
+        # Execute action in session
+        orm_session = ewallet_session.fetch_active_session()
+        convert_clock2credits = ewallet_session.ewallet_controller(
+            controller='user', ctype='action', action='create',
+            create='conversion', conversion='clock2credits',
+            active_session=orm_session, **sanitized_instruction_set
+        )
+        # Formulate response
+        response = self.warning_could_not_convert_clock_to_credits(
+            ewallet_session, kwargs, convert_clock2credits
+        ) if not convert_clock2credits or \
+            isinstance(convert_clock2credits, dict) and \
+            convert_clock2credits.get('failed') else convert_clock2credits
+        # Respond to session manager
+        self.send_instruction_response(response)
+        return response
+
     def action_convert_credits_to_clock(self, **kwargs):
         log.debug('')
         # Fetch ewallet session by token keys
@@ -687,7 +717,7 @@ class EWalletWorker():
             active_session=orm_session, **sanitized_instruction_set
         )
         # Formulate response
-        response = self.warning_could_not_supply_user_credit_ewallet(
+        response = self.warning_could_not_convert_credits_to_clock(
             ewallet_session, kwargs, convert_credits2clock
         ) if not convert_credits2clock or \
             isinstance(convert_credits2clock, dict) and \
@@ -717,7 +747,7 @@ class EWalletWorker():
             **sanitized_instruction_set
         )
         # Formulate response
-        response = self.warning_could_not_supply_user_credit_ewallet(
+        response = self.warning_could_not_pay_partner_account(
             ewallet_session, kwargs, pay_credits
         ) if not pay_credits or isinstance(pay_credits, dict) and \
             pay_credits.get('failed') else pay_credits
@@ -899,7 +929,8 @@ class EWalletWorker():
     # HANDLERS
 
     def handle_client_action_convert_clock_to_credits(self, **kwargs):
-        log.debug('TODO')
+        log.debug('')
+        return self.action_convert_clock_to_credits(**kwargs)
 
     def handle_client_action_convert_credits_to_clock(self, **kwargs):
         log.debug('')
@@ -1178,6 +1209,36 @@ class EWalletWorker():
         return handlers[kwargs['controller']](**kwargs)
 
     # WARNINGS
+
+    def warning_could_not_pay_partner_account(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Something went wrong. '
+                       'Could not pay partner account. '
+                       'Details: {}'.format(args),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
+
+    def warning_could_not_convert_clock_to_credits(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Something went wrong. '
+                       'Could not convert clock to credits. '
+                       'Details: {}'.format(args),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
+
+    def warning_could_not_convert_credits_to_clock(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Something went wrong. '
+                       'Could not convert credits to clock. '
+                       'Details: {}'.format(args),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
 
     def warning_could_not_create_new_user_account(self, *args):
         command_chain_response = {
