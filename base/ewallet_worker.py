@@ -666,6 +666,36 @@ class EWalletWorker():
 
     # ACTIONS
 
+    def action_convert_credits_to_clock(self, **kwargs):
+        log.debug('')
+        # Fetch ewallet session by token keys
+        ewallet_session = self.fetch_ewallet_session_by_client_session_tokens(
+            kwargs['client_id'], kwargs['session_token']
+        )
+        if not ewallet_session or isinstance(ewallet_session, dict) and \
+                ewallet_session.get('failed'):
+            return ewallet_session
+        sanitized_instruction_set = res_utils.remove_tags_from_command_chain(
+            kwargs, 'controller', 'ctype', 'action', 'create',
+            'conversion', 'active_session'
+        )
+        # Execute action in session
+        orm_session = ewallet_session.fetch_active_session()
+        convert_credits2clock = ewallet_session.ewallet_controller(
+            controller='user', ctype='action', action='create',
+            create='conversion', conversion='credits2clock',
+            active_session=orm_session, **sanitized_instruction_set
+        )
+        # Formulate response
+        response = self.warning_could_not_supply_user_credit_ewallet(
+            ewallet_session, kwargs, convert_credits2clock
+        ) if not convert_credits2clock or \
+            isinstance(convert_credits2clock, dict) and \
+            convert_credits2clock.get('failed') else convert_credits2clock
+        # Respond to session manager
+        self.send_instruction_response(response)
+        return response
+
     def action_pay_partner_account(self, **kwargs):
         log.debug('')
         # Fetch ewallet session by token keys
@@ -867,6 +897,23 @@ class EWalletWorker():
             }
 
     # HANDLERS
+
+    def handle_client_action_convert_clock_to_credits(self, **kwargs):
+        log.debug('TODO')
+
+    def handle_client_action_convert_credits_to_clock(self, **kwargs):
+        log.debug('')
+        return self.action_convert_credits_to_clock(**kwargs)
+
+    def handle_client_action_convert(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('convert'):
+            return self.error_no_client_action_convert_target_specified(kwargs)
+        handlers = {
+            'credits2clock': self.handle_client_action_convert_credits_to_clock,
+            'clock2credits': self.handle_client_action_convert_clock_to_credits,
+        }
+        return handlers[kwargs['convert']](**kwargs)
 
     def handle_client_action_pay(self, **kwargs):
         log.debug('')
@@ -1084,6 +1131,7 @@ class EWalletWorker():
             'login': self.handle_client_action_account_login,
             'supply': self.handle_client_action_supply,
             'pay': self.handle_client_action_pay,
+            'convert': self.handle_client_action_convert,
         }
         return handlers[kwargs['action']](**kwargs)
 
@@ -1326,6 +1374,15 @@ class EWalletWorker():
         return False
 
     # ERRORS
+
+    def error_no_client_action_convert_target_specified(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No client action convert target specified. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
 
     def error_no_client_action_supply_target_specified(self, *args):
         command_chain_response = {
