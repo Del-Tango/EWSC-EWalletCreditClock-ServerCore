@@ -54,9 +54,9 @@
 - Move actions to worker
     - x - Request Session token
     - x - User action Create Account
-    -   - User action Account Login
-    - User action supply_credits
-    - User action pay_credits
+    - x - User action Account Login
+    - x - User action Supply Credits
+    -   - User action Pay Credits
     - User action convert_credits2clock
     - User action convert_clock2credits
     - User action add_contact_record

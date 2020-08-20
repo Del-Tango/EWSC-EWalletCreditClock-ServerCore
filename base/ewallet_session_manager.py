@@ -1223,12 +1223,8 @@ class EWalletSessionManager():
         return self.error_could_not_spawn_socket_handler() if not socket else socket
 
     # ACTIONS
-    '''
-    [ NOTE ]: SqlAlchemy ORM sessions are fetched here.
 
-    '''
-
-    def action_account_login(self, **kwargs):
+    def action_execute_user_instruction_set(self, **kwargs):
         log.debug('')
         # Fetch worker id from client token label
         worker_id = self.fetch_worker_identifier_by_client_id(kwargs['client_id'])
@@ -1243,26 +1239,7 @@ class EWalletSessionManager():
             return self.error_could_not_fetch_client_session_token_map(
                 kwargs, cst_map, worker_id
             )
-        # Account Login
-        return self.execute_worker_instruction(
-            worker_id, kwargs
-        )
-
-    def action_create_new_account(self, **kwargs):
-        log.debug('')
-        # Fetch worker id from client token label
-        worker_id = self.fetch_worker_identifier_by_client_id(kwargs['client_id'])
-        if not worker_id or isinstance(worker_id, dict) and \
-                worker_id.get('failed'):
-            return worker_id
-        # Fetch client session token map
-        cst_map = self.fetch_client_session_tokens(
-            kwargs['client_id'], kwargs['session_token']
-        )
-        if not cst_map or isinstance(cst_map, dict) and cst_map.get('failed'):
-            return self.error_could_not_fetch_client_session_token_map(
-                kwargs, cst_map
-            )
+        # Instruction set processing
         return self.execute_worker_instruction(
             worker_id, kwargs
         )
@@ -1274,9 +1251,6 @@ class EWalletSessionManager():
 
 #   @pysnooper.snoop()
     def action_request_session_token(self, worker_id, cst_map, **kwargs):
-        '''
-        [ NOTE   ]: .
-        '''
         log.debug('')
         # Sanitize instruction set
         sanitized_instruction_set = res_utils.remove_tags_from_command_chain(
@@ -1321,417 +1295,6 @@ class EWalletSessionManager():
         worker.set_response_queue(response_queue)
         worker.set_lock(Value('i', 0))
         return worker
-
-    def action_recover_user_account(self, ewallet_session, instruction_set):
-        log.debug('')
-        orm_session = ewallet_session.fetch_active_session()
-        sanitized_instruction_set = self.res_utils.remove_tags_from_command_chain(
-            instruction_set, 'controller', 'ctype', 'action', 'recover',
-        )
-        active_session_user = ewallet_session.fetch_active_session_user()
-        recover_user_account = ewallet_session.ewallet_controller(
-            controller='user', ctype='action', action='recover', recover='account',
-            active_session=orm_session, **sanitized_instruction_set
-        )
-        return self.warning_could_not_recover_user_account(
-            ewallet_session, instruction_set
-        ) if not recover_user_account or recover_user_account.get('failed') \
-            else recover_user_account
-
-#   @pysnooper.snoop('logs/ewallet.log')
-    def action_unlink_user_account(self, ewallet_session, instruction_set):
-        log.debug('')
-        orm_session = ewallet_session.fetch_active_session()
-        sanitized_instruction_set = self.res_utils.remove_tags_from_command_chain(
-            instruction_set, 'controller', 'ctype', 'action', 'unlink',
-        )
-        active_session_user = ewallet_session.fetch_active_session_user()
-        unlink_user_account = ewallet_session.ewallet_controller(
-            controller='user', ctype='action', action='unlink', unlink='account',
-            active_session=orm_session, **sanitized_instruction_set
-        )
-        return self.warning_could_not_unlink_user_account(
-            ewallet_session, instruction_set
-        ) if not unlink_user_account or unlink_user_account.get('failed') \
-            else unlink_user_account
-
-    def action_switch_active_session_user_account(self, ewallet_session, instruction_set):
-        log.debug('')
-        orm_session = ewallet_session.fetch_active_session()
-        sanitized_instruction_set = self.res_utils.remove_tags_from_command_chain(
-            instruction_set, 'controller', 'ctype', 'action', 'switch',
-        )
-        active_session_user = ewallet_session.fetch_active_session_user()
-        switch_user_account = ewallet_session.ewallet_controller(
-            controller='user', ctype='action', action='switch', switch='account',
-            active_session=orm_session, **sanitized_instruction_set
-        )
-        return self.warning_could_not_switch_active_session_user_account(
-            ewallet_session, instruction_set
-        ) if not switch_user_account or switch_user_account.get('failed') \
-            else switch_user_account
-
-    def action_new_time_sheet(self, ewallet_session, instruction_set):
-        log.debug('')
-        orm_session = ewallet_session.fetch_active_session()
-        sanitized_instruction_set = self.res_utils.remove_tags_from_command_chain(
-            instruction_set, 'controller', 'ctype', 'action', 'new', 'time'
-        )
-        new_time_sheet = ewallet_session.ewallet_controller(
-            controller='user', ctype='action', action='create', create='time_sheet',
-            active_session=orm_session, **sanitized_instruction_set
-        )
-        return self.warning_could_not_create_new_time_sheet(
-            ewallet_session, instruction_set
-        ) if new_time_sheet.get('failed') else new_time_sheet
-
-    def action_new_conversion_sheet(self, ewallet_session, instruction_set):
-        log.debug('')
-        orm_session = ewallet_session.fetch_active_session()
-        sanitized_instruction_set = self.res_utils.remove_tags_from_command_chain(
-            instruction_set, 'controller', 'ctype', 'action', 'new', 'conversion'
-        )
-        new_conversion_sheet = ewallet_session.ewallet_controller(
-            controller='user', ctype='action', action='create', create='conversion_sheet',
-            active_session=orm_session, **sanitized_instruction_set
-        )
-        return self.warning_could_not_create_new_conversion_sheet(
-            ewallet_session, instruction_set
-        ) if new_conversion_sheet.get('failed') else new_conversion_sheet
-
-    def action_new_transfer_sheet(self, ewallet_session, instruction_set):
-        log.debug('')
-        orm_session = ewallet_session.fetch_active_session()
-        sanitized_instruction_set = self.res_utils.remove_tags_from_command_chain(
-            instruction_set, 'controller', 'ctype', 'action', 'new', 'transfer'
-        )
-        new_transfer_sheet = ewallet_session.ewallet_controller(
-            controller='user', ctype='action', action='create', create='transfer_sheet',
-            active_session=orm_session, **sanitized_instruction_set
-        )
-        return self.warning_could_not_create_new_transfer_sheet(
-            ewallet_session, instruction_set
-        ) if new_transfer_sheet.get('failed') else new_transfer_sheet
-
-    def action_new_credit_clock(self, ewallet_session, instruction_set):
-        log.debug('')
-        orm_session = ewallet_session.fetch_active_session()
-        sanitized_instruction_set = self.res_utils.remove_tags_from_command_chain(
-            instruction_set, 'controller', 'ctype', 'action', 'new', 'credit'
-        )
-        new_credit_clock = ewallet_session.ewallet_controller(
-            controller='user', ctype='action', action='create', create='credit_clock',
-            active_session=orm_session, **sanitized_instruction_set
-        )
-        return self.warning_could_not_create_new_credit_clock(
-            ewallet_session, instruction_set
-        ) if new_credit_clock.get('failed') else new_credit_clock
-
-    def action_new_credit_ewallet(self, ewallet_session, instruction_set):
-        log.debug('')
-        orm_session = ewallet_session.fetch_active_session()
-        sanitized_instruction_set = self.res_utils.remove_tags_from_command_chain(
-            instruction_set, 'controller', 'ctype', 'action', 'new', 'credit'
-        )
-        new_credit_ewallet = ewallet_session.ewallet_controller(
-            controller='user', ctype='action', action='create', create='credit_wallet',
-            active_session=orm_session, **sanitized_instruction_set
-        )
-        return self.warning_could_not_create_new_credit_ewallet(
-            ewallet_session, instruction_set
-        ) if new_credit_ewallet.get('failed') else new_credit_ewallet
-
-    def action_view_invoice_record(self, ewallet_session, instruction_set):
-        log.debug('')
-        orm_session = ewallet_session.fetch_active_session()
-        sanitized_instruction_set = self.res_utils.remove_tags_from_command_chain(
-            instruction_set, 'controller', 'ctype', 'action', 'view', 'invoice'
-        )
-        view_invoice_record = ewallet_session.ewallet_controller(
-            controller='user', ctype='action', action='view', view='invoice',
-            invoice='record', active_session=orm_session, **sanitized_instruction_set
-        )
-        return self.warning_could_not_view_invoice_sheet_record(
-            ewallet_session, instruction_set
-        ) if view_invoice_record.get('failed') else view_invoice_record
-
-    def action_view_invoice_sheet(self, ewallet_session, instruction_set):
-        log.debug('')
-        orm_session = ewallet_session.fetch_active_session()
-        sanitized_instruction_set = self.res_utils.remove_tags_from_command_chain(
-            instruction_set, 'controller', 'ctype', 'action', 'view', 'invoice'
-        )
-        view_invoice_sheet = ewallet_session.ewallet_controller(
-            controller='user', ctype='action', action='view', view='invoice',
-            invoice='list', active_session=orm_session, **sanitized_instruction_set
-        )
-        return self.warning_could_not_view_invoice_sheet(
-            ewallet_session, instruction_set
-        ) if view_invoice_sheet.get('failed') else view_invoice_sheet
-
-    def action_view_credit_clock(self, ewallet_session, instruction_set):
-        log.debug('')
-        orm_session = ewallet_session.fetch_active_session()
-        sanitized_instruction_set = self.res_utils.remove_tags_from_command_chain(
-            instruction_set, 'controller', 'ctype', 'action', 'view', 'credit'
-        )
-        view_credit_clock = ewallet_session.ewallet_controller(
-            controller='user', ctype='action', action='view', view='credit_clock',
-            active_session=orm_session, **sanitized_instruction_set
-        )
-        return self.warning_could_not_view_credit_clock(
-            ewallet_session, instruction_set
-        ) if view_credit_clock.get('failed') else view_credit_clock
-
-    def action_view_credit_ewallet(self, ewallet_session, instruction_set):
-        log.debug('')
-        orm_session = ewallet_session.fetch_active_session()
-        sanitized_instruction_set = self.res_utils.remove_tags_from_command_chain(
-            instruction_set, 'controller', 'ctype', 'action', 'view', 'credit'
-        )
-        view_credit_ewallet = ewallet_session.ewallet_controller(
-            controller='user', ctype='action', action='view', view='credit_wallet',
-            active_session=orm_session, **sanitized_instruction_set
-        )
-        return self.warning_could_not_view_credit_ewallet(
-            ewallet_session, instruction_set
-        ) if view_credit_ewallet.get('failed') else view_credit_ewallet
-
-    def action_edit_user_account(self, ewallet_session, instruction_set):
-        log.debug('')
-        orm_session = ewallet_session.fetch_active_session()
-        sanitized_instruction_set = self.res_utils.remove_tags_from_command_chain(
-            instruction_set, 'controller', 'ctype', 'action', 'edit',
-        )
-        edit_account = ewallet_session.ewallet_controller(
-            controller='user', ctype='action', action='edit', edit='account',
-            active_session=orm_session, **sanitized_instruction_set
-        )
-        return self.warning_could_not_edit_user_account(
-            ewallet_session, instruction_set
-        ) if edit_account.get('failed') else edit_account
-
-    def action_view_user_account(self, ewallet_session, instruction_set):
-        log.debug('')
-        orm_session = ewallet_session.fetch_active_session()
-        sanitized_instruction_set = self.res_utils.remove_tags_from_command_chain(
-            instruction_set, 'controller', 'ctype', 'action', 'view',
-        )
-        view_account = ewallet_session.ewallet_controller(
-            controller='user', ctype='action', action='view', view='account',
-            active_session=orm_session, **sanitized_instruction_set
-        )
-        return self.warning_could_not_view_user_account(
-            ewallet_session, instruction_set
-        ) if view_account.get('failed') else view_account
-
-    def action_view_conversion_record(self, ewallet_session, instruction_set):
-        log.debug('')
-        orm_session = ewallet_session.fetch_active_session()
-        sanitized_instruction_set = self.res_utils.remove_tags_from_command_chain(
-            instruction_set, 'controller', 'ctype', 'action', 'view', 'conversion',
-        )
-        view_conversion_record = ewallet_session.ewallet_controller(
-            controller='user', ctype='action', action='view', view='conversion',
-            conversion='record', active_session=orm_session, **sanitized_instruction_set
-        )
-        return self.warning_could_not_view_conversion_sheet_record(
-            ewallet_session, instruction_set
-        ) if not view_conversion_record or \
-        isinstance(view_conversion_record, dict) and \
-        view_conversion_record.get('failed') else view_conversion_record
-
-    def action_view_conversion_sheet(self, ewallet_session, instruction_set):
-        log.debug('')
-        orm_session = ewallet_session.fetch_active_session()
-        sanitized_instruction_set = self.res_utils.remove_tags_from_command_chain(
-            instruction_set, 'controller', 'ctype', 'action', 'view', 'conversion',
-        )
-        view_conversion_sheet = ewallet_session.ewallet_controller(
-            controller='user', ctype='action', action='view', view='conversion',
-            conversion='list', active_session=orm_session, **sanitized_instruction_set
-        )
-        return self.warning_could_not_view_conversion_sheet(
-            ewallet_session, instruction_set
-        ) if view_conversion_sheet.get('failed') else view_conversion_sheet
-
-    def action_view_time_sheet_record(self, ewallet_session, instruction_set):
-        log.debug('')
-        orm_session = ewallet_session.fetch_active_session()
-        sanitized_instruction_set = self.res_utils.remove_tags_from_command_chain(
-            instruction_set, 'controller', 'ctype', 'action', 'view', 'time',
-        )
-        view_time_record = ewallet_session.ewallet_controller(
-            controller='user', ctype='action', action='view', view='time',
-            time='record', active_session=orm_session, **sanitized_instruction_set
-        )
-        return self.warning_could_not_view_time_sheet_record(
-            ewallet_session, instruction_set
-        ) if view_time_record.get('failed') else view_time_record
-
-    def action_view_time_sheet(self, ewallet_session, instruction_set):
-        log.debug('')
-        orm_session = ewallet_session.fetch_active_session()
-        sanitized_instruction_set = self.res_utils.remove_tags_from_command_chain(
-            instruction_set, 'controller', 'ctype', 'action', 'view', 'time',
-        )
-        view_time_sheet = ewallet_session.ewallet_controller(
-            controller='user', ctype='action', action='view', view='time',
-            time='list', active_session=orm_session, **sanitized_instruction_set
-        )
-        return self.warning_could_not_view_time_sheet(
-            ewallet_session, instruction_set
-        ) if view_time_sheet.get('failed') else view_time_sheet
-
-    def action_view_transfer_sheet_record(self, ewallet_session, instruction_set):
-        log.debug('')
-        orm_session = ewallet_session.fetch_active_session()
-        sanitized_instruction_set = self.res_utils.remove_tags_from_command_chain(
-            instruction_set, 'controller', 'ctype', 'action', 'view', 'transfer',
-        )
-        view_transfer_record = ewallet_session.ewallet_controller(
-            controller='user', ctype='action', action='view', view='transfer',
-            transfer='record', active_session=orm_session, **sanitized_instruction_set
-        )
-        return self.warning_could_not_view_transfer_sheet_record(
-            ewallet_session, instruction_set
-        ) if view_transfer_record.get('failed') else view_transfer_record
-
-    def action_view_transfer_sheet(self, ewallet_session, instruction_set):
-        log.debug('')
-        orm_session = ewallet_session.fetch_active_session()
-        sanitized_instruction_set = self.res_utils.remove_tags_from_command_chain(
-            instruction_set, 'controller', 'ctype', 'action', 'view', 'transfer',
-        )
-        view_transfer_sheet = ewallet_session.ewallet_controller(
-            controller='user', ctype='action', action='view', view='transfer',
-            transfer='list', active_session=orm_session, **sanitized_instruction_set
-        )
-        return self.warning_could_not_view_transfer_sheet(
-            ewallet_session, instruction_set
-        ) if view_transfer_sheet.get('failed') else view_transfer_sheet
-
-#   @pysnooper.snoop()
-    def action_transfer_credits(self, ewallet_session, instruction_set):
-        log.debug('')
-        orm_session = ewallet_session.fetch_active_session()
-        transfer_credits = ewallet_session.ewallet_controller(
-            controller='user', ctype='action', action='create', create='transfer',
-            ttype='transfer', active_session=orm_session, **instruction_set
-        )
-        return self.warning_could_not_transfer_credits_to_partner(
-            ewallet_session, instruction_set
-        ) if not transfer_credits or isinstance(transfer_credits, dict) and \
-            transfer_credits.get('failed') else transfer_credits
-
-    def action_view_contact_record(self, ewallet_session, instruction_set):
-        log.debug('')
-        orm_session = ewallet_session.fetch_active_session()
-        view_contact_record = ewallet_session.ewallet_controller(
-            controller='user', ctype='action', action='view',
-            active_session=orm_session, **instruction_set
-        )
-        return self.warning_could_not_view_contact_record(
-            ewallet_session, instruction_set
-        ) if not view_contact_record else view_contact_record
-
-    def action_view_contact_list(self, ewallet_session, instruction_set):
-        log.debug('')
-        orm_session = ewallet_session.fetch_active_session()
-        view_contact_list = ewallet_session.ewallet_controller(
-            controller='user', ctype='action', action='view',
-            active_session=orm_session, **instruction_set
-        )
-        return self.warning_could_not_view_contact_list(
-            ewallet_session, instruction_set
-        ) if not view_contact_list or isinstance(view_contact_list, dict) and \
-        view_contact_list.get('failed') else view_contact_list
-
-    def action_new_contact_record(self, ewallet_session, instruction_set):
-        log.debug('')
-        orm_session = ewallet_session.fetch_active_session()
-        new_contact_record = ewallet_session.ewallet_controller(
-            controller='user', ctype='action', action='create',
-            create='contact', active_session=orm_session, **instruction_set
-        )
-        return self.warning_could_not_create_new_contact_record(
-            ewallet_session, instruction_set
-        ) if not new_contact_record else new_contact_record
-
-    def action_pay_partner_account(self, ewallet_session, instruction_set):
-        log.debug('')
-        orm_session = ewallet_session.fetch_active_session()
-        pay_partner = ewallet_session.ewallet_controller(
-            controller='user', ctype='action', action='create', create='transfer',
-            ttype='pay', **instruction_set
-        )
-        return self.warning_could_not_pay_partner_account(
-            ewallet_session, instruction_set
-        ) if not pay_partner or isinstance(pay_partner, dict) and \
-            pay_partner.get('failed') else pay_partner
-
-    def action_stop_credit_clock_timer(self, ewallet_session, instruction_set):
-        log.debug('')
-        orm_session = ewallet_session.fetch_active_session()
-        stop_timer = ewallet_session.ewallet_controller(
-            controller='user', ctype='action', action='time', timer='stop',
-            active_session=orm_session, **instruction_set
-        )
-        return self.warning_could_not_stop_credit_clock_timer(
-            ewallet_session, instruction_set
-        ) if not stop_timer or isinstance(stop_timer, dict) and \
-            stop_timer.get('failed') else stop_timer
-
-#   @pysnooper.snoop()
-    def action_resume_credit_clock_timer(self, ewallet_session, instruction_set):
-        '''
-        [ NOTE   ]: Resumes active credit clock consumption timer if clock is in
-                    appropriate state.
-        '''
-        log.debug('')
-        orm_session = ewallet_session.fetch_active_session()
-        resume_timer = ewallet_session.ewallet_controller(
-            controller='user', ctype='action', action='time', timer='resume',
-            active_session=orm_session, **instruction_set
-        )
-        return self.warning_could_not_resume_credit_clock_timer(
-            ewallet_session, instruction_set
-        ) if not resume_timer or isinstance(resume_timer, dict) and \
-            resume_timer.get('failed') else resume_timer
-
-#   @pysnooper.snoop()
-    def action_pause_credit_clock_timer(self, ewallet_session, instruction_set):
-        '''
-        [ NOTE   ]: Pauses active credit clock consumption timer if clock is in
-                    appropriate state.
-        '''
-        log.debug('')
-        orm_session = ewallet_session.fetch_active_session()
-        pause_timer = ewallet_session.ewallet_controller(
-            controller='user', ctype='action', action='time', timer='pause',
-            active_session=orm_session, **instruction_set
-        )
-        return self.warning_could_not_pause_credit_clock_timer(
-            ewallet_session, instruction_set
-        ) if not pause_timer or isinstance(pause_timer, dict) and \
-            pause_timer.get('failed') else pause_timer
-
-#   @pysnooper.snoop()
-    def action_start_credit_clock_timer(self, ewallet_session, instruction_set):
-        '''
-        [ NOTE   ]: Starts active credit clock consumption timer if clock is in
-                    appropriate state.
-        '''
-        log.debug('')
-        orm_session = ewallet_session.fetch_active_session()
-        start_timer = ewallet_session.ewallet_controller(
-            controller='user', ctype='action', action='time', timer='start',
-            active_session=orm_session, **instruction_set
-        )
-        return self.warning_could_not_start_credit_clock_timer(
-            ewallet_session, instruction_set
-        ) if not start_timer or isinstance(start_timer, dict) and \
-            start_timer.get('failed') else start_timer
 
     def action_sweep_cleanup_ewallet_sessions(self, **kwargs):
         log.debug('')
@@ -1828,425 +1391,6 @@ class EWalletSessionManager():
         ) if not interogate_session or isinstance(interogate_session, dict) and \
             interogate_session.get('failed') else interogate_session
 
-    def action_logout_user_account(self, ewallet_session, instruction_set):
-        log.debug('')
-        orm_session = ewallet_session.fetch_active_session()
-        sanitized_instruction_set = self.res_utils.remove_tags_from_command_chain(
-            instruction_set, 'controller', 'ctype', 'action',
-        )
-        active_session_user = ewallet_session.fetch_active_session_user()
-        logout_account = ewallet_session.ewallet_controller(
-            controller='user', ctype='action', action='logout',
-            active_session=orm_session, **sanitized_instruction_set
-        )
-        return self.warning_could_not_logout_user_account(
-            ewallet_session, instruction_set
-        ) if not logout_account or logout_account.get('failed') \
-            else logout_account
-
-    def action_view_logout_records(self, ewallet_session, instruction_set):
-        log.debug('')
-        orm_session = ewallet_session.fetch_active_session()
-        sanitized_instruction_set = self.res_utils.remove_tags_from_command_chain(
-            instruction_set, 'controller', 'ctype', 'action', 'view',
-        )
-        active_session_user = ewallet_session.fetch_active_session_user()
-        user_logout_records = ewallet_session.ewallet_controller(
-            controller='user', ctype='action', action='view', view='logout',
-            active_session=orm_session, **sanitized_instruction_set
-        )
-        return self.warning_could_not_view_user_logout_records(
-            ewallet_session, instruction_set
-        ) if not user_logout_records or user_logout_records.get('failed') \
-            else user_logout_records
-
-    def action_view_login_records(self, ewallet_session, instruction_set):
-        log.debug('')
-        orm_session = ewallet_session.fetch_active_session()
-        sanitized_instruction_set = self.res_utils.remove_tags_from_command_chain(
-            instruction_set, 'controller', 'ctype', 'action', 'view',
-        )
-        active_session_user = ewallet_session.fetch_active_session_user()
-        user_login_records = ewallet_session.ewallet_controller(
-            controller='user', ctype='action', action='view', view='login',
-            active_session=orm_session, **sanitized_instruction_set
-        )
-        return self.warning_could_not_view_user_login_records(
-            ewallet_session, instruction_set
-        ) if not user_login_records or user_login_records.get('failed') \
-            else user_login_records
-
-    def action_unlink_credit_clock(self, ewallet_session, instruction_set):
-        log.debug('')
-        orm_session = ewallet_session.fetch_active_session()
-        sanitized_instruction_set = self.res_utils.remove_tags_from_command_chain(
-            instruction_set, 'controller', 'ctype', 'action', 'unlink', 'credit'
-        )
-        unlink_credit_clock = ewallet_session.ewallet_controller(
-            controller='user', ctype='action', action='unlink', unlink='credit_clock',
-            active_session=orm_session, **sanitized_instruction_set
-        )
-        return self.warning_could_not_unlink_credit_clock(
-            ewallet_session, instruction_set
-        ) if not unlink_credit_clock or unlink_credit_clock.get('failed') \
-            else unlink_credit_clock
-
-    def action_unlink_credit_ewallet(self, ewallet_session, instruction_set):
-        log.debug('')
-        orm_session = ewallet_session.fetch_active_session()
-        sanitized_instruction_set = self.res_utils.remove_tags_from_command_chain(
-            instruction_set, 'controller', 'ctype', 'action', 'unlink', 'credit'
-        )
-        unlink_credit_ewallet = ewallet_session.ewallet_controller(
-            controller='user', ctype='action', action='unlink', unlink='credit_wallet',
-            active_session=orm_session, **sanitized_instruction_set
-        )
-        return self.warning_could_not_unlink_credit_ewallet(
-            ewallet_session, instruction_set
-        ) if not unlink_credit_ewallet or unlink_credit_ewallet.get('failed') \
-            else unlink_credit_ewallet
-
-    def action_unlink_contact_list(self, ewallet_session, instruction_set):
-        log.debug('')
-        orm_session = ewallet_session.fetch_active_session()
-        sanitized_instruction_set = self.res_utils.remove_tags_from_command_chain(
-            instruction_set, 'controller', 'ctype', 'action', 'unlink', 'contact'
-        )
-        unlink_contact_list = ewallet_session.ewallet_controller(
-            controller='user', ctype='action', action='unlink', unlink='contact',
-            contact='list', active_session=orm_session, **sanitized_instruction_set
-        )
-        return self.warning_could_not_unlink_contact_list(
-            ewallet_session, instruction_set
-        ) if not unlink_contact_list or unlink_contact_list.get('failed') \
-            else unlink_contact_list
-
-    def action_unlink_time_sheet(self, ewallet_session, instruction_set):
-        log.debug('')
-        orm_session = ewallet_session.fetch_active_session()
-        sanitized_instruction_set = self.res_utils.remove_tags_from_command_chain(
-            instruction_set, 'controller', 'ctype', 'action', 'unlink', 'time'
-        )
-        unlink_time_sheet = ewallet_session.ewallet_controller(
-            controller='user', ctype='action', action='unlink', unlink='time',
-            time='list', active_session=orm_session, **sanitized_instruction_set
-        )
-        return self.warning_could_not_unlink_time_sheet(
-            ewallet_session, instruction_set
-        ) if not unlink_time_sheet or unlink_time_sheet.get('failed') \
-            else unlink_time_sheet
-
-    def action_unlink_conversion_sheet(self, ewallet_session, instruction_set):
-        log.debug('')
-        orm_session = ewallet_session.fetch_active_session()
-        sanitized_instruction_set = self.res_utils.remove_tags_from_command_chain(
-            instruction_set, 'controller', 'ctype', 'action', 'unlink', 'conversion'
-        )
-        unlink_conversion_sheet = ewallet_session.ewallet_controller(
-            controller='user', ctype='action', action='unlink', unlink='conversion',
-            conversion='list', active_session=orm_session, **sanitized_instruction_set
-        )
-        return self.warning_could_not_unlink_conversion_sheet(
-            ewallet_session, instruction_set
-        ) if not unlink_conversion_sheet or unlink_conversion_sheet.get('failed') \
-            else unlink_conversion_sheet
-
-    def action_unlink_invoice_sheet(self, ewallet_session, instruction_set):
-        log.debug('')
-        orm_session = ewallet_session.fetch_active_session()
-        sanitized_instruction_set = self.res_utils.remove_tags_from_command_chain(
-            instruction_set, 'controller', 'ctype', 'action', 'unlink', 'invoice'
-        )
-        unlink_invoice_sheet = ewallet_session.ewallet_controller(
-            controller='user', ctype='action', action='unlink', unlink='invoice',
-            invoice='list', active_session=orm_session, **sanitized_instruction_set
-        )
-        return self.warning_could_not_unlink_invoice_sheet(
-            ewallet_session, instruction_set
-        ) if not unlink_invoice_sheet or unlink_invoice_sheet.get('failed') \
-            else unlink_invoice_sheet
-
-    def action_unlink_transfer_sheet(self, ewallet_session, instruction_set):
-        log.debug('')
-        orm_session = ewallet_session.fetch_active_session()
-        sanitized_instruction_set = self.res_utils.remove_tags_from_command_chain(
-            instruction_set, 'controller', 'ctype', 'action', 'unlink', 'transfer'
-        )
-        unlink_transfer_sheet = ewallet_session.ewallet_controller(
-            controller='user', ctype='action', action='unlink', unlink='transfer',
-            transfer='list', active_session=orm_session, **sanitized_instruction_set
-        )
-        return self.warning_could_not_unlink_transfer_sheet(
-            ewallet_session, instruction_set
-        ) if not unlink_transfer_sheet or unlink_transfer_sheet.get('failed') \
-            else unlink_transfer_sheet
-
-#   @pysnooper.snoop()
-    def action_unlink_contact_list_record(self, ewallet_session, instruction_set):
-        log.debug('')
-        orm_session = ewallet_session.fetch_active_session()
-        sanitized_instruction_set = self.res_utils.remove_tags_from_command_chain(
-            instruction_set, 'controller', 'ctype', 'action', 'unlink', 'contact'
-        )
-        unlink_contact_record = ewallet_session.ewallet_controller(
-            controller='user', ctype='action', action='unlink', unlink='contact',
-            contact='record', active_session=orm_session, **sanitized_instruction_set
-        )
-        return self.warning_could_not_unlink_contact_list_record(
-            ewallet_session, instruction_set
-        ) if not unlink_contact_record or unlink_contact_record.get('failed') \
-            else unlink_contact_record
-
-    def action_unlink_time_sheet_record(self, ewallet_session, instruction_set):
-        log.debug('')
-        orm_session = ewallet_session.fetch_active_session()
-        sanitized_instruction_set = self.res_utils.remove_tags_from_command_chain(
-            instruction_set, 'controller', 'ctype', 'action', 'unlink', 'time'
-        )
-        unlink_time_record = ewallet_session.ewallet_controller(
-            controller='user', ctype='action', action='unlink', unlink='time',
-            time='record', active_session=orm_session, **sanitized_instruction_set
-        )
-        return self.warning_could_not_unlink_time_sheet_record(
-            ewallet_session, instruction_set
-        ) if not unlink_time_record or unlink_time_record.get('failed') \
-            else unlink_time_record
-
-    def action_unlink_conversion_sheet_record(self, ewallet_session, instruction_set):
-        log.debug('')
-        orm_session = ewallet_session.fetch_active_session()
-        sanitized_instruction_set = self.res_utils.remove_tags_from_command_chain(
-            instruction_set, 'controller', 'ctype', 'action', 'unlink', 'conversion'
-        )
-        unlink_conversion_record = ewallet_session.ewallet_controller(
-            controller='user', ctype='action', action='unlink', unlink='conversion',
-            conversion='record', active_session=orm_session, **sanitized_instruction_set
-        )
-        return self.warning_could_not_unlink_conversion_sheet_record(
-            ewallet_session, instruction_set
-        ) if not unlink_conversion_record or unlink_conversion_record.get('failed') \
-            else unlink_conversion_record
-
-    def action_unlink_invoice_sheet_record(self, ewallet_session, instruction_set):
-        log.debug('')
-        orm_session = ewallet_session.fetch_active_session()
-        sanitized_instruction_set = self.res_utils.remove_tags_from_command_chain(
-            instruction_set, 'controller', 'ctype', 'action', 'unlink', 'invoice'
-        )
-        unlink_invoice_record = ewallet_session.ewallet_controller(
-            controller='user', ctype='action', action='unlink', unlink='invoice',
-            invoice='record', active_session=orm_session, **sanitized_instruction_set
-        )
-        return self.warning_could_not_unlink_invoice_sheet_record(
-            ewallet_session, instruction_set
-        ) if not unlink_invoice_record or unlink_invoice_record.get('failed') \
-            else unlink_invoice_record
-
-    def action_unlink_transfer_sheet_record(self, ewallet_session, instruction_set):
-        log.debug('')
-        orm_session = ewallet_session.fetch_active_session()
-        sanitized_instruction_set = self.res_utils.remove_tags_from_command_chain(
-            instruction_set, 'controller', 'ctype', 'action', 'unlink', 'transfer'
-        )
-        unlink_transfer_record = ewallet_session.ewallet_controller(
-            controller='user', ctype='action', action='unlink', unlink='transfer',
-            transfer='record', active_session=orm_session, **sanitized_instruction_set
-        )
-        return self.warning_could_not_unlink_transfer_sheet_record(
-            ewallet_session, instruction_set
-        ) if not unlink_transfer_record or unlink_transfer_record.get('failed') \
-            else unlink_transfer_record
-
-    def action_switch_contact_list(self, ewallet_session, instruction_set):
-        log.debug('')
-        orm_session = ewallet_session.fetch_active_session()
-        sanitized_instruction_set = self.res_utils.remove_tags_from_command_chain(
-            instruction_set, 'controller', 'ctype', 'action', 'switch'
-        )
-        switch_contact_list = ewallet_session.ewallet_controller(
-            controller='user', ctype='action', action='switch', switch='contact_list',
-            active_session=orm_session, **sanitized_instruction_set
-        )
-        return self.warning_could_not_switch_contact_list(
-            ewallet_session, instruction_set
-        ) if not switch_contact_list or switch_contact_list.get('failed') \
-            else switch_contact_list
-
-    def action_switch_time_sheet(self, ewallet_session, instruction_set):
-        log.debug('')
-        orm_session = ewallet_session.fetch_active_session()
-        sanitized_instruction_set = self.res_utils.remove_tags_from_command_chain(
-            instruction_set, 'controller', 'ctype', 'action', 'switch'
-        )
-        switch_time_sheet = ewallet_session.ewallet_controller(
-            controller='user', ctype='action', action='switch', switch='time_sheet',
-            active_session=orm_session, **sanitized_instruction_set
-        )
-        return self.warning_could_not_switch_time_sheet(
-            ewallet_session, instruction_set
-        ) if not switch_time_sheet or switch_time_sheet.get('failed') else \
-        switch_time_sheet
-
-    def action_switch_conversion_sheet(self, ewallet_session, instruction_set):
-        log.debug('')
-        orm_session = ewallet_session.fetch_active_session()
-        sanitized_instruction_set = self.res_utils.remove_tags_from_command_chain(
-            instruction_set, 'controller', 'ctype', 'action', 'switch'
-        )
-        switch_conversion_sheet = ewallet_session.ewallet_controller(
-            controller='user', ctype='action', action='switch', switch='conversion_sheet',
-            active_session=orm_session, **sanitized_instruction_set
-        )
-        return self.warning_could_not_switch_conversion_sheet(
-            ewallet_session, instruction_set
-        ) if not switch_conversion_sheet or switch_conversion_sheet.get('failed') \
-        else switch_conversion_sheet
-
-    def action_switch_invoice_sheet(self, ewallet_session, instruction_set):
-        log.debug('')
-        orm_session = ewallet_session.fetch_active_session()
-        sanitized_instruction_set = self.res_utils.remove_tags_from_command_chain(
-            instruction_set, 'controller', 'ctype', 'action', 'switch'
-        )
-        switch_invoice_sheet = ewallet_session.ewallet_controller(
-            controller='user', ctype='action', action='switch', switch='invoice_sheet',
-            active_session=orm_session, **sanitized_instruction_set
-        )
-        return self.warning_could_not_switch_invoice_sheet(
-            ewallet_session, instruction_set
-        ) if not switch_invoice_sheet or switch_invoice_sheet.get('failed') \
-        else switch_invoice_sheet
-
-    def action_switch_transfer_sheet(self, ewallet_session, instruction_set):
-        log.debug('')
-        orm_session = ewallet_session.fetch_active_session()
-        sanitized_instruction_set = self.res_utils.remove_tags_from_command_chain(
-            instruction_set, 'controller', 'ctype', 'action', 'switch'
-        )
-        switch_transfer_sheet = ewallet_session.ewallet_controller(
-            controller='user', ctype='action', action='switch', switch='transfer_sheet',
-            active_session=orm_session, **sanitized_instruction_set
-        )
-        return self.warning_could_not_switch_transfer_sheet(
-            ewallet_session, instruction_set
-        ) if not switch_transfer_sheet or switch_transfer_sheet.get('failed') \
-        else switch_transfer_sheet
-
-    def action_switch_credit_clock(self, ewallet_session, instruction_set):
-        log.debug('')
-        orm_session = ewallet_session.fetch_active_session()
-        sanitized_instruction_set = self.res_utils.remove_tags_from_command_chain(
-            instruction_set, 'controller', 'ctype', 'action', 'switch', 'credit'
-        )
-        switch_credit_clock = ewallet_session.ewallet_controller(
-            controller='user', ctype='action', action='switch', switch='credit_clock',
-            active_session=orm_session, **sanitized_instruction_set
-        )
-        return self.warning_could_not_switch_credit_clock(
-            ewallet_session, instruction_set
-        ) if not switch_credit_clock or switch_credit_clock.get('failed') \
-        else switch_credit_clock
-
-    def action_switch_credit_ewallet(self, ewallet_session, instruction_set):
-        log.debug('')
-        orm_session = ewallet_session.fetch_active_session()
-        sanitized_instruction_set = self.res_utils.remove_tags_from_command_chain(
-            instruction_set, 'controller', 'ctype', 'action', 'switch', 'credit'
-        )
-        switch_credit_ewallet = ewallet_session.ewallet_controller(
-            controller='user', ctype='action', action='switch', switch='credit_ewallet',
-            active_session=orm_session, **sanitized_instruction_set
-        )
-        return self.warning_could_not_switch_credit_ewallet(
-            ewallet_session, instruction_set
-        ) if not switch_credit_ewallet or switch_credit_ewallet.get('failed') \
-        else switch_credit_ewallet
-
-    def action_new_contact_list(self, ewallet_session, instruction_set):
-        log.debug('')
-        orm_session = ewallet_session.fetch_active_session()
-        sanitized_instruction_set = self.res_utils.remove_tags_from_command_chain(
-            instruction_set, 'controller', 'ctype', 'action', 'new', 'contact'
-        )
-        new_contact_list = ewallet_session.ewallet_controller(
-            controller='user', ctype='action', action='create', create='contact',
-            contact='list', active_session=orm_session, **sanitized_instruction_set
-        )
-        return self.warning_could_not_create_new_contact_list(
-            ewallet_session, instruction_set
-        ) if new_contact_list.get('failed') else new_contact_list
-
-    def action_new_invoice_sheet(self, ewallet_session, instruction_set):
-        log.debug('')
-        orm_session = ewallet_session.fetch_active_session()
-        sanitized_instruction_set = self.res_utils.remove_tags_from_command_chain(
-            instruction_set, 'controller', 'ctype', 'action', 'new', 'invoice'
-        )
-        new_invoice_sheet = ewallet_session.ewallet_controller(
-            controller='user', ctype='action', action='create', create='invoice_sheet',
-            active_session=orm_session, **sanitized_instruction_set
-        )
-        return self.warning_could_not_create_new_invoice_sheet(
-            ewallet_session, instruction_set
-        ) if new_invoice_sheet.get('failed') else new_invoice_sheet
-
-#   @pysnooper.snoop()
-    def action_supply_user_credit_ewallet_in_session(self, ewallet_session, instruction_set):
-        '''
-        [ NOTE   ]: Sends a User action Supply command chain to given ewallet session
-                    with the SystemCore account as beeing the partner, which creates
-                    a credit transaction between two wallets resulting in S:Core having
-                    a decreased credit count and the active user having an equivalent
-                    increase in credits.
-        '''
-        log.debug('')
-        score = ewallet_session.fetch_system_core_user_account()
-        orm_session = ewallet_session.fetch_active_session()
-        credit_supply = ewallet_session.ewallet_controller(
-            controller='user', ctype='action', action='create', create='transfer',
-            ttype='supply', active_session=orm_session, partner_account=score,
-            **instruction_set
-        )
-        return self.warning_could_not_supply_user_credit_wallet_with_credits(
-            ewallet_session, instruction_set
-        ) if not credit_supply else credit_supply
-
-#   @pysnooper.snoop('logs/ewallet.log')
-    def action_convert_credits_to_credit_clock(self, ewallet_session, instruction_set):
-        '''
-        [ NOTE   ]: Executes credits to credit clock conversion and returns
-                    curent active credit ewallet credits and credit clock time left.
-        '''
-        log.debug('')
-        if not instruction_set.get('credits'):
-            return self.error_no_conversion_credit_count_specified(
-                ewallet_session, instruction_set
-            )
-        orm_session = ewallet_session.fetch_active_session()
-        conversion = ewallet_session.ewallet_controller(
-            controller='user', ctype='action', action='create',
-            create='conversion', conversion='credits2clock',
-            active_session=orm_session, **instruction_set
-        )
-        return self.warning_could_not_convert_credits_to_credit_clock(
-            instruction_set
-        ) if not conversion else conversion
-
-    def action_convert_credit_clock_to_credits(self, ewallet_session, instruction_set):
-        log.debug('')
-        if not instruction_set.get('minutes'):
-            return self.error_no_conversion_credit_clock_time_specified(
-                ewallet_session, instruction_set
-            )
-        orm_session = ewallet_session.fetch_active_session()
-        conversion = ewallet_session.ewallet_controller(
-            controller='user', ctype='action', action='create',
-            create='conversion', conversion='clock2credits',
-            active_session=orm_session, **instruction_set
-        )
-        return self.warning_could_not_convert_credit_clock_time_to_credits(
-            instruction_set) if conversion.get('failed') else conversion
-
     # EVENTS
 
     # TODO
@@ -2283,6 +1427,20 @@ class EWalletSessionManager():
     '''
 
 #   @pysnooper.snoop()
+    def handle_client_action_supply_credits(self, **kwargs):
+        log.debug('')
+        instruction_set_validation = self.validate_instruction_set(kwargs)
+        if not instruction_set_validation \
+                or isinstance(instruction_set_validation, dict) \
+                and instruction_set_validation.get('failed'):
+            return instruction_set_validation
+        supply_credits = self.action_execute_user_instruction_set(**kwargs)
+        return self.warning_could_not_supply_user_credit_ewallet(
+            kwargs, supply_credits
+        ) if not supply_credits or isinstance(supply_credits, dict) and \
+            supply_credits.get('failed') else supply_credits
+
+#   @pysnooper.snoop()
     def handle_client_action_login(self, **kwargs):
         log.debug('')
         instruction_set_validation = self.validate_instruction_set(kwargs)
@@ -2290,7 +1448,7 @@ class EWalletSessionManager():
                 or isinstance(instruction_set_validation, dict) \
                 and instruction_set_validation.get('failed'):
             return instruction_set_validation
-        account_login = self.action_account_login(**kwargs)
+        account_login = self.action_execute_user_instruction_set(**kwargs)
         return self.warning_could_not_login_user_account(
             kwargs, account_login
         ) if not account_login or isinstance(account_login, dict) and \
@@ -2308,7 +1466,7 @@ class EWalletSessionManager():
                 or isinstance(instruction_set_validation, dict) \
                 and instruction_set_validation.get('failed'):
             return instruction_set_validation
-        new_account = self.action_create_new_account(**kwargs)
+        new_account = self.action_execute_user_instruction_set(**kwargs)
         return self.warning_could_not_create_new_user_account(
             kwargs, new_account
         ) if not new_account or isinstance(new_account, dict) and \
@@ -3737,26 +2895,6 @@ class EWalletSessionManager():
         )
         return conversion
 
-#   #@pysnooper.snoop()
-    def handle_client_action_supply_credits(self, **kwargs):
-        log.debug('')
-        instruction_set_validation = self.validate_instruction_set(kwargs)
-        if not instruction_set_validation \
-                or isinstance(instruction_set_validation, dict) \
-                and instruction_set_validation.get('failed'):
-            return instruction_set_validation
-        ewallet = self.fetch_ewallet_session_for_client_action_using_instruction_set(
-            kwargs
-        )
-        if not ewallet or not ewallet['ewallet_session'] or \
-                isinstance(ewallet['ewallet_session'], dict) and \
-                ewallet['ewallet_session'].get('failed'):
-            return self.error_no_ewallet_session_found(kwargs)
-        credit_supply = self.action_supply_user_credit_ewallet_in_session(
-            ewallet['ewallet_session'], ewallet['sanitized_instruction_set']
-        )
-        return credit_supply
-
     def handle_client_action_start_clock_timer(self, **kwargs):
         log.debug('')
         instruction_set_validation = self.validate_instruction_set(kwargs)
@@ -4095,6 +3233,16 @@ class EWalletSessionManager():
         return handlers[kwargs['controller']](**kwargs)
 
     # WARNINGS
+
+    def warning_could_not_supply_user_credit_ewallet(self, *args):
+        instruction_set_response = {
+            'failed': True,
+            'warning': 'Something went wrong. '
+                       'Could not supply user credit wallet with credits in EWallet Session. '
+                       'Details : {}'.format(args)
+        }
+        log.warning(instruction_set_response['warning'])
+        return instruction_set_response
 
     def warning_could_not_login_user_account(self, *args):
         instruction_set_response = {
@@ -4833,13 +3981,6 @@ class EWalletSessionManager():
             'Something went wrong. Could not view active contact list record for ewallet session {}.'\
             'Details : {}'.format(ewallet_session, instruction_set)
         )
-        return False
-
-    def warning_could_not_supply_user_credit_wallet_with_credits(self, ewallet_session, instruction_set):
-        log.warning(
-                'Something went wrong. Could not supply user credit wallet with credits in session {}.'\
-                'Details : {}'.format(ewallet_session, instruction_set)
-                )
         return False
 
     # ERRORS
@@ -5840,152 +4981,816 @@ class EWalletSessionManager():
 
 # CODE DUMP
 
-#       ewallet = self.fetch_ewallet_session_for_client_action_using_instruction_set(
-#           kwargs
-#       )
-#       if not ewallet or not ewallet['ewallet_session'] or \
-#               isinstance(ewallet['ewallet_session'], dict) and \
-#               ewallet['ewallet_session'].get('failed'):
-#           return self.error_no_ewallet_session_found(kwargs)
-#       user_login = self.login_ewallet_user_account_in_session(
-#           ewallet['ewallet_session'], ewallet['sanitized_instruction_set']
-#       )
-#       return user_login
+    def action_logout_user_account(self, ewallet_session, instruction_set):
+        log.debug('')
+        orm_session = ewallet_session.fetch_active_session()
+        sanitized_instruction_set = self.res_utils.remove_tags_from_command_chain(
+            instruction_set, 'controller', 'ctype', 'action',
+        )
+        active_session_user = ewallet_session.fetch_active_session_user()
+        logout_account = ewallet_session.ewallet_controller(
+            controller='user', ctype='action', action='logout',
+            active_session=orm_session, **sanitized_instruction_set
+        )
+        return self.warning_could_not_logout_user_account(
+            ewallet_session, instruction_set
+        ) if not logout_account or logout_account.get('failed') \
+            else logout_account
 
-    # TODO
-#   def map_client_id_ewallet_session_token(self):
-#       pass
-#   def map_client_id_ewallet_sessions(self):
-#       pass
+    def action_view_logout_records(self, ewallet_session, instruction_set):
+        log.debug('')
+        orm_session = ewallet_session.fetch_active_session()
+        sanitized_instruction_set = self.res_utils.remove_tags_from_command_chain(
+            instruction_set, 'controller', 'ctype', 'action', 'view',
+        )
+        active_session_user = ewallet_session.fetch_active_session_user()
+        user_logout_records = ewallet_session.ewallet_controller(
+            controller='user', ctype='action', action='view', view='logout',
+            active_session=orm_session, **sanitized_instruction_set
+        )
+        return self.warning_could_not_view_user_logout_records(
+            ewallet_session, instruction_set
+        ) if not user_logout_records or user_logout_records.get('failed') \
+            else user_logout_records
 
-    # TODO - Remove - DEPRECATED
-#   def login_ewallet_user_account_in_session(self, ewallet_session, instruction_set):
-#       '''
-#       [ NOTE   ]: Sets user state to LoggedIn (state code 1), and updates given
-#                   EWallet Session with user data.
-#       '''
-#       log.debug('TODO - DEPRECATED')
-#       orm_session = ewallet_session.fetch_active_session()
-#       account_login = ewallet_session.ewallet_controller(
-#           controller='user', ctype='action', action='login',
-#           active_session=orm_session, **instruction_set
-#       )
-#       return self.warning_could_not_login_user_account(
-#           ewallet_session, instruction_set
-#       ) if not account_login else account_login
+    def action_view_login_records(self, ewallet_session, instruction_set):
+        log.debug('')
+        orm_session = ewallet_session.fetch_active_session()
+        sanitized_instruction_set = self.res_utils.remove_tags_from_command_chain(
+            instruction_set, 'controller', 'ctype', 'action', 'view',
+        )
+        active_session_user = ewallet_session.fetch_active_session_user()
+        user_login_records = ewallet_session.ewallet_controller(
+            controller='user', ctype='action', action='view', view='login',
+            active_session=orm_session, **sanitized_instruction_set
+        )
+        return self.warning_could_not_view_user_login_records(
+            ewallet_session, instruction_set
+        ) if not user_login_records or user_login_records.get('failed') \
+            else user_login_records
 
-#       # Fetch worker id from client token label
-#       worker_id = self.fetch_worker_identifier_by_client_id(kwargs['client_id'])
-#       if not worker_id or isinstance(worker_id, dict) and \
-#               worker_id.get('failed'):
-#           return worker_id
-#       # Fetch client session token map
-#       cst_map = self.fetch_client_session_tokens(
-#           kwargs['client_id'], kwargs['session_token']
-#       )
-#       if not cst_map or isinstance(cst_map, dict) and cst_map.get('failed'):
-#           return self.error_could_not_fetch_client_session_token_map(
-#               kwargs, cst_map, instruction_set_validation
-#           )
-#       # Account Login
-#       account_login = self.execute_worker_instruction(
-#           worker_id, kwargs
-#       )
+    def action_unlink_credit_clock(self, ewallet_session, instruction_set):
+        log.debug('')
+        orm_session = ewallet_session.fetch_active_session()
+        sanitized_instruction_set = self.res_utils.remove_tags_from_command_chain(
+            instruction_set, 'controller', 'ctype', 'action', 'unlink', 'credit'
+        )
+        unlink_credit_clock = ewallet_session.ewallet_controller(
+            controller='user', ctype='action', action='unlink', unlink='credit_clock',
+            active_session=orm_session, **sanitized_instruction_set
+        )
+        return self.warning_could_not_unlink_credit_clock(
+            ewallet_session, instruction_set
+        ) if not unlink_credit_clock or unlink_credit_clock.get('failed') \
+            else unlink_credit_clock
 
-#       ewallet = self.fetch_ewallet_session_for_client_action_using_instruction_set(
-#           kwargs
-#       )
-#       if not ewallet or not ewallet['ewallet_session'] or \
-#               isinstance(ewallet['ewallet_session'], dict) and \
-#               ewallet['ewallet_session'].get('failed'):
-#           return self.error_no_ewallet_session_found(kwargs)
-#       user_login = self.login_ewallet_user_account_in_session(
-#           ewallet['ewallet_session'], ewallet['sanitized_instruction_set']
-#       )
-#       return user_login
+    def action_unlink_credit_ewallet(self, ewallet_session, instruction_set):
+        log.debug('')
+        orm_session = ewallet_session.fetch_active_session()
+        sanitized_instruction_set = self.res_utils.remove_tags_from_command_chain(
+            instruction_set, 'controller', 'ctype', 'action', 'unlink', 'credit'
+        )
+        unlink_credit_ewallet = ewallet_session.ewallet_controller(
+            controller='user', ctype='action', action='unlink', unlink='credit_wallet',
+            active_session=orm_session, **sanitized_instruction_set
+        )
+        return self.warning_could_not_unlink_credit_ewallet(
+            ewallet_session, instruction_set
+        ) if not unlink_credit_ewallet or unlink_credit_ewallet.get('failed') \
+            else unlink_credit_ewallet
 
-#       # Fetch worker id from client token label
-#       worker_id = self.fetch_worker_identifier_by_client_id(kwargs['client_id'])
-#       if not worker_id or isinstance(worker_id, dict) and \
-#               worker_id.get('failed'):
-#           return worker_id
-#       # Fetch client session token map
-#       cst_map = self.fetch_client_session_tokens(
-#           kwargs['client_id'], kwargs['session_token']
-#       )
-#       if not cst_map or isinstance(cst_map, dict) and cst_map.get('failed'):
-#           return self.error_could_not_fetch_client_session_token_map(
-#               kwargs, cst_map, instruction_set_validation
-#           )
+    def action_unlink_contact_list(self, ewallet_session, instruction_set):
+        log.debug('')
+        orm_session = ewallet_session.fetch_active_session()
+        sanitized_instruction_set = self.res_utils.remove_tags_from_command_chain(
+            instruction_set, 'controller', 'ctype', 'action', 'unlink', 'contact'
+        )
+        unlink_contact_list = ewallet_session.ewallet_controller(
+            controller='user', ctype='action', action='unlink', unlink='contact',
+            contact='list', active_session=orm_session, **sanitized_instruction_set
+        )
+        return self.warning_could_not_unlink_contact_list(
+            ewallet_session, instruction_set
+        ) if not unlink_contact_list or unlink_contact_list.get('failed') \
+            else unlink_contact_list
 
-#       new_account = self.execute_worker_instruction(
-#           worker_id, kwargs
-#       )
+    def action_unlink_time_sheet(self, ewallet_session, instruction_set):
+        log.debug('')
+        orm_session = ewallet_session.fetch_active_session()
+        sanitized_instruction_set = self.res_utils.remove_tags_from_command_chain(
+            instruction_set, 'controller', 'ctype', 'action', 'unlink', 'time'
+        )
+        unlink_time_sheet = ewallet_session.ewallet_controller(
+            controller='user', ctype='action', action='unlink', unlink='time',
+            time='list', active_session=orm_session, **sanitized_instruction_set
+        )
+        return self.warning_could_not_unlink_time_sheet(
+            ewallet_session, instruction_set
+        ) if not unlink_time_sheet or unlink_time_sheet.get('failed') \
+            else unlink_time_sheet
 
+    def action_unlink_conversion_sheet(self, ewallet_session, instruction_set):
+        log.debug('')
+        orm_session = ewallet_session.fetch_active_session()
+        sanitized_instruction_set = self.res_utils.remove_tags_from_command_chain(
+            instruction_set, 'controller', 'ctype', 'action', 'unlink', 'conversion'
+        )
+        unlink_conversion_sheet = ewallet_session.ewallet_controller(
+            controller='user', ctype='action', action='unlink', unlink='conversion',
+            conversion='list', active_session=orm_session, **sanitized_instruction_set
+        )
+        return self.warning_could_not_unlink_conversion_sheet(
+            ewallet_session, instruction_set
+        ) if not unlink_conversion_sheet or unlink_conversion_sheet.get('failed') \
+            else unlink_conversion_sheet
 
-#       # Sanitize instruction set
-#       sanitized_instruction_set = res_utils.remove_tags_from_command_chain(
-#           kwargs, 'client_id', 'session_token'
-#       )
-#       sanitized_instruction_set.update({
-#           'client_token': cst_map['ctoken'], 'session_token': cst_map['stoken']
-#       })
-        # Create new user_account
+    def action_unlink_invoice_sheet(self, ewallet_session, instruction_set):
+        log.debug('')
+        orm_session = ewallet_session.fetch_active_session()
+        sanitized_instruction_set = self.res_utils.remove_tags_from_command_chain(
+            instruction_set, 'controller', 'ctype', 'action', 'unlink', 'invoice'
+        )
+        unlink_invoice_sheet = ewallet_session.ewallet_controller(
+            controller='user', ctype='action', action='unlink', unlink='invoice',
+            invoice='list', active_session=orm_session, **sanitized_instruction_set
+        )
+        return self.warning_could_not_unlink_invoice_sheet(
+            ewallet_session, instruction_set
+        ) if not unlink_invoice_sheet or unlink_invoice_sheet.get('failed') \
+            else unlink_invoice_sheet
+
+    def action_unlink_transfer_sheet(self, ewallet_session, instruction_set):
+        log.debug('')
+        orm_session = ewallet_session.fetch_active_session()
+        sanitized_instruction_set = self.res_utils.remove_tags_from_command_chain(
+            instruction_set, 'controller', 'ctype', 'action', 'unlink', 'transfer'
+        )
+        unlink_transfer_sheet = ewallet_session.ewallet_controller(
+            controller='user', ctype='action', action='unlink', unlink='transfer',
+            transfer='list', active_session=orm_session, **sanitized_instruction_set
+        )
+        return self.warning_could_not_unlink_transfer_sheet(
+            ewallet_session, instruction_set
+        ) if not unlink_transfer_sheet or unlink_transfer_sheet.get('failed') \
+            else unlink_transfer_sheet
+
 #   @pysnooper.snoop()
-#   def fetch_session_worker_response(self, worker_id):
-#       log.debug('')
-#       worker_pool_entry = self.fetch_worker_pool_entry_by_id(worker_id)
-#       return [item for item in worker_pool_entry['response'].get()]
+    def action_unlink_contact_list_record(self, ewallet_session, instruction_set):
+        log.debug('')
+        orm_session = ewallet_session.fetch_active_session()
+        sanitized_instruction_set = self.res_utils.remove_tags_from_command_chain(
+            instruction_set, 'controller', 'ctype', 'action', 'unlink', 'contact'
+        )
+        unlink_contact_record = ewallet_session.ewallet_controller(
+            controller='user', ctype='action', action='unlink', unlink='contact',
+            contact='record', active_session=orm_session, **sanitized_instruction_set
+        )
+        return self.warning_could_not_unlink_contact_list_record(
+            ewallet_session, instruction_set
+        ) if not unlink_contact_record or unlink_contact_record.get('failed') \
+            else unlink_contact_record
 
-#import multiprocessing as mp
-#   mp.set_start_method('spawn')
-#   Process = mp.Process
-#   Queue = mp.Queue
-#   Lock = mp.Lock
+    def action_unlink_time_sheet_record(self, ewallet_session, instruction_set):
+        log.debug('')
+        orm_session = ewallet_session.fetch_active_session()
+        sanitized_instruction_set = self.res_utils.remove_tags_from_command_chain(
+            instruction_set, 'controller', 'ctype', 'action', 'unlink', 'time'
+        )
+        unlink_time_record = ewallet_session.ewallet_controller(
+            controller='user', ctype='action', action='unlink', unlink='time',
+            time='record', active_session=orm_session, **sanitized_instruction_set
+        )
+        return self.warning_could_not_unlink_time_sheet_record(
+            ewallet_session, instruction_set
+        ) if not unlink_time_record or unlink_time_record.get('failed') \
+            else unlink_time_record
+
+    def action_unlink_conversion_sheet_record(self, ewallet_session, instruction_set):
+        log.debug('')
+        orm_session = ewallet_session.fetch_active_session()
+        sanitized_instruction_set = self.res_utils.remove_tags_from_command_chain(
+            instruction_set, 'controller', 'ctype', 'action', 'unlink', 'conversion'
+        )
+        unlink_conversion_record = ewallet_session.ewallet_controller(
+            controller='user', ctype='action', action='unlink', unlink='conversion',
+            conversion='record', active_session=orm_session, **sanitized_instruction_set
+        )
+        return self.warning_could_not_unlink_conversion_sheet_record(
+            ewallet_session, instruction_set
+        ) if not unlink_conversion_record or unlink_conversion_record.get('failed') \
+            else unlink_conversion_record
+
+    def action_unlink_invoice_sheet_record(self, ewallet_session, instruction_set):
+        log.debug('')
+        orm_session = ewallet_session.fetch_active_session()
+        sanitized_instruction_set = self.res_utils.remove_tags_from_command_chain(
+            instruction_set, 'controller', 'ctype', 'action', 'unlink', 'invoice'
+        )
+        unlink_invoice_record = ewallet_session.ewallet_controller(
+            controller='user', ctype='action', action='unlink', unlink='invoice',
+            invoice='record', active_session=orm_session, **sanitized_instruction_set
+        )
+        return self.warning_could_not_unlink_invoice_sheet_record(
+            ewallet_session, instruction_set
+        ) if not unlink_invoice_record or unlink_invoice_record.get('failed') \
+            else unlink_invoice_record
+
+    def action_unlink_transfer_sheet_record(self, ewallet_session, instruction_set):
+        log.debug('')
+        orm_session = ewallet_session.fetch_active_session()
+        sanitized_instruction_set = self.res_utils.remove_tags_from_command_chain(
+            instruction_set, 'controller', 'ctype', 'action', 'unlink', 'transfer'
+        )
+        unlink_transfer_record = ewallet_session.ewallet_controller(
+            controller='user', ctype='action', action='unlink', unlink='transfer',
+            transfer='record', active_session=orm_session, **sanitized_instruction_set
+        )
+        return self.warning_could_not_unlink_transfer_sheet_record(
+            ewallet_session, instruction_set
+        ) if not unlink_transfer_record or unlink_transfer_record.get('failed') \
+            else unlink_transfer_record
+
+    def action_switch_contact_list(self, ewallet_session, instruction_set):
+        log.debug('')
+        orm_session = ewallet_session.fetch_active_session()
+        sanitized_instruction_set = self.res_utils.remove_tags_from_command_chain(
+            instruction_set, 'controller', 'ctype', 'action', 'switch'
+        )
+        switch_contact_list = ewallet_session.ewallet_controller(
+            controller='user', ctype='action', action='switch', switch='contact_list',
+            active_session=orm_session, **sanitized_instruction_set
+        )
+        return self.warning_could_not_switch_contact_list(
+            ewallet_session, instruction_set
+        ) if not switch_contact_list or switch_contact_list.get('failed') \
+            else switch_contact_list
+
+    def action_switch_time_sheet(self, ewallet_session, instruction_set):
+        log.debug('')
+        orm_session = ewallet_session.fetch_active_session()
+        sanitized_instruction_set = self.res_utils.remove_tags_from_command_chain(
+            instruction_set, 'controller', 'ctype', 'action', 'switch'
+        )
+        switch_time_sheet = ewallet_session.ewallet_controller(
+            controller='user', ctype='action', action='switch', switch='time_sheet',
+            active_session=orm_session, **sanitized_instruction_set
+        )
+        return self.warning_could_not_switch_time_sheet(
+            ewallet_session, instruction_set
+        ) if not switch_time_sheet or switch_time_sheet.get('failed') else \
+        switch_time_sheet
+
+    def action_switch_conversion_sheet(self, ewallet_session, instruction_set):
+        log.debug('')
+        orm_session = ewallet_session.fetch_active_session()
+        sanitized_instruction_set = self.res_utils.remove_tags_from_command_chain(
+            instruction_set, 'controller', 'ctype', 'action', 'switch'
+        )
+        switch_conversion_sheet = ewallet_session.ewallet_controller(
+            controller='user', ctype='action', action='switch', switch='conversion_sheet',
+            active_session=orm_session, **sanitized_instruction_set
+        )
+        return self.warning_could_not_switch_conversion_sheet(
+            ewallet_session, instruction_set
+        ) if not switch_conversion_sheet or switch_conversion_sheet.get('failed') \
+        else switch_conversion_sheet
+
+    def action_switch_invoice_sheet(self, ewallet_session, instruction_set):
+        log.debug('')
+        orm_session = ewallet_session.fetch_active_session()
+        sanitized_instruction_set = self.res_utils.remove_tags_from_command_chain(
+            instruction_set, 'controller', 'ctype', 'action', 'switch'
+        )
+        switch_invoice_sheet = ewallet_session.ewallet_controller(
+            controller='user', ctype='action', action='switch', switch='invoice_sheet',
+            active_session=orm_session, **sanitized_instruction_set
+        )
+        return self.warning_could_not_switch_invoice_sheet(
+            ewallet_session, instruction_set
+        ) if not switch_invoice_sheet or switch_invoice_sheet.get('failed') \
+        else switch_invoice_sheet
+
+    def action_switch_transfer_sheet(self, ewallet_session, instruction_set):
+        log.debug('')
+        orm_session = ewallet_session.fetch_active_session()
+        sanitized_instruction_set = self.res_utils.remove_tags_from_command_chain(
+            instruction_set, 'controller', 'ctype', 'action', 'switch'
+        )
+        switch_transfer_sheet = ewallet_session.ewallet_controller(
+            controller='user', ctype='action', action='switch', switch='transfer_sheet',
+            active_session=orm_session, **sanitized_instruction_set
+        )
+        return self.warning_could_not_switch_transfer_sheet(
+            ewallet_session, instruction_set
+        ) if not switch_transfer_sheet or switch_transfer_sheet.get('failed') \
+        else switch_transfer_sheet
+
+    def action_switch_credit_clock(self, ewallet_session, instruction_set):
+        log.debug('')
+        orm_session = ewallet_session.fetch_active_session()
+        sanitized_instruction_set = self.res_utils.remove_tags_from_command_chain(
+            instruction_set, 'controller', 'ctype', 'action', 'switch', 'credit'
+        )
+        switch_credit_clock = ewallet_session.ewallet_controller(
+            controller='user', ctype='action', action='switch', switch='credit_clock',
+            active_session=orm_session, **sanitized_instruction_set
+        )
+        return self.warning_could_not_switch_credit_clock(
+            ewallet_session, instruction_set
+        ) if not switch_credit_clock or switch_credit_clock.get('failed') \
+        else switch_credit_clock
+
+    def action_switch_credit_ewallet(self, ewallet_session, instruction_set):
+        log.debug('')
+        orm_session = ewallet_session.fetch_active_session()
+        sanitized_instruction_set = self.res_utils.remove_tags_from_command_chain(
+            instruction_set, 'controller', 'ctype', 'action', 'switch', 'credit'
+        )
+        switch_credit_ewallet = ewallet_session.ewallet_controller(
+            controller='user', ctype='action', action='switch', switch='credit_ewallet',
+            active_session=orm_session, **sanitized_instruction_set
+        )
+        return self.warning_could_not_switch_credit_ewallet(
+            ewallet_session, instruction_set
+        ) if not switch_credit_ewallet or switch_credit_ewallet.get('failed') \
+        else switch_credit_ewallet
+
+    def action_new_contact_list(self, ewallet_session, instruction_set):
+        log.debug('')
+        orm_session = ewallet_session.fetch_active_session()
+        sanitized_instruction_set = self.res_utils.remove_tags_from_command_chain(
+            instruction_set, 'controller', 'ctype', 'action', 'new', 'contact'
+        )
+        new_contact_list = ewallet_session.ewallet_controller(
+            controller='user', ctype='action', action='create', create='contact',
+            contact='list', active_session=orm_session, **sanitized_instruction_set
+        )
+        return self.warning_could_not_create_new_contact_list(
+            ewallet_session, instruction_set
+        ) if new_contact_list.get('failed') else new_contact_list
+
+    def action_new_invoice_sheet(self, ewallet_session, instruction_set):
+        log.debug('')
+        orm_session = ewallet_session.fetch_active_session()
+        sanitized_instruction_set = self.res_utils.remove_tags_from_command_chain(
+            instruction_set, 'controller', 'ctype', 'action', 'new', 'invoice'
+        )
+        new_invoice_sheet = ewallet_session.ewallet_controller(
+            controller='user', ctype='action', action='create', create='invoice_sheet',
+            active_session=orm_session, **sanitized_instruction_set
+        )
+        return self.warning_could_not_create_new_invoice_sheet(
+            ewallet_session, instruction_set
+        ) if new_invoice_sheet.get('failed') else new_invoice_sheet
+
+#   @pysnooper.snoop('logs/ewallet.log')
+    def action_convert_credits_to_credit_clock(self, ewallet_session, instruction_set):
+        '''
+        [ NOTE   ]: Executes credits to credit clock conversion and returns
+                    curent active credit ewallet credits and credit clock time left.
+        '''
+        log.debug('')
+        if not instruction_set.get('credits'):
+            return self.error_no_conversion_credit_count_specified(
+                ewallet_session, instruction_set
+            )
+        orm_session = ewallet_session.fetch_active_session()
+        conversion = ewallet_session.ewallet_controller(
+            controller='user', ctype='action', action='create',
+            create='conversion', conversion='credits2clock',
+            active_session=orm_session, **instruction_set
+        )
+        return self.warning_could_not_convert_credits_to_credit_clock(
+            instruction_set
+        ) if not conversion else conversion
+
+    def action_convert_credit_clock_to_credits(self, ewallet_session, instruction_set):
+        log.debug('')
+        if not instruction_set.get('minutes'):
+            return self.error_no_conversion_credit_clock_time_specified(
+                ewallet_session, instruction_set
+            )
+        orm_session = ewallet_session.fetch_active_session()
+        conversion = ewallet_session.ewallet_controller(
+            controller='user', ctype='action', action='create',
+            create='conversion', conversion='clock2credits',
+            active_session=orm_session, **instruction_set
+        )
+        return self.warning_could_not_convert_credit_clock_time_to_credits(
+            instruction_set) if conversion.get('failed') else conversion
 
 
-    # TODO - Search ref
-#   def fetch_worker_identifier_by_client_token(self, client_token):
-#       log.debug('')
-#       if not isinstance(client_token, object):
-#           return self.error_invalid_client_token(client_token)
-#       cw_map = self.fetch_client_worker_map()
-#       return cw_map.get(client_token) or {}
+    # TODO - Deprecated
+    def action_recover_user_account(self, ewallet_session, instruction_set):
+        log.debug('TODO - Deprecated')
+        orm_session = ewallet_session.fetch_active_session()
+        sanitized_instruction_set = self.res_utils.remove_tags_from_command_chain(
+            instruction_set, 'controller', 'ctype', 'action', 'recover',
+        )
+        active_session_user = ewallet_session.fetch_active_session_user()
+        recover_user_account = ewallet_session.ewallet_controller(
+            controller='user', ctype='action', action='recover', recover='account',
+            active_session=orm_session, **sanitized_instruction_set
+        )
+        return self.warning_could_not_recover_user_account(
+            ewallet_session, instruction_set
+        ) if not recover_user_account or recover_user_account.get('failed') \
+            else recover_user_account
 
-    # TODO - Search ref1
-#   def fetch_worker_identifier_by_client_id(self, client_id):
-#       log.debug('')
-#       if not isinstance(client_id, str):
-#           return self.error_invalid_client_id(client_id)
-#       client_token = self.fetch_client_token_by_label(client_id)
-#       return self.fetch_worker_identifier_by_client_token(client_token)
+    # TODO - Deprecated
+#   @pysnooper.snoop('logs/ewallet.log')
+    def action_unlink_user_account(self, ewallet_session, instruction_set):
+        log.debug('TODO - Deprecated')
+        orm_session = ewallet_session.fetch_active_session()
+        sanitized_instruction_set = self.res_utils.remove_tags_from_command_chain(
+            instruction_set, 'controller', 'ctype', 'action', 'unlink',
+        )
+        active_session_user = ewallet_session.fetch_active_session_user()
+        unlink_user_account = ewallet_session.ewallet_controller(
+            controller='user', ctype='action', action='unlink', unlink='account',
+            active_session=orm_session, **sanitized_instruction_set
+        )
+        return self.warning_could_not_unlink_user_account(
+            ewallet_session, instruction_set
+        ) if not unlink_user_account or unlink_user_account.get('failed') \
+            else unlink_user_account
 
+    def action_switch_active_session_user_account(self, ewallet_session, instruction_set):
+        log.debug('')
+        orm_session = ewallet_session.fetch_active_session()
+        sanitized_instruction_set = self.res_utils.remove_tags_from_command_chain(
+            instruction_set, 'controller', 'ctype', 'action', 'switch',
+        )
+        active_session_user = ewallet_session.fetch_active_session_user()
+        switch_user_account = ewallet_session.ewallet_controller(
+            controller='user', ctype='action', action='switch', switch='account',
+            active_session=orm_session, **sanitized_instruction_set
+        )
+        return self.warning_could_not_switch_active_session_user_account(
+            ewallet_session, instruction_set
+        ) if not switch_user_account or switch_user_account.get('failed') \
+            else switch_user_account
 
-    # TODO - Search ref
-#   def fetch_client_worker_map(self):
-#       log.debug('')
-#       return self.client_worker_map
+    def action_new_time_sheet(self, ewallet_session, instruction_set):
+        log.debug('')
+        orm_session = ewallet_session.fetch_active_session()
+        sanitized_instruction_set = self.res_utils.remove_tags_from_command_chain(
+            instruction_set, 'controller', 'ctype', 'action', 'new', 'time'
+        )
+        new_time_sheet = ewallet_session.ewallet_controller(
+            controller='user', ctype='action', action='create', create='time_sheet',
+            active_session=orm_session, **sanitized_instruction_set
+        )
+        return self.warning_could_not_create_new_time_sheet(
+            ewallet_session, instruction_set
+        ) if new_time_sheet.get('failed') else new_time_sheet
 
-   # TODO - Refactor
+    def action_new_conversion_sheet(self, ewallet_session, instruction_set):
+        log.debug('')
+        orm_session = ewallet_session.fetch_active_session()
+        sanitized_instruction_set = self.res_utils.remove_tags_from_command_chain(
+            instruction_set, 'controller', 'ctype', 'action', 'new', 'conversion'
+        )
+        new_conversion_sheet = ewallet_session.ewallet_controller(
+            controller='user', ctype='action', action='create', create='conversion_sheet',
+            active_session=orm_session, **sanitized_instruction_set
+        )
+        return self.warning_could_not_create_new_conversion_sheet(
+            ewallet_session, instruction_set
+        ) if new_conversion_sheet.get('failed') else new_conversion_sheet
+
+    def action_new_transfer_sheet(self, ewallet_session, instruction_set):
+        log.debug('')
+        orm_session = ewallet_session.fetch_active_session()
+        sanitized_instruction_set = self.res_utils.remove_tags_from_command_chain(
+            instruction_set, 'controller', 'ctype', 'action', 'new', 'transfer'
+        )
+        new_transfer_sheet = ewallet_session.ewallet_controller(
+            controller='user', ctype='action', action='create', create='transfer_sheet',
+            active_session=orm_session, **sanitized_instruction_set
+        )
+        return self.warning_could_not_create_new_transfer_sheet(
+            ewallet_session, instruction_set
+        ) if new_transfer_sheet.get('failed') else new_transfer_sheet
+
+    def action_new_credit_clock(self, ewallet_session, instruction_set):
+        log.debug('')
+        orm_session = ewallet_session.fetch_active_session()
+        sanitized_instruction_set = self.res_utils.remove_tags_from_command_chain(
+            instruction_set, 'controller', 'ctype', 'action', 'new', 'credit'
+        )
+        new_credit_clock = ewallet_session.ewallet_controller(
+            controller='user', ctype='action', action='create', create='credit_clock',
+            active_session=orm_session, **sanitized_instruction_set
+        )
+        return self.warning_could_not_create_new_credit_clock(
+            ewallet_session, instruction_set
+        ) if new_credit_clock.get('failed') else new_credit_clock
+
+    def action_new_credit_ewallet(self, ewallet_session, instruction_set):
+        log.debug('')
+        orm_session = ewallet_session.fetch_active_session()
+        sanitized_instruction_set = self.res_utils.remove_tags_from_command_chain(
+            instruction_set, 'controller', 'ctype', 'action', 'new', 'credit'
+        )
+        new_credit_ewallet = ewallet_session.ewallet_controller(
+            controller='user', ctype='action', action='create', create='credit_wallet',
+            active_session=orm_session, **sanitized_instruction_set
+        )
+        return self.warning_could_not_create_new_credit_ewallet(
+            ewallet_session, instruction_set
+        ) if new_credit_ewallet.get('failed') else new_credit_ewallet
+
+    def action_view_invoice_record(self, ewallet_session, instruction_set):
+        log.debug('')
+        orm_session = ewallet_session.fetch_active_session()
+        sanitized_instruction_set = self.res_utils.remove_tags_from_command_chain(
+            instruction_set, 'controller', 'ctype', 'action', 'view', 'invoice'
+        )
+        view_invoice_record = ewallet_session.ewallet_controller(
+            controller='user', ctype='action', action='view', view='invoice',
+            invoice='record', active_session=orm_session, **sanitized_instruction_set
+        )
+        return self.warning_could_not_view_invoice_sheet_record(
+            ewallet_session, instruction_set
+        ) if view_invoice_record.get('failed') else view_invoice_record
+
+    def action_view_invoice_sheet(self, ewallet_session, instruction_set):
+        log.debug('')
+        orm_session = ewallet_session.fetch_active_session()
+        sanitized_instruction_set = self.res_utils.remove_tags_from_command_chain(
+            instruction_set, 'controller', 'ctype', 'action', 'view', 'invoice'
+        )
+        view_invoice_sheet = ewallet_session.ewallet_controller(
+            controller='user', ctype='action', action='view', view='invoice',
+            invoice='list', active_session=orm_session, **sanitized_instruction_set
+        )
+        return self.warning_could_not_view_invoice_sheet(
+            ewallet_session, instruction_set
+        ) if view_invoice_sheet.get('failed') else view_invoice_sheet
+
+    def action_view_credit_clock(self, ewallet_session, instruction_set):
+        log.debug('')
+        orm_session = ewallet_session.fetch_active_session()
+        sanitized_instruction_set = self.res_utils.remove_tags_from_command_chain(
+            instruction_set, 'controller', 'ctype', 'action', 'view', 'credit'
+        )
+        view_credit_clock = ewallet_session.ewallet_controller(
+            controller='user', ctype='action', action='view', view='credit_clock',
+            active_session=orm_session, **sanitized_instruction_set
+        )
+        return self.warning_could_not_view_credit_clock(
+            ewallet_session, instruction_set
+        ) if view_credit_clock.get('failed') else view_credit_clock
+
+    def action_view_credit_ewallet(self, ewallet_session, instruction_set):
+        log.debug('')
+        orm_session = ewallet_session.fetch_active_session()
+        sanitized_instruction_set = self.res_utils.remove_tags_from_command_chain(
+            instruction_set, 'controller', 'ctype', 'action', 'view', 'credit'
+        )
+        view_credit_ewallet = ewallet_session.ewallet_controller(
+            controller='user', ctype='action', action='view', view='credit_wallet',
+            active_session=orm_session, **sanitized_instruction_set
+        )
+        return self.warning_could_not_view_credit_ewallet(
+            ewallet_session, instruction_set
+        ) if view_credit_ewallet.get('failed') else view_credit_ewallet
+
+    def action_edit_user_account(self, ewallet_session, instruction_set):
+        log.debug('')
+        orm_session = ewallet_session.fetch_active_session()
+        sanitized_instruction_set = self.res_utils.remove_tags_from_command_chain(
+            instruction_set, 'controller', 'ctype', 'action', 'edit',
+        )
+        edit_account = ewallet_session.ewallet_controller(
+            controller='user', ctype='action', action='edit', edit='account',
+            active_session=orm_session, **sanitized_instruction_set
+        )
+        return self.warning_could_not_edit_user_account(
+            ewallet_session, instruction_set
+        ) if edit_account.get('failed') else edit_account
+
+    def action_view_user_account(self, ewallet_session, instruction_set):
+        log.debug('')
+        orm_session = ewallet_session.fetch_active_session()
+        sanitized_instruction_set = self.res_utils.remove_tags_from_command_chain(
+            instruction_set, 'controller', 'ctype', 'action', 'view',
+        )
+        view_account = ewallet_session.ewallet_controller(
+            controller='user', ctype='action', action='view', view='account',
+            active_session=orm_session, **sanitized_instruction_set
+        )
+        return self.warning_could_not_view_user_account(
+            ewallet_session, instruction_set
+        ) if view_account.get('failed') else view_account
+
+    def action_view_conversion_record(self, ewallet_session, instruction_set):
+        log.debug('')
+        orm_session = ewallet_session.fetch_active_session()
+        sanitized_instruction_set = self.res_utils.remove_tags_from_command_chain(
+            instruction_set, 'controller', 'ctype', 'action', 'view', 'conversion',
+        )
+        view_conversion_record = ewallet_session.ewallet_controller(
+            controller='user', ctype='action', action='view', view='conversion',
+            conversion='record', active_session=orm_session, **sanitized_instruction_set
+        )
+        return self.warning_could_not_view_conversion_sheet_record(
+            ewallet_session, instruction_set
+        ) if not view_conversion_record or \
+        isinstance(view_conversion_record, dict) and \
+        view_conversion_record.get('failed') else view_conversion_record
+
+    def action_view_conversion_sheet(self, ewallet_session, instruction_set):
+        log.debug('')
+        orm_session = ewallet_session.fetch_active_session()
+        sanitized_instruction_set = self.res_utils.remove_tags_from_command_chain(
+            instruction_set, 'controller', 'ctype', 'action', 'view', 'conversion',
+        )
+        view_conversion_sheet = ewallet_session.ewallet_controller(
+            controller='user', ctype='action', action='view', view='conversion',
+            conversion='list', active_session=orm_session, **sanitized_instruction_set
+        )
+        return self.warning_could_not_view_conversion_sheet(
+            ewallet_session, instruction_set
+        ) if view_conversion_sheet.get('failed') else view_conversion_sheet
+
+    def action_view_time_sheet_record(self, ewallet_session, instruction_set):
+        log.debug('')
+        orm_session = ewallet_session.fetch_active_session()
+        sanitized_instruction_set = self.res_utils.remove_tags_from_command_chain(
+            instruction_set, 'controller', 'ctype', 'action', 'view', 'time',
+        )
+        view_time_record = ewallet_session.ewallet_controller(
+            controller='user', ctype='action', action='view', view='time',
+            time='record', active_session=orm_session, **sanitized_instruction_set
+        )
+        return self.warning_could_not_view_time_sheet_record(
+            ewallet_session, instruction_set
+        ) if view_time_record.get('failed') else view_time_record
+
+    def action_view_time_sheet(self, ewallet_session, instruction_set):
+        log.debug('')
+        orm_session = ewallet_session.fetch_active_session()
+        sanitized_instruction_set = self.res_utils.remove_tags_from_command_chain(
+            instruction_set, 'controller', 'ctype', 'action', 'view', 'time',
+        )
+        view_time_sheet = ewallet_session.ewallet_controller(
+            controller='user', ctype='action', action='view', view='time',
+            time='list', active_session=orm_session, **sanitized_instruction_set
+        )
+        return self.warning_could_not_view_time_sheet(
+            ewallet_session, instruction_set
+        ) if view_time_sheet.get('failed') else view_time_sheet
+
+    def action_view_transfer_sheet_record(self, ewallet_session, instruction_set):
+        log.debug('')
+        orm_session = ewallet_session.fetch_active_session()
+        sanitized_instruction_set = self.res_utils.remove_tags_from_command_chain(
+            instruction_set, 'controller', 'ctype', 'action', 'view', 'transfer',
+        )
+        view_transfer_record = ewallet_session.ewallet_controller(
+            controller='user', ctype='action', action='view', view='transfer',
+            transfer='record', active_session=orm_session, **sanitized_instruction_set
+        )
+        return self.warning_could_not_view_transfer_sheet_record(
+            ewallet_session, instruction_set
+        ) if view_transfer_record.get('failed') else view_transfer_record
+
+    def action_view_transfer_sheet(self, ewallet_session, instruction_set):
+        log.debug('')
+        orm_session = ewallet_session.fetch_active_session()
+        sanitized_instruction_set = self.res_utils.remove_tags_from_command_chain(
+            instruction_set, 'controller', 'ctype', 'action', 'view', 'transfer',
+        )
+        view_transfer_sheet = ewallet_session.ewallet_controller(
+            controller='user', ctype='action', action='view', view='transfer',
+            transfer='list', active_session=orm_session, **sanitized_instruction_set
+        )
+        return self.warning_could_not_view_transfer_sheet(
+            ewallet_session, instruction_set
+        ) if view_transfer_sheet.get('failed') else view_transfer_sheet
+
 #   @pysnooper.snoop()
-#   def fetch_client_id_mapped_session_worker(self, client_id):
-#       log.debug('')
-#       client_token = self.fetch_client_token_by_label(client_id)
-#       if not self.client_worker_map.get(client_token):
-#           return self.error_no_mapped_session_worker_found_for_client_id(client_id)
-#       return self.client_worker_map[client_token]
+    def action_transfer_credits(self, ewallet_session, instruction_set):
+        log.debug('')
+        orm_session = ewallet_session.fetch_active_session()
+        transfer_credits = ewallet_session.ewallet_controller(
+            controller='user', ctype='action', action='create', create='transfer',
+            ttype='transfer', active_session=orm_session, **instruction_set
+        )
+        return self.warning_could_not_transfer_credits_to_partner(
+            ewallet_session, instruction_set
+        ) if not transfer_credits or isinstance(transfer_credits, dict) and \
+            transfer_credits.get('failed') else transfer_credits
 
-#       try:
-#           instruction_set_response = ast.literal_eval(response)
-#       except Exception as e:
-#           return self.error_invalid_session_worker_instruction_response(
-#               worker_id, worker_pool_entry, response
-#           )
-#       return instruction_set_response
+    def action_view_contact_record(self, ewallet_session, instruction_set):
+        log.debug('')
+        orm_session = ewallet_session.fetch_active_session()
+        view_contact_record = ewallet_session.ewallet_controller(
+            controller='user', ctype='action', action='view',
+            active_session=orm_session, **instruction_set
+        )
+        return self.warning_could_not_view_contact_record(
+            ewallet_session, instruction_set
+        ) if not view_contact_record else view_contact_record
 
-# import random
-# import string
-# import hashlib
-# import datetime
-# import threading
-# import pprint
+    def action_view_contact_list(self, ewallet_session, instruction_set):
+        log.debug('')
+        orm_session = ewallet_session.fetch_active_session()
+        view_contact_list = ewallet_session.ewallet_controller(
+            controller='user', ctype='action', action='view',
+            active_session=orm_session, **instruction_set
+        )
+        return self.warning_could_not_view_contact_list(
+            ewallet_session, instruction_set
+        ) if not view_contact_list or isinstance(view_contact_list, dict) and \
+        view_contact_list.get('failed') else view_contact_list
+
+    def action_new_contact_record(self, ewallet_session, instruction_set):
+        log.debug('')
+        orm_session = ewallet_session.fetch_active_session()
+        new_contact_record = ewallet_session.ewallet_controller(
+            controller='user', ctype='action', action='create',
+            create='contact', active_session=orm_session, **instruction_set
+        )
+        return self.warning_could_not_create_new_contact_record(
+            ewallet_session, instruction_set
+        ) if not new_contact_record else new_contact_record
+
+    def action_pay_partner_account(self, ewallet_session, instruction_set):
+        log.debug('')
+        orm_session = ewallet_session.fetch_active_session()
+        pay_partner = ewallet_session.ewallet_controller(
+            controller='user', ctype='action', action='create', create='transfer',
+            ttype='pay', **instruction_set
+        )
+        return self.warning_could_not_pay_partner_account(
+            ewallet_session, instruction_set
+        ) if not pay_partner or isinstance(pay_partner, dict) and \
+            pay_partner.get('failed') else pay_partner
+
+    def action_stop_credit_clock_timer(self, ewallet_session, instruction_set):
+        log.debug('')
+        orm_session = ewallet_session.fetch_active_session()
+        stop_timer = ewallet_session.ewallet_controller(
+            controller='user', ctype='action', action='time', timer='stop',
+            active_session=orm_session, **instruction_set
+        )
+        return self.warning_could_not_stop_credit_clock_timer(
+            ewallet_session, instruction_set
+        ) if not stop_timer or isinstance(stop_timer, dict) and \
+            stop_timer.get('failed') else stop_timer
+
+#   @pysnooper.snoop()
+    def action_resume_credit_clock_timer(self, ewallet_session, instruction_set):
+        '''
+        [ NOTE   ]: Resumes active credit clock consumption timer if clock is in
+                    appropriate state.
+        '''
+        log.debug('')
+        orm_session = ewallet_session.fetch_active_session()
+        resume_timer = ewallet_session.ewallet_controller(
+            controller='user', ctype='action', action='time', timer='resume',
+            active_session=orm_session, **instruction_set
+        )
+        return self.warning_could_not_resume_credit_clock_timer(
+            ewallet_session, instruction_set
+        ) if not resume_timer or isinstance(resume_timer, dict) and \
+            resume_timer.get('failed') else resume_timer
+
+#   @pysnooper.snoop()
+    def action_pause_credit_clock_timer(self, ewallet_session, instruction_set):
+        '''
+        [ NOTE   ]: Pauses active credit clock consumption timer if clock is in
+                    appropriate state.
+        '''
+        log.debug('')
+        orm_session = ewallet_session.fetch_active_session()
+        pause_timer = ewallet_session.ewallet_controller(
+            controller='user', ctype='action', action='time', timer='pause',
+            active_session=orm_session, **instruction_set
+        )
+        return self.warning_could_not_pause_credit_clock_timer(
+            ewallet_session, instruction_set
+        ) if not pause_timer or isinstance(pause_timer, dict) and \
+            pause_timer.get('failed') else pause_timer
+
+#   @pysnooper.snoop()
+    def action_start_credit_clock_timer(self, ewallet_session, instruction_set):
+        '''
+        [ NOTE   ]: Starts active credit clock consumption timer if clock is in
+                    appropriate state.
+        '''
+        log.debug('')
+        orm_session = ewallet_session.fetch_active_session()
+        start_timer = ewallet_session.ewallet_controller(
+            controller='user', ctype='action', action='time', timer='start',
+            active_session=orm_session, **instruction_set
+        )
+        return self.warning_could_not_start_credit_clock_timer(
+            ewallet_session, instruction_set
+        ) if not start_timer or isinstance(start_timer, dict) and \
+            start_timer.get('failed') else start_timer
+
+
