@@ -59,7 +59,8 @@
     - x - User action Pay Credits
     - x - User action Convert Credits2Clock
     - x - User action Convert Clock2Credits
-    -   - User action Add Contact Record
+    - x - User action Add Contact Record
+    -   - User action Create Contact List
     - User action transfer_credits
     - User action edit_account
     - User action credit_clock_timer_start
@@ -87,7 +88,6 @@
     - User action create_invoice_sheet
     - User action create_conversion_sheet
     - User action create_time_sheet
-    - User action create_contact_list
     - User action switch_credit_ewallet
     - User action switch_credit_clock
     - User action switch_transfer_sheet

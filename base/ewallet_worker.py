@@ -212,6 +212,16 @@ class EWalletWorker():
 
     # SETTERS
 
+    # TODO
+    def set_session_pool_add_record(self, record):
+        pass
+    def set_session_pool_remove_record(self, record):
+        pass
+    def set_session_pool_clear_records(self):
+        pass
+    def set_session_pool_update_records(self):
+        pass
+
     def set_esession_pool(self, map_entry):
         log.debug('')
         try:
@@ -358,16 +368,6 @@ class EWalletWorker():
         log.debug('')
         self.session_worker_state_timestamp = timestamp
         return True
-
-    # TODO
-    def set_session_pool_add_record(self, record):
-        pass
-    def set_session_pool_remove_record(self, record):
-        pass
-    def set_session_pool_clear_records(self):
-        pass
-    def set_session_pool_update_records(self):
-        pass
 
     # UPDATERS
 
@@ -666,6 +666,40 @@ class EWalletWorker():
 
     # ACTIONS
 
+    # TODO
+    def action_new_contact_list(self, **kwargs):
+        log.debug('')
+
+    def action_new_contact_record(self, **kwargs):
+        log.debug('')
+        # Fetch ewallet session by token keys
+        ewallet_session = self.fetch_ewallet_session_by_client_session_tokens(
+            kwargs['client_id'], kwargs['session_token']
+        )
+        if not ewallet_session or isinstance(ewallet_session, dict) and \
+                ewallet_session.get('failed'):
+            return ewallet_session
+        sanitized_instruction_set = res_utils.remove_tags_from_command_chain(
+            kwargs, 'controller', 'ctype', 'action', 'create',
+            'contact', 'active_session'
+        )
+        # Execute action in session
+        orm_session = ewallet_session.fetch_active_session()
+        new_contact = ewallet_session.ewallet_controller(
+            controller='user', ctype='action', action='create',
+            create='contact', contact='record',
+            active_session=orm_session, **sanitized_instruction_set
+        )
+        # Formulate response
+        response = self.warning_could_not_create_new_contact_record(
+            ewallet_session, kwargs, new_contact
+        ) if not new_contact or \
+            isinstance(new_contact, dict) and \
+            new_contact.get('failed') else new_contact
+        # Respond to session manager
+        self.send_instruction_response(response)
+        return response
+
     def action_convert_clock_to_credits(self, **kwargs):
         log.debug('')
         # Fetch ewallet session by token keys
@@ -928,6 +962,24 @@ class EWalletWorker():
 
     # HANDLERS
 
+    def handle_client_action_new_contact_record(self, **kwargs):
+        log.debug('')
+        return self.action_new_contact_record(**kwargs)
+
+    def handle_client_action_new_contact_list(self, **kwargs):
+        log.debug('')
+        return self.action_new_contact_list(**kwargs)
+
+    def handle_client_action_new_contact(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('contact'):
+            return self.error_no_client_action_new_contact_target_specified(kwargs)
+        handlers = {
+            'record': self.handle_client_action_new_contact_record,
+            'list': self.handle_client_action_new_contact_list,
+        }
+        return handlers[kwargs['contact']](**kwargs)
+
     def handle_client_action_convert_clock_to_credits(self, **kwargs):
         log.debug('')
         return self.action_convert_clock_to_credits(**kwargs)
@@ -977,6 +1029,7 @@ class EWalletWorker():
             return self.error_no_session_worker_client_action_new_target_specified(kwargs)
         handlers = {
             'account': self.handle_client_action_new_user_account,
+            'contact': self.handle_client_action_new_contact,
         }
         return handlers[kwargs['new']](**kwargs)
 
@@ -1210,6 +1263,16 @@ class EWalletWorker():
 
     # WARNINGS
 
+    def warning_could_not_create_new_contact_record(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Something went wrong. '
+                       'Could not create new contact record. '
+                       'Details: {}'.format(args),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
+
     def warning_could_not_pay_partner_account(self, *args):
         command_chain_response = {
             'failed': True,
@@ -1435,6 +1498,15 @@ class EWalletWorker():
         return False
 
     # ERRORS
+
+    def error_no_client_action_new_contact_target_specified(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No client action new contact target specified. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
 
     def error_no_client_action_convert_target_specified(self, *args):
         command_chain_response = {
@@ -1868,30 +1940,4 @@ class EWalletWorker():
     # TESTS
 
     # CODE DUMP
-#       if not map_entry or not isinstance(map_entry, dict):
-#           return self.error_invalid_client_token_pool_map_entry(map_entry)
-#       ctoken_pool = self.fetch_session_worker_ctoken_pool()
-#       for k, v in map_entry.items():
-#           if k in ctoken_pool:
-#               ctoken_pool[k].update(v)
-#               continue
-#           set_entry = self.set_ctoken_pool(map_entry)
-#           if not set_entry or isinstance(set_entry, dict) and \
-#                   set_entry.get('failed'):
-#               return set_entry
-#           break
-#       return True
 
-#       if not map_entry or not isinstance(map_entry, dict):
-#           return self.error_invalid_session_token_pool_map_entry(map_entry)
-#       stoken_pool = self.fetch_session_worker_stoken_pool()
-#       for k, v in map_entry.items():
-#           if k in stoken_pool:
-#               stoken_pool[k].update(v)
-#               continue
-#           set_entry = self.set_stoken_pool(map_entry)
-#           if not set_entry or isinstance(set_entry, dict) and \
-#                   set_entry.get('failed'):
-#               return set_entry
-#           break
-#       return True
