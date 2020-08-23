@@ -1426,6 +1426,19 @@ class EWalletSessionManager():
     [ NOTE ]: Instruction set validation and sanitizations are performed here.
     '''
 
+    def handle_client_action_new_contact_list(self, **kwargs):
+        log.debug('')
+        instruction_set_validation = self.validate_instruction_set(kwargs)
+        if not instruction_set_validation \
+                or isinstance(instruction_set_validation, dict) \
+                and instruction_set_validation.get('failed'):
+            return instruction_set_validation
+        new_contact_list = self.action_execute_user_instruction_set(**kwargs)
+        return self.warning_could_not_create_new_contact_list(
+            kwargs, new_contact_list
+        ) if not new_contact_list or isinstance(new_contact_list, dict) and \
+            new_contact_list.get('failed') else new_contact_list
+
     def handle_client_action_new_contact_record(self, **kwargs):
         log.debug('')
         instruction_set_validation = self.validate_instruction_set(kwargs)
@@ -2243,25 +2256,6 @@ class EWalletSessionManager():
             'account': self.handle_client_action_switch_user_account,
         }
         return handlers[kwargs['switch']](**kwargs)
-
-    def handle_client_action_new_contact_list(self, **kwargs):
-        log.debug('')
-        instruction_set_validation = self.validate_instruction_set(kwargs)
-        if not instruction_set_validation \
-                or isinstance(instruction_set_validation, dict) \
-                and instruction_set_validation.get('failed'):
-            return instruction_set_validation
-        ewallet = self.fetch_ewallet_session_for_client_action_using_instruction_set(
-            kwargs
-        )
-        if not ewallet or not ewallet['ewallet_session'] or \
-                isinstance(ewallet['ewallet_session'], dict) and \
-                ewallet['ewallet_session'].get('failed'):
-            return self.error_no_ewallet_session_found(kwargs)
-        new_contact_list = self.action_new_contact_list(
-            ewallet['ewallet_session'], ewallet['sanitized_instruction_set']
-        )
-        return new_contact_list
 
     def handle_client_action_new_time_sheet(self, **kwargs):
         log.debug('')
@@ -3210,6 +3204,16 @@ class EWalletSessionManager():
 
     # WARNINGS
 
+    def warning_could_not_create_new_contact_list(self, *args):
+        instruction_set_response = {
+            'failed': True,
+            'warning': 'Something went wrong. '
+                       'Could not create new contact list. '
+                       'Details: {}'.format(args),
+        }
+        log.warning(instruction_set_response['warning'])
+        return instruction_set_response
+
     def warning_could_not_create_new_contact_record(self, *args):
         instruction_set_response = {
             'failed': True,
@@ -3809,15 +3813,6 @@ class EWalletSessionManager():
         instruction_set_response = {
             'failed': True,
             'warning': 'Something went wrong. Could not switch credit ewallet in ewallet session {}. '\
-                       'Instruction set details : {}'.format(ewallet_session, instruction_set),
-        }
-        log.warning(instruction_set_response['warning'])
-        return instruction_set_response
-
-    def warning_could_not_create_new_contact_list(self, ewallet_session, instruction_set):
-        instruction_set_response = {
-            'failed': True,
-            'warning': 'Something went wrong. Could not create new contact list in ewallet session {}. '\
                        'Instruction set details : {}'.format(ewallet_session, instruction_set),
         }
         log.warning(instruction_set_response['warning'])
@@ -4962,6 +4957,21 @@ class EWalletSessionManager():
 
 # CODE DUMP
 
+#   def action_new_contact_list(self, ewallet_session, instruction_set):
+#       log.debug('')
+#       orm_session = ewallet_session.fetch_active_session()
+#       sanitized_instruction_set = self.res_utils.remove_tags_from_command_chain(
+#           instruction_set, 'controller', 'ctype', 'action', 'new', 'contact'
+#       )
+#       new_contact_list = ewallet_session.ewallet_controller(
+#           controller='user', ctype='action', action='create', create='contact',
+#           contact='list', active_session=orm_session, **sanitized_instruction_set
+#       )
+#       return self.warning_could_not_create_new_contact_list(
+#           ewallet_session, instruction_set
+#       ) if new_contact_list.get('failed') else new_contact_list
+
+
     def action_stop_credit_clock_timer(self, ewallet_session, instruction_set):
         log.debug('')
         orm_session = ewallet_session.fetch_active_session()
@@ -5307,20 +5317,6 @@ class EWalletSessionManager():
             ewallet_session, instruction_set
         ) if not switch_credit_ewallet or switch_credit_ewallet.get('failed') \
         else switch_credit_ewallet
-
-    def action_new_contact_list(self, ewallet_session, instruction_set):
-        log.debug('')
-        orm_session = ewallet_session.fetch_active_session()
-        sanitized_instruction_set = self.res_utils.remove_tags_from_command_chain(
-            instruction_set, 'controller', 'ctype', 'action', 'new', 'contact'
-        )
-        new_contact_list = ewallet_session.ewallet_controller(
-            controller='user', ctype='action', action='create', create='contact',
-            contact='list', active_session=orm_session, **sanitized_instruction_set
-        )
-        return self.warning_could_not_create_new_contact_list(
-            ewallet_session, instruction_set
-        ) if new_contact_list.get('failed') else new_contact_list
 
     def action_new_invoice_sheet(self, ewallet_session, instruction_set):
         log.debug('')

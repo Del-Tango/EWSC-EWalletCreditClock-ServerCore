@@ -60,8 +60,8 @@
     - x - User action Convert Credits2Clock
     - x - User action Convert Clock2Credits
     - x - User action Add Contact Record
-    -   - User action Create Contact List
-    - User action transfer_credits
+    - x - User action Create Contact List
+    -   - User action TransferCredits
     - User action edit_account
     - User action credit_clock_timer_start
     - User action credit_clock_timer_pause
