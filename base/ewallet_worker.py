@@ -666,6 +666,36 @@ class EWalletWorker():
 
     # ACTIONS
 
+    def action_transfer_credits(self, **kwargs):
+        log.debug('')
+        # Fetch ewallet session by token keys
+        ewallet_session = self.fetch_ewallet_session_by_client_session_tokens(
+            kwargs['client_id'], kwargs['session_token']
+        )
+        if not ewallet_session or isinstance(ewallet_session, dict) and \
+                ewallet_session.get('failed'):
+            return ewallet_session
+        sanitized_instruction_set = res_utils.remove_tags_from_command_chain(
+            kwargs, 'controller', 'ctype', 'action', 'create', 'ttype',
+            'active_session'
+        )
+        # Execute action in session
+        orm_session = ewallet_session.fetch_active_session()
+        transfer_credits = ewallet_session.ewallet_controller(
+            controller='user', ctype='action', action='create',
+            create='transfer', ttype='transfer',
+            active_session=orm_session, **sanitized_instruction_set
+        )
+        # Formulate response
+        response = self.warning_could_not_transfer_credits(
+            ewallet_session, kwargs, transfer_credits
+        ) if not transfer_credits or \
+            isinstance(transfer_credits, dict) and \
+            transfer_credits.get('failed') else transfer_credits
+        # Respond to session manager
+        self.send_instruction_response(response)
+        return response
+
     def action_new_contact_list(self, **kwargs):
         log.debug('')
         # Fetch ewallet session by token keys
@@ -988,6 +1018,20 @@ class EWalletWorker():
 
     # HANDLERS
 
+    def handle_client_action_transfer_credits(self, **kwargs):
+        log.debug('')
+        return self.action_transfer_credits(**kwargs)
+
+    def handle_client_action_transfer(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('transfer'):
+            return self.error_no_client_action_transfer_target_specified(kwargs)
+        handlers = {
+            'credits': self.handle_client_action_transfer_credits,
+#           'time':,
+        }
+        return handlers[kwargs['transfer']](**kwargs)
+
     def handle_client_action_new_contact_record(self, **kwargs):
         log.debug('')
         return self.action_new_contact_record(**kwargs)
@@ -1242,6 +1286,7 @@ class EWalletWorker():
             'supply': self.handle_client_action_supply,
             'pay': self.handle_client_action_pay,
             'convert': self.handle_client_action_convert,
+            'transfer': self.handle_client_action_transfer,
         }
         return handlers[kwargs['action']](**kwargs)
 
@@ -1288,6 +1333,16 @@ class EWalletWorker():
         return handlers[kwargs['controller']](**kwargs)
 
     # WARNINGS
+
+    def warning_could_not_transfer_credits(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Something went wrong. '
+                       'Could not transfer credits to partner. '
+                       'Details: {}'.format(args),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
 
     def warning_could_not_create_new_contact_list(self, *args):
         command_chain_response = {
@@ -1534,6 +1589,15 @@ class EWalletWorker():
         return False
 
     # ERRORS
+
+    def error_no_client_action_transfer_target_specified(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No client action transfer target specified. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
 
     def error_no_client_action_new_contact_target_specified(self, *args):
         command_chain_response = {
