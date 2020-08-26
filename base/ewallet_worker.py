@@ -666,6 +666,35 @@ class EWalletWorker():
 
     # ACTIONS
 
+    def action_edit_account(self, **kwargs):
+        log.debug('')
+        # Fetch ewallet session by token keys
+        ewallet_session = self.fetch_ewallet_session_by_client_session_tokens(
+            kwargs['client_id'], kwargs['session_token']
+        )
+        if not ewallet_session or isinstance(ewallet_session, dict) and \
+                ewallet_session.get('failed'):
+            return ewallet_session
+        sanitized_instruction_set = res_utils.remove_tags_from_command_chain(
+            kwargs, 'controller', 'ctype', 'action', 'edit', 'active_session'
+        )
+        # Execute action in session
+        orm_session = ewallet_session.fetch_active_session()
+        edit_account = ewallet_session.ewallet_controller(
+            controller='user', ctype='action', action='edit',
+            edit='account', active_session=orm_session,
+            **sanitized_instruction_set
+        )
+        # Formulate response
+        response = self.warning_could_not_edit_account(
+            ewallet_session, kwargs, edit_account
+        ) if not edit_account or \
+            isinstance(edit_account, dict) and \
+            edit_account.get('failed') else edit_account
+        # Respond to session manager
+        self.send_instruction_response(response)
+        return response
+
     def action_transfer_credits(self, **kwargs):
         log.debug('')
         # Fetch ewallet session by token keys
@@ -1018,6 +1047,19 @@ class EWalletWorker():
 
     # HANDLERS
 
+    def handle_client_action_edit_account(self, **kwargs):
+        log.debug('')
+        return self.action_edit_account(**kwargs)
+
+    def handle_client_action_edit(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('edit'):
+            return self.error_no_client_action_edit_target_specified(kwargs)
+        handlers = {
+            'account': self.handle_client_action_edit_account,
+        }
+        return handlers[kwargs['edit']](**kwargs)
+
     def handle_client_action_transfer_credits(self, **kwargs):
         log.debug('')
         return self.action_transfer_credits(**kwargs)
@@ -1287,6 +1329,7 @@ class EWalletWorker():
             'pay': self.handle_client_action_pay,
             'convert': self.handle_client_action_convert,
             'transfer': self.handle_client_action_transfer,
+            'edit': self.handle_client_action_edit,
         }
         return handlers[kwargs['action']](**kwargs)
 
@@ -1589,6 +1632,15 @@ class EWalletWorker():
         return False
 
     # ERRORS
+
+    def error_no_client_action_edit_target_specified(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No client action edit target specified. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
 
     def error_no_client_action_transfer_target_specified(self, *args):
         command_chain_response = {
