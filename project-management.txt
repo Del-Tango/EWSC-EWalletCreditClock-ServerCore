@@ -65,8 +65,8 @@
     - x - User action Edit Account
     - x - User action Start Clock Timer
     - x - User action Pause Clock Timer
-    -   - User action Resume Clock Timer
-    - User action credit_clock_timer_stop
+    - x - User action Resume Clock Timer
+    -   - User action Stop Clock Timer
     - User action view_contact_list
     - User action view_contact_record
     - User action view_transfer_sheet

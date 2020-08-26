@@ -666,6 +666,35 @@ class EWalletWorker():
 
     # ACTIONS
 
+    def action_resume_clock_timer(self, **kwargs):
+        log.debug('')
+        # Fetch ewallet session by token keys
+        ewallet_session = self.fetch_ewallet_session_by_client_session_tokens(
+            kwargs['client_id'], kwargs['session_token']
+        )
+        if not ewallet_session or isinstance(ewallet_session, dict) and \
+                ewallet_session.get('failed'):
+            return ewallet_session
+        sanitized_instruction_set = res_utils.remove_tags_from_command_chain(
+            kwargs, 'controller', 'ctype', 'action', 'resume', 'active_session'
+        )
+        # Execute action in session
+        orm_session = ewallet_session.fetch_active_session()
+        resume_timer = ewallet_session.ewallet_controller(
+            controller='user', ctype='action', action='time',
+            timer='resume', active_session=orm_session,
+            **sanitized_instruction_set
+        )
+        # Formulate response
+        response = self.warning_could_not_resume_clock_timer(
+            ewallet_session, kwargs, resume_timer
+        ) if not resume_timer or \
+            isinstance(resume_timer, dict) and \
+            resume_timer.get('failed') else resume_timer
+        # Respond to session manager
+        self.send_instruction_response(response)
+        return response
+
     def action_pause_clock_timer(self, **kwargs):
         log.debug('')
         # Fetch ewallet session by token keys
@@ -1105,6 +1134,19 @@ class EWalletWorker():
 
     # HANDLERS
 
+    def handle_client_action_resume_clock_timer(self, **kwargs):
+        log.debug('')
+        return self.action_resume_clock_timer(**kwargs)
+
+    def handle_client_action_resume(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('resume'):
+            return self.error_no_client_action_resume_target_specified(kwargs)
+        handlers = {
+            'clock_timer': self.handle_client_action_resume_clock_timer,
+        }
+        return handlers[kwargs['resume']](**kwargs)
+
     def handle_client_action_pause_clock_timer(self, **kwargs):
         log.debug('')
         return self.action_pause_clock_timer(**kwargs)
@@ -1416,6 +1458,7 @@ class EWalletWorker():
             'edit': self.handle_client_action_edit,
             'start': self.handle_client_action_start,
             'pause': self.handle_client_action_pause,
+            'resume': self.handle_client_action_resume,
         }
         return handlers[kwargs['action']](**kwargs)
 
