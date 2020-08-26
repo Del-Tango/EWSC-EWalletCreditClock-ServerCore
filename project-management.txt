@@ -63,9 +63,9 @@
     - x - User action Create Contact List
     - x - User action TransferCredits
     - x - User action Edit Account
-    -   - User action Start Clock Timer
-    - User action credit_clock_timer_pause
-    - User action credit_clock_timer_resume
+    - x - User action Start Clock Timer
+    - x - User action Pause Clock Timer
+    -   - User action Resume Clock Timer
     - User action credit_clock_timer_stop
     - User action view_contact_list
     - User action view_contact_record

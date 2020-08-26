@@ -666,6 +666,64 @@ class EWalletWorker():
 
     # ACTIONS
 
+    def action_pause_clock_timer(self, **kwargs):
+        log.debug('')
+        # Fetch ewallet session by token keys
+        ewallet_session = self.fetch_ewallet_session_by_client_session_tokens(
+            kwargs['client_id'], kwargs['session_token']
+        )
+        if not ewallet_session or isinstance(ewallet_session, dict) and \
+                ewallet_session.get('failed'):
+            return ewallet_session
+        sanitized_instruction_set = res_utils.remove_tags_from_command_chain(
+            kwargs, 'controller', 'ctype', 'action', 'pause', 'active_session'
+        )
+        # Execute action in session
+        orm_session = ewallet_session.fetch_active_session()
+        pause_timer = ewallet_session.ewallet_controller(
+            controller='user', ctype='action', action='time',
+            timer='pause', active_session=orm_session,
+            **sanitized_instruction_set
+        )
+        # Formulate response
+        response = self.warning_could_not_pause_clock_timer(
+            ewallet_session, kwargs, pause_timer
+        ) if not pause_timer or \
+            isinstance(pause_timer, dict) and \
+            pause_timer.get('failed') else pause_timer
+        # Respond to session manager
+        self.send_instruction_response(response)
+        return response
+
+    def action_start_clock_timer(self, **kwargs):
+        log.debug('')
+        # Fetch ewallet session by token keys
+        ewallet_session = self.fetch_ewallet_session_by_client_session_tokens(
+            kwargs['client_id'], kwargs['session_token']
+        )
+        if not ewallet_session or isinstance(ewallet_session, dict) and \
+                ewallet_session.get('failed'):
+            return ewallet_session
+        sanitized_instruction_set = res_utils.remove_tags_from_command_chain(
+            kwargs, 'controller', 'ctype', 'action', 'start', 'active_session'
+        )
+        # Execute action in session
+        orm_session = ewallet_session.fetch_active_session()
+        start_timer = ewallet_session.ewallet_controller(
+            controller='user', ctype='action', action='time',
+            timer='start', active_session=orm_session,
+            **sanitized_instruction_set
+        )
+        # Formulate response
+        response = self.warning_could_not_start_clock_timer(
+            ewallet_session, kwargs, start_timer
+        ) if not start_timer or \
+            isinstance(start_timer, dict) and \
+            start_timer.get('failed') else start_timer
+        # Respond to session manager
+        self.send_instruction_response(response)
+        return response
+
     def action_edit_account(self, **kwargs):
         log.debug('')
         # Fetch ewallet session by token keys
@@ -1047,6 +1105,32 @@ class EWalletWorker():
 
     # HANDLERS
 
+    def handle_client_action_pause_clock_timer(self, **kwargs):
+        log.debug('')
+        return self.action_pause_clock_timer(**kwargs)
+
+    def handle_client_action_pause(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('pause'):
+            return self.error_no_client_action_pause_target_specified(kwargs)
+        handlers = {
+            'clock_timer': self.handle_client_action_pause_clock_timer,
+        }
+        return handlers[kwargs['pause']](**kwargs)
+
+    def handle_client_action_start_clock_timer(self, **kwargs):
+        log.debug('')
+        return self.action_start_clock_timer(**kwargs)
+
+    def handle_client_action_start(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('start'):
+            return self.error_no_client_action_start_target_specified(kwargs)
+        handlers = {
+            'clock_timer': self.handle_client_action_start_clock_timer,
+        }
+        return handlers[kwargs['start']](**kwargs)
+
     def handle_client_action_edit_account(self, **kwargs):
         log.debug('')
         return self.action_edit_account(**kwargs)
@@ -1330,6 +1414,8 @@ class EWalletWorker():
             'convert': self.handle_client_action_convert,
             'transfer': self.handle_client_action_transfer,
             'edit': self.handle_client_action_edit,
+            'start': self.handle_client_action_start,
+            'pause': self.handle_client_action_pause,
         }
         return handlers[kwargs['action']](**kwargs)
 
@@ -1376,6 +1462,26 @@ class EWalletWorker():
         return handlers[kwargs['controller']](**kwargs)
 
     # WARNINGS
+
+    def warning_could_not_pause_clock_timer(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Something went wrong. '
+                       'Could not pause credit clock timer. '
+                       'Details: {}'.format(args),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
+
+    def warning_could_not_start_clock_timer(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Something went wrong. '
+                       'Could not start credit clock timer. '
+                       'Details: {}'.format(args),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
 
     def warning_could_not_transfer_credits(self, *args):
         command_chain_response = {
