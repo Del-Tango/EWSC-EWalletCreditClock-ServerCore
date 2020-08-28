@@ -1426,6 +1426,32 @@ class EWalletSessionManager():
     [ NOTE ]: Instruction set validation and sanitizations are performed here.
     '''
 
+    def handle_client_action_view_credit_clock(self, **kwargs):
+        log.debug('')
+        instruction_set_validation = self.validate_instruction_set(kwargs)
+        if not instruction_set_validation \
+                or isinstance(instruction_set_validation, dict) \
+                and instruction_set_validation.get('failed'):
+            return instruction_set_validation
+        view_clock = self.action_execute_user_instruction_set(**kwargs)
+        return self.warning_could_not_view_credit_clock(
+            kwargs, view_clock
+        ) if not view_clock or isinstance(view_clock, dict) and \
+            view_clock.get('failed') else view_clock
+
+    def handle_client_action_view_credit_ewallet(self, **kwargs):
+        log.debug('')
+        instruction_set_validation = self.validate_instruction_set(kwargs)
+        if not instruction_set_validation \
+                or isinstance(instruction_set_validation, dict) \
+                and instruction_set_validation.get('failed'):
+            return instruction_set_validation
+        view_ewallet = self.action_execute_user_instruction_set(**kwargs)
+        return self.warning_could_not_view_credit_ewallet(
+            kwargs, view_ewallet
+        ) if not view_ewallet or isinstance(view_ewallet, dict) and \
+            view_ewallet.get('failed') else view_ewallet
+
     def handle_client_action_view_account(self, **kwargs):
         log.debug('')
         instruction_set_validation = self.validate_instruction_set(kwargs)
@@ -2669,44 +2695,6 @@ class EWalletSessionManager():
         }
         return handlers[kwargs['invoice']](**kwargs)
 
-    def handle_client_action_view_credit_clock(self, **kwargs):
-        log.debug('')
-        instruction_set_validation = self.validate_instruction_set(kwargs)
-        if not instruction_set_validation \
-                or isinstance(instruction_set_validation, dict) \
-                and instruction_set_validation.get('failed'):
-            return instruction_set_validation
-        ewallet = self.fetch_ewallet_session_for_client_action_using_instruction_set(
-            kwargs
-        )
-        if not ewallet or not ewallet['ewallet_session'] or \
-                isinstance(ewallet['ewallet_session'], dict) and \
-                ewallet['ewallet_session'].get('failed'):
-            return self.error_no_ewallet_session_found(kwargs)
-        view_credit_clock = self.action_view_credit_clock(
-            ewallet['ewallet_session'], ewallet['sanitized_instruction_set'],
-        )
-        return view_credit_clock
-
-    def handle_client_action_view_credit_ewallet(self, **kwargs):
-        log.debug('')
-        instruction_set_validation = self.validate_instruction_set(kwargs)
-        if not instruction_set_validation \
-                or isinstance(instruction_set_validation, dict) \
-                and instruction_set_validation.get('failed'):
-            return instruction_set_validation
-        ewallet = self.fetch_ewallet_session_for_client_action_using_instruction_set(
-            kwargs
-        )
-        if not ewallet or not ewallet['ewallet_session'] or \
-                isinstance(ewallet['ewallet_session'], dict) and \
-                ewallet['ewallet_session'].get('failed'):
-            return self.error_no_ewallet_session_found(kwargs)
-        view_credit_ewallet = self.action_view_credit_ewallet(
-            ewallet['ewallet_session'], ewallet['sanitized_instruction_set'],
-        )
-        return view_credit_ewallet
-
     def handle_client_action_view_credit(self, **kwargs):
         log.debug('')
         if not kwargs.get('credit'):
@@ -3113,6 +3101,25 @@ class EWalletSessionManager():
         return handlers[kwargs['controller']](**kwargs)
 
     # WARNINGS
+
+    def warning_could_not_view_credit_clock(self, ewallet_session, instruction_set):
+        instruction_set_response = {
+            'failed': True,
+            'warning': 'Something went wrong. Could not view credit clock in session {}. ' \
+                       'Instruction set details : {}'.format(ewallet_session, instruction_set),
+        }
+        log.warning(instruction_set_response['warning'])
+        return instruction_set_response
+
+    def warning_could_not_view_credit_ewallet(self, *args):
+        instruction_set_response = {
+            'failed': True,
+            'warning': 'Something went wrong. '
+                       'Could not view credit ewallet. '\
+                       'Details: {}'.format(args)
+        }
+        log.warning(instruction_set_response['warning'])
+        return instruction_set_response
 
     def warning_could_not_view_account(self, *args):
         instruction_set_response = {
@@ -3880,25 +3887,6 @@ class EWalletSessionManager():
         instruction_set_response = {
             'failed': True,
             'warning': 'Something went wrong. Could not view invoice sheet in session {}. '\
-                       'Instruction set details : {}'.format(ewallet_session, instruction_set),
-        }
-        log.warning(instruction_set_response['warning'])
-        return instruction_set_response
-
-    def warning_could_not_view_credit_clock(self, ewallet_session, instruction_set):
-        instruction_set_response = {
-            'failed': True,
-            'warning': 'Something went wrong. Could not view credit clock in session {}. ' \
-                       'Instruction set details : {}'.format(ewallet_session, instruction_set),
-        }
-        log.warning(instruction_set_response['warning'])
-        return instruction_set_response
-
-
-    def warning_could_not_view_credit_ewallet(self, ewallet_session, instruction_set):
-        instruction_set_response = {
-            'failed': True,
-            'warning': 'Something went wrong. Could not view credit ewallet in session {}. ' \
                        'Instruction set details : {}'.format(ewallet_session, instruction_set),
         }
         log.warning(instruction_set_response['warning'])
@@ -4858,12 +4846,12 @@ class EWalletSessionManager():
 
     def debug_worker_unlocked(self, lock):
         log.debug(
-            'Worker unlocked {} - PID: {} - '.format(lock.value, os.getpid())
+            'Worker unlocked - {} - PID: {} - '.format(lock.value, os.getpid())
         )
 
     def debug_worker_locked(self, lock):
         log.debug(
-            'Worker locked {} - PID: {} - '.format(lock.value, os.getpid())
+            'Worker locked - {} - PID: {} - '.format(lock.value, os.getpid())
         )
 
     def debug_delegating_instruction_set(self, lock_value, instruction_set):
@@ -4900,7 +4888,6 @@ class EWalletSessionManager():
         )
 
 # CODE DUMP
-
     def action_view_credit_ewallet(self, ewallet_session, instruction_set):
         log.debug('')
         orm_session = ewallet_session.fetch_active_session()
@@ -4914,20 +4901,6 @@ class EWalletSessionManager():
         return self.warning_could_not_view_credit_ewallet(
             ewallet_session, instruction_set
         ) if view_credit_ewallet.get('failed') else view_credit_ewallet
-
-    def action_view_user_account(self, ewallet_session, instruction_set):
-        log.debug('')
-        orm_session = ewallet_session.fetch_active_session()
-        sanitized_instruction_set = self.res_utils.remove_tags_from_command_chain(
-            instruction_set, 'controller', 'ctype', 'action', 'view',
-        )
-        view_account = ewallet_session.ewallet_controller(
-            controller='user', ctype='action', action='view', view='account',
-            active_session=orm_session, **sanitized_instruction_set
-        )
-        return self.warning_could_not_view_user_account(
-            ewallet_session, instruction_set
-        ) if view_account.get('failed') else view_account
 
 
     def action_logout_user_account(self, ewallet_session, instruction_set):
@@ -5426,18 +5399,4 @@ class EWalletSessionManager():
         return self.warning_could_not_view_invoice_sheet(
             ewallet_session, instruction_set
         ) if view_invoice_sheet.get('failed') else view_invoice_sheet
-
-    def action_view_credit_clock(self, ewallet_session, instruction_set):
-        log.debug('')
-        orm_session = ewallet_session.fetch_active_session()
-        sanitized_instruction_set = self.res_utils.remove_tags_from_command_chain(
-            instruction_set, 'controller', 'ctype', 'action', 'view', 'credit'
-        )
-        view_credit_clock = ewallet_session.ewallet_controller(
-            controller='user', ctype='action', action='view', view='credit_clock',
-            active_session=orm_session, **sanitized_instruction_set
-        )
-        return self.warning_could_not_view_credit_clock(
-            ewallet_session, instruction_set
-        ) if view_credit_clock.get('failed') else view_credit_clock
 

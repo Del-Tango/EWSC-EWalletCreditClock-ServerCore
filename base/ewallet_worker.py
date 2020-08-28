@@ -666,6 +666,66 @@ class EWalletWorker():
 
     # ACTIONS
 
+    def action_view_credit_ewallet(self, **kwargs):
+        log.debug('')
+        # Fetch ewallet session by token keys
+        ewallet_session = self.fetch_ewallet_session_by_client_session_tokens(
+            kwargs['client_id'], kwargs['session_token']
+        )
+        if not ewallet_session or isinstance(ewallet_session, dict) and \
+                ewallet_session.get('failed'):
+            return ewallet_session
+        sanitized_instruction_set = res_utils.remove_tags_from_command_chain(
+            kwargs, 'controller', 'ctype', 'action', 'view', 'credit',
+            'active_session'
+        )
+        # Execute action in session
+        orm_session = ewallet_session.fetch_active_session()
+        view_ewallet = ewallet_session.ewallet_controller(
+            controller='user', ctype='action', action='view',
+            view='credit_wallet', active_session=orm_session,
+            **sanitized_instruction_set
+        )
+        # Formulate response
+        response = self.warning_could_not_view_credit_ewallet(
+            ewallet_session, kwargs, view_ewallet
+        ) if not view_ewallet or \
+            isinstance(view_ewallet, dict) and \
+            view_ewallet.get('failed') else view_ewallet
+        # Respond to session manager
+        self.send_instruction_response(response)
+        return response
+
+    def action_view_credit_clock(self, **kwargs):
+        log.debug('')
+        # Fetch ewallet session by token keys
+        ewallet_session = self.fetch_ewallet_session_by_client_session_tokens(
+            kwargs['client_id'], kwargs['session_token']
+        )
+        if not ewallet_session or isinstance(ewallet_session, dict) and \
+                ewallet_session.get('failed'):
+            return ewallet_session
+        sanitized_instruction_set = res_utils.remove_tags_from_command_chain(
+            kwargs, 'controller', 'ctype', 'action', 'view', 'credit',
+            'active_session'
+        )
+        # Execute action in session
+        orm_session = ewallet_session.fetch_active_session()
+        view_clock = ewallet_session.ewallet_controller(
+            controller='user', ctype='action', action='view',
+            view='credit_clock', active_session=orm_session,
+            **sanitized_instruction_set
+        )
+        # Formulate response
+        response = self.warning_could_not_view_credit_clock(
+            ewallet_session, kwargs, view_clock
+        ) if not view_clock or \
+            isinstance(view_clock, dict) and \
+            view_clock.get('failed') else view_clock
+        # Respond to session manager
+        self.send_instruction_response(response)
+        return response
+
     def action_view_user_account(self, **kwargs):
         log.debug('')
         # Fetch ewallet session by token keys
@@ -1432,6 +1492,24 @@ class EWalletWorker():
 
     # HANDLERS
 
+    def handle_client_action_view_credit_ewallet(self, **kwargs):
+        log.debug('')
+        return self.action_view_credit_ewallet(**kwargs)
+
+    def handle_client_action_view_credit_clock(self, **kwargs):
+        log.debug('')
+        return self.action_view_credit_clock(**kwargs)
+
+    def handle_client_action_view_credit(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('credit'):
+            return self.error_no_client_action_view_credit_target_specified(kwargs)
+        handlers = {
+            'ewallet': self.handle_client_action_view_credit_ewallet,
+            'clock': self.handle_client_action_view_credit_clock,
+        }
+        return handlers[kwargs['credit']](**kwargs)
+
     def handle_client_action_view_account(self, **kwargs):
         log.debug('')
         return self.action_view_user_account(**kwargs)
@@ -1446,6 +1524,7 @@ class EWalletWorker():
             'time': self.handle_client_action_view_time,
             'conversion': self.handle_client_action_view_conversion,
             'account': self.handle_client_action_view_account,
+            'credit': self.handle_client_action_view_credit,
         }
         return handlers[kwargs['view']](**kwargs)
 
@@ -1908,6 +1987,26 @@ class EWalletWorker():
 
     # WARNINGS
 
+    def warning_could_not_view_credit_clock(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Something went wrong. '
+                       'Could not view credit clock. '
+                       'Details: {}'.format(args),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
+
+    def warning_could_not_view_credit_ewallet(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Something went wrong. '
+                       'Could not view credit ewallet. '
+                       'Details: {}'.format(args),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
+
     def warning_could_not_view_user_account(self, *args):
         command_chain_response = {
             'failed': True,
@@ -2253,6 +2352,15 @@ class EWalletWorker():
         return False
 
     # ERRORS
+
+    def error_no_client_action_view_credit_target_specified(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No client action view credit target specified. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
 
     def error_no_client_action_view_conversion_target_specified(self, *args):
         command_chain_response = {

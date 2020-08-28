@@ -76,7 +76,7 @@ class TestEWalletSessionManageUserActionViewCreditEWallet(unittest.TestCase):
             **instruction_set
         )
         print(
-            '[ > ]: Instruction Setx : ' + str(instruction_set) +
+            '[ > ]: Instruction Set : ' + str(instruction_set) +
             '\n[ < ]: Response: ' + str(view) + '\n'
         )
         self.assertTrue(isinstance(view, dict))

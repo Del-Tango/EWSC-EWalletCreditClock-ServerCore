@@ -76,10 +76,10 @@
     - x - User action View Conversion Sheet
     - x - User action View Conversion Record
     - x - User action View Account
-    -   - User action View Credit EWallet
-    - User action view_credit_clock
-    - User action view_invoice_sheet
-    - User action view_invoice_record
+    - x - User action View Credit EWallet
+    - x - User action View Credit Clock
+    -   - User action View Invoice Sheet
+    -   - User action View Invoice Record
     - User action view_login_records
     - User action view_logout_records
     - User action create_credit_ewallet
