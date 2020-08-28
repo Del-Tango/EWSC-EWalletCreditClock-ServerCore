@@ -666,6 +666,64 @@ class EWalletWorker():
 
     # ACTIONS
 
+    def action_view_transfer_sheet(self, **kwargs):
+        # Fetch ewallet session by token keys
+        ewallet_session = self.fetch_ewallet_session_by_client_session_tokens(
+            kwargs['client_id'], kwargs['session_token']
+        )
+        if not ewallet_session or isinstance(ewallet_session, dict) and \
+                ewallet_session.get('failed'):
+            return ewallet_session
+        sanitized_instruction_set = res_utils.remove_tags_from_command_chain(
+            kwargs, 'controller', 'ctype', 'action', 'view', 'transfer',
+            'active_session'
+        )
+        # Execute action in session
+        orm_session = ewallet_session.fetch_active_session()
+        view_transfer_sheet = ewallet_session.ewallet_controller(
+            controller='user', ctype='action', action='view',
+            view='transfer', transfer='list', active_session=orm_session,
+            **sanitized_instruction_set
+        )
+        # Formulate response
+        response = self.warning_could_not_view_transfer_sheet(
+            ewallet_session, kwargs, view_transfer_sheet
+        ) if not view_transfer_sheet or \
+            isinstance(view_transfer_sheet, dict) and \
+            view_transfer_sheet.get('failed') else view_transfer_sheet
+        # Respond to session manager
+        self.send_instruction_response(response)
+        return response
+
+    def action_view_transfer_record(self, **kwargs):
+        # Fetch ewallet session by token keys
+        ewallet_session = self.fetch_ewallet_session_by_client_session_tokens(
+            kwargs['client_id'], kwargs['session_token']
+        )
+        if not ewallet_session or isinstance(ewallet_session, dict) and \
+                ewallet_session.get('failed'):
+            return ewallet_session
+        sanitized_instruction_set = res_utils.remove_tags_from_command_chain(
+            kwargs, 'controller', 'ctype', 'action', 'view', 'transfer',
+            'active_session'
+        )
+        # Execute action in session
+        orm_session = ewallet_session.fetch_active_session()
+        view_transfer_record = ewallet_session.ewallet_controller(
+            controller='user', ctype='action', action='view',
+            view='transfer', transfer='record', active_session=orm_session,
+            **sanitized_instruction_set
+        )
+        # Formulate response
+        response = self.warning_could_not_view_transfer_record(
+            ewallet_session, kwargs, view_transfer_record
+        ) if not view_transfer_record or \
+            isinstance(view_transfer_record, dict) and \
+            view_transfer_record.get('failed') else view_transfer_record
+        # Respond to session manager
+        self.send_instruction_response(response)
+        return response
+
     def action_view_contact_list(self, **kwargs):
         log.debug('')
         # Fetch ewallet session by token keys
@@ -1223,6 +1281,24 @@ class EWalletWorker():
 
     # HANDLERS
 
+    def handle_client_action_view_transfer_sheet(self, **kwargs):
+        log.debug('')
+        return self.action_view_transfer_sheet(**kwargs)
+
+    def handle_client_action_view_transfer_record(self, **kwargs):
+        log.debug('')
+        return self.action_view_transfer_record(**kwargs)
+
+    def handle_client_action_view_transfer(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('transfer'):
+            return self.error_no_client_action_view_transfer_target_specified(kwargs)
+        handlers = {
+            'list': self.handle_client_action_view_transfer_sheet,
+            'record': self.handle_client_action_view_transfer_record,
+        }
+        return handlers[kwargs['transfer']](**kwargs)
+
     def handle_client_action_view_contact_list(self, **kwargs):
         log.debug('')
         return self.action_view_contact_list(**kwargs)
@@ -1247,6 +1323,7 @@ class EWalletWorker():
             return self.error_no_client_action_view_target_specified(kwargs)
         handlers = {
             'contact': self.handle_client_action_view_contact,
+            'transfer': self.handle_client_action_view_transfer,
         }
         return handlers[kwargs['view']](**kwargs)
 
@@ -1637,6 +1714,26 @@ class EWalletWorker():
 
     # WARNINGS
 
+    def warning_could_not_view_transfer_list(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Something went wrong. '
+                       'Could not view transfer sheet. '
+                       'Details: {}'.format(args),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
+
+    def warning_could_not_view_transfer_record(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Something went wrong. '
+                       'Could not view transfer record. '
+                       'Details: {}'.format(args),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
+
     def warning_could_not_view_contact_list(self, *args):
         command_chain_response = {
             'failed': True,
@@ -1932,6 +2029,15 @@ class EWalletWorker():
         return False
 
     # ERRORS
+
+    def error_no_client_action_transfer_target_specified(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No client action transfer target specified. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
 
     def error_no_client_action_view_target_specified(self, *args):
         command_chain_response = {
