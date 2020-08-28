@@ -1426,6 +1426,32 @@ class EWalletSessionManager():
     [ NOTE ]: Instruction set validation and sanitizations are performed here.
     '''
 
+    def handle_client_action_view_contact_record(self, **kwargs):
+        log.debug('')
+        instruction_set_validation = self.validate_instruction_set(kwargs)
+        if not instruction_set_validation \
+                or isinstance(instruction_set_validation, dict) \
+                and instruction_set_validation.get('failed'):
+            return instruction_set_validation
+        view_contact_record = self.action_execute_user_instruction_set(**kwargs)
+        return self.warning_could_not_view_contact_record(
+            kwargs, view_contact_record
+        ) if not view_contact_record or isinstance(view_contact_record, dict) and \
+            view_contact_record.get('failed') else view_contact_record
+
+    def handle_client_action_view_contact_list(self, **kwargs):
+        log.debug('')
+        instruction_set_validation = self.validate_instruction_set(kwargs)
+        if not instruction_set_validation \
+                or isinstance(instruction_set_validation, dict) \
+                and instruction_set_validation.get('failed'):
+            return instruction_set_validation
+        view_contact_list = self.action_execute_user_instruction_set(**kwargs)
+        return self.warning_could_not_view_contact_list(
+            kwargs, view_contact_list
+        ) if not view_contact_list or isinstance(view_contact_list, dict) and \
+            view_contact_list.get('failed') else view_contact_list
+
     def handle_client_action_stop(self, **kwargs):
         log.debug('')
         instruction_set_validation = self.validate_instruction_set(kwargs)
@@ -2783,44 +2809,6 @@ class EWalletSessionManager():
         }
         return handlers[kwargs['contact']](**kwargs)
 
-    def handle_client_action_view_contact_list(self, **kwargs):
-        log.debug('')
-        instruction_set_validation = self.validate_instruction_set(kwargs)
-        if not instruction_set_validation \
-                or isinstance(instruction_set_validation, dict) \
-                and instruction_set_validation.get('failed'):
-            return instruction_set_validation
-        ewallet = self.fetch_ewallet_session_for_client_action_using_instruction_set(
-            kwargs
-        )
-        if not ewallet or not ewallet['ewallet_session'] or \
-                isinstance(ewallet['ewallet_session'], dict) and \
-                ewallet['ewallet_session'].get('failed'):
-            return self.error_no_ewallet_session_found(kwargs)
-        view_contact_list = self.action_view_contact_list(
-            ewallet['ewallet_session'], ewallet['sanitized_instruction_set'],
-        )
-        return view_contact_list
-
-    def handle_client_action_view_contact_record(self, **kwargs):
-        log.debug('')
-        instruction_set_validation = self.validate_instruction_set(kwargs)
-        if not instruction_set_validation \
-                or isinstance(instruction_set_validation, dict) \
-                and instruction_set_validation.get('failed'):
-            return instruction_set_validation
-        ewallet = self.fetch_ewallet_session_for_client_action_using_instruction_set(
-            kwargs
-        )
-        if not ewallet or not ewallet['ewallet_session'] or \
-                isinstance(ewallet['ewallet_session'], dict) and \
-                ewallet['ewallet_session'].get('failed'):
-            return self.error_no_ewallet_session_found(kwargs)
-        view_contact_record = self.action_view_contact_record(
-            ewallet['ewallet_session'], ewallet['sanitized_instruction_set'],
-        )
-        return view_contact_record
-
     def handle_client_action_view_contact(self, **kwargs):
         log.debug('')
         if not kwargs.get('contact'):
@@ -3167,6 +3155,16 @@ class EWalletSessionManager():
         return handlers[kwargs['controller']](**kwargs)
 
     # WARNINGS
+
+    def warning_could_not_view_contact_list(self, *args):
+        instruction_set_response = {
+            'failed': True,
+            'warning': 'Something went wrong. '
+                       'Could not view active contact list. '\
+                       'Details : {}'.format(args),
+        }
+        log.warning(instruction_set_response['warning'])
+        return instruction_set_response
 
     def warning_could_not_stop_credit_clock_timer(self, *args):
         instruction_set_response = {
@@ -3912,13 +3910,6 @@ class EWalletSessionManager():
         }
         log.warning(instruction_set_response['warning'])
         return instruction_set_response
-
-    def warning_could_not_view_contact_list(self, ewallet_session, instruction_set):
-        log.warning(
-            'Something went wrong. Could not view active contact list for ewallet session {}.'\
-            'Details : {}'.format(ewallet_session, instruction_set)
-        )
-        return False
 
     def warning_could_not_view_contact_record(self, ewallet_session, instruction_set):
         log.warning(
@@ -5561,27 +5552,4 @@ class EWalletSessionManager():
             ewallet_session, instruction_set
         ) if view_transfer_sheet.get('failed') else view_transfer_sheet
 
-
-    def action_view_contact_record(self, ewallet_session, instruction_set):
-        log.debug('')
-        orm_session = ewallet_session.fetch_active_session()
-        view_contact_record = ewallet_session.ewallet_controller(
-            controller='user', ctype='action', action='view',
-            active_session=orm_session, **instruction_set
-        )
-        return self.warning_could_not_view_contact_record(
-            ewallet_session, instruction_set
-        ) if not view_contact_record else view_contact_record
-
-    def action_view_contact_list(self, ewallet_session, instruction_set):
-        log.debug('')
-        orm_session = ewallet_session.fetch_active_session()
-        view_contact_list = ewallet_session.ewallet_controller(
-            controller='user', ctype='action', action='view',
-            active_session=orm_session, **instruction_set
-        )
-        return self.warning_could_not_view_contact_list(
-            ewallet_session, instruction_set
-        ) if not view_contact_list or isinstance(view_contact_list, dict) and \
-        view_contact_list.get('failed') else view_contact_list
 

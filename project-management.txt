@@ -67,9 +67,9 @@
     - x - User action Pause Clock Timer
     - x - User action Resume Clock Timer
     - x - User action Stop Clock Timer
-    -   - User action View Contact List
-    - User action view_contact_record
-    - User action view_transfer_sheet
+    - x - User action View Contact List
+    - x - User action View Contact Record
+    -   - User action view_transfer_sheet
     - User action view_transfer_record
     - User action view_time_sheet
     - User action view_time_record
