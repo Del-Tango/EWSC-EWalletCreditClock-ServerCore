@@ -666,7 +666,68 @@ class EWalletWorker():
 
     # ACTIONS
 
+    def action_view_time_sheet(self, **kwargs):
+        log.debug('')
+        # Fetch ewallet session by token keys
+        ewallet_session = self.fetch_ewallet_session_by_client_session_tokens(
+            kwargs['client_id'], kwargs['session_token']
+        )
+        if not ewallet_session or isinstance(ewallet_session, dict) and \
+                ewallet_session.get('failed'):
+            return ewallet_session
+        sanitized_instruction_set = res_utils.remove_tags_from_command_chain(
+            kwargs, 'controller', 'ctype', 'action', 'view', 'time',
+            'active_session'
+        )
+        # Execute action in session
+        orm_session = ewallet_session.fetch_active_session()
+        view_time_sheet = ewallet_session.ewallet_controller(
+            controller='user', ctype='action', action='view',
+            view='time', time='list', active_session=orm_session,
+            **sanitized_instruction_set
+        )
+        # Formulate response
+        response = self.warning_could_not_view_time_sheet(
+            ewallet_session, kwargs, view_time_sheet
+        ) if not view_time_sheet or \
+            isinstance(view_time_sheet, dict) and \
+            view_time_sheet.get('failed') else view_time_sheet
+        # Respond to session manager
+        self.send_instruction_response(response)
+        return response
+
+    def action_view_time_record(self, **kwargs):
+        log.debug('')
+        # Fetch ewallet session by token keys
+        ewallet_session = self.fetch_ewallet_session_by_client_session_tokens(
+            kwargs['client_id'], kwargs['session_token']
+        )
+        if not ewallet_session or isinstance(ewallet_session, dict) and \
+                ewallet_session.get('failed'):
+            return ewallet_session
+        sanitized_instruction_set = res_utils.remove_tags_from_command_chain(
+            kwargs, 'controller', 'ctype', 'action', 'view', 'time',
+            'active_session'
+        )
+        # Execute action in session
+        orm_session = ewallet_session.fetch_active_session()
+        view_time_record = ewallet_session.ewallet_controller(
+            controller='user', ctype='action', action='view',
+            view='time', time='record', active_session=orm_session,
+            **sanitized_instruction_set
+        )
+        # Formulate response
+        response = self.warning_could_not_view_time_record(
+            ewallet_session, kwargs, view_time_record
+        ) if not view_time_record or \
+            isinstance(view_time_record, dict) and \
+            view_time_record.get('failed') else view_time_record
+        # Respond to session manager
+        self.send_instruction_response(response)
+        return response
+
     def action_view_transfer_sheet(self, **kwargs):
+        log.debug('')
         # Fetch ewallet session by token keys
         ewallet_session = self.fetch_ewallet_session_by_client_session_tokens(
             kwargs['client_id'], kwargs['session_token']
@@ -696,6 +757,7 @@ class EWalletWorker():
         return response
 
     def action_view_transfer_record(self, **kwargs):
+        log.debug('')
         # Fetch ewallet session by token keys
         ewallet_session = self.fetch_ewallet_session_by_client_session_tokens(
             kwargs['client_id'], kwargs['session_token']
@@ -1281,6 +1343,35 @@ class EWalletWorker():
 
     # HANDLERS
 
+    def handle_client_action_view_time_sheet(self, **kwargs):
+        log.debug('')
+        return self.action_view_time_sheet(**kwargs)
+
+    def handle_client_action_view_time_record(self, **kwargs):
+        log.debug('')
+        return self.action_view_time_record(**kwargs)
+
+    def handle_client_action_view_time(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('time'):
+            return self.error_no_client_action_view_time_target_specified(kwargs)
+        handlers = {
+            'list': self.handle_client_action_view_time_sheet,
+            'record': self.handle_client_action_view_time_record,
+        }
+        return handlers[kwargs['time']](**kwargs)
+
+    def handle_client_action_view(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('view'):
+            return self.error_no_client_action_view_target_specified(kwargs)
+        handlers = {
+            'contact': self.handle_client_action_view_contact,
+            'transfer': self.handle_client_action_view_transfer,
+            'time': self.handle_client_action_view_time,
+        }
+        return handlers[kwargs['view']](**kwargs)
+
     def handle_client_action_view_transfer_sheet(self, **kwargs):
         log.debug('')
         return self.action_view_transfer_sheet(**kwargs)
@@ -1316,16 +1407,6 @@ class EWalletWorker():
             'record': self.handle_client_action_view_contact_record,
         }
         return handlers[kwargs['contact']](**kwargs)
-
-    def handle_client_action_view(self, **kwargs):
-        log.debug('')
-        if not kwargs.get('view'):
-            return self.error_no_client_action_view_target_specified(kwargs)
-        handlers = {
-            'contact': self.handle_client_action_view_contact,
-            'transfer': self.handle_client_action_view_transfer,
-        }
-        return handlers[kwargs['view']](**kwargs)
 
     def handle_client_action_stop_clock_timer(self, **kwargs):
         log.debug('')
@@ -2030,10 +2111,19 @@ class EWalletWorker():
 
     # ERRORS
 
-    def error_no_client_action_transfer_target_specified(self, *args):
+    def error_no_client_action_view_time_target_specified(self, **kwargs):
         command_chain_response = {
             'failed': True,
-            'error': 'No client action transfer target specified. '
+            'error': 'No client action view time target specified. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_no_client_action_view_transfer_target_specified(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No client action view transfer target specified. '
                      'Details: {}'.format(args),
         }
         log.error(command_chain_response['error'])

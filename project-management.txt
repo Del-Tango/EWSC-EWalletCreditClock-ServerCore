@@ -71,10 +71,10 @@
     - x - User action View Contact Record
     - x - User action View Transfer Sheet
     - x - User action View Transfer Record
-    -   - User action view_time_sheet
-    - User action view_time_record
-    - User action view_conversion_sheet
-    - User action view_conversion_record
+    - x - User action View Time Sheet
+    - x - User action View Time Record
+    -   - User action View Conversion Sheet
+    -   - User action View Conversion Record
     - User action view_account
     - User action view_credit_ewallet
     - User action view_credit_clock
