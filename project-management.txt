@@ -103,10 +103,10 @@
     - x - User action Unlink Conversion Record
     - x - User action Unlink Transfer Sheet
     - x - User action Unlink Transfer Record
-    -   - User action Unlink Time Sheet
-    -   - User action Unlink Time Record
-    - User action unlink_credit_ewallet
-    - User action unlink_credit_clock
+    - x - User action Unlink Time Sheet
+    - x - User action Unlink Time Record
+    -   - User action unlink_credit_ewallet
+    -   - User action unlink_credit_clock
     - User action RecoverAccount
 
 

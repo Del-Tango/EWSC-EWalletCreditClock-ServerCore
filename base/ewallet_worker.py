@@ -666,6 +666,66 @@ class EWalletWorker():
 
     # ACTIONS
 
+    def action_unlink_time_sheet(self, **kwargs):
+        log.debug('')
+        # Fetch ewallet session by token keys
+        ewallet_session = self.fetch_ewallet_session_by_client_session_tokens(
+            kwargs['client_id'], kwargs['session_token']
+        )
+        if not ewallet_session or isinstance(ewallet_session, dict) and \
+                ewallet_session.get('failed'):
+            return ewallet_session
+        sanitized_instruction_set = res_utils.remove_tags_from_command_chain(
+            kwargs, 'controller', 'ctype', 'action', 'unlink', 'time',
+            'active_session'
+        )
+        # Execute action in session
+        orm_session = ewallet_session.fetch_active_session()
+        unlink_time_sheet = ewallet_session.ewallet_controller(
+            controller='user', ctype='action', action='unlink',
+            unlink='time', time='list', active_session=orm_session,
+            **sanitized_instruction_set
+        )
+        # Formulate response
+        response = self.warning_could_not_unlink_time_sheet(
+            ewallet_session, kwargs, unlink_time_sheet
+        ) if not unlink_time_sheet or \
+            isinstance(unlink_time_sheet, dict) and \
+            unlink_time_sheet.get('failed') else unlink_time_sheet
+        # Respond to session manager
+        self.send_instruction_response(response)
+        return response
+
+    def action_unlink_time_record(self, **kwargs):
+        log.debug('')
+        # Fetch ewallet session by token keys
+        ewallet_session = self.fetch_ewallet_session_by_client_session_tokens(
+            kwargs['client_id'], kwargs['session_token']
+        )
+        if not ewallet_session or isinstance(ewallet_session, dict) and \
+                ewallet_session.get('failed'):
+            return ewallet_session
+        sanitized_instruction_set = res_utils.remove_tags_from_command_chain(
+            kwargs, 'controller', 'ctype', 'action', 'unlink', 'time',
+            'active_session'
+        )
+        # Execute action in session
+        orm_session = ewallet_session.fetch_active_session()
+        unlink_time_record = ewallet_session.ewallet_controller(
+            controller='user', ctype='action', action='unlink',
+            unlink='time', time='record', active_session=orm_session,
+            **sanitized_instruction_set
+        )
+        # Formulate response
+        response = self.warning_could_not_unlink_time_record(
+            ewallet_session, kwargs, unlink_time_record
+        ) if not unlink_time_record or \
+            isinstance(unlink_time_record, dict) and \
+            unlink_time_record.get('failed') else unlink_time_record
+        # Respond to session manager
+        self.send_instruction_response(response)
+        return response
+
     def action_unlink_transfer_sheet(self, **kwargs):
         log.debug('')
         # Fetch ewallet session by token keys
@@ -2238,6 +2298,14 @@ class EWalletWorker():
 
     # ACTION HANDLERS
 
+    def handle_client_action_unlink_time_sheet(self, **kwargs):
+        log.debug('')
+        return self.action_unlink_time_sheet(**kwargs)
+
+    def handle_client_action_unlink_time_record(self, **kwargs):
+        log.debug('')
+        return self.action_unlink_time_record(**kwargs)
+
     def handle_client_action_unlink_transfer_sheet(self, **kwargs):
         log.debug('')
         return self.action_unlink_transfer_sheet(**kwargs)
@@ -2522,6 +2590,16 @@ class EWalletWorker():
 
     # JUMPTABLE HANDLERS
 
+    def handle_client_action_unlink_time(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('time'):
+            return self.error_no_client_action_unlink_time_target_specified(kwargs)
+        handlers = {
+            'list': self.handle_client_action_unlink_time_sheet,
+            'record': self.handle_client_action_unlink_time_record,
+        }
+        return handlers[kwargs['time']](**kwargs)
+
     def handle_client_action_unlink_transfer(self, **kwargs):
         log.debug('')
         if not kwargs.get('transfer'):
@@ -2561,6 +2639,7 @@ class EWalletWorker():
             'contact': self.handle_client_action_unlink_contact,
             'conversion': self.handle_client_action_unlink_conversion,
             'transfer': self.handle_client_action_unlink_transfer,
+            'time': self.handle_client_action_unlink_time,
         }
         return handlers[kwargs['unlink']](**kwargs)
 
@@ -3006,6 +3085,26 @@ class EWalletWorker():
         return handlers[kwargs['controller']](**kwargs)
 
     # WARNINGS
+
+    def warning_could_not_unlink_time_sheet(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Something went wrong. '
+                       'Could not unlink time record. '
+                       'Details: {}'.format(args),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
+
+    def warning_could_not_unlink_time_record(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Something went wrong. '
+                       'Could not unlink time record. '
+                       'Details: {}'.format(args),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
 
     def warning_could_not_unlink_transfer_sheet(self, *args):
         command_chain_response = {
@@ -3612,6 +3711,15 @@ class EWalletWorker():
         return False
 
     # ERRORS
+
+    def error_no_client_action_unlink_time_target_specified(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No client action unlink time target specified. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
 
     def error_no_client_action_unlink_transfer_target_specified(self, *args):
         command_chain_response = {
