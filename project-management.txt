@@ -55,7 +55,7 @@
     - x - Request Session token
     - x - User action Create Account
     - x - User action Account Login
-    -   - User action Account Logout
+    - x - User action Account Logout
     - x - User action Supply Credits
     - x - User action Pay Credits
     - x - User action Convert Credits2Clock
@@ -81,10 +81,10 @@
     - x - User action View Credit Clock
     - x - User action View Invoice Sheet
     - x - User action View Invoice Record
-    - x - User action view_login_records
-    - x - User action view_logout_records
-    - User action create_credit_ewallet
-    - User action create_credit_clock
+    - x - User action View Login Records
+    - x - User action View Logout Records
+    -   - User action Create Credit EWallet
+    -   - User action Create Credit Clock
     - User action create_transfer_sheet
     - User action create_invoice_sheet
     - User action create_conversion_sheet
