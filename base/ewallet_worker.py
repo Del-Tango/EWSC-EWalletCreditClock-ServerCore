@@ -666,6 +666,66 @@ class EWalletWorker():
 
     # ACTIONS
 
+    def action_new_transfer_sheet(self, **kwargs):
+        log.debug('')
+        # Fetch ewallet session by token keys
+        ewallet_session = self.fetch_ewallet_session_by_client_session_tokens(
+            kwargs['client_id'], kwargs['session_token']
+        )
+        if not ewallet_session or isinstance(ewallet_session, dict) and \
+                ewallet_session.get('failed'):
+            return ewallet_session
+        sanitized_instruction_set = res_utils.remove_tags_from_command_chain(
+            kwargs, 'controller', 'ctype', 'action', 'new', 'transfer',
+            'active_session'
+        )
+        # Execute action in session
+        orm_session = ewallet_session.fetch_active_session()
+        new_transfer_sheet = ewallet_session.ewallet_controller(
+            controller='user', ctype='action', action='create',
+            create='transfer_sheet', active_session=orm_session,
+            **sanitized_instruction_set
+        )
+        # Formulate response
+        response = self.warning_could_not_create_new_transfer_sheet(
+            ewallet_session, kwargs, new_transfer_sheet
+        ) if not new_transfer_sheet or \
+            isinstance(new_transfer_sheet, dict) and \
+            new_transfer_sheet.get('failed') else new_transfer_sheet
+        # Respond to session manager
+        self.send_instruction_response(response)
+        return response
+
+    def action_new_invoice_sheet(self, **kwargs):
+        log.debug('')
+        # Fetch ewallet session by token keys
+        ewallet_session = self.fetch_ewallet_session_by_client_session_tokens(
+            kwargs['client_id'], kwargs['session_token']
+        )
+        if not ewallet_session or isinstance(ewallet_session, dict) and \
+                ewallet_session.get('failed'):
+            return ewallet_session
+        sanitized_instruction_set = res_utils.remove_tags_from_command_chain(
+            kwargs, 'controller', 'ctype', 'action', 'new', 'invoice',
+            'active_session'
+        )
+        # Execute action in session
+        orm_session = ewallet_session.fetch_active_session()
+        new_invoice_sheet = ewallet_session.ewallet_controller(
+            controller='user', ctype='action', action='create',
+            create='invoice_sheet', active_session=orm_session,
+            **sanitized_instruction_set
+        )
+        # Formulate response
+        response = self.warning_could_not_create_new_invoice_sheet(
+            ewallet_session, kwargs, new_invoice_sheet
+        ) if not new_invoice_sheet or \
+            isinstance(new_invoice_sheet, dict) and \
+            new_invoice_sheet.get('failed') else new_invoice_sheet
+        # Respond to session manager
+        self.send_instruction_response(response)
+        return response
+
     def action_new_credit_ewallet(self, **kwargs):
         log.debug('')
         # Fetch ewallet session by token keys
@@ -1698,6 +1758,32 @@ class EWalletWorker():
 
     # HANDLERS
 
+    def handle_client_action_new_transfer_sheet(self, **kwargs):
+        log.debug('')
+        return self.action_new_transfer_sheet(**kwargs)
+
+    def handle_client_action_new_invoice_sheet(self, **kwargs):
+        log.debug('')
+        return self.action_new_invoice_sheet(**kwargs)
+
+    def handle_client_action_new_transfer(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('transfer'):
+            return self.error_no_client_action_new_transfer_target_specified(kwargs)
+        handlers = {
+            'list': self.handle_client_action_new_transfer_sheet,
+        }
+        return handlers[kwargs['transfer']](**kwargs)
+
+    def handle_client_action_new_invoice(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('invoice'):
+            return self.error_no_client_action_new_invoice_target_specified(kwargs)
+        handlers = {
+            'list': self.handle_client_action_new_invoice_sheet,
+        }
+        return handlers[kwargs['invoice']](**kwargs)
+
     def handle_client_action_new(self, **kwargs):
         log.debug('')
         if not kwargs.get('new'):
@@ -1706,6 +1792,8 @@ class EWalletWorker():
             'account': self.handle_client_action_new_user_account,
             'contact': self.handle_client_action_new_contact,
             'credit': self.handle_client_action_new_credit,
+            'transfer': self.handle_client_action_new_transfer,
+            'invoice': self.handle_client_action_new_invoice,
         }
         return handlers[kwargs['new']](**kwargs)
 
@@ -2247,6 +2335,26 @@ class EWalletWorker():
 
     # WARNINGS
 
+    def warning_could_not_create_new_transfer_sheet(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Something went wrong. '
+                       'Could not create new transfer sheet. '
+                       'Details: {}'.format(args),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
+
+    def warning_could_not_create_new_invoice_sheet(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Something went wrong. '
+                       'Could not create new invoice sheet. '
+                       'Details: {}'.format(args),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
+
     def warning_could_not_create_new_credit_clock(self, *args):
         command_chain_response = {
             'failed': True,
@@ -2682,6 +2790,24 @@ class EWalletWorker():
         return False
 
     # ERRORS
+
+    def error_no_client_action_new_transfer_target_specified(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No client action new transfer target specified. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_no_client_action_new_invoice_target_specified(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No client action new invoice target specified. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
 
     def error_no_client_action_new_credit_target_specified(self, *args):
         command_chain_response = {
