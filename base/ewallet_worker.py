@@ -666,6 +666,66 @@ class EWalletWorker():
 
     # ACTIONS
 
+    def action_unlink_conversion_sheet(self, **kwargs):
+        log.debug('')
+        # Fetch ewallet session by token keys
+        ewallet_session = self.fetch_ewallet_session_by_client_session_tokens(
+            kwargs['client_id'], kwargs['session_token']
+        )
+        if not ewallet_session or isinstance(ewallet_session, dict) and \
+                ewallet_session.get('failed'):
+            return ewallet_session
+        sanitized_instruction_set = res_utils.remove_tags_from_command_chain(
+            kwargs, 'controller', 'ctype', 'action', 'unlink', 'conversion',
+            'active_session'
+        )
+        # Execute action in session
+        orm_session = ewallet_session.fetch_active_session()
+        unlink_conversion_sheet = ewallet_session.ewallet_controller(
+            controller='user', ctype='action', action='unlink',
+            unlink='conversion', conversion='list', active_session=orm_session,
+            **sanitized_instruction_set
+        )
+        # Formulate response
+        response = self.warning_could_not_unlink_conversion_sheet(
+            ewallet_session, kwargs, unlink_conversion_sheet
+        ) if not unlink_conversion_sheet or \
+            isinstance(unlink_conversion_sheet, dict) and \
+            unlink_conversion_sheet.get('failed') else unlink_conversion_sheet
+        # Respond to session manager
+        self.send_instruction_response(response)
+        return response
+
+    def action_unlink_conversion_record(self, **kwargs):
+        log.debug('')
+        # Fetch ewallet session by token keys
+        ewallet_session = self.fetch_ewallet_session_by_client_session_tokens(
+            kwargs['client_id'], kwargs['session_token']
+        )
+        if not ewallet_session or isinstance(ewallet_session, dict) and \
+                ewallet_session.get('failed'):
+            return ewallet_session
+        sanitized_instruction_set = res_utils.remove_tags_from_command_chain(
+            kwargs, 'controller', 'ctype', 'action', 'unlink', 'conversion',
+            'active_session'
+        )
+        # Execute action in session
+        orm_session = ewallet_session.fetch_active_session()
+        unlink_conversion_record = ewallet_session.ewallet_controller(
+            controller='user', ctype='action', action='unlink',
+            unlink='conversion', conversion='record', active_session=orm_session,
+            **sanitized_instruction_set
+        )
+        # Formulate response
+        response = self.warning_could_not_unlink_conversion_record(
+            ewallet_session, kwargs, unlink_conversion_record
+        ) if not unlink_conversion_record or \
+            isinstance(unlink_conversion_record, dict) and \
+            unlink_conversion_record.get('failed') else unlink_conversion_record
+        # Respond to session manager
+        self.send_instruction_response(response)
+        return response
+
     def action_unlink_contact_list(self, **kwargs):
         log.debug('')
         # Fetch ewallet session by token keys
@@ -2118,6 +2178,14 @@ class EWalletWorker():
 
     # ACTION HANDLERS
 
+    def handle_client_action_unlink_conversion_sheet(self, **kwargs):
+        log.debug('')
+        return self.action_unlink_conversion_sheet(**kwargs)
+
+    def handle_client_action_unlink_conversion_record(self, **kwargs):
+        log.debug('')
+        return self.action_unlink_conversion_record(**kwargs)
+
     def handle_client_action_unlink_contact_list(self, **kwargs):
         log.debug('')
         return self.action_unlink_contact_list(**kwargs)
@@ -2386,6 +2454,16 @@ class EWalletWorker():
 
     # JUMPTABLE HANDLERS
 
+    def handle_client_action_unlink_conversion(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('conversion'):
+            return self.error_no_client_action_unlink_conversion_target_specified(kwargs)
+        handlers = {
+            'list': self.handle_client_action_unlink_conversion_sheet,
+            'record': self.handle_client_action_unlink_conversion_record,
+        }
+        return handlers[kwargs['conversion']](**kwargs)
+
     def handle_client_action_unlink_contact(self, **kwargs):
         log.debug('')
         if not kwargs.get('contact'):
@@ -2403,6 +2481,7 @@ class EWalletWorker():
         handlers = {
             'account': self.handle_client_action_unlink_account,
             'contact': self.handle_client_action_unlink_contact,
+            'conversion': self.handle_client_action_unlink_conversion,
         }
         return handlers[kwargs['unlink']](**kwargs)
 
@@ -2848,6 +2927,26 @@ class EWalletWorker():
         return handlers[kwargs['controller']](**kwargs)
 
     # WARNINGS
+
+    def warning_could_not_unlink_conversion_sheet(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Something went wrong. '
+                       'Could not unlink conversion sheet. '
+                       'Details: {}'.format(args),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
+
+    def warning_could_not_unlink_conversion_record(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Something went wrong. '
+                       'Could not unlink conversion record. '
+                       'Details: {}'.format(args),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
 
     def warning_could_not_unlink_contact_list(self, *args):
         command_chain_response = {
@@ -3414,6 +3513,15 @@ class EWalletWorker():
         return False
 
     # ERRORS
+
+    def error_no_client_action_unlink_conversion_target_specified(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No client action unlink conversion target specified. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
 
     def error_no_client_action_unlink_contact_target_specified(self, *args):
         command_chain_response = {

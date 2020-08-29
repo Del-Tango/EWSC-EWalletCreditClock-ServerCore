@@ -99,10 +99,10 @@
     - x - User action Unlink Account
     - x - User action Unlink Contact List
     - x - User action Unlink Contact Record
-    -   - User action Unlink Conversion Sheet
-    -   - User action Unlink Conversion Record
-    - User action unlink_transfer_sheet
-    - User action unlink_transfer_record
+    - x - User action Unlink Conversion Sheet
+    - x - User action Unlink Conversion Record
+    -   - User action Unlink Transfer Sheet
+    -   - User action Unlink Transfer Record
     - User action unlink_time_sheet
     - User action unlink_time_record
     - User action unlink_credit_ewallet
