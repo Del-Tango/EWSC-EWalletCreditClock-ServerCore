@@ -666,6 +666,66 @@ class EWalletWorker():
 
     # ACTIONS
 
+    def action_switch_credit_ewallet(self, **kwargs):
+        log.debug('')
+        # Fetch ewallet session by token keys
+        ewallet_session = self.fetch_ewallet_session_by_client_session_tokens(
+            kwargs['client_id'], kwargs['session_token']
+        )
+        if not ewallet_session or isinstance(ewallet_session, dict) and \
+                ewallet_session.get('failed'):
+            return ewallet_session
+        sanitized_instruction_set = res_utils.remove_tags_from_command_chain(
+            kwargs, 'controller', 'ctype', 'action', 'switch', 'credit',
+            'active_session'
+        )
+        # Execute action in session
+        orm_session = ewallet_session.fetch_active_session()
+        switch_credit_ewallet = ewallet_session.ewallet_controller(
+            controller='user', ctype='action', action='switch',
+            switch='credit_ewallet', active_session=orm_session,
+            **sanitized_instruction_set
+        )
+        # Formulate response
+        response = self.warning_could_not_switch_credit_ewallet(
+            ewallet_session, kwargs, switch_credit_ewallet
+        ) if not switch_credit_ewallet or \
+            isinstance(switch_credit_ewallet, dict) and \
+            switch_credit_ewallet.get('failed') else switch_credit_ewallet
+        # Respond to session manager
+        self.send_instruction_response(response)
+        return response
+
+    def action_switch_credit_clock(self, **kwargs):
+        log.debug('')
+        # Fetch ewallet session by token keys
+        ewallet_session = self.fetch_ewallet_session_by_client_session_tokens(
+            kwargs['client_id'], kwargs['session_token']
+        )
+        if not ewallet_session or isinstance(ewallet_session, dict) and \
+                ewallet_session.get('failed'):
+            return ewallet_session
+        sanitized_instruction_set = res_utils.remove_tags_from_command_chain(
+            kwargs, 'controller', 'ctype', 'action', 'switch', 'credit',
+            'active_session'
+        )
+        # Execute action in session
+        orm_session = ewallet_session.fetch_active_session()
+        switch_credit_clock = ewallet_session.ewallet_controller(
+            controller='user', ctype='action', action='switch',
+            switch='credit_clock', active_session=orm_session,
+            **sanitized_instruction_set
+        )
+        # Formulate response
+        response = self.warning_could_not_switch_credit_clock(
+            ewallet_session, kwargs, switch_credit_clock
+        ) if not switch_credit_clock or \
+            isinstance(switch_credit_clock, dict) and \
+            switch_credit_clock.get('failed') else switch_credit_clock
+        # Respond to session manager
+        self.send_instruction_response(response)
+        return response
+
     def action_new_conversion_sheet(self, **kwargs):
         log.debug('')
         # Fetch ewallet session by token keys
@@ -1816,7 +1876,15 @@ class EWalletWorker():
                 'client_id': kwargs['client_id'],
             }
 
-    # HANDLERS
+    # ACTION HANDLERS
+
+    def handle_client_action_switch_credit_ewallet(self, **kwargs):
+        log.debug('')
+        return self.action_switch_credit_ewallet(**kwargs)
+
+    def handle_client_action_switch_credit_clock(self, **kwargs):
+        log.debug('')
+        return self.action_switch_credit_clock(**kwargs)
 
     def handle_client_action_new_conversion(self, **kwargs):
         log.debug('')
@@ -1833,6 +1901,263 @@ class EWalletWorker():
     def handle_client_action_new_invoice_sheet(self, **kwargs):
         log.debug('')
         return self.action_new_invoice_sheet(**kwargs)
+
+    def handle_client_action_new_credit_ewallet(self, **kwargs):
+        log.debug('')
+        return self.action_new_credit_ewallet(**kwargs)
+
+    def handle_client_action_new_credit_clock(self, **kwargs):
+        log.debug('')
+        return self.action_new_credit_clock(**kwargs)
+
+    def handle_client_action_logout(self, **kwargs):
+        log.debug('')
+        return self.action_logout_user_account(**kwargs)
+
+    def handle_client_action_view_login(self, **kwargs):
+        log.debug('')
+        return self.action_view_login_records(**kwargs)
+
+    def handle_client_action_view_logout(self, **kwargs):
+        log.debug('')
+        return self.action_view_logout_records(**kwargs)
+
+    def handle_client_action_view_invoice_sheet(self, **kwargs):
+        log.debug('')
+        return self.action_view_invoice_sheet(**kwargs)
+
+    def handle_client_action_view_invoice_record(self, **kwargs):
+        log.debug('')
+        return self.action_view_invoice_record(**kwargs)
+
+    def handle_client_action_view_credit_ewallet(self, **kwargs):
+        log.debug('')
+        return self.action_view_credit_ewallet(**kwargs)
+
+    def handle_client_action_view_credit_clock(self, **kwargs):
+        log.debug('')
+        return self.action_view_credit_clock(**kwargs)
+
+    def handle_client_action_view_account(self, **kwargs):
+        log.debug('')
+        return self.action_view_user_account(**kwargs)
+
+    def handle_client_action_view_conversion_sheet(self, **kwargs):
+        log.debug('')
+        return self.action_view_conversion_sheet(**kwargs)
+
+    def handle_client_action_view_conversion_record(self, **kwargs):
+        log.debug('')
+        return self.action_view_conversion_record(**kwargs)
+
+    def handle_client_action_view_time_sheet(self, **kwargs):
+        log.debug('')
+        return self.action_view_time_sheet(**kwargs)
+
+    def handle_client_action_view_time_record(self, **kwargs):
+        log.debug('')
+        return self.action_view_time_record(**kwargs)
+
+    def handle_client_action_view_transfer_sheet(self, **kwargs):
+        log.debug('')
+        return self.action_view_transfer_sheet(**kwargs)
+
+    def handle_client_action_view_transfer_record(self, **kwargs):
+        log.debug('')
+        return self.action_view_transfer_record(**kwargs)
+
+    def handle_client_action_view_contact_list(self, **kwargs):
+        log.debug('')
+        return self.action_view_contact_list(**kwargs)
+
+    def handle_client_action_view_contact_record(self, **kwargs):
+        log.debug('')
+        return self.action_view_contact_record(**kwargs)
+
+    def handle_client_action_stop_clock_timer(self, **kwargs):
+        log.debug('')
+        return self.action_stop_clock_timer(**kwargs)
+
+    def handle_client_action_pause_clock_timer(self, **kwargs):
+        log.debug('')
+        return self.action_pause_clock_timer(**kwargs)
+
+    def handle_client_action_start_clock_timer(self, **kwargs):
+        log.debug('')
+        return self.action_start_clock_timer(**kwargs)
+
+    def handle_client_action_edit_account(self, **kwargs):
+        log.debug('')
+        return self.action_edit_account(**kwargs)
+
+    def handle_client_action_transfer_credits(self, **kwargs):
+        log.debug('')
+        return self.action_transfer_credits(**kwargs)
+
+    def handle_client_action_new_contact_record(self, **kwargs):
+        log.debug('')
+        return self.action_new_contact_record(**kwargs)
+
+    def handle_client_action_new_contact_list(self, **kwargs):
+        log.debug('')
+        return self.action_new_contact_list(**kwargs)
+
+    def handle_client_action_convert_clock_to_credits(self, **kwargs):
+        log.debug('')
+        return self.action_convert_clock_to_credits(**kwargs)
+
+    def handle_client_action_convert_credits_to_clock(self, **kwargs):
+        log.debug('')
+        return self.action_convert_credits_to_clock(**kwargs)
+
+    def handle_client_action_pay(self, **kwargs):
+        log.debug('')
+        return self.action_pay_partner_account(**kwargs)
+
+    def handle_client_action_supply_credits(self, **kwargs):
+        log.debug('')
+        return self.action_supply_user_credit_ewallet(**kwargs)
+
+    def handle_client_action_account_login(self, **kwargs):
+        log.debug('')
+        return self.action_account_login(**kwargs)
+
+    def handle_client_action_new_user_account(self, **kwargs):
+        log.debug('')
+        return self.action_create_new_user_account(**kwargs)
+
+    def handle_system_action_interogate_state_code(self, **kwargs):
+        log.debug('')
+        return self.action_interogate_worker_state_code(**kwargs)
+
+    def handle_system_action_interogate_session_pool(self, **kwargs):
+        log.debug('')
+        return self.action_interogate_session_pool(**kwargs)
+
+    def handle_client_action_resume_clock_timer(self, **kwargs):
+        log.debug('')
+        return self.action_resume_clock_timer(**kwargs)
+
+    def handle_system_action_remove_session_map_by_ewallet_session(self, **kwargs):
+        log.debug('')
+        client_id = self.fetch_ewallet_session_map_client_id_by_ewallet_session(**kwargs)
+        if not client_id or isinstance(client_id, dict) and client_id.get('failed'):
+            return self.warning_could_not_fetch_ewallet_associated_client_id_from_map(
+                kwargs
+            )
+        remove_entry = self.remove_session_token_map_entry(client_id)
+        if not remove_entry or isinstance(remove_entry, dict) and \
+                remove_entry.get('failed'):
+            return self.warning_could_not_remove_session_token_map_entry(**kwargs)
+        instruction_set_response = {
+            'failed': False,
+            'session_token_map': remove_entry['session_token_map'],
+        }
+        return instruction_set_response
+
+#   @pysnooper.snoop()
+    def handle_system_action_remove_session(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('session'):
+            return self.error_no_worker_action_remove_session_specified(kwargs)
+        remove_from_pool = self.remove_ewallet_session_from_worker_pool(kwargs['session'])
+        sanitized_instruction_set = res_utils.remove_tags_from_command_chain(
+            kwargs, 'ctype', 'action', 'remove'
+        )
+        remove_from_map = self.system_controller(
+            ctype='action', action='remove', remove='session_map',
+            identifier='ewallet_session', **sanitized_instruction_set
+        )
+        clean_session = self.cleanup_session(kwargs['session'])
+        if not clean_session or isinstance(clean_session, dict) and \
+                clean_session.get('failed'):
+            return self.warning_could_not_remove_ewallet_session(kwargs)
+        update_state = self.handle_system_action_session_worker_state_check()
+        instruction_chain_response = {
+            'failed': False,
+            'worker_state': self.fetch_session_worker_state_code()
+        }
+        return instruction_chain_response
+
+    def handle_system_action_session_worker_state_check(self):
+        log.debug('')
+        current_state = self.fetch_session_worker_state_code()
+        if current_state == 2:
+            return self.warning_session_worker_ewallet_session_pool_full(current_state)
+        session_pool = self.fetch_session_worker_ewallet_session_pool()
+        set_state = self.set_session_worker_state_code(
+            1 if len(session_pool) >= 1 else 0
+        )
+        instruction_set_response = {
+            'failed': False,
+            'worker_state': current_state,
+        }
+        return self.warning_could_not_perform_session_worker_state_check(session_pool) \
+            if not set_state or isinstance(set_state, dict) and set_state.get('failed') \
+            else instruction_set_response
+
+    def handle_system_action_search_session(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('session_token'):
+            return self.error_no_session_token_found()
+        ewallet_session = self.search_ewallet_session(kwargs['session_token'])
+        return self.warning_session_token_not_mapped(kwargs['session_token']) \
+                if not ewallet_session else ewallet_session
+
+    # JUMPTABLE HANDLERS
+
+    def handle_client_action_switch_credit(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('credit'):
+            return self.error_no_client_action_switch_credit_target_specified(kwargs)
+        handlers = {
+            'ewallet': self.handle_client_action_switch_credit_ewallet,
+            'clock': self.handle_client_action_switch_credit_clock,
+        }
+        return handlers[kwargs['credit']](**kwargs)
+
+    def handle_client_action_switch(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('switch'):
+            return self.error_no_client_action_switch_target_specified(kwargs)
+        handlers = {
+            'credit': self.handle_client_action_switch_credit,
+        }
+        return handlers[kwargs['switch']](**kwargs)
+
+    # TODO
+    def handle_system_action_remove_session_map(self, **kwargs):
+        log.debug('TODO - Add suport for Client and Session Token identifiers')
+        if not kwargs.get('identifier'):
+            return self.error_no_worker_action_remove_session_map_identifier_specified(
+                kwargs
+            )
+        handlers = {
+            'ewallet_session': self.handle_system_action_remove_session_map_by_ewallet_session,
+#           'session_token': self.handle_system_action_remove_session_map_by_session_token,
+#           'client_id': self.handle_system_action_remove_session_map_by_client_id,
+        }
+        return handlers[kwargs['identifier']](**kwargs)
+
+    # TOOD
+    def handle_client_action_transfer(self, **kwargs):
+        log.debug('TODO - Add support for user action transfer time.')
+        if not kwargs.get('transfer'):
+            return self.error_no_client_action_transfer_target_specified(kwargs)
+        handlers = {
+            'credits': self.handle_client_action_transfer_credits,
+#           'time':,
+        }
+        return handlers[kwargs['transfer']](**kwargs)
+
+    def handle_system_action_search(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('search'):
+            return self.error_no_worker_action_search_target_specified()
+        handlers = {
+            'session': self.handle_system_action_search_session,
+        }
+        return handlers[kwargs['search']](**kwargs)
 
     def handle_client_action_new_transfer(self, **kwargs):
         log.debug('')
@@ -1867,14 +2192,6 @@ class EWalletWorker():
         }
         return handlers[kwargs['new']](**kwargs)
 
-    def handle_client_action_new_credit_ewallet(self, **kwargs):
-        log.debug('')
-        return self.action_new_credit_ewallet(**kwargs)
-
-    def handle_client_action_new_credit_clock(self, **kwargs):
-        log.debug('')
-        return self.action_new_credit_clock(**kwargs)
-
     def handle_client_action_new_credit(self, **kwargs):
         log.debug('')
         if not kwargs.get('credit'):
@@ -1884,26 +2201,6 @@ class EWalletWorker():
             'clock': self.handle_client_action_new_credit_clock,
         }
         return handlers[kwargs['credit']](**kwargs)
-
-    def handle_client_action_logout(self, **kwargs):
-        log.debug('')
-        return self.action_logout_user_account(**kwargs)
-
-    def handle_client_action_view_login(self, **kwargs):
-        log.debug('')
-        return self.action_view_login_records(**kwargs)
-
-    def handle_client_action_view_logout(self, **kwargs):
-        log.debug('')
-        return self.action_view_logout_records(**kwargs)
-
-    def handle_client_action_view_invoice_sheet(self, **kwargs):
-        log.debug('')
-        return self.action_view_invoice_sheet(**kwargs)
-
-    def handle_client_action_view_invoice_record(self, **kwargs):
-        log.debug('')
-        return self.action_view_invoice_record(**kwargs)
 
     def handle_client_action_view_invoice(self, **kwargs):
         log.debug('')
@@ -1915,14 +2212,6 @@ class EWalletWorker():
         }
         return handlers[kwargs['invoice']](**kwargs)
 
-    def handle_client_action_view_credit_ewallet(self, **kwargs):
-        log.debug('')
-        return self.action_view_credit_ewallet(**kwargs)
-
-    def handle_client_action_view_credit_clock(self, **kwargs):
-        log.debug('')
-        return self.action_view_credit_clock(**kwargs)
-
     def handle_client_action_view_credit(self, **kwargs):
         log.debug('')
         if not kwargs.get('credit'):
@@ -1932,10 +2221,6 @@ class EWalletWorker():
             'clock': self.handle_client_action_view_credit_clock,
         }
         return handlers[kwargs['credit']](**kwargs)
-
-    def handle_client_action_view_account(self, **kwargs):
-        log.debug('')
-        return self.action_view_user_account(**kwargs)
 
     def handle_client_action_view(self, **kwargs):
         log.debug('')
@@ -1954,14 +2239,6 @@ class EWalletWorker():
         }
         return handlers[kwargs['view']](**kwargs)
 
-    def handle_client_action_view_conversion_sheet(self, **kwargs):
-        log.debug('')
-        return self.action_view_conversion_sheet(**kwargs)
-
-    def handle_client_action_view_conversion_record(self, **kwargs):
-        log.debug('')
-        return self.action_view_conversion_record(**kwargs)
-
     def handle_client_action_view_conversion(self, **kwargs):
         log.debug('')
         if not kwargs.get('conversion'):
@@ -1971,14 +2248,6 @@ class EWalletWorker():
             'record': self.handle_client_action_view_conversion_record,
         }
         return handlers[kwargs['conversion']](**kwargs)
-
-    def handle_client_action_view_time_sheet(self, **kwargs):
-        log.debug('')
-        return self.action_view_time_sheet(**kwargs)
-
-    def handle_client_action_view_time_record(self, **kwargs):
-        log.debug('')
-        return self.action_view_time_record(**kwargs)
 
     def handle_client_action_view_time(self, **kwargs):
         log.debug('')
@@ -1990,14 +2259,6 @@ class EWalletWorker():
         }
         return handlers[kwargs['time']](**kwargs)
 
-    def handle_client_action_view_transfer_sheet(self, **kwargs):
-        log.debug('')
-        return self.action_view_transfer_sheet(**kwargs)
-
-    def handle_client_action_view_transfer_record(self, **kwargs):
-        log.debug('')
-        return self.action_view_transfer_record(**kwargs)
-
     def handle_client_action_view_transfer(self, **kwargs):
         log.debug('')
         if not kwargs.get('transfer'):
@@ -2007,14 +2268,6 @@ class EWalletWorker():
             'record': self.handle_client_action_view_transfer_record,
         }
         return handlers[kwargs['transfer']](**kwargs)
-
-    def handle_client_action_view_contact_list(self, **kwargs):
-        log.debug('')
-        return self.action_view_contact_list(**kwargs)
-
-    def handle_client_action_view_contact_record(self, **kwargs):
-        log.debug('')
-        return self.action_view_contact_record(**kwargs)
 
     def handle_client_action_view_contact(self, **kwargs):
         log.debug('')
@@ -2026,10 +2279,6 @@ class EWalletWorker():
         }
         return handlers[kwargs['contact']](**kwargs)
 
-    def handle_client_action_stop_clock_timer(self, **kwargs):
-        log.debug('')
-        return self.action_stop_clock_timer(**kwargs)
-
     def handle_client_action_stop(self, **kwargs):
         log.debug('')
         if not kwargs.get('stop'):
@@ -2038,10 +2287,6 @@ class EWalletWorker():
             'clock_timer': self.handle_client_action_stop_clock_timer,
         }
         return handlers[kwargs['stop']](**kwargs)
-
-    def handle_client_action_resume_clock_timer(self, **kwargs):
-        log.debug('')
-        return self.action_resume_clock_timer(**kwargs)
 
     def handle_client_action_resume(self, **kwargs):
         log.debug('')
@@ -2052,10 +2297,6 @@ class EWalletWorker():
         }
         return handlers[kwargs['resume']](**kwargs)
 
-    def handle_client_action_pause_clock_timer(self, **kwargs):
-        log.debug('')
-        return self.action_pause_clock_timer(**kwargs)
-
     def handle_client_action_pause(self, **kwargs):
         log.debug('')
         if not kwargs.get('pause'):
@@ -2064,10 +2305,6 @@ class EWalletWorker():
             'clock_timer': self.handle_client_action_pause_clock_timer,
         }
         return handlers[kwargs['pause']](**kwargs)
-
-    def handle_client_action_start_clock_timer(self, **kwargs):
-        log.debug('')
-        return self.action_start_clock_timer(**kwargs)
 
     def handle_client_action_start(self, **kwargs):
         log.debug('')
@@ -2078,10 +2315,6 @@ class EWalletWorker():
         }
         return handlers[kwargs['start']](**kwargs)
 
-    def handle_client_action_edit_account(self, **kwargs):
-        log.debug('')
-        return self.action_edit_account(**kwargs)
-
     def handle_client_action_edit(self, **kwargs):
         log.debug('')
         if not kwargs.get('edit'):
@@ -2090,28 +2323,6 @@ class EWalletWorker():
             'account': self.handle_client_action_edit_account,
         }
         return handlers[kwargs['edit']](**kwargs)
-
-    def handle_client_action_transfer_credits(self, **kwargs):
-        log.debug('')
-        return self.action_transfer_credits(**kwargs)
-
-    def handle_client_action_transfer(self, **kwargs):
-        log.debug('')
-        if not kwargs.get('transfer'):
-            return self.error_no_client_action_transfer_target_specified(kwargs)
-        handlers = {
-            'credits': self.handle_client_action_transfer_credits,
-#           'time':,
-        }
-        return handlers[kwargs['transfer']](**kwargs)
-
-    def handle_client_action_new_contact_record(self, **kwargs):
-        log.debug('')
-        return self.action_new_contact_record(**kwargs)
-
-    def handle_client_action_new_contact_list(self, **kwargs):
-        log.debug('')
-        return self.action_new_contact_list(**kwargs)
 
     def handle_client_action_new_contact(self, **kwargs):
         log.debug('')
@@ -2123,14 +2334,6 @@ class EWalletWorker():
         }
         return handlers[kwargs['contact']](**kwargs)
 
-    def handle_client_action_convert_clock_to_credits(self, **kwargs):
-        log.debug('')
-        return self.action_convert_clock_to_credits(**kwargs)
-
-    def handle_client_action_convert_credits_to_clock(self, **kwargs):
-        log.debug('')
-        return self.action_convert_credits_to_clock(**kwargs)
-
     def handle_client_action_convert(self, **kwargs):
         log.debug('')
         if not kwargs.get('convert'):
@@ -2141,14 +2344,6 @@ class EWalletWorker():
         }
         return handlers[kwargs['convert']](**kwargs)
 
-    def handle_client_action_pay(self, **kwargs):
-        log.debug('')
-        return self.action_pay_partner_account(**kwargs)
-
-    def handle_client_action_supply_credits(self, **kwargs):
-        log.debug('')
-        return self.action_supply_user_credit_ewallet(**kwargs)
-
     def handle_client_action_supply(self, **kwargs):
         log.debug('')
         if not kwargs.get('supply'):
@@ -2158,18 +2353,6 @@ class EWalletWorker():
         }
         return handlers[kwargs['supply']](**kwargs)
 
-    def handle_client_action_account_login(self, **kwargs):
-        log.debug('')
-        return self.action_account_login(**kwargs)
-
-    def handle_client_action_new_user_account(self, **kwargs):
-        log.debug('')
-        return self.action_create_new_user_account(**kwargs)
-
-    def handle_system_action_interogate_state_code(self, **kwargs):
-        log.debug('')
-        return self.action_interogate_worker_state_code(**kwargs)
-
     def handle_system_action_interogate_state(self, **kwargs):
         log.debug('')
         if not kwargs.get('state'):
@@ -2178,10 +2361,6 @@ class EWalletWorker():
             'code': self.handle_system_action_interogate_state_code,
         }
         return handlers[kwargs['state']](**kwargs)
-
-    def handle_system_action_interogate_session_pool(self, **kwargs):
-        log.debug('')
-        return self.action_interogate_session_pool(**kwargs)
 
     def handle_system_action_interogate(self, **kwargs):
         log.debug('')
@@ -2193,60 +2372,6 @@ class EWalletWorker():
         }
         return handlers[kwargs['interogate']](**kwargs)
 
-    def handle_system_action_remove_session_map_by_ewallet_session(self, **kwargs):
-        log.debug('')
-        client_id = self.fetch_ewallet_session_map_client_id_by_ewallet_session(**kwargs)
-        if not client_id or isinstance(client_id, dict) and client_id.get('failed'):
-            return self.warning_could_not_fetch_ewallet_associated_client_id_from_map(
-                kwargs
-            )
-        remove_entry = self.remove_session_token_map_entry(client_id)
-        if not remove_entry or isinstance(remove_entry, dict) and \
-                remove_entry.get('failed'):
-            return self.warning_could_not_remove_session_token_map_entry(**kwargs)
-        instruction_set_response = {
-            'failed': False,
-            'session_token_map': remove_entry['session_token_map'],
-        }
-        return instruction_set_response
-
-    def handle_system_action_remove_session_map(self, **kwargs):
-        log.debug('TODO')
-        if not kwargs.get('identifier'):
-            return self.error_no_worker_action_remove_session_map_identifier_specified(
-                kwargs
-            )
-        handlers = {
-            'ewallet_session': self.handle_system_action_remove_session_map_by_ewallet_session,
-#           'session_token': self.handle_system_action_remove_session_map_by_session_token,
-#           'client_id': self.handle_system_action_remove_session_map_by_client_id,
-        }
-        return handlers[kwargs['identifier']](**kwargs)
-
-#   @pysnooper.snoop()
-    def handle_system_action_remove_session(self, **kwargs):
-        log.debug('')
-        if not kwargs.get('session'):
-            return self.error_no_worker_action_remove_session_specified(kwargs)
-        remove_from_pool = self.remove_ewallet_session_from_worker_pool(kwargs['session'])
-        sanitized_instruction_set = res_utils.remove_tags_from_command_chain(
-            kwargs, 'ctype', 'action', 'remove'
-        )
-        remove_from_map = self.system_controller(
-            ctype='action', action='remove', remove='session_map',
-            identifier='ewallet_session', **sanitized_instruction_set
-        )
-        clean_session = self.cleanup_session(kwargs['session'])
-        if not clean_session or isinstance(clean_session, dict) and \
-                clean_session.get('failed'):
-            return self.warning_could_not_remove_ewallet_session(kwargs)
-        update_state = self.handle_system_action_session_worker_state_check()
-        instruction_chain_response = {
-            'failed': False,
-            'worker_state': self.fetch_session_worker_state_code()
-        }
-        return instruction_chain_response
-
     def handle_system_action_remove(self, **kwargs):
         log.debug('')
         if not kwargs.get('remove'):
@@ -2256,40 +2381,6 @@ class EWalletWorker():
             'session_map': self.handle_system_action_remove_session_map,
         }
         return handlers[kwargs['remove']](**kwargs)
-
-    def handle_system_action_session_worker_state_check(self):
-        log.debug('')
-        current_state = self.fetch_session_worker_state_code()
-        if current_state == 2:
-            return self.warning_session_worker_ewallet_session_pool_full(current_state)
-        session_pool = self.fetch_session_worker_ewallet_session_pool()
-        set_state = self.set_session_worker_state_code(
-            1 if len(session_pool) >= 1 else 0
-        )
-        instruction_set_response = {
-            'failed': False,
-            'worker_state': current_state,
-        }
-        return self.warning_could_not_perform_session_worker_state_check(session_pool) \
-            if not set_state or isinstance(set_state, dict) and set_state.get('failed') \
-            else instruction_set_response
-
-    def handle_system_action_search_session(self, **kwargs):
-        log.debug('')
-        if not kwargs.get('session_token'):
-            return self.error_no_session_token_found()
-        ewallet_session = self.search_ewallet_session(kwargs['session_token'])
-        return self.warning_session_token_not_mapped(kwargs['session_token']) \
-                if not ewallet_session else ewallet_session
-
-    def handle_system_action_search(self, **kwargs):
-        log.debug('')
-        if not kwargs.get('search'):
-            return self.error_no_worker_action_search_target_specified()
-        handlers = {
-            'session': self.handle_system_action_search_session,
-        }
-        return handlers[kwargs['search']](**kwargs)
 
     def handle_system_action_add(self, **kwargs):
         log.debug('')
@@ -2301,6 +2392,7 @@ class EWalletWorker():
             'client_id': self.action_add_client_id,
         }
         return handlers[kwargs['add']](**kwargs)
+
 
     # INIT
 
@@ -2358,6 +2450,7 @@ class EWalletWorker():
             'view': self.handle_client_action_view,
             'logout': self.handle_client_action_logout,
             'new': self.handle_client_action_new,
+            'switch': self.handle_client_action_switch,
         }
         return handlers[kwargs['action']](**kwargs)
 
@@ -2404,6 +2497,26 @@ class EWalletWorker():
         return handlers[kwargs['controller']](**kwargs)
 
     # WARNINGS
+
+    def warning_could_not_switch_credit_clock(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Something went wrong. '
+                       'Could not switch credit clock. '
+                       'Details: {}'.format(args),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
+
+    def warning_could_not_switch_credit_ewallet(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Something went wrong. '
+                       'Could not switch credit ewallet. '
+                       'Details: {}'.format(args),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
 
     def warning_could_not_create_new_time_sheet(self, *args):
         command_chain_response = {
@@ -2880,6 +2993,24 @@ class EWalletWorker():
         return False
 
     # ERRORS
+
+    def error_no_client_action_switch_credit_target_specified(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No client action switch credit target specified. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_no_client_action_switch_target_specified(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No client action switch target specified. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
 
     def error_no_client_action_new_transfer_target_specified(self, *args):
         command_chain_response = {
