@@ -55,6 +55,7 @@
     - x - Request Session token
     - x - User action Create Account
     - x - User action Account Login
+    -   - User action Account Logout
     - x - User action Supply Credits
     - x - User action Pay Credits
     - x - User action Convert Credits2Clock

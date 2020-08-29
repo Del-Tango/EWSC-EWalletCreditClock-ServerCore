@@ -666,6 +666,64 @@ class EWalletWorker():
 
     # ACTIONS
 
+    def action_view_login_records(self, **kwargs):
+        log.debug('')
+        # Fetch ewallet session by token keys
+        ewallet_session = self.fetch_ewallet_session_by_client_session_tokens(
+            kwargs['client_id'], kwargs['session_token']
+        )
+        if not ewallet_session or isinstance(ewallet_session, dict) and \
+                ewallet_session.get('failed'):
+            return ewallet_session
+        sanitized_instruction_set = res_utils.remove_tags_from_command_chain(
+            kwargs, 'controller', 'ctype', 'action', 'view', 'active_session'
+        )
+        # Execute action in session
+        orm_session = ewallet_session.fetch_active_session()
+        view_login_records = ewallet_session.ewallet_controller(
+            controller='user', ctype='action', action='view',
+            view='login', active_session=orm_session,
+            **sanitized_instruction_set
+        )
+        # Formulate response
+        response = self.warning_could_not_view_login_records(
+            ewallet_session, kwargs, view_login_records
+        ) if not view_login_records or \
+            isinstance(view_login_records, dict) and \
+            view_login_records.get('failed') else view_login_records
+        # Respond to session manager
+        self.send_instruction_response(response)
+        return response
+
+    def action_view_logout_records(self, **kwargs):
+        log.debug('')
+        # Fetch ewallet session by token keys
+        ewallet_session = self.fetch_ewallet_session_by_client_session_tokens(
+            kwargs['client_id'], kwargs['session_token']
+        )
+        if not ewallet_session or isinstance(ewallet_session, dict) and \
+                ewallet_session.get('failed'):
+            return ewallet_session
+        sanitized_instruction_set = res_utils.remove_tags_from_command_chain(
+            kwargs, 'controller', 'ctype', 'action', 'view', 'active_session'
+        )
+        # Execute action in session
+        orm_session = ewallet_session.fetch_active_session()
+        view_logout_records = ewallet_session.ewallet_controller(
+            controller='user', ctype='action', action='view',
+            view='logout', active_session=orm_session,
+            **sanitized_instruction_set
+        )
+        # Formulate response
+        response = self.warning_could_not_view_logout_records(
+            ewallet_session, kwargs, view_logout_records
+        ) if not view_logout_records or \
+            isinstance(view_logout_records, dict) and \
+            view_logout_records.get('failed') else view_logout_records
+        # Respond to session manager
+        self.send_instruction_response(response)
+        return response
+
     def action_view_invoice_sheet(self, **kwargs):
         log.debug('')
         # Fetch ewallet session by token keys
@@ -1552,6 +1610,14 @@ class EWalletWorker():
 
     # HANDLERS
 
+    def handle_client_action_view_login(self, **kwargs):
+        log.debug('')
+        return self.action_view_login_records(**kwargs)
+
+    def handle_client_action_view_logout(self, **kwargs):
+        log.debug('')
+        return self.action_view_logout_records(**kwargs)
+
     def handle_client_action_view_invoice_sheet(self, **kwargs):
         log.debug('')
         return self.action_view_invoice_sheet(**kwargs)
@@ -1604,6 +1670,8 @@ class EWalletWorker():
             'account': self.handle_client_action_view_account,
             'credit': self.handle_client_action_view_credit,
             'invoice': self.handle_client_action_view_invoice,
+            'login': self.handle_client_action_view_login,
+            'logout': self.handle_client_action_view_logout,
         }
         return handlers[kwargs['view']](**kwargs)
 
@@ -2065,6 +2133,26 @@ class EWalletWorker():
         return handlers[kwargs['controller']](**kwargs)
 
     # WARNINGS
+
+    def warning_could_not_view_login_records(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Something went wrong. '
+                       'Could not view login records. '
+                       'Details: {}'.format(args),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
+
+    def warning_could_not_view_logout_records(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Something went wrong. '
+                       'Could not view logout records. '
+                       'Details: {}'.format(args),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
 
     def warning_could_not_view_invoice_sheet(self, *args):
         command_chain_response = {
