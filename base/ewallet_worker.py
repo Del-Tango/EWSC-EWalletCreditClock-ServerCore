@@ -666,6 +666,36 @@ class EWalletWorker():
 
     # ACTIONS
 
+    def action_switch_contact_list(self, **kwargs):
+        log.debug('')
+        # Fetch ewallet session by token keys
+        ewallet_session = self.fetch_ewallet_session_by_client_session_tokens(
+            kwargs['client_id'], kwargs['session_token']
+        )
+        if not ewallet_session or isinstance(ewallet_session, dict) and \
+                ewallet_session.get('failed'):
+            return ewallet_session
+        sanitized_instruction_set = res_utils.remove_tags_from_command_chain(
+            kwargs, 'controller', 'ctype', 'action', 'switch', 'contact',
+            'active_session'
+        )
+        # Execute action in session
+        orm_session = ewallet_session.fetch_active_session()
+        switch_contact_list = ewallet_session.ewallet_controller(
+            controller='user', ctype='action', action='switch',
+            switch='contact_list', active_session=orm_session,
+            **sanitized_instruction_set
+        )
+        # Formulate response
+        response = self.warning_could_not_switch_contact_list(
+            ewallet_session, kwargs, switch_contact_list
+        ) if not switch_contact_list or \
+            isinstance(switch_contact_list, dict) and \
+            switch_contact_list.get('failed') else switch_contact_list
+        # Respond to session manager
+        self.send_instruction_response(response)
+        return response
+
     def action_switch_conversion_sheet(self, **kwargs):
         log.debug('')
         # Fetch ewallet session by token keys
@@ -1998,6 +2028,10 @@ class EWalletWorker():
 
     # ACTION HANDLERS
 
+    def handle_client_action_switch_contact_list(self, **kwargs):
+        log.debug('')
+        return self.action_switch_contact_list(**kwargs)
+
     def handle_client_action_switch_conversion_sheet(self, **kwargs):
         log.debug('')
         return self.action_switch_conversion_sheet(**kwargs)
@@ -2250,6 +2284,15 @@ class EWalletWorker():
 
     # JUMPTABLE HANDLERS
 
+    def handle_client_action_switch_contact(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('contact'):
+            return self.error_no_client_action_switch_contact_target_specified(kwargs)
+        handlers = {
+            'list': self.handle_client_action_switch_contact_list,
+        }
+        return handlers[kwargs['contact']](**kwargs)
+
     def handle_client_action_switch_conversion(self, **kwargs):
         log.debug('')
         if not kwargs.get('conversion'):
@@ -2306,6 +2349,7 @@ class EWalletWorker():
             'invoice': self.handle_client_action_switch_invoice,
             'conversion': self.handle_client_action_switch_conversion,
             'time': self.handle_client_action_switch_time,
+            'contact': self.handle_client_action_switch_contact,
         }
         return handlers[kwargs['switch']](**kwargs)
 

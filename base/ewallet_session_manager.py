@@ -1426,6 +1426,19 @@ class EWalletSessionManager():
     [ NOTE ]: Instruction set validation and sanitizations are performed here.
     '''
 
+    def handle_client_action_switch_contact_list(self, **kwargs):
+        log.debug('')
+        instruction_set_validation = self.validate_instruction_set(kwargs)
+        if not instruction_set_validation \
+                or isinstance(instruction_set_validation, dict) \
+                and instruction_set_validation.get('failed'):
+            return instruction_set_validation
+        switch_contact_list = self.action_execute_user_instruction_set(**kwargs)
+        return self.warning_could_not_switch_contact_list(
+            kwargs, switch_contact_list
+        ) if not switch_contact_list or isinstance(switch_contact_list, dict) and \
+            switch_contact_list.get('failed') else switch_contact_list
+
     def handle_client_action_switch_time_sheet(self, **kwargs):
         log.debug('')
         instruction_set_validation = self.validate_instruction_set(kwargs)
@@ -2398,25 +2411,6 @@ class EWalletSessionManager():
         )
         return unlink_transfer_record
 
-    def handle_client_action_switch_contact_list(self, **kwargs):
-        log.debug('')
-        instruction_set_validation = self.validate_instruction_set(kwargs)
-        if not instruction_set_validation \
-                or isinstance(instruction_set_validation, dict) \
-                and instruction_set_validation.get('failed'):
-            return instruction_set_validation
-        ewallet = self.fetch_ewallet_session_for_client_action_using_instruction_set(
-            kwargs
-        )
-        if not ewallet or not ewallet['ewallet_session'] or \
-                isinstance(ewallet['ewallet_session'], dict) and \
-                ewallet['ewallet_session'].get('failed'):
-            return self.error_no_ewallet_session_found(kwargs)
-        switch_contact_list = self.action_switch_contact_list(
-            ewallet['ewallet_session'], ewallet['sanitized_instruction_set']
-        )
-        return switch_contact_list
-
     # JUMPTABLE HANDLERS
 
     # TODO
@@ -3053,6 +3047,16 @@ class EWalletSessionManager():
         return handlers[kwargs['controller']](**kwargs)
 
     # WARNINGS
+
+    def warning_could_not_switch_contact_list(self, *args):
+        instruction_set_response = {
+            'failed': True,
+            'warning': 'Something went wrong. '
+                       'Could not switch contact list. '\
+                       'Details: {}'.format(args)
+        }
+        log.warning(instruction_set_response['warning'])
+        return instruction_set_response
 
     def warning_could_not_switch_time_sheet(self, *args):
         instruction_set_response = {
@@ -3875,15 +3879,6 @@ class EWalletSessionManager():
         instruction_set_response = {
             'failed': True,
             'warning': 'Something went wrong. Could not unlink transfer sheet record in ewallet session {}. '\
-                       'Instruction set details : {}'.format(ewallet_session, instruction_set),
-        }
-        log.warning(instruction_set_response['warning'])
-        return instruction_set_response
-
-    def warning_could_not_switch_contact_list(self, ewallet_session, instruction_set):
-        instruction_set_response = {
-            'failed': True,
-            'warning': 'Something went wrong. Could not switch contact list in ewallet session {}. '\
                        'Instruction set details : {}'.format(ewallet_session, instruction_set),
         }
         log.warning(instruction_set_response['warning'])
@@ -4940,35 +4935,20 @@ class EWalletSessionManager():
 
 # CODE DUMP
 
-    def action_switch_time_sheet(self, ewallet_session, instruction_set):
+    def action_switch_contact_list(self, ewallet_session, instruction_set):
         log.debug('')
         orm_session = ewallet_session.fetch_active_session()
         sanitized_instruction_set = self.res_utils.remove_tags_from_command_chain(
             instruction_set, 'controller', 'ctype', 'action', 'switch'
         )
-        switch_time_sheet = ewallet_session.ewallet_controller(
-            controller='user', ctype='action', action='switch', switch='time_sheet',
+        switch_contact_list = ewallet_session.ewallet_controller(
+            controller='user', ctype='action', action='switch', switch='contact_list',
             active_session=orm_session, **sanitized_instruction_set
         )
-        return self.warning_could_not_switch_time_sheet(
+        return self.warning_could_not_switch_contact_list(
             ewallet_session, instruction_set
-        ) if not switch_time_sheet or switch_time_sheet.get('failed') else \
-        switch_time_sheet
-
-    def action_switch_conversion_sheet(self, ewallet_session, instruction_set):
-        log.debug('')
-        orm_session = ewallet_session.fetch_active_session()
-        sanitized_instruction_set = self.res_utils.remove_tags_from_command_chain(
-            instruction_set, 'controller', 'ctype', 'action', 'switch'
-        )
-        switch_conversion_sheet = ewallet_session.ewallet_controller(
-            controller='user', ctype='action', action='switch', switch='conversion_sheet',
-            active_session=orm_session, **sanitized_instruction_set
-        )
-        return self.warning_could_not_switch_conversion_sheet(
-            ewallet_session, instruction_set
-        ) if not switch_conversion_sheet or switch_conversion_sheet.get('failed') \
-        else switch_conversion_sheet
+        ) if not switch_contact_list or switch_contact_list.get('failed') \
+            else switch_contact_list
 
     def action_unlink_credit_clock(self, ewallet_session, instruction_set):
         log.debug('')
@@ -5150,21 +5130,6 @@ class EWalletSessionManager():
             ewallet_session, instruction_set
         ) if not unlink_transfer_record or unlink_transfer_record.get('failed') \
             else unlink_transfer_record
-
-    def action_switch_contact_list(self, ewallet_session, instruction_set):
-        log.debug('')
-        orm_session = ewallet_session.fetch_active_session()
-        sanitized_instruction_set = self.res_utils.remove_tags_from_command_chain(
-            instruction_set, 'controller', 'ctype', 'action', 'switch'
-        )
-        switch_contact_list = ewallet_session.ewallet_controller(
-            controller='user', ctype='action', action='switch', switch='contact_list',
-            active_session=orm_session, **sanitized_instruction_set
-        )
-        return self.warning_could_not_switch_contact_list(
-            ewallet_session, instruction_set
-        ) if not switch_contact_list or switch_contact_list.get('failed') \
-            else switch_contact_list
 
     # TODO - Deprecated
     def action_recover_user_account(self, ewallet_session, instruction_set):

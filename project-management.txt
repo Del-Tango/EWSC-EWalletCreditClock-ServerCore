@@ -95,8 +95,8 @@
     - x - User action Switch Invoice Sheet
     - x - User action Switch Conversion Sheet
     - x - User action Switch Time Sheet
-    -   - User action switch_contact_list
-    - User action unlink_account
+    - x - User action Switch Contact List
+    -   - User action unlink_account
     - User action unlink_contact_list
     - User action unlink_contact_record
     - User action unlink_conversion_sheet
