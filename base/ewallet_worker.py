@@ -666,6 +666,66 @@ class EWalletWorker():
 
     # ACTIONS
 
+    def action_new_credit_ewallet(self, **kwargs):
+        log.debug('')
+        # Fetch ewallet session by token keys
+        ewallet_session = self.fetch_ewallet_session_by_client_session_tokens(
+            kwargs['client_id'], kwargs['session_token']
+        )
+        if not ewallet_session or isinstance(ewallet_session, dict) and \
+                ewallet_session.get('failed'):
+            return ewallet_session
+        sanitized_instruction_set = res_utils.remove_tags_from_command_chain(
+            kwargs, 'controller', 'ctype', 'action', 'new', 'credit',
+            'active_session'
+        )
+        # Execute action in session
+        orm_session = ewallet_session.fetch_active_session()
+        new_ewallet = ewallet_session.ewallet_controller(
+            controller='user', ctype='action', action='create',
+            create='credit_wallet', active_session=orm_session,
+            **sanitized_instruction_set
+        )
+        # Formulate response
+        response = self.warning_could_not_create_new_credit_ewallet(
+            ewallet_session, kwargs, new_ewallet
+        ) if not new_ewallet or \
+            isinstance(new_ewallet, dict) and \
+            new_ewallet.get('failed') else new_ewallet
+        # Respond to session manager
+        self.send_instruction_response(response)
+        return response
+
+    def action_new_credit_clock(self, **kwargs):
+        log.debug('')
+        # Fetch ewallet session by token keys
+        ewallet_session = self.fetch_ewallet_session_by_client_session_tokens(
+            kwargs['client_id'], kwargs['session_token']
+        )
+        if not ewallet_session or isinstance(ewallet_session, dict) and \
+                ewallet_session.get('failed'):
+            return ewallet_session
+        sanitized_instruction_set = res_utils.remove_tags_from_command_chain(
+            kwargs, 'controller', 'ctype', 'action', 'new', 'credit',
+            'active_session'
+        )
+        # Execute action in session
+        orm_session = ewallet_session.fetch_active_session()
+        new_clock = ewallet_session.ewallet_controller(
+            controller='user', ctype='action', action='create',
+            create='credit_clock', active_session=orm_session,
+            **sanitized_instruction_set
+        )
+        # Formulate response
+        response = self.warning_could_not_create_new_credit_clock(
+            ewallet_session, kwargs, new_clock
+        ) if not new_clock or \
+            isinstance(new_clock, dict) and \
+            new_clock.get('failed') else new_clock
+        # Respond to session manager
+        self.send_instruction_response(response)
+        return response
+
     def action_logout_user_account(self, **kwargs):
         log.debug('')
         # Fetch ewallet session by token keys
@@ -1638,6 +1698,35 @@ class EWalletWorker():
 
     # HANDLERS
 
+    def handle_client_action_new(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('new'):
+            return self.error_no_session_worker_client_action_new_target_specified(kwargs)
+        handlers = {
+            'account': self.handle_client_action_new_user_account,
+            'contact': self.handle_client_action_new_contact,
+            'credit': self.handle_client_action_new_credit,
+        }
+        return handlers[kwargs['new']](**kwargs)
+
+    def handle_client_action_new_credit_ewallet(self, **kwargs):
+        log.debug('')
+        return self.action_new_credit_ewallet(**kwargs)
+
+    def handle_client_action_new_credit_clock(self, **kwargs):
+        log.debug('')
+        return self.action_new_credit_clock(**kwargs)
+
+    def handle_client_action_new_credit(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('credit'):
+            return self.error_no_client_action_new_credit_target_specified(kwargs)
+        handlers = {
+            'ewallet': self.handle_client_action_new_credit_ewallet,
+            'clock': self.handle_client_action_new_credit_clock,
+        }
+        return handlers[kwargs['credit']](**kwargs)
+
     def handle_client_action_logout(self, **kwargs):
         log.debug('')
         return self.action_logout_user_account(**kwargs)
@@ -1919,16 +2008,6 @@ class EWalletWorker():
         log.debug('')
         return self.action_create_new_user_account(**kwargs)
 
-    def handle_client_action_new(self, **kwargs):
-        log.debug('')
-        if not kwargs.get('new'):
-            return self.error_no_session_worker_client_action_new_target_specified(kwargs)
-        handlers = {
-            'account': self.handle_client_action_new_user_account,
-            'contact': self.handle_client_action_new_contact,
-        }
-        return handlers[kwargs['new']](**kwargs)
-
     def handle_system_action_interogate_state_code(self, **kwargs):
         log.debug('')
         return self.action_interogate_worker_state_code(**kwargs)
@@ -2120,6 +2199,7 @@ class EWalletWorker():
             'stop': self.handle_client_action_stop,
             'view': self.handle_client_action_view,
             'logout': self.handle_client_action_logout,
+            'new': self.handle_client_action_new,
         }
         return handlers[kwargs['action']](**kwargs)
 
@@ -2166,6 +2246,26 @@ class EWalletWorker():
         return handlers[kwargs['controller']](**kwargs)
 
     # WARNINGS
+
+    def warning_could_not_create_new_credit_clock(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Something went wrong. '
+                       'Could not create new credit clock. '
+                       'Details: {}'.format(args),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
+
+    def warning_could_not_create_new_credit_ewallet(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Something went wrong. '
+                       'Could not create new credit ewallet. '
+                       'Details: {}'.format(args),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
 
     def warning_could_not_logout_user_account(self, *args):
         command_chain_response = {
@@ -2582,6 +2682,24 @@ class EWalletWorker():
         return False
 
     # ERRORS
+
+    def error_no_client_action_new_credit_target_specified(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No client action new credit target specified. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_no_client_action_new_target_specified(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No client action new target specified. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
 
     def error_no_client_action_view_credit_target_specified(self, *args):
         command_chain_response = {
