@@ -93,9 +93,9 @@
     - x - User action Switch Credit Clock
     - x - User action Switch Transfer Sheet
     - x - User action Switch Invoice Sheet
-    -   - User action Switch Conversion Sheet
-    -   - User action Switch Time Sheet
-    - User action switch_contact_list
+    - x - User action Switch Conversion Sheet
+    - x - User action Switch Time Sheet
+    -   - User action switch_contact_list
     - User action unlink_account
     - User action unlink_contact_list
     - User action unlink_contact_record
