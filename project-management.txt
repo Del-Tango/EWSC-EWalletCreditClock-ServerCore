@@ -81,8 +81,8 @@
     - x - User action View Credit Clock
     - x - User action View Invoice Sheet
     - x - User action View Invoice Record
-    -   - User action view_login_records
-    -   - User action view_logout_records
+    - x - User action view_login_records
+    - x - User action view_logout_records
     - User action create_credit_ewallet
     - User action create_credit_clock
     - User action create_transfer_sheet
