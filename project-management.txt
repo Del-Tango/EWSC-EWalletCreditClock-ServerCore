@@ -87,10 +87,10 @@
     - x - User action Create Credit Clock
     - x - User action Create Transfer Sheet
     - x - User action Create Invoice Sheet
-    -   - User action Create Conversion Sheet
-    -   - User action Create Time Sheet
-    - User action switch_credit_ewallet
-    - User action switch_credit_clock
+    - x - User action Create Conversion Sheet
+    - x - User action Create Time Sheet
+    -   - User action Switch Credit EWallet
+    -   - User action Switch Credit Clock
     - User action switch_transfer_sheet
     - User action switch_invoice_sheet
     - User action switch_conversion_sheet

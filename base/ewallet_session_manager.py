@@ -1421,10 +1421,36 @@ class EWalletSessionManager():
         }
         return pool_entry
 
-    # HANDLERS
+    # ACTION HANDLERS
     '''
     [ NOTE ]: Instruction set validation and sanitizations are performed here.
     '''
+
+    def handle_client_action_new_conversion_sheet(self, **kwargs):
+        log.debug('')
+        instruction_set_validation = self.validate_instruction_set(kwargs)
+        if not instruction_set_validation \
+                or isinstance(instruction_set_validation, dict) \
+                and instruction_set_validation.get('failed'):
+            return instruction_set_validation
+        new_conversion_sheet = self.action_execute_user_instruction_set(**kwargs)
+        return self.warning_could_not_create_new_conversion_sheet(
+            kwargs, new_conversion_sheet
+        ) if not new_conversion_sheet or isinstance(new_conversion_sheet, dict) and \
+            new_conversion_sheet.get('failed') else new_conversion_sheet
+
+    def handle_client_action_new_time_sheet(self, **kwargs):
+        log.debug('')
+        instruction_set_validation = self.validate_instruction_set(kwargs)
+        if not instruction_set_validation \
+                or isinstance(instruction_set_validation, dict) \
+                and instruction_set_validation.get('failed'):
+            return instruction_set_validation
+        new_time_sheet = self.action_execute_user_instruction_set(**kwargs)
+        return self.warning_could_not_create_new_time_sheet(
+            kwargs, new_time_sheet
+        ) if not new_time_sheet or isinstance(new_time_sheet, dict) and \
+            new_time_sheet.get('failed') else new_time_sheet
 
     def handle_client_action_new_transfer_sheet(self, **kwargs):
         log.debug('')
@@ -2522,6 +2548,8 @@ class EWalletSessionManager():
         )
         return switch_credit_ewallet
 
+    # JUMPTABLE HANDLERS
+
     def handle_client_action_switch_credit(self, **kwargs):
         log.debug('')
         if not kwargs.get('credit'):
@@ -2547,25 +2575,6 @@ class EWalletSessionManager():
         }
         return handlers[kwargs['switch']](**kwargs)
 
-    def handle_client_action_new_time_sheet(self, **kwargs):
-        log.debug('')
-        instruction_set_validation = self.validate_instruction_set(kwargs)
-        if not instruction_set_validation \
-                or isinstance(instruction_set_validation, dict) \
-                and instruction_set_validation.get('failed'):
-            return instruction_set_validation
-        ewallet = self.fetch_ewallet_session_for_client_action_using_instruction_set(
-            kwargs
-        )
-        if not ewallet or not ewallet['ewallet_session'] or \
-                isinstance(ewallet['ewallet_session'], dict) and \
-                ewallet['ewallet_session'].get('failed'):
-            return self.error_no_ewallet_session_found(kwargs)
-        new_time_sheet = self.action_new_time_sheet(
-            ewallet['ewallet_session'], ewallet['sanitized_instruction_set'],
-        )
-        return new_time_sheet
-
     def handle_client_action_new_time(self, **kwargs):
         log.debug('')
         if not kwargs.get('time'):
@@ -2574,25 +2583,6 @@ class EWalletSessionManager():
             'list': self.handle_client_action_new_time_sheet,
         }
         return handlers[kwargs['time']](**kwargs)
-
-    def handle_client_action_new_conversion_sheet(self, **kwargs):
-        log.debug('')
-        instruction_set_validation = self.validate_instruction_set(kwargs)
-        if not instruction_set_validation \
-                or isinstance(instruction_set_validation, dict) \
-                and instruction_set_validation.get('failed'):
-            return instruction_set_validation
-        ewallet = self.fetch_ewallet_session_for_client_action_using_instruction_set(
-            kwargs
-        )
-        if not ewallet or not ewallet['ewallet_session'] or \
-                isinstance(ewallet['ewallet_session'], dict) and \
-                ewallet['ewallet_session'].get('failed'):
-            return self.error_no_ewallet_session_found(kwargs)
-        new_conversion_sheet = self.action_new_conversion_sheet(
-            ewallet['ewallet_session'], ewallet['sanitized_instruction_set'],
-        )
-        return new_conversion_sheet
 
     def handle_client_action_new_conversion(self, **kwargs):
         log.debug('')
@@ -3047,6 +3037,26 @@ class EWalletSessionManager():
         return handlers[kwargs['controller']](**kwargs)
 
     # WARNINGS
+
+    def warning_could_not_create_new_conversion_sheet(self, *args):
+        instruction_set_response = {
+            'failed': True,
+            'warning': 'Something went wrong. '
+                       'Could not create new conversion sheet. '\
+                       'Details: {}'.format(args)
+        }
+        log.warning(instruction_set_response['warning'])
+        return instruction_set_response
+
+    def warning_could_not_create_new_time_sheet(self, *args):
+        instruction_set_response = {
+            'failed': True,
+            'warning': 'Something went wrong. '
+                       'Could not create new time sheet. '\
+                       'Details: {}'.format(args)
+        }
+        log.warning(instruction_set_response['warning'])
+        return instruction_set_response
 
     def warning_could_not_create_new_invoice_sheet(self, *args):
         instruction_set_response = {
@@ -3861,15 +3871,6 @@ class EWalletSessionManager():
         instruction_set_response = {
             'failed': True,
             'warning': 'Something went wrong. Could not switch credit ewallet in ewallet session {}. '\
-                       'Instruction set details : {}'.format(ewallet_session, instruction_set),
-        }
-        log.warning(instruction_set_response['warning'])
-        return instruction_set_response
-
-    def warning_could_not_create_new_time_sheet(self, ewallet_session, instruction_set):
-        instruction_set_response = {
-            'failed': True,
-            'warning': 'Something went wrong. Could not create new time sheet in ewallet session {}. '\
                        'Instruction set details : {}'.format(ewallet_session, instruction_set),
         }
         log.warning(instruction_set_response['warning'])
@@ -4872,33 +4873,33 @@ class EWalletSessionManager():
 
 # CODE DUMP
 
-    def action_new_transfer_sheet(self, ewallet_session, instruction_set):
+    def action_new_time_sheet(self, ewallet_session, instruction_set):
         log.debug('')
         orm_session = ewallet_session.fetch_active_session()
         sanitized_instruction_set = self.res_utils.remove_tags_from_command_chain(
-            instruction_set, 'controller', 'ctype', 'action', 'new', 'transfer'
+            instruction_set, 'controller', 'ctype', 'action', 'new', 'time'
         )
-        new_transfer_sheet = ewallet_session.ewallet_controller(
-            controller='user', ctype='action', action='create', create='transfer_sheet',
+        new_time_sheet = ewallet_session.ewallet_controller(
+            controller='user', ctype='action', action='create', create='time_sheet',
             active_session=orm_session, **sanitized_instruction_set
         )
-        return self.warning_could_not_create_new_transfer_sheet(
+        return self.warning_could_not_create_new_time_sheet(
             ewallet_session, instruction_set
-        ) if new_transfer_sheet.get('failed') else new_transfer_sheet
+        ) if new_time_sheet.get('failed') else new_time_sheet
 
-    def action_new_invoice_sheet(self, ewallet_session, instruction_set):
+    def action_new_conversion_sheet(self, ewallet_session, instruction_set):
         log.debug('')
         orm_session = ewallet_session.fetch_active_session()
         sanitized_instruction_set = self.res_utils.remove_tags_from_command_chain(
-            instruction_set, 'controller', 'ctype', 'action', 'new', 'invoice'
+            instruction_set, 'controller', 'ctype', 'action', 'new', 'conversion'
         )
-        new_invoice_sheet = ewallet_session.ewallet_controller(
-            controller='user', ctype='action', action='create', create='invoice_sheet',
+        new_conversion_sheet = ewallet_session.ewallet_controller(
+            controller='user', ctype='action', action='create', create='conversion_sheet',
             active_session=orm_session, **sanitized_instruction_set
         )
-        return self.warning_could_not_create_new_invoice_sheet(
+        return self.warning_could_not_create_new_conversion_sheet(
             ewallet_session, instruction_set
-        ) if new_invoice_sheet.get('failed') else new_invoice_sheet
+        ) if new_conversion_sheet.get('failed') else new_conversion_sheet
 
 
     def action_unlink_credit_clock(self, ewallet_session, instruction_set):
@@ -5237,32 +5238,4 @@ class EWalletSessionManager():
             ewallet_session, instruction_set
         ) if not switch_user_account or switch_user_account.get('failed') \
             else switch_user_account
-
-    def action_new_time_sheet(self, ewallet_session, instruction_set):
-        log.debug('')
-        orm_session = ewallet_session.fetch_active_session()
-        sanitized_instruction_set = self.res_utils.remove_tags_from_command_chain(
-            instruction_set, 'controller', 'ctype', 'action', 'new', 'time'
-        )
-        new_time_sheet = ewallet_session.ewallet_controller(
-            controller='user', ctype='action', action='create', create='time_sheet',
-            active_session=orm_session, **sanitized_instruction_set
-        )
-        return self.warning_could_not_create_new_time_sheet(
-            ewallet_session, instruction_set
-        ) if new_time_sheet.get('failed') else new_time_sheet
-
-    def action_new_conversion_sheet(self, ewallet_session, instruction_set):
-        log.debug('')
-        orm_session = ewallet_session.fetch_active_session()
-        sanitized_instruction_set = self.res_utils.remove_tags_from_command_chain(
-            instruction_set, 'controller', 'ctype', 'action', 'new', 'conversion'
-        )
-        new_conversion_sheet = ewallet_session.ewallet_controller(
-            controller='user', ctype='action', action='create', create='conversion_sheet',
-            active_session=orm_session, **sanitized_instruction_set
-        )
-        return self.warning_could_not_create_new_conversion_sheet(
-            ewallet_session, instruction_set
-        ) if new_conversion_sheet.get('failed') else new_conversion_sheet
 

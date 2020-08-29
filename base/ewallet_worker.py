@@ -666,6 +666,66 @@ class EWalletWorker():
 
     # ACTIONS
 
+    def action_new_conversion_sheet(self, **kwargs):
+        log.debug('')
+        # Fetch ewallet session by token keys
+        ewallet_session = self.fetch_ewallet_session_by_client_session_tokens(
+            kwargs['client_id'], kwargs['session_token']
+        )
+        if not ewallet_session or isinstance(ewallet_session, dict) and \
+                ewallet_session.get('failed'):
+            return ewallet_session
+        sanitized_instruction_set = res_utils.remove_tags_from_command_chain(
+            kwargs, 'controller', 'ctype', 'action', 'new', 'conversion',
+            'active_session'
+        )
+        # Execute action in session
+        orm_session = ewallet_session.fetch_active_session()
+        new_conversion_sheet = ewallet_session.ewallet_controller(
+            controller='user', ctype='action', action='create',
+            create='conversion_sheet', active_session=orm_session,
+            **sanitized_instruction_set
+        )
+        # Formulate response
+        response = self.warning_could_not_create_new_conversion_sheet(
+            ewallet_session, kwargs, new_conversion_sheet
+        ) if not new_conversion_sheet or \
+            isinstance(new_conversion_sheet, dict) and \
+            new_conversion_sheet.get('failed') else new_conversion_sheet
+        # Respond to session manager
+        self.send_instruction_response(response)
+        return response
+
+    def action_new_time_sheet(self, **kwargs):
+        log.debug('')
+        # Fetch ewallet session by token keys
+        ewallet_session = self.fetch_ewallet_session_by_client_session_tokens(
+            kwargs['client_id'], kwargs['session_token']
+        )
+        if not ewallet_session or isinstance(ewallet_session, dict) and \
+                ewallet_session.get('failed'):
+            return ewallet_session
+        sanitized_instruction_set = res_utils.remove_tags_from_command_chain(
+            kwargs, 'controller', 'ctype', 'action', 'new', 'time',
+            'active_session'
+        )
+        # Execute action in session
+        orm_session = ewallet_session.fetch_active_session()
+        new_time_sheet = ewallet_session.ewallet_controller(
+            controller='user', ctype='action', action='create',
+            create='time_sheet', active_session=orm_session,
+            **sanitized_instruction_set
+        )
+        # Formulate response
+        response = self.warning_could_not_create_new_time_sheet(
+            ewallet_session, kwargs, new_time_sheet
+        ) if not new_time_sheet or \
+            isinstance(new_time_sheet, dict) and \
+            new_time_sheet.get('failed') else new_time_sheet
+        # Respond to session manager
+        self.send_instruction_response(response)
+        return response
+
     def action_new_transfer_sheet(self, **kwargs):
         log.debug('')
         # Fetch ewallet session by token keys
@@ -1758,6 +1818,14 @@ class EWalletWorker():
 
     # HANDLERS
 
+    def handle_client_action_new_conversion(self, **kwargs):
+        log.debug('')
+        return self.action_new_conversion_sheet(**kwargs)
+
+    def handle_client_action_new_time(self, **kwargs):
+        log.debug('')
+        return self.action_new_time_sheet(**kwargs)
+
     def handle_client_action_new_transfer_sheet(self, **kwargs):
         log.debug('')
         return self.action_new_transfer_sheet(**kwargs)
@@ -1794,6 +1862,8 @@ class EWalletWorker():
             'credit': self.handle_client_action_new_credit,
             'transfer': self.handle_client_action_new_transfer,
             'invoice': self.handle_client_action_new_invoice,
+            'conversion': self.handle_client_action_new_conversion,
+            'time': self.handle_client_action_new_time,
         }
         return handlers[kwargs['new']](**kwargs)
 
@@ -2334,6 +2404,26 @@ class EWalletWorker():
         return handlers[kwargs['controller']](**kwargs)
 
     # WARNINGS
+
+    def warning_could_not_create_new_time_sheet(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Something went wrong. '
+                       'Could not create new time sheet. '
+                       'Details: {}'.format(args),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
+
+    def warning_could_not_create_new_conversion_sheet(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Something went wrong. '
+                       'Could not create new conversion sheet. '
+                       'Details: {}'.format(args),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
 
     def warning_could_not_create_new_transfer_sheet(self, *args):
         command_chain_response = {
