@@ -666,6 +666,66 @@ class EWalletWorker():
 
     # ACTIONS
 
+    def action_unlink_contact_list(self, **kwargs):
+        log.debug('')
+        # Fetch ewallet session by token keys
+        ewallet_session = self.fetch_ewallet_session_by_client_session_tokens(
+            kwargs['client_id'], kwargs['session_token']
+        )
+        if not ewallet_session or isinstance(ewallet_session, dict) and \
+                ewallet_session.get('failed'):
+            return ewallet_session
+        sanitized_instruction_set = res_utils.remove_tags_from_command_chain(
+            kwargs, 'controller', 'ctype', 'action', 'unlink', 'contact',
+            'active_session'
+        )
+        # Execute action in session
+        orm_session = ewallet_session.fetch_active_session()
+        unlink_contact_list = ewallet_session.ewallet_controller(
+            controller='user', ctype='action', action='unlink',
+            unlink='contact', contact='list', active_session=orm_session,
+            **sanitized_instruction_set
+        )
+        # Formulate response
+        response = self.warning_could_not_unlink_contact_list(
+            ewallet_session, kwargs, unlink_contact_list
+        ) if not unlink_contact_list or \
+            isinstance(unlink_contact_list, dict) and \
+            unlink_contact_list.get('failed') else unlink_contact_list
+        # Respond to session manager
+        self.send_instruction_response(response)
+        return response
+
+    def action_unlink_contact_record(self, **kwargs):
+        log.debug('')
+        # Fetch ewallet session by token keys
+        ewallet_session = self.fetch_ewallet_session_by_client_session_tokens(
+            kwargs['client_id'], kwargs['session_token']
+        )
+        if not ewallet_session or isinstance(ewallet_session, dict) and \
+                ewallet_session.get('failed'):
+            return ewallet_session
+        sanitized_instruction_set = res_utils.remove_tags_from_command_chain(
+            kwargs, 'controller', 'ctype', 'action', 'unlink', 'contact',
+            'active_session'
+        )
+        # Execute action in session
+        orm_session = ewallet_session.fetch_active_session()
+        unlink_contact_record = ewallet_session.ewallet_controller(
+            controller='user', ctype='action', action='unlink',
+            unlink='contact', contact='record', active_session=orm_session,
+            **sanitized_instruction_set
+        )
+        # Formulate response
+        response = self.warning_could_not_unlink_contact_record(
+            ewallet_session, kwargs, unlink_contact_record
+        ) if not unlink_contact_record or \
+            isinstance(unlink_contact_record, dict) and \
+            unlink_contact_record.get('failed') else unlink_contact_record
+        # Respond to session manager
+        self.send_instruction_response(response)
+        return response
+
     def action_unlink_user_account(self, **kwargs):
         log.debug('')
         # Fetch ewallet session by token keys
@@ -2058,9 +2118,17 @@ class EWalletWorker():
 
     # ACTION HANDLERS
 
+    def handle_client_action_unlink_contact_list(self, **kwargs):
+        log.debug('')
+        return self.action_unlink_contact_list(**kwargs)
+
+    def handle_client_action_unlink_contact_record(self, **kwargs):
+        log.debug('')
+        return self.action_unlink_contact_record(**kwargs)
+
     def handle_client_action_unlink_account(self, **kwargs):
         log.debug('')
-        return  self.action_unlink_user_account(**kwargs)
+        return self.action_unlink_user_account(**kwargs)
 
     def handle_client_action_switch_contact_list(self, **kwargs):
         log.debug('')
@@ -2318,12 +2386,23 @@ class EWalletWorker():
 
     # JUMPTABLE HANDLERS
 
+    def handle_client_action_unlink_contact(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('contact'):
+            return self.error_no_client_action_unlink_contact_target_specified(kwargs)
+        handlers = {
+            'list': self.handle_client_action_unlink_contact_list,
+            'record': self.handle_client_action_unlink_contact_record,
+        }
+        return handlers[kwargs['contact']](**kwargs)
+
     def handle_client_action_unlink(self, **kwargs):
         log.debug('')
         if not kwargs.get('unlink'):
             return self.error_no_client_action_unlink_target_specified(kwargs)
         handlers = {
             'account': self.handle_client_action_unlink_account,
+            'contact': self.handle_client_action_unlink_contact,
         }
         return handlers[kwargs['unlink']](**kwargs)
 
@@ -2769,6 +2848,26 @@ class EWalletWorker():
         return handlers[kwargs['controller']](**kwargs)
 
     # WARNINGS
+
+    def warning_could_not_unlink_contact_list(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Something went wrong. '
+                       'Could not unlink contact list. '
+                       'Details: {}'.format(args),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
+
+    def warning_could_not_unlink_contact_record(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Something went wrong. '
+                       'Could not unlink contact record. '
+                       'Details: {}'.format(args),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
 
     def warning_could_not_unlink_user_account(self, *args):
         command_chain_response = {
@@ -3315,6 +3414,15 @@ class EWalletWorker():
         return False
 
     # ERRORS
+
+    def error_no_client_action_unlink_contact_target_specified(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No client action unlink contact target specified. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
 
     def error_no_client_action_unlink_target_secified(self, *args):
         command_chain_response = {

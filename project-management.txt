@@ -97,10 +97,10 @@
     - x - User action Switch Time Sheet
     - x - User action Switch Contact List
     - x - User action Unlink Account
-    -   - User action Unlink Contact List
-    -   - User action Unlink Contact Record
-    - User action unlink_conversion_sheet
-    - User action unlink_conversion_record
+    - x - User action Unlink Contact List
+    - x - User action Unlink Contact Record
+    -   - User action Unlink Conversion Sheet
+    -   - User action Unlink Conversion Record
     - User action unlink_transfer_sheet
     - User action unlink_transfer_record
     - User action unlink_time_sheet

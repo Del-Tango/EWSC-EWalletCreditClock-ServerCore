@@ -1426,6 +1426,32 @@ class EWalletSessionManager():
     [ NOTE ]: Instruction set validation and sanitizations are performed here.
     '''
 
+    def handle_client_action_unlink_contact_record(self, **kwargs):
+        log.debug('')
+        instruction_set_validation = self.validate_instruction_set(kwargs)
+        if not instruction_set_validation \
+                or isinstance(instruction_set_validation, dict) \
+                and instruction_set_validation.get('failed'):
+            return instruction_set_validation
+        unlink_contact_record = self.action_execute_user_instruction_set(**kwargs)
+        return self.warning_could_not_unlink_contact_record(
+            kwargs, unlink_contact_record
+        ) if not unlink_contact_record or isinstance(unlink_contact_record, dict) and \
+            unlink_contact_record.get('failed') else unlink_contact_record
+
+    def handle_client_action_unlink_contact_list(self, **kwargs):
+        log.debug('')
+        instruction_set_validation = self.validate_instruction_set(kwargs)
+        if not instruction_set_validation \
+                or isinstance(instruction_set_validation, dict) \
+                and instruction_set_validation.get('failed'):
+            return instruction_set_validation
+        unlink_contact_list = self.action_execute_user_instruction_set(**kwargs)
+        return self.warning_could_not_unlink_contact_list(
+            kwargs, unlink_contact_list
+        ) if not unlink_contact_list or isinstance(unlink_contact_list, dict) and \
+            unlink_contact_list.get('failed') else unlink_contact_list
+
     def handle_client_action_unlink_account(self, **kwargs):
         log.debug('')
         instruction_set_validation = self.validate_instruction_set(kwargs)
@@ -2215,25 +2241,6 @@ class EWalletSessionManager():
         )
         return unlink_credit_ewallet
 
-    def handle_client_action_unlink_contact_list(self, **kwargs):
-        log.debug('')
-        instruction_set_validation = self.validate_instruction_set(kwargs)
-        if not instruction_set_validation \
-                or isinstance(instruction_set_validation, dict) \
-                and instruction_set_validation.get('failed'):
-            return instruction_set_validation
-        ewallet = self.fetch_ewallet_session_for_client_action_using_instruction_set(
-            kwargs
-        )
-        if not ewallet or not ewallet['ewallet_session'] or \
-                isinstance(ewallet['ewallet_session'], dict) and \
-                ewallet['ewallet_session'].get('failed'):
-            return self.error_no_ewallet_session_found(kwargs)
-        unlink_contact_list = self.action_unlink_contact_list(
-            ewallet['ewallet_session'], ewallet['sanitized_instruction_set']
-        )
-        return unlink_contact_list
-
     def handle_client_action_unlink_time_sheet(self, **kwargs):
         log.debug('')
         instruction_set_validation = self.validate_instruction_set(kwargs)
@@ -2309,25 +2316,6 @@ class EWalletSessionManager():
             ewallet['ewallet_session'], ewallet['sanitized_instruction_set']
         )
         return unlink_transfer_sheet
-
-    def handle_client_action_unlink_contact_record(self, **kwargs):
-        log.debug('')
-        instruction_set_validation = self.validate_instruction_set(kwargs)
-        if not instruction_set_validation \
-                or isinstance(instruction_set_validation, dict) \
-                and instruction_set_validation.get('failed'):
-            return instruction_set_validation
-        ewallet = self.fetch_ewallet_session_for_client_action_using_instruction_set(
-            kwargs
-        )
-        if not ewallet or not ewallet['ewallet_session'] or \
-                isinstance(ewallet['ewallet_session'], dict) and \
-                ewallet['ewallet_session'].get('failed'):
-            return self.error_no_ewallet_session_found(kwargs)
-        unlink_contact_record = self.action_unlink_contact_list_record(
-            ewallet['ewallet_session'], ewallet['sanitized_instruction_set']
-        )
-        return unlink_contact_record
 
     def handle_client_action_unlink_time_record(self, **kwargs):
         log.debug('')
@@ -3041,6 +3029,26 @@ class EWalletSessionManager():
         return handlers[kwargs['controller']](**kwargs)
 
     # WARNINGS
+
+    def warning_could_not_unlink_contact_record(self, *args):
+        instruction_set_response = {
+            'failed': True,
+            'warning': 'Something went wrong. '
+                       'Could not unlink contact record. '\
+                       'Details: {}'.format(args)
+        }
+        log.warning(instruction_set_response['warning'])
+        return instruction_set_response
+
+    def warning_could_not_unlink_contact_list(self, *args):
+        instruction_set_response = {
+            'failed': True,
+            'warning': 'Something went wrong. '
+                       'Could not unlink contact list. '\
+                       'Details: {}'.format(args)
+        }
+        log.warning(instruction_set_response['warning'])
+        return instruction_set_response
 
     def warning_could_not_unlink_user_account(self, *args):
         instruction_set_response = {
@@ -3789,15 +3797,6 @@ class EWalletSessionManager():
         log.warning(instruction_set_response['warning'])
         return instruction_set_response
 
-    def warning_could_not_unlink_contact_list(self, ewallet_session, instruction_set):
-        instruction_set_response = {
-            'failed': True,
-            'warning': 'Something went wrong. Could not unlink contact list in ewallet session {}. '\
-                       'Instruction set details : {}'.format(ewallet_session, instruction_set),
-        }
-        log.warning(instruction_set_response['warning'])
-        return instruction_set_response
-
     def warning_could_not_unlink_time_sheet(self, ewallet_session, instruction_set):
         instruction_set_response = {
             'failed': True,
@@ -3829,15 +3828,6 @@ class EWalletSessionManager():
         instruction_set_response = {
             'failed': True,
             'warning': 'Something went wrong. Could not unlink transfer sheet in ewallet session {}. '\
-                       'Instruction set details : {}'.format(ewallet_session, instruction_set),
-        }
-        log.warning(instruction_set_response['warning'])
-        return instruction_set_response
-
-    def warning_could_not_unlink_contact_list_record(self, ewallet_session, instruction_set):
-        instruction_set_response = {
-            'failed': True,
-            'warning': 'Something went wrong. Could not unlink contact list record in ewallet session {}. '\
                        'Instruction set details : {}'.format(ewallet_session, instruction_set),
         }
         log.warning(instruction_set_response['warning'])
@@ -4930,23 +4920,37 @@ class EWalletSessionManager():
 
 # CODE DUMP
 
-    # TODO - Deprecated
-#   @pysnooper.snoop('logs/ewallet.log')
-    def action_unlink_user_account(self, ewallet_session, instruction_set):
-        log.debug('TODO - Deprecated')
+#   @pysnooper.snoop()
+    def action_unlink_contact_list_record(self, ewallet_session, instruction_set):
+        log.debug('')
         orm_session = ewallet_session.fetch_active_session()
         sanitized_instruction_set = self.res_utils.remove_tags_from_command_chain(
-            instruction_set, 'controller', 'ctype', 'action', 'unlink',
+            instruction_set, 'controller', 'ctype', 'action', 'unlink', 'contact'
         )
-        active_session_user = ewallet_session.fetch_active_session_user()
-        unlink_user_account = ewallet_session.ewallet_controller(
-            controller='user', ctype='action', action='unlink', unlink='account',
-            active_session=orm_session, **sanitized_instruction_set
+        unlink_contact_record = ewallet_session.ewallet_controller(
+            controller='user', ctype='action', action='unlink', unlink='contact',
+            contact='record', active_session=orm_session, **sanitized_instruction_set
         )
-        return self.warning_could_not_unlink_user_account(
+        return self.warning_could_not_unlink_contact_list_record(
             ewallet_session, instruction_set
-        ) if not unlink_user_account or unlink_user_account.get('failed') \
-            else unlink_user_account
+        ) if not unlink_contact_record or unlink_contact_record.get('failed') \
+            else unlink_contact_record
+
+    def action_unlink_contact_list(self, ewallet_session, instruction_set):
+        log.debug('')
+        orm_session = ewallet_session.fetch_active_session()
+        sanitized_instruction_set = self.res_utils.remove_tags_from_command_chain(
+            instruction_set, 'controller', 'ctype', 'action', 'unlink', 'contact'
+        )
+        unlink_contact_list = ewallet_session.ewallet_controller(
+            controller='user', ctype='action', action='unlink', unlink='contact',
+            contact='list', active_session=orm_session, **sanitized_instruction_set
+        )
+        return self.warning_could_not_unlink_contact_list(
+            ewallet_session, instruction_set
+        ) if not unlink_contact_list or unlink_contact_list.get('failed') \
+            else unlink_contact_list
+
 
     def action_unlink_credit_clock(self, ewallet_session, instruction_set):
         log.debug('')
@@ -4977,21 +4981,6 @@ class EWalletSessionManager():
             ewallet_session, instruction_set
         ) if not unlink_credit_ewallet or unlink_credit_ewallet.get('failed') \
             else unlink_credit_ewallet
-
-    def action_unlink_contact_list(self, ewallet_session, instruction_set):
-        log.debug('')
-        orm_session = ewallet_session.fetch_active_session()
-        sanitized_instruction_set = self.res_utils.remove_tags_from_command_chain(
-            instruction_set, 'controller', 'ctype', 'action', 'unlink', 'contact'
-        )
-        unlink_contact_list = ewallet_session.ewallet_controller(
-            controller='user', ctype='action', action='unlink', unlink='contact',
-            contact='list', active_session=orm_session, **sanitized_instruction_set
-        )
-        return self.warning_could_not_unlink_contact_list(
-            ewallet_session, instruction_set
-        ) if not unlink_contact_list or unlink_contact_list.get('failed') \
-            else unlink_contact_list
 
     def action_unlink_time_sheet(self, ewallet_session, instruction_set):
         log.debug('')
@@ -5052,22 +5041,6 @@ class EWalletSessionManager():
             ewallet_session, instruction_set
         ) if not unlink_transfer_sheet or unlink_transfer_sheet.get('failed') \
             else unlink_transfer_sheet
-
-#   @pysnooper.snoop()
-    def action_unlink_contact_list_record(self, ewallet_session, instruction_set):
-        log.debug('')
-        orm_session = ewallet_session.fetch_active_session()
-        sanitized_instruction_set = self.res_utils.remove_tags_from_command_chain(
-            instruction_set, 'controller', 'ctype', 'action', 'unlink', 'contact'
-        )
-        unlink_contact_record = ewallet_session.ewallet_controller(
-            controller='user', ctype='action', action='unlink', unlink='contact',
-            contact='record', active_session=orm_session, **sanitized_instruction_set
-        )
-        return self.warning_could_not_unlink_contact_list_record(
-            ewallet_session, instruction_set
-        ) if not unlink_contact_record or unlink_contact_record.get('failed') \
-            else unlink_contact_record
 
     def action_unlink_time_sheet_record(self, ewallet_session, instruction_set):
         log.debug('')
