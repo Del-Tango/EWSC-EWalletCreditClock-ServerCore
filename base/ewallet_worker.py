@@ -666,6 +666,66 @@ class EWalletWorker():
 
     # ACTIONS
 
+    def action_view_invoice_sheet(self, **kwargs):
+        log.debug('')
+        # Fetch ewallet session by token keys
+        ewallet_session = self.fetch_ewallet_session_by_client_session_tokens(
+            kwargs['client_id'], kwargs['session_token']
+        )
+        if not ewallet_session or isinstance(ewallet_session, dict) and \
+                ewallet_session.get('failed'):
+            return ewallet_session
+        sanitized_instruction_set = res_utils.remove_tags_from_command_chain(
+            kwargs, 'controller', 'ctype', 'action', 'view', 'invoice',
+            'active_session'
+        )
+        # Execute action in session
+        orm_session = ewallet_session.fetch_active_session()
+        view_invoice_sheet = ewallet_session.ewallet_controller(
+            controller='user', ctype='action', action='view',
+            view='invoice', invoice='list', active_session=orm_session,
+            **sanitized_instruction_set
+        )
+        # Formulate response
+        response = self.warning_could_not_view_invoice_sheet(
+            ewallet_session, kwargs, view_invoice_sheet
+        ) if not view_invoice_sheet or \
+            isinstance(view_invoice_sheet, dict) and \
+            view_invoice_sheet.get('failed') else view_invoice_sheet
+        # Respond to session manager
+        self.send_instruction_response(response)
+        return response
+
+    def action_view_invoice_record(self, **kwargs):
+        log.debug('')
+        # Fetch ewallet session by token keys
+        ewallet_session = self.fetch_ewallet_session_by_client_session_tokens(
+            kwargs['client_id'], kwargs['session_token']
+        )
+        if not ewallet_session or isinstance(ewallet_session, dict) and \
+                ewallet_session.get('failed'):
+            return ewallet_session
+        sanitized_instruction_set = res_utils.remove_tags_from_command_chain(
+            kwargs, 'controller', 'ctype', 'action', 'view', 'invoice',
+            'active_session'
+        )
+        # Execute action in session
+        orm_session = ewallet_session.fetch_active_session()
+        view_invoice_record = ewallet_session.ewallet_controller(
+            controller='user', ctype='action', action='view',
+            view='invoice', invoice='record', active_session=orm_session,
+            **sanitized_instruction_set
+        )
+        # Formulate response
+        response = self.warning_could_not_view_invoice_record(
+            ewallet_session, kwargs, view_invoice_record
+        ) if not view_invoice_record or \
+            isinstance(view_invoice_record, dict) and \
+            view_invoice_record.get('failed') else view_invoice_record
+        # Respond to session manager
+        self.send_instruction_response(response)
+        return response
+
     def action_view_credit_ewallet(self, **kwargs):
         log.debug('')
         # Fetch ewallet session by token keys
@@ -1492,6 +1552,24 @@ class EWalletWorker():
 
     # HANDLERS
 
+    def handle_client_action_view_invoice_sheet(self, **kwargs):
+        log.debug('')
+        return self.action_view_invoice_sheet(**kwargs)
+
+    def handle_client_action_view_invoice_record(self, **kwargs):
+        log.debug('')
+        return self.action_view_invoice_record(**kwargs)
+
+    def handle_client_action_view_invoice(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('invoice'):
+            return self.error_no_client_action_view_invoice_target_specified(kwargs)
+        handlers = {
+            'list': self.handle_client_action_view_invoice_sheet,
+            'record': self.handle_client_action_view_invoice_record,
+        }
+        return handlers[kwargs['invoice']](**kwargs)
+
     def handle_client_action_view_credit_ewallet(self, **kwargs):
         log.debug('')
         return self.action_view_credit_ewallet(**kwargs)
@@ -1525,6 +1603,7 @@ class EWalletWorker():
             'conversion': self.handle_client_action_view_conversion,
             'account': self.handle_client_action_view_account,
             'credit': self.handle_client_action_view_credit,
+            'invoice': self.handle_client_action_view_invoice,
         }
         return handlers[kwargs['view']](**kwargs)
 
@@ -1986,6 +2065,26 @@ class EWalletWorker():
         return handlers[kwargs['controller']](**kwargs)
 
     # WARNINGS
+
+    def warning_could_not_view_invoice_sheet(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Something went wrong. '
+                       'Could not view invoice sheet. '
+                       'Details: {}'.format(args),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
+
+    def warning_could_not_view_invoice_record(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Something went wrong. '
+                       'Could not view invoice record. '
+                       'Details: {}'.format(args),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
 
     def warning_could_not_view_credit_clock(self, *args):
         command_chain_response = {
