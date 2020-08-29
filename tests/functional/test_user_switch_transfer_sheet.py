@@ -75,8 +75,9 @@ class TestEWalletSessionManageUserActionSwitchTransferSheet(unittest.TestCase):
         print('\n[ * ]: User action Switch Transfer Sheet')
         instruction_set = {
             'controller': 'client', 'ctype': 'action', 'action': 'switch',
-            'switch': 'transfer_sheet', 'client_id': self.client_id,
-            'session_token': self.session_token, 'sheet_id': 2
+            'switch': 'transfer', 'transfer': 'list',
+            'client_id': self.client_id, 'session_token': self.session_token,
+            'sheet_id': 2
         }
         switch = self.session_manager.session_manager_controller(
             **instruction_set

@@ -666,6 +666,66 @@ class EWalletWorker():
 
     # ACTIONS
 
+    def action_switch_transfer_sheet(self, **kwargs):
+        log.debug('')
+        # Fetch ewallet session by token keys
+        ewallet_session = self.fetch_ewallet_session_by_client_session_tokens(
+            kwargs['client_id'], kwargs['session_token']
+        )
+        if not ewallet_session or isinstance(ewallet_session, dict) and \
+                ewallet_session.get('failed'):
+            return ewallet_session
+        sanitized_instruction_set = res_utils.remove_tags_from_command_chain(
+            kwargs, 'controller', 'ctype', 'action', 'switch', 'transfer',
+            'active_session'
+        )
+        # Execute action in session
+        orm_session = ewallet_session.fetch_active_session()
+        switch_transfer_sheet = ewallet_session.ewallet_controller(
+            controller='user', ctype='action', action='switch',
+            switch='transfer_sheet', active_session=orm_session,
+            **sanitized_instruction_set
+        )
+        # Formulate response
+        response = self.warning_could_not_switch_transfer_sheet(
+            ewallet_session, kwargs, switch_transfer_sheet
+        ) if not switch_transfer_sheet or \
+            isinstance(switch_transfer_sheet, dict) and \
+            switch_transfer_sheet.get('failed') else switch_transfer_sheet
+        # Respond to session manager
+        self.send_instruction_response(response)
+        return response
+
+    def action_switch_invoice_sheet(self, **kwargs):
+        log.debug('')
+        # Fetch ewallet session by token keys
+        ewallet_session = self.fetch_ewallet_session_by_client_session_tokens(
+            kwargs['client_id'], kwargs['session_token']
+        )
+        if not ewallet_session or isinstance(ewallet_session, dict) and \
+                ewallet_session.get('failed'):
+            return ewallet_session
+        sanitized_instruction_set = res_utils.remove_tags_from_command_chain(
+            kwargs, 'controller', 'ctype', 'action', 'switch', 'invoice',
+            'active_session'
+        )
+        # Execute action in session
+        orm_session = ewallet_session.fetch_active_session()
+        switch_invoice_sheet = ewallet_session.ewallet_controller(
+            controller='user', ctype='action', action='switch',
+            switch='invoice_sheet', active_session=orm_session,
+            **sanitized_instruction_set
+        )
+        # Formulate response
+        response = self.warning_could_not_switch_invoice_sheet(
+            ewallet_session, kwargs, switch_invoice_sheet
+        ) if not switch_invoice_sheet or \
+            isinstance(switch_invoice_sheet, dict) and \
+            switch_invoice_sheet.get('failed') else switch_invoice_sheet
+        # Respond to session manager
+        self.send_instruction_response(response)
+        return response
+
     def action_switch_credit_ewallet(self, **kwargs):
         log.debug('')
         # Fetch ewallet session by token keys
@@ -1878,6 +1938,22 @@ class EWalletWorker():
 
     # ACTION HANDLERS
 
+    def handle_client_action_switch_invoice_sheet(self, **kwargs):
+        log.debug('')
+        return self.action_switch_invoice_sheet(**kwargs)
+
+    def handle_client_action_switch_transfer_sheet(self, **kwargs):
+        log.debug('')
+        return self.action_switch_transfer_sheet(**kwargs)
+
+    def handle_client_action_switch_transfer_sheet(self, **kwargs):
+        log.debug('')
+        return self.action_switch_transfer_sheet(**kwargs)
+
+    def handle_client_action_switch_invoice_sheet(self, **kwargs):
+        log.debug('')
+        return self.action_switch_invoice_sheet(**kwargs)
+
     def handle_client_action_switch_credit_ewallet(self, **kwargs):
         log.debug('')
         return self.action_switch_credit_ewallet(**kwargs)
@@ -2106,6 +2182,24 @@ class EWalletWorker():
 
     # JUMPTABLE HANDLERS
 
+    def handle_client_action_switch_transfer(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('transfer'):
+            return self.error_no_client_action_switch_transfer_target_specified(kwargs)
+        handlers = {
+            'list': self.handle_client_action_switch_transfer_sheet,
+        }
+        return handlers[kwargs['transfer']](**kwargs)
+
+    def handle_client_action_switch_invoice(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('invoice'):
+            return self.error_no_client_action_switch_invoice_target_specified(kwargs)
+        handlers = {
+            'list': self.handle_client_action_switch_invoice_sheet,
+        }
+        return handlers[kwargs['invoice']](**kwargs)
+
     def handle_client_action_switch_credit(self, **kwargs):
         log.debug('')
         if not kwargs.get('credit'):
@@ -2122,6 +2216,8 @@ class EWalletWorker():
             return self.error_no_client_action_switch_target_specified(kwargs)
         handlers = {
             'credit': self.handle_client_action_switch_credit,
+            'transfer': self.handle_client_action_switch_transfer,
+            'invoice': self.handle_client_action_switch_invoice,
         }
         return handlers[kwargs['switch']](**kwargs)
 
@@ -2497,6 +2593,26 @@ class EWalletWorker():
         return handlers[kwargs['controller']](**kwargs)
 
     # WARNINGS
+
+    def warning_could_not_switch_invoice_sheet(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Something went wrong. '
+                       'Could not switch invoice sheet. '
+                       'Details: {}'.format(args),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
+
+    def warning_could_not_switch_transfer_sheet(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Something went wrong. '
+                       'Could not switch transfer sheet. '
+                       'Details: {}'.format(args),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
 
     def warning_could_not_switch_credit_clock(self, *args):
         command_chain_response = {
@@ -2993,6 +3109,24 @@ class EWalletWorker():
         return False
 
     # ERRORS
+
+    def error_no_client_action_switch_invoice_target_specified(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No client action switch invoice target specified. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_no_client_action_switch_transfer_target_specified(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No client action switch transfer target specified. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
 
     def error_no_client_action_switch_credit_target_specified(self, *args):
         command_chain_response = {

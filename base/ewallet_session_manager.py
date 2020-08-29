@@ -1426,6 +1426,61 @@ class EWalletSessionManager():
     [ NOTE ]: Instruction set validation and sanitizations are performed here.
     '''
 
+    def handle_client_action_switch_invoice_sheet(self, **kwargs):
+        log.debug('')
+        instruction_set_validation = self.validate_instruction_set(kwargs)
+        if not instruction_set_validation \
+                or isinstance(instruction_set_validation, dict) \
+                and instruction_set_validation.get('failed'):
+            return instruction_set_validation
+        switch_invoice_sheet = self.action_execute_user_instruction_set(**kwargs)
+        return self.warning_could_not_switch_invoice_sheet(
+            kwargs, switch_invoice_sheet
+        ) if not switch_invoice_sheet or isinstance(switch_invoice_sheet, dict) and \
+            switch_invoice_sheet.get('failed') else switch_invoice_sheet
+
+    def handle_client_action_switch_transfer_sheet(self, **kwargs):
+        log.debug('')
+        instruction_set_validation = self.validate_instruction_set(kwargs)
+        if not instruction_set_validation \
+                or isinstance(instruction_set_validation, dict) \
+                and instruction_set_validation.get('failed'):
+            return instruction_set_validation
+        switch_transfer_sheet = self.action_execute_user_instruction_set(**kwargs)
+        return self.warning_could_not_switch_transfer_sheet(
+            kwargs, switch_transfer_sheet
+        ) if not switch_transfer_sheet or isinstance(switch_transfer_sheet, dict) and \
+            switch_transfer_sheet.get('failed') else switch_transfer_sheet
+
+    # TODO
+    def handle_system_action_close_sockets(self, **kwargs):
+        '''
+        [ NOTE   ]: Desociates Ewallet Socket Handler from Session Manager.
+        '''
+        log.debug('TODO - Kill process')
+        return self.unset_socket_handler()
+
+    def handle_client_action_request_client_id(self, **kwargs):
+        log.debug('')
+        return self.action_request_client_id()
+
+    def handle_system_action_start_instruction_listener(self, **kwargs):
+        '''
+        [ NOTE   ]: Turn Session Manager into server listenning for socket based instructions.
+        [ NOTE   ]: System hangs here until interrupt.
+        '''
+        log.debug('')
+        return self.start_instruction_set_listener()
+
+    def handle_system_action_open_sockets(self, **kwargs):
+        '''
+        [ NOTE   ]: Create and setups Session Manager Socket Handler.
+        '''
+        log.debug('')
+        socket_handler = self.open_ewallet_session_manager_sockets(**kwargs)
+        set_socket_handler = self.set_socket_handler(socket_handler)
+        return socket_handler
+
     def handle_client_action_switch_credit_ewallet(self, **kwargs):
         log.debug('')
         instruction_set_validation = self.validate_instruction_set(kwargs)
@@ -1803,15 +1858,6 @@ class EWalletSessionManager():
         ) if not edit_account or isinstance(edit_account, dict) and \
             edit_account.get('failed') else edit_account
 
-    def handle_client_action_edit(self, **kwargs):
-        log.debug('')
-        if not kwargs.get('edit'):
-            return self.error_no_client_action_edit_target_specified(kwargs)
-        handlers = {
-            'account': self.handle_client_action_edit_account,
-        }
-        return handlers[kwargs['edit']](**kwargs)
-
     def handle_client_action_transfer_credits(self, **kwargs):
         log.debug('')
         instruction_set_validation = self.validate_instruction_set(kwargs)
@@ -2023,17 +2069,6 @@ class EWalletSessionManager():
         )
         return recover_account
 
-    def handle_client_action_recover(self, **kwargs):
-        log.debug('')
-        if not kwargs.get('recover'):
-            return self.error_no_client_action_recover_target_specified(kwargs)
-        handlers = {
-            'account': self.handle_client_action_recover_account,
-        }
-        return self.warning_invalid_recover_target(kwargs) \
-            if kwargs['recover'] not in handlers.keys() else \
-            handlers[kwargs['recover']](**kwargs)
-
     def handle_system_action_sweep_cleanup_ewallet_sessions(self, **kwargs):
         log.debug('')
         return self.action_sweep_cleanup_ewallet_sessions(**kwargs)
@@ -2042,28 +2077,9 @@ class EWalletSessionManager():
         log.debug('')
         return self.action_cleanup_ewallet_session_by_id(**kwargs)
 
-    def handle_system_action_cleanup_ewallet_sessions(self, **kwargs):
-        log.debug('')
-        cleanup_mode = 'target' if kwargs.get('session_id') else 'sweep'
-        handlers = {
-            'target': self.handle_system_action_cleanup_target_ewallet_session,
-            'sweep': self.handle_system_action_sweep_cleanup_ewallet_sessions,
-        }
-        return handlers[cleanup_mode](**kwargs)
-
     def handle_system_action_cleanup_session_workers(self, **kwargs):
         log.debug('')
         return self.action_cleanup_session_workers(**kwargs)
-
-    def handle_system_action_cleanup(self, **kwargs):
-        log.debug('')
-        if not kwargs.get('cleanup'):
-            return self.error_no_system_action_cleanup_target_specified(kwargs)
-        handlers = {
-            'workers': self.handle_system_action_cleanup_session_workers,
-            'sessions': self.handle_system_action_cleanup_ewallet_sessions,
-        }
-        return handlers[kwargs['cleanup']](**kwargs)
 
     def handle_system_action_interogate_ewallet_workers(self, **kwargs):
         log.debug('')
@@ -2089,16 +2105,6 @@ class EWalletSessionManager():
             ewallet_session, sanitized_instruction_set
         )
         return interogate_session
-
-    def handle_system_action_interogate(self, **kwargs):
-        log.debug('')
-        if not kwargs.get('interogate'):
-            return self.error_no_system_action_interogate_target_specified(kwargs)
-        handlers = {
-            'session': self.handle_system_action_interogate_ewallet_session,
-            'workers': self.handle_system_action_interogate_ewallet_workers,
-        }
-        return handlers[kwargs['interogate']](**kwargs)
 
     def handle_client_action_switch_user_account(self, **kwargs):
         log.debug('')
@@ -2175,16 +2181,6 @@ class EWalletSessionManager():
             ewallet['ewallet_session'], ewallet['sanitized_instruction_set']
         )
         return unlink_credit_ewallet
-
-    def handle_client_action_unlink_credit(self, **kwargs):
-        log.debug('')
-        if not kwargs.get('credit'):
-            return self.error_no_client_action_unlink_credit_target_specified(kwargs)
-        handlers = {
-            'ewallet': self.handle_client_action_unlink_credit_ewallet,
-            'clock': self.handle_client_action_unlink_credit_clock,
-        }
-        return handlers[kwargs['credit']](**kwargs)
 
     def handle_client_action_unlink_contact_list(self, **kwargs):
         log.debug('')
@@ -2300,16 +2296,6 @@ class EWalletSessionManager():
         )
         return unlink_contact_record
 
-    def handle_client_action_unlink_contact(self, **kwargs):
-        log.debug('')
-        if not kwargs.get('contact'):
-            return self.error_no_client_action_unlink_contact_target_specified(kwargs)
-        handlers = {
-            'list': self.handle_client_action_unlink_contact_list,
-            'record': self.handle_client_action_unlink_contact_record,
-        }
-        return handlers[kwargs['contact']](**kwargs)
-
     def handle_client_action_unlink_time_record(self, **kwargs):
         log.debug('')
         instruction_set_validation = self.validate_instruction_set(kwargs)
@@ -2328,16 +2314,6 @@ class EWalletSessionManager():
             ewallet['ewallet_session'], ewallet['sanitized_instruction_set']
         )
         return unlink_time_record
-
-    def handle_client_action_unlink_time(self, **kwargs):
-        log.debug('')
-        if not kwargs.get('time'):
-            return self.error_no_client_action_unlink_time_target_specified(kwargs)
-        handlers = {
-            'list': self.handle_client_action_unlink_time_sheet,
-            'record': self.handle_client_action_unlink_time_record,
-        }
-        return handlers[kwargs['time']](**kwargs)
 
     def handle_client_action_unlink_conversion_record(self, **kwargs):
         log.debug('')
@@ -2358,16 +2334,6 @@ class EWalletSessionManager():
         )
         return unlink_conversion_record
 
-    def handle_client_action_unlink_conversion(self, **kwargs):
-        log.debug('')
-        if not kwargs.get('conversion'):
-            return self.error_no_client_action_unlink_conversion_target_specified(kwargs)
-        handlers = {
-            'list': self.handle_client_action_unlink_conversion_sheet,
-            'record': self.handle_client_action_unlink_conversion_record,
-        }
-        return handlers[kwargs['conversion']](**kwargs)
-
     def handle_client_action_unlink_invoice_record(self, **kwargs):
         log.debug('')
         instruction_set_validation = self.validate_instruction_set(kwargs)
@@ -2387,16 +2353,6 @@ class EWalletSessionManager():
         )
         return unlink_invoice_record
 
-    def handle_client_action_unlink_invoice(self, **kwargs):
-        log.debug('')
-        if not kwargs.get('invoice'):
-            return self.error_no_client_action_unlink_invoice_target_specified(kwargs)
-        handlers = {
-            'list': self.handle_client_action_unlink_invoice_sheet,
-            'record': self.handle_client_action_unlink_invoice_record,
-        }
-        return handlers[kwargs['invoice']](**kwargs)
-
     def handle_client_action_unlink_transfer_record(self, **kwargs):
         log.debug('')
         instruction_set_validation = self.validate_instruction_set(kwargs)
@@ -2415,31 +2371,6 @@ class EWalletSessionManager():
             ewallet['ewallet_session'], ewallet['sanitized_instruction_set']
         )
         return unlink_transfer_record
-
-    def handle_client_action_unlink_transfer(self, **kwargs):
-        log.debug('')
-        if not kwargs.get('transfer'):
-            return self.error_no_client_action_unlink_transfer_target_specified(kwargs)
-        handlers = {
-            'list': self.handle_client_action_unlink_transfer_sheet,
-            'record': self.handle_client_action_unlink_transfer_record,
-        }
-        return handlers[kwargs['transfer']](**kwargs)
-
-    def handle_client_action_unlink(self, **kwargs):
-        log.debug('')
-        if not kwargs.get('unlink'):
-            return self.error_no_client_action_unlink_target_specified(kwargs)
-        handlers = {
-            'transfer': self.handle_client_action_unlink_transfer,
-            'invoice': self.handle_client_action_unlink_invoice,
-            'conversion': self.handle_client_action_unlink_conversion,
-            'time': self.handle_client_action_unlink_time,
-            'contact': self.handle_client_action_unlink_contact,
-            'credit': self.handle_client_action_unlink_credit,
-            'account': self.handle_client_action_unlink_account,
-        }
-        return handlers[kwargs['unlink']](**kwargs)
 
     def handle_client_action_switch_contact_list(self, **kwargs):
         log.debug('')
@@ -2498,45 +2429,227 @@ class EWalletSessionManager():
         )
         return switch_conversion_sheet
 
-    def handle_client_action_switch_invoice_sheet(self, **kwargs):
-        log.debug('')
-        instruction_set_validation = self.validate_instruction_set(kwargs)
-        if not instruction_set_validation \
-                or isinstance(instruction_set_validation, dict) \
-                and instruction_set_validation.get('failed'):
-            return instruction_set_validation
-        ewallet = self.fetch_ewallet_session_for_client_action_using_instruction_set(
-            kwargs
-        )
-        if not ewallet or not ewallet['ewallet_session'] or \
-                isinstance(ewallet['ewallet_session'], dict) and \
-                ewallet['ewallet_session'].get('failed'):
-            return self.error_no_ewallet_session_found(kwargs)
-        switch_invoice_sheet = self.action_switch_invoice_sheet(
-            ewallet['ewallet_session'], ewallet['sanitized_instruction_set']
-        )
-        return switch_invoice_sheet
-
-    def handle_client_action_switch_transfer_sheet(self, **kwargs):
-        log.debug('')
-        instruction_set_validation = self.validate_instruction_set(kwargs)
-        if not instruction_set_validation \
-                or isinstance(instruction_set_validation, dict) \
-                and instruction_set_validation.get('failed'):
-            return instruction_set_validation
-        ewallet = self.fetch_ewallet_session_for_client_action_using_instruction_set(
-            kwargs
-        )
-        if not ewallet or not ewallet['ewallet_session'] or \
-                isinstance(ewallet['ewallet_session'], dict) and \
-                ewallet['ewallet_session'].get('failed'):
-            return self.error_no_ewallet_session_found(kwargs)
-        switch_transfer_sheet = self.action_switch_transfer_sheet(
-            ewallet['ewallet_session'], ewallet['sanitized_instruction_set']
-        )
-        return switch_transfer_sheet
-
     # JUMPTABLE HANDLERS
+
+    # TODO
+    def handle_system_action_scrape(self, **kwargs):
+        log.debug('TODO - Unimplemented functionality')
+    def handle_system_action_search(self, **kwargs):
+        log.debug('TODO - Unimplemented functionality')
+    def handle_system_action_view(self, **kwargs):
+        log.debug('TODO - Unimplemented functionality')
+    def handle_system_action_request(self, **kwargs):
+        log.debug('TODO - Unimplemented functionality')
+    def handle_system_event_session_timeout(self, **kwargs):
+        log.debug('TODO - Unimplemented functionality')
+        timeout = self.event_session_timeout()
+    def handle_system_event_worker_timeout(self, **kwargs):
+        log.debug('TODO - Unimplemented functionality')
+        timeout = self.event_worker_timeout()
+    def handle_system_event_client_ack_timeout(self, **kwargs):
+        log.debug('TODO - Unimplemented functionality')
+        timeout = self.event_client_ack_timeout()
+    def handle_system_event_client_id_expire(self, **kwargs):
+        log.debug('TODO - Unimplemented functionality')
+        expire = self.event_client_id_expire()
+    def handle_system_event_session_token_expire(self, **kwargs):
+        log.debug('TODO - Unimplemented functionality')
+        expire = self.event_session_token_expire()
+
+    # TODO
+    def handle_client_action_transfer(self, **kwargs):
+        log.debug('TODO - Add support for client action transfer time')
+        if not kwargs.get('transfer'):
+            return self.error_no_client_action_transfer_target_specified(kwargs)
+        handlers = {
+            'credits': self.handle_client_action_transfer_credits,
+#           'time': self.handle_client_action_transfer_time,
+        }
+        return handlers[kwargs['transfer']](**kwargs)
+
+    def handle_client_action_switch_transfer(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('transfer'):
+            return self.error_no_client_action_switch_transfer_target_specified(kwargs)
+        handlers = {
+            'list': self.handle_client_action_switch_transfer_sheet,
+        }
+        return handlers[kwargs['transfer']](**kwargs)
+
+    def handle_client_action_switch_invoice(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('invoice'):
+            return self.error_no_client_action_switch_invoice_target_specified(kwargs)
+        handlers = {
+            'list': self.handle_client_action_switch_invoice_sheet,
+        }
+        return handlers[kwargs['invoice']](**kwargs)
+
+    def handle_client_action_switch_conversion(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('conversion'):
+            return self.error_no_client_action_switch_conversion_target_specified(kwargs)
+        handlers = {
+            'list': self.handle_client_action_switch_conversion_sheet,
+        }
+        return handlers[kwargs['conversion']](**kwargs)
+
+    def handle_client_action_switch_time(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('time'):
+            return self.error_no_client_action_switch_time_target_specified(kwargs)
+        handlers = {
+            'list': self.handle_client_action_switch_time_sheet,
+        }
+        return handlers[kwargs['time']](**kwargs)
+
+    def handle_client_action_switch_contact(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('contact'):
+            return self.error_no_client_action_switch_contact_target_specified(kwargs)
+        handlers = {
+            'list': self.handle_client_action_switch_contact_list,
+        }
+        return handlers[kwargs['contact']](**kwargs)
+
+    def handle_client_action_switch(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('switch'):
+            return self.error_no_client_action_switch_target_specified(kwargs)
+        handlers = {
+            'credit': self.handle_client_action_switch_credit,
+            'transfer': self.handle_client_action_switch_transfer,
+            'invoice': self.handle_client_action_switch_invoice,
+            'conversion': self.handle_client_action_switch_conversion,
+            'time_sheet': self.handle_client_action_switch_time,
+            'contact': self.handle_client_action_switch_contact,
+            'account': self.handle_client_action_switch_user_account,
+        }
+        return handlers[kwargs['switch']](**kwargs)
+
+    def handle_client_action_edit(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('edit'):
+            return self.error_no_client_action_edit_target_specified(kwargs)
+        handlers = {
+            'account': self.handle_client_action_edit_account,
+        }
+        return handlers[kwargs['edit']](**kwargs)
+
+    def handle_client_action_unlink_credit(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('credit'):
+            return self.error_no_client_action_unlink_credit_target_specified(kwargs)
+        handlers = {
+            'ewallet': self.handle_client_action_unlink_credit_ewallet,
+            'clock': self.handle_client_action_unlink_credit_clock,
+        }
+        return handlers[kwargs['credit']](**kwargs)
+
+    def handle_client_action_recover(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('recover'):
+            return self.error_no_client_action_recover_target_specified(kwargs)
+        handlers = {
+            'account': self.handle_client_action_recover_account,
+        }
+        return self.warning_invalid_recover_target(kwargs) \
+            if kwargs['recover'] not in handlers.keys() else \
+            handlers[kwargs['recover']](**kwargs)
+
+    def handle_system_action_cleanup_ewallet_sessions(self, **kwargs):
+        log.debug('')
+        cleanup_mode = 'target' if kwargs.get('session_id') else 'sweep'
+        handlers = {
+            'target': self.handle_system_action_cleanup_target_ewallet_session,
+            'sweep': self.handle_system_action_sweep_cleanup_ewallet_sessions,
+        }
+        return handlers[cleanup_mode](**kwargs)
+
+    def handle_system_action_cleanup(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('cleanup'):
+            return self.error_no_system_action_cleanup_target_specified(kwargs)
+        handlers = {
+            'workers': self.handle_system_action_cleanup_session_workers,
+            'sessions': self.handle_system_action_cleanup_ewallet_sessions,
+        }
+        return handlers[kwargs['cleanup']](**kwargs)
+
+    def handle_system_action_interogate(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('interogate'):
+            return self.error_no_system_action_interogate_target_specified(kwargs)
+        handlers = {
+            'session': self.handle_system_action_interogate_ewallet_session,
+            'workers': self.handle_system_action_interogate_ewallet_workers,
+        }
+        return handlers[kwargs['interogate']](**kwargs)
+
+    def handle_client_action_unlink_contact(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('contact'):
+            return self.error_no_client_action_unlink_contact_target_specified(kwargs)
+        handlers = {
+            'list': self.handle_client_action_unlink_contact_list,
+            'record': self.handle_client_action_unlink_contact_record,
+        }
+        return handlers[kwargs['contact']](**kwargs)
+
+    def handle_client_action_unlink_time(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('time'):
+            return self.error_no_client_action_unlink_time_target_specified(kwargs)
+        handlers = {
+            'list': self.handle_client_action_unlink_time_sheet,
+            'record': self.handle_client_action_unlink_time_record,
+        }
+        return handlers[kwargs['time']](**kwargs)
+
+    def handle_client_action_unlink_conversion(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('conversion'):
+            return self.error_no_client_action_unlink_conversion_target_specified(kwargs)
+        handlers = {
+            'list': self.handle_client_action_unlink_conversion_sheet,
+            'record': self.handle_client_action_unlink_conversion_record,
+        }
+        return handlers[kwargs['conversion']](**kwargs)
+
+    def handle_client_action_unlink_invoice(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('invoice'):
+            return self.error_no_client_action_unlink_invoice_target_specified(kwargs)
+        handlers = {
+            'list': self.handle_client_action_unlink_invoice_sheet,
+            'record': self.handle_client_action_unlink_invoice_record,
+        }
+        return handlers[kwargs['invoice']](**kwargs)
+
+    def handle_client_action_unlink_transfer(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('transfer'):
+            return self.error_no_client_action_unlink_transfer_target_specified(kwargs)
+        handlers = {
+            'list': self.handle_client_action_unlink_transfer_sheet,
+            'record': self.handle_client_action_unlink_transfer_record,
+        }
+        return handlers[kwargs['transfer']](**kwargs)
+
+    def handle_client_action_unlink(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('unlink'):
+            return self.error_no_client_action_unlink_target_specified(kwargs)
+        handlers = {
+            'transfer': self.handle_client_action_unlink_transfer,
+            'invoice': self.handle_client_action_unlink_invoice,
+            'conversion': self.handle_client_action_unlink_conversion,
+            'time': self.handle_client_action_unlink_time,
+            'contact': self.handle_client_action_unlink_contact,
+            'credit': self.handle_client_action_unlink_credit,
+            'account': self.handle_client_action_unlink_account,
+        }
+        return handlers[kwargs['unlink']](**kwargs)
 
     def handle_client_action_switch_credit(self, **kwargs):
         log.debug('')
@@ -2547,21 +2660,6 @@ class EWalletSessionManager():
             'clock': self.handle_client_action_switch_credit_clock,
         }
         return handlers[kwargs['credit']](**kwargs)
-
-    def handle_client_action_switch(self, **kwargs):
-        log.debug('')
-        if not kwargs.get('switch'):
-            return self.error_no_client_action_switch_target_specified(kwargs)
-        handlers = {
-            'credit': self.handle_client_action_switch_credit,
-            'transfer_sheet': self.handle_client_action_switch_transfer_sheet,
-            'invoice_sheet': self.handle_client_action_switch_invoice_sheet,
-            'conversion_sheet': self.handle_client_action_switch_conversion_sheet,
-            'time_sheet': self.handle_client_action_switch_time_sheet,
-            'contact_list': self.handle_client_action_switch_contact_list,
-            'account': self.handle_client_action_switch_user_account,
-        }
-        return handlers[kwargs['switch']](**kwargs)
 
     def handle_client_action_new_time(self, **kwargs):
         log.debug('')
@@ -2659,16 +2757,6 @@ class EWalletSessionManager():
         }
         return handlers[kwargs['transfer']](**kwargs)
 
-    def handle_client_action_transfer(self, **kwargs):
-        log.debug('')
-        if not kwargs.get('transfer'):
-            return self.error_no_client_action_transfer_target_specified(kwargs)
-        handlers = {
-            'credits': self.handle_client_action_transfer_credits,
-#           'time': self.handle_client_action_transfer_time,
-        }
-        return handlers[kwargs['transfer']](**kwargs)
-
     def handle_client_action_new_contact(self, **kwargs):
         log.debug('')
         if not kwargs.get('contact'):
@@ -2705,47 +2793,6 @@ class EWalletSessionManager():
             'logout': self.handle_client_action_view_logout_records,
         }
         return handlers[kwargs['view']](**kwargs)
-
-    def handle_client_action_request_client_id(self, **kwargs):
-        log.debug('')
-        return self.action_request_client_id()
-
-    def handle_system_action_start_instruction_listener(self, **kwargs):
-        '''
-        [ NOTE   ]: Turn Session Manager into server listenning for socket based instructions.
-        [ NOTE   ]: System hangs here until interrupt.
-        '''
-        log.debug('')
-        return self.start_instruction_set_listener()
-
-    def handle_system_action_open_sockets(self, **kwargs):
-        '''
-        [ NOTE   ]: Create and setups Session Manager Socket Handler.
-        '''
-        log.debug('')
-        socket_handler = self.open_ewallet_session_manager_sockets(**kwargs)
-        set_socket_handler = self.set_socket_handler(socket_handler)
-        return socket_handler
-
-    # TODO - Kill process
-    def handle_system_action_close_sockets(self, **kwargs):
-        '''
-        [ NOTE   ]: Desociates Ewallet Socket Handler from Session Manager.
-        '''
-        log.debug('')
-        return self.unset_socket_handler()
-
-    # TODO
-    def handle_system_event_session_timeout(self, **kwargs):
-        timeout = self.event_session_timeout()
-    def handle_system_event_worker_timeout(self, **kwargs):
-        timeout = self.event_worker_timeout()
-    def handle_system_event_client_ack_timeout(self, **kwargs):
-        timeout = self.event_client_ack_timeout()
-    def handle_system_event_client_id_expire(self, **kwargs):
-        expire = self.event_client_id_expire()
-    def handle_system_event_session_token_expire(self, **kwargs):
-        expire = self.event_session_token_expire()
 
     def handle_client_action_start(self, **kwargs):
         log.debug('')
@@ -2800,11 +2847,11 @@ class EWalletSessionManager():
         log.debug('')
         if not kwargs.get('request'):
             return self.error_no_client_request_specified()
-        _handlers = {
-                'client_id': self.handle_client_action_request_client_id,
-                'session_token': self.handle_client_action_request_session_token,
-                }
-        return _handlers[kwargs['request']](**kwargs)
+        handlers = {
+            'client_id': self.handle_client_action_request_client_id,
+            'session_token': self.handle_client_action_request_session_token,
+        }
+        return handlers[kwargs['request']](**kwargs)
 
     def handle_system_action_new(self, **kwargs):
         '''
@@ -2819,15 +2866,6 @@ class EWalletSessionManager():
         }
         return handlers[kwargs['new']](**kwargs)
 
-    def handle_system_action_scrape(self, **kwargs):
-        pass
-    def handle_system_action_search(self, **kwargs):
-        pass
-    def handle_system_action_view(self, **kwargs):
-        pass
-    def handle_system_action_request(self, **kwargs):
-        pass
-
     def handle_system_action_start(self, **kwargs):
         '''
         [ NOTE   ]: System action handler for start type actions.
@@ -2835,10 +2873,10 @@ class EWalletSessionManager():
         log.debug('')
         if not kwargs.get('start'):
             return self.error_no_system_action_start_target_specified()
-        _handlers = {
-                'instruction_listener': self.handle_system_action_start_instruction_listener,
-                }
-        return _handlers[kwargs['start']](**kwargs)
+        handlers = {
+            'instruction_listener': self.handle_system_action_start_instruction_listener,
+        }
+        return handlers[kwargs['start']](**kwargs)
 
     def handle_system_action_open(self, **kwargs):
         '''
@@ -2847,10 +2885,10 @@ class EWalletSessionManager():
         log.debug('')
         if not kwargs.get('opening'):
             return self.error_no_system_action_open_target_specified()
-        _handlers = {
-                'sockets': self.handle_system_action_open_sockets,
-                }
-        return _handlers[kwargs['opening']](**kwargs)
+        handlers = {
+            'sockets': self.handle_system_action_open_sockets,
+        }
+        return handlers[kwargs['opening']](**kwargs)
 
     def handle_system_action_close(self, **kwargs):
         '''
@@ -2859,10 +2897,10 @@ class EWalletSessionManager():
         log.debug('')
         if not kwargs.get('closing'):
             return self.error_no_system_action_close_target_specified()
-        _handlers = {
-                'sockets': self.handle_system_action_close_sockets,
-                }
-        return _handlers[kwargs['closing']](**kwargs)
+        handlers = {
+            'sockets': self.handle_system_action_close_sockets,
+        }
+        return handlers[kwargs['closing']](**kwargs)
 
     def handle_system_event_client_timeout(self, **kwargs):
         '''
@@ -2871,10 +2909,10 @@ class EWalletSessionManager():
         log.debug('')
         if not kwargs.get('target'):
             return self.error_no_system_event_client_timeout_target_specified()
-        _handlers = {
-                'client_ack': self.handle_system_event_client_ack_timeout,
-                }
-        return _handlers[kwargs['target']](**kwargs)
+        handlers = {
+            'client_ack': self.handle_system_event_client_ack_timeout,
+        }
+        return handlers[kwargs['target']](**kwargs)
 
     def handle_system_event_expire(self, **kwargs):
         '''
@@ -2883,11 +2921,11 @@ class EWalletSessionManager():
         log.debug('')
         if not kwargs.get('expire'):
             return self.error_no_system_event_expire_specified()
-        _handlers = {
-                'client_id': self.handle_system_event_client_id_expire,
-                'session_token': self.handle_system_event_session_token_expire,
-                }
-        return _handlers[kwargs['expire']](**kwargs)
+        handlers = {
+            'client_id': self.handle_system_event_client_id_expire,
+            'session_token': self.handle_system_event_session_token_expire,
+        }
+        return handlers[kwargs['expire']](**kwargs)
 
     def handle_system_event_timeout(self, **kwargs):
         '''
@@ -2896,21 +2934,32 @@ class EWalletSessionManager():
         log.debug('')
         if not kwargs.get('timeout'):
             return self.error_no_system_event_timeout_specified()
-        _handlers = {
-                'session': self.handle_system_event_session_timeout,
-                'worker': self.handle_system_event_worker_timeout,
-                'client': self.handle_system_event_client_timeout,
-                }
-        return _handlers[kwargs['timeout']](**kwargs)
+        handlers = {
+            'session': self.handle_system_event_session_timeout,
+            'worker': self.handle_system_event_worker_timeout,
+            'client': self.handle_system_event_client_timeout,
+        }
+        return handlers[kwargs['timeout']](**kwargs)
 
     # CONTROLLERS
 
+    # TODO
+    def client_session_manager_event_controller(self, **kwargs):
+        '''
+        [ NOTE   ]: Client event controller for the EWallet Session Manager, accessible
+                    to regular user api calls.
+        [ INPUT  ]: event=('timeout' | 'expire')+
+        [ WARNING ]: Unimplemented
+        '''
+        log.debug('TODO - Unimplemented functionality')
+
+    # TODO
     def client_session_manager_action_controller(self, **kwargs):
         '''
         [ NOTE   ]: Client action controller for the EWallet Session Manager, accessible
                     to regular user api calls.
         '''
-        log.debug('')
+        log.debug('TODO - Add support for action categories scrape and search.')
         if not kwargs.get('action'):
             return self.error_no_client_session_manager_action_specified()
         handlers = {
@@ -2936,13 +2985,14 @@ class EWalletSessionManager():
         }
         return handlers[kwargs['action']](**kwargs)
 
+    # TODO
     def system_session_manager_action_controller(self, **kwargs):
         '''
         [ NOTE   ]: System action controller for the EWallet Session Manager, not accessible
                     to regular user api calls.
         [ NOTE   ]: Pauses active credit clock consumption timer.
         '''
-        log.debug('')
+        log.debug('TODO - Add support for system action category scrape')
         if not kwargs.get('action'):
             return self.error_no_system_session_manager_action_specified()
         handlers = {
@@ -2958,16 +3008,6 @@ class EWalletSessionManager():
             'cleanup': self.handle_system_action_cleanup,
         }
         return handlers[kwargs['action']](**kwargs)
-
-    # TODO
-    def client_session_manager_event_controller(self, **kwargs):
-        '''
-        [ NOTE   ]: Client event controller for the EWallet Session Manager, accessible
-                    to regular user api calls.
-        [ INPUT  ]: event=('timeout' | 'expire')+
-        [ WARNING ]: Unimplemented
-        '''
-        pass
 
     def system_session_manager_event_controller(self, **kwargs):
         '''
@@ -3025,6 +3065,26 @@ class EWalletSessionManager():
         return handlers[kwargs['controller']](**kwargs)
 
     # WARNINGS
+
+    def warning_could_not_switch_invoice_sheet(self, *args):
+        instruction_set_response = {
+            'failed': True,
+            'warning': 'Something went wrong. '
+                       'Could not switch invoice sheet. '\
+                       'Details: {}'.format(args)
+        }
+        log.warning(instruction_set_response['warning'])
+        return instruction_set_response
+
+    def warning_could_not_switch_transfer_sheet(self, *args):
+        instruction_set_response = {
+            'failed': True,
+            'warning': 'Something went wrong. '
+                       'Could not switch transfer sheet. '\
+                       'Details: {}'.format(args)
+        }
+        log.warning(instruction_set_response['warning'])
+        return instruction_set_response
 
     def warning_could_not_switch_credit_clock(self, *args):
         instruction_set_response = {
@@ -3848,25 +3908,52 @@ class EWalletSessionManager():
         log.warning(instruction_set_response['warning'])
         return instruction_set_response
 
-    def warning_could_not_switch_invoice_sheet(self, ewallet_session, instruction_set):
-        instruction_set_response = {
-            'failed': True,
-            'warning': 'Something went wrong. Could not switch credit ewallet invoice sheet in ewallet session {}. '\
-                       'Instruction set details : {}'.format(ewallet_session, instruction_set),
-        }
-        log.warning(instruction_set_response['warning'])
-        return instruction_set_response
-
-    def warning_could_not_switch_transfer_sheet(self, ewallet_session, instruction_set):
-        instruction_set_response = {
-            'failed': True,
-            'warning': 'Something went wrong. Could not switch transfer sheet in ewallet session {}. '\
-                       'Instruction set details : {}'.format(ewallet_session, instruction_set),
-        }
-        log.warning(instruction_set_response['warning'])
-        return instruction_set_response
-
     # ERRORS
+
+    def error_no_client_action_switch_contact_target_specified(self, *args):
+        instruction_set_response = {
+            'failed': True,
+            'error': 'No client action switch contact target specified. '
+                     'Details: {}'.format(args),
+        }
+        log.error(instruction_set_response['error'])
+        return instruction_set_response
+
+    def error_no_client_action_switch_transfer_target_specified(self, *args):
+        instruction_set_response = {
+            'failed': True,
+            'error': 'No client action switch transfer target specified. '
+                     'Details: {}'.format(args),
+        }
+        log.error(instruction_set_response['error'])
+        return instruction_set_response
+
+    def error_no_client_action_switch_invoice_target_specified(self, *args):
+        instruction_set_response = {
+            'failed': True,
+            'error': 'No client action switch invoice target specified. '
+                     'Details: {}'.format(args),
+        }
+        log.error(instruction_set_response['error'])
+        return instruction_set_response
+
+    def error_no_client_action_switch_conversion_target_specified(self, *args):
+        instruction_set_response = {
+            'failed': True,
+            'error': 'No client action switch conversion target specified. '
+                     'Details: {}'.format(args),
+        }
+        log.error(instruction_set_response['error'])
+        return instruction_set_response
+
+    def error_no_client_action_switch_time_target_specified(self, *args):
+        instruction_set_response = {
+            'failed': True,
+            'error': 'No client action switch time target specified. '
+                     'Details: {}'.format(args),
+        }
+        log.error(instruction_set_response['error'])
+        return instruction_set_response
 
     def error_could_not_fetch_session_token_by_label(self, *args):
         instruction_set_response = {
@@ -4863,36 +4950,35 @@ class EWalletSessionManager():
 
 # CODE DUMP
 
-    def action_switch_credit_clock(self, ewallet_session, instruction_set):
+    def action_switch_invoice_sheet(self, ewallet_session, instruction_set):
         log.debug('')
         orm_session = ewallet_session.fetch_active_session()
         sanitized_instruction_set = self.res_utils.remove_tags_from_command_chain(
-            instruction_set, 'controller', 'ctype', 'action', 'switch', 'credit'
+            instruction_set, 'controller', 'ctype', 'action', 'switch'
         )
-        switch_credit_clock = ewallet_session.ewallet_controller(
-            controller='user', ctype='action', action='switch', switch='credit_clock',
+        switch_invoice_sheet = ewallet_session.ewallet_controller(
+            controller='user', ctype='action', action='switch', switch='invoice_sheet',
             active_session=orm_session, **sanitized_instruction_set
         )
-        return self.warning_could_not_switch_credit_clock(
+        return self.warning_could_not_switch_invoice_sheet(
             ewallet_session, instruction_set
-        ) if not switch_credit_clock or switch_credit_clock.get('failed') \
-        else switch_credit_clock
+        ) if not switch_invoice_sheet or switch_invoice_sheet.get('failed') \
+        else switch_invoice_sheet
 
-    def action_switch_credit_ewallet(self, ewallet_session, instruction_set):
+    def action_switch_transfer_sheet(self, ewallet_session, instruction_set):
         log.debug('')
         orm_session = ewallet_session.fetch_active_session()
         sanitized_instruction_set = self.res_utils.remove_tags_from_command_chain(
-            instruction_set, 'controller', 'ctype', 'action', 'switch', 'credit'
+            instruction_set, 'controller', 'ctype', 'action', 'switch'
         )
-        switch_credit_ewallet = ewallet_session.ewallet_controller(
-            controller='user', ctype='action', action='switch', switch='credit_ewallet',
+        switch_transfer_sheet = ewallet_session.ewallet_controller(
+            controller='user', ctype='action', action='switch', switch='transfer_sheet',
             active_session=orm_session, **sanitized_instruction_set
         )
-        return self.warning_could_not_switch_credit_ewallet(
+        return self.warning_could_not_switch_transfer_sheet(
             ewallet_session, instruction_set
-        ) if not switch_credit_ewallet or switch_credit_ewallet.get('failed') \
-        else switch_credit_ewallet
-
+        ) if not switch_transfer_sheet or switch_transfer_sheet.get('failed') \
+        else switch_transfer_sheet
 
     def action_unlink_credit_clock(self, ewallet_session, instruction_set):
         log.debug('')
@@ -5119,36 +5205,6 @@ class EWalletSessionManager():
             ewallet_session, instruction_set
         ) if not switch_conversion_sheet or switch_conversion_sheet.get('failed') \
         else switch_conversion_sheet
-
-    def action_switch_invoice_sheet(self, ewallet_session, instruction_set):
-        log.debug('')
-        orm_session = ewallet_session.fetch_active_session()
-        sanitized_instruction_set = self.res_utils.remove_tags_from_command_chain(
-            instruction_set, 'controller', 'ctype', 'action', 'switch'
-        )
-        switch_invoice_sheet = ewallet_session.ewallet_controller(
-            controller='user', ctype='action', action='switch', switch='invoice_sheet',
-            active_session=orm_session, **sanitized_instruction_set
-        )
-        return self.warning_could_not_switch_invoice_sheet(
-            ewallet_session, instruction_set
-        ) if not switch_invoice_sheet or switch_invoice_sheet.get('failed') \
-        else switch_invoice_sheet
-
-    def action_switch_transfer_sheet(self, ewallet_session, instruction_set):
-        log.debug('')
-        orm_session = ewallet_session.fetch_active_session()
-        sanitized_instruction_set = self.res_utils.remove_tags_from_command_chain(
-            instruction_set, 'controller', 'ctype', 'action', 'switch'
-        )
-        switch_transfer_sheet = ewallet_session.ewallet_controller(
-            controller='user', ctype='action', action='switch', switch='transfer_sheet',
-            active_session=orm_session, **sanitized_instruction_set
-        )
-        return self.warning_could_not_switch_transfer_sheet(
-            ewallet_session, instruction_set
-        ) if not switch_transfer_sheet or switch_transfer_sheet.get('failed') \
-        else switch_transfer_sheet
 
     # TODO - Deprecated
     def action_recover_user_account(self, ewallet_session, instruction_set):
