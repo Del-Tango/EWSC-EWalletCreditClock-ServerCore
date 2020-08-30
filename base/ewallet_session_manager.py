@@ -4850,36 +4850,4 @@ class EWalletSessionManager():
         )
 
 # CODE DUMP
-    # TODO - Deprecated
-    def action_recover_user_account(self, ewallet_session, instruction_set):
-        log.debug('TODO - Deprecated')
-        orm_session = ewallet_session.fetch_active_session()
-        sanitized_instruction_set = self.res_utils.remove_tags_from_command_chain(
-            instruction_set, 'controller', 'ctype', 'action', 'recover',
-        )
-        active_session_user = ewallet_session.fetch_active_session_user()
-        recover_user_account = ewallet_session.ewallet_controller(
-            controller='user', ctype='action', action='recover', recover='account',
-            active_session=orm_session, **sanitized_instruction_set
-        )
-        return self.warning_could_not_recover_user_account(
-            ewallet_session, instruction_set
-        ) if not recover_user_account or recover_user_account.get('failed') \
-            else recover_user_account
-
-    def action_switch_active_session_user_account(self, ewallet_session, instruction_set):
-        log.debug('')
-        orm_session = ewallet_session.fetch_active_session()
-        sanitized_instruction_set = self.res_utils.remove_tags_from_command_chain(
-            instruction_set, 'controller', 'ctype', 'action', 'switch',
-        )
-        active_session_user = ewallet_session.fetch_active_session_user()
-        switch_user_account = ewallet_session.ewallet_controller(
-            controller='user', ctype='action', action='switch', switch='account',
-            active_session=orm_session, **sanitized_instruction_set
-        )
-        return self.warning_could_not_switch_active_session_user_account(
-            ewallet_session, instruction_set
-        ) if not switch_user_account or switch_user_account.get('failed') \
-            else switch_user_account
 

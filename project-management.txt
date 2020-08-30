@@ -9,9 +9,9 @@
     - x - (EWSC) Refactor client id to token object
     - x - (EWSC) Refactor session token to token object
     - x - (EWSC) Separater workers on different processes
-    -   - (EWSC) Move all subordonate account action handlers to worker
-    - (EWSC) Update ewallet dox instruction set for user action category Switch
-    - (EWSC) Update write dates
+    - x - (EWSC) Move all subordonate account action handlers to worker
+    - x - (EWSC) Update ewallet dox instruction set for user action category Switch
+    -   - (EWSC) Update write dates
     - (EWSC) Journal record grooming
     - (EWSC) Impose entity ownership restrictions on User action categories View, Switch and Unlink
     - (EWCC) Perform valid input checks on core subroutine SetResource
