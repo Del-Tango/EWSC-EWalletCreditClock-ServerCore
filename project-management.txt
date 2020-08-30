@@ -54,10 +54,13 @@
 ################################################################################
 
 - Update write dates and UIDs for:
-    - Session Manager
-        - System action Cleanup Session Workers
-        - System action Open Sockers
-        - System action Close Sockers
+    - x - Session Manager
+        - x - System action New Worker
+        - x - System action Cleanup Session Workers
+        - x - System action Open Sockers
+        - x - System action Close Sockers
+        - x - User action Request Client ID
+        - x - User action Request Session Token
     - Session Workers
         - System action New Worker
         - System action New EWallet Session
