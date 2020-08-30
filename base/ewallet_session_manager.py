@@ -649,9 +649,8 @@ class EWalletSessionManager():
 
     # SPAWNERS
 
-    # TODO - EWallet session spawning should happen on the worker side.
     def spawn_ewallet_session(self, orm_session, **kwargs):
-        log.debug('TODO')
+        log.debug('')
         return EWallet(
             name=kwargs.get('reference'), session=orm_session,
             expiration_date=kwargs.get('expiration_date')
@@ -1224,6 +1223,21 @@ class EWalletSessionManager():
 
     # ACTIONS
 
+    def action_new_session(self, **kwargs):
+        log.debug('')
+        session = self.create_new_ewallet_session(**kwargs)
+        return session
+
+    def action_new_worker(self):
+        log.debug('')
+        worker = self.spawn_ewallet_session_worker()
+        instruction_queue = Queue()
+        response_queue = Queue()
+        worker.set_instruction_queue(instruction_queue)
+        worker.set_response_queue(response_queue)
+        worker.set_lock(Value('i', 0))
+        return worker
+
     def action_execute_user_instruction_set(self, **kwargs):
         log.debug('')
         # Fetch worker id from client token label
@@ -1243,11 +1257,6 @@ class EWalletSessionManager():
         return self.execute_worker_instruction(
             worker_id, kwargs
         )
-
-    def action_new_session(self, **kwargs):
-        log.debug('')
-        session = self.create_new_ewallet_session(**kwargs)
-        return session
 
 #   @pysnooper.snoop()
     def action_request_session_token(self, worker_id, cst_map, **kwargs):
@@ -1285,16 +1294,6 @@ class EWalletSessionManager():
             'client_id': client_id.label,
         }
         return instruction_set_response
-
-    def action_new_worker(self):
-        log.debug('')
-        worker = self.spawn_ewallet_session_worker()
-        instruction_queue = Queue()
-        response_queue = Queue()
-        worker.set_instruction_queue(instruction_queue)
-        worker.set_response_queue(response_queue)
-        worker.set_lock(Value('i', 0))
-        return worker
 
     def action_sweep_cleanup_ewallet_sessions(self, **kwargs):
         log.debug('')
@@ -1590,7 +1589,7 @@ class EWalletSessionManager():
                 and instruction_set_validation.get('failed'):
             return instruction_set_validation
         unlink_account = self.action_execute_user_instruction_set(**kwargs)
-        return self.warning_could_not_unlink_account(
+        return self.warning_could_not_unlink_user_account(
             kwargs, unlink_account
         ) if not unlink_account or isinstance(unlink_account, dict) and \
             unlink_account.get('failed') else unlink_account

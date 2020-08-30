@@ -3644,6 +3644,16 @@ class EWalletWorker():
         log.warning(command_chain_response['warning'])
         return command_chain_response
 
+    def warning_could_not_stop_clock_timer(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Something went wrong. '
+                       'Could not stop credit clock timer. '
+                       'Details: {}'.format(args),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
+
     def warning_could_not_start_clock_timer(self, *args):
         command_chain_response = {
             'failed': True,
@@ -3909,6 +3919,15 @@ class EWalletWorker():
         return False
 
     # ERRORS
+
+    def error_no_client_action_resume_target_specified(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No client action resume target specified. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
 
     def error_no_client_action_recover_target_specified(self, *args):
         command_chain_response = {
