@@ -10,6 +10,7 @@
     - x - (EWSC) Refactor session token to token object
     - x - (EWSC) Separater workers on different processes
     -   - (EWSC) Move all subordonate account action handlers to worker
+    - (EWSC) Update ewallet dox instruction set for user action category Switch
     - (EWSC) Update write dates
     - (EWSC) Journal record grooming
     - (EWSC) Impose entity ownership restrictions on User action categories View, Switch and Unlink
@@ -105,8 +106,8 @@
     - x - User action Unlink Transfer Record
     - x - User action Unlink Time Sheet
     - x - User action Unlink Time Record
-    -   - User action unlink_credit_ewallet
-    -   - User action unlink_credit_clock
+    -   - User action Unlink Credit EWallet
+    -   - User action Unlink Credit Clock
     - User action RecoverAccount
 
 

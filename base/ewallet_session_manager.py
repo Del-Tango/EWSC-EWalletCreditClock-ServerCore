@@ -1426,6 +1426,32 @@ class EWalletSessionManager():
     [ NOTE ]: Instruction set validation and sanitizations are performed here.
     '''
 
+    def handle_client_action_unlink_credit_clock(self, **kwargs):
+        log.debug('')
+        instruction_set_validation = self.validate_instruction_set(kwargs)
+        if not instruction_set_validation \
+                or isinstance(instruction_set_validation, dict) \
+                and instruction_set_validation.get('failed'):
+            return instruction_set_validation
+        unlink_credit_clock = self.action_execute_user_instruction_set(**kwargs)
+        return self.warning_could_not_unlink_credit_clock(
+            kwargs, unlink_credit_clock
+        ) if not unlink_credit_clock or isinstance(unlink_credit_clock, dict) and \
+            unlink_credit_clock.get('failed') else unlink_credit_clock
+
+    def handle_client_action_unlink_credit_ewallet(self, **kwargs):
+        log.debug('')
+        instruction_set_validation = self.validate_instruction_set(kwargs)
+        if not instruction_set_validation \
+                or isinstance(instruction_set_validation, dict) \
+                and instruction_set_validation.get('failed'):
+            return instruction_set_validation
+        unlink_credit_ewallet = self.action_execute_user_instruction_set(**kwargs)
+        return self.warning_could_not_unlink_credit_ewallet(
+            kwargs, unlink_credit_ewallet
+        ) if not unlink_credit_ewallet or isinstance(unlink_credit_ewallet, dict) and \
+            unlink_credit_ewallet.get('failed') else unlink_credit_ewallet
+
     def handle_client_action_unlink_time_record(self, **kwargs):
         log.debug('')
         instruction_set_validation = self.validate_instruction_set(kwargs)
@@ -2281,44 +2307,6 @@ class EWalletSessionManager():
         )
         return switch_user_account
 
-    def handle_client_action_unlink_credit_clock(self, **kwargs):
-        log.debug('')
-        instruction_set_validation = self.validate_instruction_set(kwargs)
-        if not instruction_set_validation \
-                or isinstance(instruction_set_validation, dict) \
-                and instruction_set_validation.get('failed'):
-            return instruction_set_validation
-        ewallet = self.fetch_ewallet_session_for_client_action_using_instruction_set(
-            kwargs
-        )
-        if not ewallet or not ewallet['ewallet_session'] or \
-                isinstance(ewallet['ewallet_session'], dict) and \
-                ewallet['ewallet_session'].get('failed'):
-            return self.error_no_ewallet_session_found(kwargs)
-        unlink_credit_clock = self.action_unlink_credit_clock(
-            ewallet['ewallet_session'], ewallet['sanitized_instruction_set']
-        )
-        return unlink_credit_clock
-
-    def handle_client_action_unlink_credit_ewallet(self, **kwargs):
-        log.debug('')
-        instruction_set_validation = self.validate_instruction_set(kwargs)
-        if not instruction_set_validation \
-                or isinstance(instruction_set_validation, dict) \
-                and instruction_set_validation.get('failed'):
-            return instruction_set_validation
-        ewallet = self.fetch_ewallet_session_for_client_action_using_instruction_set(
-            kwargs
-        )
-        if not ewallet or not ewallet['ewallet_session'] or \
-                isinstance(ewallet['ewallet_session'], dict) and \
-                ewallet['ewallet_session'].get('failed'):
-            return self.error_no_ewallet_session_found(kwargs)
-        unlink_credit_ewallet = self.action_unlink_credit_ewallet(
-            ewallet['ewallet_session'], ewallet['sanitized_instruction_set']
-        )
-        return unlink_credit_ewallet
-
     def handle_client_action_unlink_invoice_sheet(self, **kwargs):
         log.debug('')
         instruction_set_validation = self.validate_instruction_set(kwargs)
@@ -2993,6 +2981,26 @@ class EWalletSessionManager():
         return handlers[kwargs['controller']](**kwargs)
 
     # WARNINGS
+
+    def warning_could_not_unlink_credit_clock(self, *args):
+        instruction_set_response = {
+            'failed': True,
+            'warning': 'Something went wrong. '
+                       'Could not unlink credit clock. '\
+                       'Details: {}'.format(args)
+        }
+        log.warning(instruction_set_response['warning'])
+        return instruction_set_response
+
+    def warning_could_not_unlink_credit_ewallet(self, *args):
+        instruction_set_response = {
+            'failed': True,
+            'warning': 'Something went wrong. '
+                       'Could not unlink credit ewallet. '\
+                       'Details: {}'.format(args)
+        }
+        log.warning(instruction_set_response['warning'])
+        return instruction_set_response
 
     def warning_could_not_unlink_time_sheet(self, *args):
         instruction_set_response = {
@@ -3798,24 +3806,6 @@ class EWalletSessionManager():
         instruction_set_response = {
             'failed': True,
             'warning': 'Something went wrong. Could not view user login records in ewallet session {}. '\
-                       'Instruction set details : {}'.format(ewallet_session, instruction_set),
-        }
-        log.warning(instruction_set_response['warning'])
-        return instruction_set_response
-
-    def warning_could_not_unlink_credit_clock(self, ewallet_session, instruction_set):
-        instruction_set_response = {
-            'failed': True,
-            'warning': 'Something went wrong. Could not unlink credit ewallet credit clock in ewallet session {}. '\
-                       'Instruction set details :  {}'.format(ewallet_session, instruction_set),
-        }
-        log.warning(instruction_set_response['warning'])
-        return instruction_set_response
-
-    def warning_could_not_unlink_credit_ewallet(self, ewallet_session, instruction_set):
-        instruction_set_response = {
-            'failed': True,
-            'warning': 'Something went wrong. Could not unlink credit ewallet in ewallet session {}. '\
                        'Instruction set details : {}'.format(ewallet_session, instruction_set),
         }
         log.warning(instruction_set_response['warning'])
@@ -4889,36 +4879,6 @@ class EWalletSessionManager():
         )
 
 # CODE DUMP
-
-    def action_unlink_time_sheet_record(self, ewallet_session, instruction_set):
-        log.debug('')
-        orm_session = ewallet_session.fetch_active_session()
-        sanitized_instruction_set = self.res_utils.remove_tags_from_command_chain(
-            instruction_set, 'controller', 'ctype', 'action', 'unlink', 'time'
-        )
-        unlink_time_record = ewallet_session.ewallet_controller(
-            controller='user', ctype='action', action='unlink', unlink='time',
-            time='record', active_session=orm_session, **sanitized_instruction_set
-        )
-        return self.warning_could_not_unlink_time_sheet_record(
-            ewallet_session, instruction_set
-        ) if not unlink_time_record or unlink_time_record.get('failed') \
-            else unlink_time_record
-
-    def action_unlink_time_sheet(self, ewallet_session, instruction_set):
-        log.debug('')
-        orm_session = ewallet_session.fetch_active_session()
-        sanitized_instruction_set = self.res_utils.remove_tags_from_command_chain(
-            instruction_set, 'controller', 'ctype', 'action', 'unlink', 'time'
-        )
-        unlink_time_sheet = ewallet_session.ewallet_controller(
-            controller='user', ctype='action', action='unlink', unlink='time',
-            time='list', active_session=orm_session, **sanitized_instruction_set
-        )
-        return self.warning_could_not_unlink_time_sheet(
-            ewallet_session, instruction_set
-        ) if not unlink_time_sheet or unlink_time_sheet.get('failed') \
-            else unlink_time_sheet
 
     def action_unlink_credit_clock(self, ewallet_session, instruction_set):
         log.debug('')
