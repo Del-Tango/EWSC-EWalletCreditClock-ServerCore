@@ -61,11 +61,11 @@
         - x - System action Close Sockers
         - x - User action Request Client ID
         - x - User action Request Session Token
-    - Session Workers
-        - System action New Worker
-        - System action New EWallet Session
-        - System action Target Cleanup EWallet Session
-        - System action Sweep Cleanup EWallet Session
+    - x - Session Workers
+        - x - System action New Worker
+        - x - System action New EWallet Session
+        - x - System action Target Cleanup EWallet Session
+        - x - System action Sweep Cleanup EWallet Session
     - EWallet Session
         - User action Account Login
         - User action Switch Account
@@ -199,6 +199,8 @@
     - x - User action Unlink Time Record
     - x - User action Unlink Credit EWallet
     - x - User action Unlink Credit Clock
+    - x - User action Unlink Invoice Sheet
+    - x - User action Unlink Invoice Record
     - x - User action Recover Account
 
 
@@ -281,6 +283,8 @@ EWSC - User Actions
     - User action Unlink Transfer Record
     - User action Unlink Time Sheet
     - User action Unlink Time Record
+    - User action Unlink Invoice Sheet
+    - User action Unlink Invoice Record
     - User action Unlink Credit EWallet
     - User action Unlink Credit Clock
     - User action Recover Account

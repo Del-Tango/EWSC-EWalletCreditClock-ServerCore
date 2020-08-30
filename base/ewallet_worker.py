@@ -38,8 +38,8 @@ class EWalletWorker():
         now = datetime.datetime.now()
         self.id = kwargs.get('id') or int()
         self.reference = kwargs.get('reference') or str()
-        self.create_date = now
-        self.write_date = now
+        self.create_date = kwargs.get('create_date') or now
+        self.write_date = kwargs.get('write_date') or now
         self.session_worker_state_code = kwargs.get('state_code') or 0
         self.session_worker_state_label = kwargs.get('state_label') or 'vacant'
         self.session_worker_state_timestamp = now
@@ -211,6 +211,9 @@ class EWalletWorker():
         return {0: 'vacant', 1: 'in_use', 2: 'full'}
 
     # SETTERS
+    '''
+    [ NOTE ]: Write date updates are done here.
+    '''
 
     # TODO
     def set_session_pool_add_record(self, record):
@@ -222,10 +225,72 @@ class EWalletWorker():
     def set_session_pool_update_records(self):
         pass
 
+    def set_write_date(self, write_date):
+        log.debug('')
+        try:
+            self.write_date = write_date
+        except Exception as e:
+            return self.warning_could_not_set_write_date(
+                write_date, self.write_date, e
+            )
+        return True
+
+    def set_client_token_to_pool(self, client_id):
+        log.debug('')
+        try:
+            self.ctoken_pool.append(client_id)
+            self.update_write_date()
+        except Exception as e:
+            return self.warning_could_not_set_ctoken_pool_entry(
+                client_id, self.ctoken_pool, e
+            )
+        return True
+
+    def set_session_token_to_pool(self, session_token):
+        log.debug('')
+        try:
+            self.stoken_pool.append(session_token)
+            self.update_write_date()
+        except Exception as e:
+            return self.warning_could_not_set_stoken_pool_entry(
+                session_token, self.stoken_pool
+            )
+        return True
+
+    def remove_session_token_map_entry(self, client_id):
+        log.debug('')
+        try:
+            del self.token_session_map[client_id]
+            self.update_write_date()
+        except:
+            return self.error_could_not_remove_session_token_map_entry(client_id)
+        instruction_set_response = {
+            'failed': False,
+            'session_token_map': self.fetch_session_token_map(),
+        }
+        return instruction_set_response
+
+#   @pysnooper.snoop()
+    def remove_ewallet_session_from_worker_pool(self, ewallet_session):
+        log.debug('')
+        try:
+            self.session_pool.remove(ewallet_session)
+            self.update_write_date()
+        except:
+            return self.error_could_not_remove_ewallet_session_from_worker_session_pool(
+                ewallet_session
+            )
+        instruction_set_response = {
+            'failed': False,
+            'session_pool': self.fetch_session_worker_ewallet_session_pool(),
+        }
+        return instruction_set_response
+
     def set_esession_pool(self, map_entry):
         log.debug('')
         try:
             self.session_pool.update(map_entry)
+            self.update_write_date()
         except Exception as e:
             return self.warning_could_not_set_esession_pool_entry(
                 map_entry, self.session_pool
@@ -236,6 +301,7 @@ class EWalletWorker():
         log.debug('')
         try:
             self.ctoken_pool.update(map_entry)
+            self.update_write_date()
         except Exception as e:
             return self.warning_could_not_set_ctoken_pool_entry(
                 map_entry, self.ctoken_pool
@@ -246,6 +312,7 @@ class EWalletWorker():
         log.debug('')
         try:
             self.stoken_pool.update(map_entry)
+            self.update_write_date()
         except Exception as e:
             return self.warning_could_not_set_stoken_pool_entry(
                 map_entry, self.stoken_pool
@@ -258,6 +325,7 @@ class EWalletWorker():
             return self.error_invalid_session_worker_token_session_map_entry(map_entry)
         try:
             self.token_session_map.update(map_entry)
+            self.update_write_date()
         except:
             return self.error_could_not_set_session_worker_token_session_map_entry(map_entry)
         return True
@@ -268,6 +336,7 @@ class EWalletWorker():
             return self.error_invalid_lock(lock)
         try:
             self.lock = lock
+            self.update_write_date()
         except Exception as e:
             return self.warning_could_not_set_lock(lock)
         return True
@@ -278,6 +347,7 @@ class EWalletWorker():
             return self.error_invalid_instruction_queue(instruction_queue)
         try:
             self.instruction_set_recv = instruction_queue
+            self.update_write_date()
         except Exception as e:
             return self.warning_could_not_set_session_worker_instruction_queue(
                 instruction_queue
@@ -290,6 +360,7 @@ class EWalletWorker():
             return self.error_invalid_response_queue(response_queue)
         try:
             self.instruction_set_resp = response_queue
+            self.update_write_date()
         except Exception as e:
             return self.warning_could_not_set_session_worker_response_queue(
                 response_queue
@@ -301,6 +372,7 @@ class EWalletWorker():
         log.debug('')
         try:
             self.stoken_pool.append(session_token)
+            self.update_write_date()
         except:
             return self.error_could_not_set_new_session_token_to_pool(session_token)
         return True
@@ -309,6 +381,7 @@ class EWalletWorker():
         log.debug('')
         try:
             self.ctoken_pool.append(client_token)
+            self.update_write_date()
         except:
             return self.error_could_not_add_new_client_token_to_pool(client_token)
         return True
@@ -319,6 +392,7 @@ class EWalletWorker():
             return self.error_invalid_ewallet_session_for_worker_session_pool(ewallet_session)
         try:
             self.session_pool.append(ewallet_session)
+            self.update_write_date()
         except:
             return self.error_could_not_add_new_session_to_pool(ewallet_session)
         return True
@@ -327,6 +401,7 @@ class EWalletWorker():
         log.debug('')
         try:
             self.create_date = create_date
+            self.update_write_date()
         except:
             return self.error_could_not_set_worker_create_date()
         return True
@@ -342,7 +417,13 @@ class EWalletWorker():
         log.debug('')
         if state_code not in self.fetch_session_worker_state_code_label_map().keys():
             return self.error_invalid_session_worker_state_code(state_code)
-        self.session_worker_state_code = state_code
+        try:
+            self.session_worker_state_code = state_code
+            self.update_write_date()
+        except Exception as e:
+            return self.error_could_not_set_worker_state_code(
+                state_code, self.session_worker_state_code, kwargs, e
+            )
         return True
 
     def set_session_worker_state_label(self, state_label, **kwargs):
@@ -355,7 +436,13 @@ class EWalletWorker():
         if state_label not in kwargs.get('label_map') or \
                 self.fetch_session_worker_state_code_label_map().values():
             return self.error_invalid_session_worker_state_label()
-        self.session_worker_state_label = state_label
+        try:
+            self.session_worker_state_label = state_label
+            self.update_write_date()
+        except Exception as e:
+            return self.error_could_not_set_worker_state_label(
+                state_label, self.session_sorker_state_label, kwargs, e
+            )
         return True
 
     def set_session_worker_state_timestamp(self, timestamp):
@@ -366,10 +453,20 @@ class EWalletWorker():
         [ RETURN ]: (True | False)
         '''
         log.debug('')
-        self.session_worker_state_timestamp = timestamp
+        try:
+            self.session_worker_state_timestamp = timestamp
+            self.update_write_date()
+        except Exception as e:
+            return self.error_could_not_set_worker_state_timestamp(
+                timestamp, self.session_worker_state_timestamp, e
+            )
         return True
 
     # UPDATERS
+
+    def update_write_date(self):
+        log.debug('')
+        return self.set_write_date(datetime.datetime.now())
 
     def update_ewallet_session_token_map(self, map_entry):
         log.debug('')
@@ -405,23 +502,11 @@ class EWalletWorker():
 
     def update_client_token_pool(self, client_id):
         log.debug('')
-        try:
-            self.ctoken_pool.append(client_id)
-        except Exception as e:
-            return self.warning_could_not_set_ctoken_pool_entry(
-                client_id, self.ctoken_pool
-            )
-        return True
+        return self.set_client_token_to_pool(client_id)
 
     def update_session_token_pool(self, session_token):
         log.debug('')
-        try:
-            self.stoken_pool.append(session_token)
-        except Exception as e:
-            return self.warning_could_not_set_stoken_pool_entry(
-                session_token, self.stoken_pool
-            )
-        return True
+        return self.set_session_token_to_pool(session_token)
 
     def update_session_worker_state(self, state_code):
         '''
@@ -568,33 +653,6 @@ class EWalletWorker():
             return error
         return instruction_set
 
-    def remove_session_token_map_entry(self, client_id):
-        log.debug('')
-        try:
-            del self.token_session_map[client_id]
-        except:
-            return self.error_could_not_remove_session_token_map_entry(client_id)
-        instruction_set_response = {
-            'failed': False,
-            'session_token_map': self.fetch_session_token_map(),
-        }
-        return instruction_set_response
-
-#   @pysnooper.snoop()
-    def remove_ewallet_session_from_worker_pool(self, ewallet_session):
-        log.debug('')
-        try:
-            self.session_pool.remove(ewallet_session)
-        except:
-            return self.error_could_not_remove_ewallet_session_from_worker_session_pool(
-                ewallet_session
-            )
-        instruction_set_response = {
-            'failed': False,
-            'session_pool': self.fetch_session_worker_ewallet_session_pool(),
-        }
-        return instruction_set_response
-
     # TODO - Refactor - Efficiency deficit
 #   @pysnooper.snoop()
     def search_ewallet_session(self, session_token):
@@ -666,6 +724,66 @@ class EWalletWorker():
 
     # ACTIONS
 
+    def action_unlink_invoice_sheet(self, **kwargs):
+        log.debug('')
+        # Fetch ewallet session by token keys
+        ewallet_session = self.fetch_ewallet_session_by_client_session_tokens(
+            kwargs['client_id'], kwargs['session_token']
+        )
+        if not ewallet_session or isinstance(ewallet_session, dict) and \
+                ewallet_session.get('failed'):
+            return ewallet_session
+        sanitized_instruction_set = res_utils.remove_tags_from_command_chain(
+            kwargs, 'controller', 'ctype', 'action', 'unlink', 'invoice',
+            'active_session'
+        )
+        # Execute action in session
+        orm_session = ewallet_session.fetch_active_session()
+        unlink_invoice_sheet = ewallet_session.ewallet_controller(
+            controller='user', ctype='action', action='unlink',
+            unlink='invoice', invoice='list', active_session=orm_session,
+            **sanitized_instruction_set
+        )
+        # Formulate response
+        response = self.warning_could_not_unlink_invoice_sheet(
+            ewallet_session, kwargs, unlink_invoice_sheet
+        ) if not unlink_invoice_sheet or \
+            isinstance(unlink_invoice_sheet, dict) and \
+            unlink_invoice_sheet.get('failed') else unlink_invoice_sheet
+        # Respond to session manager
+        self.send_instruction_response(response)
+        return response
+
+    def action_unlink_invoice_record(self, **kwargs):
+        log.debug('')
+        # Fetch ewallet session by token keys
+        ewallet_session = self.fetch_ewallet_session_by_client_session_tokens(
+            kwargs['client_id'], kwargs['session_token']
+        )
+        if not ewallet_session or isinstance(ewallet_session, dict) and \
+                ewallet_session.get('failed'):
+            return ewallet_session
+        sanitized_instruction_set = res_utils.remove_tags_from_command_chain(
+            kwargs, 'controller', 'ctype', 'action', 'unlink', 'invoice',
+            'active_session'
+        )
+        # Execute action in session
+        orm_session = ewallet_session.fetch_active_session()
+        unlink_invoice_record = ewallet_session.ewallet_controller(
+            controller='user', ctype='action', action='unlink',
+            unlink='invoice', invoice='record', active_session=orm_session,
+            **sanitized_instruction_set
+        )
+        # Formulate response
+        response = self.warning_could_not_unlink_invoice_record(
+            ewallet_session, kwargs, unlink_invoice_record
+        ) if not unlink_invoice_record or \
+            isinstance(unlink_invoice_record, dict) and \
+            unlink_invoice_record.get('failed') else unlink_invoice_record
+        # Respond to session manager
+        self.send_instruction_response(response)
+        return response
+
     def action_recover_user_account(self, **kwargs):
         log.debug('')
         # Fetch ewallet session by token keys
@@ -723,8 +841,6 @@ class EWalletWorker():
         # Respond to session manager
         self.send_instruction_response(response)
         return response
-
-
 
     def action_unlink_credit_ewallet(self, **kwargs):
         log.debug('')
@@ -2418,6 +2534,14 @@ class EWalletWorker():
 
     # ACTION HANDLERS
 
+    def handle_client_action_unlink_invoice_sheet(self, **kwargs):
+        log.debug('')
+        return self.action_unlink_invoice_sheet(**kwargs)
+
+    def handle_client_action_unlink_invoice_record(self, **kwargs):
+        log.debug('')
+        return self.action_unlink_invoice_record(**kwargs)
+
     def handle_client_action_recover_account(self, **kwargs):
         log.debug('')
         return self.action_recover_user_account(**kwargs)
@@ -2726,6 +2850,16 @@ class EWalletWorker():
 
     # JUMPTABLE HANDLERS
 
+    def handle_client_action_unlink_invoice(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('invoice'):
+            return self.error_no_client_action_unlink_invoice_target_specified(kwargs)
+        handlers = {
+            'list': self.handle_client_action_unlink_invoice_sheet,
+            'record': self.handle_client_action_unlink_invoice_record,
+        }
+        return handlers[kwargs['invoice']](**kwargs)
+
     def handle_client_action_recover(self, **kwargs):
         log.debug('')
         if not kwargs.get('recover'):
@@ -2796,6 +2930,7 @@ class EWalletWorker():
             'transfer': self.handle_client_action_unlink_transfer,
             'time': self.handle_client_action_unlink_time,
             'credit': self.handle_client_action_unlink_credit,
+            'invoice': self.handle_client_action_unlink_invoice,
         }
         return handlers[kwargs['unlink']](**kwargs)
 
@@ -3243,6 +3378,36 @@ class EWalletWorker():
         return handlers[kwargs['controller']](**kwargs)
 
     # WARNINGS
+
+    def warning_could_not_unlink_invoice_sheet(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Something went wrong. '
+                       'Could not unlink invoice sheet. '
+                       'Details: {}'.format(args),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
+
+    def warning_could_not_unlink_invoice_record(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Something went wrong. '
+                       'Could not unlink invoice record. '
+                       'Details: {}'.format(args),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
+
+    def warning_could_not_set_write_date(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Something went wrong. '
+                       'Could not set session worker write date. '
+                       'Details: {}'.format(args),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
 
     def warning_could_not_switch_user_account(self, *args):
         command_chain_response = {
@@ -3919,6 +4084,45 @@ class EWalletWorker():
         return False
 
     # ERRORS
+
+    def error_no_client_action_unlink_invoice_target_specified(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No client action unlink invoice target specified. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_could_not_set_worker_state_code(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Something went wrong. '
+                     'Could not set session worker state code. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_could_not_set_worker_state_label(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Something went wrong. '
+                     'Could not set session worker state label. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_could_not_set_worker_state_timestamp(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Something went wrong. '
+                     'Could not set session worker state timestamp. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
 
     def error_no_client_action_resume_target_specified(self, *args):
         command_chain_response = {

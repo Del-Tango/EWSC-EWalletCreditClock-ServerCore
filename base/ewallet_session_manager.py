@@ -385,6 +385,9 @@ class EWalletSessionManager():
         pass
 
     # SETTERS
+    '''
+    [ NOTE ]: Write date updates are done here.
+    '''
 
     def remove_session_worker_from_pool(self, session_worker):
         log.debug('')
@@ -1413,6 +1416,31 @@ class EWalletSessionManager():
     '''
     [ NOTE ]: Instruction set validation and sanitizations are performed here.
     '''
+    def handle_client_action_unlink_invoice_sheet(self, **kwargs):
+        log.debug('')
+        instruction_set_validation = self.validate_instruction_set(kwargs)
+        if not instruction_set_validation \
+                or isinstance(instruction_set_validation, dict) \
+                and instruction_set_validation.get('failed'):
+            return instruction_set_validation
+        unlink_invoice_sheet = self.action_execute_user_instruction_set(**kwargs)
+        return self.warning_could_not_unlink_invoice_sheet(
+            kwargs, unlink_invoice_sheet
+        ) if not unlink_invoice_sheet or isinstance(unlink_invoice_sheet, dict) and \
+            unlink_invoice_sheet.get('failed') else unlink_invoice_sheet
+
+    def handle_client_action_unlink_invoice_record(self, **kwargs):
+        log.debug('')
+        instruction_set_validation = self.validate_instruction_set(kwargs)
+        if not instruction_set_validation \
+                or isinstance(instruction_set_validation, dict) \
+                and instruction_set_validation.get('failed'):
+            return instruction_set_validation
+        unlink_invoice_record = self.action_execute_user_instruction_set(**kwargs)
+        return self.warning_could_not_unlink_invoice_record(
+            kwargs, unlink_invoice_record
+        ) if not unlink_invoice_record or isinstance(unlink_invoice_record, dict) and \
+            unlink_invoice_record.get('failed') else unlink_invoice_record
 
     def handle_client_action_recover_account(self, **kwargs):
         log.debug('')
@@ -2283,44 +2311,6 @@ class EWalletSessionManager():
         )
         return interogate_session
 
-    def handle_client_action_unlink_invoice_sheet(self, **kwargs):
-        log.debug('')
-        instruction_set_validation = self.validate_instruction_set(kwargs)
-        if not instruction_set_validation \
-                or isinstance(instruction_set_validation, dict) \
-                and instruction_set_validation.get('failed'):
-            return instruction_set_validation
-        ewallet = self.fetch_ewallet_session_for_client_action_using_instruction_set(
-            kwargs
-        )
-        if not ewallet or not ewallet['ewallet_session'] or \
-                isinstance(ewallet['ewallet_session'], dict) and \
-                ewallet['ewallet_session'].get('failed'):
-            return self.error_no_ewallet_session_found(kwargs)
-        unlink_invoice_sheet = self.action_unlink_invoice_sheet(
-            ewallet['ewallet_session'], ewallet['sanitized_instruction_set']
-        )
-        return unlink_invoice_sheet
-
-    def handle_client_action_unlink_invoice_record(self, **kwargs):
-        log.debug('')
-        instruction_set_validation = self.validate_instruction_set(kwargs)
-        if not instruction_set_validation \
-                or isinstance(instruction_set_validation, dict) \
-                and instruction_set_validation.get('failed'):
-            return instruction_set_validation
-        ewallet = self.fetch_ewallet_session_for_client_action_using_instruction_set(
-            kwargs
-        )
-        if not ewallet or not ewallet['ewallet_session'] or \
-                isinstance(ewallet['ewallet_session'], dict) and \
-                ewallet['ewallet_session'].get('failed'):
-            return self.error_no_ewallet_session_found(kwargs)
-        unlink_invoice_record = self.action_unlink_invoice_sheet_record(
-            ewallet['ewallet_session'], ewallet['sanitized_instruction_set']
-        )
-        return unlink_invoice_record
-
     # JUMPTABLE HANDLERS
 
     # TODO
@@ -2957,6 +2947,26 @@ class EWalletSessionManager():
         return handlers[kwargs['controller']](**kwargs)
 
     # WARNINGS
+
+    def warning_could_not_unlink_invoice_sheet(self, *args):
+        instruction_set_response = {
+            'failed': True,
+            'warning': 'Something went wrong. '
+                       'Could not unlink invoice sheet. '
+                       'Details: {}'.format(args)
+        }
+        log.warning(instruction_set_response['warning'])
+        return instruction_set_response
+
+    def warning_could_not_unlink_invoice_sheet_record(self, *args):
+        instruction_set_response = {
+            'failed': True,
+            'warning': 'Something went wrong. '
+                       'Could not unlink invoice record. '
+                       'Details: {}'.format(args)
+        }
+        log.warning(instruction_set_response['warning'])
+        return instruction_set_response
 
     def warning_could_not_recover_user_account(self, *args):
         instruction_set_response = {
@@ -3766,33 +3776,6 @@ class EWalletSessionManager():
             'failed': True,
             'warning': 'Something went wrong. Could not fetch ewallet session. '\
                        'Instruction set details : {}'.format(instruction_set),
-        }
-        log.warning(instruction_set_response['warning'])
-        return instruction_set_response
-
-    def warning_could_not_unlink_invoice_sheet(self, ewallet_session, instruction_set):
-        command_chain_response = {
-            'failed': True,
-            'warning': 'Something went wrong. Could not unlink invoice sheet in ewallet session {}. '\
-                       'Instruction set details : {}'.format(ewallet_session, instruction_set),
-        }
-        log.warning(command_chain_response['warning'])
-        return command_chain_response
-
-    def warning_could_not_unlink_invoice_sheet_record(self, ewallet_session, instruction_set):
-        instruction_set_response = {
-            'failed': True,
-            'warning': 'Something went wrong. Could not unlink invoice sheet record in ewallet session {}. '\
-                       'Instruction set details : {}'.format(ewallet_session, instruction_set),
-        }
-        log.warning(instruction_set_response['warning'])
-        return instruction_set_response
-
-    def warning_cound_not_switch_contact_list(self, ewallet_session, instruction_set):
-        instruction_set_response = {
-            'failed': True,
-            'warning': 'Something went wrong. Could not switch contact list in ewallet session {}. '\
-                       'Instruction set details : {}'.format(ewallet_session, instruction_set),
         }
         log.warning(instruction_set_response['warning'])
         return instruction_set_response
