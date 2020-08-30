@@ -666,6 +666,66 @@ class EWalletWorker():
 
     # ACTIONS
 
+    def action_recover_user_account(self, **kwargs):
+        log.debug('')
+        # Fetch ewallet session by token keys
+        ewallet_session = self.fetch_ewallet_session_by_client_session_tokens(
+            kwargs['client_id'], kwargs['session_token']
+        )
+        if not ewallet_session or isinstance(ewallet_session, dict) and \
+                ewallet_session.get('failed'):
+            return ewallet_session
+        sanitized_instruction_set = res_utils.remove_tags_from_command_chain(
+            kwargs, 'controller', 'ctype', 'action', 'recover', 'active_session'
+        )
+        # Execute action in session
+        orm_session = ewallet_session.fetch_active_session()
+        recover_account = ewallet_session.ewallet_controller(
+            controller='user', ctype='action', action='recover',
+            recover='account', active_session=orm_session,
+            **sanitized_instruction_set
+        )
+        # Formulate response
+        response = self.warning_could_not_recover_user_account(
+            ewallet_session, kwargs, recover_account
+        ) if not recover_account or \
+            isinstance(recover_account, dict) and \
+            recover_account.get('failed') else recover_account
+        # Respond to session manager
+        self.send_instruction_response(response)
+        return response
+
+    def action_switch_user_account(self, **kwargs):
+        log.debug('')
+        # Fetch ewallet session by token keys
+        ewallet_session = self.fetch_ewallet_session_by_client_session_tokens(
+            kwargs['client_id'], kwargs['session_token']
+        )
+        if not ewallet_session or isinstance(ewallet_session, dict) and \
+                ewallet_session.get('failed'):
+            return ewallet_session
+        sanitized_instruction_set = res_utils.remove_tags_from_command_chain(
+            kwargs, 'controller', 'ctype', 'action', 'switch', 'active_session'
+        )
+        # Execute action in session
+        orm_session = ewallet_session.fetch_active_session()
+        switch_account = ewallet_session.ewallet_controller(
+            controller='user', ctype='action', action='switch',
+            switch='account', active_session=orm_session,
+            **sanitized_instruction_set
+        )
+        # Formulate response
+        response = self.warning_could_not_switch_user_account(
+            ewallet_session, kwargs, switch_account
+        ) if not switch_account or \
+            isinstance(switch_account, dict) and \
+            switch_account.get('failed') else switch_account
+        # Respond to session manager
+        self.send_instruction_response(response)
+        return response
+
+
+
     def action_unlink_credit_ewallet(self, **kwargs):
         log.debug('')
         # Fetch ewallet session by token keys
@@ -2358,6 +2418,14 @@ class EWalletWorker():
 
     # ACTION HANDLERS
 
+    def handle_client_action_recover_account(self, **kwargs):
+        log.debug('')
+        return self.action_recover_user_account(**kwargs)
+
+    def handle_client_action_switch_account(self, **kwargs):
+        log.debug('')
+        return self.action_switch_user_account(**kwargs)
+
     def handle_client_action_unlink_credit_ewallet(self, **kwargs):
         log.debug('')
         return self.action_unlink_credit_ewallet(**kwargs)
@@ -2658,6 +2726,15 @@ class EWalletWorker():
 
     # JUMPTABLE HANDLERS
 
+    def handle_client_action_recover(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('recover'):
+            return self.error_no_client_action_recover_target_specified(kwargs)
+        handlers = {
+            'account': self.handle_client_action_recover_account,
+        }
+        return handlers[kwargs['recover']](**kwargs)
+
     def handle_client_action_unlink_credit(self, **kwargs):
         log.debug('')
         if not kwargs.get('credit'):
@@ -2788,6 +2865,7 @@ class EWalletWorker():
             'conversion': self.handle_client_action_switch_conversion,
             'time': self.handle_client_action_switch_time,
             'contact': self.handle_client_action_switch_contact,
+            'account': self.handle_client_action_switch_account,
         }
         return handlers[kwargs['switch']](**kwargs)
 
@@ -3118,6 +3196,7 @@ class EWalletWorker():
             'new': self.handle_client_action_new,
             'switch': self.handle_client_action_switch,
             'unlink': self.handle_client_action_unlink,
+            'recover': self.handle_client_action_recover,
         }
         return handlers[kwargs['action']](**kwargs)
 
@@ -3164,6 +3243,26 @@ class EWalletWorker():
         return handlers[kwargs['controller']](**kwargs)
 
     # WARNINGS
+
+    def warning_could_not_switch_user_account(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Something went wrong. '
+                       'Could not switch user account. '
+                       'Details: {}'.format(args),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
+
+    def warning_could_not_recover_user_account(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Something went wrong. '
+                       'Could not recover user account. '
+                       'Details: {}'.format(args),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
 
     def warning_could_not_unlink_credit_ewallet(self, *args):
         command_chain_response = {
@@ -3810,6 +3909,15 @@ class EWalletWorker():
         return False
 
     # ERRORS
+
+    def error_no_client_action_recover_target_specified(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No client action recover target specified. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
 
     def error_no_client_action_unlink_time_target_specified(self, *args):
         command_chain_response = {

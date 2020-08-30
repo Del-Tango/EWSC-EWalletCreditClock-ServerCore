@@ -90,6 +90,7 @@
     - x - User action Create Invoice Sheet
     - x - User action Create Conversion Sheet
     - x - User action Create Time Sheet
+    - x - User action Switch Account
     - x - User action Switch Credit EWallet
     - x - User action Switch Credit Clock
     - x - User action Switch Transfer Sheet
@@ -106,9 +107,9 @@
     - x - User action Unlink Transfer Record
     - x - User action Unlink Time Sheet
     - x - User action Unlink Time Record
-    -   - User action Unlink Credit EWallet
-    -   - User action Unlink Credit Clock
-    - User action RecoverAccount
+    - x - User action Unlink Credit EWallet
+    - x - User action Unlink Credit Clock
+    - x - User action Recover Account
 
 
 ################################################################################
