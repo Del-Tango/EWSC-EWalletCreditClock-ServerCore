@@ -28,8 +28,8 @@ class EWalletSessionUser(Base):
     session_id = Column(Integer, ForeignKey('ewallet.id'))
     user_id = Column(Integer, ForeignKey('res_user.user_id'))
     datetime = Column(DateTime, default=datetime.datetime.now())
-    user = relationship('ResUser', backref=backref('ewallet_session_user')) #, cascade='all, delete-orphan'
-    session = relationship('EWallet', backref=backref('ewallet_session_user')) #, cascade='all, delete-orphan'
+    user = relationship('ResUser', backref=backref('ewallet_session_user'))
+    session = relationship('EWallet', backref=backref('ewallet_session_user'))
 
 
 class EWallet(Base):
@@ -79,6 +79,12 @@ class EWallet(Base):
 
     # FETCHERS
 
+    # TODO - Fetch value from config file
+    def fetch_default_ewallet_session_validity_interval_in_hours(self):
+        log.debug('TODO')
+        return 24
+
+
     def fetch_active_session_reference(self):
         log.debug('')
         return self.name
@@ -86,11 +92,6 @@ class EWallet(Base):
     def fetch_active_session_expiration_date(self):
         log.debug('')
         return self.expiration_date
-
-    # TODO - Fetch value from config file
-    def fetch_default_ewallet_session_validity_interval_in_hours(self):
-        log.debug('TODO')
-        return 24
 
     def fetch_active_session_values(self):
         log.debug('')
@@ -316,27 +317,95 @@ class EWallet(Base):
 
     # SETTERS
 
+    def set_session_name(self, name):
+        log.debug('')
+        try:
+            self.name = name
+            self.update_write_date()
+        except Exception as e:
+            return self.error_could_not_set_session_name(
+                name, self.name, e
+            )
+        return self.name
+
+    def set_session_expiration_date(self, expiration_date):
+        log.debug('')
+        try:
+            self.expiration_date = expiration_date
+            self.update_write_date()
+        except Exception as e:
+            return self.error_could_not_set_session_expiration_date(
+                expiration_date, self.expiration_date, e
+            )
+        return self.expiration_date
+
+    def set_to_user_account_archive(self, account):
+        log.debug('')
+        try:
+            self.user_account_archive.append(account)
+            self.update_write_date()
+        except Exception as e:
+            return self.error_could_not_set_user_account_to_archive(
+                account, self.user_account_archive, e
+            )
+        return self.user_account_archive
+
+    def set_write_date(self, write_date):
+        log.debug('')
+        try:
+            self.write_date = write_date
+        except Exception as e:
+            return self.error_could_not_set_write_date(
+                write_date, self.write_date, e
+            )
+        return self.write_date
+
     def set_orm_session(self, orm_session):
-        self.session = orm_session
+        log.debug('')
+        try:
+            self.session = orm_session
+            self.update_write_date()
+        except Exception as e:
+            return self.error_could_not_set_orm_session(
+                orm_session, self.session, e
+            )
         return self.session
 
     def set_session_active_user(self, active_user):
         log.debug('')
-        self.active_user = active_user if isinstance(active_user, list) \
-                else [active_user]
+        try:
+            self.active_user = active_user if isinstance(active_user, list) \
+                    else [active_user]
+            self.update_write_date()
+        except Exception as e:
+            return self.error_could_not_set_active_session_user(
+                active_user, self.active_user, e
+            )
         return self.active_user
 
 #   @pysnooper.snoop('logs/ewallet.log')
     def set_session_credit_wallet(self, credit_wallet):
         log.debug('')
-        self.credit_wallet = credit_wallet if isinstance(credit_wallet, list) \
-                else [credit_wallet]
+        try:
+            self.credit_wallet = credit_wallet if \
+                isinstance(credit_wallet, list) else [credit_wallet]
+            self.update_write_date()
+        except Exception as e:
+            return self.error_could_not_set_session_credit_ewallet(
+                credit_wallet, self.credit_wallet, e
+            )
         return self.credit_wallet
 
     def set_session_contact_list(self, contact_list):
         log.debug('')
-        self.contact_list = contact_list if isinstance(contact_list, list) \
-                else [contact_list]
+        try:
+            self.contact_list = contact_list if \
+                isinstance(contact_list, list) else [contact_list]
+            self.update_write_date()
+        except Exception as e:
+            return self.error_could_not_set_session_contact_list(
+                contact_list, self.contact_list, e
+            )
         return self.contact_list
 
     def set_session_data(self, data_dct):
@@ -356,28 +425,39 @@ class EWallet(Base):
                 handlers[item](data_dct[item])
         return data_dct
 
+    def set_session_user_account_archive(self, archive):
+        log.debug('')
+        try:
+            self.user_account_archive = archive
+            self.update_write_date()
+        except Exception as e:
+            return self.error_could_not_set_user_account_archive(
+                archive, self.user_account_archive, e
+            )
+        return archive
+
     # CHECKERS
 
     # CLEANERS
 
     def clear_session_active_user(self):
         log.debug('')
-        self.active_user = []
+        self.set_session_active_user([])
         return True
 
     def clear_session_credit_wallet(self):
         log.debug('')
-        self.credit_wallet = []
+        self.set_session_credit_wallet([])
         return True
 
     def clear_session_contact_list(self):
         log.debug('')
-        self.contact_list = []
+        self.set_session_contact_list([])
         return True
 
     def clear_session_user_account_archive(self):
         log.debug('')
-        self.user_account_archive = []
+        self.set_session_user_account_archive([])
         return True
 
     def clear_active_session_user_data(self, data_dct):
@@ -398,6 +478,28 @@ class EWallet(Base):
         return data_dct
 
     # UPDATERS
+
+#   @pysnooper.snoop()
+    def update_user_account_archive(self, **kwargs):
+        '''
+        [ NOTE   ]: Update EWallet session user login stack with new user.
+        [ INPUT  ]: user=<user>
+        [ RETURN ]: (User login stack | False)
+        '''
+        log.debug('')
+        if not kwargs.get('user'):
+            return self.error_no_user_object_found(kwargs)
+        set_to_archive = self.set_to_user_account_archive(kwargs['user'])
+        log.info(
+            'Successfully updated session user account archive with user {}.'
+            .format(kwargs['user'].fetch_user_name())
+        )
+        return set_to_archive
+
+    def update_write_date(self):
+        log.debug('')
+        self.set_write_date(datetime.datetime.now())
+        return True
 
     def update_session_from_user(self, **kwargs):
         '''
@@ -421,27 +523,12 @@ class EWallet(Base):
         log.info('Successfully updated ewallet session from current active user.')
         return session_data
 
-#   @pysnooper.snoop()
-    def update_user_account_archive(self, **kwargs):
-        '''
-        [ NOTE   ]: Update EWallet session user login stack with new user.
-        [ INPUT  ]: user=<user>
-        [ RETURN ]: (User login stack | False)
-        '''
-        log.debug('')
-        if not kwargs.get('user'):
-            return self.error_no_user_object_found(kwargs)
-        self.user_account_archive.append(kwargs['user'])
-        log.info(
-            'Successfully updated session user account archive with user {}.' \
-            .format(kwargs['user'].fetch_user_name())
-        )
-        return self.user_account_archive
-
     # GENERAL
 
+    # TODO - Use setters on account and update write date
 #   @pysnooper.snoop()
     def recover_user_account(self, **kwargs):
+        log.debug('TODO - Use setters on account to update write date.')
         if not kwargs.get('user'):
             return self.error_no_user_account_found(kwargs)
         kwargs['user'].to_unlink = True
@@ -454,6 +541,7 @@ class EWallet(Base):
 
     # UNLINKERS
 
+    # TODO - Use setters on account and update write date
 #   @pysnooper.snoop('logs/ewallet.log')
     def unlink_user_account(self, **kwargs):
         '''
@@ -461,7 +549,7 @@ class EWallet(Base):
         [ INPUT  ]: active_session=<session>, user_id=<user_id>
         [ RETURN ]:
         '''
-        log.debug('')
+        log.debug('TODO - Use setters on account and update write date')
         if not kwargs.get('user_id'):
             return self.error_no_user_account_id_found(kwargs)
         try:
@@ -492,9 +580,28 @@ class EWallet(Base):
     [ NOTE ]: Command chain responses are formatted here.
     '''
 
+    # TODO
+    def action_edit_account_user_pass(self, **kwargs):
+        log.debug('TODO - FIX ME')
+        active_user = self.fetch_active_session_user()
+        if not active_user or isinstance(active_user, dict) and \
+                active_user.get('failed'):
+            return self.warning_could_not_fetch_ewallet_session_active_user(kwargs)
+        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
+            kwargs, 'ctype', 'action', 'edit'
+        )
+        edit_user_pass = active_user.user_controller(
+            ctype='action', action='edit', edit='user_pass',
+            **sanitized_command_chain
+        )
+        return self.warning_could_not_edit_account_user_pass(kwargs) if \
+            edit_user_pass.get('failed') else edit_user_pass
+
+
+    # TODO
 #   @pysnooper.snoop()
     def action_recover_user_account(self, **kwargs):
-        log.debug('')
+        log.debug('TODO - Use setters on account and update write date.')
         user_account = kwargs.get('user') or \
             self.fetch_active_session_user()
         if not user_account or isinstance(user_account, dict) and \
@@ -919,22 +1026,6 @@ class EWallet(Base):
         )
         return self.warning_could_not_edit_account_user_name(kwargs) if \
             edit_user_name.get('failed') else edit_user_name
-
-    def action_edit_account_user_pass(self, **kwargs):
-        log.debug('TODO')
-        active_user = self.fetch_active_session_user()
-        if not active_user or isinstance(active_user, dict) and \
-                active_user.get('failed'):
-            return self.warning_could_not_fetch_ewallet_session_active_user(kwargs)
-        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
-            kwargs, 'ctype', 'action', 'edit'
-        )
-        edit_user_pass = active_user.user_controller(
-            ctype='action', action='edit', edit='user_pass',
-            **sanitized_command_chain
-        )
-        return self.warning_could_not_edit_account_user_pass(kwargs) if \
-            edit_user_pass.get('failed') else edit_user_pass
 
     def action_edit_account_user_alias(self, **kwargs):
         log.debug('')
@@ -3150,11 +3241,13 @@ class EWallet(Base):
         _controllers = {
             'system': self.ewallet_system_controller,
             'user': self.ewallet_user_controller,
-            'test': self.test_ewallet,
         }
         return _controllers[kwargs['controller']](**kwargs)
 
     # WARNINGS
+    '''
+    [ TODO ]: Fetch warning messages from message file by key codes.
+    '''
 
     def warning_invalid_user_action_recover_target(self, *args):
         command_chain_response = {
@@ -3740,6 +3833,9 @@ class EWallet(Base):
         return False
 
     # ERROR HANDLERS
+    '''
+    [ TODO ]: All error handlers are deprecated, remove and refactor.
+    '''
 
     def error_handler_action_create_new_transfer(self, **kwargs):
         _reasons_and_handlers = {
@@ -4034,13 +4130,106 @@ class EWallet(Base):
         return False
 
     # ERRORS
+    '''
+    [ TODO ]: Fetch error messages from message file by key codes.
+    '''
 
-    def error_could_not_recover_user_account(self, command_chain, *args):
+    def error_could_not_set_session_expiration_date(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Something went wrong. '
+                     'Could not set EWallet session expiration date. '
+                     'Details: {}'.format(args)
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_could_not_set_session_name(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Something went wrong. '
+                     'Could not set EWallet session reference. '
+                     'Details: {}'.format(args)
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_could_not_set_user_account_to_archive(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Something went wrong. '
+                     'Could not set user account to session account archive. '
+                     'Details: {}'.format(args)
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_could_not_set_user_account_archive(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Something went wrong. '
+                     'Could not set active session user account archive. '
+                     'Details: {}'.format(args)
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_could_not_set_session_credit_ewallet(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Something went wrong. '
+                     'Could not set active session credit ewallet. '
+                     'Details: {}'.format(args)
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_could_not_set_session_contact_list(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Something went wrong. '
+                     'Could not set active session contact list. '
+                     'Details: {}'.format(args)
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_could_not_set_active_session_user(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Something went wrong. '
+                     'Could not set active session user. '
+                     'Details: {}'.format(args)
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_could_not_set_write_date(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Something went wrong. '
+                     'Could not set EWallet session write date. '
+                     'Details: {}'.format(args)
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_could_not_set_orm_session(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Something went wrong. '
+                     'Could not set ORM session. '
+                     'Details: {}'.format(args)
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_could_not_recover_user_account(self, *args):
         command_chain_response = {
             'failed': True,
             'error': 'Something went wrong. '
                      'Could not recover user account. '
-                     'Details: {}, {}'.format(command_chain, args)
+                     'Details: {}'.format(args)
         }
         log.error(command_chain_response['error'])
         return command_chain_response
@@ -4715,328 +4904,17 @@ class EWallet(Base):
         log.error('Could not convert minutes to credits.')
         return False
 
-    # TESTS
 
-    def test_create_account(self):
-        print('[ * ] Create account')
-        _create = self.ewallet_controller(
-                controller='user', ctype='action', action='create', create='account',
-                user_name='test user', user_pass='123abc@xxx', user_email='example@example.com'
-                )
-        print(str(_create) + '\n')
-        return _create
-
-    def test_login_account(self):
-        print('[ * ] Login')
-        _login = self.ewallet_controller(
-                controller='user', ctype='action', action='login', user_name='test user',
-                user_pass='123abc@xxx'
-                )
-        print(str(_login) + '\n')
-        return _login
-
-    def test_view_account(self):
-        print('[ * ] View account')
-        _view_account = self.ewallet_controller(
-                controller='user', ctype='action', action='view', view='account'
-                )
-        print(str(_view_account) + '\n')
-        return _view_account
-
-    def test_create_second_account(self):
-        print('[ * ] Create second account')
-        _create_second = self.ewallet_controller(
-                controller='user', ctype='action', action='create', create='account',
-                user_name='user2', user_pass='123abc@xxx', user_email='example2@example.com'
-                )
-        print(str(_create_second) + '\n')
-        return _create_second
-
-    def test_second_login(self):
-        print('[ * ] Second Login')
-        _second_login = self.ewallet_controller(
-                controller='user', ctype='action', action='login', user_name='user2',
-                user_pass='123abc@xxx'
-                )
-        print(str(_second_login) + '\n')
-        return _second_login
-
-    def test_supply_credits(self):
-        print('[ * ] Supply credits')
-        _supply_credits = self.ewallet_controller(
-                controller='user', ctype='action', action='create', create='transfer',
-                ttype='supply', partner_account=self.fetch_system_core_user_account(),
-                active_session=self.session, credits=10, currency='RON', cost=4.36,
-                notes='Test Notes - Action Supply'
-                )
-        print(str(_supply_credits) + '\n')
-        return _supply_credits
-
-    def test_view_credit_wallet(self):
-        print('[ * ] View Credit Wallet')
-        _view_credit_wallet = self.ewallet_controller(
-                controller='user', ctype='action', action='view', view='credit_wallet',
-                )
-        print(str(_view_credit_wallet) + '\n')
-        return _view_credit_wallet
-
-    def test_view_transfer_sheet(self):
-        print('[ * ] View Transfer Sheet')
-        _view_transfer_sheet = self.ewallet_controller(
-                controller='user', ctype='action', action='view', view='transfer',
-                transfer='list'
-                )
-        print(str(_view_transfer_sheet) + '\n')
-        return _view_transfer_sheet
-
-    def test_view_transfer_sheet_record(self):
-        print('[ * ] View Transfer Sheet Record')
-        _view_transfer_sheet_record = self.ewallet_controller(
-                controller='user', ctype='action', action='view', view='transfer',
-                transfer='record', record_id=1
-                )
-        print(str(_view_transfer_sheet_record) + '\n')
-        return _view_transfer_sheet_record
-
-    def test_view_invoice_sheet(self):
-        print('[ * ] View Invoice Sheet')
-        _view_invoice_sheet = self.ewallet_controller(
-                controller='user', ctype='action', action='view', view='invoice',
-                invoice='list'
-                )
-        print(str(_view_invoice_sheet) + '\n')
-        return _view_invoice_sheet
-
-    def test_view_invoice_sheet_record(self):
-        print('[ * ] View Invoice Sheet Record')
-        _view_invoice_sheet_record = self.ewallet_controller(
-                controller='user', ctype='action', action='view', view='invoice',
-                invoice='record', record_id=1
-                )
-        print(str(_view_invoice_sheet_record) + '\n')
-        return _view_invoice_sheet_record
-
-    def test_view_time_sheet(self):
-        print('[ * ] View Time Sheet')
-        _view_time_sheet = self.ewallet_controller(
-                controller='user', ctype='action', action='view', view='time',
-                time='list'
-                )
-        print(str(_view_time_sheet) + '\n')
-        return _view_time_sheet
-
-    def test_view_time_sheet_record(self):
-        print('[ * ] View Time Sheet Record')
-        _view_time_sheet_record = self.ewallet_controller(
-                controller='user', ctype='action', action='view', view='time',
-                time='record', record_id=1
-                )
-        print(str(_view_time_sheet_record) + '\n')
-
-    def test_view_conversion_sheet(self):
-        print('[ * ] View Conversion Sheet')
-        _view_conversion_sheet = self.ewallet_controller(
-                controller='user', ctype='action', action='view', view='conversion',
-                conversion='list'
-                )
-        print(str(_view_conversion_sheet) + '\n')
-        return _view_conversion_sheet
-
-    def test_view_conversion_sheet_record(self):
-        print('[ * ] View Conversion Sheet Record')
-        _view_conversion_sheet_record = self.ewallet_controller(
-                controller='user', ctype='action', action='view', view='conversion',
-                conversion='record', record_id=1
-                )
-        print(str(_view_conversion_sheet_record) + '\n')
-        return _view_conversion_sheet_record
-
-    def test_view_contact_list(self):
-        print('[ * ] View Contact List')
-        _view_contact_list = self.ewallet_controller(
-                controller='user', ctype='action', action='view', view='contact',
-                contact='list'
-                )
-        print(str(_view_contact_list) + '\n')
-        return _view_contact_list
-
-    def test_view_contact_list_record(self):
-        print('[ * ] View Contact List Record')
-        _view_contact_sheet_record = self.ewallet_controller(
-                controller='user', ctype='action', action='view', view='contact',
-                contact='record', record_id=1
-                )
-        print(str(_view_contact_sheet_record) + '\n')
-        return _view_contact_sheet_record
-
-    def test_extract_credits(self):
-        print('[ * ] Extract credits')
-        _extract_credits = self.ewallet_controller(
-                controller='user', ctype='action', action='create',
-                create='transfer', transfer_type='outgoing',
-                partner_ewallet=self.fetch_active_session_credit_wallet(),
-                credits=10, reference='First Credit Extract',
-                transfer_to=self.fetch_active_session_user().fetch_user_id(),
-                active_session=self.session
-                )
-        print(str(_extract_credits) + '\n')
-        return _extract_credits
-
-    def test_logout(self):
-        print('[ * ] Logout')
-        _logout = self.ewallet_controller(
-                controller='user', ctype='action', action='logout',
-                )
-        print(str(_logout) + '\n')
-        return _logout
-
-    def test_convert_credits_to_clock(self):
-        print('[ * ] Convert Credits To Clock')
-        _convert = self.ewallet_controller(
-                controller='user', ctype='action', action='create',
-                create='conversion', conversion='credits2clock', credits=3,
-                )
-        print(str(_convert) + '\n')
-        return _convert
-
-
-    def test_convert_clock_to_credits(self):
-        print('[ * ]: Convert Clock To Credits')
-        _convert = self.ewallet_controller(
-                controller='user', ctype='action', action='create',
-                create='conversion', conversion='clock2credits', minutes=1,
-                )
-        print(str(_convert) + '\n')
-        return _convert
-
-    def test_start_credit_clock(self):
-        print('[ * ]: Start Credit Clock')
-        _start = self.ewallet_controller(
-                controller='user', ctype='action', action='time', timer='start'
-                )
-        print(str(_start) + '\n')
-        return _start
-
-    def test_pause_credit_clock(self):
-        print('[ * ]: Pause Credit Clock')
-        _pause = self.ewallet_controller(
-                controller='user', ctype='action', action='time', timer='pause'
-                )
-        print(str(_pause) + '\n')
-        return _pause
-
-    def test_resume_credit_clock(self):
-        print('[ * ]: Resume Credit Clock')
-        _resume = self.ewallet_controller(
-                controller='user', ctype='action', action='time', timer='resume'
-                )
-        print(str(_resume) + '\n')
-        return _resume
-
-    def test_stop_credit_clock(self):
-        print('[ * ]: Stop Credit Clock')
-        _stop = self.ewallet_controller(
-                controller='user', ctype='action', action='time', timer='stop'
-                )
-        print(str(_stop) + '\n')
-        return _stop
-
-    def test_unlink_user_account(self):
-        print('[ * ]: Unlink User Account')
-        _unlink = self.ewallet_controller(
-                controller='user', ctype='action', action='unlink',
-                unlink='account',
-                )
-        print(str(_unlink) + '\n')
-        return _unlink
-
-    def test_ewallet_user_controller(self):
-        print('[ TEST ] User.')
-        _create = self.test_create_account()
-        _login = self.test_login_account()
-        self.test_orm()
-        _view_account = self.test_view_account()
-        _create_second = self.test_create_second_account()
-        _second_login = self.test_second_login()
-        self.test_orm()
-        _supply_credits = self.test_supply_credits()
-        _view_credit_wallet = self.test_view_credit_wallet()
-        _view_transfer_sheet = self.test_view_transfer_sheet()
-        _view_transfer_sheet_record = self.test_view_transfer_sheet_record()
-        _view_invoice_sheet = self.test_view_invoice_sheet()
-        _view_invoice_sheet_record = self.test_view_invoice_sheet_record()
-        _view_time_sheet = self.test_view_time_sheet()
-        _view_time_sheet_record = self.test_view_time_sheet_record()
-        _convert_credits = self.test_convert_credits_to_clock()
-        _start_clock = self.test_start_credit_clock()
-        self.sleep_printer()
-        _pause_clock = self.test_pause_credit_clock()
-        self.sleep_printer()
-        _resume_clock = self.test_resume_credit_clock()
-        self.sleep_printer()
-        _pause_clock = self.test_pause_credit_clock()
-        self.sleep_printer()
-        _resume_clock = self.test_resume_credit_clock()
-        _stop_clock = self.test_stop_credit_clock()
-        _convert_clock = self.test_convert_clock_to_credits()
-        _view_conversion_sheet = self.test_view_conversion_sheet()
-        _view_conversion_sheet_record = self.test_view_conversion_sheet_record()
-        _view_contact_list = self.test_view_contact_list()
-        _view_contact_list_record = self.test_view_contact_list_record()
-        _extract_credits = self.test_extract_credits()
-        _second_view_account = self.test_view_account()
-        print('[ TEST ] System.')
-        _update_session = self.test_update_session()
-        _logout = self.test_logout()
-#       _unlink_account = self.test_unlink_user_account()
-        _second_logout = self.test_logout()
-
-    def sleep_printer(self):
-        for item in range(3):
-            print('Sleeping ...')
-            time.sleep(1)
-        print('\n')
-
-    def test_update_session(self):
-        print('[ * ] Update session')
-        _update_session = self.ewallet_controller(
-                controller='system', ctype='action', action='update', target='session'
-                )
-        print(str(_update_session) + '\n')
-        return _update_session
-
-    def test_ewallet_system_controller(self):
-        print('[ TEST ] System.')
-        print('[ * ] Update session')
-        _update_session = self.ewallet_controller(
-                controller='system', ctype='action', action='update', target='session'
-                )
-        print(str(_update_session) + '\n')
-
-    def test_orm(self):
-        print('Active user : {}'.format(self.active_user))
-        print('Session Contact List : {}'.format(self.contact_list))
-        print('Session Credit Wallet : {}'.format(self.credit_wallet))
-        print('User account archive : {}'.format(self.user_account_archive))
-        print('\n')
-
-    def test_ewallet(self, **kwargs):
-        self.test_ewallet_user_controller()
-        self.test_ewallet_system_controller()
-        self.test_orm()
-
-if __name__ == '__main__':
+#if __name__ == '__main__':
 
     # TODO - Uncommend, needed for init
-    Base.metadata.create_all(res_utils.engine)
+#   Base.metadata.create_all(res_utils.engine)
 
-    _working_session = res_utils.session_factory()
-    ewallet = EWallet(session=_working_session, reference='SystemCore Primary Session')
-    _working_session.add(ewallet)
-    _working_session.commit()
-    system_user = res_utils.create_system_user(ewallet)
-
-    ewallet.ewallet_controller(controller='test')
+#   _working_session = res_utils.session_factory()
+#   ewallet = EWallet(session=_working_session, reference='SystemCore Primary Session')
+#   _working_session.add(ewallet)
+#   _working_session.commit()
+#   system_user = res_utils.create_system_user(ewallet)
 
 ################################################################################
 # CODE DUMP
