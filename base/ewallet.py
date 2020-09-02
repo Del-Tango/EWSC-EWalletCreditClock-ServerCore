@@ -79,11 +79,10 @@ class EWallet(Base):
 
     # FETCHERS
 
-    # TODO - Fetch value from config file
+    # TODO
     def fetch_default_ewallet_session_validity_interval_in_hours(self):
-        log.debug('TODO')
+        log.debug('TODO - Fetch value from config file')
         return 24
-
 
     def fetch_active_session_reference(self):
         log.debug('')
@@ -326,6 +325,7 @@ class EWallet(Base):
             return self.error_could_not_set_session_name(
                 name, self.name, e
             )
+        log.info('Successfully set ewallet session reference.')
         return self.name
 
     def set_session_expiration_date(self, expiration_date):
@@ -337,6 +337,7 @@ class EWallet(Base):
             return self.error_could_not_set_session_expiration_date(
                 expiration_date, self.expiration_date, e
             )
+        log.info('Successfully set ewallet session expiration date.')
         return self.expiration_date
 
     def set_to_user_account_archive(self, account):
@@ -348,6 +349,7 @@ class EWallet(Base):
             return self.error_could_not_set_user_account_to_archive(
                 account, self.user_account_archive, e
             )
+        log.info('Successfully updated ewallet session user account archive.')
         return self.user_account_archive
 
     def set_write_date(self, write_date):
@@ -358,6 +360,7 @@ class EWallet(Base):
             return self.error_could_not_set_write_date(
                 write_date, self.write_date, e
             )
+        log.info('Successfully set ewallet session write date.')
         return self.write_date
 
     def set_orm_session(self, orm_session):
@@ -369,6 +372,7 @@ class EWallet(Base):
             return self.error_could_not_set_orm_session(
                 orm_session, self.session, e
             )
+        log.info('Successfully set ewallet session ORM session.')
         return self.session
 
     def set_session_active_user(self, active_user):
@@ -381,6 +385,7 @@ class EWallet(Base):
             return self.error_could_not_set_active_session_user(
                 active_user, self.active_user, e
             )
+        log.info('Successfully set ewallet session active user.')
         return self.active_user
 
 #   @pysnooper.snoop('logs/ewallet.log')
@@ -394,6 +399,7 @@ class EWallet(Base):
             return self.error_could_not_set_session_credit_ewallet(
                 credit_wallet, self.credit_wallet, e
             )
+        log.info('Successfully set ewallet session credit ewallet.')
         return self.credit_wallet
 
     def set_session_contact_list(self, contact_list):
@@ -406,6 +412,7 @@ class EWallet(Base):
             return self.error_could_not_set_session_contact_list(
                 contact_list, self.contact_list, e
             )
+        log.info('Successfully set ewallet session contact list.')
         return self.contact_list
 
     def set_session_data(self, data_dct):
@@ -434,6 +441,7 @@ class EWallet(Base):
             return self.error_could_not_set_user_account_archive(
                 archive, self.user_account_archive, e
             )
+        log.info('Successfully set ewallet session user account archive.')
         return archive
 
     # CHECKERS

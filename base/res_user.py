@@ -377,6 +377,42 @@ class ResUser(Base):
 #       log.info('Successfully set user email.')
 #       return True
 
+    def set_user_write_uid(self, uid):
+        log.debug('')
+        try:
+            self.user_write_uid = uid
+            self.update_write_date()
+        except Exception as e:
+            return self.error_could_not_set_user_write_uid(
+                uid, self.user_write_uid, e
+            )
+        log.info('Successfully set user write UID.')
+        return True
+
+    def set_user_create_uid(self, uid):
+        log.debug('')
+        try:
+            self.user_create_uid = uid
+            self.update_write_date()
+        except Exception as e:
+            return self.error_could_not_set_user_create_uid(
+                uid, self.user_create_uid, e
+            )
+        log.info('Successfully set user create UID.')
+        return True
+
+    def set_user_pass_hash(self, pass_hash):
+        log.debug('')
+        try:
+            self.user_pass_hash = pass_hash
+            self.update_write_date()
+        except Exception as e:
+            return self.error_could_not_set_user_pass_hash(
+                pass_hash, self.user_pass_hash, e
+            )
+        log.info('Successfully set user password hash.')
+        return True
+
     def set_to_unlink(self, flag):
         log.debug('')
         try:
@@ -397,6 +433,7 @@ class ResUser(Base):
             return self.error_could_not_set_to_unlink_timestamp(
                 timestamp, self.to_unlink_timestamp, e
             )
+        log.info('Successfully set user to unlink timestamp.')
         return True
 
     def set_user_contact_list(self, contact_list):
@@ -720,6 +757,16 @@ class ResUser(Base):
 
     # ACTIONS
 
+    # TODO
+    def action_edit_user_email(self, **kwargs):
+        log.debug('TODO - Add email validations here')
+        set_user_email = self.set_user_email(email=kwargs['user_email'])
+        return self.error_could_not_edit_user_email(kwargs) \
+            if not set_user_email else {
+                'failed': False,
+                'user_email': set_user_email,
+            }
+
     def action_create_credit_clock(self, **kwargs):
         log.debug('')
         credit_wallet = self.fetch_user_credit_wallet()
@@ -971,15 +1018,6 @@ class ResUser(Base):
                 'user_alias': set_user_alias,
             }
 
-    def action_edit_user_email(self, **kwargs):
-        log.debug('TODO - Add email validations here')
-        set_user_email = self.set_user_email(email=kwargs['user_email'])
-        return self.error_could_not_edit_user_email(kwargs) \
-            if not set_user_email else {
-                'failed': False,
-                'user_email': set_user_email,
-            }
-
     def action_edit_user_phone(self, **kwargs):
         log.debug('')
         set_user_phone = self.set_user_phone(phone=kwargs['user_phone'])
@@ -1021,6 +1059,12 @@ class ResUser(Base):
         return clock_switch
 
     # HANDLERS
+
+    # TODO
+    def handle_user_event_notification(self, **kwargs):
+        pass
+    def handle_user_event_signal(self, **kwargs):
+        pass
 
     def handle_user_action_edit_name(self, **kwargs):
         log.debug('')
@@ -1162,12 +1206,6 @@ class ResUser(Base):
         }
         return handlers[kwargs['request']](**kwargs)
 
-    # TODO
-    def handle_user_event_notification(self, **kwargs):
-        pass
-    def handle_user_event_signal(self, **kwargs):
-        pass
-
     def user_action_controller(self, **kwargs):
         log.debug('')
         if not kwargs.get('action'):
@@ -1204,6 +1242,9 @@ class ResUser(Base):
         return controllers[kwargs['ctype']](**kwargs)
 
     # WARNINGS
+    '''
+    [ TODO ]: Fetch error messages from message file by key codes.
+    '''
 
     def warning_no_contact_list_found_by_id(self, list_id, command_chain):
         command_chain_response = {
@@ -1284,6 +1325,39 @@ class ResUser(Base):
         return False
 
     # ERRORS
+    '''
+    [ TODO ]: Fetch error messages from message file by key codes.
+    '''
+
+    def error_could_not_set_user_pass_hash(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Something went wrong. '
+                     'Could not set user password hash. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_could_not_set_user_create_uid(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Something went wrong. '
+                     'Could not set user create user id. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_could_not_set_user_write_uid(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Something went wrong. '
+                     'Could not set user write user id. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
 
     def error_could_not_set_to_unlink_flag(self, *args):
         command_chain_response = {
@@ -1537,7 +1611,7 @@ class ResUser(Base):
     def error_could_not_fetch_active_orm_session(self, command_chain):
         command_chain_response = {
             'failed': True,
-            'error': 'Something went wrong. Could not fetch active orm session. '\
+            'error': 'Something went wrong. Could not fetch active orm session. '
                      'Command chain details : {}'.format(command_chain),
         }
         log.error(command_chain_response['error'])
@@ -1546,7 +1620,7 @@ class ResUser(Base):
     def error_could_not_view_login_records(self, command_chain):
         command_chain_response = {
             'failed': True,
-            'error': 'Something went wrong. Could not view user account login records. '\
+            'error': 'Something went wrong. Could not view user account login records. '
                      'Command chain details : {}'.format(command_chain),
         }
         log.error(command_chain_response['error'])
@@ -1555,7 +1629,7 @@ class ResUser(Base):
     def error_no_user_action_view_target_specified(self, command_chain):
         command_chain_response = {
             'failed': True,
-            'error': 'No user action view target specified. Command chain details : {}'\
+            'error': 'No user action view target specified. Command chain details : {}'
                      .format(command_chain),
         }
         log.error(command_chain_response['error'])
@@ -1564,7 +1638,7 @@ class ResUser(Base):
     def error_no_credit_clock_id_found(self, command_chain):
         command_chain_response = {
             'failed': True,
-            'error': 'No ewallet credit clock id found. Command chain details : {}'\
+            'error': 'No ewallet credit clock id found. Command chain details : {}'
                      .format(command_chain),
         }
         log.error(command_chain_response['error'])
@@ -1573,7 +1647,7 @@ class ResUser(Base):
     def error_could_not_unlink_credit_ewallet(self, command_chain):
         command_chain_response = {
             'failed': True,
-            'error': 'Something went wrong. Could not unlink credit ewallet. '\
+            'error': 'Something went wrong. Could not unlink credit ewallet. '
                      'Command chain details : {}'.format(command_chain),
         }
         log.error(command_chain_response['error'])
@@ -1582,7 +1656,7 @@ class ResUser(Base):
     def error_no_ewallet_id_found(self, command_chain):
         command_chain_response = {
             'failed': True,
-            'error': 'No ewallet id found. Command chain details : {}'\
+            'error': 'No ewallet id found. Command chain details : {}'
                      .format(command_chain),
         }
         log.error(command_chain_response['error'])
@@ -1595,7 +1669,7 @@ class ResUser(Base):
     def error_no_contact_list_id_found(self, command_chain):
         command_chain_response = {
             'failed': True,
-            'error': 'No contact list id found. Command chain details : {}'\
+            'error': 'No contact list id found. Command chain details : {}'
                      .format(command_chain),
         }
         log.error(command_chain_response['error'])
@@ -1604,7 +1678,7 @@ class ResUser(Base):
     def error_no_invoice_sheet_id_specified(self, command_chain):
         command_chain_response = {
             'failed': True,
-            'error': 'No invoice sheet id specified. Command chain details : {}'\
+            'error': 'No invoice sheet id specified. Command chain details : {}'
                      .format(command_chain),
         }
         log.error(command_chain_response['error'])
@@ -1613,7 +1687,7 @@ class ResUser(Base):
     def error_no_transfer_sheet_id_found(self, command_chain):
         command_chain_response = {
             'failed': True,
-            'error': 'No transfer sheet id found. Command chain details : {}'\
+            'error': 'No transfer sheet id found. Command chain details : {}'
                      .format(command_chain),
         }
         log.error(command_chain_response['error'])
@@ -1622,7 +1696,7 @@ class ResUser(Base):
     def error_could_not_fetch_user_credit_ewallet(self, command_chain):
         command_chain_response = {
             'failed': True,
-            'error': 'Could not fetch active user credit ewallet. Command chain details : {}'\
+            'error': 'Could not fetch active user credit ewallet. Command chain details : {}'
                      .format(command_chain),
         }
         log.error(command_chain_response['error'])
@@ -1631,7 +1705,7 @@ class ResUser(Base):
     def error_could_not_fetch_user_credit_wallet(self, command_chain):
         command_chain_reply = {
             'failed': True,
-            'error': 'Could not fetch user credit wallet. Command chain details : {}'\
+            'error': 'Could not fetch user credit wallet. Command chain details : {}'
                      .format(command_chain),
         }
         log.error(command_chain_reply['error'])
@@ -1640,7 +1714,7 @@ class ResUser(Base):
     def error_could_not_create_new_transaction_handler(self, creation_values):
         command_chain_reply = {
             'failed': True,
-            'error': 'Something went wrong. Could not create new transaction handler with creation values {}.'\
+            'error': 'Something went wrong. Could not create new transaction handler with creation values {}.'
                      .format(creation_values),
         }
         log.error(command_chain_reply['error'])
@@ -1649,7 +1723,7 @@ class ResUser(Base):
     def error_could_not_create_new_credit_ewallet(self, creation_values):
         command_chain_reply = {
             'failed': True,
-            'error': 'Something went wrong. Could not create new credit ewallet with creation values {}.'\
+            'error': 'Something went wrong. Could not create new credit ewallet with creation values {}.'
                      .format(creation_values),
         }
         log.error(command_chain_reply['error'])
@@ -1658,7 +1732,7 @@ class ResUser(Base):
     def error_could_not_edit_user_name(self, command_chain):
         command_chain_response = {
             'failed': True,
-            'error': 'Something went wrong. Could not edit user name. Command chain details : {}'\
+            'error': 'Something went wrong. Could not edit user name. Command chain details : {}'
                      .format(command_chain)
         }
         log.error(command_chain_response['error'])
@@ -1667,7 +1741,7 @@ class ResUser(Base):
     def error_could_not_edit_user_pass(self, command_chain):
         command_chain_response = {
             'failed': True,
-            'error': 'Something went wrong. Could not edit user password. Command chain details : {}'\
+            'error': 'Something went wrong. Could not edit user password. Command chain details : {}'
                      .format(command_chain)
         }
         log.error(command_chain_response['error'])
@@ -1676,7 +1750,7 @@ class ResUser(Base):
     def error_could_not_edit_user_alias(self, command_chain):
         command_chain_response = {
             'failed': True,
-            'error': 'Something went wrong. Could not edit user alias. Command chain details : {}'\
+            'error': 'Something went wrong. Could not edit user alias. Command chain details : {}'
                      .format(command_chain)
         }
         log.error(command_chain_response['error'])
@@ -1685,7 +1759,7 @@ class ResUser(Base):
     def error_could_not_edit_user_email(self, command_chain):
         command_chain_response = {
             'failed': True,
-            'error': 'Something went wrong. Could not edit user email. Command chain details : {}'\
+            'error': 'Something went wrong. Could not edit user email. Command chain details : {}'
                      .format(command_chain)
         }
         log.error(command_chain_response['error'])
@@ -1694,7 +1768,7 @@ class ResUser(Base):
     def error_could_not_edit_user_phone(self, command_chain):
         command_chain_response = {
             'failed': True,
-            'error': 'Something went wrong. Could not edit user phone. Command chain details : {}'\
+            'error': 'Something went wrong. Could not edit user phone. Command chain details : {}'
                      .format(command_chain)
         }
         log.error(command_chain_response['error'])
@@ -1703,7 +1777,7 @@ class ResUser(Base):
     def error_no_user_name_specified_for_user_action_edit(self, command_chain):
         command_chain_response = {
             'failed': True,
-            'error': 'No user name specified for user action edit. Command chain details : {}'\
+            'error': 'No user name specified for user action edit. Command chain details : {}'
                      .format(command_chain)
         }
         log.error(command_chain_response['error'])
@@ -1712,7 +1786,7 @@ class ResUser(Base):
     def error_no_user_pass_specified_for_user_action_edit(self, command_chain):
         command_chain_response = {
             'failed': True,
-            'error': 'No user pass specified for user action edit. Command chain details : {}'\
+            'error': 'No user pass specified for user action edit. Command chain details : {}'
                      .format(command_chain)
         }
         log.error(command_chain_response['error'])
@@ -1721,7 +1795,7 @@ class ResUser(Base):
     def error_no_user_alias_specified_for_user_action_edit(self, command_chain):
         command_chain_response = {
             'failed': True,
-            'error': 'No user alias specified for user action edit. Command chain details : {}'\
+            'error': 'No user alias specified for user action edit. Command chain details : {}'
                      .format(command_chain)
         }
         log.error(command_chain_response['error'])
@@ -1730,7 +1804,7 @@ class ResUser(Base):
     def error_no_user_email_specified_for_user_action_edit(self, command_chain):
         command_chain_response = {
             'failed': True,
-            'error': 'No user email specified for user action edit. Command chain details : {}'\
+            'error': 'No user email specified for user action edit. Command chain details : {}'
                      .format(command_chain)
         }
         log.error(command_chain_response['error'])
@@ -1739,7 +1813,7 @@ class ResUser(Base):
     def error_no_user_phone_specified_for_user_action_edit(self, command_chain):
         command_chain_response = {
             'failed': True,
-            'error': 'No user phone specified for user action edit. Command chain details : {}'\
+            'error': 'No user phone specified for user action edit. Command chain details : {}'
                      .format(command_chain)
         }
         log.error(command_chain_response['error'])
@@ -1747,7 +1821,7 @@ class ResUser(Base):
 
     def error_no_user_action_transfer_credits_target_partner_account_specified(self, command_chain):
         log.error(
-            'No user action transfer credits target partner account specified. Detauls : {}'\
+            'No user action transfer credits target partner account specified. Detauls : {}'
             .format(command_chain)
         )
         return False

@@ -83,19 +83,19 @@
         - x - User action Create Credit EWallet
         - x - User action Create Credit Clock
         - x - User action Create Contact List
-    - Credit EWallet
-        - User action Create Credit EWallet
-        - User action Create Credit Clock
-        - User action Create Invoice Sheet
-        - User action Create Transfer Sheet
-        - User action Switch Credit Clock
-        - User action Switch Invoice Sheet
-        - User action Switch Transfer Sheet
-        - User action Supply Credits
-        - User action Pay Credits
-        - User action Transfer Credits
-        - User action Convert Credits To Clock
-        - User action Convert Clock To Credits
+    - x - Credit EWallet
+        - x - User action Create Credit EWallet
+        - x - User action Create Credit Clock
+        - x - User action Create Invoice Sheet
+        - x - User action Create Transfer Sheet
+        - x - User action Switch Credit Clock
+        - x - User action Switch Invoice Sheet
+        - x - User action Switch Transfer Sheet
+        - x - User action Supply Credits
+        - x - User action Pay Credits
+        - x - User action Transfer Credits
+        - x - User action Convert Credits To Clock
+        - x - User action Convert Clock To Credits
     - Credit Clock
         - User action Create Credit Clock
         - User action Create Conversion Sheet
