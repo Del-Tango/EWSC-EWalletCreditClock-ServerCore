@@ -287,109 +287,284 @@ class CreditEWallet(Base):
 
     # SETTERS
 
+    def set_ewallet_id(self, ewallet_id):
+        log.debug('')
+        try:
+            self.ewallet_id = ewallet_id
+            self.update_write_date()
+        except Exception as e:
+            return self.error_could_not_set_ewallet_id(
+                ewallet_id, self.ewallet_id, e
+            )
+        log.info('Successfully set credit ewallet id.')
+        return True
+
+    def set_client_id(self, client_id):
+        log.debug('')
+        try:
+            self.client_id = client_id
+            self.update_write_date()
+        except Exception as e:
+            return self.error_could_not_set_client_user_id(
+                client_id, self.client_id, e
+            )
+        log.info('Successfully set user client id.')
+        return True
+
+    def set_active_session_id(self, ewallet_session_id):
+        log.debug('')
+        try:
+            self.active_session_id = ewallet_session_id
+            self.update_write_date()
+        except Exception as e:
+            return self.error_could_not_set_active_session_id(
+                ewallet_session_id, self.active_session_id, e
+            )
+        log.info('Successfully set credit ewallet session id.')
+        return True
+
+    def set_create_date(self, create_date):
+        log.debug('')
+        try:
+            self.create_date = create_date
+            self.update_write_date()
+        except Exception as e:
+            return self.error_could_not_set_create_date(
+                ewallet_session, self.active_session, e
+            )
+        log.info('Successfully set credit ewallet create date.')
+        return True
+
+    def set_active_session(self, ewallet_session):
+        log.debug('')
+        try:
+            self.active_session = ewallet_session
+            self.update_write_date()
+        except Exception as e:
+            return self.error_could_not_set_active_ewallet_session(
+                ewallet_session, self.active_session, e
+            )
+        log.info('Successfully set active ewallet session.')
+        return True
+
+    def set_client(self, user):
+        log.debug('')
+        try:
+            self.client = user
+            self.update_write_date()
+        except Exception as e:
+            return self.error_could_not_set_client_user(
+                user, self.client, e
+            )
+        log.info('Successfully set credit ewallet client user.')
+        return True
+
+
+
+    def set_to_credit_clock_archive(self, credit_clock):
+        log.debug('')
+        try:
+            self.credit_clock_archive.append(credit_clock)
+            self.update_write_date()
+        except Exception as e:
+            return self.error_could_not_set_credit_clock_to_archive(
+                credit_clock, self.credit_clock_archive, e
+            )
+        log.info('Successfully updated credit clock archive.')
+        return True
+
+    def set_to_invoice_sheet_archive(self, invoice_sheet):
+        log.debug('')
+        try:
+            self.invoice_sheet_archive.append(invoice_sheet)
+            self.update_write_date()
+        except Exception as e:
+            return self.error_could_not_set_invoice_sheet_to_archive(
+                invoice_sheet, self.invoice_sheet_archive, e
+            )
+        log.info('Successfully updated invoice sheet archive.')
+        return True
+
+    def set_to_transfer_sheet_archive(self, transfer_sheet):
+        log.debug('')
+        try:
+            self.transfer_sheet_archive.append(transfer_sheet)
+            self.update_write_date()
+        except Exception as e:
+            return self.error_could_not_set_transfer_sheet_to_archive(
+                transfer_sheet, self.transfer_sheet_archive, e
+            )
+        log.info('Successfully updated transfer sheet archive.')
+        return True
+
     def set_invoice_sheet(self, invoice_sheet):
         log.debug('')
         try:
             self.invoice_sheet = [invoice_sheet]
-        except:
-            return self.error_could_not_set_invoice_sheet(invoice_sheet)
+            self.update_write_date()
+        except Exception as e:
+            return self.error_could_not_set_invoice_sheet(
+                invoice_sheet, self.invoice_sheet, e
+            )
+        log.info('Successfully set invoice sheet.')
         return True
 
     def set_transfer_sheet(self, transfer_sheet):
         log.debug('')
         try:
             self.transfer_sheet = [transfer_sheet]
-        except:
-            return self.error_could_not_set_transfer_sheet(transfer_sheet)
+            self.update_write_date()
+        except Exception as e:
+            return self.error_could_not_set_transfer_sheet(
+                transfer_sheet, self.transfer_sheet, e
+            )
+        log.info('Successfully set transfer sheet.')
         return True
 
     def set_credit_clock(self, credit_clock):
         log.debug('')
         try:
             self.credit_clock = [credit_clock]
-        except:
-            return self.error_could_not_set_credit_clock(credit_clock)
+            self.update_write_date()
+        except Exception as e:
+            return self.error_could_not_set_credit_clock(
+                credit_clock, self.credit_clock, e
+            )
+        log.info('Successfully set credit clock.')
         return True
 
     def set_id(self, **kwargs):
         log.debug('')
         if not kwargs.get('id'):
-            return self.error_no_id_found()
-        self.wallet_id = kwargs['id']
+            return self.error_no_id_found(kwargs)
+        try:
+            self.wallet_id = kwargs['id']
+            self.update_write_date()
+        except Exception as e:
+            return self.error_could_not_set_credit_ewallet_id(
+                kwargs, self.wallet_id, e
+            )
+        log.info('Successfully set credit ewallet id.')
         return True
 
     def set_client_id(self, **kwargs):
         log.debug('')
         if not kwargs.get('client_id'):
-            return self.error_no_client_id_found()
-        self.client_id = kwargs['client_id']
+            return self.error_no_client_id_found(kwargs)
+        try:
+            self.client_id = kwargs['client_id']
+            self.update_write_date()
+        except Exception as e:
+            return self.error_could_not_set_client_id(
+                kwargs, self.client_id, e
+            )
+        log.info('Successfully set client id.')
         return True
 
     def set_reference(self, **kwargs):
         log.debug('')
         if not kwargs.get('reference'):
-            return self.error_no_reference_found()
-        self.reference = kwargs['reference']
+            return self.error_no_reference_found(kwargs)
+        try:
+            self.reference = kwargs['reference']
+            self.update_write_date()
+        except Exception as e:
+            return self.error_could_not_set_credit_ewallet_reference(
+                kwargs, self.reference, e
+            )
+        log.info('Successfully set credit ewallet reference.')
         return True
 
     def set_credits(self, **kwargs):
         log.debug('')
         if not kwargs.get('credits'):
-            return self.error_no_credits_found()
-        self.credits = kwargs['credits']
+            return self.error_no_credits_found(kwargs)
+        try:
+            self.credits = kwargs['credits']
+            self.update_write_date()
+        except Exception as e:
+            return self.error_could_not_set_ewallet_credits(
+                kwargs, self.credits, e
+            )
+        log.info('Successfully set ewallet credits.')
         return True
 
     def set_credit_clock_archive(self, **kwargs):
         log.debug('')
         if not kwargs.get('credit_clock_archive'):
-            return self.error_no_credit_clock_archive_found()
-        self.credit_clock_archive = kwargs['credit_clock_archive']
+            return self.error_no_credit_clock_archive_found(kwargs)
+        try:
+            self.credit_clock_archive = kwargs['credit_clock_archive']
+            self.update_write_date()
+        except Exception as e:
+            return self.error_could_not_set_credit_clock_archive(
+                kwargs, self.credit_clock_archive, e
+            )
+        log.info('Successfully set credit clock archive.')
         return True
 
     def set_transfer_sheet_archive(self, **kwargs):
         log.debug('')
         if not kwargs.get('transfer_sheet_archive'):
-            return self.error_no_transfer_sheet_archive_found()
-        self.transfer_sheet_archive = kwargs['transfer_sheet_archive']
+            return self.error_no_transfer_sheet_archive_found(kwargs)
+        try:
+            self.transfer_sheet_archive = kwargs['transfer_sheet_archive']
+            self.update_write_date()
+        except Exception as e:
+            return self.error_could_not_set_transfer_sheet_archive(
+                kwargs, self.transfer_sheet_archive, e
+            )
+        log.info('Successfully set transfer sheet archive.')
         return True
 
     def set_invoice_sheet_archive(self, **kwargs):
         log.debug('')
         if not kwargs.get('invoice_sheet_archive'):
-            return self.error_no_invoice_sheet_archive_found()
-        self.invoice_sheet_archive = kwargs['invoice_sheet_archive']
+            return self.error_no_invoice_sheet_archive_found(kwargs)
+        try:
+            self.invoice_sheet_archive = kwargs['invoice_sheet_archive']
+            self.update_write_date()
+        except Exception as e:
+            return self.error_could_not_set_invoice_sheet_archive(
+                kwargs, self.invoice_sheet_archive, e
+            )
+        log.info('Successfully set invoice sheet archive.')
         return True
 
-    def set_write_date(self, **kwargs):
+    def set_write_date(self, write_date):
         log.debug('')
-        if not kwargs.get('write_date'):
-            return self.error_no_write_date_found()
-        self.write_date = kwargs['write_date']
-        return self.write_date
+        try:
+            self.write_date = write_date
+        except Exception as e:
+            return self.error_could_not_set_ewallet_write_date(
+                write_date, self.write_date, e
+            )
+        log.info('Successfully set write date.')
+        return True
 
     # UPDATERS
 
-    def update_write_date(self):
-        log.debug('')
-        return self.set_write_date(write_date=datetime.datetime.now())
-
     def update_credit_clock_archive(self, credit_clock):
         log.debug('')
-        self.credit_clock_archive.append(credit_clock)
-        log.info('Successfully updated credit clock archive.')
-        return self.credit_clock_archive
+        set_to = self.set_to_credit_clock_archive(credit_clock)
+        return set_to if isinstance(set_to, dict) and \
+            set_to.get('failed') else self.credit_clock_archive
 
     def update_invoice_sheet_archive(self, invoice_sheet):
         log.debug('')
-        self.invoice_sheet_archive.append(invoice_sheet)
-        log.info('Successfully updated invoice sheet archive.')
-        return self.invoice_sheet_archive
+        set_to = self.set_to_invoice_sheet_archive(invoice_sheet)
+        return set_to if isinstance(set_to, dict) and \
+            set_to.get('failed') else self.invoice_sheet_archive
 
     def update_transfer_sheet_archive(self, transfer_sheet):
         log.debug('')
-        self.transfer_sheet_archive.append(transfer_sheet)
-        log.info('Successfully updated transfer sheet archive.')
-        return self.transfer_sheet_archive
+        set_to = self.set_to_transfer_sheet_archive(transfer_sheet)
+        return set_to if isinstance(set_to, dict) and \
+            set_to.get('failed') else self.transfer_sheet_archive
+
+    def update_write_date(self):
+        log.debug('')
+        return self.set_write_date(datetime.datetime.now())
 
     # HANDLERS
 
@@ -428,7 +603,7 @@ class CreditEWallet(Base):
         credits = self.credits + int(kwargs['credits'])
         if self.credits is credits:
             return self.error_could_not_supply_credits_to_credit_ewallet()
-        self.credits = credits
+        self.set_credits(credits=credits)
         log.info('Successfully supplied wallet with credits.')
         return self.credits
 
@@ -439,7 +614,7 @@ class CreditEWallet(Base):
         credits = self.credits - int(kwargs['credits'])
         if self.credits is credits:
             return self.error_could_not_extract_credits()
-        self.credits = credits
+        self.set_credits(credits=credits)
         log.info('Successfully extracted credits from wallet.')
         return self.credits
 
@@ -495,10 +670,6 @@ class CreditEWallet(Base):
 
     # INTEROGATORS
 
-    def interogate_credit_wallet_credits(self, **kwargs):
-        log.debug('')
-        return self.fetch_credit_ewallet_credits()
-
     # TODO
     def interogate_credit_wallet_transfer_sheets(self, **kwargs):
         log.debug('UNIMPLEMENTED')
@@ -508,6 +679,10 @@ class CreditEWallet(Base):
         log.debug('UNIMPLEMENTED')
     def interogate_credit_wallet_invoice_records(self, **kwargs):
         log.debug('UNIMPLEMENTED')
+
+    def interogate_credit_wallet_credits(self, **kwargs):
+        log.debug('')
+        return self.fetch_credit_ewallet_credits()
 
     def interogate_credit_wallet(self, **kwargs):
         log.debug('')
@@ -1047,6 +1222,9 @@ class CreditEWallet(Base):
         return handlers[kwargs['controller']](**kwargs)
 
     # WARNINGS
+    '''
+    [ TODO ]: Fetch error messages from message file by key codes.
+    '''
 
     def warning_could_not_unlink_time_sheet(self, command_chain):
         command_chain_response = {
@@ -1224,6 +1402,272 @@ class CreditEWallet(Base):
         return False
 
     # ERRORS
+    '''
+    [ TODO ]: Fetch error messages from message file by key codes.
+    '''
+
+    def error_could_not_set_client_user(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Something went wrong. '
+                     'Could not set credit ewallet client user. '
+                     'Details: {}'.format(args)
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_could_not_set_active_ewallet_session(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Something went wrong. '
+                     'Could not set active ewallet session. '
+                     'Details: {}'.format(args)
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_could_not_set_create_date(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Something went wrong. '
+                     'Could not set credit ewallet create date. '
+                     'Details: {}'.format(args)
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_could_not_set_active_session_id(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Something went wrong. '
+                     'Could not set credit ewallet active session id. '
+                     'Details: {}'.format(args)
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_could_not_set_client_user_id(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Something went wrong. '
+                     'Could not set credit ewallet client user id. '
+                     'Details: {}'.format(args)
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_could_not_set_ewallet_id(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Something went wrong. '
+                     'Could not set credit ewallet id. '
+                     'Details: {}'.format(args)
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_could_not_set_credit_clock_to_archive(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Something went wrong. '
+                     'Could not set credit clock to archive. '
+                     'Details: {}'.format(args)
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_could_not_set_invoice_sheet_to_archive(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Something went wrong. '
+                     'Could not set invoice sheet to archive. '
+                     'Details: {}'.format(args)
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_could_not_set_transfer_sheet_to_archive(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Something went wrong. '
+                     'Could not set transfer sheet to archive. '
+                     'Details: {}'.format(args)
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_could_not_set_ewallet_write_date(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Something went wrong. '
+                     'Could not set ewallet write date. '
+                     'Details: {}'.format(args)
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_could_not_set_invoice_sheet_archive(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Something went wrong. '
+                     'Could not set ewallet invoice sheet archive. '
+                     'Details: {}'.format(args)
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_no_invoice_sheet_archive_found(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No invoice sheet archive. '
+                     'Details: {}'.format(args)
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_could_not_set_transfer_sheet_archive(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Something went wrong. '
+                     'Could not set ewallet transfer sheet archive. '
+                     'Details: {}'.format(args)
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_no_transfer_sheet_archive_found(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No transfer sheet archive found. '
+                     'Details: {}'.format(args)
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_could_not_set_credit_clock_archive(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Something went wrong. '
+                     'Could not set ewallet credit clock archive. '
+                     'Details: {}'.format(args)
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_no_credit_clock_archive_found(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No credit clock archive found. '
+                     'Details: {}'.format(args)
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_could_not_set_ewallet_credits(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Something went wrong. '
+                     'Could not set ewallet credits. '
+                     'Details: {}'.format(args)
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_no_credits_found(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No ewallet credits found. '
+                     'Details: {}'.format(args)
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_could_not_set_credit_ewallet_reference(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Something went wrong. '
+                     'Could not set credit ewallet reference. '
+                     'Details: {}'.format(args)
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_no_reference_found(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No credit ewallet reference found. '
+                     'Details: {}'.format(args)
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_could_not_set_client_id(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Something went wrong. '
+                     'Could not set credit ewallet client id. '
+                     'Details: {}'.format(args)
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_no_client_id_found(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No client id found. '
+                     'Details: {}'.format(args)
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_could_not_set_credit_ewallet_id(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Something went wrong. '
+                     'Could not set credit ewallet id. '
+                     'Details: {}'.format(args)
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_no_id_found(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No credit ewallet id found. '
+                     'Details: {}'.format(args)
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_could_not_set_credit_clock(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Something went wrong. '
+                     'Could not set credit ewallet credit clock. '
+                     'Details: {}'.format(args)
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_could_not_set_transfer_sheet(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Something went wrong. '
+                     'Could not set credit ewallet transfer sheet. '
+                     'Details: {}'.format(args)
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_could_not_set_invoice_sheet(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Something went wrong. '
+                     'Could not set credit ewallet invoice sheet. '
+                     'Details: {}'.format(args)
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
 
     def error_transfer_record_id_not_found(self, command_chain, *args):
         command_chain_response = {
@@ -1379,10 +1823,6 @@ class CreditEWallet(Base):
         log.error(command_chain_response['error'])
         return command_chain_response
 
-    def error_could_not_set_invoice_sheet(self, invoice_sheet):
-        log.error('Could not set invoice sheet {}.'.format(invoice_sheet))
-        return False
-
     def error_no_switch_credit_ewallet_transfer_sheet_indentifier_specified(self, command_chain):
         command_chain_response = {
             'failed': True,
@@ -1392,16 +1832,8 @@ class CreditEWallet(Base):
         log.error(command_chain_response['error'])
         return command_chain_response
 
-    def error_could_not_set_transfer_sheet(self, transfer_sheet):
-        log.error('Could not set transfer sheet {}.'.format(transfer_sheet))
-        return False
-
     def error_no_credit_ewallet_credit_clock_found(self):
         log.error('No credit clock found.')
-        return False
-
-    def error_could_not_set_credit_clock(self, credit_clock):
-        log.error('Could not set credit clock {}.'.format(credit_clock))
         return False
 
     def error_invalid_credit_clock_id(self, command_chain):
@@ -1522,44 +1954,16 @@ class CreditEWallet(Base):
                 return _reasons_and_handlers['handlers'][item]()
         return False
 
-    def error_no_id_found(self):
-        log.error('No wallet id found.')
-        return False
-
-    def error_no_client_id_found(self):
-        log.error('No client id found.')
-        return False
-
-    def error_no_reference_found(self):
-        log.error('No reference found.')
-        return False
-
-    def error_no_credits_found(self):
-        log.error('No credits found.')
-        return False
-
     def error_no_credit_clock_found(self):
         log.error('No credit clock found.')
-        return False
-
-    def error_no_credit_clock_archive_found(self):
-        log.error('No credit clock archive found.')
         return False
 
     def error_no_transfer_sheet_found(self):
         log.error('No transfer sheet found.')
         return False
 
-    def error_no_transfer_sheet_archive_found(self):
-        log.error('No transfer sheet archive found.')
-        return False
-
     def error_no_invoice_sheet_found(self):
         log.error('No invoice sheet found.')
-        return False
-
-    def error_no_invoice_sheet_archive_found(self):
-        log.error('No invoice sheet archive found.')
         return False
 
     def error_no_invoice_sheet_identifier_found(self):

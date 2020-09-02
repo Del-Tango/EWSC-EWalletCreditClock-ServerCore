@@ -96,18 +96,18 @@
         - x - User action Transfer Credits
         - x - User action Convert Credits To Clock
         - x - User action Convert Clock To Credits
-    - Credit Clock
-        - User action Create Credit Clock
-        - User action Create Conversion Sheet
-        - User action Convert Time Sheet
-        - User action Switch Conversion Sheet
-        - User action Switch Time Sheet
-        - User action Convert Credits To Clock
-        - User action Convert Clock To Credits
-        - User action Start Timer
-        - User action Pause Timer
-        - User action Resume Timer
-        - User action Stop Timer
+    - x - Credit Clock
+        - x - User action Create Credit Clock
+        - x - User action Create Conversion Sheet
+        - x - User action Convert Time Sheet
+        - x - User action Switch Conversion Sheet
+        - x - User action Switch Time Sheet
+        - x - User action Convert Credits To Clock
+        - x - User action Convert Clock To Credits
+        - x - User action Start Timer
+        - x - User action Pause Timer
+        - x - User action Resume Timer
+        - x - User action Stop Timer
     - Contact List
         - User action Create Contact List
         - User action Create Contact Record
