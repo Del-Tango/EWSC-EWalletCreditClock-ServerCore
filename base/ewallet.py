@@ -525,14 +525,13 @@ class EWallet(Base):
 
     # GENERAL
 
-    # TODO - Use setters on account and update write date
 #   @pysnooper.snoop()
     def recover_user_account(self, **kwargs):
-        log.debug('TODO - Use setters on account to update write date.')
+        log.debug('')
         if not kwargs.get('user'):
             return self.error_no_user_account_found(kwargs)
-        kwargs['user'].to_unlink = True
-        kwargs['user'].to_unlink_timestamp = None
+        kwargs['user'].set_to_unlink(False)
+        kwargs['user'].set_to_unlink_timestamp(None)
         kwargs['active_session'].commit()
         return {
             'failed': False,
@@ -541,7 +540,6 @@ class EWallet(Base):
 
     # UNLINKERS
 
-    # TODO - Use setters on account and update write date
 #   @pysnooper.snoop('logs/ewallet.log')
     def unlink_user_account(self, **kwargs):
         '''
@@ -549,7 +547,7 @@ class EWallet(Base):
         [ INPUT  ]: active_session=<session>, user_id=<user_id>
         [ RETURN ]:
         '''
-        log.debug('TODO - Use setters on account and update write date')
+        log.debug('')
         if not kwargs.get('user_id'):
             return self.error_no_user_account_id_found(kwargs)
         try:
@@ -560,8 +558,8 @@ class EWallet(Base):
             )
             user = list(user_account)
             if not user[0].to_unlink:
-                user[0].to_unlink = True
-                user[0].to_unlink_timestamp = datetime.datetime.now()
+                user[0].set_to_unlink(True)
+                user[0].set_to_unlink_timestamp(datetime.datetime.now())
                 kwargs['active_session'].commit()
                 return kwargs['user_id']
             check = res_utils.check_days_since_timestamp(
@@ -597,11 +595,9 @@ class EWallet(Base):
         return self.warning_could_not_edit_account_user_pass(kwargs) if \
             edit_user_pass.get('failed') else edit_user_pass
 
-
-    # TODO
 #   @pysnooper.snoop()
     def action_recover_user_account(self, **kwargs):
-        log.debug('TODO - Use setters on account and update write date.')
+        log.debug('')
         user_account = kwargs.get('user') or \
             self.fetch_active_session_user()
         if not user_account or isinstance(user_account, dict) and \
@@ -611,8 +607,8 @@ class EWallet(Base):
             kwargs, 'user'
         )
         try:
-            user_account.to_unlink = False
-            user_account.to_unlink_timestamp = None
+            user_account.set_to_unlink(False)
+            user_account.set_to_unlink_timestamp(None)
         except Exception as e:
             return self.error_could_not_recover_user_account(kwargs, e)
         if user_account.to_unlink:

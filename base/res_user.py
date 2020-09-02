@@ -377,6 +377,28 @@ class ResUser(Base):
 #       log.info('Successfully set user email.')
 #       return True
 
+    def set_to_unlink(self, flag):
+        log.debug('')
+        try:
+            self.to_unlink = flag
+            self.update_write_date()
+        except Exception as e:
+            return self.error_could_not_set_to_unlink_flag(
+                flag, self.to_unlink, e
+            )
+        return True
+
+    def set_to_unlink_timestamp(self, timestamp):
+        log.debug('')
+        try:
+            self.to_unlink_timestamp = timestamp
+            self.update_write_date()
+        except Exception as e:
+            return self.error_could_not_set_to_unlink_timestamp(
+                timestamp, self.to_unlink_timestamp, e
+            )
+        return True
+
     def set_user_contact_list(self, contact_list):
         log.debug('')
         try:
@@ -1262,6 +1284,26 @@ class ResUser(Base):
         return False
 
     # ERRORS
+
+    def error_could_not_set_to_unlink_flag(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Something went wrong. '
+                     'Could not set user to unlink flag. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_could_not_set_to_unlink_timestamp(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Something went wrong. '
+                     'Could not set user to unlink timestamp. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
 
     def error_could_not_set_to_credit_ewallet_archive(self, *args):
         command_chain_response = {
