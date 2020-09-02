@@ -331,23 +331,9 @@ class ResUser(Base):
 
     # SETTERS
 
-    def set_user_contact_list(self, contact_list):
-        log.debug('')
-        try:
-            self.user_contact_list = [contact_list]
-            self.set_user_write_date()
-        except:
-            return self.error_could_not_set_contact_list(contact_list)
-        return True
-
-    def set_user_write_date(self):
-        log.debug('')
-        self.user_write_date = datetime.datetime.now()
-        return True
-
     # TODO - Refactor
     def set_user_pass(self, **kwargs):
-        log.debug('TODO')
+        log.debug('TODO - FIX ME')
         if not kwargs.get('password') or not kwargs.get('pass_check_func') \
                 or not kwargs.get('pass_hash_func'):
             return self.error_handler_set_user_pass(
@@ -371,86 +357,9 @@ class ResUser(Base):
 #       log.info('Successfully set user password.')
 #       return True
 
-    def set_user_alias(self, **kwargs):
-        log.debug('')
-        if not kwargs.get('alias'):
-            return self.error_no_user_alias_found()
-        self.user_alias = kwargs['alias']
-        log.info('Successfully set user alias.')
-        self.set_user_write_date()
-        return True
-
-#   #@pysnooper.snoop('logs/ewallet.log')
-    def set_user_state_code(self, **kwargs):
-        log.debug('')
-        if kwargs.get('state_code') not in [0, 1]:
-            return self.error_no_state_code_found()
-        self.user_state_code = kwargs['state_code']
-        self.set_user_write_date()
-        return True
-
-    def set_user_state_name(self, **kwargs):
-        log.debug('')
-        if not kwargs.get('state_name'):
-            return self.error_no_state_name_found()
-        self.user_state_name = kwargs['state_name']
-        self.set_user_write_date()
-        return True
-
-#   #@pysnooper.snoop('logs/ewallet.log')
-    def set_user_state(self, **kwargs):
-        log.debug('')
-        if not kwargs.get('set_by'):
-            return self.error_no_set_by_parameter_specified()
-        _handlers = {
-                'converters': {
-                    'code': self.convert_user_state_code_to_name,
-                    'name': self.convert_user_state_name_to_code,
-                    },
-                'setters': {
-                    'code': self.set_user_state_code,
-                    'name': self.set_user_state_name,
-                    },
-                }
-        _set_command_chain = {kwargs['set_by']: kwargs.get('code') or kwargs.get('name')}
-        _set_command_chain.update(kwargs)
-        _value_fetch = _handlers['converters'][kwargs['set_by']](
-                **_set_command_chain
-                )
-        _field_code = kwargs.get('state_code') if kwargs['set_by'] == 'code' \
-                            else _value_fetch
-        _field_name = kwargs.get('name') if kwargs['set_by'] == 'name' \
-                            else _value_fetch
-        _setter_values = {
-                'field_names': {
-                    'code': 'state_code',
-                    'name': 'state_name',
-                    },
-                'field_values': {
-                    'code': _field_code,
-                    'name': _field_name,
-                    }
-                }
-        for item in _handlers['setters']:
-            _field_name = _setter_values['field_names'][item]
-            _field_values = _setter_values['field_values'][item]
-            _set_state = _handlers['setters'][item](
-                    **{_field_name: _field_values}
-                    )
-        return _value_fetch
-
-    def set_user_phone(self, **kwargs):
-        log.debug('')
-        if not kwargs.get('phone'):
-            return self.no_user_phone_found()
-        self.user_phone = kwargs['phone']
-        self.set_user_write_date()
-        log.info('Successfully set user phone.')
-        return True
-
-    # TODO
+    # TODO - REFACTOR
     def set_user_email(self, **kwargs):
-        log.debug('TODO')
+        log.debug('TODO - FIX ME')
         if not kwargs.get('email') or not kwargs.get('email_check_func'):
             return self.error_handler_set_user_email(
                     email=kwargs.get('email'),
@@ -468,74 +377,242 @@ class ResUser(Base):
 #       log.info('Successfully set user email.')
 #       return True
 
+    def set_user_contact_list(self, contact_list):
+        log.debug('')
+        try:
+            self.user_contact_list = [contact_list]
+            self.update_write_date()
+        except Exception as e:
+            return self.error_could_not_set_contact_list(
+                contact_list, self.user_contact_list, e
+            )
+        log.info('Successfully set user contact list.')
+        return True
+
+    def set_user_write_date(self, write_date):
+        log.debug('')
+        try:
+            self.user_write_date = write_date
+        except Exception as e:
+            return self.error_could_not_set_write_date(
+                write_date, self.user_write_date, e
+            )
+        log.info('Successfully set user write date.')
+        return True
+
+    def set_user_alias(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('alias'):
+            return self.error_no_user_alias_found(kwargs)
+        try:
+            self.user_alias = kwargs['alias']
+            self.update_write_date()
+        except Exception as e:
+            return self.error_could_not_set_user_alias(
+                kwargs, self.user_alias, e
+            )
+        log.info('Successfully set user alias.')
+        return True
+
+#   #@pysnooper.snoop('logs/ewallet.log')
+    def set_user_state_code(self, **kwargs):
+        log.debug('')
+        if kwargs.get('state_code') not in [0, 1]:
+            return self.error_no_state_code_found(kwargs) \
+                if not kwargs.get('state_code') \
+                else self.error_invalid_user_state_code(kwargs)
+        try:
+            self.user_state_code = kwargs['state_code']
+            self.update_write_date()
+        except Exception as e:
+            return self.error_could_not_set_user_state_code(
+                kwargs, self.user_state_code, e
+            )
+        log.info('Successfully set user state code.')
+        return True
+
+    def set_user_state_name(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('state_name'):
+            return self.error_no_state_name_found(kwargs)
+        try:
+            self.user_state_name = kwargs['state_name']
+            self.update_write_date()
+        except Exception as e:
+            return self.error_could_not_set_state_name(
+                kwargs, self.user_state_name, e
+            )
+        return True
+
+#   #@pysnooper.snoop('logs/ewallet.log')
+    def set_user_state(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('set_by'):
+            return self.error_no_set_by_parameter_specified(kwargs)
+        handlers = {
+            'converters': {
+                'code': self.convert_user_state_code_to_name,
+                'name': self.convert_user_state_name_to_code,
+            },
+            'setters': {
+                'code': self.set_user_state_code,
+                'name': self.set_user_state_name,
+            },
+        }
+        set_command_chain = {
+            kwargs['set_by']: kwargs.get('code') or kwargs.get('name')
+        }
+        set_command_chain.update(kwargs)
+        value_fetch = handlers['converters'][kwargs['set_by']](
+            **set_command_chain
+        )
+        field_code = kwargs.get('state_code') if kwargs['set_by'] == 'code' \
+                else value_fetch
+        field_name = kwargs.get('name') if kwargs['set_by'] == 'name' \
+                else value_fetch
+        setter_values = {
+            'field_names': {
+                'code': 'state_code',
+                'name': 'state_name',
+            },
+            'field_values': {
+                'code': field_code,
+                'name': field_name,
+            },
+        }
+        for item in handlers['setters']:
+            field_name = setter_values['field_names'][item]
+            field_values = setter_values['field_values'][item]
+            set_state = handlers['setters'][item](**{field_name: field_values})
+        return value_fetch
+
+    def set_user_phone(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('phone'):
+            return self.no_user_phone_found(kwargs)
+        try:
+            self.user_phone = kwargs['phone']
+            self.update_write_date()
+        except Exception as e:
+            return self.error_could_not_set_user_phone(
+                kwargs, self.user_phone, e
+            )
+        log.info('Successfully set user phone.')
+        return True
+
     def set_user_credit_wallet(self, **kwargs):
         log.debug('')
         if not kwargs.get('credit_ewallet'):
-            return self.error_no_credit_wallet_found()
-        self.user_credit_wallet = kwargs['credit_ewallet']
-        self.set_user_write_date()
+            return self.error_no_credit_wallet_found(kwargs)
+        try:
+            self.user_credit_wallet = kwargs['credit_ewallet']
+            self.update_write_date()
+        except Exception as e:
+            return self.error_could_not_set_user_credit_ewallet(
+                kwargs, self.user_credit_wallet, e
+            )
         log.info('Successfully set user credit ewallet.')
         return True
 
     def set_user_name(self, **kwargs):
         log.debug('')
         if not kwargs.get('name'):
-            return self.error_no_user_name_found()
-        self.user_name = kwargs['name']
-        self.set_user_write_date()
+            return self.error_no_user_name_found(kwargs)
+        try:
+            self.user_name = kwargs['name']
+            self.update_write_date()
+        except Exception as e:
+            return self.error_could_not_set_user_name(
+                kwargs, self.user_name, e
+            )
         log.info('Successfully set user name.')
-        return True
-
-    def set_user_credit_wallet(self, **kwargs):
-        log.debug('')
-        if not kwargs.get('credit_ewallet'):
-            return self.error_no_credit_wallet_found()
-        self.user_credit_wallet = [kwargs['credit_ewallet']]
-        self.set_user_write_date()
-        log.info('Successfully set user credit wallet.')
         return True
 
     def set_user_pass_hash_archive(self, **kwargs):
         log.debug('')
         if not kwargs.get('archive'):
-            return self.error_no_user_pass_hash_archive_found()
-        self.user_pass_hash_archive = kwargs['archive'] or {}
-        self.set_user_write_date()
+            return self.error_no_user_pass_hash_archive_found(kwargs)
+        try:
+            self.user_pass_hash_archive = kwargs['archive']
+            self.update_write_date()
+        except Exception as e:
+            return self.error_could_not_set_user_pass_hash_archive(
+                kwargs, self.user_pass_hash_archive, e
+            )
         log.info('Successfully set user password hash archive.')
         return True
 
     def set_user_credit_wallet_archive(self, **kwargs):
         log.debug('')
         if not kwargs.get('archive'):
-            return self.error_no_user_credit_wallet_archive_found()
-        self.user_credit_wallet_archive = kwargs['archive'] or {}
-        self.set_user_write_date()
+            return self.error_no_user_credit_wallet_archive_found(kwargs)
+        try:
+            self.user_credit_wallet_archive = kwargs['archive']
+            self.update_write_date()
+        except Exception as e:
+            return self.error_could_not_set_user_credit_ewallet_archive(
+                kwargs, self.user_credit_wallet_archive, e
+            )
         log.info('Successfully set user credit wallet archive.')
         return True
 
     def set_user_contact_list_archive(self, **kwargs):
         log.debug('')
         if not kwargs.get('archive'):
-            return self.error_no_user_contact_list_archive_found()
-        self.user_contact_list_archive = kwargs['archive'] or {}
-        self.set_user_write_date()
+            return self.error_no_user_contact_list_archive_found(kwargs)
+        try:
+            self.user_contact_list_archive = kwargs['archive']
+            self.update_write_date()
+        except Exception as e:
+            return self.error_could_not_set_user_contact_list_archive(
+                kwargs, self.user_contact_list_archive, e
+            )
         log.info('Successfully set user contact list archive.')
+        return True
+
+    def set_to_credit_ewallet_archive(self, credit_ewallet):
+        log.debug('')
+        try:
+            self.user_credit_wallet_archive.append(credit_ewallet)
+            self.update_write_date()
+        except Exception as e:
+            return self.error_could_not_set_to_credit_ewallet_archive(
+                credit_ewallet, self.user_credit_wallet_archive, e
+            )
+        log.info('Successfully updated user credit wallet archive.')
+        return True
+
+    def set_to_contact_list_archive(self, contact_list):
+        log.debug('')
+        try:
+            self.user_contact_list_archive.append(contact_list)
+            self.update_write_date()
+        except Exception as e:
+            return self.error_could_not_set_to_contact_list_archive(
+                contact_list, self.user_contact_list_archive, e
+            )
+        log.info('Successfully updated user contact list archive.')
         return True
 
     # UPDATERS
 
     def update_user_credit_wallet_archive(self, credit_wallet):
         log.debug('')
-        self.user_credit_wallet_archive.append(credit_wallet)
-        log.info('Successfully updated user credit wallet archive.')
-        return self.user_credit_wallet_archive
+        set_to = self.set_to_credit_ewallet_archive(credit_wallet)
+        return set_to if not set_to or isinstance(set_to, dict) and \
+            set_to.get('failed') else self.user_credit_wallet_archive
 
 #   #@pysnooper.snoop('logs/ewallet.log')
     def update_user_contact_list_archive(self, contact_list):
         log.debug('')
-        self.user_contact_list_archive.append(contact_list)
-        log.info('Successfully updated user contact list archive.')
-        return self.user_contact_list_archive
+        set_to = self.set_to_contact_list_archive(contact_list)
+        return set_to if not set_to or isinstance(set_to, dict) and \
+            set_to.get('failed') else self.user_contact_list_archive
+
+    def update_write_date(self):
+        log.debug('')
+        self.set_user_write_date(datetime.datetime.now())
+        return True
 
     # CONVERTORS
 
@@ -1186,6 +1263,235 @@ class ResUser(Base):
 
     # ERRORS
 
+    def error_could_not_set_to_credit_ewallet_archive(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Something went wrong. '
+                     'Could not set user credit ewallet to archive. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_could_not_set_to_contact_list_archive(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Something went wrong. '
+                     'Could not set user contact list to archive. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_could_not_set_user_contact_list_archive(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Something went wrong. '
+                     'Could not set user contact list archive. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_no_user_contact_list_archive_found(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No user contact list archive found. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_could_not_set_user_credit_ewallet_archive(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Something went wrong. '
+                     'Could not set user credit ewallet archive. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_no_user_credit_wallet_archive_found(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No user credit ewallet archive found. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_could_not_set_user_pass_hash_archive(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Something went wrong. '
+                     'Could not set user password hash archive. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_no_user_pass_hash_archive_found(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No user password hash archive found. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_could_not_set_user_name(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Something went wrong. '
+                     'Could not set user name. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_no_user_name_found(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No user name found. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_could_not_set_user_credit_ewallet(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Something went wrong. '
+                     'Could not set user credit ewallet. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_no_credit_wallet_found(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No credit ewallet found. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_could_not_set_user_phone(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Something went wrong. '
+                     'Could not set user phone. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_no_user_phone_found(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No user phone found. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_no_set_by_parameter_specified(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No set by parameter specified. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_could_not_set_state_name(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Something went wrong. '
+                     'Could not set user state label. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_no_state_name_found(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No user state label found. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_no_state_code_found(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No user state code found. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_invalid_user_state_code(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Invalid user state code. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_could_not_set_user_state_code(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Something went wrong. '
+                     'Could not set user state code. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_could_not_set_user_alias(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Something went wrong. '
+                     'Could not set user alias. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_no_user_alias_found(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No user alias found. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_could_not_set_write_date(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Something went wrong. '
+                     'Could not set write date. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_could_not_set_contact_list(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Something went wrong. '
+                     'Could not set contact list. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
     def error_could_not_fetch_active_orm_session(self, command_chain):
         command_chain_response = {
             'failed': True,
@@ -1252,10 +1558,6 @@ class ResUser(Base):
         }
         log.error(command_chain_response['error'])
         return command_chain_response
-
-    def error_could_not_set_contact_list(self, contact_list):
-        log.error('Could not set contact list {}.'.format(contact_list))
-        return False
 
     def error_no_invoice_sheet_id_specified(self, command_chain):
         command_chain_response = {
@@ -1531,28 +1833,8 @@ class ResUser(Base):
         log.error('No clock id found.')
         return False
 
-    def error_no_user_pass_hash_archive_found(self):
-        log.error('No user password hash archive found.')
-        return False
-
-    def error_no_user_credit_wallet_archive_found(self):
-        log.error('No user credit wallet archive found.')
-        return False
-
-    def error_no_user_contact_list_archive_found(self):
-        log.error('No user contact list archive found.')
-        return False
-
-    def error_no_user_name_found(self):
-        log.error('No user name found.')
-        return False
-
     def error_no_contact_list_found(self):
         log.error('No contact list found.')
-        return False
-
-    def error_no_credit_wallet_found(self):
-        log.error('No credit wallet found.')
         return False
 
     def error_no_contact_list_found(self):
@@ -1577,18 +1859,6 @@ class ResUser(Base):
 
     def error_no_password_hash_function_found(self):
         log.error('No password hash function found.')
-        return False
-
-    def error_no_user_alias_found(self):
-        log.error('No user alias found.')
-        return False
-
-    def error_no_user_phone_found(self):
-        log.error('No user phone found.')
-        return False
-
-    def error_no_user_name_found(self):
-        log.error('No user name found.')
         return False
 
     def error_no_user_pass_hash_found(self):
@@ -1625,18 +1895,6 @@ class ResUser(Base):
 
     def error_no_user_controller_event_specified(self):
         log.error('No user controller event specified.')
-        return False
-
-    def error_no_state_code_found(self):
-        log.error('No state code found.')
-        return False
-
-    def error_no_state_name_found(self):
-        log.error('No state name found.')
-        return False
-
-    def error_no_set_by_parameter_specified(self):
-        log.error('No set_by parameter specified.')
         return False
 
     def error_no_user_pass_hash_found(self):
