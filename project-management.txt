@@ -12,7 +12,8 @@
     - x - (EWSC) Move all subordonate account action handlers to worker
     - x - (EWSC) Update ewallet dox instruction set for user action category Switch
     - x - (EWSC) Impose System Portal restrictions
-    -   - (EWSC) Update write dates
+    - x - (EWSC) Update write dates
+    -   - (EWSC) Move all system actions to session worker
     - (EWSC) Journal record grooming
     - (EWSC) Impose entity ownership restrictions on User action categories View, Switch and Unlink
     - (EWCC) Perform valid input checks on core subroutine SetResource
@@ -20,7 +21,6 @@
     - (EWSC) Implement EWallet Session cleaner cron
     - (EWSC, EWCC, EWAT) Implement master accounts
     - (EWSC) Impose user account state restrictions on all user actions
-    - (EWSC) Move all system actions to session worker
     - (EWSC, EWCC, EWAT) Implement forced account removal
     - (EWSC, EWCC, EWAT) Implement EWallet Session keep alive signal
     - (EWSC, EWCC, EWAT) Implement check client id validity
@@ -53,7 +53,7 @@
 - EWallet Credit Clock - Server Core
 ################################################################################
 
-- Update write dates and UIDs for:
+- x - Update write dates and UIDs for:
     - x - Session Manager
         - x - System action New Worker
         - x - System action Cleanup Session Workers
@@ -133,12 +133,12 @@
         - x - User action Unlink Invoice Record
     - x - Invoice Record
         - x - User action Create Invoice Record
-    - Time Sheet
-        - User action Create Time Sheet
-        - User action Create Time Record
-        - User action Unlink Time Record
-    - Time Record
-        - User action Create Time Record
+    - x - Time Sheet
+        - x - User action Create Time Sheet
+        - x - User action Create Time Record
+        - x - User action Unlink Time Record
+    - x - Time Record
+        - x - User action Create Time Record
 
 - Move actions to worker
     - System action Session Sweep Cleanup
