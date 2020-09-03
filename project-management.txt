@@ -141,8 +141,8 @@
         - x - User action Create Time Record
 
 - Move actions to worker
-    - System action Session Sweep Cleanup
-    - System action Session Target Cleanup
+    - x - System action Session Sweep Cleanup
+    -   - System action Session Target Cleanup
     - System action Session Workers Cleanup
     - System action New EWallet Session
     - System action Interogate Session Workers

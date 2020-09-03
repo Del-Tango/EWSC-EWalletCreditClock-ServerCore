@@ -44,19 +44,15 @@ class EWallet(Base):
     write_date = Column(Date)
     expiration_date = Column(DateTime)
     session = None
-    # O2O
     contact_list = relationship(
        'ContactList', back_populates='active_session',
        )
-    # O2O
     credit_wallet = relationship(
        'CreditEWallet', back_populates='active_session',
        )
-    # O2O
     active_user = relationship(
        'ResUser', back_populates='active_session',
        )
-    # M2M
     user_account_archive = relationship(
         'ResUser', secondary='ewallet_session_user'
     )
@@ -446,6 +442,13 @@ class EWallet(Base):
 
     # CHECKERS
 
+#   @pysnooper.snoop('logs/ewallet.log')
+    def check_if_active_ewallet_session_expired(self):
+        log.debug('')
+        expiration_date = self.fetch_active_session_expiration_date()
+        now = datetime.datetime.now()
+        return True if now > expiration_date else False
+
     # CLEANERS
 
     def clear_session_active_user(self):
@@ -602,6 +605,30 @@ class EWallet(Base):
         )
         return self.warning_could_not_edit_account_user_pass(kwargs) if \
             edit_user_pass.get('failed') else edit_user_pass
+
+    def action_interogate_ewallet_session_expired(self, **kwargs):
+        log.debug('')
+        expired = self.check_if_active_ewallet_session_expired()
+        if isinstance(expired, dict) and expired.get('failed'):
+            return self.error_could_not_check_if_ewallet_session_expired(
+                kwargs, expired
+            )
+        command_chain_response = {
+            'failed': False,
+            'ewallet_session': self.fetch_active_session_id(),
+            'expired': expired,
+        }
+        return command_chain_response
+
+    def action_interogate_ewallet_session_state(self, **kwargs):
+        log.debug('')
+        session_values = self.fetch_active_session_values()
+        command_chain_response = {
+            'failed': False,
+            'ewallet_session': self.fetch_active_session_id(),
+            'session_data': session_values,
+        }
+        return command_chain_response
 
 #   @pysnooper.snoop()
     def action_recover_user_account(self, **kwargs):
@@ -1595,16 +1622,6 @@ class EWallet(Base):
         }
         return command_chain_response
 
-    def action_interogate_ewallet_session(self, **kwargs):
-        log.debug('')
-        session_values = self.fetch_active_session_values()
-        command_chain_response = {
-            'failed': False,
-            'ewallet_session': self.fetch_active_session_id(),
-            'session_data': session_values,
-        }
-        return command_chain_response
-
 #   @pysnooper.snoop('logs/ewallet.log')
     def action_system_user_logout(self, **kwargs):
         '''
@@ -2588,6 +2605,26 @@ class EWallet(Base):
 
     # HANDLERS
 
+    def handle_system_action_interogate_session_state(self, **kwargs):
+        log.debug('')
+        return self.action_interogate_ewallet_session_state(**kwargs)
+
+    def handle_system_action_interogate_session_expired(self, **kwargs):
+        log.debug('')
+        return self.action_interogate_ewallet_session_expired(**kwargs)
+
+    def handle_system_action_interogate_ewallet_session(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('session'):
+            return self.error_no_system_action_interogate_ewallet_session_target_specified(
+                kwargs
+            )
+        handlers = {
+            'expired': self.handle_system_action_interogate_session_expired,
+            'state': self.handle_system_action_interogate_session_state,
+        }
+        return handlers[kwargs['session']](**kwargs)
+
 #   @pysnooper.snoop()
     def handle_user_action_recover_account(self, **kwargs):
         log.debug('')
@@ -2668,10 +2705,6 @@ class EWallet(Base):
             }
         }
         return command_chain_response
-
-    def handle_system_action_interogate_ewallet_session(self, **kwargs):
-        log.debug('')
-        return self.action_interogate_ewallet_session(**kwargs)
 
     def handle_system_action_interogate(self, **kwargs):
         log.debug('')
@@ -4137,6 +4170,16 @@ class EWallet(Base):
     '''
     [ TODO ]: Fetch error messages from message file by key codes.
     '''
+
+    def error_could_not_check_if_ewallet_session_expired(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Something went wrong. '
+                     'Could not check if EWallet session expired. '
+                     'Details: {}'.format(args)
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
 
     def error_could_not_set_session_expiration_date(self, *args):
         command_chain_response = {

@@ -330,7 +330,7 @@ class CreditEWallet(Base):
             self.update_write_date()
         except Exception as e:
             return self.error_could_not_set_create_date(
-                ewallet_session, self.active_session, e
+                create_date, self.create_date, e
             )
         log.info('Successfully set credit ewallet create date.')
         return True
