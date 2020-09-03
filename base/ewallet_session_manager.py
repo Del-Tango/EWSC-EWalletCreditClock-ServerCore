@@ -960,7 +960,7 @@ class EWalletSessionManager():
 
     # CREATORS
 
-#   @pysnooper.snoop()
+#   @pysnooper.snoop('logs/ewallet.log')
     def create_new_ewallet_session(self, **kwargs):
         log.debug('')
         orm_session = self.res_utils.session_factory()

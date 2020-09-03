@@ -127,12 +127,12 @@
         - x - User action Unlink Conversion Record
     - x - Conversion Record
         - x - User action Create Conversion Record
-    - Invoice Sheet
-        - User action Create Invoice Sheet
-        - User action Create Invoice Record
-        - User action Unlink Invoice Record
-    - Invoice Record
-        - User action Create Invoice Record
+    - x - Invoice Sheet
+        - x - User action Create Invoice Sheet
+        - x - User action Create Invoice Record
+        - x - User action Unlink Invoice Record
+    - x - Invoice Record
+        - x - User action Create Invoice Record
     - Time Sheet
         - User action Create Time Sheet
         - User action Create Time Record

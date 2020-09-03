@@ -18,10 +18,10 @@ class CreditInvoiceSheetRecord(Base):
     record_id = Column(Integer, primary_key=True)
     invoice_sheet_id = Column(
         Integer, ForeignKey('credit_invoice_sheet.invoice_sheet_id')
-        )
+    )
     transfer_record_id = Column(
         Integer, ForeignKey('transfer_sheet_record.record_id')
-        )
+    )
     reference = Column(String)
     create_date = Column(DateTime)
     write_date = Column(DateTime)
@@ -36,15 +36,21 @@ class CreditInvoiceSheetRecord(Base):
         self.write_date = datetime.datetime.now()
         self.invoice_sheet_id = kwargs.get('invoice_sheet_id')
         self.transfer_record_id = kwargs.get('transfer_record_id')
-        self.reference = kwargs.get('reference') or \
+        self.reference = kwargs.get(
+            'reference',
             config.invoice_sheet_config['invoice_record_reference']
-        self.credits = kwargs.get('credits') or 0
-        self.currency = kwargs.get('currency') or 'RON'
-        self.cost = kwargs.get('cost') or 1
-        self.seller_id = kwargs.get('seller_id')
-        self.notes = kwargs.get('notes')
+        )
+        self.credits = kwargs.get('credits', 0)
+        self.currency = kwargs.get('currency', 'RON')
+        self.cost = kwargs.get('cost', 1)
+        self.seller_id = kwargs.get('seller_id', int())
+        self.notes = kwargs.get('notes', str())
 
-    # FETCHERS
+    # FETCHERS (RECORD)
+
+    def fetch_record_write_date(self):
+        log.debg('')
+        return self.write_date
 
     def fetch_record_id(self):
         log.debug('')
@@ -78,104 +84,344 @@ class CreditInvoiceSheetRecord(Base):
         }
         return values
 
-    # SETTERS
+    # SETTERS (RECORD)
+
+    def set_transfer_record_id(self, record_id):
+        log.debug('')
+        try:
+            self.transfer_record_id = record_id
+            self.update_write_date()
+        except Exception as e:
+            return self.error_could_not_set_transfer_record_id(
+                record_id, self.transfer_record_id, e
+            )
+        log.info('Successfully set invoice record transfer record id.')
+        return True
+
+    def set_create_date(self, create_date):
+        log.debug('')
+        try:
+            self.create_date = create_date
+            self.update_write_date()
+        except Exception as e:
+            return self.error_could_not_set_invoice_record_create_date(
+                create_date, self.create_date, e
+            )
+        log.info('Successfully set invoice record create date.')
+        return True
 
     def set_record_id(self, **kwargs):
         log.debug('')
         if not kwargs.get('record_id'):
-            return self.error_no_record_id_found()
-        self.record_id = kwargs['record_id']
+            return self.error_no_record_id_found(kwargs)
+        try:
+            self.record_id = kwargs['record_id']
+            self.update_write_date()
+        except Exception as e:
+            return self.error_could_not_set_record_id(
+                kwargs, self.record_id, e
+            )
+        log.info('Successfully set invoice record id.')
         return True
 
     def set_invoice_sheet_id(self, **kwargs):
         log.debug('')
         if not kwargs.get('invoice_sheet_id'):
-            return self.error_no_invoice_sheet_id_found()
-        self.invoice_sheet_id = kwargs['invoice_sheet_id']
+            return self.error_no_invoice_sheet_id_found(kwargs)
+        try:
+            self.invoice_sheet_id = kwargs['invoice_sheet_id']
+            self.update_write_date()
+        except Exception as e:
+            return self.error_could_not_set_invoice_sheet_id(
+                kwargs, self.invoice_sheet_id, e
+            )
+        log.info('Successfully set invoice record sheet id.')
         return False
 
     def set_reference(self, **kwargs):
         log.debug('')
         if not kwargs.get('reference'):
-            return self.error_no_reference_found()
-        self.reference = kwargs['reference']
+            return self.error_no_reference_found(kwargs)
+        try:
+            self.reference = kwargs['reference']
+            self.update_write_date()
+        except Exception as e:
+            return self.error_could_not_set_invoice_record_reference(
+                kwargs, self.reference, e
+            )
+        log.info('Successfully set invoice record reference.')
         return True
 
     def set_credits(self, **kwargs):
         log.debug('')
         if not kwargs.get('credits'):
-            return self.error_no_credits_found()
-        self.credits = kwargs['credits']
+            return self.error_no_credits_found(kwargs)
+        try:
+            self.credits = kwargs['credits']
+            self.update_write_date()
+        except Exception as e:
+            return self.error_could_not_set_credits(
+                kwargs, self.credits, e
+            )
+        log.info('Successfully set invoice record credits.')
         return True
 
     def set_currency(self, **kwargs):
         log.debug('')
         if not kwargs.get('currency'):
-            return self.error_no_currency_found()
-        self.currency = kwargs['currency']
+            return self.error_no_currency_found(kwargs)
+        try:
+            self.currency = kwargs['currency']
+            self.update_write_date()
+        except Exception as e:
+            return self.error_could_not_set_currency(
+                kwargs, self.currency, e
+            )
+        log.info('Successfully set invoice record currency.')
         return False
 
     def set_cost(self, **kwargs):
         log.debug('')
         if not kwargs.get('cost'):
-            return self.error_no_cost_found()
-        self.cost = kwargs['cost']
+            return self.error_no_cost_found(kwargs)
+        try:
+            self.cost = kwargs['cost']
+            self.update_write_date()
+        except Exception as e:
+            return self.error_could_not_set_cost(
+                kwargs, self.cost, e
+            )
+        log.info('Successfully set invoice record cost.')
         return True
 
     def set_seller_id(self, **kwargs):
         log.debug('')
         if not kwargs.get('seller_id'):
-            return self.error_no_seller_id_found()
-        self.seller_id = kwargs['seller_id']
+            return self.error_no_seller_id_found(kwargs)
+        try:
+            self.seller_id = kwargs['seller_id']
+            self.update_write_date()
+        except Exception as e:
+            return self.error_could_not_set_seller_id(
+                kwargs, self.seller_id, e
+            )
+        log.info('Successfully set invoice record seller id.')
         return True
 
     def set_notes(self, **kwargs):
         log.debug('')
         if not kwargs.get('notes'):
-            return self.error_no_notes_found()
-        self.notes = kwargs['notes']
+            return self.error_no_notes_found(kwargs)
+        try:
+            self.notes = kwargs['notes']
+            self.update_write_date()
+        except Exception as e:
+            return self.error_could_not_set_invoice_record_notes(
+                kwargs, self.notes, e
+            )
+        log.info('Successfully set invoice record notes.')
         return True
 
-    # UPDATERS
+    def set_write_date(self, write_date):
+        log.debug('')
+        try:
+            self.write_date = write_date
+        except Exception as e:
+            return self.error_could_not_set_invoice_record_write_date(
+                write_date, self.write_date, e
+            )
+        log.info('Successfully set invoice record write date.')
+        return True
+
+    # UPDATERS (RECORD)
 
     def update_write_date(self):
         log.debug('')
-        self.write_date = datetime.datetime.now()
-        return self.write_date
+        set_date = self.set_write_date(datetime.datetime.now())
+        return set_date if isinstance(set_date, dict) and \
+            set_date.get('failed') else self.fetch_record_write_date()
 
-    # ERRORS
+    # ERRORS (RECORD)
 
-    def error_no_record_id_found(self):
-        log.error('No record id found.')
-        return False
+    def error_could_not_set_invoice_record_create_date(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Something went wrong. '
+                     'Could not set invoice record create date. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
 
-    def error_no_invoice_sheet_id_found(self):
-        log.error('No invoice sheet id found.')
-        return False
+    def error_could_not_set_transfer_record_id(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Something went wrong. '
+                     'Could not set invoice record linked transfer record id. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
 
-    def error_no_reference_found(self):
-        log.error('No reference found.')
-        return False
+    def error_could_not_set_record_id(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Something went wrong. '
+                     'Could not set invoice record id. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
 
-    def error_no_credits_found(self):
-        log.error('No credits found.')
-        return False
+    def error_could_not_set_invoice_record_write_date(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Something went wrong. '
+                     'Could not set invoice record write date. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
 
-    def error_no_currency_found(self):
-        log.error('No currency found')
-        return False
+    def error_could_not_set_invoice_sheet_id(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Something went wrong. '
+                     'Could not set invoice record sheet id. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
 
-    def error_no_cost_found(self):
-        log.error('No cost found.')
-        return False
+    def error_could_not_set_invoice_record_reference(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Something went wrong. '
+                     'Could not set invoice record reference. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
 
-    def error_no_seller_id_found(self):
-        log.error('No seller id found.')
-        return False
+    def error_could_not_set_credits(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Something went wrong. '
+                     'Could not set invoice record credits. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
 
-    def error_no_notes_found(self):
-        log.error('No notes found.')
-        return False
+    def error_could_not_set_currency(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Something went wrong. '
+                     'Could not set invoice record currency. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_could_not_set_cost(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Something went wrong. '
+                     'Could not set invoice record cost. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_could_not_set_seller_id(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Something went wrong. '
+                     'Could not set invoice record seller id. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_could_not_set_invoice_record_notes(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Something went wrong. '
+                     'Could not set invoice record notes. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_no_record_id_found(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No record id found. Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_no_invoice_sheet_id_found(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No invoice sheet id found. Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_no_reference_found(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No invoice record reference found. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_no_credits_found(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No credits found. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_no_currency_found(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No currency found. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_no_cost_found(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No cost found. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_no_seller_id_found(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No seller id found. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_no_notes_found(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No notes found. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
 
 
 class CreditInvoiceSheet(Base):
@@ -186,20 +432,19 @@ class CreditInvoiceSheet(Base):
     reference = Column(String)
     create_date = Column(DateTime)
     write_date = Column(DateTime)
-    # O2O
     wallet = relationship('CreditEWallet', back_populates='invoice_sheet')
-    # O2M
     records = relationship('CreditInvoiceSheetRecord')
 
     def __init__(self, **kwargs):
-        self.create_date = datetime.datetime.now()
-        self.write_date = datetime.datetime.now()
-        self.wallet_id = kwargs.get('wallet_id')
+        self.create_date = kwargs.get('create_date', datetime.datetime.now())
+        self.write_date = kwargs.get('write_date', datetime.datetime.now())
+        self.wallet_id = kwargs.get('wallet_id', int())
+        self.wallet = kwargs.get('wallet')
         self.reference = kwargs.get('reference') or \
             config.invoice_sheet_config['invoice_sheet_reference']
-        self.records = kwargs.get('records') or []
+        self.records = kwargs.get('records', [])
 
-    # FETCHERS
+    # FETCHERS (LIST)
 
     def fetch_credit_invoice_records(self, **kwargs):
         log.debug('')
@@ -247,6 +492,10 @@ class CreditInvoiceSheet(Base):
     def fetch_invoice_sheet_create_date(self):
         log.debug('')
         return self.create_date
+
+    def fetch_invoice_sheet_write_date(self):
+        log.debug('')
+        return self.write_date
 
     def fetch_invoice_sheet_records(self):
         log.debug('')
@@ -316,42 +565,106 @@ class CreditInvoiceSheet(Base):
         log.info('Successfully fetched invoice records by seller.')
         return _records
 
-    # SETTERS
+    # SETTERS (LIST)
+
+    def set_create_date(self, create_date):
+        log.debug('')
+        try:
+            self.create_date = create_date
+            self.update_write_date()
+        except Exception as e:
+            return self.error_could_not_set_invoice_sheet_create_date(
+                create_date, self.create_date, e
+            )
+        log.info('Successfully set invoice sheet credit ewallet.')
+        return True
+
+    def set_ewallet(self, credit_ewallet):
+        log.debug('')
+        try:
+            self.wallet = credit_ewallet
+            self.update_write_date()
+        except Exception as e:
+            return self.error_could_not_set_invoice_sheet_ewallet(
+                credit_ewallet, self.wallet, e
+            )
+        log.info('Successfully set invoice sheet credit ewallet.')
+        return True
 
     def set_invoice_sheet_id(self, **kwargs):
         log.debug('')
         if not kwargs.get('invoice_sheet_id'):
-            return self.error_no_invoice_sheet_id_found()
-        self.invoice_sheet_id = kwargs['invoice_sheet_id']
+            return self.error_no_invoice_sheet_id_found(kwargs)
+        try:
+            self.invoice_sheet_id = kwargs['invoice_sheet_id']
+            self.update_write_date()
+        except Exception as e:
+            return self.error_could_not_set_invoice_sheet_id(
+                kwargs, self.invoice_sheet_id, e
+            )
+        log.info('Successfully set invoice sheet id.')
         return True
 
     def set_wallet_id(self, **kwargs):
         log.debug('')
         if not kwargs.get('wallet_id'):
-            return self.error_no_wallet_id_found()
-        self.wallet_id = kwargs['wallet_id']
+            return self.error_no_wallet_id_found(kwargs)
+        try:
+            self.wallet_id = kwargs['wallet_id']
+            self.update_write_date()
+        except Exception as e:
+            return self.error_could_not_set_invoice_sheet_ewallet_id(
+                kwargs, self.wallet_id, e
+            )
+        log.info('Successfully set invoice sheet ewallet id.')
         return True
 
     def set_reference(self, **kwargs):
         log.debug('')
         if not kwargs.get('reference'):
-            return self.error_no_reference_found()
-        self.reference = kwargs['reference']
+            return self.error_no_reference_found(kwargs)
+        try:
+            self.reference = kwargs['reference']
+            self.update_write_date()
+        except Exception as e:
+            return self.error_could_not_set_invoice_sheet_reference(
+                kwargs, self.reference, e
+            )
+        log.info('Successfully set invoice sheet reference.')
         return True
 
     def set_records(self, **kwargs):
         log.debug('')
         if not kwargs.get('records'):
-            return self.error_no_records_found()
-        self.records = kwargs['records']
+            return self.error_no_records_found(kwargs)
+        try:
+            self.records = kwargs['records']
+            self.update_write_date()
+        except Exception as e:
+            return self.error_no_invoice_records_found(
+                kwargs, self.records, e
+            )
+        log.info('Successfully set invoice sheet records.')
         return False
 
-    # UPDATERS
+    def set_write_date(self, write_date):
+        log.debug('')
+        try:
+            self.write_date = write_date
+        except Exception as e:
+            return self.error_could_not_set_invoice_sheet_write_date(
+                write_date, self.write_date, e
+            )
+        log.info('Successfully set invoice sheet write date.')
+        return True
+
+    # UPDATERS (LIST)
 
     def update_write_date(self):
         log.debug('')
-        self.write_date = datetime.datetime.now()
-        return self.write_date
+        set_date = self.set_write_date(datetime.datetime.now())
+        return set_date if isinstance(set_date, dict) and \
+            set_date.get('failed') else self.fetch_invoice_sheet_write_date()
 
     def update_records(self, record):
         log.debug('')
@@ -364,7 +677,7 @@ class CreditInvoiceSheet(Base):
         log.info('Successfully updated invoice sheet records.')
         return self.records
 
-    # INTEROGATORS
+    # INTEROGATORS (LIST)
 
     def interogate_credit_invoice_record_by_id(self, **kwargs):
         log.debug('')
@@ -396,7 +709,7 @@ class CreditInvoiceSheet(Base):
         _display = self.display_credit_invoice_records(records=_records)
         return _records if _display else False
 
-    # ACTIONS
+    # ACTIONS (LIST)
 
 #   @pysnooper.snoop()
     def action_add_credit_invoice_sheet_record(self, **kwargs):
@@ -442,10 +755,11 @@ class CreditInvoiceSheet(Base):
 
     def action_clear_credit_invoice_sheet_records(self, **kwargs):
         log.debug('')
-        self.records = []
-        return self.records
+        set_record = self.set_record(records=[])
+        return set_record if isinstance(set_record, dict) and \
+            set_record.get('failed') else self.fetch_invoice_sheet_records()
 
-    # CONTROLLERS
+    # CONTROLLERS (LIST)
 
     def credit_invoice_sheet_controller(self, **kwargs):
         log.debug('')
@@ -457,12 +771,9 @@ class CreditInvoiceSheet(Base):
             'interogate': self.action_interogate_credit_invoice_sheet_records,
             'clear': self.action_clear_credit_invoice_sheet_records,
         }
-        handle = handlers[kwargs['action']](**kwargs)
-        if handle:
-            self.update_write_date()
-        return handle
+        return handlers[kwargs['action']](**kwargs)
 
-    # ERROR HANDLERS
+    # ERROR HANDLERS (LIST)
 
     def error_handler_add_credit_invoice_sheet_record(self, **kwargs):
         _reasons_and_handlers = {
@@ -480,7 +791,7 @@ class CreditInvoiceSheet(Base):
                 return _reasons_and_handlers['handlers'][item]()
         return False
 
-    # WARNINGS
+    # WARNINGS (LIST)
 
     def warning_could_not_fetch_invoice_record(self, command_chain, *args, **kwargs):
         command_chain_response = {
@@ -491,100 +802,224 @@ class CreditInvoiceSheet(Base):
         log.warning(command_chain_response['warning'])
         return command_chain_response
 
-    # ERRORS
+    # ERRORS (LIST)
 
-    def error_invoice_record_already_in_sheet_record_set(self, record):
+    def error_could_not_set_invoice_sheet_ewallet(self, *args):
         command_chain_response = {
             'failed': True,
-            'error': 'Duplicated invoice record. Could not update invoice sheet records '\
-                     'with {}.'.format(record),
+            'error': 'Something went wrong. '
+                     'Could not set invoice sheet credit ewallet. '
+                     'Details: {}'.format(args),
         }
         log.error(command_chain_response['error'])
         return command_chain_response
 
-    def error_could_not_update_invoice_sheet_records(self, record):
+    def error_could_not_set_invoice_sheet_create_date(self, *args):
         command_chain_response = {
             'failed': True,
-            'error': 'Something went wrong. Could not update invoice sheet records '\
-                     'with {}.'.format(record),
+            'error': 'Something went wrong. '
+                     'Could not set invoice sheet create date. '
+                     'Details: {}'.format(args),
         }
         log.error(command_chain_response['error'])
         return command_chain_response
 
-    def error_no_credits_found(self, command_chain):
+    def error_could_not_set_invoice_sheet_id(self, *args):
         command_chain_response = {
             'failed': True,
-            'error': 'No credits found. Command chain details : {}',
+            'error': 'Something went wrong. '
+                     'Could not set invoice sheet id. '
+                     'Details: {}'.format(args),
         }
         log.error(command_chain_response['error'])
         return command_chain_response
 
-    def error_no_seller_id_found(self, command_chain):
+    def error_could_not_set_invoice_sheet_write_date(self, *args):
         command_chain_response = {
             'failed': True,
-            'error': 'No seller id found. Command chain details : {}',
+            'error': 'Something went wrong. '
+                     'Could not set invoice sheet write date. '
+                     'Details: {}'.format(args),
         }
         log.error(command_chain_response['error'])
         return command_chain_response
 
-
-    def error_could_not_remove_credit_invoice_sheet_record(self, command_chain):
+    def error_could_not_set_invoice_sheet_ewallet_id(self, *args):
         command_chain_response = {
             'failed': True,
-            'error': 'Could not remove credit invoice sheet record. '\
-                     'Command chain details : {}'.format(command_chain),
+            'error': 'Something went wrong. '
+                     'Could not set invoice sheet ewallet id. '
+                     'Details: {}'.format(args),
         }
         log.error(command_chain_response['error'])
         return command_chain_response
 
-    def error_no_invoice_record_id_found(self, command_chain):
+    def error_could_not_set_invoice_sheet_reference(self, *args):
         command_chain_response = {
             'failed': True,
-            'error': 'No invoice record id found. Command chain details : {}'\
-                     .format(command_chain),
+            'error': 'Something went wrong. '
+                     'Could not set invoice sheet reference. '
+                     'Details: {}'.format(args),
         }
         log.error(command_chain_response['error'])
         return command_chain_response
 
-    def error_no_invoice_sheet_id_found(self):
-        log.error('No invoice sheet id found.')
-        return False
+    def error_no_invoice_records_found(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No invoice sheet records found. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
 
-    def error_no_wallet_id_found(self):
-        log.error('No wallet id found.')
-        return False
+    def error_invoice_record_already_in_sheet_record_set(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Duplicated invoice record. '
+                     'Could not update invoice sheet records. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
 
-    def error_no_reference_found(self):
-        log.error('No reference found.')
-        return False
+    def error_could_not_update_invoice_sheet_records(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Something went wrong. '
+                     'Could not update invoice sheet records. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
 
-    def error_no_records_found(self):
-        log.error('No records found.')
-        return False
+    def error_no_credits_found(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No credits found. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
 
-    def error_no_invoice_record_interogation_identifier_specified(self):
-        log.error('No invoice record interogation identifier specified.')
-        return False
+    def error_no_seller_id_found(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No seller id found. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
 
-    def error_no_invoice_sheet_controller_action_specified(self):
-        log.error('No invoice sheet controller action specified.')
-        return False
+    def error_could_not_remove_credit_invoice_sheet_record(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Something went wrong. '
+                     'Could not remove invoice sheet record. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
 
-    def error_no_credits_found(self):
-        log.error('No credits found.')
-        return False
+    def error_no_invoice_record_id_found(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No invoice sheet record id found. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
 
-    def error_no_invoice_record_search_identifier_specified(self):
-        log.error('No invoice record search identifier specified.')
-        return False
+    def error_no_invoice_sheet_id_found(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No invoice sheet sheet id found. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
 
-    def error_no_new_invoice_record_values_found(self):
-        log.error('No new invoice record values found.')
-        return False
+    def error_no_wallet_id_found(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No wallet id found. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
 
-    def error_no_active_session_found(self):
-        log.error('No active session found.')
-        return False
+    def error_no_reference_found(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No invoice sheet reference found. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_no_records_found(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No invoice sheet records found. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_no_invoice_record_interogation_identifier_specified(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No invoice record interogation identifier specified. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_no_invoice_sheet_controller_action_specified(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No invoice sheet controller action specified. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_no_credits_found(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No credits found. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_no_invoice_record_search_identifier_specified(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No invoice record search identifier specified. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_no_new_invoice_record_values_found(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No new invoice record values found. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_no_active_session_found(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No active session found. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
 
 ###############################################################################
 # CODE DUMP

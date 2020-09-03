@@ -980,19 +980,6 @@ class CreditClock(Base):
         log.info('Successfully created new credit clock time sheet.')
         return time_sheet
 
-#   @pysnooper.snoop()
-    def create_credit_clock_conversion_sheet(self, **kwargs):
-        log.debug('')
-        if not kwargs.get('active_session'):
-            return self.error_no_active_session_found()
-        values = self.fetch_conversion_sheet_creation_values(**kwargs)
-        conversion_sheet = CreditClockConversionSheet(**values)
-        kwargs['active_session'].add(conversion_sheet)
-        self.update_conversion_sheet_archive(conversion_sheet)
-        kwargs['active_session'].commit()
-        log.info('Successfully created new credit clock conversion sheet.')
-        return conversion_sheet
-
 #   @pysnooper.snoop('logs/ewallet.log')
     def create_credit_clock_conversion_record(self, creation_values, **kwargs):
         log.debug('')
@@ -1261,6 +1248,19 @@ class CreditClock(Base):
         log.debug('UNIMPLEMENTED')
 
     # CREATORS
+
+#   @pysnooper.snoop('logs/ewallet.log')
+    def create_credit_clock_conversion_sheet(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('active_session'):
+            return self.error_no_active_session_found()
+        values = self.fetch_conversion_sheet_creation_values(**kwargs)
+        conversion_sheet = CreditClockConversionSheet(**values)
+        kwargs['active_session'].add(conversion_sheet)
+        self.update_conversion_sheet_archive(conversion_sheet)
+        kwargs['active_session'].commit()
+        log.info('Successfully created new credit clock conversion sheet.')
+        return conversion_sheet
 
     def create_credit_clock_sheet(self, **kwargs):
         log.debug('')
