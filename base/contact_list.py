@@ -40,6 +40,12 @@ class ContactListRecord(Base):
         self.reference = kwargs.get('reference') or \
             config.contact_list_config['contact_record_reference']
 
+    # FETCHERS (RECORD)
+
+    def fetch_record_write_date(self):
+        log.debug('')
+        return self.write_date
+
     def fetch_record_id(self):
         log.debug('')
         return self.record_id
@@ -80,87 +86,271 @@ class ContactListRecord(Base):
         }
         return values
 
+    # SETTERS (RECORD)
+
     def set_record_id(self, **kwargs):
         log.debug('')
         if not kwargs.get('record_id'):
-            return self.error_no_record_id_found()
-        self.record_id = kwargs['record_id']
+            return self.error_no_record_id_found(kwargs)
+        try:
+            self.record_id = kwargs['record_id']
+            self.update_write_date()
+        except Exception as e:
+            return self.error_could_not_set_contact_record_id(
+                kwargs, self.record_id, e
+            )
+        log.info('Successfully set contact record id.')
         return True
 
     def set_contact_list_id(self, **kwargs):
         log.debug('')
         if not kwargs.get('contact_list_id'):
-            return self.error_no_contact_list_id_found()
-        self.contact_list_id = kwargs['contact_list_id']
+            return self.error_no_contact_list_id_found(kwargs)
+        try:
+            self.contact_list_id = kwargs['contact_list_id']
+            self.update_write_date()
+        except Exception as e:
+            return self.error_could_not_set_contact_list_id(
+                kwargs, self.contact_list_id, e
+            )
+        log.info('Successfully set record contact list id.')
         return True
 
     def set_user_name(self, **kwargs):
         log.debug('')
         if not kwargs.get('user_name'):
-            return self.error_no_user_name_found()
-        self.user_name = kwargs['user_name']
+            return self.error_no_user_name_found(kwargs)
+        try:
+            self.user_name = kwargs['user_name']
+            self.update_write_date()
+        except Exception as e:
+            return self.error_could_not_set_user_name(
+                kwargs, self.user_name, e
+            )
+        log.info('Successfully set user name.')
         return True
 
     def set_user_email(self, **kwargs):
         log.debug('')
         if not kwargs.get('user_email'):
-            return self.error_no_user_email_found()
-        self.user_name = kwargs['user_email']
+            return self.error_no_user_email_found(kwargs)
+        try:
+            self.user_email = kwargs['user_email']
+            self.update_write_date()
+        except Exception as e:
+            return self.error_could_not_set_user_email(
+                kwargs, self.user_email, e
+            )
+        log.info('Successfully set user email.')
         return True
 
     def set_user_phone(self, **kwargs):
         log.debug('')
         if not kwargs.get('user_phone'):
-            return self.error_no_user_phone_found()
-        self.user_phone = kwargs['user_phone']
+            return self.error_no_user_phone_found(kwargs)
+        try:
+            self.user_phone = kwargs['user_phone']
+            self.update_write_date()
+        except Exception as e:
+            return self.error_could_not_set_user_phone(
+                kwargs, self.user_phone, e
+            )
+        log.info('Successfully set user phone.')
         return True
 
     def set_notes(self, **kwargs):
         log.debug('')
         if not kwargs.get('notes'):
-            return self.error_no_notes_found()
-        self.notes = kwargs['notes']
+            return self.error_no_notes_found(kwargs)
+        try:
+            self.notes = kwargs['notes']
+            self.update_write_date()
+        except Exception as e:
+            return self.error_could_not_set_user_notes(
+                kwargs, self.notes, e
+            )
+        log.info('Successfully set contact record notes.')
         return True
 
     def set_reference(self, **kwargs):
         log.debug('')
         if not kwargs.get('reference'):
-            return self.error_no_reference_found()
-        self.reference = kwargs['reference']
+            return self.error_no_reference_found(kwargs)
+        try:
+            self.reference = kwargs['reference']
+            self.update_write_date()
+        except Exception as e:
+            return self.error_could_not_set_reference(
+                kwargs, self.reference, e
+            )
+        log.info('Successfully set contact record reference.')
         return True
+
+    def set_write_date(self, write_date):
+        log.debug('')
+        try:
+            self.write_date = write_date
+        except Exception as e:
+            return self.error_could_not_set_write_date(
+                write_date, self.write_date, e
+            )
+        log.info('Successfully set contact record write date.')
+        return True
+
+    # UPDATERS (RECORD)
 
     def update_write_date(self):
         log.debug('')
-        self.write_date = datetime.datetime.now()
-        return self.write_date
+        self.set_write_date(datetime.datetime.now())
+        return self.fetch_record_write_date()
 
-    def error_no_record_id_found(self):
-        log.error('No record id found.')
-        return False
+    # ERRORS (RECORD)
+    '''
+    [ TODO ]: Fetch error messages from message file by key codes.
+    '''
 
-    def error_no_contact_list_id_found(self):
-        log.error('No contact list id found.')
-        return False
+    def error_could_not_set_user_name(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Something went wrong. '
+                     'Could not set contact record user name. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
 
-    def error_no_user_name_found(self):
-        log.error('No user name found.')
-        return False
+    def error_could_not_set_user_email(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Something went wrong. '
+                     'Could not set contact record user email. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
 
-    def error_no_user_email_found(self):
-        log.error('No user email found.')
-        return False
+    def error_could_not_set_user_phone(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Something went wrong. '
+                     'Could not set contact record user phone. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
 
-    def error_no_user_phone_found(self):
-        log.error('No user phone found.')
-        return False
+    def error_could_not_set_user_notes(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Something went wrong. '
+                     'Could not set contact record user notes. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
 
-    def error_no_notes_found(self):
-        log.error('No notes found.')
-        return False
+    def error_could_not_set_reference(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Something went wrong. '
+                     'Could not set contact record reference. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
 
-    def error_no_reference_found(self):
-        log.error('No reference found.')
-        return False
+    def error_could_not_set_write_date(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Something went wrong. '
+                     'Could not set contact record write date. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_could_not_set_contact_record_id(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Something went wrong. '
+                     'Could not set contact record id. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_no_record_id_found(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No record id found. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_could_not_set_contact_list_id(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Something went wrong. '
+                     'Could not set contact list id. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_no_contact_list_id_found(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No contact list id found. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_no_user_name_found(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No user name found. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_no_user_email_found(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No user email found. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_no_user_phone_found(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No user phone found. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_no_notes_found(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No contact record notes found. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_no_reference_found(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No contact record reference found. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
 
 
 class ContactList(Base):
@@ -181,13 +371,22 @@ class ContactList(Base):
     records = relationship('ContactListRecord')
 
     def __init__(self, **kwargs):
-        self.create_date = datetime.datetime.now()
-        self.write_date = datetime.datetime.now()
+        self.contact_list_id = kwargs.get('contact_list_id')
+        self.create_date = kwargs.get('create_date') or datetime.datetime.now()
+        self.write_date = kwargs.get('write_date') or datetime.datetime.now()
         self.client_id = kwargs.get('client_id')
+        self.client = kwargs.get('client')
         self.reference = kwargs.get('reference') or \
             config.contact_list_config['contact_list_reference']
         self.active_session_id = kwargs.get('active_session_id')
+        self.active_session = kwargs.get('active_session')
         self.records = kwargs.get('records') or []
+
+    # FETCHERS (LIST)
+
+    def fetch_contact_list_write_date(self):
+        log.debug('')
+        return self.write_date
 
     def fetch_contact_list_id(self):
         log.debug('')
@@ -238,11 +437,6 @@ class ContactList(Base):
                 kwargs
             )
         return records
-
-    def update_write_date(self):
-        log.debug('')
-        self.write_date = datetime.datetime.now()
-        return self.write_date
 
     def fetch_contact_list_record_by_id(self, **kwargs):
         log.debug('')
@@ -324,47 +518,164 @@ class ContactList(Base):
                 }
         return _handlers[kwargs['search_by']](**kwargs)
 
-    # SETTERS
+    # SETTERS (LIST)
+
+    def set_create_date(self, create_date):
+        log.debug('')
+        try:
+            self.create_date = create_date
+            self.update_write_date()
+        except Exception as e:
+            return self.error_could_not_set_contact_list_create_date(
+                create_date, self.create_date, e
+            )
+        log.info('Successfully set contact list create date.')
+        return True
+
+    def set_active_session_id(self, ewallet_session_id):
+        log.debug('')
+        try:
+            self.active_session_id = ewallet_session_id
+            self.update_write_date()
+        except Exception as e:
+            return self.error_could_not_set_contact_list_active_session_id(
+                ewallet_session_id, self.active_session_id, e
+            )
+        log.info('Successfully set active ewallet session id.')
+        return True
+
+    def set_active_session(self, ewallet_session):
+        log.debug('')
+        try:
+            self.active_session = ewallet_session
+            self.update_write_date()
+        except Exception as e:
+            return self.error_could_not_set_contact_list_active_session(
+                ewallet_session, self.active_session, e
+            )
+        log.info('Successfully set contact list active ewallet session.')
+        return True
+
+    def set_client(self, user):
+        log.debug('')
+        try:
+            self.client = user
+            self.update_write_date()
+        except Exception as e:
+            return self.error_could_not_set_contact_list_client(
+                user, self.client, e
+            )
+        log.info('Successfully set contact list client.')
+        return True
+
+    def set_to_contact_list_records(self, record):
+        log.debug('')
+        try:
+            self.records.append(record)
+            self.update_write_date()
+        except Exception as e:
+            return self.error_could_not_update_contact_list_records(
+                record, self.records, e
+            )
+        log.info('Successfully updated contact list records.')
+        return True
 
     def set_contact_list_id(self, **kwargs):
         log.debug('')
         if not kwargs.get('contact_list_id'):
-            return self.error_no_contact_list_id_found()
-        self.contact_list_id = kwargs['contact_list_id']
+            return self.error_no_contact_list_id_found(kwargs)
+        try:
+            self.contact_list_id = kwargs['contact_list_id']
+            self.update_write_date()
+        except Exception as e:
+            return self.error_could_not_set_contact_list_id(
+                kwargs, self.contact_list_id, e
+            )
+        log.info('Successfully set contact list id.')
         return True
 
     def set_client_id(self, **kwargs):
         log.debug('')
         if not kwargs.get('client_id'):
-            return self.error_no_client_id_found()
-        self.client_id = kwargs['client_id']
+            return self.error_no_client_id_found(kwargs)
+        try:
+            self.client_id = kwargs['client_id']
+            self.update_write_date()
+        except Exception as e:
+            return self.error_could_not_set_client_id(
+                kwargs, self.client_id, e
+            )
+        log.info('Successfully set client id.')
         return True
 
     def set_reference(self, **kwargs):
         log.debug('')
         if not kwargs.get('reference'):
-            return self.error_no_reference_found()
-        self.reference = kwargs['reference']
+            return self.error_no_reference_found(kwargs)
+        try:
+            self.reference = kwargs['reference']
+            self.update_write_date()
+        except Exception as e:
+            return self.error_could_not_set_contact_list_reference(
+                kwargs, self.reference, e
+            )
+        log.info('Successfully set contact list reference.')
         return True
 
     def set_records(self, **kwargs):
         log.debug('')
         if not kwargs.get('records'):
-            return self.error_no_records_found()
-        self.records = kwargs['records']
+            return self.error_no_records_found(kwargs)
+        try:
+            self.records = kwargs['records']
+            self.update_write_date()
+        except Exception as e:
+            return self.error_could_not_set_contact_list_records(
+                kwargs, self.records, e
+            )
+        log.info('Successfully set contact list records.')
         return True
 
-    # UPDATERS
+    def set_write_date(self, write_date):
+        log.debug('')
+        try:
+            self.write_date = write_date
+        except Exception as e:
+            return self.error_could_not_set_contact_list_write_date(
+                write_date, self.write_date, e
+            )
+        log.info('Successfully set contact list write date.')
+        return True
+
+    # UPDATERS (LIST)
+
+    def update_write_date(self):
+        log.debug('')
+        self.set_write_date(datetime.datetime.now())
+        return self.fetch_contact_list_write_date()
+
+    def update_contact_list(self, **kwargs):
+        '''
+        [ INPUT ]: values = {'update_type': '', records: []}
+        '''
+        log.debug('')
+        if not kwargs.get('utype'):
+            return self.error_no_contact_list_update_type_specified()
+        handlers = {
+            'rewrite': self.handle_update_contact_list_rewrite,
+            'append': self.handle_update_contact_list_append,
+            'remove': self.handle_update_contact_list_remove,
+            'clear': self.handle_update_contact_list_clear,
+        }
+        return handlers[kwargs.get('utype')](**kwargs)
 
     def update_contact_list_records(self, record):
         log.debug('')
-        try:
-            self.records.append(record)
-        except:
-            return self.error_could_not_update_contact_list_records(record)
-        return True
+        set_to = self.set_to_contact_list_records(record)
+        return set_to if isinstance(set_to, dict) and \
+            set_to.get('failed') else self.fetch_contact_list_records()
 
-    # HANDLERS
+    # HANDLERS (LIST)
 
     def handle_update_contact_list_remove(self, **kwargs):
         log.debug('')
@@ -389,8 +700,8 @@ class ContactList(Base):
         if not kwargs.get('records'):
             return self.error_no_contact_records_found()
         self.records = {}
-        _new_records = kwargs['records']
-        for item in _new_records:
+        new_records = kwargs['records']
+        for item in new_records:
             self.records.update({item.fetch_record_id(): item})
         if self.records:
             log.info('Successfully updated contact list.')
@@ -444,17 +755,18 @@ class ContactList(Base):
                 ))
         return kwargs['records']
 
-    # TODO
-    def handle_display_contact_list_records_to_desktop(self, **kwargs):
-        log.debug('')
-        print('Unimplemented functionality: - handle_display_contact_list_to_desktop')
-        pass
+    # INTEROGATORS (LIST)
 
-    # TODO
-    def handle_display_contact_list_records_to_web(self, **kwargs):
+    def interogate_contact_list(self, **kwargs):
         log.debug('')
-        print('Unimplemented functionality: - handle_display_contact_list_to_web')
-        pass
+        if not kwargs.get('search_type'):
+            return self.error_no_contact_list_interogation_type_specified()
+        _handlers = {
+                'single': self.interogate_contact_list_for_single_record,
+                'filter': self.interogate_contact_list_for_filtered_records,
+                'all': self.interogate_contact_list_for_all_records,
+                }
+        return _handlers[kwargs['search_type']](**kwargs)
 
     def interogate_contact_list_for_single_record(self, **kwargs):
         log.debug('')
@@ -480,6 +792,8 @@ class ContactList(Base):
                 display_to='terminal', records=[item for item in self.records.values()]
                 )
 
+    # CREATORS (LIST)
+
     def create_contact_list_record(self, **kwargs):
         log.debug('')
         record = ContactListRecord(
@@ -493,16 +807,20 @@ class ContactList(Base):
         kwargs['active_session'].add(record)
         return record
 
+    # DISPLAYS (LIST)
+
     def display_contact_list_records(self, **kwargs):
         log.debug('')
         if not kwargs.get('display_to'):
             return self.error_no_record_display_target_specified()
-        _handlers = {
-                'terminal': self.handle_display_contact_list_records_to_terminal,
-                'desktop': self.handle_display_contact_list_records_to_desktop,
-                'web': self.handle_display_contact_list_records_to_web,
-                }
-        return _handlers[kwargs['display_to']](**kwargs)
+        handlers = {
+            'terminal': self.handle_display_contact_list_records_to_terminal,
+#           'desktop': self.handle_display_contact_list_records_to_desktop,
+#           'web': self.handle_display_contact_list_records_to_web,
+        }
+        return handlers[kwargs['terminal']](**kwargs)
+
+    # GENERAL (LIST)
 
     def load_contact_list_records(self, **kwargs):
         log.debug('')
@@ -514,43 +832,165 @@ class ContactList(Base):
                 }
         return _handlers[kwargs.get('source')](**kwargs)
 
-    # [ INPUT ]: values = {'update_type': '', records: []}
-    def update_contact_list(self, **kwargs):
-        log.debug('')
-        if not kwargs.get('utype'):
-            return self.error_no_contact_list_update_type_specified()
-        handlers = {
-            'rewrite': self.handle_update_contact_list_rewrite,
-            'append': self.handle_update_contact_list_append,
-            'remove': self.handle_update_contact_list_remove,
-            'clear': self.handle_update_contact_list_clear,
-        }
-        return handlers[kwargs.get('utype')](**kwargs)
-
-    def interogate_contact_list(self, **kwargs):
-        log.debug('')
-        if not kwargs.get('search_type'):
-            return self.error_no_contact_list_interogation_type_specified()
-        _handlers = {
-                'single': self.interogate_contact_list_for_single_record,
-                'filter': self.interogate_contact_list_for_filtered_records,
-                'all': self.interogate_contact_list_for_all_records,
-                }
-        return _handlers[kwargs['search_type']](**kwargs)
+    # CONTROLLERS (LIST)
 
     def contact_list_controller(self, **kwargs):
         log.debug('')
         if not kwargs.get('action'):
             return self.error_no_contact_list_controller_action_specified()
-        _handlers = {
-                'load': self.load_contact_list_records,
-                'create': self.create_contact_list_record,
-                'update': self.update_contact_list,
-                'interogate': self.interogate_contact_list,
-                }
-        return _handlers[kwargs['action']](**kwargs)
+        handlers = {
+            'load': self.load_contact_list_records,
+            'create': self.create_contact_list_record,
+            'update': self.update_contact_list,
+            'interogate': self.interogate_contact_list,
+        }
+        return handlers[kwargs['action']](**kwargs)
 
-    # ERRORS
+    # WARNINGS (LIST)
+    '''
+    [ TODO ]: Fetch warning messages from message file by key codes.
+    '''
+
+    def warning_could_not_fetch_contact_records_from_database(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Something went wrong. '
+                       'Could not fetch contact records from database. '
+                       'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    # ERRORS (LIST)
+    '''
+    [ TODO ]: Fetch error messages from message file by key codes.
+    '''
+
+    def error_could_not_set_contact_list_client(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Something went wrong. '
+                     'Could not set contact list client user. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_could_not_set_contact_list_active_session(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Something went wrong. '
+                     'Could not set contact list active ewallet session. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_could_not_set_contact_list_active_session_id(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Something went wrong. '
+                     'Could not set contact list active ewallet session id. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_could_not_set_contact_list_create_date(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Something went wrong. '
+                     'Could not set contact list create date. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_could_not_set_contact_list_records(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Something went wrong. '
+                     'Could not set contact list records. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_no_records_found(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No contact records found. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_could_not_set_contact_list_reference(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Something went wrong. '
+                     'Could not set contact list reference. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_no_reference_found(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No reference found. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_could_not_set_contact_list_write_date(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Something went wrong. '
+                     'Could not set contact list write date. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_could_not_set_client_id(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Something went wrong. '
+                     'Could not set client id. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_no_client_id_found(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No client id found. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_no_contact_list_id_found(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No contact list id found. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_could_not_set_contact_list_id(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Something went wrong. '
+                     'Could not set contact list id. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
 
     def error_no_active_session_found(self, command_chain):
         command_chain_response = {
@@ -587,22 +1027,6 @@ class ContactList(Base):
         }
         log.error(command_chain_response['error'])
         return command_chain_response
-
-    def error_no_contact_list_id_found(self):
-        log.error('No contact list id found.')
-        return False
-
-    def error_no_client_id_found(self):
-        log.error('No client id found.')
-        return False
-
-    def error_no_reference_found(self):
-        log.error('No reference found.')
-        return False
-
-    def error_no_records_found(self):
-        log.error('No records found.')
-        return False
 
     def error_no_contact_list_interogation_type_specified(self):
         log.error('No contact list interogation type specified.')
@@ -648,87 +1072,6 @@ class ContactList(Base):
         log.error('No contact list record name found.')
         return False
 
-    def warning_could_not_fetch_contact_records_from_database(self):
-        log.warning('Could not fetch contact records from database.')
-        return False
-
-    def test_contact_list_record_generator(self, count):
-        _records = []
-        for item in range(1,count):
-            _record = self.create_contact_list_record(
-                    user_name='Test Username {}'.format(item),
-                    user_email='test{}@mail.com'.format(item),
-                    user_phone='555 555 555',
-                    notes='Test {} notes'.format(item),
-                    )
-            _records.append(_record)
-        return _records
-
-    def test_contact_list_load(self):
-        print('[ TEST ]: Contact list load...')
-        print('[ * ]: Args')
-        _records = self.test_contact_list_record_generator(5)
-        return self.contact_list_controller(
-                action='load', source='args', records=_records
-                )
-        return True
-
-    def test_contact_list_update(self):
-        print('[ TEST ]: Contact list update...')
-        print('[ * ]: Append')
-        _records = self.test_contact_list_record_generator(5)
-        test_append = self.contact_list_controller(
-                action='update', update_type='append', records=_records
-                )
-        print('[ * ]: Remove')
-        _all_records = [item for item in self.records.values()]
-        test_remove = self.contact_list_controller(
-                action='update', update_type='remove', records=_all_records
-                )
-        print('[ * ]: Clear')
-        test_clear = self.contact_list_controller(
-                action='update', update_type='clear'
-                )
-        print('[ * ]: Rewrite')
-        test_rewrite = self.contact_list_controller(
-                action='update', update_type='rewrite', records=_records
-                )
-        return True
-
-    def test_contact_list_interogate(self):
-        print('[ TEST ]: Contact list interogate...')
-        print('[ * ]: Single')
-        code = [item for item in self.records.values()]
-        test_single = self.contact_list_controller(
-                action='interogate', search_type='single', search_by='id',
-                code=code[0].fetch_record_id()
-                )
-        print('[ * ]: Filter')
-        test_filter = self.contact_list_controller(
-                action='interogate', search_type='filter', search_by='name',
-                code=code[0].fetch_record_user_name(),
-                )
-        print('[ * ]: All')
-        test_filter = self.contact_list_controller(
-                action='interogate', search_type='all'
-                )
-        return True
-
-    def test_contact_list_regression(self):
-        self.test_contact_list_load()
-        self.test_contact_list_update()
-        self.test_contact_list_interogate()
-
-
-
-#contact_list = ContactList(client_id=1234, reference='Test Contact List')
-#contact_list.test_contact_list_regression()
-
 # ==============================================================================
 # CODE DUMP
 # ==============================================================================
-
-# O2O
-#   active_session = relationship('EWallet', back_populates="contact_list", foreign_keys=[active_session_id])
-    # M2O
-#   user = relationship('ResUser')

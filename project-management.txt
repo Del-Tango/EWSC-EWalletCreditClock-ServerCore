@@ -108,13 +108,13 @@
         - x - User action Pause Timer
         - x - User action Resume Timer
         - x - User action Stop Timer
-    - Contact List
-        - User action Create Contact List
-        - User action Create Contact Record
-        - User action Unlink Contact Record
-    - Contact Record
-        - User action Create Contact Record
-        - User action Edit Contact Record
+    - x - Contact List
+        - x - User action Create Contact List
+        - x - User action Create Contact Record
+        - x - User action Unlink Contact Record
+    - x - Contact Record
+        - x - User action Create Contact Record
+        - x - User action Edit Contact Record
     - Transfer Sheet
         - User action Create Transfer Sheet
         - User action Create Transfer Record
