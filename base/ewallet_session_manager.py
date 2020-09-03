@@ -58,15 +58,15 @@ class EWalletSessionManager():
 
     # TODO
     def fetch_from_worker_pool(self):
-        log.debug('UNIMPLEMENTED')
+        log.debug('TODO - UNIMPLEMENTED')
     def fetch_from_client_pool(self):
-        log.debug('UNIMPLEMENTED')
+        log.debug('TODO - UNIMPLEMENTED')
     def fetch_from_client_session_map(self):
-        log.debug('UNIMPLEMENTED')
+        log.debug('TODO - UNIMPLEMENTED')
     def fetch_ewallet_worker_sessions(self, ewallet_worker):
-        log.debug('UNIMPLEMENTED')
+        log.debug('TODO - UNIMPLEMENTED')
     def fetch_from_ewallet_worker_session(self):
-        log.debug('UNIMPLEMENTED')
+        log.debug('TODO - UNIMPLEMENTED')
 
     # TODO - Refactor
 #   @pysnooper.snoop()
@@ -120,6 +120,47 @@ class EWalletSessionManager():
             'ewallet_session': ewallet_session,
         }
         return False if False in value_set.keys() else value_set
+
+    def fetch_worker_session_target_cleanup_instruction(self):
+        log.debug('')
+        return {
+            'controller': 'system',
+            'ctype': 'action',
+            'action': 'remove',
+            'remove': 'session',
+        }
+
+    def fetch_session_worker_session_exists_instruction(self):
+        log.debug('')
+        return {
+            'controller': 'system',
+            'ctype': 'action',
+            'action': 'interogate',
+            'interogate': 'session',
+            'session': 'exists',
+        }
+
+#   @pysnooper.snoop()
+    def fetch_ewallet_session_assigned_worker(self, ewallet_session_id):
+        log.debug('')
+        worker_pool = self.fetch_worker_pool()
+        instruction = self.fetch_session_worker_session_exists_instruction()
+        instruction.update({'session_id': ewallet_session_id})
+        for worker_id in worker_pool:
+            check = self.action_execute_system_instruction_set(
+                worker_id=worker_id, **instruction
+            )
+            if isinstance(check, dict) and check.get('failed'):
+                return self.error_could_not_check_if_ewallet_session_is_assigned_to_worker(
+                    ewallet_session_id, worker_pool, worker_id,
+                    instruction, check
+                )
+            if not check.get('exists'):
+                continue
+            return worker_id
+        return self.warning_no_worker_found_assigned_to_session(
+            ewallet_session_id, worker_pool, instruction
+        )
 
 #   @pysnooper.snoop()
     def fetch_ewallet_sessions_past_expiration_date(self, **kwargs):
@@ -349,24 +390,6 @@ class EWalletSessionManager():
     def fetch_primary_ewallet_session(self):
         log.debug('')
         return self.primary_session
-
-#   @pysnooper.snoop()
-    def fetch_ewallet_session_assigned_worker(self, ewallet_session):
-        log.debug('')
-        worker_pool = self.worker_pool
-        if not worker_pool:
-            return self.error_worker_pool_empty()
-        ewallet_session_id = ewallet_session.fetch_active_session_id()
-        worker_set = []
-        for worker in worker_pool:
-            session_pool_ids = [
-                item.fetch_active_session_id() for item in
-                worker.fetch_session_worker_ewallet_session_pool()
-            ]
-            if ewallet_session_id in session_pool_ids:
-                worker_set.append(worker)
-        return self.error_no_worker_found_assigned_to_session(ewallet_session)\
-            if not worker_set else worker_set[0]
 
     def fetch_first_available_worker(self):
         log.debug('')
@@ -759,24 +782,25 @@ class EWalletSessionManager():
 
     # SCRAPERS
 
+    # TODO
 #   @pysnooper.snoop()
     def scrape_ewallet_session(self, ewallet_session):
-        log.debug('')
-        session_worker = self.fetch_ewallet_session_assigned_worker(
-            ewallet_session
-        )
-        if not session_worker or isinstance(session_worker, dict) and \
-                session_worker.get('failed'):
-            return self.error_could_not_fetch_session_worker_for_ewallet_session(
-                ewallet_session
-            )
-        remove_from_pool = session_worker.main_controller(
-            controller='system', ctype='action', action='remove',
-            remove='session', session=ewallet_session
-        )
-        return self.error_could_not_scrape_ewallet_session(ewallet_session) \
-            if not remove_from_pool or isinstance(remove_from_pool, dict) and \
-            remove_from_pool.get('failed') else True
+        log.debug('TODO - Refactor')
+#       session_worker = self.fetch_ewallet_session_assigned_worker(
+#           ewallet_session
+#       )
+#       if not session_worker or isinstance(session_worker, dict) and \
+#               session_worker.get('failed'):
+#           return self.error_could_not_fetch_session_worker_for_ewallet_session(
+#               ewallet_session
+#           )
+#       remove_from_pool = session_worker.main_controller(
+#           controller='system', ctype='action', action='remove',
+#           remove='session', session=ewallet_session
+#       )
+#       return self.error_could_not_scrape_ewallet_session(ewallet_session) \
+#           if not remove_from_pool or isinstance(remove_from_pool, dict) and \
+#           remove_from_pool.get('failed') else True
 
     def scrape_ewallet_session_worker(self, session_worker):
         log.debug('')
@@ -1284,10 +1308,32 @@ class EWalletSessionManager():
 
     # ACTIONS
 
-    # TODO
+    def action_cleanup_ewallet_session_by_id(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('session_id'):
+            return self.error_no_action_cleanup_ewallet_session_id_found(kwargs)
+        worker_id = self.fetch_ewallet_session_assigned_worker(
+            kwargs['session_id']
+        )
+        if not worker_id or isinstance(worker_id, dict) and \
+                worker_id.get('failed'):
+            return self.warning_could_not_fetch_assigned_session_worker_id(
+                kwargs, worker_id
+            )
+        instruction = self.fetch_worker_session_target_cleanup_instruction()
+        instruction.update({'session_id': kwargs['session_id']})
+        clean = self.action_execute_system_instruction_set(
+            worker_id=worker_id, **instruction
+        )
+        instruction_set_response = self.warning_could_not_cleanup_target_ewallet_session(
+            kwargs, worker_id, instruction, clean
+        ) if not clean or isinstance(clean, dict) and \
+            clean.get('failed') else clean
+        return instruction_set_response
+
 #   @pysnooper.snoop('logs/ewallet.log')
     def action_cleanup_session_workers(self, **kwargs):
-        log.debug('TODO - Refactor')
+        log.debug('')
         session_workers = self.fetch_ewallet_session_manager_worker_pool()
         if not session_workers or isinstance(session_workers, dict) and \
                 session_workers.get('failed'):
@@ -1397,18 +1443,6 @@ class EWalletSessionManager():
             'client_id': client_id.label,
         }
         return instruction_set_response
-
-    def action_cleanup_ewallet_session_by_id(self, **kwargs):
-        log.debug('')
-        ewallet_session = self.fetch_ewallet_session_by_id(kwargs['session_id'])
-        if not ewallet_session:
-            return self.warning_could_not_fetch_ewallet_session(kwargs)
-        cleanup_session = self.cleanup_ewallet_sessions(
-            ewallet_sessions=[ewallet_session], **kwargs
-        )
-        return self.warning_could_not_cleanup_target_ewallet_session(kwargs) \
-            if not cleanup_session or isinstance(cleanup_session, dict) and \
-            cleanup_session.get('failed') else cleanup_session
 
 #   @pysnooper.snoop('logs/ewallet.log')
     def action_interogate_ewallet_session_workers(self, **kwargs):
@@ -3030,21 +3064,50 @@ class EWalletSessionManager():
     [ TODO ]: Fetch warning messages from message file by key codes.
     '''
 
+    def warning_could_not_cleanup_target_ewallet_session(self, *args):
+        instruction_set_response = {
+            'failed': True,
+            'warning': 'Something went wrong. '
+                       'Could not cleanup target ewallet session. '
+                       'Details: {}'.format(args),
+        }
+        log.warning(instruction_set_response['warning'])
+        return instruction_set_response
+
+    def warning_could_not_fetch_assigned_session_worker_id(self, *args):
+        instruction_set_response = {
+            'failed': True,
+            'warning': 'Something went wrong. '
+                       'Could not fetch assigned worker id for ewallet session. '
+                       'Details: {}'.format(args),
+        }
+        log.warning(instruction_set_response['warning'])
+        return instruction_set_response
+
+    def warning_no_worker_found_assigned_to_session(self, *args):
+        instruction_set_response = {
+            'failed': True,
+            'warning': 'No worker found assigned to ewallet session. '
+                       'Details: {}'.format(args),
+        }
+        log.warning(instruction_set_response['warning'])
+        return instruction_set_response
+
     def warning_could_not_sweep_cleanup_ewallet_sessions(self, *args):
         instruction_set_response = {
             'failed': True,
             'warning': 'Something went wrong. '
-                       'Could not sweep clean ewallet sessions. '\
+                       'Could not sweep clean ewallet sessions. '
                        'Details: {}'.format(args),
         }
-        log.error(instruction_set_response['warning'])
+        log.warning(instruction_set_response['warning'])
         return instruction_set_response
 
     def warning_could_not_clean_expired_worker_sessions(self, *args):
         instruction_set_response = {
             'failed': True,
             'warning': 'Something went wrong. '
-                       'Could not clean expired worker sessions. '\
+                       'Could not clean expired worker sessions. '
                        'Details: {}'.format(args),
         }
         log.warning(instruction_set_response['warning'])
@@ -3054,7 +3117,7 @@ class EWalletSessionManager():
         instruction_set_response = {
             'failed': True,
             'warning': 'Something went wrong. '
-                       'Could not fetch workers with expired sessions. '\
+                       'Could not fetch workers with expired sessions. '
                        'Details: {}'.format(args),
         }
         log.warning(instruction_set_response['warning'])
@@ -3064,7 +3127,7 @@ class EWalletSessionManager():
         instruction_set_response = {
             'failed': True,
             'warning': 'Something went wrong. '
-                       'Could not interogate worker session pool. '\
+                       'Could not interogate worker session pool. '
                        'Details: {}'.format(args),
         }
         log.warning(instruction_set_response['warning'])
@@ -3788,15 +3851,6 @@ class EWalletSessionManager():
         log.warning(instruction_set_response['warning'])
         return instruction_set_response
 
-    def warning_could_not_cleanup_target_ewallet_session(self, instruction_set):
-        instruction_set_response = {
-            'failed': True,
-            'warning': 'Something went wrong. Could not clean up target ewallet '\
-                       'session. Instruction set details : {}'.format(instruction_set),
-        }
-        log.warning(instruction_set_response['warning'])
-        return instruction_set_response
-
     def warning_could_not_cleanup_ewallet_session_worker(self, session_worker):
         instruction_set_response = {
             'failed': True,
@@ -3898,6 +3952,25 @@ class EWalletSessionManager():
     '''
     [ TODO ]: Fetch error messages from message file by key codes.
     '''
+
+    def error_no_action_cleanup_ewallet_session_id_found(self, *args):
+        instruction_set_response = {
+            'failed': True,
+            'error': 'No ewallet session id found for action cleanup. '
+                     'Details: {}'.format(args),
+        }
+        log.error(instruction_set_response['error'])
+        return instruction_set_response
+
+    def error_could_not_check_if_ewallet_session_is_assigned_to_worker(self, *args):
+        instruction_set_response = {
+            'failed': True,
+            'error': 'Something went wrong. '
+                     'Could not check if ewallet session is assigned to worker. '
+                     'Details: {}'.format(args),
+        }
+        log.error(instruction_set_response['error'])
+        return instruction_set_response
 
     def error_no_ewallet_session_worker_map_found(self, *args):
         instruction_set_response = {

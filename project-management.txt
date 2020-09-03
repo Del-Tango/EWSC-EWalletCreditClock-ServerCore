@@ -12,7 +12,7 @@
     - x - (EWSC) Move all subordonate account action handlers to worker
     - x - (EWSC) Update ewallet dox instruction set for user action category Switch
     - x - (EWSC) Impose System Portal restrictions
-    - x - (EWSC) Update write dates
+    - . - (EWSC) Update write dates
     -   - (EWSC) Move all system actions to session worker
     - (EWSC) Journal record grooming
     - (EWSC) Impose entity ownership restrictions on User action categories View, Switch and Unlink
@@ -53,7 +53,13 @@
 - EWallet Credit Clock - Server Core
 ################################################################################
 
-- x - Update write dates and UIDs for:
+- Update write dates for:
+    - Session Worker
+        - System action Session Sweep Cleanup
+        - System action Session Target Cleanup
+        - System action Add New Session
+        - System action Add Client ID / Session Token map entry
+        - System action Add Client ID
     - x - Session Manager
         - x - System action New Worker
         - x - System action Cleanup Session Workers
@@ -142,7 +148,7 @@
 
 - Move actions to worker
     - x - System action Session Sweep Cleanup
-    -   - System action Session Target Cleanup
+    - x - System action Session Target Cleanup
     - System action Session Workers Cleanup
     - System action New EWallet Session
     - System action Interogate Session Workers
