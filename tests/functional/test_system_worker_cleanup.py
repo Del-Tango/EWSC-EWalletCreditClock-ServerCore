@@ -50,10 +50,9 @@ class TestEWalletSessionManagerSystemWorkerCleanup(unittest.TestCase):
             '\n[ < ]: Response: ' + str(clean) + '\n'
         )
         self.assertTrue(isinstance(clean, dict))
-        self.assertEqual(len(clean.keys()), 4)
+        self.assertEqual(len(clean.keys()), 5)
         self.assertFalse(clean.get('failed'))
         self.assertTrue(isinstance(clean['workers_cleaned'], int))
-        self.assertTrue(isinstance(clean.get('worker_pool'), list))
-        self.assertTrue(clean.get('worker_reserved'))
-
-
+        self.assertTrue(isinstance(clean['worker_pool'], dict))
+        self.assertTrue(isinstance(clean.get('worker_reserved'), int))
+        self.assertTrue(isinstance(clean['workers'], list))

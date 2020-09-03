@@ -14,6 +14,7 @@
     - x - (EWSC) Impose System Portal restrictions
     - . - (EWSC) Update write dates
     -   - (EWSC) Move all system actions to session worker
+    - (EWSC) Groom session worker state updates
     - (EWSC) Journal record grooming
     - (EWSC) Impose entity ownership restrictions on User action categories View, Switch and Unlink
     - (EWCC) Perform valid input checks on core subroutine SetResource
@@ -149,7 +150,7 @@
 - Move actions to worker
     - x - System action Session Sweep Cleanup
     - x - System action Session Target Cleanup
-    - System action Session Workers Cleanup
+    - x - System action Session Workers Cleanup
     - System action New EWallet Session
     - System action Interogate Session Workers
     - System action Interogate EWallet Session

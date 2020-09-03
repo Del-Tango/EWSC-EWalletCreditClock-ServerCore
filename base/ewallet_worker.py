@@ -796,6 +796,16 @@ class EWalletWorker():
     [ NOTE ]: Command chain responses are formulated here.
     '''
 
+    def action_interogate_worker_state_code(self, **kwargs):
+        log.debug('')
+        state_code = self.fetch_session_worker_state_code()
+        instruction_set_response = {
+            'failed': False,
+            'state': state_code,
+        }
+        self.send_instruction_response(instruction_set_response)
+        return instruction_set_response
+
     def action_remove_ewallet_session_from_pool(self, **kwargs):
         log.debug('')
         if not kwargs.get('session_id'):
@@ -892,18 +902,6 @@ class EWalletWorker():
         return self.warning_could_not_set_session_worker_ewallet_session_token_map_entry(kwargs) \
             if not set_entry or isinstance(set_entry, dict) and \
             set_entry.get('failed') else instruction_set_response
-
-    # TODO
-    def action_interogate_worker_state_code(self, **kwargs):
-        log.debug('TODO - Refactod')
-        state_code = self.fetch_session_worker_state_code()
-        instruction_set_response = {
-            'failed': False,
-            'state': state_code,
-        }
-        response = self.send_instruction_response(instruction_set_response)
-        return response if not response or isinstance(response, dict) and \
-            response.get('failed') else instruction_set_response
 
     # TODO - Refactor
 #   @pysnooper.snoop()
@@ -3461,7 +3459,6 @@ class EWalletWorker():
             'client_id': self.action_add_client_id,
         }
         return handlers[kwargs['add']](**kwargs)
-
 
     # INIT
 
