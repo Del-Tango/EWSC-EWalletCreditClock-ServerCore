@@ -121,18 +121,18 @@
         - x - User action Unlink Transfer Record
     - x - Transfer Record
         - x - User action Create Transfer Record
+    - x - Conversion Sheet
+        - x - User action Create Conversion Sheet
+        - x - User action Create Conversion Record
+        - x - User action Unlink Conversion Record
+    - x - Conversion Record
+        - x - User action Create Conversion Record
     - Invoice Sheet
         - User action Create Invoice Sheet
         - User action Create Invoice Record
         - User action Unlink Invoice Record
     - Invoice Record
         - User action Create Invoice Record
-    - Conversion Sheet
-        - User action Create Conversion Sheet
-        - User action Create Conversion Record
-        - User action Unlink Conversion Record
-    - Conversion Record
-        - User action Create Conversion Record
     - Time Sheet
         - User action Create Time Sheet
         - User action Create Time Record

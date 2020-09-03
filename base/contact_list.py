@@ -28,17 +28,19 @@ class ContactListRecord(Base):
     reference = Column(String)
 
     def __init__(self, **kwargs):
-        self.record_id = kwargs.get('record_id')
-        self.create_date = datetime.datetime.now()
-        self.write_date = datetime.datetime.now()
-        self.contact_list_id = kwargs.get('contact_list_id')
-        self.user_id = kwargs.get('user_id')
-        self.user_name = kwargs.get('user_name')
-        self.user_email = kwargs.get('user_email')
-        self.user_phone = kwargs.get('user_phone')
-        self.notes = kwargs.get('notes')
-        self.reference = kwargs.get('reference') or \
+#       self.record_id = kwargs.get('record_id')
+        self.create_date = kwargs.get('create_date', datetime.datetime.now())
+        self.write_date = kwargs.get('write_date', datetime.datetime.now())
+        self.contact_list_id = kwargs.get('contact_list_id', int())
+        self.user_id = kwargs.get('user_id', int())
+        self.user_name = kwargs.get('user_name', str())
+        self.user_email = kwargs.get('user_email', str())
+        self.user_phone = kwargs.get('user_phone', str())
+        self.notes = kwargs.get('notes', str())
+        self.reference = kwargs.get(
+            'reference',
             config.contact_list_config['contact_record_reference']
+        )
 
     # FETCHERS (RECORD)
 
@@ -363,24 +365,24 @@ class ContactList(Base):
     write_date = Column(DateTime)
     active_session_id = Column(Integer, ForeignKey('ewallet.id'))
     active_session = relationship('EWallet', back_populates='contact_list')
-    # O2O
     client = relationship(
         'ResUser', back_populates='user_contact_list'
-        )
-    # O2M
+    )
     records = relationship('ContactListRecord')
 
     def __init__(self, **kwargs):
-        self.contact_list_id = kwargs.get('contact_list_id')
-        self.create_date = kwargs.get('create_date') or datetime.datetime.now()
-        self.write_date = kwargs.get('write_date') or datetime.datetime.now()
-        self.client_id = kwargs.get('client_id')
+#       self.contact_list_id = kwargs.get('contact_list_id')
+        self.create_date = kwargs.get('create_date', datetime.datetime.now())
+        self.write_date = kwargs.get('write_date', datetime.datetime.now())
+        self.client_id = kwargs.get('client_id', int())
         self.client = kwargs.get('client')
-        self.reference = kwargs.get('reference') or \
+        self.reference = kwargs.get(
+            'reference',
             config.contact_list_config['contact_list_reference']
-        self.active_session_id = kwargs.get('active_session_id')
+        )
+        self.active_session_id = kwargs.get('active_session_id', int())
         self.active_session = kwargs.get('active_session')
-        self.records = kwargs.get('records') or []
+        self.records = kwargs.get('records', [])
 
     # FETCHERS (LIST)
 

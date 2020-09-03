@@ -28,18 +28,18 @@ class CreditTransferSheetRecord(Base):
     )
 
     def __init__(self, **kwargs):
-        self.record_id = kwargs.get('record_id')
+#       self.record_id = kwargs.get('record_id')
         self.create_date = kwargs.get('create_date', datetime.datetime.now())
         self.write_date = kwargs.get('write_date', datetime.datetime.now())
         self.reference = kwargs.get(
             'reference',
             config.transfer_sheet_config['transfer_record_reference']
         )
-        self.transfer_type = kwargs.get('transfer_type')
-        self.transfer_from = kwargs.get('transfer_from')
-        self.transfer_to = kwargs.get('transfer_to')
-        self.credits = kwargs.get('credits', 0)
-        self.transfer_sheet_id = kwargs.get('transfer_sheet_id')
+        self.transfer_type = kwargs.get('transfer_type', str())
+        self.transfer_from = kwargs.get('transfer_from', int())
+        self.transfer_to = kwargs.get('transfer_to', int())
+        self.credits = kwargs.get('credits', int())
+        self.transfer_sheet_id = kwargs.get('transfer_sheet_id', int())
 
     # FETCHERS (RECORD)
 
@@ -358,10 +358,10 @@ class CreditTransferSheet(Base):
     records = relationship('CreditTransferSheetRecord')
 
     def __init__(self, **kwargs):
-        self.transfer_sheet_id = kwargs.get('transfer_sheet_id')
+#       self.transfer_sheet_id = kwargs.get('transfer_sheet_id')
         self.create_date = kwargs.get('create_date', datetime.datetime.now())
         self.write_date = kwargs.get('write_date', datetime.datetime.now())
-        self.wallet_id = kwargs.get('wallet_id')
+        self.wallet_id = kwargs.get('wallet_id', int())
         self.reference = kwargs.get(
             'reference',
             config.transfer_sheet_config['transfer_sheet_reference']

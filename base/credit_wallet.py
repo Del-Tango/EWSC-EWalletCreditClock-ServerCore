@@ -50,7 +50,7 @@ class CreditEWallet(Base):
     # O2M
     invoice_sheet_archive = relationship('CreditInvoiceSheet')
 
-#   @pysnooper.snoop()
+#   @pysnooper.snoop('logs/ewallet.log')
     def __init__(self, **kwargs):
         if not kwargs.get('active_session'):
             self.error_no_active_session_found()

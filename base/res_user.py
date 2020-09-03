@@ -692,6 +692,18 @@ class ResUser(Base):
 
     # CREATORS
 
+    # TODO
+    def create_user_pass_hash_record(self, **kwargs):
+        log.debug('TODO - Receive creation values')
+        if not kwargs.get('pass_hash'):
+            return self.error_no_user_pass_hash_found()
+        pass_hash_record = ResUserPassHashArchive(
+            user_id=kwargs.get('user_id') or self.fetch_user_id(),
+            user_pass_hash=kwargs['pass_hash'],
+        )
+        return pass_hash_record
+
+#   @pysnooper.snoop('logs/ewallet.log')
     def create_credit_ewallet(self, creation_values, **kwargs):
         log.debug('')
         try:
@@ -709,17 +721,6 @@ class ResUser(Base):
         except:
             return self.error_could_not_create_new_transaction_handler(creation_values)
         return transaction_handler
-
-    # TODO - Receive creation values
-    def create_user_pass_hash_record(self, **kwargs):
-        log.debug('')
-        if not kwargs.get('pass_hash'):
-            return self.error_no_user_pass_hash_found()
-        pass_hash_record = ResUserPassHashArchive(
-            user_id=kwargs.get('user_id') or self.fetch_user_id(),
-            user_pass_hash=kwargs['pass_hash'],
-        )
-        return pass_hash_record
 
     # GENERAL
 
