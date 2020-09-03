@@ -115,12 +115,12 @@
     - x - Contact Record
         - x - User action Create Contact Record
         - x - User action Edit Contact Record
-    - Transfer Sheet
-        - User action Create Transfer Sheet
-        - User action Create Transfer Record
-        - User action Unlink Transfer Record
-    - Transfer Record
-        - User action Create Transfer Record
+    - x - Transfer Sheet
+        - x - User action Create Transfer Sheet
+        - x - User action Create Transfer Record
+        - x - User action Unlink Transfer Record
+    - x - Transfer Record
+        - x - User action Create Transfer Record
     - Invoice Sheet
         - User action Create Invoice Sheet
         - User action Create Invoice Record

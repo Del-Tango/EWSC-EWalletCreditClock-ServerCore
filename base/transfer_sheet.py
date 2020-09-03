@@ -28,16 +28,20 @@ class CreditTransferSheetRecord(Base):
     )
 
     def __init__(self, **kwargs):
-        self.create_date = datetime.datetime.now()
-        self.write_date = datetime.datetime.now()
-        self.reference = kwargs.get('reference') or \
+        self.record_id = kwargs.get('record_id')
+        self.create_date = kwargs.get('create_date', datetime.datetime.now())
+        self.write_date = kwargs.get('write_date', datetime.datetime.now())
+        self.reference = kwargs.get(
+            'reference',
             config.transfer_sheet_config['transfer_record_reference']
+        )
         self.transfer_type = kwargs.get('transfer_type')
         self.transfer_from = kwargs.get('transfer_from')
         self.transfer_to = kwargs.get('transfer_to')
-        self.credits = kwargs.get('credits') or 0
+        self.credits = kwargs.get('credits', 0)
+        self.transfer_sheet_id = kwargs.get('transfer_sheet_id')
 
-    # FETCHERS
+    # FETCHERS (RECORD)
 
     def fetch_record_id(self):
         log.debug('')
@@ -74,93 +78,272 @@ class CreditTransferSheetRecord(Base):
         }
         return values
 
-    # SETTERS
+    # SETTERS (RECORD)
 
     def set_record_id(self, **kwargs):
         log.debug('')
         if not kwargs.get('record_id'):
-            return self.error_no_record_id_found()
-        self.record_id = kwargs['record_id']
+            return self.error_no_record_id_found(kwargs)
+        try:
+            self.record_id = kwargs['record_id']
+            self.update_write_date()
+        except Exception as e:
+            return self.error_could_not_set_record_id(
+                kwargs, self.record_id, e
+            )
+        log.info('Successfully set transfer record id.')
         return True
 
     def set_transfer_sheet_id(self, **kwargs):
         log.debug('')
         if not kwargs.get('transfer_sheet_id'):
-            return self.error_no_transfer_sheet_id_found()
-        self.transfer_sheet_id = kwargs['transfer_sheet_id']
+            return self.error_no_transfer_sheet_id_found(kwargs)
+        try:
+            self.transfer_sheet_id = kwargs['transfer_sheet_id']
+            self.update_write_date()
+        except Exception as e:
+            return self.error_could_not_set_transfer_sheet_id(
+                kwargs, self.transfer_sheet_id, e
+            )
+        log.info('Successfully set transfer sheet id.')
         return True
 
     def set_reference(self, **kwargs):
         log.debug('')
         if not kwargs.get('reference'):
-            return self.error_no_reference_found()
-        self.reference = kwargs['reference']
+            return self.error_no_reference_found(kwargs)
+        try:
+            self.reference = kwargs['reference']
+            self.update_write_date()
+        except Exception as e:
+            return self.error_could_not_set_transfer_record_reference(
+                kwargs, self.reference, e
+            )
+        log.info('Successfully set transfer record reference.')
         return True
 
     def set_transfer_type(self, **kwargs):
         log.debug('')
         if not kwargs.get('transfer_type'):
-            return self.error_no_transfer_type_found()
-        self.transfer_type = kwargs['transfer_type']
+            return self.error_no_transfer_type_found(kwargs)
+        try:
+            self.transfer_type = kwargs['transfer_type']
+            self.update_write_date()
+        except Exception as e:
+            return self.error_could_not_set_transfer_type(
+                kwargs, self.transfer_type, e
+            )
+        log.info('Successfully set transfer type.')
         return True
 
     def set_transfer_from(self, **kwargs):
         log.debug('')
         if not kwargs.get('transfer_from'):
-            return self.error_no_transfer_from_found()
-        self.transfer_from = kwargs['transfer_from']
+            return self.error_no_transfer_from_found(kwargs)
+        try:
+            self.transfer_from = kwargs['transfer_from']
+            self.update_write_date()
+        except Exception as e:
+            return self.error_could_not_set_transfer_from(
+                kwargs, self.transfer_from, e
+            )
+        log.info('Successfully set transfer from user account.')
         return True
 
     def set_transfer_to(self, **kwargs):
         log.debug('')
         if not kwargs.get('transfer_to'):
-            return self.error_no_transfer_to_found()
-        self.transfer_to = kwargs['transfer_to']
+            return self.error_no_transfer_to_found(kwargs)
+        try:
+            self.transfer_to = kwargs['transfer_to']
+            self.update_write_date()
+        except Exception as e:
+            return self.error_could_not_set_transfer_to(
+                kwargs, self.transfer_to, e
+            )
+        log.info('Successfully set transfer to user account.')
         return True
 
     def set_credits(self, **kwargs):
         log.debug('')
         if not kwargs.get('credits'):
-            return self.error_no_credits_found()
-        self.credits = kwargs['credits']
+            return self.error_no_credits_found(kwargs)
+        try:
+            self.credits = kwargs['credits']
+            self.update_write_date()
+        except Exception as e:
+            return self.error_could_not_set_credits(
+                kwargs, self.credits, e
+            )
+        log.info('Successfully set credit count.')
         return True
 
-    # UPDATERS
+    def set_write_date(self, write_date):
+        log.debug('')
+        try:
+            self.write_date = write_date
+        except Exception as e:
+            return self.error_could_not_set_transfer_record_write_date(
+                write_date, self.write_date, e
+            )
+        log.info('Successfully set transfer record write date.')
+        return True
+
+    # UPDATERS (RECORD)
 
     def update_write_date(self):
         log.debug('')
-        self.write_date = datetime.datetime.now()
-        return self.write_date
+        set_date = self.set_write_date(datetime.datetime.now())
+        return set_date if isinstance(set_date, dict) and \
+            set_date.get('failed') else self.fetch_record_write_date()
 
-    # ERRORS
+    # ERRORS (RECORD)
+    '''
+    [ TODO ]: Fetch error messages from message file by key codes.
+    '''
 
-    def error_no_record_id_found(self):
-        log.error('No record id found.')
-        return False
+    def error_could_not_set_record_id(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Something went wrong. '
+                     'Could not set transfer record id. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
 
-    def error_no_transfer_sheet_id_found(self):
-        log.error('No transfer sheet id found.')
-        return False
+    def error_could_not_set_transfer_sheet_id(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Something went wrong. '
+                     'Could not set transfer sheet id. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
 
-    def error_no_reference_found(self):
-        log.error('No reference found.')
-        return False
+    def error_could_not_set_transfer_record_reference(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Something went wrong. '
+                     'Could not set transfer record reference. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
 
-    def error_no_transfer_type_found(self):
-        log.error('No transfer type found.')
-        return False
+    def error_could_not_set_transfer_type(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Something went wrong. '
+                     'Could not set transfer type. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
 
-    def error_no_transfer_from_found(self):
-        log.error('No transfer source found.')
-        return False
+    def error_could_not_set_transfer_from(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Something went wrong. '
+                     'Could not set transfer from user account. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
 
-    def error_no_transfer_to_found(self):
-        log.error('No transfer destination found.')
-        return False
+    def error_could_not_set_transfer_to(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Something went wrong. '
+                     'Could not set transfer to user account. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
 
-    def error_no_credits_found(self):
-        log.error('No credits found.')
-        return False
+    def error_could_not_set_credits(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Something went wrong. '
+                     'Could not set transfer record credit count. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_could_not_set_transfer_record_write_date(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Something went wrong. '
+                     'Could not set transfer record write date. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_no_record_id_found(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No transfer record id found. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_no_transfer_sheet_id_found(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No transfer sheet id found. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_no_reference_found(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No transfer record reference found. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_no_transfer_type_found(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No transfer type found. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_no_transfer_from_found(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No transfer from user account found. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_no_transfer_to_found(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No transfer to user account found. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_no_credits_found(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No credits found. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
 
 
 class CreditTransferSheet(Base):
@@ -171,20 +354,31 @@ class CreditTransferSheet(Base):
     reference = Column(String)
     create_date = Column(DateTime)
     write_date = Column(DateTime)
-    # O2O
     wallet = relationship('CreditEWallet', back_populates='transfer_sheet')
-    # O2M
     records = relationship('CreditTransferSheetRecord')
 
     def __init__(self, **kwargs):
-        self.create_date = datetime.datetime.now()
-        self.write_date = datetime.datetime.now()
+        self.transfer_sheet_id = kwargs.get('transfer_sheet_id')
+        self.create_date = kwargs.get('create_date', datetime.datetime.now())
+        self.write_date = kwargs.get('write_date', datetime.datetime.now())
         self.wallet_id = kwargs.get('wallet_id')
-        self.reference = kwargs.get('reference') or \
+        self.reference = kwargs.get(
+            'reference',
             config.transfer_sheet_config['transfer_sheet_reference']
-        self.records = kwargs.get('records') or []
+        )
+        self.wallet = kwargs.get('wallet')
+        self.records = kwargs.get('records', [])
 
-    # FETCHERS
+    # FETCHERS (LIST)
+
+    # TODO
+    def fetch_all_transfer_sheet_records(self, **kwargs):
+        log.debug('TODO - Refactor')
+        return list(self.records.values())
+
+    def fetch_transfer_sheet_write_date(self):
+        log.debug('')
+        return self.write_date
 
     def fetch_transfer_sheet_id(self):
         log.debug('')
@@ -316,12 +510,6 @@ class CreditTransferSheet(Base):
         log.info('Successfully fethced transfer records by transfer destination.')
         return _records
 
-    # TODO - Refactor
-    def fetch_all_transfer_sheet_records(self, **kwargs):
-        log.debug('')
-        _records = [item for item in self.records.values()]
-        return _records
-
     def fetch_transfer_sheet_records(self, **kwargs):
         log.debug('')
         if not kwargs.get('search_by'):
@@ -336,60 +524,133 @@ class CreditTransferSheet(Base):
         }
         return handlers[kwargs['search_by']](**kwargs)
 
-    # SETTERS
+    # SETTERS (LIST)
+
+    def set_create_date(self, create_date):
+        log.debug('')
+        try:
+            self.create_date = create_date
+            self.update_write_date()
+        except Exception as e:
+            return self.error_could_not_set_transfer_sheet_create_date(
+                create_date, self.create_date, e
+            )
+        log.info('Successfully set transfer sheet create date.')
+        return True
+
+    def set_ewallet(self, credit_ewallet):
+        log.debug('')
+        try:
+            self.wallet = credit_ewallet
+            self.update_write_date()
+        except Exception as e:
+            return self.error_could_not_set_transfer_sheet_ewallet(
+                credit_ewallet, self.wallet, e
+            )
+        log.info('Successfully set transfer sheet ewallet.')
+        return True
 
     def set_transfer_sheet_id(self, **kwargs):
         log.debug('')
         if not kwargs.get('transfer_sheet_id'):
-            return self.error_no_transfer_sheet_id_found()
-        self.transfer_sheet_id = kwargs['transfer_sheet_id']
+            return self.error_no_transfer_sheet_id_found(kwargs)
+        try:
+            self.transfer_sheet_id = kwargs['transfer_sheet_id']
+            self.update_write_date()
+        except Exception as e:
+            return self.error_could_not_set_transfer_sheet_id(
+                kwargs, self.transfer_sheet_id, e
+            )
+        log.info('Successfully set transfer sheet id.')
         return True
 
     def set_wallet_id(self, **kwargs):
         log.debug('')
         if not kwargs.get('wallet_id'):
-            return self.error_no_wallet_id_found()
-        self.wallet_id = kwargs['wallet_id']
+            return self.error_no_wallet_id_found(kwargs)
+        try:
+            self.wallet_id = kwargs['wallet_id']
+            self.update_write_date()
+        except Exception as e:
+            return self.error_could_not_set_transer_sheet_ewallet_id(
+                kwargs, self.wallet_id, e
+            )
+        log.info('Successfully set transfer sheet ewallet id.')
         return True
 
     def set_reference(self, **kwargs):
         log.debug('')
         if not kwargs.get('reference'):
-            return self.error_no_reference_found()
-        self.reference = kwargs['reference']
+            return self.error_no_reference_found(kwargs)
+        try:
+            self.reference = kwargs['reference']
+            self.update_write_date()
+        except Exception as e:
+            return self.error_could_not_set_transfer_sheet_reference(
+                kwargs, self.reference, e
+            )
+        log.info('Successfully set transfer sheet reference.')
         return True
 
     def set_records(self, **kwargs):
         log.debug('')
         if not kwargs.get('records'):
-            return self.error_no_records_found()
-        self.records = kwargs['records']
+            return self.error_no_records_found(kwargs)
+        try:
+            self.records = kwargs['records']
+            self.update_write_date()
+        except Exception as e:
+            return self.error_could_not_set_transfer_sheet_records(
+                kwargs, self.records, e
+            )
+        log.info('Successfully set transfer sheet records.')
         return True
 
-    # UPDATERS
+    def set_write_date(self, write_date):
+        log.debug('')
+        try:
+            self.write_date = write_date
+        except Exception as e:
+            return self.error_could_not_set_transfer_sheet_write_date(
+                write_date, self.write_date, e
+            )
+        log.info('Successfully set transfer sheet write date.')
+        return True
+
+    def set_to_records(self, record):
+        log.debug('')
+        try:
+            self.records.append(record)
+            self.update_write_date()
+        except Exception as e:
+            return self.error_could_not_update_transfer_sheet_records(
+                record, self.records, e
+            )
+        log.info('Successfully set transfer record to sheet.')
+        return True
+
+    # UPDATERS (LIST)
 
     def update_write_date(self):
         log.debug('')
-        self.write_date = datetime.datetime.now()
-        return self.write_date
+        set_date = self.set_write_date(datetime.datetime.now())
+        return self.fetch_transfer_sheet_write_date()
 
     def update_records(self, record):
         log.debug('')
-        self.records.update({
-            record.fetch_record_id(): record
-            })
-        log.info('Successfully updated transfer sheet records.')
-        return self.records
+        set_to = self.set_to_records(record)
+        return set_to if isinstance(set_to, dict) and \
+            set_to.get('failed') else self.fetch_transfer_sheet_records()
 
-    # ACTIONS
+    # ACTIONS (LIST)
 
     def create_transfer_sheet_record(self, values=None):
         log.debug('')
         if not values:
             log.error('No transfer sheet record creation values found.')
             return False
-        _record = CreditTransferSheetRecord(**values)
-        return _record
+        record = CreditTransferSheetRecord(**values)
+        return record
 
     def add_transfer_sheet_record(self, **kwargs):
         log.debug('')
@@ -418,18 +679,10 @@ class CreditTransferSheet(Base):
             return self.error_could_not_remove_transfer_sheet_record(kwargs)
         return True
 
-    def update_records(self, record):
-        log.debug('')
-        try:
-            self.records.append(record)
-        except:
-            return self.error_could_not_update_transfer_sheet_records(record)
-        return self.records
-
     def append_transfer_sheet_record(self, **kwargs):
         log.debug('')
         if not kwargs.get('records'):
-            return self.error_no_transfer_records_found()
+            return self.error_no_records_found()
         for item in kwargs['records']:
             self.update_records(item)
         log.info('Successfully appended transfer records.')
@@ -447,7 +700,7 @@ class CreditTransferSheet(Base):
         log.info('Successfully cleared transfer sheet records.')
         return self.records
 
-    # CONTROLLERS
+    # CONTROLLERS (LIST)
 
     def credit_transfer_sheet_controller(self, **kwargs):
         log.debug('')
@@ -465,22 +718,115 @@ class CreditTransferSheet(Base):
             self.update_write_date()
         return handle
 
-    # ERRORS
+    # WARNINGS (LIST)
+    '''
+    [ TODO ]: Fetch warning messages from message file by key codes.
+    '''
 
-    def error_could_not_remove_transfer_sheet_record(self, command_chain):
+    def warning_could_not_fetch_transfer_record(self, *args):
         command_chain_response = {
             'failed': True,
-            'error': 'Could not remove transfer sheet record. '\
-                     'Command chain details : {}'.format(command_chain),
+            'warning': 'Something went wrong. '
+                       'Could not fetch transfer sheet record. '
+                       'Details: {}'.format(args),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
+
+    # ERRORS (LIST)
+    '''
+    [ TODO ]: Fetch error messages from message file by key codes.
+    '''
+
+    def error_could_not_set_transfer_sheet_ewallet(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Something went wrong. '
+                     'Could not set transfer sheet credit ewallet. '
+                     'Details: {}'.format(args),
         }
         log.error(command_chain_response['error'])
         return command_chain_response
 
-    def error_could_not_update_transfer_sheet_records(self, record):
-        log.error(
-            'Could not update transfer sheet records with {}.'.format(record)
-        )
-        return False
+    def error_could_not_set_transfer_sheet_create_date(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Something went wrong. '
+                     'Could not set transfer sheet create date. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_could_not_set_transfer_sheet_write_date(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Something went wrong. '
+                     'Could not set transfer sheet write date. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_could_not_set_transfer_sheet_id(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Something went wrong. '
+                     'Could not set transfer sheet id. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_could_not_set_transer_sheet_ewallet_id(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Something went wrong. '
+                     'Could not set transfer sheet ewallet id. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_could_not_set_transfer_sheet_reference(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Something went wrong. '
+                     'Could not set transfer sheet reference. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_could_not_set_transfer_sheet_records(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Something went wrong. '
+                     'Could not set transfer sheet records. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_could_not_remove_transfer_sheet_record(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Something went wrong. '
+                     'Could not remove transfer sheet record. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_could_not_update_transfer_sheet_records(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Something went wrong. '
+                     'Could not update transfer sheet records. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
 
     def error_handler_add_transfer_sheet_record(self, **kwargs):
         _reasons_and_handlers = {
@@ -498,71 +844,125 @@ class CreditTransferSheet(Base):
                 return _reasons_and_handlers['handlers'][item]()
         return False
 
-    def error_no_transfer_sheet_id_found(self):
-        log.error('No transfer sheet id found.')
-        return False
+    def error_no_transfer_sheet_id_found(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No transfer sheet id found. Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
 
-    def error_no_wallet_id_found(self):
-        log.error('No wallet id found.')
-        return False
+    def error_no_wallet_id_found(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No credit ewallet id found. Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
 
-    def error_no_reference_found(self):
-        log.error('No reference found.')
-        return False
+    def error_no_reference_found(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No transfer sheet reference found. Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
 
-    def error_no_records_found(self):
-        log.error('No records found.')
-        return False
+    def error_no_records_found(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No transfer records found. Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
 
-    def error_no_transfer_type_found(self):
-        log.error('No transfer type found.')
-        return False
+    def error_no_transfer_type_found(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No transfer type found. Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
 
-    def error_no_transfer_records_found(self):
-        log.error('No transfer records found.')
-        return False
+    def error_no_transfer_sheet_controller_action_specified(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No transfer sheet controller action specified. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
 
-    def error_no_transfer_sheet_controller_action_specified(self):
-        log.error('No transfer sheet controller action specified.')
-        return False
+    def error_no_credits_found(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No credits found. Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
 
-    def error_no_credits_found(self):
-        log.error('No credits found.')
-        return False
+    def error_no_transfer_sheet_record_identifier_specified(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No transfer sheet record identifier specified. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
 
-    def error_no_transfer_sheet_record_identifier_specified(self):
-        log.error('No transfer sheet record identifier specified.')
-        return False
+    def error_no_transfer_record_creation_values_found(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No transfer sheet record creation values found. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
 
-    def error_no_transfer_record_creation_values_found(self):
-        log.error('No transfer record creation values found.')
-        return False
+    def error_no_transfer_record_src_found(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No transfer sheet record source account found. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
 
-    def error_no_transfer_record_src_found(self):
-        log.error('No transfer record source party found.')
-        return False
+    def error_no_transfer_record_dst_found(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No transfer sheet record destination account found. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
 
-    def error_no_transfer_record_dst_found(self):
-        log.error('No transfer record destination party found.')
+    def error_no_transfer_record_reference_found(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No transfer sheet record reference found. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
 
-    def error_no_transfer_record_reference_found(self):
-        log.error('No transfer record reference found.')
-        return False
+    def error_no_transfer_record_date_found(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No transfer sheet record date found. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
 
-    def error_no_transfer_record_date_found(self):
-        log.error('No transfer record date found.')
-        return False
-
-    def error_no_transfer_record_id_found(self):
-        log.error('No transfer record id found.')
-        return False
-
-    def warning_could_not_fetch_transfer_record(self, search_code, code):
-        log.warning(
-                'Something went wrong. '
-                'Could not fetch transfer record by %s %s.'
-                )
-        return False
+    def error_no_transfer_record_id_found(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No transfer sheet record id found. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
 
 
 ###############################################################################
