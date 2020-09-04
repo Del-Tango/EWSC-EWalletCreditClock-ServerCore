@@ -1017,10 +1017,6 @@ class EWalletWorker():
 
     def spawn_ewallet_session(self, orm_session, **kwargs):
         log.debug('')
-
-        # TODO - Remove 1 down
-        log.info('\n\nKWARGS : {}\n'.format(kwargs))
-
         return EWallet(
             name=kwargs.get('reference'), session=orm_session,
             expiration_date=kwargs.get('expiration_date')
@@ -1151,9 +1147,8 @@ class EWalletWorker():
             return self.warning_could_not_cleanup_ewallet_session(
                 kwargs, command, ewallet_session, cleanup
             )
-        orm_session = ewallet_session.fetch_active_session()
-        remove_from_disk = self.remove_ewallet_session_from_disk(
-            kwargs['session_id'], orm_session
+        remove_from_disk = self.remove_ewallet_sessions_from_disk(
+            [ewallet_session]
         )
         if not remove_from_disk or isinstance(remove_from_disk, dict) and \
                 remove_from_disk.get('failed'):
@@ -1173,6 +1168,7 @@ class EWalletWorker():
             'worker': self.fetch_worker_id(),
             'sessions': list(remove_from_pool['session_pool'].keys()),
             'session_cleaned': kwargs['session_id'],
+            'cleaning_failures': remove_from_disk['removal_failures'],
         }
         self.send_instruction_response(response)
         return response
