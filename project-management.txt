@@ -12,8 +12,8 @@
     - x - (EWSC) Move all subordonate account action handlers to worker
     - x - (EWSC) Update ewallet dox instruction set for user action category Switch
     - x - (EWSC) Impose System Portal restrictions
-    - . - (EWSC) Update write dates
-    -   - (EWSC) Move all system actions to session worker
+    -   - (EWSC) Update write dates
+    - x - (EWSC) Refactor all system actions
     - (EWSC) Sync session workers using Semaphore objects
     - (EWSC) Groom session worker state updates
     - (EWSC) Journal record grooming
@@ -56,12 +56,6 @@
 ################################################################################
 
 - Update write dates for:
-    - Session Worker
-        - System action Session Sweep Cleanup
-        - System action Session Target Cleanup
-        - System action Add New Session
-        - System action Add Client ID / Session Token map entry
-        - System action Add Client ID
     - x - Session Manager
         - x - System action New Worker
         - x - System action Cleanup Session Workers
@@ -69,11 +63,13 @@
         - x - System action Close Sockers
         - x - User action Request Client ID
         - x - User action Request Session Token
-    - x - Session Workers
+    - Session Workers
         - x - System action New Worker
         - x - System action New EWallet Session
         - x - System action Target Cleanup EWallet Session
         - x - System action Sweep Cleanup EWallet Session
+        -   - System action Add Client ID / Session Token map entry
+        - System action Add Client ID
     - x - EWallet Session
         - x - User action Account Login
         - x - User action Create Account
@@ -148,12 +144,12 @@
     - x - Time Record
         - x - User action Create Time Record
 
-- Move actions to worker
+- x - Move actions to worker
     - x - System action Session Sweep Cleanup
     - x - System action Session Target Cleanup
     - x - System action Session Workers Cleanup
     - x - System action New EWallet Session
-    -   - System action Interogate Session Workers
+    - x - System action Interogate Session Workers
     - x - System action Interogate EWallet Session
     - x - User action Request Session token
     - x - User action Create Account

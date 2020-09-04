@@ -68,7 +68,6 @@ class EWalletWorker():
             ewallet_session_id, session_pool
         ) if not ewallet_session else ewallet_session
 
-
     def fetch_ewallet_session_expiration_date(self):
         log.debug('')
         validity_hours = self.fetch_default_ewallet_session_validity_interval(
@@ -278,16 +277,6 @@ class EWalletWorker():
     '''
     [ NOTE ]: Write date updates are done here.
     '''
-
-    # TODO
-    def set_session_pool_add_record(self, record):
-        pass
-    def set_session_pool_remove_record(self, record):
-        pass
-    def set_session_pool_clear_records(self):
-        pass
-    def set_session_pool_update_records(self):
-        pass
 
 #   @pysnooper.snoop()
     def remove_ewallet_session_from_worker_pool(self, ewallet_session):
@@ -660,6 +649,33 @@ class EWalletWorker():
 
     # GENERAL
 
+    def sanitize_session_worker_values(self, values):
+        log.debug('')
+        sanitized_values = values.copy()
+        sanitized_values['create_date'] = res_utils.format_datetime(
+            values['create_date']
+        )
+        sanitized_values['state_timestamp'] = res_utils.format_datetime(
+            values['state_timestamp']
+        )
+        for session_id in values['session_pool']:
+            sanitized_values['session_pool'][session_id] = str(
+                values['session_pool'][session_id]
+            )
+        sanitized_values['instruction_set_recv'] = str(
+            values['instruction_set_recv']
+        )
+        sanitized_values['instruction_set_resp'] = str(
+            values['instruction_set_resp']
+        )
+        for client_id in values['token_session_map']:
+            for session_token in client_id:
+                sanitized_values['token_session_map'][client_id][session_token] = str(
+                    values['token_session_map'][client_id][session_token]
+                )
+        sanitized_values['lock'] = str(values['lock'])
+        return sanitized_values
+
 #   @pysnooper.snoop()
     def send_instruction_response(self, response, *args, **kwargs):
         '''
@@ -803,6 +819,18 @@ class EWalletWorker():
     '''
     [ NOTE ]: Command chain responses are formulated here.
     '''
+
+    def action_interogate_worker_state(self, **kwargs):
+        log.debug('')
+        state = self.fetch_session_worker_values()
+        sanitized_state = self.sanitize_session_worker_values(state)
+        response = {
+            'failed': False,
+            'worker': self.fetch_worker_id(),
+            'worker_data': sanitized_state,
+        }
+        self.send_instruction_response(response)
+        return response
 
     def action_check_ewallet_session_state(self, **kwargs):
         log.debug('')
@@ -2763,6 +2791,10 @@ class EWalletWorker():
 
     # ACTION HANDLERS
 
+    def handle_system_action_interogate_state_info(self, **kwargs):
+        log.debug('')
+        return self.action_interogate_worker_state(**kwargs)
+
     def handle_system_action_check_ewallet_session_state(self, **kwargs):
         log.debug('')
         return self.action_check_ewallet_session_state(**kwargs)
@@ -3079,6 +3111,16 @@ class EWalletWorker():
 
     # JUMPTABLE HANDLERS
 
+    def handle_system_action_interogate_state(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('state'):
+            return self.error_no_worker_state_interogation_target_specified(kwargs)
+        handlers = {
+            'code': self.handle_system_action_interogate_state_code,
+            'info': self.handle_system_action_interogate_state_info,
+        }
+        return handlers[kwargs['state']](**kwargs)
+
     def handle_system_action_interogate_session(self, **kwargs):
         log.debug('')
         if not kwargs.get('session'):
@@ -3112,15 +3154,6 @@ class EWalletWorker():
             'state': self.handle_system_action_interogate_session_pool_state,
         }
         return handlers[kwargs['pool']](**kwargs)
-
-    def handle_system_action_interogate_state(self, **kwargs):
-        log.debug('')
-        if not kwargs.get('state'):
-            return self.error_no_worker_state_interogation_target_specified(kwargs)
-        handlers = {
-            'code': self.handle_system_action_interogate_state_code,
-        }
-        return handlers[kwargs['state']](**kwargs)
 
     def handle_client_action_unlink_invoice(self, **kwargs):
         log.debug('')

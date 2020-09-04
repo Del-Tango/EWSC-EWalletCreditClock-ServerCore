@@ -121,6 +121,16 @@ class EWalletSessionManager():
         }
         return False if False in value_set.keys() else value_set
 
+    def fetch_worker_state_interogation_instruction(self):
+        log.debug('')
+        return {
+            'controller': 'system',
+            'ctype': 'action',
+            'action': 'interogate',
+            'interogate': 'state',
+            'state': 'info',
+        }
+
     def fetch_ewallet_session_interogation_instruction(self):
         log.debug('')
         return {
@@ -1176,6 +1186,30 @@ class EWalletSessionManager():
 
     # GENERAL
 
+    def interogate_session_pool_workers(self, **kwargs):
+        log.debug('')
+        worker_pool = self.fetch_worker_pool()
+        if not worker_pool or isinstance(worker_pool, dict) and \
+                worker_pool.get('failed'):
+            return self.warning_could_not_fetch_session_worker_pool(kwargs)
+        if kwargs.get('limit') and isinstance(kwargs['limit'], int):
+            worker_ids = list(worker_pool.keys())[:kwargs['limit']]
+            workers = {
+                worker_id: worker_pool[worker_id] for worker_id in worker_ids
+            }
+            worker_pool = workers
+        instruction = self.fetch_worker_state_interogation_instruction()
+        worker_states = {
+            worker_id: self.action_execute_system_instruction_set(
+                worker_id=worker_id, **instruction
+            ) for worker_id in worker_pool
+        }
+        instruction_set_response = {
+            'failed': False,
+            'workers': worker_states,
+        }
+        return instruction_set_response
+
 #   @pysnooper.snoop()
     def send_session_worker_instruction(self, worker_id, instruction_set):
         log.debug('')
@@ -1388,6 +1422,17 @@ class EWalletSessionManager():
     # ACTIONS
 
 #   @pysnooper.snoop('logs/ewallet.log')
+    def action_interogate_ewallet_session_workers(self, **kwargs):
+        log.debug('')
+        interogate_workers = self.interogate_session_pool_workers(**kwargs)
+        if isinstance(interogate_workers, dict) and \
+                interogate_workers.get('failed'):
+            return self.warning_could_not_interogate_session_workers(
+                kwargs, interogate_workers
+            )
+        return interogate_workers
+
+#   @pysnooper.snoop('logs/ewallet.log')
     def action_interogate_ewallet_session(self, **kwargs):
         log.debug('')
         if not kwargs.get('session_id'):
@@ -1570,22 +1615,6 @@ class EWalletSessionManager():
         }
         return instruction_set_response
 
-#   @pysnooper.snoop('logs/ewallet.log')
-    def action_interogate_ewallet_session_workers(self, **kwargs):
-        log.debug('')
-        workers = self.fetch_ewallet_session_manager_worker_pool()
-        if not workers or isinstance(workers, dict) and workers.get('failed'):
-            return self.warning_could_not_interogate_ewallet_session_workers(
-                kwargs
-            )
-        command_chain_response = {
-            'failed': False,
-            'workers': {
-                worker: worker.fetch_session_worker_values() for worker in workers
-            },
-        }
-        return command_chain_response
-
     # EVENTS
 
     # TODO
@@ -1620,6 +1649,10 @@ class EWalletSessionManager():
     '''
     [ NOTE ]: Instruction set validation and sanitizations are performed here.
     '''
+
+    def handle_system_action_interogate_ewallet_workers(self, **kwargs):
+        log.debug('')
+        return self.action_interogate_ewallet_session_workers(**kwargs)
 
     def handle_system_action_interogate_ewallet_session(self, **kwargs):
         log.debug('')
@@ -2495,10 +2528,6 @@ class EWalletSessionManager():
         log.debug('')
         return self.action_cleanup_session_workers(**kwargs)
 
-    def handle_system_action_interogate_ewallet_workers(self, **kwargs):
-        log.debug('')
-        return self.action_interogate_ewallet_session_workers(**kwargs)
-
     def handle_system_action_new_session(self, **kwargs):
         log.debug('')
         return self.action_new_ewallet_session(**kwargs)
@@ -3142,6 +3171,26 @@ class EWalletSessionManager():
     '''
     [ TODO ]: Fetch warning messages from message file by key codes.
     '''
+
+    def warning_could_not_interogate_session_workers(self, *args):
+        instruction_set_response = {
+            'failed': True,
+            'warning': 'Something went wrong. '
+                       'Could not interogate session workers. '\
+                       'Details: {}'.format(args),
+        }
+        log.warning(instruction_set_response['warning'])
+        return instruction_set_response
+
+    def warning_could_not_fetch_session_worker_pool(self, *args):
+        instruction_set_response = {
+            'failed': True,
+            'warning': 'Something went wrong. '
+                       'Could not fetch session worker pool. '\
+                       'Details: {}'.format(args),
+        }
+        log.warning(instruction_set_response['warning'])
+        return instruction_set_response
 
     def warning_could_not_interogate_ewallet_session(self, *args):
         instruction_set_response = {
@@ -3994,15 +4043,6 @@ class EWalletSessionManager():
             'failed': True,
             'warning': 'Something went wrong. Could not cleanup ewallet session worker {}.'\
                        .format(session_worker),
-        }
-        log.warning(instruction_set_response['warning'])
-        return instruction_set_response
-
-    def warning_could_not_fetch_session_worker_pool(self, instruction_set):
-        instruction_set_response = {
-            'failed': True,
-            'warning': 'Something went wrong. Could not fetch session worker pool. '\
-                       'Instruction set details : {}'.format(instruction_set),
         }
         log.warning(instruction_set_response['warning'])
         return instruction_set_response
