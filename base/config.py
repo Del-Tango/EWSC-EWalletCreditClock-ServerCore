@@ -19,8 +19,10 @@ class Config():
             'esm_response_port': 8081,
         }
         self.worker_config = {
+            'worker_reference': 'Session Worker',
             'worker_limit': 10,
             'worker_sigterm': 'terminate_worker',
+            'session_limit': 10,
         }
         self.log_config = {
             'log_name': 'EWallet',

@@ -16,8 +16,8 @@
     - x - (EWSC) Refactor all system actions
     - x - (EWSC) Gracefully cleanup EWallet Session
     - x - (EWSC) Gracefully cleanup Session Worker
-    -   - (EWSC) Groom session worker state updates
-    - (EWSC) Sync session workers using Semaphore objects
+    - x - (EWSC) Groom session worker state updates
+    -   - (EWSC) Sync session workers using Semaphore objects
     - (EWSC) Journal record grooming
     - (EWSC) Impose entity ownership restrictions on User action categories View, Switch and Unlink
     - (EWCC) Perform valid input checks on core subroutine SetResource

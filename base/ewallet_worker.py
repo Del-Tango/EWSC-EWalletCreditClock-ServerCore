@@ -33,6 +33,7 @@ class EWalletWorker():
     instruction_set_recv = None # <multiprocessing.Queue(1)>
     instruction_set_resp = None # <multiprocessing.Queue(1)>
     lock = None # <multiprocessing.Value('i', 0)>
+    session_limit = int()
 
     def __init__(self, *args, **kwargs):
         now = datetime.datetime.now()
@@ -45,8 +46,11 @@ class EWalletWorker():
         self.session_worker_state_timestamp = now
         self.instruction_set_recv = kwargs.get('instruction_set_recv') or Queue(1)
         self.instruction_set_resp = kwargs.get('instruction_set_resp') or Queue(1)
-        self.sigterm = kwargs.get('sigterm') or 'terminate_worker'
+        self.sigterm = kwargs.get('sigterm') or \
+            str(config.worker_config['worker_sigter'])
         self.lock = kwargs.get('lock') or Value('i', 0)
+        self.session_limit = kwargs.get('session_limit') or \
+            int(config.worker_config['session_limit'])
 
     # FETCHERS
 
@@ -64,6 +68,10 @@ class EWalletWorker():
     def fetch_default_ewallet_session_validity_interval_in_days(self, **kwargs):
         log.debug('TODO - Fetch value from config file')
         return 1
+
+    def fetch_session_worker_session_limit(self):
+        log.debug('')
+        return self.session_limit
 
     def fetch_session_worker_ewallet_session_pool(self):
         log.debug('')
@@ -617,6 +625,50 @@ class EWalletWorker():
 
     # UPDATERS
 
+    def update_session_worker_state(self):
+        '''
+        [ NOTE   ]: Compute appropriate session worker state code and set values.
+        [ RETURN ]: {
+            'state_code': (True | False),
+            'state_label': (True | False),
+            'state_timestamp': (True | False)
+        }
+        '''
+        log.debug('')
+        session_limit = self.fetch_session_worker_session_limit()
+        session_pool = self.fetch_session_worker_ewallet_session_pool()
+        state_code = 0 if not len(session_pool) else \
+            (1 if len(session_pool) < session_limit else 2)
+        return self.update_session_worker_state_values(state_code)
+
+    def update_session_worker_state_values(self, state_code):
+        '''
+        [ NOTE   ]: Update worker state using state code.
+        [ INPUT  ]: (0 | 1 | 2)
+        [ RETURN ]: {
+            'state_code': (True | False),
+            'state_label': (True | False),
+            'state_timestamp': (True | False)
+        }
+        '''
+        log.debug('')
+        mapper = self.fetch_session_worker_state_code_label_map()
+        state_label = mapper.get(state_code)
+        timestamp = datetime.datetime.now()
+        updates = {
+            'state_code': self.set_session_worker_state_code(
+                state_code, code_map=mapper.keys()
+            ),
+            'state_label': self.set_session_worker_state_label(
+                state_label, label_map=mapper.values()
+            ),
+            'state_timestamp': self.set_session_worker_state_timestamp(
+                timestamp
+            ),
+        }
+        return updates
+
+
     def update_ewallet_session_pool(self, map_entry):
         log.debug('')
         if not map_entry or not isinstance(map_entry, dict):
@@ -653,34 +705,12 @@ class EWalletWorker():
         log.debug('')
         return self.set_session_token_to_pool(session_token)
 
-    def update_session_worker_state(self, state_code):
-        '''
-        [ NOTE   ]: Update worker state using state code.
-        [ INPUT  ]: (0 | 1 | 2)
-        [ RETURN ]: {
-            'state_code': (True | False),
-            'state_label': (True | False),
-            'state_timestamp': (True | False)
-            }
-        '''
-        log.debug('')
-        mapper = self.fetch_session_worker_state_code_label_map()
-        state_label = mapper.get(state_code)
-        timestamp = datetime.datetime.now()
-        updates = {
-            'state_code': self.set_session_worker_state_code(
-                state_code, code_map=mapper.keys()
-            ),
-            'state_label': self.set_session_worker_state_label(
-                state_label, label_map=mapper.values()
-            ),
-            'state_timestamp': self.set_session_worker_state_timestamp(
-                timestamp
-            ),
-        }
-        return updates
-
     # CHECKERS
+
+    def check_session_worker_available(self):
+        log.debug('')
+        state_code = self.fetch_session_worker_state_code()
+        return True if state_code in [0, 1] else False
 
     def check_ewallet_session_id_mapped(self, session_id):
         log.debug('')
@@ -1001,6 +1031,9 @@ class EWalletWorker():
 #   @pysnooper.snoop()
     def create_new_ewallet_session(self, **kwargs):
         log.debug('')
+        availability_check = self.check_session_worker_available()
+        if not availability_check:
+            return self.error_session_worker_full(kwargs)
         orm_session = res_utils.session_factory()
         ewallet_session = self.spawn_ewallet_session(orm_session, **kwargs)
         orm_session.add(ewallet_session)
@@ -1011,6 +1044,23 @@ class EWalletWorker():
     '''
     [ NOTE ]: Command chain responses are formulated here.
     '''
+
+    def action_remove_session_map_by_ewallet_session(self, **kwargs):
+        log.debug('')
+        client_id = self.fetch_ewallet_session_map_client_id_by_ewallet_session(**kwargs)
+        if not client_id or isinstance(client_id, dict) and client_id.get('failed'):
+            return self.warning_could_not_fetch_ewallet_associated_client_id_from_map(
+                kwargs
+            )
+        remove_entry = self.remove_session_token_map_entry(client_id)
+        if not remove_entry or isinstance(remove_entry, dict) and \
+                remove_entry.get('failed'):
+            return self.warning_could_not_remove_session_token_map_entry(**kwargs)
+        instruction_set_response = {
+            'failed': False,
+            'session_token_map': remove_entry['session_token_map'],
+        }
+        return instruction_set_response
 
     def action_remove_ewallet_session_set_from_pool(self, **kwargs):
         log.debug('')
@@ -1212,6 +1262,11 @@ class EWalletWorker():
             expiration_date=kwargs.get('expiration_date') or
                 self.fetch_ewallet_session_expiration_date()
         )
+        if not ewallet_session or isinstance(ewallet_session, dict) and \
+                ewallet_session.get('failed'):
+            return self.warning_could_not_create_new_ewallet_system_session(
+                kwargs, ewallet_session
+            )
         # Add map entry
         map_session = self.map_ewallet_session(ewallet_session)
         # Formulate instruction response
@@ -1231,6 +1286,11 @@ class EWalletWorker():
             expiration_date=kwargs.get('expiration_date') or
                 self.fetch_ewallet_session_expiration_date()
         )
+        if not ewallet_session or isinstance(ewallet_session, dict) and \
+                ewallet_session.get('failed'):
+            return self.warning_could_not_create_new_ewallet_session(
+                kwargs, ewallet_session
+            )
         # Add map entries
         map_client_session = self.map_client_session(
             kwargs['client_id'], kwargs['session_token'], ewallet_session
@@ -3069,9 +3129,17 @@ class EWalletWorker():
 
     # ACTION HANDLERS
 
+    def handle_system_action_remove_session_map_by_ewallet_session(self, **kwargs):
+        log.debug('')
+        action = self.action_remove_session_map_by_ewallet_session(**kwargs)
+        self.update_session_worker_state()
+        return action
+
     def handle_system_action_cleanup_session_worker(self, **kwargs):
         log.debug('')
-        return self.action_cleanup_session_worker(**kwargs)
+        action = self.action_cleanup_session_worker(**kwargs)
+        self.update_session_worker_state()
+        return action
 
     def handle_system_action_interogate_state_info(self, **kwargs):
         log.debug('')
@@ -3083,7 +3151,9 @@ class EWalletWorker():
 
     def handle_system_action_remove_session(self, **kwargs):
         log.debug('')
-        return self.action_remove_ewallet_session(**kwargs)
+        action = self.action_remove_ewallet_session(**kwargs)
+        self.update_session_worker_state()
+        return action
 
     def handle_system_action_check_ewallet_session_exists(self, **kwargs):
         log.debug('')
@@ -3091,7 +3161,9 @@ class EWalletWorker():
 
     def handle_system_action_remove_sessions(self, **kwargs):
         log.debug('')
-        return self.action_remove_ewallet_session_set_from_pool(**kwargs)
+        action = self.action_remove_ewallet_session_set_from_pool(**kwargs)
+        self.update_session_worker_state()
+        return action
 
     def handle_system_action_interogate_session_pool_expired(self, **kwargs):
         log.debug('')
@@ -3348,23 +3420,6 @@ class EWalletWorker():
     def handle_client_action_resume_clock_timer(self, **kwargs):
         log.debug('')
         return self.action_resume_clock_timer(**kwargs)
-
-    def handle_system_action_remove_session_map_by_ewallet_session(self, **kwargs):
-        log.debug('')
-        client_id = self.fetch_ewallet_session_map_client_id_by_ewallet_session(**kwargs)
-        if not client_id or isinstance(client_id, dict) and client_id.get('failed'):
-            return self.warning_could_not_fetch_ewallet_associated_client_id_from_map(
-                kwargs
-            )
-        remove_entry = self.remove_session_token_map_entry(client_id)
-        if not remove_entry or isinstance(remove_entry, dict) and \
-                remove_entry.get('failed'):
-            return self.warning_could_not_remove_session_token_map_entry(**kwargs)
-        instruction_set_response = {
-            'failed': False,
-            'session_token_map': remove_entry['session_token_map'],
-        }
-        return instruction_set_response
 
     def handle_system_action_session_worker_state_check(self):
         log.debug('')
@@ -3959,6 +4014,26 @@ class EWalletWorker():
     '''
     [ TODO ]: Fetch warning messages from message file by key codes.
     '''
+
+    def warning_could_not_create_new_ewallet_system_session(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Something went wrong. '
+                       'Could not create new ewallet session for system. '
+                       'Details: {}'.format(args),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
+
+    def warning_could_not_create_new_ewallet_session(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Something went wrong. '
+                       'Could not create new ewallet session for client. '
+                       'Details: {}'.format(args),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
 
     def warning_could_not_remove_ewallet_session_from_disk(self, *args):
         command_chain_response = {
@@ -4798,6 +4873,18 @@ class EWalletWorker():
     '''
     [ TODO ]: Fetch error messages from message file by key codes.
     '''
+
+    def error_session_worker_full(self, *args):
+        instruction_set_response = {
+            'failed': True,
+            'error': 'Session worker full. '
+                     'Reached capacity limit of {} ewallet sessions. '
+                     'Details: {}.'.format(
+                         self.fetch_session_worker_session_limit(), args
+                     ),
+        }
+        log.error(instruction_set_response['error'])
+        return instruction_set_response
 
     def error_could_not_remove_ewallet_session_set_from_disk(self, *args):
         instruction_set_response = {
