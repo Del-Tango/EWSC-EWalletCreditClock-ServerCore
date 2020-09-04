@@ -12,8 +12,10 @@
     - x - (EWSC) Move all subordonate account action handlers to worker
     - x - (EWSC) Update ewallet dox instruction set for user action category Switch
     - x - (EWSC) Impose System Portal restrictions
-    -   - (EWSC) Update write dates
+    - x - (EWSC) Update write dates
     - x - (EWSC) Refactor all system actions
+    - (EWSC) Gracefully cleanup EWallet Session
+    - (EWSC) Gracefully cleanup Session Worker
     - (EWSC) Sync session workers using Semaphore objects
     - (EWSC) Groom session worker state updates
     - (EWSC) Journal record grooming
@@ -32,6 +34,8 @@
 * v.WhiteRabbit (1.0.0/MVP - stable) - Planned
     - (EWSC, EWCC, EWAT) Add SSL certificates for master accounts
     - (EWSC) Use PostgreSql
+    - (EWSC) Implement session manager thread pool
+    - (EWSC, EWCC, EWAT) Fetch error and warning messages from message file
     - (EWSC, EWCC) Configuration file grooming and refactoring
     - (EWSC) Impose master account state restrictions on all user actions
     - (EWSC) Impose master account subordonate account restriction limit
@@ -63,13 +67,13 @@
         - x - System action Close Sockers
         - x - User action Request Client ID
         - x - User action Request Session Token
-    - Session Workers
+    - x - Session Workers
         - x - System action New Worker
         - x - System action New EWallet Session
         - x - System action Target Cleanup EWallet Session
         - x - System action Sweep Cleanup EWallet Session
-        -   - System action Add Client ID / Session Token map entry
-        - System action Add Client ID
+        - x - System action Add Client ID / Session Token map entry
+        - x - System action Add Client ID
     - x - EWallet Session
         - x - User action Account Login
         - x - User action Create Account

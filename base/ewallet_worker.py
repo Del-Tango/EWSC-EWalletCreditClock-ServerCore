@@ -354,7 +354,7 @@ class EWalletWorker():
             self.update_write_date()
         except Exception as e:
             return self.warning_could_not_set_stoken_pool_entry(
-                session_token, self.stoken_pool
+                session_token, self.stoken_pool, e
             )
         return True
 
@@ -363,8 +363,10 @@ class EWalletWorker():
         try:
             del self.token_session_map[client_id]
             self.update_write_date()
-        except:
-            return self.error_could_not_remove_session_token_map_entry(client_id)
+        except Exception as e:
+            return self.error_could_not_remove_session_token_map_entry(
+                client_id, self.token_session_map, e
+            )
         instruction_set_response = {
             'failed': False,
             'session_token_map': self.fetch_session_token_map(),
@@ -378,7 +380,7 @@ class EWalletWorker():
             self.update_write_date()
         except Exception as e:
             return self.warning_could_not_set_esession_pool_entry(
-                map_entry, self.session_pool
+                map_entry, self.session_pool, e
             )
         return True
 
@@ -389,7 +391,7 @@ class EWalletWorker():
             self.update_write_date()
         except Exception as e:
             return self.warning_could_not_set_ctoken_pool_entry(
-                map_entry, self.ctoken_pool
+                map_entry, self.ctoken_pool, e
             )
         return True
 
@@ -400,7 +402,7 @@ class EWalletWorker():
             self.update_write_date()
         except Exception as e:
             return self.warning_could_not_set_stoken_pool_entry(
-                map_entry, self.stoken_pool
+                map_entry, self.stoken_pool, e
             )
         return True
 
@@ -411,8 +413,10 @@ class EWalletWorker():
         try:
             self.token_session_map.update(map_entry)
             self.update_write_date()
-        except:
-            return self.error_could_not_set_session_worker_token_session_map_entry(map_entry)
+        except Exception as e:
+            return self.error_could_not_set_session_worker_token_session_map_entry(
+                map_entry, self.token_session_map, e
+            )
         return True
 
     def set_lock(self, lock):
@@ -423,7 +427,7 @@ class EWalletWorker():
             self.lock = lock
             self.update_write_date()
         except Exception as e:
-            return self.warning_could_not_set_lock(lock)
+            return self.warning_could_not_set_lock(lock, self.lock, e)
         return True
 
     def set_instruction_queue(self, instruction_queue):
@@ -435,7 +439,7 @@ class EWalletWorker():
             self.update_write_date()
         except Exception as e:
             return self.warning_could_not_set_session_worker_instruction_queue(
-                instruction_queue
+                instruction_queue, self.instruction_set_recv, e
             )
         return True
 
@@ -448,7 +452,7 @@ class EWalletWorker():
             self.update_write_date()
         except Exception as e:
             return self.warning_could_not_set_session_worker_response_queue(
-                response_queue
+                response_queue, self.instruction_set_resp, e
             )
         return True
 
@@ -458,8 +462,10 @@ class EWalletWorker():
         try:
             self.stoken_pool.append(session_token)
             self.update_write_date()
-        except:
-            return self.error_could_not_set_new_session_token_to_pool(session_token)
+        except Exception as e:
+            return self.error_could_not_set_new_session_token_to_pool(
+                session_token, self.stoken_pool, e
+            )
         return True
 
     def set_new_client_token_to_pool(self, client_token):
@@ -467,8 +473,10 @@ class EWalletWorker():
         try:
             self.ctoken_pool.append(client_token)
             self.update_write_date()
-        except:
-            return self.error_could_not_add_new_client_token_to_pool(client_token)
+        except Exception as e:
+            return self.error_could_not_add_new_client_token_to_pool(
+                client_token, self.ctoken_pool, e
+            )
         return True
 
     def set_create_date(self, create_date):
@@ -476,8 +484,10 @@ class EWalletWorker():
         try:
             self.create_date = create_date
             self.update_write_date()
-        except:
-            return self.error_could_not_set_worker_create_date()
+        except Exception as e:
+            return self.error_could_not_set_worker_create_date(
+                create_date, self.create_date, e
+            )
         return True
 
     def set_session_worker_state_code(self, state_code, **kwargs):
@@ -820,6 +830,36 @@ class EWalletWorker():
     [ NOTE ]: Command chain responses are formulated here.
     '''
 
+    # TODO - Refactor
+#   @pysnooper.snoop()
+    def action_add_client_id_session_token_map_entry(self, **kwargs):
+        '''
+        [ NOTE   ]: Maps an existing client_id with a new session token and object.
+        [ INPUT  ]: client_id=<label>, session_token=<label>, session=<EWallet-obj>
+        [ RETURN ]: {client_id: {'token': session_token, 'session': session}}
+        '''
+        log.debug('TODO - Refactor')
+        if None in [kwargs.get('client_token'), kwargs.get('session_token'),
+                kwargs.get('session')]:
+            return self.error_required_session_token_map_entry_data_not_found()
+        map_entry = {
+            kwargs['client_token']: {
+                'token': kwargs['session_token'],
+                'session': kwargs['session']
+            }
+        }
+        set_stoken_to_pool = self.set_new_session_token_to_pool(kwargs['session_token'])
+        set_entry = self.set_session_worker_token_session_map_entry(map_entry)
+        if set_entry or isinstance(set_entry, dict) and not set_entry.get('failed'):
+            self.handle_system_action_session_worker_state_check()
+        instruction_set_response = {
+            'failed': False,
+            'map_entry': map_entry,
+        }
+        return self.warning_could_not_set_session_worker_ewallet_session_token_map_entry(kwargs) \
+            if not set_entry or isinstance(set_entry, dict) and \
+            set_entry.get('failed') else instruction_set_response
+
     def action_interogate_worker_state(self, **kwargs):
         log.debug('')
         state = self.fetch_session_worker_values()
@@ -962,35 +1002,6 @@ class EWalletWorker():
             else remove
         self.send_instruction_response(response)
         return response
-
-    # TODO - Refactor
-#   @pysnooper.snoop()
-    def action_add_client_id_session_token_map_entry(self, **kwargs):
-        '''
-        [ NOTE   ]: Maps an existing client_id with a new session token and object.
-        [ INPUT  ]: client_id=<id>, session_token=<token>, session=<session-obj>
-        [ RETURN ]: {client_id: {'token': session_token, 'session': session}}
-        '''
-        log.debug('TODO - Refactor')
-        if None in [kwargs.get('client_token'), kwargs.get('session_token'),
-                kwargs.get('session')]:
-            return self.error_required_session_token_map_entry_data_not_found()
-        map_entry = {kwargs['client_token']: {
-            'token': kwargs['session_token'],
-            'session': kwargs['session']
-            }
-        }
-        set_stoken_to_pool = self.set_new_session_token_to_pool(kwargs['session_token'])
-        set_entry = self.set_session_worker_token_session_map_entry(map_entry)
-        if set_entry or isinstance(set_entry, dict) and not set_entry.get('failed'):
-            self.handle_system_action_session_worker_state_check()
-        instruction_set_response = {
-            'failed': False,
-            'map_entry': map_entry,
-        }
-        return self.warning_could_not_set_session_worker_ewallet_session_token_map_entry(kwargs) \
-            if not set_entry or isinstance(set_entry, dict) and \
-            set_entry.get('failed') else instruction_set_response
 
     # TODO - Refactor
 #   @pysnooper.snoop()
@@ -4429,6 +4440,36 @@ class EWalletWorker():
     [ TODO ]: Fetch error messages from message file by key codes.
     '''
 
+    def error_could_not_set_worker_create_date(self, *args):
+        instruction_set_response = {
+            'failed': True,
+            'error': 'Something went wrong. '
+                     'Could not set session worker create date. '
+                     'Details: {}.'.format(args),
+        }
+        log.error(instruction_set_response['error'])
+        return instruction_set_response
+
+    def error_could_not_remove_session_token_map_entry(self, *args):
+        instruction_set_response = {
+            'failed': True,
+            'error': 'Something went wrong. '
+                     'Could not remove session token map entry. '
+                     'Details: {}.'.format(args),
+        }
+        log.error(instruction_set_response['error'])
+        return instruction_set_response
+
+    def error_could_not_set_session_worker_token_session_map_entry(self, *args):
+        instruction_set_response = {
+            'failed': True,
+            'error': 'Something went wrong. '
+                     'Could not set token session map entry. '
+                     'Details: {}'.format(args),
+        }
+        log.error(instruction_set_response['error'])
+        return instruction_set_response
+
     def error_no_ewallet_session_id_found(self, *args):
         instruction_set_response = {
             'failed': True,
@@ -5034,15 +5075,6 @@ class EWalletWorker():
         log.error(command_chain_response['error'])
         return command_chain_response
 
-    def error_could_not_remove_session_token_map_entry(self, client_id):
-        instruction_set_response = {
-            'failed': True,
-            'error': 'Something went wrong. Could not remove session token map entry '\
-                     'by client id {}.'.format(client_id),
-        }
-        log.error(instruction_set_response['error'])
-        return instruction_set_response
-
     def error_no_ewallet_session_found(self, instruction_set):
         instruction_set_response = {
             'failed': True,
@@ -5124,15 +5156,6 @@ class EWalletWorker():
         log.error(instruction_set_response['error'])
         return instruction_set_response
 
-    def error_could_not_set_session_worker_token_session_map_entru(self, map_entry):
-        instruction_set_response = {
-            'failed': True,
-            'error': 'Something went wrong. Could not set token session map '\
-                     'entry {} to session worker.'.format(map_entry),
-        }
-        log.error(instruction_set_response['error'])
-        return instruction_set_response
-
     def error_invalid_ewallet_session_for_worker_session_pool(self, ewallet_session):
         command_chain_response = {
             'failed': True,
@@ -5152,10 +5175,6 @@ class EWalletWorker():
 
     def error_required_session_token_map_entry_data_not_found(self):
         log.error('Required session token map entry not found.')
-        return False
-
-    def error_could_not_set_worker_create_date(self):
-        log.error('Something went wrong. Could not set worker create date.')
         return False
 
     def error_no_worker_action_new_target_specified(self):
