@@ -121,6 +121,16 @@ class EWalletSessionManager():
         }
         return False if False in value_set.keys() else value_set
 
+    def fetch_ewallet_session_interogation_instruction(self):
+        log.debug('')
+        return {
+            'controller': 'system',
+            'ctype': 'action',
+            'action': 'interogate',
+            'interogate': 'session',
+            'session': 'state',
+        }
+
     def fetch_worker_new_system_session_instruction(self):
         log.debug('')
         return {
@@ -700,8 +710,15 @@ class EWalletSessionManager():
 
     # CHECKERS
 
+    # TODO
+    def check_command_chain_session_token(self):
+        log.debug('TODO - UNIMPLEMENTED')
+    def check_command_chain_instruction_set(self):
+        log.debug('TODO - UNIMPLEMENTED')
+
+    # TODO
     def check_worker_is_available(self, worker_id, **kwargs):
-        log.debug('')
+        log.debug('TODO - Refactor, sync processes with Semaphore objects.')
         worker_pool = kwargs.get('worker_pool') or self.fetch_worker_pool()
         if not worker_pool or isinstance(worker_pool, dict) and \
                 worker_pool.get('failed'):
@@ -773,11 +790,6 @@ class EWalletSessionManager():
             'code': self.check_client_id_code(client_id_segmented[1]),
         }
         return False if False in checks.values() else True
-
-    def check_command_chain_session_token(self):
-        pass
-    def check_command_chain_instruction_set(self):
-        pass
 
     # SPAWNERS
 
@@ -1375,6 +1387,28 @@ class EWalletSessionManager():
 
     # ACTIONS
 
+#   @pysnooper.snoop('logs/ewallet.log')
+    def action_interogate_ewallet_session(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('session_id'):
+            return self.error_no_ewallet_session_id_found(kwargs)
+        worker_id = self.fetch_ewallet_session_assigned_worker(
+            kwargs['session_id']
+        )
+        if isinstance(worker_id, dict) and worker_id.get('failed'):
+            return self.warning_could_not_fetch_worker_id(kwargs, worker_id)
+        instruction = self.fetch_ewallet_session_interogation_instruction()
+        instruction.update({'session_id': kwargs['session_id']})
+        session_state = self.action_execute_system_instruction_set(
+            worker_id=worker_id, **instruction
+        )
+        if isinstance(session_state, dict) and session_state.get('failed'):
+            return self.warning_could_not_interogate_ewallet_session(
+                kwargs, worker_id, instruction, session_state
+            )
+        session_state.update({'worker': worker_id})
+        return session_state
+
 #   @pysnooper.snoop()
     def action_new_ewallet_session(self, **kwargs):
         log.debug('')
@@ -1552,31 +1586,19 @@ class EWalletSessionManager():
         }
         return command_chain_response
 
-    def action_interogate_ewallet_session(self, ewallet_session, instruction_set):
-        log.debug('')
-        orm_session = ewallet_session.fetch_active_session()
-        interogate_session = ewallet_session.ewallet_controller(
-            controller='system', ctype='action', action='interogate',
-            interogate='session', active_session=orm_session, **instruction_set
-        )
-        return self.warning_could_not_interogate_ewallet_session(
-            ewallet_session, instruction_set
-        ) if not interogate_session or isinstance(interogate_session, dict) and \
-            interogate_session.get('failed') else interogate_session
-
     # EVENTS
 
     # TODO
     def event_session_timeout(self, **kwargs):
-        pass
+        log.debug('TODO - UNIMPLEMENTED')
     def event_worker_timeout(self, **kwargs):
-        pass
+        log.debug('TODO - UNIMPLEMENTED')
     def event_client_ack_timeout(self, **kwargs):
-        pass
+        log.debug('TODO - UNIMPLEMENTED')
     def event_client_id_expire(self, **kwargs):
-        pass
+        log.debug('TODO - UNIMPLEMENTED')
     def event_session_token_expire(self, **kwargs):
-        pass
+        log.debug('TODO - UNIMPLEMENTED')
 
     # FORMATTERS
 
@@ -1598,6 +1620,10 @@ class EWalletSessionManager():
     '''
     [ NOTE ]: Instruction set validation and sanitizations are performed here.
     '''
+
+    def handle_system_action_interogate_ewallet_session(self, **kwargs):
+        log.debug('')
+        return self.action_interogate_ewallet_session(**kwargs)
 
     def handle_system_action_sweep_cleanup_ewallet_sessions(self, **kwargs):
         log.debug('')
@@ -2477,48 +2503,31 @@ class EWalletSessionManager():
         log.debug('')
         return self.action_new_ewallet_session(**kwargs)
 
-    def handle_system_action_interogate_ewallet_session(self, **kwargs):
-        log.debug('')
-        active_session = self.res_utils.session_factory()
-        ewallet_session = self.fetch_ewallet_session_for_system_action_using_id(
-            active_session=active_session, **kwargs
-        )
-        if not ewallet_session or isinstance(ewallet_session, dict) and \
-                ewallet_session.get('failed'):
-            return self.warning_could_not_fetch_ewallet_session(kwargs)
-        sanitized_instruction_set = self.res_utils.remove_tags_from_command_chain(
-            kwargs, 'controller', 'ctype', 'action', 'interogate'
-        )
-        interogate_session = self.action_interogate_ewallet_session(
-            ewallet_session, sanitized_instruction_set
-        )
-        return interogate_session
-
     # JUMPTABLE HANDLERS
 
     # TODO
     def handle_system_action_scrape(self, **kwargs):
-        log.debug('TODO - Unimplemented functionality')
+        log.debug('TODO - UNIMPLEMENTED')
     def handle_system_action_search(self, **kwargs):
-        log.debug('TODO - Unimplemented functionality')
+        log.debug('TODO - UNIMPLEMENTED')
     def handle_system_action_view(self, **kwargs):
-        log.debug('TODO - Unimplemented functionality')
+        log.debug('TODO - UNIMPLEMENTED')
     def handle_system_action_request(self, **kwargs):
-        log.debug('TODO - Unimplemented functionality')
+        log.debug('TODO - UNIMPLEMENTED')
     def handle_system_event_session_timeout(self, **kwargs):
-        log.debug('TODO - Unimplemented functionality')
+        log.debug('TODO - UNIMPLEMENTED')
         timeout = self.event_session_timeout()
     def handle_system_event_worker_timeout(self, **kwargs):
-        log.debug('TODO - Unimplemented functionality')
+        log.debug('TODO - UNIMPLEMENTED')
         timeout = self.event_worker_timeout()
     def handle_system_event_client_ack_timeout(self, **kwargs):
-        log.debug('TODO - Unimplemented functionality')
+        log.debug('TODO - UNIMPLEMENTED')
         timeout = self.event_client_ack_timeout()
     def handle_system_event_client_id_expire(self, **kwargs):
-        log.debug('TODO - Unimplemented functionality')
+        log.debug('TODO - UNIMPLEMENTED')
         expire = self.event_client_id_expire()
     def handle_system_event_session_token_expire(self, **kwargs):
-        log.debug('TODO - Unimplemented functionality')
+        log.debug('TODO - UNIMPLEMENTED')
         expire = self.event_session_token_expire()
 
     def handle_system_action_cleanup_ewallet_sessions(self, **kwargs):
@@ -3133,6 +3142,16 @@ class EWalletSessionManager():
     '''
     [ TODO ]: Fetch warning messages from message file by key codes.
     '''
+
+    def warning_could_not_interogate_ewallet_session(self, *args):
+        instruction_set_response = {
+            'failed': True,
+            'warning': 'Something went wrong. '
+                       'Could not interogate ewallet session. '\
+                       'Details: {}'.format(args),
+        }
+        log.warning(instruction_set_response['warning'])
+        return instruction_set_response
 
     def warning_could_not_create_new_ewallet_session(self, *args):
         instruction_set_response = {
@@ -4040,15 +4059,6 @@ class EWalletSessionManager():
         log.warning(instruction_set_response['warning'])
         return instruction_set_response
 
-    def warning_could_not_interogate_ewallet_session(self, ewallet_session, instruction_set):
-        instruction_set_response = {
-            'failed': True,
-            'warning': 'Something went wrong. Could not interogate ewallet session {}. '\
-                       'Instruction set details : {}'.format(ewallet_session, instruction_set),
-        }
-        log.warning(instruction_set_response['warning'])
-        return instruction_set_response
-
     def warning_could_not_fetch_ewallet_session(self, instruction_set):
         instruction_set_response = {
             'failed': True,
@@ -4062,6 +4072,15 @@ class EWalletSessionManager():
     '''
     [ TODO ]: Fetch error messages from message file by key codes.
     '''
+
+    def error_no_ewallet_session_id_found(self, *args):
+        instruction_set_response = {
+            'failed': True,
+            'error': 'No ewallet session id found. '
+                     'Details: {}'.format(args),
+        }
+        log.error(instruction_set_response['error'])
+        return instruction_set_response
 
     def error_could_not_clean_session_worker(self, *args):
         instruction_set_response = {

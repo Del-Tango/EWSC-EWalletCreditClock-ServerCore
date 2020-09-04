@@ -14,6 +14,7 @@
     - x - (EWSC) Impose System Portal restrictions
     - . - (EWSC) Update write dates
     -   - (EWSC) Move all system actions to session worker
+    - (EWSC) Sync session workers using Semaphore objects
     - (EWSC) Groom session worker state updates
     - (EWSC) Journal record grooming
     - (EWSC) Impose entity ownership restrictions on User action categories View, Switch and Unlink
@@ -153,7 +154,7 @@
     - x - System action Session Workers Cleanup
     - x - System action New EWallet Session
     -   - System action Interogate Session Workers
-    - System action Interogate EWallet Session
+    - x - System action Interogate EWallet Session
     - x - User action Request Session token
     - x - User action Create Account
     - x - User action Account Login

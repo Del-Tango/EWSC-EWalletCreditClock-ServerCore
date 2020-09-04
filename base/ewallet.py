@@ -4171,6 +4171,15 @@ class EWallet(Base):
     [ TODO ]: Fetch error messages from message file by key codes.
     '''
 
+    def error_no_system_action_interogate_ewallet_session_target_specified(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No system action interogate ewallet session target specified. '
+                     'Details: {}'.format(args)
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
     def error_could_not_check_if_ewallet_session_expired(self, *args):
         command_chain_response = {
             'failed': True,

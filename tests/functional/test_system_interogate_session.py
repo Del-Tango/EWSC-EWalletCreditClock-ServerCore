@@ -34,7 +34,7 @@ class TestEWalletSessionManagerSystemActionInterogateSession(unittest.TestCase):
         print('\n[ * ]: System action Interogate EWallet Session')
         instruction_set = {
             'controller': 'system', 'ctype': 'action', 'action': 'interogate',
-            'interogate': 'session', 'session_id': 1
+            'interogate': 'session', 'session_id': 2
         }
         interogate = self.session_manager.session_manager_controller(
             **instruction_set
@@ -44,8 +44,8 @@ class TestEWalletSessionManagerSystemActionInterogateSession(unittest.TestCase):
             '\n[ < ] Response: ' + str(interogate) + '\n'
         )
         self.assertTrue(isinstance(interogate, dict))
-        self.assertEqual(len(interogate.keys()), 3)
+        self.assertEqual(len(interogate.keys()), 4)
         self.assertFalse(interogate.get('failed'))
         self.assertTrue(isinstance(interogate.get('ewallet_session'), int))
         self.assertTrue(isinstance(interogate.get('session_data'), dict))
-
+        self.assertTrue(isinstance(interogate.get('worker'), int))

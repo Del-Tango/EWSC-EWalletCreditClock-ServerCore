@@ -50,6 +50,25 @@ class EWalletWorker():
 
     # FETCHERS
 
+    def fetch_ewallet_session_state_check_instruction(self):
+        log.debug('')
+        return {
+            'controller': 'system',
+            'ctype': 'action',
+            'action': 'interogate',
+            'interogate': 'session',
+            'session': 'state',
+        }
+
+    def fetch_ewallet_session_from_pool_by_id(self, ewallet_session_id):
+        log.debug('')
+        session_pool = self.fetch_session_worker_ewallet_session_pool()
+        ewallet_session = session_pool.get(ewallet_session_id)
+        return self.warning_could_not_fetch_ewallet_session_from_pool_by_id(
+            ewallet_session_id, session_pool
+        ) if not ewallet_session else ewallet_session
+
+
     def fetch_ewallet_session_expiration_date(self):
         log.debug('')
         validity_hours = self.fetch_default_ewallet_session_validity_interval(
@@ -72,17 +91,6 @@ class EWalletWorker():
     def fetch_default_ewallet_session_validity_interval_in_days(self, **kwargs):
         log.debug('TODO - Fetch value from config file')
         return 1
-
-    # TODO - Remove - DEPRECATED
-    def fetch_ewallet_session_from_pool_by_id(self, ewallet_session_id):
-        log.debug('DEPRECATED')
-        session_pool = self.fetch_session_worker_ewallet_session_pool()
-        for ewallet_session in session_pool:
-            if ewallet_session.fetch_active_session_id() == ewallet_session_id:
-                return ewallet_session
-        return self.warning_could_not_fetch_ewallet_session_from_pool_by_id(
-            ewallet_session_id
-        )
 
     def fetch_worker_write_date(self):
         log.debug('')
@@ -795,6 +803,41 @@ class EWalletWorker():
     '''
     [ NOTE ]: Command chain responses are formulated here.
     '''
+
+    def action_check_ewallet_session_state(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('session_id'):
+            return self.error_no_ewallet_session_id_found(kwargs)
+        ewallet_session = self.fetch_ewallet_session_from_pool_by_id(
+            kwargs['session_id']
+        )
+        if isinstance(ewallet_session, dict) and ewallet_session.get('failed'):
+            return self.warning_could_not_fetch_ewallet_session(
+                kwargs, ewallet_session
+            )
+        instruction = self.fetch_ewallet_session_state_check_instruction()
+        session_state = ewallet_session.ewallet_controller(**instruction)
+        if not session_state or isinstance(session_state, dict) and \
+                session_state.get('failed'):
+            response = self.warning_could_not_check_ewallet_session_state(
+                kwargs, ewallet_session, instruction, session_state
+            )
+        else:
+            response = session_state
+            response['session_data']['orm_session'] = str(
+                response['session_data']['orm_session']
+            )
+            response['session_data']['create_date'] = res_utils.format_datetime(
+                response['session_data']['create_date']
+            )
+            response['session_data']['write_date'] = res_utils.format_datetime(
+                response['session_data']['write_date']
+            )
+            response['session_data']['expiration_date'] = res_utils.format_datetime(
+                response['session_data']['expiration_date']
+            )
+        self.send_instruction_response(response)
+        return response
 
     def action_add_new_system_session(self, **kwargs):
         # Create new ewallet session
@@ -2720,6 +2763,10 @@ class EWalletWorker():
 
     # ACTION HANDLERS
 
+    def handle_system_action_check_ewallet_session_state(self, **kwargs):
+        log.debug('')
+        return self.action_check_ewallet_session_state(**kwargs)
+
     def handle_system_action_remove_session(self, **kwargs):
         log.debug('')
         return self.action_remove_ewallet_session_from_pool(**kwargs)
@@ -3038,6 +3085,7 @@ class EWalletWorker():
             return self.error_no_system_action_interogate_session_target_specified(kwargs)
         handlers = {
             'exists': self.handle_system_action_check_ewallet_session_exists,
+            'state': self.handle_system_action_check_ewallet_session_state,
         }
         return handlers[kwargs['session']](**kwargs)
 
@@ -3587,6 +3635,36 @@ class EWalletWorker():
     '''
     [ TODO ]: Fetch warning messages from message file by key codes.
     '''
+
+    def warning_could_not_fetch_ewallet_session(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Something went wrong. '
+                       'Could not fetch ewallet session. '
+                       'Details: {}'.format(args),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
+
+    def warning_could_not_check_ewallet_session_state(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Something went wrong. '
+                       'Could not check ewallet session state. '
+                       'Details: {}'.format(args),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
+
+    def warning_could_not_fetch_ewallet_session_from_pool_by_id(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Something went wrong. '
+                       'Could not fetch ewallet session from pool by id. '
+                       'Details: {}'.format(args),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
 
     def warning_could_not_remove_ewallet_session_from_pool(self, *args):
         command_chain_response = {
@@ -4224,15 +4302,6 @@ class EWalletWorker():
         log.warning(command_chain_response['warning'])
         return command_chain_response
 
-    def warning_could_not_fetch_ewallet_session_from_pool_by_id(self, ewallet_session_id):
-        command_chain_response = {
-            'failed': True,
-            'warning': 'Could not find EWallet Session in session worker pool by id {}.'\
-                       .format(ewallet_session_id),
-        }
-        log.warning(command_chain_response['warning'])
-        return command_chain_response
-
     def warning_worker_session_token_map_empty(self, command_chain):
         command_chain_response = {
             'failed': True,
@@ -4326,6 +4395,15 @@ class EWalletWorker():
     '''
     [ TODO ]: Fetch error messages from message file by key codes.
     '''
+
+    def error_no_ewallet_session_id_found(self, *args):
+        instruction_set_response = {
+            'failed': True,
+            'error': 'No ewallet session id found. '
+                     'Details: {}'.format(args),
+        }
+        log.error(instruction_set_response['error'])
+        return instruction_set_response
 
     def error_could_not_check_if_ewallet_session_exists(self, *args):
         instruction_set_response = {
