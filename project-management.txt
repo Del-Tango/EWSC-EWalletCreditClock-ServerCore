@@ -151,8 +151,8 @@
     - x - System action Session Sweep Cleanup
     - x - System action Session Target Cleanup
     - x - System action Session Workers Cleanup
-    - System action New EWallet Session
-    - System action Interogate Session Workers
+    - x - System action New EWallet Session
+    -   - System action Interogate Session Workers
     - System action Interogate EWallet Session
     - x - User action Request Session token
     - x - User action Create Account

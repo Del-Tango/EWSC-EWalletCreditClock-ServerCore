@@ -796,6 +796,44 @@ class EWalletWorker():
     [ NOTE ]: Command chain responses are formulated here.
     '''
 
+    def action_add_new_system_session(self, **kwargs):
+        # Create new ewallet session
+        ewallet_session = self.create_new_ewallet_session(
+            expiration_date=kwargs.get('expiration_date') or
+                self.fetch_ewallet_session_expiration_date()
+        )
+        # Add map entry
+        map_session = self.map_ewallet_session(ewallet_session)
+        # Formulate instruction response
+        response = {
+            'failed': False,
+            'ewallet_session': ewallet_session.fetch_active_session_id(),
+        }
+        # Respond to session manager
+        self.send_instruction_response(response)
+        return response
+
+#   @pysnooper.snoop()
+    def action_add_new_session(self, **kwargs):
+        log.debug('')
+        # Create new ewallet session
+        ewallet_session = self.create_new_ewallet_session(
+            expiration_date=kwargs.get('expiration_date') or
+                self.fetch_ewallet_session_expiration_date()
+        )
+        # Add map entries
+        map_client_session = self.map_client_session(
+            kwargs['client_id'], kwargs['session_token'], ewallet_session
+        )
+        # Formulate instruction response
+        response = {
+            'failed': False,
+            'ewallet_session': ewallet_session.fetch_active_session_id(),
+        }
+        # Respond to session manager
+        self.send_instruction_response(response)
+        return response
+
     def action_interogate_worker_state_code(self, **kwargs):
         log.debug('')
         state_code = self.fetch_session_worker_state_code()
@@ -851,26 +889,6 @@ class EWalletWorker():
             kwargs, remove,
         ) if not remove or isinstance(remove, dict) and remove.get('failed') \
             else remove
-        self.send_instruction_response(response)
-        return response
-
-#   @pysnooper.snoop()
-    def action_add_new_session(self, **kwargs):
-        log.debug('')
-        # Create new ewallet session
-        ewallet_session = self.create_new_ewallet_session(
-            expiration_date=self.fetch_ewallet_session_expiration_date()
-        )
-        # Add map entries
-        map_client_session = self.map_client_session(
-            kwargs['client_id'], kwargs['session_token'], ewallet_session
-        )
-        # Formulate instruction response
-        response = {
-            'failed': False,
-            'ewallet_session': ewallet_session.fetch_active_session_id(),
-        }
-        # Respond to session manager
         self.send_instruction_response(response)
         return response
 
@@ -3455,6 +3473,7 @@ class EWalletWorker():
             return self.error_no_worker_action_new_target_specified()
         handlers = {
             'session': self.action_add_new_session,
+            'system_session': self.action_add_new_system_session,
             'session_map': self.action_add_client_id_session_token_map_entry,
             'client_id': self.action_add_client_id,
         }

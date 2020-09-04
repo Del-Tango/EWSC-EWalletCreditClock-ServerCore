@@ -40,9 +40,7 @@ class TestEWalletSessionManagerSystemActionNewSession(unittest.TestCase):
         self.assertTrue(isinstance(session, dict))
         self.assertEqual(len(session.keys()), 3)
         self.assertFalse(session.get('failed'))
-        self.assertTrue(session.get('ewallet_session'))
-        self.assertTrue(isinstance(session.get('session_data'), dict))
-        self.assertTrue(isinstance(session['session_data']['id'], int))
-        self.assertTrue(session['session_data']['orm_session'])
+        self.assertTrue(isinstance(session.get('worker'), int))
+        self.assertTrue(isinstance(session.get('ewallet_session'), int))
 
 

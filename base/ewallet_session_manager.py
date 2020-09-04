@@ -121,6 +121,25 @@ class EWalletSessionManager():
         }
         return False if False in value_set.keys() else value_set
 
+    def fetch_worker_new_system_session_instruction(self):
+        log.debug('')
+        return {
+            'controller': 'system',
+            'ctype': 'action',
+            'action': 'add',
+            'add': 'system_session'
+        }
+
+    def fetch_ewallet_system_session_expiration_date(self):
+        log.debug('')
+        validity_interval = self.fetch_default_ewallet_system_session_validity_in_hours()
+        now = datetime.datetime.now()
+        return now + datetime.timedelta(hours=validity_interval)
+
+    def fetch_default_ewallet_system_session_validity_in_hours(self):
+        log.debug('TODO - Fetch data from config file.')
+        return 24
+
     def fetch_session_worker_state_code_check_instruction(self):
         log.debug('')
         return {
@@ -1041,6 +1060,15 @@ class EWalletSessionManager():
 
     # CREATORS
 
+    def create_new_system_session(self, **kwargs):
+        log.debug('')
+        worker_id = kwargs.get('worker_id') or \
+            self.fetch_available_worker_id()
+        instruction = self.fetch_worker_new_system_session_instruction()
+        return self.action_execute_system_instruction_set(
+            worker_id=worker_id, **instruction
+        )
+
 #   @pysnooper.snoop('logs/ewallet.log')
     def create_new_ewallet_session(self, **kwargs):
         log.debug('')
@@ -1317,27 +1345,6 @@ class EWalletSessionManager():
         }
         return instruction_set_response
 
-#   @pysnooper.snoop('logs/ewallet.log')
-    def assign_new_ewallet_session_to_worker(self, new_session):
-        '''
-        [ NOTE   ]: Adds new EWallet Session to one of the workers session pool.
-                    The worker is simply the neares available worker in pool, and
-                    if none is found, one is created.
-        '''
-        log.debug('')
-        worker = self.fetch_first_available_worker()
-        if not worker or isinstance(worker, dict) and worker.get('failed'):
-            self.session_manager_controller(
-                controller='system', ctype='action', action='new', new='worker'
-            )
-            worker = self.fetch_first_available_worker()
-        assign_worker = worker.main_controller(
-            controller='system', ctype='action', action='add', add='session',
-            session=new_session
-        )
-        return False if not assign_worker or isinstance(assign_worker, dict) \
-            and assign_worker.get('failed') else worker
-
     def start_instruction_set_listener(self):
         '''
         [ NOTE   ]: Starts socket based command chain instruction set listener.
@@ -1367,6 +1374,25 @@ class EWalletSessionManager():
         return self.error_could_not_spawn_socket_handler() if not socket else socket
 
     # ACTIONS
+
+#   @pysnooper.snoop()
+    def action_new_ewallet_session(self, **kwargs):
+        log.debug('')
+        worker_id = self.fetch_available_worker_id()
+        ewallet_session = self.create_new_system_session(
+            worker_id=worker_id,
+        )
+        if not ewallet_session or isinstance(ewallet_session, dict) and \
+                ewallet_session.get('failed'):
+            return self.warning_could_not_create_new_ewallet_session(
+                kwargs, worker_id, ewallet_session
+            )
+        instruction_set_response = {
+            'failed': False,
+            'worker': worker_id,
+            'ewallet_session': ewallet_session['ewallet_session'],
+        }
+        return instruction_set_response
 
 #   @pysnooper.snoop('logs/ewallet.log')
     def action_cleanup_session_workers(self, **kwargs):
@@ -1525,28 +1551,6 @@ class EWalletSessionManager():
             },
         }
         return command_chain_response
-
-#   @pysnooper.snoop()
-    def action_new_ewallet_session(self, **kwargs):
-        log.debug('')
-        new_session = self.create_new_ewallet_session(**kwargs)
-        if not new_session or isinstance(new_session, dict) and \
-                new_session.get('failed'):
-            return self.warning_could_not_create_new_ewallet_session(kwargs)
-        orm_session = new_session.fetch_active_session()
-        orm_session.add(new_session)
-        orm_session.commit()
-        assign_worker = self.assign_new_ewallet_session_to_worker(new_session)
-        if not assign_worker or isinstance(assign_worker, dict) and \
-                assign_worker.get('failed'):
-            orm_session.rollback()
-            return self.warning_ewallet_session_worker_assignment_failure(kwargs)
-        instruction_set_response = {
-            'failed': False,
-            'ewallet_session': new_session,
-            'session_data': new_session.fetch_active_session_values(),
-        }
-        return instruction_set_response
 
     def action_interogate_ewallet_session(self, ewallet_session, instruction_set):
         log.debug('')
@@ -3130,6 +3134,16 @@ class EWalletSessionManager():
     [ TODO ]: Fetch warning messages from message file by key codes.
     '''
 
+    def warning_could_not_create_new_ewallet_session(self, *args):
+        instruction_set_response = {
+            'failed': True,
+            'warning': 'Something went wrong. '
+                       'Could not create new ewallet session. '\
+                       'Details: {}'.format(args),
+        }
+        log.warning(instruction_set_response['warning'])
+        return instruction_set_response
+
     def warning_no_session_workers_cleaned(self, *args):
         instruction_set_response = {
             'failed': True,
@@ -4004,15 +4018,6 @@ class EWalletSessionManager():
         instruction_set_response = {
             'failed': True,
             'warning': 'No ewallet session found by id {}.'.format(ewallet_session_id),
-        }
-        log.warning(instruction_set_response['warning'])
-        return instruction_set_response
-
-    def warning_could_not_create_new_ewallet_session(self, instruction_set):
-        instruction_set_response = {
-            'failed': True,
-            'warning': 'Something went wrong. Could not create new ewallet session. '\
-                       'Instruction set details : {}'.format(instruction_set),
         }
         log.warning(instruction_set_response['warning'])
         return instruction_set_response
