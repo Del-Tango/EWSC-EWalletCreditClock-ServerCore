@@ -14,8 +14,8 @@
     - x - (EWSC) Impose System Portal restrictions
     - x - (EWSC) Update write dates
     - x - (EWSC) Refactor all system actions
-    - (EWSC) Gracefully cleanup EWallet Session
-    - (EWSC) Gracefully cleanup Session Worker
+    - x - (EWSC) Gracefully cleanup EWallet Session
+    -   - (EWSC) Gracefully cleanup Session Worker
     - (EWSC) Sync session workers using Semaphore objects
     - (EWSC) Groom session worker state updates
     - (EWSC) Journal record grooming

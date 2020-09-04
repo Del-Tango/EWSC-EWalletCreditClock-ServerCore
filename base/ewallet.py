@@ -606,6 +606,15 @@ class EWallet(Base):
         return self.warning_could_not_edit_account_user_pass(kwargs) if \
             edit_user_pass.get('failed') else edit_user_pass
 
+    def action_cleanup_ewallet_session(self, **kwargs):
+        log.debug('')
+        return self.clear_active_session_user_data({
+            'active_user': True,
+            'credit_wallet': True,
+            'contact_list': True,
+            'user_account_archive': True,
+        })
+
     def action_interogate_ewallet_session_expired(self, **kwargs):
         log.debug('')
         expired = self.check_if_active_ewallet_session_expired()
@@ -2605,6 +2614,19 @@ class EWallet(Base):
 
     # HANDLERS
 
+    def handle_system_action_cleanup_ewallet_session(self, **kwargs):
+        log.debug('')
+        return self.action_cleanup_ewallet_session(**kwargs)
+
+    def handle_system_action_cleanup(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('cleanup'):
+            return self.error_no_system_action_cleanup_target_specified(kwargs)
+        handlers = {
+            'session': self.handle_system_action_cleanup_ewallet_session,
+        }
+        return handlers[kwargs['cleanup']](**kwargs)
+
     def handle_system_action_interogate_session_state(self, **kwargs):
         log.debug('')
         return self.action_interogate_ewallet_session_state(**kwargs)
@@ -3233,6 +3255,7 @@ class EWallet(Base):
             'send': self.handle_system_action_send,
             'receive': self.handle_system_action_receive,
             'interogate': self.handle_system_action_interogate,
+            'cleanup': self.handle_system_action_cleanup,
         }
         return handlers[kwargs['action']](**kwargs)
 
@@ -4170,6 +4193,15 @@ class EWallet(Base):
     '''
     [ TODO ]: Fetch error messages from message file by key codes.
     '''
+
+    def error_no_system_action_cleanup_target_specified(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No system action cleanup target specified. '
+                     'Details: {}'.format(args)
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
 
     def error_no_system_action_interogate_ewallet_session_target_specified(self, *args):
         command_chain_response = {
