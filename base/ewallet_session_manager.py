@@ -121,6 +121,15 @@ class EWalletSessionManager():
         }
         return False if False in value_set.keys() else value_set
 
+    def fetch_session_worker_cleanup_instruction(self):
+        log.debug('')
+        return {
+            'controller': 'system',
+            'ctype': 'action',
+            'action': 'cleanup',
+            'cleanup': 'worker',
+        }
+
     def fetch_worker_state_interogation_instruction(self):
         log.debug('')
         return {
@@ -1128,10 +1137,21 @@ class EWalletSessionManager():
 
     def cleanup_session_worker(self, worker_id):
         log.debug('')
+        instruction = self.fetch_session_worker_cleanup_instruction()
+        cleanup = self.action_execute_system_instruction_set(
+            worker_id=worker_id, **instruction
+        )
+        if not cleanup or isinstance(cleanup, dict) and \
+                cleanup.get('failed'):
+            return self.error_could_not_clean_session_worker(
+                worker_id, cleanup
+            )
         remove = self.remove_session_worker_from_pool(worker_id)
         if not remove or isinstance(remove, dict) and \
                 remove.get('failed'):
-            return self.error_could_not_clean_session_worker(worker_id, remove)
+            return self.error_could_not_remove_session_worker_from_pool(
+                worker_id, remove
+            )
         return {
             'failed': False,
             'workers_cleaned': 1,
@@ -1140,19 +1160,21 @@ class EWalletSessionManager():
 
     def cleanup_session_workers(self, worker_ids):
         log.debug('')
-        cleaned_workers = []
+        cleaned_workers, cleaning_failures = [], 0
         for worker_id in worker_ids:
             clean = self.cleanup_session_worker(worker_id)
             if isinstance(clean, dict) and clean.get('failed'):
                 self.warning_could_not_clean_session_worker(
                     worker_id, worker_ids, clean
                 )
+                cleaning_failures += 1
                 continue
             cleaned_workers.append(worker_id)
         return self.warning_no_session_workers_cleaned(worker_ids) \
             if not cleaned_workers else {
                 'failed': False,
                 'workers_cleaned': len(cleaned_workers),
+                'cleaning_failures': cleaning_failures,
                 'workers': cleaned_workers
             }
 
@@ -1422,6 +1444,30 @@ class EWalletSessionManager():
     # ACTIONS
 
 #   @pysnooper.snoop('logs/ewallet.log')
+    def action_cleanup_session_workers(self, **kwargs):
+        log.debug('')
+        vacant_workers = self.fetch_vacant_session_workers()
+        if not vacant_workers or isinstance(vacant_workers, dict) and \
+                vacant_workers.get('failed'):
+            return self.warning_could_not_fetch_vacant_session_workers(
+                kwargs, vacant_workers
+            )
+        # [ NOTE ]: Save one vacant worker to reduce client execution time in
+        #           case all other workers are full.
+        reserved = vacant_workers.pop(0)
+        clean = self.cleanup_session_workers(vacant_workers)
+        if not clean or isinstance(clean, dict) and \
+                clean.get('failed'):
+            return self.warning_could_not_cleanup_vacant_ewallet_session_workers(
+                kwargs, vacant_workers, clean,
+            )
+        clean.update({
+            'worker_reserved': reserved,
+            'worker_pool': self.fetch_worker_pool(),
+        })
+        return clean
+
+#   @pysnooper.snoop('logs/ewallet.log')
     def action_interogate_ewallet_session_workers(self, **kwargs):
         log.debug('')
         interogate_workers = self.interogate_session_pool_workers(**kwargs)
@@ -1472,30 +1518,6 @@ class EWalletSessionManager():
             'ewallet_session': ewallet_session['ewallet_session'],
         }
         return instruction_set_response
-
-#   @pysnooper.snoop('logs/ewallet.log')
-    def action_cleanup_session_workers(self, **kwargs):
-        log.debug('')
-        vacant_workers = self.fetch_vacant_session_workers()
-        if not vacant_workers or isinstance(vacant_workers, dict) and \
-                vacant_workers.get('failed'):
-            return self.warning_could_not_fetch_vacant_session_workers(
-                kwargs, vacant_workers
-            )
-        # [ NOTE ]: Save one vacant worker to reduce client execution time in
-        #           case all other workers are full.
-        reserved = vacant_workers.pop(0)
-        clean = self.cleanup_session_workers(vacant_workers)
-        if not clean or isinstance(clean, dict) and \
-                clean.get('failed'):
-            return self.warning_could_not_cleanup_vacant_ewallet_session_workers(
-                kwargs, vacant_workers, clean,
-            )
-        clean.update({
-            'worker_reserved': reserved,
-            'worker_pool': self.fetch_worker_pool(),
-        })
-        return clean
 
     def action_cleanup_ewallet_session_by_id(self, **kwargs):
         log.debug('')
@@ -4112,6 +4134,16 @@ class EWalletSessionManager():
     '''
     [ TODO ]: Fetch error messages from message file by key codes.
     '''
+
+    def error_could_not_remove_session_worker_from_pool(self, *args):
+        instruction_set_response = {
+            'failed': True,
+            'error': 'Something went wrong. '
+                     'Could not remove session worker from pool. '
+                     'Details: {}'.format(args),
+        }
+        log.error(instruction_set_response['error'])
+        return instruction_set_response
 
     def error_no_ewallet_session_id_found(self, *args):
         instruction_set_response = {

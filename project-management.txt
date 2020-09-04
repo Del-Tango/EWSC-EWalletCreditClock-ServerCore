@@ -15,9 +15,9 @@
     - x - (EWSC) Update write dates
     - x - (EWSC) Refactor all system actions
     - x - (EWSC) Gracefully cleanup EWallet Session
-    -   - (EWSC) Gracefully cleanup Session Worker
+    - x - (EWSC) Gracefully cleanup Session Worker
+    -   - (EWSC) Groom session worker state updates
     - (EWSC) Sync session workers using Semaphore objects
-    - (EWSC) Groom session worker state updates
     - (EWSC) Journal record grooming
     - (EWSC) Impose entity ownership restrictions on User action categories View, Switch and Unlink
     - (EWCC) Perform valid input checks on core subroutine SetResource
@@ -59,7 +59,7 @@
 - EWallet Credit Clock - Server Core
 ################################################################################
 
-- Update write dates for:
+- x - Update write dates for:
     - x - Session Manager
         - x - System action New Worker
         - x - System action Cleanup Session Workers

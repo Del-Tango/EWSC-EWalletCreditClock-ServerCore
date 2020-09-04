@@ -16,16 +16,19 @@ class TestEWalletSessionManagerSystemWorkerCleanup(unittest.TestCase):
         # [ NOTE ]: On cleanup, one of the vacant workers should be reserved if
         # not passed over worker limit defined in config file to handle new
         # session token requests
-        print('[...]: System action New Session Worker')
+        print('[...]: System action New Session Worker (1)')
         worker = session_manager.session_manager_controller(
             controller='system', ctype='action', action='new', new='worker'
         )
+        print('[...]: System action New Session Worker (2)')
         worker = session_manager.session_manager_controller(
             controller='system', ctype='action', action='new', new='worker'
         )
+        print('[...]: System action New Session Worker (3)')
         worker = session_manager.session_manager_controller(
             controller='system', ctype='action', action='new', new='worker'
         )
+        print('[...]: System action New Session Worker (4)')
         worker = session_manager.session_manager_controller(
             controller='system', ctype='action', action='new', new='worker'
         )
@@ -50,9 +53,10 @@ class TestEWalletSessionManagerSystemWorkerCleanup(unittest.TestCase):
             '\n[ < ]: Response: ' + str(clean) + '\n'
         )
         self.assertTrue(isinstance(clean, dict))
-        self.assertEqual(len(clean.keys()), 5)
+        self.assertEqual(len(clean.keys()), 6)
         self.assertFalse(clean.get('failed'))
         self.assertTrue(isinstance(clean['workers_cleaned'], int))
+        self.assertTrue(isinstance(clean['cleaning_failures'], int))
         self.assertTrue(isinstance(clean['worker_pool'], dict))
         self.assertTrue(isinstance(clean.get('worker_reserved'), int))
         self.assertTrue(isinstance(clean['workers'], list))

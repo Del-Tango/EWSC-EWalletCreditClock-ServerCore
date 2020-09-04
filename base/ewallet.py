@@ -608,12 +608,26 @@ class EWallet(Base):
 
     def action_cleanup_ewallet_session(self, **kwargs):
         log.debug('')
-        return self.clear_active_session_user_data({
+        cleanup = self.clear_active_session_user_data({
             'active_user': True,
             'credit_wallet': True,
             'contact_list': True,
             'user_account_archive': True,
         })
+        orm_session = self.fetch_active_session()
+        try:
+            orm_session.commit()
+        except Exception as e:
+            orm_session.rollback()
+            return self.error_could_not_cleanup_ewallet_session(
+                kwargs, cleanup, orm_session. e
+            )
+        instruction_set_response = {
+            'failed': False,
+            'ewallet_session': self.fetch_active_session_id(),
+            'cleanup': cleanup,
+        }
+        return cleanup
 
     def action_interogate_ewallet_session_expired(self, **kwargs):
         log.debug('')
@@ -4193,6 +4207,16 @@ class EWallet(Base):
     '''
     [ TODO ]: Fetch error messages from message file by key codes.
     '''
+
+    def error_could_not_cleanup_ewallet_session(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Something went wrong. '
+                     'Could not cleanup ewallet session. '
+                     'Details: {}'.format(args)
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
 
     def error_no_system_action_cleanup_target_specified(self, *args):
         command_chain_response = {
