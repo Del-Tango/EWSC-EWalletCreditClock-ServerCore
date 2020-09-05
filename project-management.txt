@@ -71,9 +71,9 @@
     - x - User action Pay Credits
     - x - User action Convert Credits2Clock
     - x - User action Convert Clock2Credits
-    -   - User action Add Contact Record
-    - User action Create Contact List
-    - User action TransferCredits
+    - x - User action Add Contact Record
+    - x - User action Create Contact List
+    -   - User action TransferCredits
     - User action Edit Account
     - User action Start Clock Timer
     - User action Pause Clock Timer

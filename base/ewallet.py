@@ -2587,8 +2587,20 @@ class EWallet(Base):
 
     # ACTION HANDLERS
     '''
-    [ NOTES ]: User account state checks are performed here.
+    [ NOTES ]: Enviroment checks for action are performed here.
     '''
+
+    def handle_user_action_create_new_contact_list(self, **kwargs):
+        log.debug('')
+        check = self.check_user_logged_in()
+        return self.warning_user_not_logged_in(check, kwargs) if not check \
+            else self.action_create_new_contact_list(**kwargs)
+
+    def handle_user_action_create_new_contact_record(self, **kwargs):
+        log.debug('')
+        check = self.check_user_logged_in()
+        return self.warning_user_not_logged_in(check, kwargs) if not check \
+            else self.action_create_new_contact_record(**kwargs)
 
     def handle_user_action_create_new_conversion_credits_to_clock(self, **kwargs):
         log.debug('')
@@ -2827,14 +2839,6 @@ class EWallet(Base):
     def handle_system_action_receive_transfer_sheet(self, **kwargs):
         log.debug('')
         return self.action_receive_transfer_sheet(**kwargs)
-
-    def handle_user_action_create_new_contact_list(self, **kwargs):
-        log.debug('')
-        return self.action_create_new_contact_list(**kwargs)
-
-    def handle_user_action_create_new_contact_record(self, **kwargs):
-        log.debug('')
-        return self.action_create_new_contact_record(**kwargs)
 
     def handle_user_action_create_new_transfer_type_transfer(self, **kwargs):
         log.debug('')
