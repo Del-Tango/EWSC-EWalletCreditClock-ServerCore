@@ -17,14 +17,13 @@
     - x - (EWSC) Gracefully cleanup EWallet Session
     - x - (EWSC) Gracefully cleanup Session Worker
     - x - (EWSC) Groom session worker state updates
-    -   - (EWSC) Sync session workers using Semaphore objects
-    - (EWSC) Journal record grooming
+    -   - (EWSC) Impose user account state restrictions on all user actions
     - (EWSC) Impose entity ownership restrictions on User action categories View, Switch and Unlink
-    - (EWCC) Perform valid input checks on core subroutine SetResource
+    - (EWSC) Journal record grooming
     - (EWSC) Implement ResUser cleaner cron
     - (EWSC) Implement EWallet Session cleaner cron
+    - (EWCC) Perform valid input checks on core subroutine SetResource
     - (EWSC, EWCC, EWAT) Implement master accounts
-    - (EWSC) Impose user account state restrictions on all user actions
     - (EWSC, EWCC, EWAT) Implement forced account removal
     - (EWSC, EWCC, EWAT) Implement EWallet Session keep alive signal
     - (EWSC, EWCC, EWAT) Implement check client id validity

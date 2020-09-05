@@ -764,7 +764,7 @@ class EWalletSessionManager():
             self.debug_waiting_for_worker_unlock_to_read_response(
                 worker_pool[worker_id]['lock'].value
             )
-            time.sleep(1)
+            time.sleep(0.1)
             continue
         response = self.read_session_worker_response(worker_id)
         self.debug_received_instruction_set_response(
@@ -1208,40 +1208,6 @@ class EWalletSessionManager():
 
     # GENERAL
 
-    def interogate_session_pool_workers(self, **kwargs):
-        log.debug('')
-        worker_pool = self.fetch_worker_pool()
-        if not worker_pool or isinstance(worker_pool, dict) and \
-                worker_pool.get('failed'):
-            return self.warning_could_not_fetch_session_worker_pool(kwargs)
-        if kwargs.get('limit') and isinstance(kwargs['limit'], int):
-            worker_ids = list(worker_pool.keys())[:kwargs['limit']]
-            workers = {
-                worker_id: worker_pool[worker_id] for worker_id in worker_ids
-            }
-            worker_pool = workers
-        instruction = self.fetch_worker_state_interogation_instruction()
-        worker_states = {
-            worker_id: self.action_execute_system_instruction_set(
-                worker_id=worker_id, **instruction
-            ) for worker_id in worker_pool
-        }
-        instruction_set_response = {
-            'failed': False,
-            'workers': worker_states,
-        }
-        return instruction_set_response
-
-#   @pysnooper.snoop()
-    def send_session_worker_instruction(self, worker_id, instruction_set):
-        log.debug('')
-        pool_entry = self.fetch_worker_pool_entry_by_id(worker_id)
-        if not pool_entry or isinstance(pool_entry, dict) and \
-                pool_entry.get('failed'):
-            return pool_entry
-        pool_entry['instruction'].put(instruction_set)
-        return True
-
     def execute_worker_instruction(self, worker_id, instruction):
         log.debug('')
         # Fetch worker pool entry by worker id
@@ -1280,7 +1246,7 @@ class EWalletSessionManager():
         log.debug('')
         if lock.value:
             while lock.value:
-                time.sleep(1)
+                time.sleep(0.1)
                 continue
         self.debug_worker_unlocked(lock)
         return True
@@ -1289,9 +1255,43 @@ class EWalletSessionManager():
         log.debug('')
         if not lock.value:
             while not lock.value:
-                time.sleep(1)
+                time.sleep(0.1)
                 continue
         self.debug_worker_locked(lock)
+        return True
+
+    def interogate_session_pool_workers(self, **kwargs):
+        log.debug('')
+        worker_pool = self.fetch_worker_pool()
+        if not worker_pool or isinstance(worker_pool, dict) and \
+                worker_pool.get('failed'):
+            return self.warning_could_not_fetch_session_worker_pool(kwargs)
+        if kwargs.get('limit') and isinstance(kwargs['limit'], int):
+            worker_ids = list(worker_pool.keys())[:kwargs['limit']]
+            workers = {
+                worker_id: worker_pool[worker_id] for worker_id in worker_ids
+            }
+            worker_pool = workers
+        instruction = self.fetch_worker_state_interogation_instruction()
+        worker_states = {
+            worker_id: self.action_execute_system_instruction_set(
+                worker_id=worker_id, **instruction
+            ) for worker_id in worker_pool
+        }
+        instruction_set_response = {
+            'failed': False,
+            'workers': worker_states,
+        }
+        return instruction_set_response
+
+#   @pysnooper.snoop()
+    def send_session_worker_instruction(self, worker_id, instruction_set):
+        log.debug('')
+        pool_entry = self.fetch_worker_pool_entry_by_id(worker_id)
+        if not pool_entry or isinstance(pool_entry, dict) and \
+                pool_entry.get('failed'):
+            return pool_entry
+        pool_entry['instruction'].put(instruction_set)
         return True
 
 #   @pysnooper.snoop()

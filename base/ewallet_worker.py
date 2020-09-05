@@ -757,7 +757,7 @@ class EWalletWorker():
 
     def clean_session_worker_reference(self):
         log.debug('')
-        self.reference = None
+        self.reference = str()
 
     def clean_session_worker_create_date(self):
         log.debug('')
@@ -769,11 +769,11 @@ class EWalletWorker():
 
     def clean_session_worker_state_code(self):
         log.debug('')
-        self.session_worker_state_code = None
+        self.session_worker_state_code = int()
 
     def clean_session_worker_state_label(self):
         log.debug('')
-        self.session_worker_state_label = None
+        self.session_worker_state_label = str()
 
     def clean_session_worker_state_timestamp(self):
         log.debug('')
@@ -781,19 +781,19 @@ class EWalletWorker():
 
     def clean_session_worker_session_pool(self):
         log.debug('')
-        self.session_pool = None
+        self.session_pool = dict()
 
     def clean_session_worker_client_token_pool(self):
         log.debug('')
-        self.ctoken_pool = None
+        self.ctoken_pool = list()
 
     def clean_session_worker_session_token_pool(self):
         log.debug('')
-        self.stoken_pool = None
+        self.stoken_pool = list()
 
     def clean_session_worker_token_session_map(self):
         log.debug('')
-        self.token_session_map = None
+        self.token_session_map = dict()
 
     def clean_session_worker_instruction_set_recv(self):
         log.debug('')
@@ -925,7 +925,7 @@ class EWalletWorker():
         log.debug('')
         if not lock.value:
             while not lock.value:
-                time.sleep(1)
+                time.sleep(0.1)
                 continue
         self.debug_worker_locked(lock.value)
         return True
@@ -934,7 +934,7 @@ class EWalletWorker():
         log.debug('')
         if lock.value:
             while lock.value:
-                time.sleep(1)
+                time.sleep(0.1)
                 continue
         self.debug_worker_unlocked(lock.value)
         return True
