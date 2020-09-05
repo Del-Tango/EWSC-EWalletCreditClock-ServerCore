@@ -2590,11 +2590,23 @@ class EWallet(Base):
     [ NOTES ]: User account state checks are performed here.
     '''
 
+    def handle_user_action_create_new_transfer_type_pay(self, **kwargs):
+        log.debug('')
+        check = self.check_user_logged_in()
+        return self.warning_user_not_logged_in(check, kwargs) if not check \
+            else self.action_create_new_transfer_type_pay(**kwargs)
+
     def handle_user_action_logout(self, **kwargs):
         log.debug('')
         check = self.check_user_logged_in()
         return self.warning_user_not_logged_in(check, kwargs) if not check \
             else self.action_logout_user_account(**kwargs)
+
+    def handle_user_action_create_new_transfer_type_supply(self, **kwargs):
+        log.debug('')
+        check = self.check_user_logged_in()
+        return self.warning_user_not_logged_in(check, kwargs) if not check \
+            else self.action_create_new_transfer_type_supply(**kwargs)
 
     def handle_user_action_edit_account(self, **kwargs):
         log.debug('')
@@ -2823,14 +2835,6 @@ class EWallet(Base):
     def handle_user_action_create_new_transfer_type_transfer(self, **kwargs):
         log.debug('')
         return self.action_create_new_transfer_type_transfer(**kwargs)
-
-    def handle_user_action_create_new_transfer_type_pay(self, **kwargs):
-        log.debug('')
-        return self.action_create_new_transfer_type_pay(**kwargs)
-
-    def handle_user_action_create_new_transfer_type_supply(self, **kwargs):
-        log.debug('')
-        return self.action_create_new_transfer_type_supply(**kwargs)
 
     def handle_user_action_create_new_time_sheet(self, **kwargs):
         log.debug('')
