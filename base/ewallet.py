@@ -2590,6 +2590,32 @@ class EWallet(Base):
     [ NOTES ]: Enviroment checks for proper action execution are performed here.
     '''
 
+    def handle_user_action_switch_credit_clock(self, **kwargs):
+        log.debug('')
+        check = self.check_user_logged_in()
+        if not check:
+            return self.warning_user_not_logged_in(check, kwargs)
+        if not kwargs.get('clock_id'):
+            return self.error_no_user_action_switch_credit_clock_id_specified(kwargs)
+        switch_credit_clock = self.action_switch_credit_clock(**kwargs)
+        return switch_credit_clock
+
+    def handle_user_action_switch_credit_ewallet(self, **kwargs):
+        log.debug('')
+        check = self.check_user_logged_in()
+        if not check:
+            return self.warning_user_not_logged_in(check, kwargs)
+        if not kwargs.get('ewallet_id'):
+            return self.error_no_user_action_switch_credit_ewallet_id_specified(kwargs)
+        switch_credit_ewallet = self.action_switch_credit_ewallet(**kwargs)
+        return switch_credit_ewallet
+
+    def handle_user_action_switch_active_account(self, **kwargs):
+        log.debug('')
+        check = self.check_user_logged_in()
+        return self.warning_user_not_logged_in(check, kwargs) if not check \
+            else self.action_switch_active_user_account(**kwargs)
+
     def handle_user_action_create_new_time_sheet(self, **kwargs):
         log.debug('')
         check = self.check_user_logged_in()
@@ -2798,10 +2824,6 @@ class EWallet(Base):
         log.debug('')
         return self.action_recover_user_account(**kwargs)
 
-    def handle_user_action_switch_active_account(self, **kwargs):
-        log.debug('')
-        return self.action_switch_active_user_account(**kwargs)
-
     def handle_user_action_login(self, **kwargs):
         log.debug('')
         return self.action_login_user_account(**kwargs)
@@ -2972,20 +2994,6 @@ class EWallet(Base):
             return self.error_no_user_action_switch_transfer_sheet_id_specified(kwargs)
         switch_transfer_sheet = self.action_switch_transfer_sheet(**kwargs)
         return switch_transfer_sheet
-
-    def handle_user_action_switch_credit_clock(self, **kwargs):
-        log.debug('')
-        if not kwargs.get('clock_id'):
-            return self.error_no_user_action_switch_credit_clock_id_specified(kwargs)
-        switch_credit_clock = self.action_switch_credit_clock(**kwargs)
-        return switch_credit_clock
-
-    def handle_user_action_switch_credit_ewallet(self, **kwargs):
-        log.debug('')
-        if not kwargs.get('ewallet_id'):
-            return self.error_no_user_action_switch_credit_ewallet_id_specified(kwargs)
-        switch_credit_ewallet = self.action_switch_credit_ewallet(**kwargs)
-        return switch_credit_ewallet
 
     def handle_user_action_edit_account_user_name(self, **kwargs):
         log.debug('')
