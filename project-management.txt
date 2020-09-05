@@ -18,8 +18,8 @@
     - x - (EWSC) Gracefully cleanup Session Worker
     - x - (EWSC) Groom session worker state updates
     - x - (EWSC) Groom user account state updates
-    -   - (EWSC) Impose user account state restrictions on all user actions
-    - (EWSC) Impose entity ownership restrictions on all user actions
+    - x - (EWSC) Impose user account state restrictions on all user actions
+    -   - (EWSC) Impose entity ownership restrictions on all user actions
     - (EWSC) Fix user action Edit Password
     - (EWSC) Fix user action Edit Email
     - (EWSC) Journal record grooming
@@ -65,7 +65,7 @@
     - 05/09/2020 16:22
         - Detected possible memory leak upon executing EWSC test suit.
 
-- Restrict user actions based on account state
+- x - Restrict user actions based on account state
     - x - User action Account Logout
     - x - User action Supply Credits
     - x - User action Pay Credits
@@ -119,9 +119,9 @@
     - x - User action Unlink Time Record
     - x - User action Unlink Credit EWallet
     - x - User action Unlink Credit Clock
-    -   - User action Unlink Invoice Sheet
-    -   - User action Unlink Invoice Record
-    - User action Recover Account
+    - x - User action Unlink Invoice Sheet
+    - x - User action Unlink Invoice Record
+    - x - User action Recover Account
 
 - x - Update write dates for:
     - x - Session Manager
