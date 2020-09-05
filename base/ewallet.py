@@ -80,6 +80,21 @@ class EWallet(Base):
         log.debug('TODO - Fetch value from config file')
         return 24
 
+#   @pysnooper.snoop('logs/ewallet.log')
+    def fetch_active_session_user(self, obj=True):
+        log.debug('')
+        try:
+            if not self.active_user:
+                return self.error_no_session_active_user_found(
+                    self.active_user
+                )
+            return self.active_user[0] if obj else \
+                self.active_user[0].fetch_user_id()
+        except:
+            return self.error_could_not_fetch_active_session_user({
+                'account': self.active_user
+            })
+
     def fetch_active_session_reference(self):
         log.debug('')
         return self.name
@@ -91,6 +106,7 @@ class EWallet(Base):
     def fetch_active_session_values(self):
         log.debug('')
         user_account_archive = self.fetch_active_session_user_account_archive()
+        user_account = self.fetch_active_session_user()
         values = {
             'id': self.id,
             'name': self.name,
@@ -100,7 +116,8 @@ class EWallet(Base):
             'expiration_date': self.expiration_date,
             'contact_list': self.fetch_active_session_contact_list(),
             'credit_ewallet': self.fetch_active_session_credit_wallet(),
-            'user_account': self.fetch_active_session_user(),
+            'user_account': [] if isinstance(user_account, dict) and \
+                user_account.get('failed') else user_account,
             'user_account_archive': {} if not user_account_archive else {
                 item.fetch_user_email(): item.fetch_user_name() for item in \
                 user_account_archive
@@ -244,17 +261,6 @@ class EWallet(Base):
         if not self.session:
             return self.error_no_active_session_found()
         return self.session
-
-#   @pysnooper.snoop('logs/ewallet.log')
-    def fetch_active_session_user(self, obj=True):
-        log.debug('')
-        try:
-            if not self.active_user:
-                return self.error_no_session_active_user_found()
-            return self.active_user[0] if obj else self.active_user[0].fetch_user_id()
-        except:
-            self.fetch_active_session().rollback()
-        return self.error_could_not_fetch_active_session_user({})
 
     def fetch_active_session_credit_wallet(self):
         log.debug('')
@@ -441,6 +447,11 @@ class EWallet(Base):
         return archive
 
     # CHECKERS
+
+    def check_user_logged_in(self):
+        log.debug('')
+        user_account = self.fetch_active_session_user(obj=True)
+        return user_account.check_user_logged_in()
 
 #   @pysnooper.snoop('logs/ewallet.log')
     def check_if_active_ewallet_session_expired(self):
@@ -632,39 +643,23 @@ class EWallet(Base):
         return self.warning_could_not_edit_account_user_pass(kwargs) if \
             edit_user_pass.get('failed') else edit_user_pass
 
-    def action_edit_user_account(self, **kwargs):
-        log.debug('')
-        user = self.fetch_active_session_user()
-        edit_value_set = {
-            'name': self.handle_user_action_edit_account_user_name(**kwargs),
-            'pass': self.handle_user_action_edit_account_user_pass(**kwargs),
-            'alias': self.handle_user_action_edit_account_user_alias(**kwargs),
-            'email': self.handle_user_action_edit_account_user_email(**kwargs),
-            'phone': self.handle_user_action_edit_account_user_phone(**kwargs),
-        }
-        return self.warning_no_user_account_values_edited(kwargs) \
-            if True not in edit_value_set.values() else {
-                'failed': False,
-                'account': user.fetch_user_name(),
-                'edit': edit_value_set,
-                'account_data': user.fetch_user_values(),
-            }
-
+    # TODO
     def action_login_user_account(self, **kwargs):
         log.debug('')
         login_record = EWalletLogin()
-        kwargs['active_session'].add(login_record)
         sanitized_command_chain = res_utils.remove_tags_from_command_chain(
             kwargs, 'action'
         )
         session_login = login_record.ewallet_login_controller(
-           action='login', user_archive=self.fetch_active_session_user_account_archive(),
+            action='login',
+            user_archive=self.fetch_active_session_user_account_archive(),
             **sanitized_command_chain
         )
         if not session_login:
             return self.warning_could_not_login_user_account(kwargs)
         update_archive = self.update_user_account_archive(user=session_login)
         update_session = self.action_system_user_update(user=session_login)
+        kwargs['active_session'].add(login_record)
         kwargs['active_session'].commit()
         log.info('User successfully logged in.')
         session_values = self.fetch_active_session_values()
@@ -683,6 +678,24 @@ class EWallet(Base):
             }
         }
         return command_chain_response
+
+    def action_edit_user_account(self, **kwargs):
+        log.debug('')
+        user = self.fetch_active_session_user()
+        edit_value_set = {
+            'name': self.handle_user_action_edit_account_user_name(**kwargs),
+            'pass': self.handle_user_action_edit_account_user_pass(**kwargs),
+            'alias': self.handle_user_action_edit_account_user_alias(**kwargs),
+            'email': self.handle_user_action_edit_account_user_email(**kwargs),
+            'phone': self.handle_user_action_edit_account_user_phone(**kwargs),
+        }
+        return self.warning_no_user_account_values_edited(kwargs) \
+            if True not in edit_value_set.values() else {
+                'failed': False,
+                'account': user.fetch_user_name(),
+                'edit': edit_value_set,
+                'account_data': user.fetch_user_values(),
+            }
 
     def action_logout_user_account(self, **kwargs):
         log.debug('')
@@ -1812,7 +1825,7 @@ class EWallet(Base):
         user = self.fetch_active_session_user()
         if not user:
             return self.error_no_active_session_user_found(kwargs)
-        set_user_state = user.set_user_state(set_by='code', state_code=0)
+        set_user_state = user.set_user_state(0)
         search_user_for_session = self.fetch_next_active_session_user(active_user=user)
         clear_user_data = self.clear_active_session_user_data({
             'active_user': True if not search_user_for_session else False,
@@ -2573,6 +2586,15 @@ class EWallet(Base):
         return search_account
 
     # ACTION HANDLERS
+    '''
+    [ NOTES ]: User account state checks are performed here.
+    '''
+
+    def handle_user_action_logout(self, **kwargs):
+        log.debug('')
+        check = self.check_user_logged_in()
+        return self.warning_user_not_logged_in(check, kwargs) if not check \
+            else self.action_logout_user_account(**kwargs)
 
     def handle_user_action_edit_account(self, **kwargs):
         log.debug('')
@@ -2585,10 +2607,6 @@ class EWallet(Base):
     def handle_user_action_switch_active_account(self, **kwargs):
         log.debug('')
         return self.action_switch_active_user_account(**kwargs)
-
-    def handle_user_action_logout(self, **kwargs):
-        log.debug('')
-        return self.action_logout_user_account(**kwargs)
 
     def handle_user_action_login(self, **kwargs):
         log.debug('')
@@ -3401,6 +3419,15 @@ class EWallet(Base):
     '''
     [ TODO ]: Fetch warning messages from message file by key codes.
     '''
+
+    def warning_user_not_logged_in(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Illegal account state, user not logged in. '
+                       'Details: {}'.format(args)
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
 
     def warning_invalid_user_action_recover_target(self, *args):
         command_chain_response = {
@@ -4287,6 +4314,15 @@ class EWallet(Base):
     [ TODO ]: Fetch error messages from message file by key codes.
     '''
 
+    def error_no_session_active_user_found(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No active session user found. '
+                     'Details: {}'.format(args)
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
     def error_could_not_cleanup_ewallet_session(self, *args):
         command_chain_response = {
             'failed': True,
@@ -5037,10 +5073,6 @@ class EWallet(Base):
 
     def error_no_user_identifier_found(self):
         log.error('No user identifier found.')
-        return False
-
-    def error_no_session_active_user_found(self):
-        log.error('No session active user found.')
         return False
 
     def error_no_user_password_found(self):

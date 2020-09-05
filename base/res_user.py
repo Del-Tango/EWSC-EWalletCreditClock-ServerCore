@@ -84,6 +84,10 @@ class ResUser(Base):
 
     # FETCHERS
 
+    def fetch_user_state(self):
+        log.debug('')
+        return self.user_state_code
+
     def fetch_user_contact_list_by_id(self, list_id, **kwargs):
         log.debug('')
         active_session = kwargs.get('active_session') or \
@@ -246,10 +250,6 @@ class ResUser(Base):
         log.debug('')
         return self.user_alias
 
-    def fetch_user_state(self):
-        log.debug('')
-        return self.user_state
-
     def fetch_user_pass_hash_archive(self):
         log.debug('')
         return self.user_pass_hash_archive
@@ -312,12 +312,12 @@ class ResUser(Base):
         log.debug('')
         state_map = {
             'code': {
-                0: 'LoggedOut',
-                1: 'LoggedIn',
+                0: 'Logged Out',
+                1: 'Logged In',
                 },
             'name': {
-                'LoggedOut': 0,
-                'LoggedIn': 1,
+                'Logged Out': 0,
+                'Logged In': 1,
                 }
             }
         return state_map
@@ -467,76 +467,19 @@ class ResUser(Base):
         return True
 
 #   #@pysnooper.snoop('logs/ewallet.log')
-    def set_user_state_code(self, **kwargs):
+    def set_user_state(self, state):
         log.debug('')
-        if kwargs.get('state_code') not in [0, 1]:
-            return self.error_no_state_code_found(kwargs) \
-                if not kwargs.get('state_code') \
-                else self.error_invalid_user_state_code(kwargs)
+        if state not in [0, 1]:
+            return self.error_invalid_user_account_state_code(state)
         try:
-            self.user_state_code = kwargs['state_code']
+            self.user_state_code = state
             self.update_write_date()
         except Exception as e:
             return self.error_could_not_set_user_state_code(
-                kwargs, self.user_state_code, e
+                state, self.user_state_code, e
             )
         log.info('Successfully set user state code.')
         return True
-
-    def set_user_state_name(self, **kwargs):
-        log.debug('')
-        if not kwargs.get('state_name'):
-            return self.error_no_state_name_found(kwargs)
-        try:
-            self.user_state_name = kwargs['state_name']
-            self.update_write_date()
-        except Exception as e:
-            return self.error_could_not_set_state_name(
-                kwargs, self.user_state_name, e
-            )
-        return True
-
-#   #@pysnooper.snoop('logs/ewallet.log')
-    def set_user_state(self, **kwargs):
-        log.debug('')
-        if not kwargs.get('set_by'):
-            return self.error_no_set_by_parameter_specified(kwargs)
-        handlers = {
-            'converters': {
-                'code': self.convert_user_state_code_to_name,
-                'name': self.convert_user_state_name_to_code,
-            },
-            'setters': {
-                'code': self.set_user_state_code,
-                'name': self.set_user_state_name,
-            },
-        }
-        set_command_chain = {
-            kwargs['set_by']: kwargs.get('code') or kwargs.get('name')
-        }
-        set_command_chain.update(kwargs)
-        value_fetch = handlers['converters'][kwargs['set_by']](
-            **set_command_chain
-        )
-        field_code = kwargs.get('state_code') if kwargs['set_by'] == 'code' \
-                else value_fetch
-        field_name = kwargs.get('name') if kwargs['set_by'] == 'name' \
-                else value_fetch
-        setter_values = {
-            'field_names': {
-                'code': 'state_code',
-                'name': 'state_name',
-            },
-            'field_values': {
-                'code': field_code,
-                'name': field_name,
-            },
-        }
-        for item in handlers['setters']:
-            field_name = setter_values['field_names'][item]
-            field_values = setter_values['field_values'][item]
-            set_state = handlers['setters'][item](**{field_name: field_values})
-        return value_fetch
 
     def set_user_phone(self, **kwargs):
         log.debug('')
@@ -665,6 +608,19 @@ class ResUser(Base):
         log.debug('')
         self.set_user_write_date(datetime.datetime.now())
         return True
+
+    # CHECKERS
+
+#   @pysnooper.snoop('logs/ewallet.log')
+    def check_user_logged_in(self):
+        log.debug('')
+        account_state = self.fetch_user_state()
+        return False if account_state == 0 else True
+
+    def check_user_logged_out(self):
+        log.debug('')
+        account_state = self.fetch_user_state()
+        return False if account_state == 1 else True
 
     # CONVERTORS
 
@@ -1322,6 +1278,15 @@ class ResUser(Base):
     '''
     [ TODO ]: Fetch error messages from message file by key codes.
     '''
+
+    def error_invalid_user_account_state_code(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Invalid user account state code. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
 
     def error_could_not_set_user_pass_hash(self, *args):
         command_chain_response = {
@@ -2024,4 +1989,75 @@ class ResUser(Base):
 ###############################################################################
 # CODE DUMP
 ###############################################################################
+
+#   #@pysnooper.snoop('logs/ewallet.log')
+#   def set_user_state_code(self, **kwargs):
+#       log.debug('')
+#       if kwargs.get('state_code') not in [0, 1]:
+#           return self.error_no_state_code_found(kwargs) \
+#               if not kwargs.get('state_code') \
+#               else self.error_invalid_user_state_code(kwargs)
+#       try:
+#           self.user_state_code = kwargs['state_code']
+#           self.update_write_date()
+#       except Exception as e:
+#           return self.error_could_not_set_user_state_code(
+#               kwargs, self.user_state_code, e
+#           )
+
+#       return True
+
+#   def set_user_state_name(self, **kwargs):
+#       log.debug('')
+#       if not kwargs.get('state_name'):
+#           return self.error_no_state_name_found(kwargs)
+#       try:
+#           self.user_state_name = kwargs['state_name']
+#           self.update_write_date()
+#       except Exception as e:
+#           return self.error_could_not_set_state_name(
+#               kwargs, self.user_state_name, e
+#           )
+#       return True
+
+
+
+#       if not kwargs.get('set_by'):
+#           return self.error_no_set_by_parameter_specified(kwargs)
+#       handlers = {
+#           'converters': {
+#               'code': self.convert_user_state_code_to_name,
+#               'name': self.convert_user_state_name_to_code,
+#           },
+#           'setters': {
+#               'code': self.set_user_state_code,
+#               'name': self.set_user_state_name,
+#           },
+#       }
+#       set_command_chain = {
+#           kwargs['set_by']: kwargs.get('code') or kwargs.get('name')
+#       }
+#       set_command_chain.update(kwargs)
+#       value_fetch = handlers['converters'][kwargs['set_by']](
+#           **set_command_chain
+#       )
+#       field_code = kwargs.get('state_code') if kwargs['set_by'] == 'code' \
+#               else value_fetch
+#       field_name = kwargs.get('name') if kwargs['set_by'] == 'name' \
+#               else value_fetch
+#       setter_values = {
+#           'field_names': {
+#               'code': 'state_code',
+#               'name': 'state_name',
+#           },
+#           'field_values': {
+#               'code': field_code,
+#               'name': field_name,
+#           },
+#       }
+#       for item in handlers['setters']:
+#           field_name = setter_values['field_names'][item]
+#           field_values = setter_values['field_values'][item]
+#           set_state = handlers['setters'][item](**{field_name: field_values})
+#       return value_fetch
 

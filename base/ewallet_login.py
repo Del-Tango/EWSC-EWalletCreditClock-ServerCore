@@ -154,74 +154,56 @@ class EWalletLogin(Base):
 
 #   @pysnooper.snoop()
     def authenticate_user(self, **kwargs):
-        '''
-        [ NOTE   ]: Tries to authenticate user using given credentials so the EWallet session can be updated.
-        [ INPUT  ]: user_name=<name>, user_pass=<pass>, active_session=<session>
-        [ RETURN ]: (ResUser object | False)
-        '''
         log.debug('')
-        _user_query = self.check_user_name_exists(
+        user_query = self.check_user_name_exists(
             kwargs['user_name'], kwargs.get('active_session')
         )
-        if not _user_query or isinstance(_user_query, dict) and \
-                _user_query.get('failed'):
+        if not user_query or isinstance(user_query, dict) and \
+                user_query.get('failed'):
             return self.warning_user_name_not_found(kwargs)
-        if _user_query.count() > 1:
+        if user_query.count() > 1:
             self.warning_user_not_found_by_name(kwargs['user_name'])
         try:
-            _user = list(_user_query)[0]
+            user = list(user_query)[0]
         except Exception as e:
             return self.warning_user_name_not_found(kwargs, e)
-        _pass_check = self.check_user_pass_hash(
-                kwargs['user_pass'], _user.fetch_user_pass_hash()
-                )
-        if not _pass_check:
+        pass_check = self.check_user_pass_hash(
+            kwargs['user_pass'], user.fetch_user_pass_hash()
+        )
+        if not pass_check:
             return self.warning_user_password_incorrect()
-        return _user
+        return user
 
     # ACTIONS
 
     def action_login(self, **kwargs):
-        '''
-        [ NOTE   ]: User action 'login', accessible from external api call.
-        [ INPUT  ]: user_name=<name>, user_pass=<pass>, active_session=<session>
-        [ RETURN ]: (ResUser object | False)
-        '''
         log.debug('')
         if not kwargs.get('user_name') or not kwargs.get('user_pass'):
             return self.error_handler_action_login(
-                    user_name=kwargs.get('user_name'),
-                    user_pass=kwargs.get('user_pass'),
-                    )
-        _authenticated_user = self.authenticate_user(**kwargs)
-        if not _authenticated_user or isinstance(_authenticated_user, dict) \
-                and _authenticated_user.get('failed'):
-            _set_login_data = self.set_login_record_data(
-                    login_status=False,
-                    )
+                user_name=kwargs.get('user_name'),
+                user_pass=kwargs.get('user_pass'),
+            )
+        authenticated_user = self.authenticate_user(**kwargs)
+        if not authenticated_user or isinstance(authenticated_user, dict) \
+                and authenticated_user.get('failed'):
+            set_login_data = self.set_login_record_data(
+                login_status=False,
+            )
             return self.error_invalid_login_credentials()
-        _set_login_data = self.set_login_record_data(
-                user_id=_authenticated_user.user_id,
-                login_status=True,
-                )
-        _set_user_state = _authenticated_user.set_user_state(
-                set_by='code', state_code=1
-                )
-        return _authenticated_user
+        set_login_data = self.set_login_record_data(
+            user_id=authenticated_user.user_id,
+            login_status=True,
+        )
+        set_user_state = authenticated_user.set_user_state(1)
+        return authenticated_user
 
     def action_create_new_account(self, **kwargs):
-        '''
-        [ NOTE   ]: User action 'create new account', accessible from external api call.
-        [ INPUT  ]: user_name=<name>, user_pas=<pass>, user_email=<email>,
-                    user_phone=<phone>, user_alias=<alias>, active_session=<session>
-        [ RETURN ]: (ResUser object | False)
-        '''
         log.debug('')
-        _ewallet_new_user = EWalletCreateUser()
-        _new_user = _ewallet_new_user.action_create_new_user(**kwargs)
-        if not _new_user:
+        ewallet_new_user = EWalletCreateUser()
+        new_user = ewallet_new_user.action_create_new_user(**kwargs)
+        if not new_user:
             return self.warning_could_not_create_new_user_account()
-        return _new_user
+        return new_user
 
     # CONTROLLERS
 
@@ -234,31 +216,41 @@ class EWalletLogin(Base):
         log.debug('')
         if not kwargs.get('action'):
             return self.error_no_login_controller_action_specified()
-        _handlers = {
-                'login': self.action_login,
-                'new_account': self.action_create_new_account,
-                }
-        return _handlers[kwargs['action']](**kwargs)
+        handlers = {
+            'login': self.action_login,
+            'new_account': self.action_create_new_account,
+        }
+        return handlers[kwargs['action']](**kwargs)
 
     # ERROR HANDLERS
 
     def error_handler_action_login(self, **kwargs):
-        _reasons_and_handlers = {
-                'reasons': {
-                    'user_name': kwargs.get('user_name'),
-                    'user_pass': kwargs.get('user_pass'),
-                    },
-                'handlers': {
-                    'user_name': self.error_no_user_name_found,
-                    'user_pass': self.error_no_user_pass_found,
-                    },
-                }
-        for item in _reasons_and_handlers['reasons']:
-            if not _reasons_and_handlers['reasons'][item]:
-                return _reasons_and_handlers['handlers'][item]()
+        log.debug('')
+        reasons_and_handlers = {
+            'reasons': {
+                'user_name': kwargs.get('user_name'),
+                'user_pass': kwargs.get('user_pass'),
+            },
+            'handlers': {
+                'user_name': self.error_no_user_name_found,
+                'user_pass': self.error_no_user_pass_found,
+            },
+        }
+        for item in reasons_and_handlers['reasons']:
+            if not reasons_and_handlers['reasons'][item]:
+                return reasons_and_handlers['handlers'][item]()
         return False
 
     # ERRORS
+
+    def error_no_active_session_found(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No active SqlAlchemy ORM session found. '
+                     'Details: {}'.format(args)
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
 
     def error_no_active_session_found(self):
         log.error('No active user found.')
@@ -369,6 +361,26 @@ class EWalletCreateUser(): #EWalletLogin,
         ]
         return user_names
 
+    # CHECKERS
+
+    # TODO
+    def check_user_email_is_valid(self, user_email):
+        log.debug('TODO - FIX ME - Requires pydns')
+#       return validate_email(user_email)
+        return True
+
+    # TODO
+    def check_user_email_host_has_smtp(self, user_email):
+        log.debug('TODO - FIX ME - Requires pydns')
+#       return validate_email(user_email, check_mx=True)
+        return True
+
+    # TODO
+    def check_user_email_host_smtp_has_address(self, user_email):
+        log.debug('TODO - FIX ME - Requires pydns')
+#       return validate_email(user_email, verify=True)
+        return True
+
 #   @pysnooper.snoop('logs/ewallet.log')
     def check_user_name_ensure_one(self, user_name, user_names):
         '''
@@ -463,22 +475,6 @@ class EWalletCreateUser(): #EWalletLogin,
         if False in _checks.values():
             return False
         return True
-
-    # TODO - FIX ME
-    def check_user_email_is_valid(self, user_email):
-        log.debug('')
-#       return validate_email(user_email)
-        return True
-
-    # [ NOTE ]: Requires pydns
-    def check_user_email_host_has_smtp(self, user_email):
-        log.debug('')
-        return validate_email(user_email, check_mx=True)
-
-    # [ NOTE ]: Requires pydns
-    def check_user_email_host_smtp_has_address(self, user_email):
-        log.debug('')
-        return validate_email(user_email, verify=True)
 
     def check_user_email(self, user_email, severity=None):
         '''

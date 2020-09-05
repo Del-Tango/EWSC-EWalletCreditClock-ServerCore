@@ -17,8 +17,11 @@
     - x - (EWSC) Gracefully cleanup EWallet Session
     - x - (EWSC) Gracefully cleanup Session Worker
     - x - (EWSC) Groom session worker state updates
+    - x - (EWSC) Groom user account state updates
     -   - (EWSC) Impose user account state restrictions on all user actions
-    - (EWSC) Impose entity ownership restrictions on User action categories View, Switch and Unlink
+    - (EWSC) Impose entity ownership restrictions on all user actions
+    - (EWSC) Fix user action Edit Password
+    - (EWSC) Fix user action Edit Email
     - (EWSC) Journal record grooming
     - (EWSC) Implement ResUser cleaner cron
     - (EWSC) Implement EWallet Session cleaner cron
@@ -61,6 +64,64 @@
 - BUG REPORT:
     - 05/09/2020 16:22
         - Detected possible memory leak upon executing EWSC test suit.
+
+- Restrict user actions based on account state
+    - x - User action Account Logout
+    -   - User action Supply Credits
+    - User action Pay Credits
+    - User action Convert Credits2Clock
+    - User action Convert Clock2Credits
+    - User action Add Contact Record
+    - User action Create Contact List
+    - User action TransferCredits
+    - User action Edit Account
+    - User action Start Clock Timer
+    - User action Pause Clock Timer
+    - User action Resume Clock Timer
+    - User action Stop Clock Timer
+    - User action View Contact List
+    - User action View Contact Record
+    - User action View Transfer Sheet
+    - User action View Transfer Record
+    - User action View Time Sheet
+    - User action View Time Record
+    - User action View Conversion Sheet
+    - User action View Conversion Record
+    - User action View Account
+    - User action View Credit EWallet
+    - User action View Credit Clock
+    - User action View Invoice Sheet
+    - User action View Invoice Record
+    - User action View Login Records
+    - User action View Logout Records
+    - User action Create Credit EWallet
+    - User action Create Credit Clock
+    - User action Create Transfer Sheet
+    - User action Create Invoice Sheet
+    - User action Create Conversion Sheet
+    - User action Create Time Sheet
+    - User action Switch Account
+    - User action Switch Credit EWallet
+    - User action Switch Credit Clock
+    - User action Switch Transfer Sheet
+    - User action Switch Invoice Sheet
+    - User action Switch Conversion Sheet
+    - User action Switch Time Sheet
+    - User action Switch Contact List
+    - User action Unlink Account
+    - User action Unlink Contact List
+    - User action Unlink Contact Record
+    - User action Unlink Conversion Sheet
+    - User action Unlink Conversion Record
+    - User action Unlink Transfer Sheet
+    - User action Unlink Transfer Record
+    - User action Unlink Time Sheet
+    - User action Unlink Time Record
+    - User action Unlink Credit EWallet
+    - User action Unlink Credit Clock
+    - User action Unlink Invoice Sheet
+    - User action Unlink Invoice Record
+    - User action Recover Account
 
 - x - Update write dates for:
     - x - Session Manager
@@ -243,65 +304,248 @@ EWSC - System Actions
     - System action Sweep Cleanup Sessions
 
 EWSC - User Actions
-    - User action Request Client ID
-    - User action Request Session Token
-    - User action Create Account
-    - User action Account Login
-    - User action Account Logout
-    - User action Supply Credits
-    - User action Pay Credits
-    - User action Convert Credits2Clock
-    - User action Convert Clock2Credits
-    - User action Add Contact Record
-    - User action Create Contact List
-    - User action TransferCredits
-    - User action Edit Account
-    - User action Start Clock Timer
-    - User action Pause Clock Timer
-    - User action Resume Clock Timer
-    - User action Stop Clock Timer
-    - User action View Contact List
-    - User action View Contact Record
-    - User action View Transfer Sheet
-    - User action View Transfer Record
-    - User action View Time Sheet
-    - User action View Time Record
-    - User action View Conversion Sheet
-    - User action View Conversion Record
-    - User action View Account
-    - User action View Credit EWallet
-    - User action View Credit Clock
-    - User action View Invoice Sheet
-    - User action View Invoice Record
-    - User action View Login Records
-    - User action View Logout Records
-    - User action Create Credit EWallet
-    - User action Create Credit Clock
-    - User action Create Transfer Sheet
-    - User action Create Invoice Sheet
-    - User action Create Conversion Sheet
-    - User action Create Time Sheet
-    - User action Switch Account
-    - User action Switch Credit EWallet
-    - User action Switch Credit Clock
-    - User action Switch Transfer Sheet
-    - User action Switch Invoice Sheet
-    - User action Switch Conversion Sheet
-    - User action Switch Time Sheet
-    - User action Switch Contact List
-    - User action Unlink Account
-    - User action Unlink Contact List
-    - User action Unlink Contact Record
-    - User action Unlink Conversion Sheet
-    - User action Unlink Conversion Record
-    - User action Unlink Transfer Sheet
-    - User action Unlink Transfer Record
-    - User action Unlink Time Sheet
-    - User action Unlink Time Record
-    - User action Unlink Invoice Sheet
-    - User action Unlink Invoice Record
-    - User action Unlink Credit EWallet
-    - User action Unlink Credit Clock
-    - User action Recover Account
 
+    - User action Request Client ID
+        - User Account States:
+            - Logged In
+            - Logged Out
+
+    - User action Request Session Token
+        - User Account States:
+            - Logged In
+            - Logged Out
+
+    - User action Create Account
+        - User Account States:
+            - Logged In
+            - Logged Out
+
+    - User action Account Login
+        - User Account States:
+            - Logged In
+            - Logged Out
+
+    - User action Account Logout
+        - User Account States:
+            - Logged In
+
+    - User action Supply Credits
+        - User Account States:
+            - Logged In
+
+    - User action Pay Credits
+        - User Account States:
+            - Logged In
+
+    - User action Convert Credits2Clock
+        - User Account States:
+            - Logged In
+
+    - User action Convert Clock2Credits
+        - User Account States:
+            - Logged In
+
+    - User action Add Contact Record
+        - User Account States:
+            - Logged In
+
+    - User action Create Contact List
+        - User Account States:
+            - Logged In
+
+    - User action TransferCredits
+        - User Account States:
+            - Logged In
+
+    - User action Edit Account
+        - User Account States:
+            - Logged In
+
+    - User action Start Clock Timer
+        - User Account States:
+            - Logged In
+
+    - User action Pause Clock Timer
+        - User Account States:
+            - Logged In
+
+    - User action Resume Clock Timer
+        - User Account States:
+            - Logged In
+
+    - User action Stop Clock Timer
+        - User Account States:
+            - Logged In
+
+    - User action View Contact List
+        - User Account States:
+            - Logged In
+
+    - User action View Contact Record
+        - User Account States:
+            - Logged In
+
+    - User action View Transfer Sheet
+        - User Account States:
+            - Logged In
+
+    - User action View Transfer Record
+        - User Account States:
+            - Logged In
+
+    - User action View Time Sheet
+        - User Account States:
+            - Logged In
+
+    - User action View Time Record
+        - User Account States:
+            - Logged In
+
+    - User action View Conversion Sheet
+        - User Account States:
+            - Logged In
+
+    - User action View Conversion Record
+        - User Account States:
+            - Logged In
+
+    - User action View Account
+        - User Account States:
+            - Logged In
+
+    - User action View Credit EWallet
+        - User Account States:
+            - Logged In
+
+    - User action View Credit Clock
+        - User Account States:
+            - Logged In
+
+    - User action View Invoice Sheet
+        - User Account States:
+            - Logged In
+
+    - User action View Invoice Record
+        - User Account States:
+            - Logged In
+
+    - User action View Login Records
+        - User Account States:
+            - Logged In
+
+    - User action View Logout Records
+        - User Account States:
+            - Logged In
+
+    - User action Create Credit EWallet
+        - User Account States:
+            - Logged In
+
+    - User action Create Credit Clock
+        - User Account States:
+            - Logged In
+
+    - User action Create Transfer Sheet
+        - User Account States:
+            - Logged In
+
+    - User action Create Invoice Sheet
+        - User Account States:
+            - Logged In
+
+    - User action Create Conversion Sheet
+        - User Account States:
+            - Logged In
+
+    - User action Create Time Sheet
+        - User Account States:
+            - Logged In
+
+    - User action Switch Account
+        - User Account States:
+            - Logged In
+
+    - User action Switch Credit EWallet
+        - User Account States:
+            - Logged In
+
+    - User action Switch Credit Clock
+        - User Account States:
+            - Logged In
+
+    - User action Switch Transfer Sheet
+        - User Account States:
+            - Logged In
+
+    - User action Switch Invoice Sheet
+        - User Account States:
+            - Logged In
+
+    - User action Switch Conversion Sheet
+        - User Account States:
+            - Logged In
+
+    - User action Switch Time Sheet
+        - User Account States:
+            - Logged In
+
+    - User action Switch Contact List
+        - User Account States:
+            - Logged In
+
+    - User action Unlink Account
+        - User Account States:
+            - Logged In
+
+    - User action Unlink Contact List
+        - User Account States:
+            - Logged In
+
+    - User action Unlink Contact Record
+        - User Account States:
+            - Logged In
+
+    - User action Unlink Conversion Sheet
+        - User Account States:
+            - Logged In
+
+    - User action Unlink Conversion Record
+        - User Account States:
+            - Logged In
+
+    - User action Unlink Transfer Sheet
+        - User Account States:
+            - Logged In
+
+    - User action Unlink Transfer Record
+        - User Account States:
+            - Logged In
+
+    - User action Unlink Time Sheet
+        - User Account States:
+            - Logged In
+
+    - User action Unlink Time Record
+        - User Account States:
+            - Logged In
+
+    - User action Unlink Invoice Sheet
+        - User Account States:
+            - Logged In
+
+    - User action Unlink Invoice Record
+        - User Account States:
+            - Logged In
+
+    - User action Unlink Credit EWallet
+        - User Account States:
+            - Logged In
+
+    - User action Unlink Credit Clock
+        - User Account States:
+            - Logged In
+
+    - User action Recover Account
+        - User Account States:
+            - Logged In
 
