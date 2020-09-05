@@ -1,15 +1,84 @@
-wallet
-|_contact_list
-| |_contact_list_record
-|_credit_wallet
-| |_credit_transfer_sheet
-| | |_credit_transfer_sheet_record
-| |_credit_clock
-|   |_credit_clock_time_sheet
-|   | |_credit_clock_time_sheet_record
-|   |_credit_clock_conversion_sheet
-|     |_credit_clock_conversion_sheet_record
-|_config
-| |_config_parser
-|_logger
+###############################################################################
+ EWSC Entity Interface Design
+###############################################################################
 
+             (Entity instruction set)
+                        |
+                        V
+
+                        * Controllers
+                        |
+                        |_ * Jumptable Handlers
+                        |
+                        |_ * Action/Event Handlers
+                           |
+                           |_ * Resources
+                              |
+                              |_. Fetchers
+                              |_. Setters
+                              |_. Cleaners
+                              |_. Formatters
+                              |_. Computers
+                              |_. Displays
+                              |_. Creators
+                              |_. Spawners
+                              |_. Generators
+                              |_. General
+                              |_. Warning Handlers
+                              |_. Error Handlers
+
+###############################################################################
+ EWSC Entity Relationship Hierarchy
+###############################################################################
+
+                  (Server Core)
+                        |
+                        * Session Manager
+                        |
+                        |_ * Worker 1
+                        |  |
+                        |  |_ * EWallet Session 1
+                        |  |  |
+                        |  |  |_ * User Account
+                        |  |  |  |
+                        |  |  |  |_ * Credit EWallet
+                        |  |  |  |  |
+                        |  |  |  |  |_ * Credit Clock
+                        |  |  |  |  |  |
+                        |  |  |  |  |  |_ * Time Sheet
+                        |  |  |  |  |  |  |
+                        |  |  |  |  |  |  |_ * Time Record
+                        |  |  |  |  |  |
+                        |  |  |  |  |  |
+                        |  |  |  |  |  |_ * Conversion Sheet
+                        |  |  |  |  |     |
+                        |  |  |  |  |     |_ * Conversion Record
+                        |  |  |  |  |
+                        |  |  |  |  |_ * Invoice Sheet
+                        |  |  |  |  |  |
+                        |  |  |  |  |  |_ * Invoice Record
+                        |  |  |  |  |
+                        |  |  |  |  |
+                        |  |  |  |  |_ * Transfer Sheet
+                        |  |  |  |     |
+                        |  |  |  |     |_ * Transfer Record
+                        |  |  |  |
+                        |  |  |  |
+                        |  |  |  |_ * Contact List
+                        |  |  |     |
+                        |  |  |     |_ * Contact Record
+                        |  |  |
+                        |  |  |
+                        |  |  |_ * Credit EWallet
+                        |  |  |
+                        |  |  |_ * Contact List
+                        |  |  |
+                        |  |  |_ * SqlAlchemy ORM Session
+                        |  |
+                        |  |
+                        |  |_ * EWallet Session (N)
+                        |     '
+                        |     '
+                        |_ * Worker (N)
+                        '
+                        '

@@ -35,25 +35,18 @@ class ResUser(Base):
     user_state_code = Column(Integer)
     user_state_name = Column(String)
     active_session_id = Column(Integer, ForeignKey('ewallet.id'))
-    # O2O
     active_session = relationship(
        'EWallet', back_populates='active_user'
        )
-    # O2O
     user_contact_list = relationship(
        'ContactList', back_populates='client',
        )
-    # O2O
     user_credit_wallet = relationship(
        'CreditEWallet', back_populates='client',
        )
-    # M2M
     user_session_archive = relationship('EWallet', secondary='ewallet_session_user')
-    # O2M
     user_pass_hash_archive = relationship('ResUserPassHashArchive')
-    # O2M
     user_credit_wallet_archive = relationship('CreditEWallet')
-    # O2M
     user_contact_list_archive = relationship('ContactList')
     to_unlink = Column(Boolean)
     to_unlink_timestamp = Column(DateTime)

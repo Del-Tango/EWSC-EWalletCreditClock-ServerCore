@@ -1,6 +1,6 @@
 [ + ]: Prerequisites -
 [...]: User action Request Client ID
-[...]: User action Request Session Token 
+[...]: User action Request Session Token
 [...]: User action Create Account
 [...]: User action Account Login
 [...]: User action Supply EWallet Credits
@@ -194,7 +194,7 @@
 [ > ]: Instruction Set: {'controller': 'client', 'ctype': 'action', 'action': 'new', 'new': 'credit', 'credit': 'clock', 'client_id': 'ewsm-uid:MRLsV1e0AXFibJ1jl0gS:1594520351.4682689', 'session_token': 'ewsm-st:l09XrJicL7E5gzrYFW2d:1594520353.744707'}
 [ < ]: Response: {'failed': False, 'clock': 3, 'clock_data': {'id': 3, 'ewallet': 2, 'reference': 'Credit Clock', 'create_date': '12-07-2020 05:19:15', 'write_date': '12-07-2020 05:19:15', 'credit_clock': 0.0, 'clock_state': 'inactive', 'time_sheet': 3, 'time_sheet_archive': {3: 'Time Sheet'}, 'conversion_sheet': 3, 'conversion_sheet_archive': {3: 'Conversion Sheet'}}}
 
-[ + ]: Prerequisites - 
+[ + ]: Prerequisites -
 [...]: User action Request Client ID
 [...]: User action Request Session Token
 [...]: User action Create New Account
