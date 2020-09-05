@@ -90,10 +90,10 @@
     - x - User action View Account
     - x - User action View Credit EWallet
     - x - User action View Credit Clock
-    -   - User action View Invoice Sheet
-    -   - User action View Invoice Record
-    - User action View Login Records
-    - User action View Logout Records
+    - x - User action View Invoice Sheet
+    - x - User action View Invoice Record
+    -   - User action View Login Records
+    -   - User action View Logout Records
     - User action Create Credit EWallet
     - User action Create Credit Clock
     - User action Create Transfer Sheet
