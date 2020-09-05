@@ -113,10 +113,10 @@
     - x - User action Unlink Contact Record
     - x - User action Unlink Conversion Sheet
     - x - User action Unlink Conversion Record
-    -   - User action Unlink Transfer Sheet
-    -   - User action Unlink Transfer Record
-    - User action Unlink Time Sheet
-    - User action Unlink Time Record
+    - x - User action Unlink Transfer Sheet
+    - x - User action Unlink Transfer Record
+    -   - User action Unlink Time Sheet
+    -   - User action Unlink Time Record
     - User action Unlink Credit EWallet
     - User action Unlink Credit Clock
     - User action Unlink Invoice Sheet
