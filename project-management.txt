@@ -81,10 +81,10 @@
     - x - User action Stop Clock Timer
     - x - User action View Contact List
     - x - User action View Contact Record
-    -   - User action View Transfer Sheet
-    -   - User action View Transfer Record
-    - User action View Time Sheet
-    - User action View Time Record
+    - x - User action View Transfer Sheet
+    - x - User action View Transfer Record
+    -   - User action View Time Sheet
+    -   - User action View Time Record
     - User action View Conversion Sheet
     - User action View Conversion Record
     - User action View Account
