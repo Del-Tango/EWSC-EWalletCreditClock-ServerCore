@@ -111,10 +111,10 @@
     - x - User action Unlink Account
     - x - User action Unlink Contact List
     - x - User action Unlink Contact Record
-    -   - User action Unlink Conversion Sheet
-    -   - User action Unlink Conversion Record
-    - User action Unlink Transfer Sheet
-    - User action Unlink Transfer Record
+    - x - User action Unlink Conversion Sheet
+    - x - User action Unlink Conversion Record
+    -   - User action Unlink Transfer Sheet
+    -   - User action Unlink Transfer Record
     - User action Unlink Time Sheet
     - User action Unlink Time Record
     - User action Unlink Credit EWallet
