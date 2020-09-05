@@ -85,10 +85,10 @@
     - x - User action View Transfer Record
     - x - User action View Time Sheet
     - x - User action View Time Record
-    -   - User action View Conversion Sheet
-    -   - User action View Conversion Record
-    - User action View Account
-    - User action View Credit EWallet
+    - x - User action View Conversion Sheet
+    - x - User action View Conversion Record
+    -   - User action View Account
+    -   - User action View Credit EWallet
     - User action View Credit Clock
     - User action View Invoice Sheet
     - User action View Invoice Record
