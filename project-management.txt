@@ -75,12 +75,12 @@
     - x - User action Create Contact List
     - x - User action TransferCredits
     - x - User action Edit Account
-    -   - User action Start Clock Timer
-    -   - User action Pause Clock Timer
-    - User action Resume Clock Timer
-    - User action Stop Clock Timer
-    - User action View Contact List
-    - User action View Contact Record
+    - x - User action Start Clock Timer
+    - x - User action Pause Clock Timer
+    - x - User action Resume Clock Timer
+    - x - User action Stop Clock Timer
+    -   - User action View Contact List
+    -   - User action View Contact Record
     - User action View Transfer Sheet
     - User action View Transfer Record
     - User action View Time Sheet

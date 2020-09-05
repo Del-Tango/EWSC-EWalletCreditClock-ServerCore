@@ -2590,6 +2590,30 @@ class EWallet(Base):
     [ NOTES ]: Enviroment checks for proper action execution are performed here.
     '''
 
+    def handle_user_action_start_credit_clock_timer(self, **kwargs):
+        log.debug('')
+        check = self.check_user_logged_in()
+        return self.warning_user_not_logged_in(check, kwargs) if not check \
+            else self.action_start_credit_clock_timer(**kwargs)
+
+    def handle_user_action_pause_credit_clock_timer(self, **kwargs):
+        log.debug('')
+        check = self.check_user_logged_in()
+        return self.warning_user_not_logged_in(check, kwargs) if not check \
+            else self.action_pause_credit_clock_timer(**kwargs)
+
+    def handle_user_action_resume_credit_clock_timer(self, **kwargs):
+        log.debug('')
+        check = self.check_user_logged_in()
+        return self.warning_user_not_logged_in(check, kwargs) if not check \
+            else self.action_resume_credit_clock_timer(**kwargs)
+
+    def handle_user_action_stop_credit_clock_timer(self, **kwargs):
+        log.debug('')
+        check = self.check_user_logged_in()
+        return self.warning_user_not_logged_in(check, kwargs) if not check \
+            else self.action_stop_credit_clock_timer(**kwargs)
+
     def handle_user_action_create_new_transfer_type_transfer(self, **kwargs):
         log.debug('')
         check = self.check_user_logged_in()
@@ -2767,22 +2791,6 @@ class EWallet(Base):
     def handle_user_action_view_credit_clock(self, **kwargs):
         log.debug('')
         return self.action_view_credit_clock(**kwargs)
-
-    def handle_user_action_start_credit_clock_timer(self, **kwargs):
-        log.debug('')
-        return self.action_start_credit_clock_timer(**kwargs)
-
-    def handle_user_action_pause_credit_clock_timer(self, **kwargs):
-        log.debug('')
-        return self.action_pause_credit_clock_timer(**kwargs)
-
-    def handle_user_action_resume_credit_clock_timer(self, **kwargs):
-        log.debug('')
-        return self.action_resume_credit_clock_timer(**kwargs)
-
-    def handle_user_action_stop_credit_clock_timer(self, **kwargs):
-        log.debug('')
-        return self.action_stop_credit_clock_timer(**kwargs)
 
     def handle_user_action_reset_alias(self, **kwargs):
         log.debug('')
