@@ -2590,6 +2590,12 @@ class EWallet(Base):
     [ NOTES ]: Enviroment checks for proper action execution are performed here.
     '''
 
+    def handle_user_action_unlink_account(self, **kwargs):
+        log.debug('')
+        check = self.check_user_logged_in()
+        return self.warning_user_not_logged_in(check, kwargs) if not check \
+            else self.action_unlink_user_account(**kwargs)
+
     def handle_user_action_switch_contact_list(self, **kwargs):
         log.debug('')
         check = self.check_user_logged_in()
@@ -2931,10 +2937,6 @@ class EWallet(Base):
     def handle_user_action_unlink_contact_record(self, **kwargs):
         log.debug('')
         return self.action_unlink_contact_record(**kwargs)
-
-    def handle_user_action_unlink_account(self, **kwargs):
-        log.debug('')
-        return self.action_unlink_user_account(**kwargs)
 
     def handle_user_action_unlink_credit_ewallet(self, **kwargs):
         log.debug('')
