@@ -551,14 +551,10 @@ class EWallet(Base):
 
     # UNLINKERS
 
+    # TODO
 #   @pysnooper.snoop('logs/ewallet.log')
     def unlink_user_account(self, **kwargs):
-        '''
-        [ NOTE   ]: Deletes specific user or active session user.
-        [ INPUT  ]: active_session=<session>, user_id=<user_id>
-        [ RETURN ]:
-        '''
-        log.debug('')
+        log.debug('TODO - Refactor')
         if not kwargs.get('user_id'):
             return self.error_no_user_account_id_found(kwargs)
         try:
@@ -568,6 +564,7 @@ class EWallet(Base):
                 user_id=kwargs['user_id']
             )
             user = list(user_account)
+            # If account not marked for removal, mark now
             if not user[0].to_unlink:
                 user[0].set_to_unlink(True)
                 user[0].set_to_unlink_timestamp(datetime.datetime.now())
@@ -576,6 +573,7 @@ class EWallet(Base):
             check = res_utils.check_days_since_timestamp(
                 user[0].to_unlink_timestamp, 30
             )
+            # If 30 days since account marked for removal, remove from db
             if check:
                 user_account.delete()
                 return kwargs['user_id']
@@ -588,6 +586,20 @@ class EWallet(Base):
     '''
     [ NOTE ]: Command chain responses are formatted here.
     '''
+
+    # TODO
+    def action_system_user_check(self, **kwargs):
+        log.debug('TODO - UNIMPLEMENTED')
+    def action_system_session_check(self, **kwargs):
+        log.debug('TODO - UNIMPLEMENTED')
+    def action_send_invoice_record(self, **kwargs):
+        log.debug('TODO - UNIMPLEMENTED')
+    def action_send_transfer_record(self, **kwargs):
+        log.debug('TODO - UNIMPLEMENTED')
+    def action_receive_invoice_record(self, **kwargs):
+        log.debug('TODO - UNIMPLEMENTED')
+    def action_receive_transfer_record(self, **kwargs):
+        log.debug('TODO - UNIMPLEMENTED')
 
     # TODO
     def action_edit_account_user_pass(self, **kwargs):
@@ -606,6 +618,164 @@ class EWallet(Base):
         return self.warning_could_not_edit_account_user_pass(kwargs) if \
             edit_user_pass.get('failed') else edit_user_pass
 
+    def action_edit_user_account(self, **kwargs):
+        log.debug('')
+        user = self.fetch_active_session_user()
+        edit_value_set = {
+            'name': self.handle_user_action_edit_account_user_name(**kwargs),
+            'pass': self.handle_user_action_edit_account_user_pass(**kwargs),
+            'alias': self.handle_user_action_edit_account_user_alias(**kwargs),
+            'email': self.handle_user_action_edit_account_user_email(**kwargs),
+            'phone': self.handle_user_action_edit_account_user_phone(**kwargs),
+        }
+        return self.warning_no_user_account_values_edited(kwargs) \
+            if True not in edit_value_set.values() else {
+                'failed': False,
+                'account': user.fetch_user_name(),
+                'edit': edit_value_set,
+                'account_data': user.fetch_user_values(),
+            }
+
+    def action_login_user_account(self, **kwargs):
+        log.debug('')
+        login_record = EWalletLogin()
+        kwargs['active_session'].add(login_record)
+        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
+            kwargs, 'action'
+        )
+        session_login = login_record.ewallet_login_controller(
+           action='login', user_archive=self.fetch_active_session_user_account_archive(),
+            **sanitized_command_chain
+        )
+        if not session_login:
+            return self.warning_could_not_login_user_account(kwargs)
+        update_archive = self.update_user_account_archive(user=session_login)
+        update_session = self.action_system_user_update(user=session_login)
+        kwargs['active_session'].commit()
+        log.info('User successfully logged in.')
+        session_values = self.fetch_active_session_values()
+        command_chain_response = {
+            'failed': False,
+            'account': session_login.fetch_user_email(),
+            'session_data': {
+                'session_user_account': None if not session_values['user_account'] \
+                    else session_values['user_account'].fetch_user_email(),
+                'session_credit_ewallet': None if not session_values['credit_ewallet'] \
+                    else session_values['credit_ewallet'].fetch_credit_ewallet_id(),
+                'session_contact_list': None if not session_values['contact_list'] \
+                    else session_values['contact_list'].fetch_contact_list_id(),
+                'session_account_archive': None if not session_values['user_account_archive'] \
+                    else session_values['user_account_archive']
+            }
+        }
+        return command_chain_response
+
+    def action_logout_user_account(self, **kwargs):
+        log.debug('')
+        user = self.fetch_active_session_user()
+        session_logout = self.action_system_user_logout()
+        logout_record = EWalletLogout(
+            user_id=user.fetch_user_id(),
+            logout_status=False if not session_logout else True,
+        )
+        kwargs['active_session'].add(logout_record)
+        if not session_logout:
+            kwargs['active_session'].rollback()
+            return self.warning_could_not_logout_user_account(kwargs)
+        update_next = False if isinstance(session_logout, bool) \
+                else self.action_system_user_update(user=session_logout)
+        try:
+            self.user_account_archive.remove(user)
+        except:
+            kwargs['active_session'].rollback()
+            return self.error_could_not_remove_user_from_account_archive(kwargs)
+        kwargs['active_session'].commit()
+        session_values = self.fetch_active_session_values()
+        command_chain_response = {
+            'failed': False,
+            'account': user.fetch_user_email(),
+            'session_data': {
+                'session_user_account': None if not session_values['user_account'] \
+                    else session_values['user_account'].fetch_user_email(),
+                'session_credit_ewallet': None if not session_values['credit_ewallet'] \
+                    else session_values['credit_ewallet'].fetch_credit_ewallet_id(),
+                'session_contact_list': None if not session_values['contact_list'] \
+                    else session_values['contact_list'].fetch_contact_list_id(),
+                'session_account_archive': None if not session_values['user_account_archive'] \
+                    else session_values['user_account_archive']
+            }
+        }
+        return command_chain_response
+
+    def action_switch_active_user_account(self, **kwargs):
+        log.debug('')
+        account_record = self.fetch_user_by_email(email=kwargs.get('account'))
+        if not account_record or isinstance(account_record, dict) and \
+                account_record.get('failed'):
+            return self.warning_user_account_not_found_in_database(kwargs)
+        new_account = self.interogate_active_session_user_archive_for_user_account(
+            account_id=account_record.fetch_user_id(), **kwargs
+        )
+        if not new_account or isinstance(new_account, dict) and \
+                new_account.get('failed'):
+            return self.warning_could_not_find_user_action_switch_target_account(kwargs)
+        update_session = self.update_session_from_user(session_active_user=new_account)
+        if not update_session or isinstance(update_session, dict) and \
+                update_session.get('failed'):
+            return self.error_could_not_update_ewallet_session_from_user_account(kwargs)
+        kwargs['active_session'].commit()
+        account_archive = self.fetch_active_session_user_account_archive()
+        command_chain_response = {
+            'failed': False,
+            'account': new_account.fetch_user_email(),
+            'session_data': {
+                'session_user_account': None if not update_session['active_user'] \
+                    else update_session['active_user'].fetch_user_email(),
+                'session_credit_ewallet': None if not update_session['credit_wallet'] \
+                    else update_session['credit_wallet'].fetch_credit_ewallet_id(),
+                'session_contact_list': None if not update_session['contact_list'] \
+                    else update_session['contact_list'].fetch_contact_list_id(),
+                'session_account_archive': None if not account_archive else {
+                    item.fetch_user_email(): item.fetch_user_name()
+                    for item in account_archive
+                }
+            }
+        }
+        return command_chain_response
+
+    def action_recover_user_account(self, **kwargs):
+        log.debug('')
+        user = self.fetch_active_session_user()
+        recover_account = self.action_recover_user_account(user=user, **kwargs)
+        if not recover_account or isinstance(recover_account, dict) and \
+                recover_account.get('failed'):
+            kwargs['active_session'].rollback()
+            return self.warning_could_not_recover_user_account(kwargs)
+        update = False if not recover_account or isinstance(recover_account, bool) \
+                or isinstance(recover_account, dict) and recover_account.get('failed') \
+                else self.action_system_user_update(user=user, **kwargs)
+        if not update or isinstance(update, dict) and update.get('failed'):
+            kwargs['active_session'].rollback()
+            return self.error_could_not_update_ewallet_session_from_user_account(kwargs)
+        kwargs['active_session'].commit()
+        session_values = self.fetch_active_session_values()
+        command_chain_response = {
+            'failed': False,
+            'account': user.fetch_user_email(),
+            'account_data': user.fetch_user_values(),
+            'session_data': {
+                'session_user_account': None if not session_values['user_account']
+                    else session_values['user_account'].fetch_user_email(),
+                'session_credit_ewallet': None if not session_values['credit_ewallet']
+                    else session_values['credit_ewallet'].fetch_credit_ewallet_id(),
+                'session_contact_list': None if not session_values['contact_list']
+                    else session_values['contact_list'].fetch_contact_list_id(),
+                'session_account_archive': None if not session_values['user_account_archive']
+                    else session_values['user_account_archive']
+            }
+        }
+        return command_chain_response
+
     def action_cleanup_ewallet_session(self, **kwargs):
         log.debug('')
         cleanup = self.clear_active_session_user_data({
@@ -620,14 +790,14 @@ class EWallet(Base):
         except Exception as e:
             orm_session.rollback()
             return self.error_could_not_cleanup_ewallet_session(
-                kwargs, cleanup, orm_session. e
+                kwargs, cleanup, orm_session, e
             )
         instruction_set_response = {
             'failed': False,
             'ewallet_session': self.fetch_active_session_id(),
             'cleanup': cleanup,
         }
-        return cleanup
+        return instruction_set_response
 
     def action_interogate_ewallet_session_expired(self, **kwargs):
         log.debug('')
@@ -1931,21 +2101,6 @@ class EWallet(Base):
         kwargs['active_session'].commit()
         return unlink_record
 
-    def action_unlink_contact(self, **kwargs):
-        '''
-        [ NOTE   ]: Jump table for user action category 'unlink contact', accessible from external api call.
-        [ INPUT  ]: unlink=(list | record)
-        [ RETURN ]: Action variable correspondent.
-        '''
-        log.debug('')
-        if not kwargs.get('contact'):
-            return self.error_no_unlink_target_specified()
-        handlers = {
-            'list': self.action_unlink_contact_list,
-            'record': self.action_unlink_contact_record,
-        }
-        return handlers[kwargs['contact']](**kwargs)
-
     def action_unlink_time_record(self, **kwargs):
         '''
         [ NOTE   ]: User action 'unlink time record', accessible from external api calls.
@@ -1972,21 +2127,6 @@ class EWallet(Base):
             )
         kwargs['active_session'].commit()
         return unlink_record
-
-    def action_unlink_time(self, **kwargs):
-        '''
-        [ NOTE   ]: Jump table for user action category 'unlink time', accessible from external api call.
-        [ INPUT  ]: unlinl=(list | record)
-        [ RETURN ]: Action variable correspondent.
-        '''
-        log.debug('')
-        if not kwargs.get('time'):
-            return self.error_no_unlink_target_specified()
-        handlers = {
-            'list': self.action_unlink_time_list,
-            'record': self.action_unlink_time_record,
-        }
-        return handlers[kwargs['time']](**kwargs)
 
     def action_unlink_conversion_record(self, **kwargs):
         '''
@@ -2015,21 +2155,6 @@ class EWallet(Base):
         kwargs['active_session'].commit()
         return unlink_record
 
-    def action_unlink_conversion(self, **kwargs):
-        '''
-        [ NOTE   ]: Jump table for user action category 'unlink conversion', accessible from external api call.
-        [ INPUT  ]: unlink=(list | record)
-        [ RETURN ]: Action variable correspondent.
-        '''
-        log.debug('')
-        if not kwargs.get('conversion'):
-            return self.error_no_unlink_target_specified()
-        handlers = {
-            'list': self.action_unlink_conversion_list,
-            'record': self.action_unlink_conversion_record,
-        }
-        return handlers[kwargs['conversion']](**kwargs)
-
     def action_unlink_invoice_record(self, **kwargs):
         '''
         [ NOTE   ]: User action 'unlink invoice record', accessible from external api calls.
@@ -2057,21 +2182,6 @@ class EWallet(Base):
         kwargs['active_session'].commit()
         return unlink_record
 
-    def action_unlink_invoice(self, **kwargs):
-        '''
-        [ NOTE   ]: Jump table for user action category 'unlink invoice', accessible from external api call.
-        [ INPUT  ]: unlink=(list | record)
-        [ RETURN ]: Action variable correspondent.
-        '''
-        log.debug('')
-        if not kwargs.get('invoice'):
-            return self.error_no_unlink_target_specified()
-        handlers = {
-            'list': self.action_unlink_invoice_list,
-            'record': self.action_unlink_invoice_record,
-        }
-        return handlers[kwargs['invoice']](**kwargs)
-
     def action_unlink_transfer_record(self, **kwargs):
         '''
         [ NOTE   ]: User action 'unlink transfer record', accessible from external api calls.
@@ -2098,21 +2208,6 @@ class EWallet(Base):
             )
         kwargs['active_session'].commit()
         return unlink_record
-
-    def action_unlink_transfer(self, **kwargs):
-        '''
-        [ NOTE   ]: Jump table for user action category 'unlink transfer', accessible from external api call.
-        [ INPUT  ]: unlink=(list | record)
-        [ RETURN ]: Action variable correspondent.
-        '''
-        log.debug('')
-        if not kwargs.get('transfer'):
-            return self.error_no_unlink_target_specified(kwargs)
-        handlers = {
-            'list': self.action_unlink_transfer_list,
-            'record': self.action_unlink_transfer_record,
-        }
-        return handlers[kwargs['transfer']](**kwargs)
 
     def action_switch_contact_list(self, **kwargs):
         log.debug('')
@@ -2357,111 +2452,6 @@ class EWallet(Base):
         }
         return command_chain_response
 
-    def action_create_new_transfer(self, **kwargs):
-        '''
-        [ NOTE   ]: Jump table for user action category 'create new transfer', accessible from external api call.
-        [ INPUT  ]: ttype=(supply | pay | transfer)
-        [ RETURN ]: Action variable correspondent.
-        '''
-        log.debug('')
-        if not kwargs.get('ttype'):
-            return self.error_no_transfer_type_specified()
-        handlers = {
-            'supply': self.action_create_new_transfer_type_supply,
-            'pay': self.action_create_new_transfer_type_pay,
-            'transfer': self.action_create_new_transfer_type_transfer,
-        }
-        return handlers[kwargs['ttype']](**kwargs)
-
-    def action_view_contact(self, **kwargs):
-        '''
-        [ NOTE   ]: Jump table for user action category 'view contact', accessible from external api call.
-        [ INPUT  ]: contact=(list | record)
-        [ RETURN ]: Action variable correspondent.
-        '''
-        log.debug('')
-        if not kwargs.get('contact'):
-            return self.error_no_contact_target_specified()
-        handlers = {
-            'list': self.action_view_contact_list,
-            'record': self.action_view_contact_record,
-        }
-        return handlers[kwargs['contact']](**kwargs)
-
-    def action_view_invoice(self, **kwargs):
-        '''
-        [ NOTE   ]: Jump table for user action category 'view invoice', accessible from external api call.
-        [ INPUT  ]: invoice=(list | record)
-        [ RETURN ]: Action variable correspondent.
-        '''
-        log.debug('')
-        if not kwargs.get('invoice'):
-            return self.error_no_invoice_target_specified()
-        handlers = {
-            'list': self.action_view_invoice_list,
-            'record': self.action_view_invoice_record,
-        }
-        return handlers[kwargs['invoice']](**kwargs)
-
-    def action_view_transfer(self, **kwargs):
-        '''
-        [ NOTE   ]: Jump table for user action category 'view transfer', accessible from external api call.
-        [ INPUT  ]: transfer=(list | record)
-        [ RETURN ]: Action variable correspondent.
-        '''
-        log.debug('')
-        if not kwargs.get('transfer'):
-            return self.error_no_transfer_view_target_specified()
-        _handlers = {
-                'list': self.action_view_transfer_list,
-                'record': self.action_view_transfer_record,
-                }
-        return _handlers[kwargs['transfer']](**kwargs)
-
-    def action_view_time(self, **kwargs):
-        '''
-        [ NOTE   ]: Jumpt table for user action category 'view time', accessible from external api call.
-        [ INPUT  ]: time=(list | record)
-        [ RETURN ]: Action variable correspondent.
-        '''
-        log.debug('')
-        if not kwargs.get('time'):
-            return self.error_no_time_view_target_specified()
-        _handlers = {
-                'list': self.action_view_time_list,
-                'record': self.action_view_time_record,
-                }
-        return _handlers[kwargs['time']](**kwargs)
-
-    def action_view_conversion(self, **kwargs):
-        '''
-        [ NOTE   ]: Jump table for user action category 'view conversion', accessible from external api call.
-        [ INPUT  ]: conversion=(list | record)
-        [ RETURN ]: Action variable correspondent.
-        '''
-        log.debug('')
-        if not kwargs.get('conversion'):
-            return self.error_no_conversion_view_target_specified()
-        _handlers = {
-                'list': self.action_view_conversion_list,
-                'record': self.action_view_conversion_record,
-                }
-        return _handlers[kwargs['conversion']](**kwargs)
-
-    # TODO
-    def action_system_user_check(self, **kwargs):
-        pass
-    def action_system_session_check(self, **kwargs):
-        pass
-    def action_send_invoice_record(self, **kwargs):
-        pass
-    def action_send_transfer_record(self, **kwargs):
-        pass
-    def action_receive_invoice_record(self, **kwargs):
-        pass
-    def action_receive_transfer_record(self, **kwargs):
-        pass
-
     def action_system_user_update(self, **kwargs):
         '''
         [ NOTE   ]: System action 'user update'. Allows multiple logged in users to switch.
@@ -2583,37 +2573,6 @@ class EWallet(Base):
         active_session.commit()
         return convert
 
-    def action_create_new_conversion(self, **kwargs):
-        '''
-        [ NOTE   ]: Jump table for user action 'create new conversion', accessible from external api calls.
-        [ INPUT  ]: conversion=('credits2clock' | 'clock2credits')
-        [ RETURN ]: Action variable correspondent.
-        '''
-        log.debug('')
-        if not kwargs.get('conversion'):
-            return self.error_no_conversion_type_specified()
-        _handlers = {
-                'credits2clock': self.action_create_new_conversion_credits_to_clock,
-                'clock2credits': self.action_create_new_conversion_clock_to_credits,
-                }
-        return _handlers[kwargs['conversion']](**kwargs)
-
-    def action_create_new_contact(self, **kwargs):
-        '''
-        [ NOTE   ]: Jump table for user action 'create new contact', accessible
-                    from external api calls.
-        [ INPUT  ]: contact=('list', 'record')
-        [ RETURN ]: Action variable correspondent.
-        '''
-        log.debug('')
-        if not kwargs.get('contact'):
-            return self.error_no_contact_found()
-        handlers = {
-            'list': self.action_create_new_contact_list,
-            'record': self.action_create_new_contact_record,
-        }
-        return handlers[kwargs['contact']](**kwargs)
-
     # INTEROGATORS
 
     def interogate_active_session_user_archive_for_user_account(self, **kwargs):
@@ -2626,20 +2585,275 @@ class EWallet(Base):
             return self.warning_could_not_fetch_user_account_from_session_archive(kwargs)
         return search_account
 
-    # HANDLERS
+    # ACTION HANDLERS
 
-    def handle_system_action_cleanup_ewallet_session(self, **kwargs):
+    def handle_user_action_edit_account(self, **kwargs):
         log.debug('')
-        return self.action_cleanup_ewallet_session(**kwargs)
+        return self.action_edit_user_account(**kwargs)
 
-    def handle_system_action_cleanup(self, **kwargs):
+    def handle_user_action_recover_account(self, **kwargs):
         log.debug('')
-        if not kwargs.get('cleanup'):
-            return self.error_no_system_action_cleanup_target_specified(kwargs)
-        handlers = {
-            'session': self.handle_system_action_cleanup_ewallet_session,
-        }
-        return handlers[kwargs['cleanup']](**kwargs)
+        return self.action_recover_user_account(**kwargs)
+
+    def handle_user_action_switch_active_account(self, **kwargs):
+        log.debug('')
+        return self.action_switch_active_user_account(**kwargs)
+
+    def handle_user_action_logout(self, **kwargs):
+        log.debug('')
+        return self.action_logout_user_account(**kwargs)
+
+    def handle_user_action_login(self, **kwargs):
+        log.debug('')
+        return self.action_login_user_account(**kwargs)
+
+    def handle_user_action_unlink_conversion_list(self, **kwargs):
+        log.debug('')
+        return self.action_unlink_conversion_list(**kwargs)
+
+    def handle_user_action_unlink_conversion_record(self, **kwargs):
+        log.debug('')
+        return self.action_unlink_conversion_record(**kwargs)
+
+    def handle_user_action_unlink_time_list(self, **kwargs):
+        log.debug('')
+        return self.action_unlink_time_list(**kwargs)
+
+    def handle_user_action_unlink_time_record(self, **kwargs):
+        log.debug('')
+        return self.action_unlink_time_record(**kwargs)
+
+    def handle_user_action_unlink_transfer_list(self, **kwargs):
+        log.debug('')
+        return self.action_unlink_transfer_list(**kwargs)
+
+    def handle_user_action_unlink_transfer_record(self, **kwargs):
+        log.debug('')
+        return self.action_unlink_transfer_record(**kwargs)
+
+    def handle_user_action_unlink_invoice_list(self, **kwargs):
+        log.debug('')
+        return self.action_unlink_invoice_list(**kwargs)
+
+    def handle_user_action_unlink_invoice_record(self, **kwargs):
+        log.debug('')
+        return self.action_unlink_invoice_record(**kwargs)
+
+    def handle_user_action_unlink_contact_list(self, **kwargs):
+        log.debug('')
+        return self.action_unlink_contact_list(**kwargs)
+
+    def handle_user_action_unlink_contact_record(self, **kwargs):
+        log.debug('')
+        return self.action_unlink_contact_record(**kwargs)
+
+    def handle_user_action_unlink_account(self, **kwargs):
+        log.debug('')
+        return self.action_unlink_user_account(**kwargs)
+
+    def handle_user_action_unlink_credit_ewallet(self, **kwargs):
+        log.debug('')
+        return self.action_unlink_credit_wallet(**kwargs)
+
+    def handle_user_action_unlink_credit_clock(self, **kwargs):
+        log.debug('')
+        return self.action_unlink_credit_clock(**kwargs)
+
+    def handle_user_action_view_login_records(self, **kwargs):
+        log.debug('')
+        return self.action_view_login_records(**kwargs)
+
+    def handle_user_action_view_logout_records(self, **kwargs):
+        log.debug('')
+        return self.action_view_logout_records(**kwargs)
+
+    def handle_user_action_view_conversion_list(self, **kwargs):
+        log.debug('')
+        return self.action_view_conversion_list(**kwargs)
+
+    def handle_user_action_view_conversion_record(self, **kwargs):
+        log.debug('')
+        return self.action_view_conversion_record(**kwargs)
+
+    def handle_user_action_view_time_list(self, **kwargs):
+        log.debug('')
+        return self.action_view_time_list(**kwargs)
+
+    def handle_user_action_view_time_record(self, **kwargs):
+        log.debug('')
+        return self.action_view_time_record(**kwargs)
+
+    def handle_user_action_view_transfer_list(self, **kwargs):
+        log.debug('')
+        return self.action_view_transfer_list(**kwargs)
+
+    def handle_user_action_view_tranfer_record(self, **kwargs):
+        log.debug('')
+        return self.action_view_transfer_record(**kwargs)
+
+    def handle_user_action_view_invoice_list(self, **kwargs):
+        log.debug('')
+        return self.action_view_invoice_list(**kwargs)
+
+    def handle_user_action_view_invoice_record(self, **kwargs):
+        log.debug('')
+        return self.action_view_invoice_record(**kwargs)
+
+    def handle_user_action_view_contact_list(self, **kwargs):
+        log.debug('')
+        return self.action_view_contact_list(**kwargs)
+
+    def handle_user_action_view_contact_record(self, **kwargs):
+        log.debug('')
+        return self.action_view_contact_record(**kwargs)
+
+    def handle_user_action_view_account(self, **kwargs):
+        log.debug('')
+        return self.action_view_uesr_account(**kwargs)
+
+    def handle_user_action_view_credit_ewallet(self, **kwargs):
+        log.debug('')
+        return self.action_view_credit_wallet(**kwargs)
+
+    def handle_user_action_view_credit_clock(self, **kwargs):
+        log.debug('')
+        return self.action_view_credit_clock(**kwargs)
+
+    def handle_user_action_start_credit_clock_timer(self, **kwargs):
+        log.debug('')
+        return self.action_start_credit_clock_timer(**kwargs)
+
+    def handle_user_action_pause_credit_clock_timer(self, **kwargs):
+        log.debug('')
+        return self.action_pause_credit_clock_timer(**kwargs)
+
+    def handle_user_action_resume_credit_clock_timer(self, **kwargs):
+        log.debug('')
+        return self.action_resume_credit_clock_timer(**kwargs)
+
+    def handle_user_action_stop_credit_clock_timer(self, **kwargs):
+        log.debug('')
+        return self.action_stop_credit_clock_timer(**kwargs)
+
+    def handle_user_action_reset_alias(self, **kwargs):
+        log.debug('')
+        return self.action_reset_user_alias(**kwargs)
+
+    def handle_user_action_reset_password(self, **kwargs):
+        log.debug('')
+        return self.action_reset_user_password(**kwargs)
+
+    def handle_user_action_reset_email(self, **kwargs):
+        log.debug('')
+        return self.action_reset_user_email(**kwargs)
+
+    def handle_user_action_reset_phone(self, **kwargs):
+        log.debug('')
+        return self.action_reset_user_phone(**kwargs)
+
+    def handle_system_action_check_user(self, **kwargs):
+        log.debug('')
+        return self.action_system_user_check(**kwargs)
+
+    def handle_system_action_check_session(self, **kwargs):
+        log.debug('')
+        return self.action_system_session_check(**kwargs)
+
+    def handle_system_action_update_user(self, **kwargs):
+        log.debug('')
+        return self.action_system_user_update(**kwargs)
+
+    def handle_system_action_update_session(self, **kwargs):
+        log.debug('')
+        return self.action_system_session_update(**kwargs)
+
+    def handle_system_action_send_invoice_record(self, **kwargs):
+        log.debug('')
+        return self.action_send_invoice_record(**kwargs)
+
+    def handle_system_action_send_invoice_sheet(self, **kwargs):
+        log.debug('')
+        return self.action_send_invoice_sheet(**kwargs)
+
+    def handle_system_action_send_transfer_record(self, **kwargs):
+        log.debug('')
+        return self.action_send_transfer_record(**kwargs)
+
+    def handle_system_action_send_transfer_sheet(self, **kwargs):
+        log.debug('')
+        return self.action_send_transfer_sheet(**kwargs)
+
+    def handle_system_action_receive_invoice_record(self, **kwargs):
+        log.debug('')
+        return self.action_receive_invoice_record(**kwargs)
+
+    def handle_system_action_receive_invoice_shee(self, **kwargs):
+        log.debug('')
+        return self.action_receive_invoice_sheet(**kwargs)
+
+    def handle_system_action_receive_transfer_record(self, **kwargs):
+        log.debug('')
+        return self.action_receive_transfer_record(**kwargs)
+
+    def handle_system_action_receive_transfer_sheet(self, **kwargs):
+        log.debug('')
+        return self.action_receive_transfer_sheet(**kwargs)
+
+    def handle_user_action_create_new_contact_list(self, **kwargs):
+        log.debug('')
+        return self.action_create_new_contact_list(**kwargs)
+
+    def handle_user_action_create_new_contact_record(self, **kwargs):
+        log.debug('')
+        return self.action_create_new_contact_record(**kwargs)
+
+    def handle_user_action_create_new_conversion_credits_to_clock(self, **kwargs):
+        log.debug('')
+        return self.action_create_new_conversion_credits_to_clock(**kwargs)
+
+    def handle_user_action_create_new_conversion_clock_to_credits(self, **kwargs):
+        log.debug('')
+        return self.action_create_new_conversion_clock_to_credits(**kwargs)
+
+    def handle_user_action_create_new_transfer_type_transfer(self, **kwargs):
+        log.debug('')
+        return self.action_create_new_transfer_type_transfer(**kwargs)
+
+    def handle_user_action_create_new_transfer_type_pay(self, **kwargs):
+        log.debug('')
+        return self.action_create_new_transfer_type_pay(**kwargs)
+
+    def handle_user_action_create_new_transfer_type_supply(self, **kwargs):
+        log.debug('')
+        return self.action_create_new_transfer_type_supply(**kwargs)
+
+    def handle_user_action_create_new_time_sheet(self, **kwargs):
+        log.debug('')
+        return self.action_create_new_time_sheet(**kwargs)
+
+    def handle_user_action_create_new_conversion_sheet(self, **kwargs):
+        log.debug('')
+        return self.action_create_new_conversion_sheet(**kwargs)
+
+    def handle_user_action_create_new_invoice_sheet(self, **kwargs):
+        log.debug('')
+        return self.action_create_new_invoice_sheet(**kwargs)
+
+    def handle_user_action_create_new_transfer_sheet(self, **kwargs):
+        log.debug('')
+        return self.action_create_new_transfer_sheet(**kwargs)
+
+    def handle_user_action_create_new_credit_clock(self, **kwargs):
+        log.debug('')
+        return self.action_create_new_credit_clock(**kwargs)
+
+    def handle_user_action_create_new_credit_wallet(self, **kwargs):
+        log.debug('')
+        return self.action_create_new_credit_wallet(**kwargs)
+
+    def handle_user_action_create_new_user_account(self, **kwargs):
+        log.debug('')
+        return self.action_create_new_user_account(**kwargs)
 
     def handle_system_action_interogate_session_state(self, **kwargs):
         log.debug('')
@@ -2649,190 +2863,9 @@ class EWallet(Base):
         log.debug('')
         return self.action_interogate_ewallet_session_expired(**kwargs)
 
-    def handle_system_action_interogate_ewallet_session(self, **kwargs):
+    def handle_system_action_cleanup_ewallet_session(self, **kwargs):
         log.debug('')
-        if not kwargs.get('session'):
-            return self.error_no_system_action_interogate_ewallet_session_target_specified(
-                kwargs
-            )
-        handlers = {
-            'expired': self.handle_system_action_interogate_session_expired,
-            'state': self.handle_system_action_interogate_session_state,
-        }
-        return handlers[kwargs['session']](**kwargs)
-
-#   @pysnooper.snoop()
-    def handle_user_action_recover_account(self, **kwargs):
-        log.debug('')
-        user = self.fetch_active_session_user()
-        recover_account = self.action_recover_user_account(user=user, **kwargs)
-        if not recover_account or isinstance(recover_account, dict) and \
-                recover_account.get('failed'):
-            kwargs['active_session'].rollback()
-            return self.warning_could_not_recover_user_account(kwargs)
-        update = False if not recover_account or isinstance(recover_account, bool) \
-                or isinstance(recover_account, dict) and recover_account.get('failed') \
-                else self.action_system_user_update(user=user, **kwargs)
-        if not update or isinstance(update, dict) and update.get('failed'):
-            kwargs['active_session'].rollback()
-            return self.error_could_not_update_ewallet_session_from_user_account(kwargs)
-        kwargs['active_session'].commit()
-        session_values = self.fetch_active_session_values()
-        command_chain_response = {
-            'failed': False,
-            'account': user.fetch_user_email(),
-            'account_data': user.fetch_user_values(),
-            'session_data': {
-                'session_user_account': None if not session_values['user_account'] \
-                    else session_values['user_account'].fetch_user_email(),
-                'session_credit_ewallet': None if not session_values['credit_ewallet'] \
-                    else session_values['credit_ewallet'].fetch_credit_ewallet_id(),
-                'session_contact_list': None if not session_values['contact_list'] \
-                    else session_values['contact_list'].fetch_contact_list_id(),
-                'session_account_archive': None if not session_values['user_account_archive'] \
-                    else session_values['user_account_archive']
-            }
-        }
-        return command_chain_response
-
-    def handle_user_action_recover(self, **kwargs):
-        log.debug('')
-        if not kwargs.get('recover'):
-            return self.error_no_user_action_recover_target_specified(kwargs)
-        handlers = {
-            'account': self.handle_user_action_recover_account,
-        }
-        return self.warning_invalid_user_action_recover_target(kwargs) if \
-            kwargs['recover'] not in handlers.keys() else \
-            handlers[kwargs['recover']](**kwargs)
-
-    def handle_user_action_switch_active_user_account(self, **kwargs):
-        log.debug('')
-        account_record = self.fetch_user_by_email(email=kwargs.get('account'))
-        if not account_record or isinstance(account_record, dict) and \
-                account_record.get('failed'):
-            return self.warning_user_account_not_found_in_database(kwargs)
-        new_account = self.interogate_active_session_user_archive_for_user_account(
-            account_id=account_record.fetch_user_id(), **kwargs
-        )
-        if not new_account or isinstance(new_account, dict) and \
-                new_account.get('failed'):
-            return self.warning_could_not_find_user_action_switch_target_account(kwargs)
-        update_session = self.update_session_from_user(session_active_user=new_account)
-        if not update_session or isinstance(update_session, dict) and \
-                update_session.get('failed'):
-            return self.error_could_not_update_ewallet_session_from_user_account(kwargs)
-        kwargs['active_session'].commit()
-        account_archive = self.fetch_active_session_user_account_archive()
-        command_chain_response = {
-            'failed': False,
-            'account': new_account.fetch_user_email(),
-            'session_data': {
-                'session_user_account': None if not update_session['active_user'] \
-                    else update_session['active_user'].fetch_user_email(),
-                'session_credit_ewallet': None if not update_session['credit_wallet'] \
-                    else update_session['credit_wallet'].fetch_credit_ewallet_id(),
-                'session_contact_list': None if not update_session['contact_list'] \
-                    else update_session['contact_list'].fetch_contact_list_id(),
-                'session_account_archive': None if not account_archive else {
-                    item.fetch_user_email(): item.fetch_user_name()
-                    for item in account_archive
-                }
-            }
-        }
-        return command_chain_response
-
-    def handle_system_action_interogate(self, **kwargs):
-        log.debug('')
-        if not kwargs.get('interogate'):
-            return self.error_no_system_action_interogate_target_specified(kwargs)
-        handlers = {
-            'session': self.handle_system_action_interogate_ewallet_session,
-        }
-        return handlers[kwargs['interogate']](**kwargs)
-
-    def handle_user_action_logout(self, **kwargs):
-        '''
-        [ NOTE   ]: High level manager for user action logout.
-        [ INPUT  ]:
-        [ RETURN ]: True if no other users loged in. If loged in users found in
-                    user account archive, returns next.
-        '''
-        log.debug('')
-        user = self.fetch_active_session_user()
-        session_logout = self.action_system_user_logout()
-        logout_record = EWalletLogout(
-            user_id=user.fetch_user_id(),
-            logout_status=False if not session_logout else True,
-        )
-        kwargs['active_session'].add(logout_record)
-        if not session_logout:
-            kwargs['active_session'].rollback()
-            return self.warning_could_not_logout_user_account(kwargs)
-        update_next = False if isinstance(session_logout, bool) \
-                else self.action_system_user_update(user=session_logout)
-        try:
-            self.user_account_archive.remove(user)
-        except:
-            kwargs['active_session'].rollback()
-            return self.error_could_not_remove_user_from_account_archive(kwargs)
-        kwargs['active_session'].commit()
-        session_values = self.fetch_active_session_values()
-        command_chain_response = {
-            'failed': False,
-            'account': user.fetch_user_email(),
-            'session_data': {
-                'session_user_account': None if not session_values['user_account'] \
-                    else session_values['user_account'].fetch_user_email(),
-                'session_credit_ewallet': None if not session_values['credit_ewallet'] \
-                    else session_values['credit_ewallet'].fetch_credit_ewallet_id(),
-                'session_contact_list': None if not session_values['contact_list'] \
-                    else session_values['contact_list'].fetch_contact_list_id(),
-                'session_account_archive': None if not session_values['user_account_archive'] \
-                    else session_values['user_account_archive']
-            }
-        }
-        return command_chain_response
-
-#   @pysnooper.snoop('logs/ewallet.log')
-    def handle_user_action_login(self, **kwargs):
-        '''
-        [ NOTE   ]: High level manager for user action login.
-        [ INPUT  ]: user_name=<name>, user_pass=<pass>
-        [ RETURN ]: Logged in user if login action succesful, else False.
-        '''
-        log.debug('')
-        login_record = EWalletLogin()
-        kwargs['active_session'].add(login_record)
-        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
-            kwargs, 'action'
-        )
-        session_login = login_record.ewallet_login_controller(
-           action='login', user_archive=self.fetch_active_session_user_account_archive(),
-            **sanitized_command_chain
-        )
-        if not session_login:
-            return self.warning_could_not_login_user_account(kwargs)
-        update_archive = self.update_user_account_archive(user=session_login)
-        update_session = self.action_system_user_update(user=session_login)
-        kwargs['active_session'].commit()
-        log.info('User successfully logged in.')
-        session_values = self.fetch_active_session_values()
-        command_chain_response = {
-            'failed': False,
-            'account': session_login.fetch_user_email(),
-            'session_data': {
-                'session_user_account': None if not session_values['user_account'] \
-                    else session_values['user_account'].fetch_user_email(),
-                'session_credit_ewallet': None if not session_values['credit_ewallet'] \
-                    else session_values['credit_ewallet'].fetch_credit_ewallet_id(),
-                'session_contact_list': None if not session_values['contact_list'] \
-                    else session_values['contact_list'].fetch_contact_list_id(),
-                'session_account_archive': None if not session_values['user_account_archive'] \
-                    else session_values['user_account_archive']
-            }
-        }
-        return command_chain_response
+        return self.action_cleanup_ewallet_session(**kwargs)
 
     def handle_user_action_switch_contact_list(self, **kwargs):
         log.debug('')
@@ -2883,22 +2916,6 @@ class EWallet(Base):
         switch_credit_ewallet = self.action_switch_credit_ewallet(**kwargs)
         return switch_credit_ewallet
 
-    def handle_user_action_switch(self, **kwargs):
-        log.debug('')
-        if not kwargs.get('switch'):
-            return self.error_no_user_action_switch_target_specified(kwargs)
-        handlers = {
-            'credit_ewallet': self.handle_user_action_switch_credit_ewallet,
-            'credit_clock': self.handle_user_action_switch_credit_clock,
-            'transfer_sheet': self.handle_user_action_switch_transfer_sheet,
-            'invoice_sheet': self.handle_user_action_switch_invoice_sheet,
-            'conversion_sheet': self.handle_user_action_switch_conversion_sheet,
-            'time_sheet': self.handle_user_action_switch_time_sheet,
-            'contact_list': self.handle_user_action_switch_contact_list,
-            'account': self.handle_user_action_switch_active_user_account,
-        }
-        return handlers[kwargs['switch']](**kwargs)
-
     def handle_user_action_edit_account_user_name(self, **kwargs):
         log.debug('')
         if not kwargs.get('user_name'):
@@ -2934,23 +2951,346 @@ class EWallet(Base):
         edit_user_phone = self.action_edit_account_user_phone(**kwargs)
         return False if edit_user_phone.get('failed') else True
 
-    def handle_user_action_edit_account(self, **kwargs):
+    # EVENT HANDLERS
+
+    # TODO
+    def handle_user_event_signal(self, **kwargs):
+        log.debug('TODO - UNIMPLEMENTED')
+    def handle_user_event_notification(self, **kwargs):
+        log.debug('TODO - UNIMPLEMENTED')
+    def handle_user_event_request(self, **kwargs):
+        log.debug('TODO - UNIMPLEMENTED')
+    def handle_system_event_signal(self, **kwargs):
+        log.debug('TODO - UNIMPLEMENTED')
+    def handle_system_event_notification(self, **kwargs):
+        log.debug('TODO - UNIMPLEMENTED')
+    def handle_system_event_request(self, **kwargs):
+        log.debug('TODO - UNIMPLEMENTED')
+
+    # JUMPTABLE HANDLERS
+
+    def handle_user_action_unlink(self, **kwargs):
         log.debug('')
-        user = self.fetch_active_session_user()
-        edit_value_set = {
-            'name': self.handle_user_action_edit_account_user_name(**kwargs),
-            'pass': self.handle_user_action_edit_account_user_pass(**kwargs),
-            'alias': self.handle_user_action_edit_account_user_alias(**kwargs),
-            'email': self.handle_user_action_edit_account_user_email(**kwargs),
-            'phone': self.handle_user_action_edit_account_user_phone(**kwargs),
+        if not kwargs.get('unlink'):
+            return self.error_no_unlink_target_specified()
+        handlers = {
+            'account': self.handle_user_action_unlink_account,
+            'credit_wallet': self.handle_user_action_unlink_credit_ewallet,
+            'credit_clock': self.handle_user_action_unlink_credit_clock,
+            'contact': self.handle_user_action_unlink_contact,
+            'invoice': self.handle_user_action_unlink_invoice,
+            'transfer': self.handle_user_action_unlink_transfer,
+            'time': self.handle_user_action_unlink_time,
+            'conversion': self.handle_user_action_unlink_conversion,
         }
-        return self.warning_no_user_account_values_edited(kwargs) if True not in \
-            edit_value_set.values() else {
-                'failed': False,
-                'account': user.fetch_user_name(),
-                'edit': edit_value_set,
-                'account_data': user.fetch_user_values(),
-            }
+        return handlers[kwargs['unlink']](**kwargs)
+
+    def handle_user_action_unlink_conversion(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('conversion'):
+            return self.error_no_unlink_target_specified()
+        handlers = {
+            'list': self.handle_user_action_unlink_conversion_list,
+            'record': self.handle_user_action_unlink_conversion_record,
+        }
+        return handlers[kwargs['conversion']](**kwargs)
+
+    def handle_user_action_unlink_time(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('time'):
+            return self.error_no_unlink_target_specified()
+        handlers = {
+            'list': self.handle_user_action_unlink_time_list,
+            'record': self.handle_user_action_unlink_time_record,
+        }
+        return handlers[kwargs['time']](**kwargs)
+
+    def handle_user_action_unlink_transfer(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('transfer'):
+            return self.error_no_unlink_target_specified(kwargs)
+        handlers = {
+            'list': self.handle_user_action_unlink_transfer_list,
+            'record': self.handle_user_action_unlink_transfer_record,
+        }
+        return handlers[kwargs['transfer']](**kwargs)
+
+    def handle_user_action_unlink_invoice(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('invoice'):
+            return self.error_no_unlink_target_specified()
+        handlers = {
+            'list': self.handle_user_action_unlink_invoice_list,
+            'record': self.handle_user_action_unlink_invoice_record,
+        }
+        return handlers[kwargs['invoice']](**kwargs)
+
+    def handle_user_action_unlink_contact(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('contact'):
+            return self.error_no_unlink_target_specified()
+        handlers = {
+            'list': self.handle_user_action_unlink_contact_list,
+            'record': self.handle_user_action_unlink_contact_record,
+        }
+        return handlers[kwargs['contact']](**kwargs)
+
+    def handle_user_action_view(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('view'):
+            return self.error_no_user_action_view_target_specified(kwargs)
+        handlers = {
+            'account': self.handle_user_action_view_user_account,
+            'credit_wallet': self.handle_user_action_view_credit_wallet,
+            'credit_clock': self.handle_user_action_view_credit_clock,
+            'contact': self.handle_user_action_view_contact,
+            'invoice': self.handle_user_action_view_invoice,
+            'transfer': self.handle_user_action_view_transfer,
+            'time': self.handle_user_action_view_time,
+            'conversion': self.handle_user_action_view_conversion,
+            'login': self.handle_user_action_view_login_records,
+            'logout': self.handle_user_action_view_logout_records,
+        }
+        return handlers[kwargs['view']](**kwargs)
+
+    def handle_user_action_view_conversion(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('conversion'):
+            return self.error_no_conversion_view_target_specified()
+        handlers = {
+            'list': self.handle_user_action_view_conversion_list,
+            'record': self.handle_user_action_view_conversion_record,
+        }
+        return handlers[kwargs['conversion']](**kwargs)
+
+    def handle_user_action_view_time(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('time'):
+            return self.error_no_time_view_target_specified()
+        handlers = {
+            'list': self.handle_user_action_view_time_list,
+            'record': self.handle_user_action_view_time_record,
+        }
+        return handlers[kwargs['time']](**kwargs)
+
+    def handle_user_action_view_transfer(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('transfer'):
+            return self.error_no_transfer_view_target_specified()
+        handlers = {
+            'list': self.handle_user_action_view_transfer_list,
+            'record': self.handle_user_action_view_transfer_record,
+        }
+        return handlers[kwargs['transfer']](**kwargs)
+
+    def handle_user_action_view_invoice(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('invoice'):
+            return self.error_no_invoice_target_specified()
+        handlers = {
+            'list': self.action_view_invoice_list,
+            'record': self.action_view_invoice_record,
+        }
+        return handlers[kwargs['invoice']](**kwargs)
+
+    def handle_user_action_view_contact(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('contact'):
+            return self.error_no_contact_target_specified()
+        handlers = {
+            'list': self.handle_user_action_view_contact_list,
+            'record': self.handle_user_action_view_contact_record,
+        }
+        return handlers[kwargs['contact']](**kwargs)
+
+    def handle_user_action_time(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('timer'):
+            return self.error_no_timer_action_specified()
+        handlers = {
+            'start': self.handle_user_action_start_credit_clock_timer,
+            'pause': self.handle_user_action_pause_credit_clock_timer,
+            'resume': self.handle_user_action_resume_credit_clock_timer,
+            'stop': self.handle_user_action_stop_credit_clock_timer,
+        }
+        return handlers[kwargs['timer']](**kwargs)
+
+    def handle_user_action_reset(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('target'):
+            return self.error_no_user_reset_target_specified()
+        handlers = {
+            'user_alias': self.handle_user_action_reset_alias,
+            'user_pass': self.handle_user_action_reset_password,
+            'user_email': self.handle_user_action_reset_email,
+            'user_phone': self.handle_user_action_reset_phone,
+        }
+        return handlers[kwargs['target']](**kwargs)
+
+    def handle_system_action_check(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('target'):
+            return self.error_no_system_check_target_specified()
+        handlers = {
+            'user': self.handle_system_action_check_user,
+            'session': self.handle_system_action_check_session,
+        }
+        return handlers[kwargs['target']](**kwargs)
+
+    def handle_system_action_update(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('target'):
+            return self.error_no_system_update_target_specified()
+        handlers = {
+            'user': self.handle_system_action_update_user,
+            'session': self.handle_system_action_update_session,
+        }
+        return handlers[kwargs['target']](**kwargs)
+
+    def handle_system_action_send_invoice(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('invoice'):
+            return self.error_no_invoice_target_specified()
+        handlers = {
+            'record': self.handle_system_action_send_invoice_record,
+            'list': self.handle_system_action_send_invoice_sheet,
+        }
+        return handlers[kwargs['invoice']](**kwargs)
+
+    def handle_system_action_send_transfer(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('transfer'):
+            return self.error_no_transfer_target_specified()
+        handlers = {
+            'record': self.handle_system_action_send_transfer_record,
+            'list': self.handle_system_action_send_transfer_sheet,
+        }
+        return handlers[kwargs['transfer']](**kwargs)
+
+    def handle_system_action_receive_invoice(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('invoice'):
+            return self.error_no_invoice_target_specified()
+        handlers = {
+            'record': self.handle_system_action_receive_invoice_record,
+            'list': self.handle_system_action_receive_invoice_sheet,
+        }
+        return handlers[kwargs['invoice']](**kwargs)
+
+    def handle_system_action_receive_transfer(self, **kwargs):
+        if not kwargs.get('transfer'):
+            return self.error_no_transfer_target_specified()
+        handlers = {
+            'record': self.handle_system_action_receive_transfer_record,
+            'list': self.handle_system_action_receive_transfer_sheet,
+        }
+        return handlers[kwargs['transfer']](**kwargs)
+
+    def handle_user_action_create_new_contact(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('contact'):
+            return self.error_no_contact_found()
+        handlers = {
+            'list': self.handle_user_action_create_new_contact_list,
+            'record': self.handle_user_action_create_new_contact_record,
+        }
+        return handlers[kwargs['contact']](**kwargs)
+
+    def handle_user_action_create(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('create'):
+            return self.error_no_user_create_target_specified()
+        handlers = {
+            'account': self.handle_user_action_create_new_user_account,
+            'credit_wallet': self.handle_user_action_create_new_credit_wallet,
+            'credit_clock': self.handle_user_action_create_new_credit_clock,
+            'transfer_sheet': self.handle_user_action_create_new_transfer_sheet,
+            'invoice_sheet': self.handle_user_action_create_new_invoice_sheet,
+            'conversion_sheet': self.handle_user_action_create_new_conversion_sheet,
+            'time_sheet': self.handle_user_action_create_new_time_sheet,
+            'transfer': self.handle_user_action_create_new_transfer,
+            'conversion': self.handle_user_action_create_new_conversion,
+            'contact': self.handle_user_action_create_new_contact,
+        }
+        return handlers[kwargs['create']](**kwargs)
+
+    def handle_user_action_create_new_conversion(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('conversion'):
+            return self.error_no_conversion_type_specified()
+        handlers = {
+            'credits2clock': self.handle_user_action_create_new_conversion_credits_to_clock,
+            'clock2credits': self.handle_user_action_create_new_conversion_clock_to_credits,
+        }
+        return handlers[kwargs['conversion']](**kwargs)
+
+    def handle_user_action_create_new_transfer(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('ttype'):
+            return self.error_no_transfer_type_specified()
+        handlers = {
+            'supply': self.handle_user_action_create_new_transfer_type_supply,
+            'pay': self.handle_user_action_create_new_transfer_type_pay,
+            'transfer': self.handle_user_action_create_new_transfer_type_transfer,
+        }
+        return handlers[kwargs['ttype']](**kwargs)
+
+    def handle_system_action_cleanup(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('cleanup'):
+            return self.error_no_system_action_cleanup_target_specified(kwargs)
+        handlers = {
+            'session': self.handle_system_action_cleanup_ewallet_session,
+        }
+        return handlers[kwargs['cleanup']](**kwargs)
+
+    def handle_system_action_interogate_ewallet_session(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('session'):
+            return self.error_no_system_action_interogate_ewallet_session_target_specified(
+                kwargs
+            )
+        handlers = {
+            'expired': self.handle_system_action_interogate_session_expired,
+            'state': self.handle_system_action_interogate_session_state,
+        }
+        return handlers[kwargs['session']](**kwargs)
+
+    def handle_user_action_recover(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('recover'):
+            return self.error_no_user_action_recover_target_specified(kwargs)
+        handlers = {
+            'account': self.handle_user_action_recover_account,
+        }
+        return self.warning_invalid_user_action_recover_target(kwargs) if \
+            kwargs['recover'] not in handlers.keys() else \
+            handlers[kwargs['recover']](**kwargs)
+
+    def handle_system_action_interogate(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('interogate'):
+            return self.error_no_system_action_interogate_target_specified(kwargs)
+        handlers = {
+            'session': self.handle_system_action_interogate_ewallet_session,
+        }
+        return handlers[kwargs['interogate']](**kwargs)
+
+    def handle_user_action_switch(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('switch'):
+            return self.error_no_user_action_switch_target_specified(kwargs)
+        handlers = {
+            'credit_ewallet': self.handle_user_action_switch_credit_ewallet,
+            'credit_clock': self.handle_user_action_switch_credit_clock,
+            'transfer_sheet': self.handle_user_action_switch_transfer_sheet,
+            'invoice_sheet': self.handle_user_action_switch_invoice_sheet,
+            'conversion_sheet': self.handle_user_action_switch_conversion_sheet,
+            'time_sheet': self.handle_user_action_switch_time_sheet,
+            'contact_list': self.handle_user_action_switch_contact_list,
+            'account': self.handle_user_action_switch_active_account,
+        }
+        return handlers[kwargs['switch']](**kwargs)
 
     def handle_user_action_edit(self, **kwargs):
         log.debug('')
@@ -2961,250 +3301,27 @@ class EWallet(Base):
         }
         return handlers[kwargs['edit']](**kwargs)
 
-    def handle_system_action_send_invoice(self, **kwargs):
-        '''
-        [ NOTE   ]: Jump table handler for system action 'send invoice'.
-        [ INPUT  ]: invoice=('record' | 'list')
-        [ RETURN ]: Action variable correspondent.
-        '''
-        log.debug('')
-        if not kwargs.get('invoice'):
-            return self.error_no_invoice_target_specified()
-        _handlers = {
-            'record': self.action_send_invoice_record,
-            'list': self.action_send_invoice_sheet,
-        }
-        return _handlers[kwargs['invoice']](**kwargs)
-
-    def handle_system_action_send_transfer(self, **kwargs):
-        '''
-        [ NOTE   ]: Jump table handler for system action 'send transfer'.
-        [ INPUT  ]: transfer=('record' | 'list')
-        [ RETURN ]: Action variable correspondent.
-        '''
-        log.debug('')
-        if not kwargs.get('transfer'):
-            return self.error_no_transfer_target_specified()
-        _handlers = {
-            'record': self.action_send_transfer_record,
-            'list': self.action_send_transfer_sheet,
-        }
-        return _handlers[kwargs['transfer']](**kwargs)
-
-    def handle_system_action_receive_invoice(self, **kwargs):
-        '''
-        [ NOTE   ]: Jump table handler for system action 'receive invoice'.
-        [ INPUT  ]: invoice=('record' | 'list')
-        [ RETURN ]: Action variable correspondent.
-        '''
-        log.debug('')
-        if not kwargs.get('invoice'):
-            return self.error_no_invoice_target_specified()
-        _handlers = {
-            'record': self.action_receive_invoice_record,
-            'list': self.action_receive_invoice_sheet,
-        }
-        return _handlers[kwargs['invoice']](**kwargs)
-
-    def handle_system_action_receive_transfer(self, **kwargs):
-        '''
-        [ NOTE   ]: Jump table handler for system action 'receive transfer'.
-        [ INPUT  ]: transfer=('record' | 'list')
-        [ RETURN ]: Action variable correspondent
-        '''
-        if not kwargs.get('transfer'):
-            return self.error_no_transfer_target_specified()
-        _handlers = {
-            'record': self.action_receive_transfer_record,
-            'list': self.action_receive_transfer_sheet,
-        }
-        return _handlers[kwargs['transfer']](**kwargs)
-
     def handle_system_action_send(self, **kwargs):
-        '''
-        [ NOTE   ]: Jump table handler for system action category type 'send'.
-        [ INPUT  ]: send=('invoice' | 'transfer')
-        [ RETURN ]: Action variable correspondent.
-        '''
         if not kwargs.get('send'):
             return self.error_no_system_action_specified()
-        _handlers = {
+        handlers = {
             'invoice': self.handle_system_action_send_invoice,
             'transfer': self.handle_system_action_send_transfer,
         }
-        return _handlers[kwargs['send']](**kwargs)
+        return handlers[kwargs['send']](**kwargs)
 
     def handle_system_action_receive(self, **kwargs):
-        '''
-        [ NOTE   ]: Jump table handler for system action category type 'receive'.
-        [ INPUT  ]: receive=('invoice' | 'transfer')
-        [ RETURN ]: Action variable correspondent.
-        '''
         if not kwargs.get('receive'):
             return self.error_no_system_action_specified()
-        _handlers = {
+        handlers = {
             'invoice': self.handle_system_action_receive_invoice,
             'transfer': self.handle_system_action_receive_transfer,
         }
-        return _handlers[kwargs['send']](**kwargs)
-
-    def handle_system_action_update(self, **kwargs):
-        '''
-        [ NOTE   ]: Jump table handler for system action category type 'update'.
-        [ INPUT  ]: target=('user' | 'session')
-        [ RETURN ]: Action variable correspondent.
-        '''
-        log.debug('')
-        if not kwargs.get('target'):
-            return self.error_no_system_update_target_specified()
-        _handlers = {
-            'user': self.action_system_user_update,
-            'session': self.action_system_session_update,
-        }
-        return _handlers[kwargs['target']](**kwargs)
-
-    def handle_system_action_check(self, **kwargs):
-        '''
-        [ NOTE   ]: Jump table handler for system action category type 'check'.
-        [ INPUT  ]: target=('user' | 'session')
-        [ RETURN ]: Action variable correspondent.
-        '''
-        log.debug('')
-        if not kwargs.get('target'):
-            return self.error_no_system_check_target_specified()
-        _handlers = {
-                'user': self.action_system_user_check,
-                'session': self.action_system_session_check,
-                }
-        return _handlers[kwargs['target']](**kwargs)
-
-    def handle_user_action_reset(self, **kwargs):
-        '''
-        [ NOTE   ]: Jump table handler for user action category type 'reset'.
-        [ INPUT  ]: target=('user_alias' | 'user_pass' | 'user_email' | 'user_phone')
-        [ RETURN ]: Action variable correspondent.
-        '''
-        log.debug('')
-        if not kwargs.get('target'):
-            return self.error_no_user_reset_target_specified()
-        _handlers = {
-                'user_alias': self.action_reset_user_alias,
-                'user_pass': self.action_reset_user_password,
-                'user_email': self.action_reset_user_email,
-                'user_phone': self.action_reset_user_phone,
-                }
-        return _handlers[kwargs['target']](**kwargs)
-
-    def handle_user_action_create(self, **kwargs):
-        '''
-        [ NOTE   ]: Jump table handler for user action category type 'create'.
-        [ INPUT  ]: create=('account' | 'credit_wallet' | 'credit_clock' | 'transfer' | 'conversion' | 'contact')
-        [ RETURN ]: Action variable correspondent.
-        '''
-        log.debug('')
-        if not kwargs.get('create'):
-            return self.error_no_user_create_target_specified()
-        handlers = {
-            'account': self.action_create_new_user_account,
-            'credit_wallet': self.action_create_new_credit_wallet,
-            'credit_clock': self.action_create_new_credit_clock,
-            'transfer_sheet': self.action_create_new_transfer_sheet,
-            'invoice_sheet': self.action_create_new_invoice_sheet,
-            'conversion_sheet': self.action_create_new_conversion_sheet,
-            'time_sheet': self.action_create_new_time_sheet,
-            'transfer': self.action_create_new_transfer,
-            'conversion': self.action_create_new_conversion,
-            'contact': self.action_create_new_contact,
-        }
-        return handlers[kwargs['create']](**kwargs)
-
-    def handle_user_action_time(self, **kwargs):
-        '''
-        [ NOTE   ]: Jump table handler for user action category type 'time'.
-        [ INPUT  ]: timer=('start' | 'pause' | 'resume' | 'stop')
-        [ RETURN ]: Action variable correspondent.
-        '''
-        log.debug('')
-        if not kwargs.get('timer'):
-            return self.error_no_timer_action_specified()
-        _handlers = {
-                'start': self.action_start_credit_clock_timer,
-                'pause': self.action_pause_credit_clock_timer,
-                'resume': self.action_resume_credit_clock_timer,
-                'stop': self.action_stop_credit_clock_timer,
-                }
-        return _handlers[kwargs['timer']](**kwargs)
-
-    def handle_user_action_view(self, **kwargs):
-        '''
-        [ NOTE   ]: Jump table handler for user action category type 'view'.
-        [ INPUT  ]: view=('account' | 'credit_wallet' | 'credit_clock' |
-                          'contact' | 'invoice' | 'transfer' | 'time' |
-                          'conversion')
-        [ RETURN ]: Action variable correspondent.
-        '''
-        log.debug('')
-        if not kwargs.get('view'):
-            return self.error_no_user_action_view_target_specified(kwargs)
-        handlers = {
-            'account': self.action_view_user_account,
-            'credit_wallet': self.action_view_credit_wallet,
-            'credit_clock': self.action_view_credit_clock,
-            'contact': self.action_view_contact,
-            'invoice': self.action_view_invoice,
-            'transfer': self.action_view_transfer,
-            'time': self.action_view_time,
-            'conversion': self.action_view_conversion,
-            'login': self.action_view_login_records,
-            'logout': self.action_view_logout_records,
-        }
-        return handlers[kwargs['view']](**kwargs)
-
-    def handle_user_action_unlink(self, **kwargs):
-        '''
-        [ NOTE   ]: Jump table handler for user action category type 'unlink'.
-        [ INPUT  ]: unlink=('account' | 'credit_wallet' | 'credit_clock' |
-                            'contact' | 'invoice' | 'transfer' | 'time' |
-                            'conversion')
-        [ RETURN ]: Action variable correspondent.
-        '''
-        log.debug('')
-        if not kwargs.get('unlink'):
-            return self.error_no_unlink_target_specified()
-        _handlers = {
-            'account': self.action_unlink_user_account,
-            'credit_wallet': self.action_unlink_credit_wallet,
-            'credit_clock': self.action_unlink_credit_clock,
-            'contact': self.action_unlink_contact,
-            'invoice': self.action_unlink_invoice,
-            'transfer': self.action_unlink_transfer,
-            'time': self.action_unlink_time,
-            'conversion': self.action_unlink_conversion,
-        }
-        return _handlers[kwargs['unlink']](**kwargs)
-
-    # TODO
-    def handle_user_event_signal(self, **kwargs):
-        pass
-    def handle_user_event_notification(self, **kwargs):
-        pass
-    def handle_user_event_request(self, **kwargs):
-        pass
-    def handle_system_event_signal(self, **kwargs):
-        pass
-    def handle_system_event_notification(self, **kwargs):
-        pass
-    def handle_system_event_request(self, **kwargs):
-        pass
+        return handlers[kwargs['send']](**kwargs)
 
     # CONTROLLERS
 
     def ewallet_user_action_controller(self, **kwargs):
-        '''
-        [ NOTE   ]: User action controller, accessible to external user api calls.
-        [ INPUT  ]: action=('login' | 'logout' | 'create' | 'time' | 'reset' | 'view' | 'unlink')
-        [ RETURN ]: Action variable correspondent.
-        '''
         log.debug('')
         if not kwargs.get('action'):
             return self.error_no_user_action_specified()
@@ -3223,43 +3340,28 @@ class EWallet(Base):
         return handlers[kwargs['action']](**kwargs)
 
     def ewallet_user_event_controller(self, **kwargs):
-        '''
-        [ NOTE   ]: User event controller, accessible to external user api calls.
-        [ INPUT  ]: event=('signal' | 'notification' | 'request')
-        [ RETURN ]: Event variable correspondent.
-        '''
         log.debug('')
         if not kwargs.get('event'):
             return self.error_no_user_event_specified()
-        _handlers = {
+        handlers = {
             'signal': self.handle_user_event_signal,
             'notification': self.handle_user_event_notification,
             'request': self.handle_user_event_request,
         }
-        return _handlers[kwargs['event']](**kwargs)
+        return handlers[kwargs['event']](**kwargs)
 
     def ewallet_system_event_controller(self, **kwargs):
-        '''
-        [ NOTE   ]: System event controller, not accessible to external user api calls.
-        [ INPUT  ]: event=('signal' | 'notification' | 'request')
-        [ RETURN ]: Event variable correspondent.
-        '''
         log.debug('')
         if not kwargs.get('event'):
             return self.error_no_system_event_specified()
-        _handlers = {
+        handlers = {
             'signal': self.handle_system_event_signal,
             'notification': self.handle_system_event_notification,
             'request': self.handle_system_event_request,
         }
-        return _handlers[kwargs['event']](**kwargs)
+        return handlers[kwargs['event']](**kwargs)
 
     def ewallet_system_action_controller(self, **kwargs):
-        '''
-        [ NOTE   ]: System action controller, not accessible to user api calls.
-        [ INPUT  ]: action=('check' | 'update' | 'send' | 'receive')
-        [ RETURN ]: Action variable correspondent.
-        '''
         log.debug('')
         if not kwargs.get('action'):
             return self.error_no_system_action_specified()
@@ -3274,49 +3376,39 @@ class EWallet(Base):
         return handlers[kwargs['action']](**kwargs)
 
     def ewallet_system_controller(self, **kwargs):
-        '''
-        [ NOTE   ]: Low level command interface for system actions and events.
-        [ INPUT  ]: ctype=('action' | 'event')
-        [ RETURN ]: Action/Event variable correspondent.
-        '''
         log.debug('')
         if not kwargs.get('ctype'):
             return self.error_no_system_controller_type_specified()
-        _handlers = {
+        handlers = {
             'action': self.ewallet_system_action_controller,
             'event': self.ewallet_system_event_controller,
         }
-        return _handlers[kwargs['ctype']](**kwargs)
+        return handlers[kwargs['ctype']](**kwargs)
 
     def ewallet_user_controller(self, **kwargs):
-        '''
-        [ NOTE   ]: High level command interface for user actions and events.
-        [ INPUT  ]: ctype=('action' | 'event')
-        [ RETURN ]: Action/Event variable correspondent.
-        '''
         log.debug('')
         if not kwargs.get('ctype'):
             return self.error_no_user_controller_type_specified()
-        _handlers = {
+        handlers = {
             'action': self.ewallet_user_action_controller,
             'event': self.ewallet_user_event_controller,
         }
-        return _handlers[kwargs['ctype']](**kwargs)
+        return handlers[kwargs['ctype']](**kwargs)
 
     def ewallet_controller(self, **kwargs):
         '''
         [ NOTE   ]: Main command interface for EWallet session.
-        [ INPUT  ]: controller=('system' | 'user' | 'test')
+        [ INPUT  ]: controller=('system' | 'user')
         [ RETURN ]: Action/Event variable correspondent.
         '''
         log.debug('')
         if not kwargs.get('controller'):
             return self.error_no_ewallet_controller_specified()
-        _controllers = {
+        controllers = {
             'system': self.ewallet_system_controller,
             'user': self.ewallet_user_controller,
         }
-        return _controllers[kwargs['controller']](**kwargs)
+        return controllers[kwargs['controller']](**kwargs)
 
     # WARNINGS
     '''
