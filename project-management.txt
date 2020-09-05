@@ -69,9 +69,9 @@
     - x - User action Account Logout
     - x - User action Supply Credits
     - x - User action Pay Credits
-    -   - User action Convert Credits2Clock
-    - User action Convert Clock2Credits
-    - User action Add Contact Record
+    - x - User action Convert Credits2Clock
+    - x - User action Convert Clock2Credits
+    -   - User action Add Contact Record
     - User action Create Contact List
     - User action TransferCredits
     - User action Edit Account
