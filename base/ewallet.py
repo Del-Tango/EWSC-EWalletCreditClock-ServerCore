@@ -539,15 +539,29 @@ class EWallet(Base):
 #   @pysnooper.snoop()
     def recover_user_account(self, **kwargs):
         log.debug('')
-        if not kwargs.get('user'):
+        user_account = kwargs.get('user') or \
+            self.fetch_active_session_user()
+        if not user_account or isinstance(user_account, dict) and \
+                user_account.get('failed'):
             return self.error_no_user_account_found(kwargs)
-        kwargs['user'].set_to_unlink(False)
-        kwargs['user'].set_to_unlink_timestamp(None)
+        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
+            kwargs, 'user'
+        )
+        try:
+            user_account.set_to_unlink(False)
+            user_account.set_to_unlink_timestamp(None)
+        except Exception as e:
+            return self.error_could_not_recover_user_account(kwargs, e)
+        if user_account.to_unlink:
+            kwargs['active_session'].rollback()
+            return self.warning_could_not_recover_user_account(user_account, kwargs)
         kwargs['active_session'].commit()
-        return {
+        user_email = user_account.fetch_user_email()
+        command_chain_response = {
             'failed': False,
-            'account': kwargs['user'].fetch_user_email(),
+            'account': user_email,
         }
+        return command_chain_response
 
     # UNLINKERS
 
@@ -746,7 +760,7 @@ class EWallet(Base):
     def action_recover_user_account(self, **kwargs):
         log.debug('')
         user = self.fetch_active_session_user()
-        recover_account = self.action_recover_user_account(user=user, **kwargs)
+        recover_account = self.recover_user_account(user=user, **kwargs)
         if not recover_account or isinstance(recover_account, dict) and \
                 recover_account.get('failed'):
             kwargs['active_session'].rollback()
@@ -820,33 +834,6 @@ class EWallet(Base):
             'failed': False,
             'ewallet_session': self.fetch_active_session_id(),
             'session_data': session_values,
-        }
-        return command_chain_response
-
-#   @pysnooper.snoop()
-    def action_recover_user_account(self, **kwargs):
-        log.debug('')
-        user_account = kwargs.get('user') or \
-            self.fetch_active_session_user()
-        if not user_account or isinstance(user_account, dict) and \
-                user_account.get('failed'):
-            return self.error_no_user_account_found(kwargs)
-        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
-            kwargs, 'user'
-        )
-        try:
-            user_account.set_to_unlink(False)
-            user_account.set_to_unlink_timestamp(None)
-        except Exception as e:
-            return self.error_could_not_recover_user_account(kwargs, e)
-        if user_account.to_unlink:
-            kwargs['active_session'].rollback()
-            return self.warning_could_not_recover_user_account(user_account, kwargs)
-        kwargs['active_session'].commit()
-        user_email = user_account.fetch_user_email()
-        command_chain_response = {
-            'failed': False,
-            'account': user_email,
         }
         return command_chain_response
 
@@ -2687,7 +2674,7 @@ class EWallet(Base):
         log.debug('')
         return self.action_view_transfer_list(**kwargs)
 
-    def handle_user_action_view_tranfer_record(self, **kwargs):
+    def handle_user_action_view_transfer_record(self, **kwargs):
         log.debug('')
         return self.action_view_transfer_record(**kwargs)
 
@@ -2709,7 +2696,7 @@ class EWallet(Base):
 
     def handle_user_action_view_account(self, **kwargs):
         log.debug('')
-        return self.action_view_uesr_account(**kwargs)
+        return self.action_view_user_account(**kwargs)
 
     def handle_user_action_view_credit_ewallet(self, **kwargs):
         log.debug('')
@@ -3040,8 +3027,8 @@ class EWallet(Base):
         if not kwargs.get('view'):
             return self.error_no_user_action_view_target_specified(kwargs)
         handlers = {
-            'account': self.handle_user_action_view_user_account,
-            'credit_wallet': self.handle_user_action_view_credit_wallet,
+            'account': self.handle_user_action_view_account,
+            'credit_wallet': self.handle_user_action_view_credit_ewallet,
             'credit_clock': self.handle_user_action_view_credit_clock,
             'contact': self.handle_user_action_view_contact,
             'invoice': self.handle_user_action_view_invoice,
@@ -5109,6 +5096,23 @@ class EWallet(Base):
         return False
 
 
+################################################################################
+# CODE DUMP
+################################################################################
+
+#   @pysnooper.snoop()
+#   def recover_user_account(self, **kwargs):
+#       log.debug('')
+#       if not kwargs.get('user'):
+#           return self.error_no_user_account_found(kwargs)
+#       kwargs['user'].set_to_unlink(False)
+#       kwargs['user'].set_to_unlink_timestamp(None)
+#       kwargs['active_session'].commit()
+#       return {
+#           'failed': False,
+#           'account': kwargs['user'].fetch_user_email(),
+#       }
+
 #if __name__ == '__main__':
 
     # TODO - Uncommend, needed for init
@@ -5120,7 +5124,4 @@ class EWallet(Base):
 #   _working_session.commit()
 #   system_user = res_utils.create_system_user(ewallet)
 
-################################################################################
-# CODE DUMP
-################################################################################
 

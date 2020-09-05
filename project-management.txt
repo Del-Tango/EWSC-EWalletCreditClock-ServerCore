@@ -58,6 +58,10 @@
 - EWallet Credit Clock - Server Core
 ################################################################################
 
+- BUG REPORT:
+    - 05/09/2020 16:22
+        - Detected possible memory leak upon executing EWSC test suit.
+
 - x - Update write dates for:
     - x - Session Manager
         - x - System action New Worker

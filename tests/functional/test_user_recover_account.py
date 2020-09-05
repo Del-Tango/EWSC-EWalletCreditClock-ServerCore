@@ -43,7 +43,7 @@ class TestEWalletSessionManageUserActionRecoverAccount(unittest.TestCase):
             session_token=cls.session_token, user_name=cls.user_name_1,
             user_pass=cls.user_pass_1, user_email=cls.user_email_1
         )
-        # Create new user account to user as Client account mockup
+        # Create new user account to use as Client account mockup
         new_account = session_manager.session_manager_controller(
             controller='client', ctype='action', action='new',
             new='account', client_id=cls.client_id,
