@@ -2590,6 +2590,18 @@ class EWallet(Base):
     [ NOTES ]: Enviroment checks for proper action execution are performed here.
     '''
 
+    def handle_user_action_view_login_records(self, **kwargs):
+        log.debug('')
+        check = self.check_user_logged_in()
+        return self.warning_user_not_logged_in(check, kwargs) if not check \
+            else self.action_view_login_records(**kwargs)
+
+    def handle_user_action_view_logout_records(self, **kwargs):
+        log.debug('')
+        check = self.check_user_logged_in()
+        return self.warning_user_not_logged_in(check, kwargs) if not check \
+            else self.action_view_logout_records(**kwargs)
+
     def handle_user_action_view_invoice_list(self, **kwargs):
         log.debug('')
         check = self.check_user_logged_in()
@@ -2809,14 +2821,6 @@ class EWallet(Base):
     def handle_user_action_unlink_credit_clock(self, **kwargs):
         log.debug('')
         return self.action_unlink_credit_clock(**kwargs)
-
-    def handle_user_action_view_login_records(self, **kwargs):
-        log.debug('')
-        return self.action_view_login_records(**kwargs)
-
-    def handle_user_action_view_logout_records(self, **kwargs):
-        log.debug('')
-        return self.action_view_logout_records(**kwargs)
 
     def handle_user_action_reset_alias(self, **kwargs):
         log.debug('')
