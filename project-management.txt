@@ -100,15 +100,15 @@
     - x - User action Create Invoice Sheet
     - x - User action Create Conversion Sheet
     - x - User action Create Time Sheet
-    -   - User action Switch Account
-    -   - User action Switch Credit EWallet
-    -   - User action Switch Credit Clock
-    - User action Switch Transfer Sheet
-    - User action Switch Invoice Sheet
-    - User action Switch Conversion Sheet
-    - User action Switch Time Sheet
-    - User action Switch Contact List
-    - User action Unlink Account
+    - x - User action Switch Account
+    - x - User action Switch Credit EWallet
+    - x - User action Switch Credit Clock
+    - x - User action Switch Transfer Sheet
+    - x - User action Switch Invoice Sheet
+    - x - User action Switch Conversion Sheet
+    - x - User action Switch Time Sheet
+    - x - User action Switch Contact List
+    -   - User action Unlink Account
     - User action Unlink Contact List
     - User action Unlink Contact Record
     - User action Unlink Conversion Sheet
