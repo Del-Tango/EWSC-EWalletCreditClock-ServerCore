@@ -597,6 +597,11 @@ class ResUser(Base):
 
     # CHECKERS
 
+    def check_contact_list_belongs_to_user(self, contact_list):
+        log.debug('')
+        return False if contact_list not in self.user_contact_list_archive \
+            else True
+
     def check_credit_ewallet_belongs_to_user(self, ewallet):
         log.debug('')
         return False if ewallet not in self.user_credit_wallet_archive \
@@ -707,6 +712,31 @@ class ResUser(Base):
                 'failed': False,
                 'user_email': set_user_email,
             }
+
+    def action_switch_contact_list(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('list_id'):
+            return self.error_no_contact_list_id_found()
+        log.info('Attempting to fetch user contact list...')
+        contact_list = self.fetch_user_contact_list_by_id(kwargs['list_id'])
+        if not contact_list or isinstance(contact_list, dict) and \
+                contact_list.get('failed'):
+            return self.warning_could_not_fetch_contact_list(
+                kwargs, contact_list
+            )
+        check = self.check_contact_list_belongs_to_user(contact_list)
+        if not check:
+            return self.warning_contact_list_does_not_belong_to_user(
+                kwargs, contact_list, check
+            )
+        switch = self.set_user_contact_list(contact_list)
+        if not switch or isinstance(switch, dict) and \
+                switch.get('failed'):
+            return self.error_could_not_switch_contact_list(
+                kwargs, contact_list, check, switch
+            )
+        log.info('Successfully switched user contact list.')
+        return contact_list
 
     def action_switch_time_sheet(self, **kwargs):
         log.debug('')
@@ -962,19 +992,6 @@ class ResUser(Base):
         log.info('Successfully removed user contact list by id.')
         return kwargs['list_id']
 
-    def action_switch_contact_list(self, **kwargs):
-        log.debug('')
-        if not kwargs.get('list_id'):
-            return self.error_no_contact_list_id_found()
-        log.info('Attempting to fetch user contact list...')
-        contact_list = self.fetch_user_contact_list_by_id(kwargs['list_id'])
-        if not contact_list:
-            return self.warning_could_not_fetch_contact_list()
-        switch = self.set_user_contact_list(contact_list)
-        if switch:
-            log.info('Successfully switched user contact list.')
-        return contact_list
-
     def action_edit_user_name(self, **kwargs):
         log.debug('')
         set_user_name = self.set_user_name(name=kwargs['user_name'])
@@ -1213,6 +1230,25 @@ class ResUser(Base):
     [ TODO ]: Fetch error messages from message file by key codes.
     '''
 
+    def warning_contact_list_does_not_belong_to_user(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Contact list does not belong to active user. '
+                       'Details: {}'.format(args),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
+
+    def warning_could_not_fetch_contact_list(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Something went wrong. '
+                       'Could not fetch contact list. '
+                       'Details: {}'.format(args),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
+
     def warning_could_not_switch_time_sheet(self, *args):
         command_chain_response = {
             'failed': True,
@@ -1339,13 +1375,6 @@ class ResUser(Base):
         )
         return False
 
-    def warning_could_not_fetch_contact_list(self):
-        log.warning(
-                'Something went wrong. '
-                'Could not fetch contact list.'
-                )
-        return False
-
     def warning_could_not_fetch_credit_clock(self):
         log.warning(
                 'Something went wrong. '
@@ -1357,6 +1386,16 @@ class ResUser(Base):
     '''
     [ TODO ]: Fetch error messages from message file by key codes.
     '''
+
+    def error_could_not_switch_contact_list(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Something went wrong. '
+                     'Could not switch contact list. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
 
     def error_invalid_user_account_state_code(self, *args):
         command_chain_response = {

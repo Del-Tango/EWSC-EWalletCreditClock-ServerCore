@@ -75,7 +75,7 @@ class TestEWalletSessionManageUserActionSwitchContactList(unittest.TestCase):
         print('\n[ * ]: User action Switch Contact List')
         instruction_set = {
             'controller': 'client', 'ctype': 'action', 'action': 'switch',
-            'switch': 'contact', 'contact': 'list', 'list_id': 2,
+            'switch': 'contact', 'contact': 'list', 'list_id': 3,
             'client_id': self.client_id, 'session_token': self.session_token
         }
         switch = self.session_manager.session_manager_controller(

@@ -679,6 +679,33 @@ class EWallet(Base):
         }
         return command_chain_response
 
+    def action_switch_contact_list(self, **kwargs):
+        log.debug('')
+        active_user = self.fetch_active_session_user()
+        if not active_user:
+            return self.error_no_session_active_user_found(kwargs)
+        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
+            kwargs, 'ctype', 'action', 'target'
+        )
+        switch_contact_list = active_user.user_controller(
+            ctype='action', action='switch', target='contact_list',
+            **sanitized_command_chain
+        )
+        if not switch_contact_list or isinstance(switch_contact_list, dict) and \
+                switch_contact_list.get('failed'):
+            kwargs['active_session'].rollback()
+            return self.warning_could_not_switch_contact_list(
+                kwargs, active_user, switch_contact_list
+            )
+        kwargs['active_session'].commit()
+        log.info('Successfully switched contact list.')
+        command_chain_response = {
+            'failed': False,
+            'contact_list': switch_contact_list.fetch_contact_list_id(),
+            'list_data': switch_contact_list.fetch_contact_list_values(),
+        }
+        return command_chain_response
+
     def action_switch_time_sheet(self, **kwargs):
         log.debug('')
         active_user = self.fetch_active_session_user()
@@ -2227,33 +2254,6 @@ class EWallet(Base):
         kwargs['active_session'].commit()
         return unlink_record
 
-    def action_switch_contact_list(self, **kwargs):
-        log.debug('')
-        active_user = self.fetch_active_session_user()
-        if not active_user:
-            return self.error_no_session_active_user_found(kwargs)
-        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
-            kwargs, 'ctype', 'action', 'target'
-        )
-        switch_contact_list = active_user.user_controller(
-            ctype='action', action='switch', target='contact_list',
-            **sanitized_command_chain
-        )
-        if not switch_contact_list or isinstance(switch_contact_list, dict) and \
-                switch_contact_list.get('failed'):
-            kwargs['active_session'].rollback()
-            return self.warning_could_not_switch_contact_list(
-                active_user.fetch_user_name(), kwargs
-            )
-        kwargs['active_session'].commit()
-        log.info('Successfully switched contact list.')
-        command_chain_response = {
-            'failed': False,
-            'contact_list': switch_contact_list.fetch_contact_list_id(),
-            'list_data': switch_contact_list.fetch_contact_list_values(),
-        }
-        return command_chain_response
-
     def action_create_new_contact_list(self, **kwargs):
         log.debug('')
         active_user = self.fetch_active_session_user()
@@ -3368,6 +3368,16 @@ class EWallet(Base):
     [ TODO ]: Fetch warning messages from message file by key codes.
     '''
 
+    def warning_could_not_switch_contact_list(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Something went wrong. '
+                       'Could not switch contact list. '
+                       'Details: {}'.format(args),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
+
     def warning_could_not_switch_time_sheet(self, *args):
         command_chain_response = {
             'failed': True,
@@ -3819,15 +3829,6 @@ class EWallet(Base):
         command_chain_response = {
             'failed': True,
             'warning': 'Something went wrong. Could not unlink transfer sheet record for user {}. '\
-                       'Command chain details : {}'.format(user_name, command_chain),
-        }
-        log.warning(command_chain_response['warning'])
-        return command_chain_response
-
-    def warning_could_not_switch_contact_list(self, user_name, command_chain):
-        command_chain_response = {
-            'failed': True,
-            'warning': 'Something went wrong. Could not switch contact list for ewallet user {}. '\
                        'Command chain details : {}'.format(user_name, command_chain),
         }
         log.warning(command_chain_response['warning'])

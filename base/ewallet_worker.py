@@ -4011,6 +4011,16 @@ class EWalletWorker():
     [ TODO ]: Fetch warning messages from message file by key codes.
     '''
 
+    def warning_could_not_switch_contact_list(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Something went wrong. '
+                       'Could not switch contact list. '
+                       'Details: {}'.format(args),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
+
     def warning_could_not_create_new_ewallet_system_session(self, *args):
         command_chain_response = {
             'failed': True,
