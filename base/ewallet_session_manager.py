@@ -2245,7 +2245,7 @@ class EWalletSessionManager():
                 and instruction_set_validation.get('failed'):
             return instruction_set_validation
         view_transfer_record = self.action_execute_user_instruction_set(**kwargs)
-        return self.warning_could_not_view_transfer_record(
+        return self.warning_could_not_view_transfer_sheet_record(
             kwargs, view_transfer_record
         ) if not view_transfer_record or isinstance(view_transfer_record, dict) and \
             view_transfer_record.get('failed') else view_transfer_record

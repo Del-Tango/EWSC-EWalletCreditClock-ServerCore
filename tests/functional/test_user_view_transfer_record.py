@@ -94,7 +94,7 @@ class TestEWalletSessionManageUserActionViewTransferRecord(unittest.TestCase):
         print('\n[ * ]: User action View Transfer Record')
         instruction_set = {
             'controller': 'client', 'ctype': 'action', 'action': 'view',
-            'view': 'transfer', 'transfer': 'record', 'record_id': 3,
+            'view': 'transfer', 'transfer': 'record', 'record_id': 2,
             'client_id': self.client_id, 'session_token': self.session_token
         }
         view = self.session_manager.session_manager_controller(

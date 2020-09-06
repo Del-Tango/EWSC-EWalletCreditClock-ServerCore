@@ -72,8 +72,8 @@
 
 - Impose entity owner restrictions on user actions
     - x - User action View Contact Record
-    -   - User action View Transfer Record
-    - User action View Time Record
+    - x - User action View Transfer Record
+    -   - User action View Time Record
     - User action View Conversion Record
     - User action View Invoice Record
     - User action Switch Account

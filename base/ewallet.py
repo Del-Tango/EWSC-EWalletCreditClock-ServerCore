@@ -679,6 +679,48 @@ class EWallet(Base):
         }
         return command_chain_response
 
+    def action_view_transfer_record(self, **kwargs):
+        '''
+        [ NOTE   ]: User action 'view transfer record', accessible from external api call.
+        [ INPUT  ]: record_id=<id>
+        [ RETURN ]: (Transfer record values | False)
+        '''
+        log.debug('')
+        if not kwargs.get('record_id'):
+            return self.error_no_transfer_sheet_record_id_found(kwargs)
+        credit_wallet = self.fetch_active_session_credit_wallet()
+        if not credit_wallet or isinstance(credit_wallet, dict) and \
+                credit_wallet.get('failed'):
+            return self.error_could_not_fetch_credit_ewallet(kwargs)
+        log.info('Attempting to fetch active transfer sheet...')
+        transfer_sheet = credit_wallet.fetch_credit_ewallet_transfer_sheet()
+        if not transfer_sheet or isinstance(transfer_sheet, dict) and \
+                transfer_sheet.get('failed'):
+            return self.warning_could_not_fetch_transfer_sheet(kwargs)
+        log.info('Attempting to fetch transfer record by id...')
+        record = transfer_sheet.fetch_transfer_sheet_record(
+            search_by='id', code=kwargs['record_id'], active_session=self.session
+        )
+        if not record or isinstance(record, dict) and \
+                record.get('failed'):
+            return self.warning_could_not_fetch_transfer_sheet_record(
+                kwargs, credit_wallet, transfer_sheet, record
+            )
+        record_values = record.fetch_record_values()
+        record_values['transfer_from'] = self.fetch_user(
+            identifier='id', account_id=record_values['transfer_from'], **kwargs
+        ).fetch_user_email()
+        record_values['transfer_to'] = self.fetch_user(
+            identifier='id', account_id=record_values['transfer_to'], **kwargs
+        ).fetch_user_email()
+        command_chain_response = {
+            'failed': False,
+            'transfer_sheet': transfer_sheet.fetch_transfer_sheet_id(),
+            'transfer_record': record.fetch_record_id(),
+            'record_data': record_values,
+        }
+        return command_chain_response
+
 #   @pysnooper.snoop()
     def action_view_contact_record(self, **kwargs):
         '''
@@ -1498,46 +1540,6 @@ class EWallet(Base):
             'failed': False,
             'time_sheet': time_sheet.fetch_time_sheet_id(),
             'sheet_data': time_sheet.fetch_time_sheet_values(),
-        }
-        return command_chain_response
-
-    def action_view_transfer_record(self, **kwargs):
-        '''
-        [ NOTE   ]: User action 'view transfer record', accessible from external api call.
-        [ INPUT  ]: record_id=<id>
-        [ RETURN ]: (Transfer record values | False)
-        '''
-        log.debug('')
-        if not kwargs.get('record_id'):
-            return self.error_no_transfer_sheet_record_id_found(kwargs)
-        credit_wallet = self.fetch_active_session_credit_wallet()
-        if not credit_wallet or isinstance(credit_wallet, dict) and \
-                credit_wallet.get('failed'):
-            return self.error_could_not_fetch_credit_ewallet(kwargs)
-        log.info('Attempting to fetch active transfer sheet...')
-        transfer_sheet = credit_wallet.fetch_credit_ewallet_transfer_sheet()
-        if not transfer_sheet or isinstance(transfer_sheet, dict) and \
-                transfer_sheet.get('failed'):
-            return self.warning_could_not_fetch_transfer_sheet(kwargs)
-        log.info('Attempting to fetch transfer record by id...')
-        record = transfer_sheet.fetch_transfer_sheet_records(
-            search_by='id', code=kwargs['record_id'], active_session=self.session
-        )
-        if not record or isinstance(record, dict) and \
-                record.get('failed'):
-            return self.warning_could_not_fetch_transfer_sheet_record(kwargs)
-        record_values = record.fetch_record_values()
-        record_values['transfer_from'] = self.fetch_user(
-            identifier='id', account_id=record_values['transfer_from'], **kwargs
-        ).fetch_user_email()
-        record_values['transfer_to'] = self.fetch_user(
-            identifier='id', account_id=record_values['transfer_to'], **kwargs
-        ).fetch_user_email()
-        command_chain_response = {
-            'failed': False,
-            'transfer_sheet': transfer_sheet.fetch_transfer_sheet_id(),
-            'transfer_record': record.fetch_record_id(),
-            'record_data': record_values,
         }
         return command_chain_response
 
@@ -3551,6 +3553,16 @@ class EWallet(Base):
     [ TODO ]: Fetch warning messages from message file by key codes.
     '''
 
+    def warning_could_not_fetch_transfer_sheet_record(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Something went wrong. '
+                       'Could not fetch transfer sheet record. '\
+                       'Details: {}'.format(args),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
+
     def warning_user_not_logged_in(self, *args):
         command_chain_response = {
             'failed': True,
@@ -3674,15 +3686,6 @@ class EWallet(Base):
         command_chain_response = {
             'failed': True,
             'warning': 'Something went wrong. Could not fetch time sheet '\
-                       'Command chain details : {}'.format(command_chain),
-        }
-        log.warning(command_chain_response['warning'])
-        return command_chain_response
-
-    def warning_could_not_fetch_transfer_sheet_record(self, command_chain):
-        command_chain_response = {
-            'failed': True,
-            'warning': 'Something went wrong. Could not fetch transfer sheet record. '\
                        'Command chain details : {}'.format(command_chain),
         }
         log.warning(command_chain_response['warning'])

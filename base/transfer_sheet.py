@@ -371,6 +371,93 @@ class CreditTransferSheet(Base):
 
     # FETCHERS (LIST)
 
+    def fetch_transfer_sheet_record_by_id(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('code'):
+            return self.error_no_transfer_record_id_found()
+        if kwargs.get('active_session'):
+            match = list(
+                kwargs['active_session'].query(CreditTransferSheetRecord)\
+                .filter_by(record_id=kwargs['code'])
+            )
+        else:
+            match = [
+                item for item in self.records
+                if item.fetch_record_id() is kwargs['code']
+            ]
+        record = False if not match else match[0]
+        check = self.check_record_in_transfer_sheet(record)
+        if not check:
+            return self.warning_record_not_in_transfer_sheet(
+                kwargs, record, check
+            )
+        log.info('Successfully fetched transfer record by id.')
+        return record
+
+    # TODO
+    def fetch_transfer_sheet_record_by_ref(self, **kwargs):
+        log.debug('TODO - Refactor')
+        if not kwargs.get('code'):
+            return self.error_no_transfer_record_reference_found()
+        _records = [
+                self.records[item] for item in self.records
+                if self.records[item].fetch_record_reference() == kwargs['code']
+                ]
+        if not _records:
+            return self.warning_could_not_fetch_transfer_record(
+                    'reference', kwargs['code']
+                    )
+        log.info('Successfully fetched transfer records by reference.')
+        return _records
+
+    # TODO
+    def fetch_transfer_sheet_record_by_date(self, **kwargs):
+        log.debug('TODO - Refactor')
+        if not kwargs.get('code'):
+            return self.error_no_transfer_record_date_found()
+        _records = [
+                self.records[item] for item in self.records
+                if self.records[item].fetch_record_create_date() == kwargs['code']
+                ]
+        if not _records:
+            return self.warning_could_not_fetch_transfer_record(
+                    'date', kwargs['code']
+                    )
+        log.info('Successfully fetched transfer records by date.')
+        return _records
+
+    # TODO
+    def fetch_transfer_sheet_record_by_src(self, **kwargs):
+        log.debug('TODO - Refactor')
+        if not kwargs.get('code'):
+            return self.error_no_transfer_record_src_found()
+        _records = [
+                self.records[item] for item in self.records
+                if self.records[item].fetch_record_transfer_from() == kwargs['code']
+                ]
+        if not _records:
+            return self.warning_could_not_fetch_transfer_record(
+                    'src', kwargs['code']
+                    )
+        log.info('Successfully fetched transfer records by transfer source.')
+        return _records
+
+    # TODO
+    def fetch_transfer_sheet_record_by_dst(self, **kwargs):
+        log.debug('TODO - Refactor')
+        if not kwargs.get('code'):
+            return self.error_no_transfer_record_dst_found()
+        _records = [
+                self.records[item] for item in self.records
+                if self.records[item].fetch_record_transfer_to() == kwargs['code']
+                ]
+        if not _records:
+            return self.warning_could_not_fetch_transfer_record(
+                    'dst', kwargs['code']
+                    )
+        log.info('Successfully fethced transfer records by transfer destination.')
+        return _records
+
     # TODO
     def fetch_all_transfer_sheet_records(self, **kwargs):
         log.debug('TODO - Refactor')
@@ -428,89 +515,7 @@ class CreditTransferSheet(Base):
         }
         return values
 
-    def fetch_transfer_sheet_record_by_id(self, **kwargs):
-        log.debug('')
-        if not kwargs.get('code'):
-            return self.error_no_transfer_record_id_found()
-        if kwargs.get('active_session'):
-            _match = list(
-                kwargs['active_session'].query(CreditTransferSheetRecord)\
-                .filter_by(record_id=kwargs['code'])
-            )
-        else:
-            _match = [
-                item for item in self.records
-                if item.fetch_record_id() is kwargs['code']
-            ]
-        _record = False if not _match else _match[0]
-        if not _record:
-            return self.warning_could_not_fetch_transfer_record(
-                'id', kwargs['code']
-            )
-        log.info('Successfully fetched transfer record by id.')
-        return _record
-
-    def fetch_transfer_sheet_record_by_ref(self, **kwargs):
-        log.debug('')
-        if not kwargs.get('code'):
-            return self.error_no_transfer_record_reference_found()
-        _records = [
-                self.records[item] for item in self.records
-                if self.records[item].fetch_record_reference() == kwargs['code']
-                ]
-        if not _records:
-            return self.warning_could_not_fetch_transfer_record(
-                    'reference', kwargs['code']
-                    )
-        log.info('Successfully fetched transfer records by reference.')
-        return _records
-
-    def fetch_transfer_sheet_record_by_date(self, **kwargs):
-        log.debug('')
-        if not kwargs.get('code'):
-            return self.error_no_transfer_record_date_found()
-        _records = [
-                self.records[item] for item in self.records
-                if self.records[item].fetch_record_create_date() == kwargs['code']
-                ]
-        if not _records:
-            return self.warning_could_not_fetch_transfer_record(
-                    'date', kwargs['code']
-                    )
-        log.info('Successfully fetched transfer records by date.')
-        return _records
-
-    def fetch_transfer_sheet_record_by_src(self, **kwargs):
-        log.debug('')
-        if not kwargs.get('code'):
-            return self.error_no_transfer_record_src_found()
-        _records = [
-                self.records[item] for item in self.records
-                if self.records[item].fetch_record_transfer_from() == kwargs['code']
-                ]
-        if not _records:
-            return self.warning_could_not_fetch_transfer_record(
-                    'src', kwargs['code']
-                    )
-        log.info('Successfully fetched transfer records by transfer source.')
-        return _records
-
-    def fetch_transfer_sheet_record_by_dst(self, **kwargs):
-        log.debug('')
-        if not kwargs.get('code'):
-            return self.error_no_transfer_record_dst_found()
-        _records = [
-                self.records[item] for item in self.records
-                if self.records[item].fetch_record_transfer_to() == kwargs['code']
-                ]
-        if not _records:
-            return self.warning_could_not_fetch_transfer_record(
-                    'dst', kwargs['code']
-                    )
-        log.info('Successfully fethced transfer records by transfer destination.')
-        return _records
-
-    def fetch_transfer_sheet_records(self, **kwargs):
+    def fetch_transfer_sheet_record(self, **kwargs):
         log.debug('')
         if not kwargs.get('search_by'):
             return self.error_no_transfer_sheet_record_identifier_specified()
@@ -642,6 +647,12 @@ class CreditTransferSheet(Base):
         return set_to if isinstance(set_to, dict) and \
             set_to.get('failed') else self.fetch_transfer_sheet_records()
 
+    # CHECKERS (LIST)
+
+    def check_record_in_transfer_sheet(self, record):
+        log.debug('')
+        return False if record not in self.records else True
+
     # ACTIONS (LIST)
 
     def create_transfer_sheet_record(self, values=None):
@@ -722,6 +733,15 @@ class CreditTransferSheet(Base):
     '''
     [ TODO ]: Fetch warning messages from message file by key codes.
     '''
+
+    def warning_record_not_in_transfer_sheet(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Record not in transfer sheet. '
+                       'Details: {}'.format(args),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
 
     def warning_could_not_fetch_transfer_record(self, *args):
         command_chain_response = {
