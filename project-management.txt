@@ -102,10 +102,10 @@
         - x - User action Unlink Conversion Record
         - x - User action Unlink Transfer Sheet
         - x - User action Unlink Transfer Record
-        -   - User action Unlink Time Sheet
-        -   - User action Unlink Time Record
-        - User action Unlink Credit EWallet
-        - User action Unlink Credit Clock
+        - x - User action Unlink Time Sheet
+        - x - User action Unlink Time Record
+        -   - User action Unlink Credit EWallet
+        -   - User action Unlink Credit Clock
         - User action Unlink Invoice Sheet
         - User action Unlink Invoice Record
 

@@ -655,6 +655,29 @@ class CreditTransferSheet(Base):
 
     # ACTIONS (LIST)
 
+    def remove_transfer_sheet_record(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('record_id'):
+            return self.error_no_transfer_record_id_found()
+        record = self.fetch_transfer_sheet_record_by_id(
+            code=kwargs['record_id'],
+            active_session=kwargs['active_session'],
+        )
+        check = self.check_record_in_transfer_sheet(record)
+        if not check:
+            return self.warning_record_not_in_transfer_sheet(
+                kwargs, record, check
+            )
+        try:
+            kwargs['active_session'].query(
+                CreditTransferSheetRecord
+            ).filter_by(
+                record_id=kwargs['record_id']
+            ).delete()
+        except:
+            return self.error_could_not_remove_transfer_sheet_record(kwargs)
+        return True
+
     def create_transfer_sheet_record(self, values=None):
         log.debug('')
         if not values:
@@ -675,20 +698,6 @@ class CreditTransferSheet(Base):
         update = self.update_records(record)
         log.info('Successfully added new transfer record.')
         return record
-
-    def remove_transfer_sheet_record(self, **kwargs):
-        log.debug('')
-        if not kwargs.get('record_id'):
-            return self.error_no_transfer_record_id_found()
-        try:
-            kwargs['active_session'].query(
-                CreditTransferSheetRecord
-            ).filter_by(
-                record_id=kwargs['record_id']
-            ).delete()
-        except:
-            return self.error_could_not_remove_transfer_sheet_record(kwargs)
-        return True
 
     def append_transfer_sheet_record(self, **kwargs):
         log.debug('')

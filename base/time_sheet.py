@@ -609,7 +609,7 @@ class CreditClockTimeSheet(Base):
         check = self.check_record_in_time_sheet(record)
         if not check:
             return self.warning_record_not_in_time_sheet(
-                kwrags, record
+                kwargs, record
             )
         log.info('Successfully fetched time record by id.')
         return record
@@ -797,6 +797,25 @@ class CreditClockTimeSheet(Base):
 
     # ACTIONS (LIST)
 
+    def action_remove_time_sheet_record(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('record_id'):
+            return self.error_no_time_record_id_found()
+        record = self.fetch_time_sheet_record_by_id(
+            record_id=kwargs['record_id'],
+            active_session=kwargs['active_session'],
+        )
+        check = self.check_record_in_time_sheet(record)
+        if not check:
+            return self.warning_record_not_in_time_sheet(kwargs, record, check)
+        try:
+            kwargs['active_session'].query(
+                TimeSheetRecord
+            ).filter_by(record_id=kwargs['record_id']).delete()
+        except:
+            return self.error_could_not_remove_time_sheet_record(kwargs)
+        return True
+
 #   @pysnooper.snoop('logs/ewallet.log')
     def action_add_time_sheet_record(self, **kwargs):
         log.debug('')
@@ -808,18 +827,6 @@ class CreditClockTimeSheet(Base):
         if record:
             log.info('Successfully added new time record.')
         return record or False
-
-    def action_remove_time_sheet_record(self, **kwargs):
-        log.debug('')
-        if not kwargs.get('record_id'):
-            return self.error_no_time_record_id_found()
-        try:
-            kwargs['active_session'].query(
-                TimeSheetRecord
-            ).filter_by(record_id=kwargs['record_id']).delete()
-        except:
-            return self.error_could_not_remove_time_sheet_record(kwargs)
-        return True
 
     def action_interogate_all_time_sheet_records(self, **kwargs):
         log.debug('')

@@ -75,7 +75,7 @@ class TestEWalletSessionManageUserActionUnlinkTimeSheet(unittest.TestCase):
         print('\n[ * ]: User action Unlink Time Sheet')
         instruction_set = {
             'controller': 'client', 'ctype': 'action', 'action': 'unlink',
-            'unlink': 'time', 'time': 'list', 'list_id': 2,
+            'unlink': 'time', 'time': 'list', 'list_id': 3,
             'client_id': self.client_id, 'session_token': self.session_token
         }
         unlink = self.session_manager.session_manager_controller(

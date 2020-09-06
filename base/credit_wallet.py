@@ -1030,6 +1030,74 @@ class CreditEWallet(Base):
 
     # UNLINKERS
 
+    def unlink_transfer_record(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('record_id'):
+            return self.error_transfer_record_id_not_found(kwargs)
+        log.info('Attempting to fetch transfer sheet...')
+        transfer_sheet = self.fetch_credit_ewallet_transfer_sheet()
+        if not transfer_sheet:
+            return self.warning_could_not_fetch_transfer_sheet(kwargs)
+        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
+            kwargs, 'action',
+        )
+        unlink = transfer_sheet.credit_transfer_sheet_controller(
+            action='remove', **sanitized_command_chain
+        )
+        if not unlink or isinstance(unlink, dict) and unlink.get('failed'):
+            return self.warning_could_not_unlink_transfer_record(kwargs)
+        command_chain_response = {
+            'failed': False,
+            'transfer_sheet': transfer_sheet.fetch_transfer_sheet_id(),
+            'transfer_record': kwargs['record_id'],
+        }
+        return command_chain_response
+
+    def unlink_transfer_list(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('list_id'):
+            return self.error_no_transfer_list_id_specified(kwargs)
+        transfer_sheet = self.fetch_credit_wallet_transfer_sheet_by_id(
+            code=kwargs['list_id'],
+            active_session=kwargs['active_session'],
+        )
+        check = self.check_transfer_sheet_belongs_to_credit_ewallet(
+            transfer_sheet
+        )
+        if not check:
+            return self.warning_transfer_sheet_does_not_belong_to_credit_ewallet(
+                kwargs, transfer_sheet, check
+            )
+        try:
+            kwargs['active_session'].query(
+                CreditTransferSheet
+            ).filter_by(
+                transfer_sheet_id=kwargs['list_id']
+            ).delete()
+        except:
+            return self.error_could_not_remove_transfer_sheet(kwargs)
+        command_chain_response = {
+            'failed': False,
+            'transfer_sheet': kwargs['list_id'],
+        }
+        return command_chain_response
+
+    def unlink_time_record(self, **kwargs):
+        log.debug('')
+        credit_clock = self.fetch_credit_ewallet_credit_clock()
+        if not credit_clock:
+            return self.error_could_not_fetch_credit_ewallet_credit_clock(kwargs)
+        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
+            kwargs, 'controller', 'ctype', 'action', 'unlink', 'time'
+        )
+        unlink = credit_clock.main_controller(
+            controller='user', ctype='action', action='unlink', unlink='time',
+            time='record', **sanitized_command_chain
+        )
+        return self.warning_could_not_unlink_time_record(kwargs) \
+            if not unlink or isinstance(unlink, dict) and unlink.get('failed') \
+            else unlink
+
 #   @pysnooper.snoop()
     def unlink_conversion_list(self, **kwargs):
         log.debug('')
@@ -1083,40 +1151,6 @@ class CreditEWallet(Base):
         }
         return command_chain_response
 
-    def unlink_transfer_list(self, **kwargs):
-        log.debug('')
-        if not kwargs.get('list_id'):
-            return self.error_no_transfer_list_id_specified(kwargs)
-        try:
-            kwargs['active_session'].query(
-                CreditTransferSheet
-            ).filter_by(
-                transfer_sheet_id=kwargs['list_id']
-            ).delete()
-        except:
-            return self.error_could_not_remove_transfer_sheet(kwargs)
-        command_chain_response = {
-            'failed': False,
-            'transfer_sheet': kwargs['list_id'],
-        }
-        return command_chain_response
-
-    def unlink_time_record(self, **kwargs):
-        log.debug('')
-        credit_clock = self.fetch_credit_ewallet_credit_clock()
-        if not credit_clock:
-            return self.error_could_not_fetch_credit_ewallet_credit_clock(kwargs)
-        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
-            kwargs, 'controller', 'ctype', 'action', 'unlink', 'time'
-        )
-        unlink = credit_clock.main_controller(
-            controller='user', ctype='action', action='unlink', unlink='time',
-            time='record', **sanitized_command_chain
-        )
-        return self.warning_could_not_unlink_time_record(kwargs) \
-            if not unlink or isinstance(unlink, dict) and unlink.get('failed') \
-            else unlink
-
     def unlink_conversion_record(self, **kwargs):
         log.debug('')
         credit_clock = self.fetch_credit_ewallet_credit_clock()
@@ -1156,31 +1190,8 @@ class CreditEWallet(Base):
         }
         return command_chain_response
 
-    def unlink_transfer_record(self, **kwargs):
-        log.debug('')
-        if not kwargs.get('record_id'):
-            return self.error_transfer_record_id_not_found(kwargs)
-        log.info('Attempting to fetch transfer sheet...')
-        transfer_sheet = self.fetch_credit_ewallet_transfer_sheet()
-        if not transfer_sheet:
-            return self.warning_could_not_fetch_transfer_sheet(kwargs)
-        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
-            kwargs, 'action',
-        )
-        unlink = transfer_sheet.credit_transfer_sheet_controller(
-            action='remove', **sanitized_command_chain
-        )
-        if not unlink or isinstance(unlink, dict) and unlink.get('failed'):
-            return self.warning_could_not_unlink_transfer_record(kwargs)
-        command_chain_response = {
-            'failed': False,
-            'transfer_sheet': transfer_sheet.fetch_transfer_sheet_id(),
-            'transfer_record': kwargs['record_id'],
-        }
-        return command_chain_response
-
     def unlink_transfer_sheet(self, **kwargs):
-        log.debug('')
+        log.debug('TODO - DEPRECATED')
         if not kwargs.get('sheet_id'):
             return self.error_transfer_sheet_id_not_found()
         log.info('Attempting to fetch transfer sheet...')
