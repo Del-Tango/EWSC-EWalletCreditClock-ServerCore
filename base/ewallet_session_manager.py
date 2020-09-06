@@ -5,6 +5,7 @@ import logging
 import pysnooper
 import ast
 import multiprocessing as mp
+import json
 
 from multiprocessing import Process, Queue, Lock, Value
 
@@ -1207,6 +1208,13 @@ class EWalletSessionManager():
         return instruction_set_response
 
     # GENERAL
+
+    def log_warning(self, **kwargs):
+        log.warning(
+            '{} - [ DETAILS ] - {}'.format(
+                kwargs.get('warning'), kwargs.get('details'),
+            )
+        )
 
     def execute_worker_instruction(self, worker_id, instruction):
         log.debug('')
@@ -3194,940 +3202,856 @@ class EWalletSessionManager():
     [ TODO ]: Fetch warning messages from message file by key codes.
     '''
 
-    def warning_could_not_interogate_session_workers(self, *args):
-        instruction_set_response = {
-            'failed': True,
+    def warning_could_not_view_invoice_record(self, *args):
+        instruction_set_response = res_utils.format_warning_response(**{
+            'failed': True, 'details': args,
             'warning': 'Something went wrong. '
-                       'Could not interogate session workers. '\
-                       'Details: {}'.format(args),
-        }
-        log.warning(instruction_set_response['warning'])
-        return instruction_set_response
-
-    def warning_could_not_fetch_session_worker_pool(self, *args):
-        instruction_set_response = {
-            'failed': True,
-            'warning': 'Something went wrong. '
-                       'Could not fetch session worker pool. '\
-                       'Details: {}'.format(args),
-        }
-        log.warning(instruction_set_response['warning'])
-        return instruction_set_response
-
-    def warning_could_not_interogate_ewallet_session(self, *args):
-        instruction_set_response = {
-            'failed': True,
-            'warning': 'Something went wrong. '
-                       'Could not interogate ewallet session. '\
-                       'Details: {}'.format(args),
-        }
-        log.warning(instruction_set_response['warning'])
-        return instruction_set_response
-
-    def warning_could_not_create_new_ewallet_session(self, *args):
-        instruction_set_response = {
-            'failed': True,
-            'warning': 'Something went wrong. '
-                       'Could not create new ewallet session. '\
-                       'Details: {}'.format(args),
-        }
-        log.warning(instruction_set_response['warning'])
-        return instruction_set_response
-
-    def warning_no_session_workers_cleaned(self, *args):
-        instruction_set_response = {
-            'failed': True,
-            'warning': 'No ewallet session workers cleaned. '
-                       'Details: {}'.format(args),
-        }
-        log.warning(instruction_set_response['warning'])
-        return instruction_set_response
-
-    def warning_could_not_clean_session_worker(self, *args):
-        instruction_set_response = {
-            'failed': True,
-            'warning': 'Something went wrong. '
-                       'Could not  ewallet session worker. '
-                       'Details: {}'.format(args),
-        }
-        log.warning(instruction_set_response['warning'])
-        return instruction_set_response
-
-    def warning_could_not_fetch_vacant_session_workers(self, *args):
-        instruction_set_response = {
-            'failed': True,
-            'warning': 'Something went wrong. '
-                       'Could not fetch vacant ewallet session workers. '
-                       'Details: {}'.format(args),
-        }
-        log.warning(instruction_set_response['warning'])
-        return instruction_set_response
-
-    def warning_could_not_cleanup_vacant_ewallet_session_workers(self, *args):
-        instruction_set_response = {
-            'failed': True,
-            'warning': 'Something went wrong. '
-                       'Could not cleanup vacant ewallet session workers. '
-                       'Details: {}'.format(args),
-        }
-        log.warning(instruction_set_response['warning'])
-        return instruction_set_response
-
-    def warning_no_vacant_session_workers_found(self, *args):
-        instruction_set_response = {
-            'failed': True,
-            'warning': 'No vacant session workers found. '
-                       'Details: {}'.format(args),
-        }
-        log.warning(instruction_set_response['warning'])
-        return instruction_set_response
-
-    def warning_could_not_cleanup_target_ewallet_session(self, *args):
-        instruction_set_response = {
-            'failed': True,
-            'warning': 'Something went wrong. '
-                       'Could not cleanup target ewallet session. '
-                       'Details: {}'.format(args),
-        }
-        log.warning(instruction_set_response['warning'])
-        return instruction_set_response
-
-    def warning_could_not_fetch_assigned_session_worker_id(self, *args):
-        instruction_set_response = {
-            'failed': True,
-            'warning': 'Something went wrong. '
-                       'Could not fetch assigned worker id for ewallet session. '
-                       'Details: {}'.format(args),
-        }
-        log.warning(instruction_set_response['warning'])
-        return instruction_set_response
-
-    def warning_no_worker_found_assigned_to_session(self, *args):
-        instruction_set_response = {
-            'failed': True,
-            'warning': 'No worker found assigned to ewallet session. '
-                       'Details: {}'.format(args),
-        }
-        log.warning(instruction_set_response['warning'])
-        return instruction_set_response
-
-    def warning_could_not_sweep_cleanup_ewallet_sessions(self, *args):
-        instruction_set_response = {
-            'failed': True,
-            'warning': 'Something went wrong. '
-                       'Could not sweep clean ewallet sessions. '
-                       'Details: {}'.format(args),
-        }
-        log.warning(instruction_set_response['warning'])
-        return instruction_set_response
-
-    def warning_could_not_clean_expired_worker_sessions(self, *args):
-        instruction_set_response = {
-            'failed': True,
-            'warning': 'Something went wrong. '
-                       'Could not clean expired worker sessions. '
-                       'Details: {}'.format(args),
-        }
-        log.warning(instruction_set_response['warning'])
-        return instruction_set_response
-
-    def warning_could_not_fetch_workers_with_expired_sessions(self, *args):
-        instruction_set_response = {
-            'failed': True,
-            'warning': 'Something went wrong. '
-                       'Could not fetch workers with expired sessions. '
-                       'Details: {}'.format(args),
-        }
-        log.warning(instruction_set_response['warning'])
-        return instruction_set_response
-
-    def warning_could_not_interogate_worker_session_pool(self, *args):
-        instruction_set_response = {
-            'failed': True,
-            'warning': 'Something went wrong. '
-                       'Could not interogate worker session pool. '
-                       'Details: {}'.format(args),
-        }
-        log.warning(instruction_set_response['warning'])
-        return instruction_set_response
-
-    def warning_could_not_fetch_expired_ewallet_sessions_from_worker(self, *args):
-        instruction_set_response = {
-            'failed': True,
-            'warning': 'Something went wrong. '
-                       'Could not fetch expired ewallet sessions from worker. '
-                       'Details: {}'.format(args),
-        }
-        log.warning(instruction_set_response['warning'])
-        return instruction_set_response
-
-    def warning_session_manager_socket_handler_not_set(self, *args):
-        instruction_set_response = {
-            'failed': True,
-            'warning': 'EWallet Session Manager socket handler not set. '
-                       'Details: {}'.format(args)
-        }
-        log.warning(instruction_set_response['warning'])
-        return instruction_set_response
-
-    def warning_could_not_unlink_invoice_sheet(self, *args):
-        instruction_set_response = {
-            'failed': True,
-            'warning': 'Something went wrong. '
-                       'Could not unlink invoice sheet. '
-                       'Details: {}'.format(args)
-        }
-        log.warning(instruction_set_response['warning'])
-        return instruction_set_response
-
-    def warning_could_not_unlink_invoice_sheet_record(self, *args):
-        instruction_set_response = {
-            'failed': True,
-            'warning': 'Something went wrong. '
-                       'Could not unlink invoice record. '
-                       'Details: {}'.format(args)
-        }
-        log.warning(instruction_set_response['warning'])
-        return instruction_set_response
-
-    def warning_could_not_recover_user_account(self, *args):
-        instruction_set_response = {
-            'failed': True,
-            'warning': 'Something went wrong. '
-                       'Could not recover user account. '
-                       'Details: {}'.format(args)
-        }
-        log.warning(instruction_set_response['warning'])
-        return instruction_set_response
-
-    def warning_could_not_switch_user_account(self, *args):
-        instruction_set_response = {
-            'failed': True,
-            'warning': 'Something went wrong. '
-                       'Could not switch user account. '\
-                       'Details: {}'.format(args)
-        }
-        log.warning(instruction_set_response['warning'])
-        return instruction_set_response
-
-    def warning_could_not_unlink_credit_clock(self, *args):
-        instruction_set_response = {
-            'failed': True,
-            'warning': 'Something went wrong. '
-                       'Could not unlink credit clock. '\
-                       'Details: {}'.format(args)
-        }
-        log.warning(instruction_set_response['warning'])
-        return instruction_set_response
-
-    def warning_could_not_unlink_credit_ewallet(self, *args):
-        instruction_set_response = {
-            'failed': True,
-            'warning': 'Something went wrong. '
-                       'Could not unlink credit ewallet. '\
-                       'Details: {}'.format(args)
-        }
-        log.warning(instruction_set_response['warning'])
-        return instruction_set_response
-
-    def warning_could_not_unlink_time_sheet(self, *args):
-        instruction_set_response = {
-            'failed': True,
-            'warning': 'Something went wrong. '
-                       'Could not unlink time sheet. '\
-                       'Details: {}'.format(args)
-        }
-        log.warning(instruction_set_response['warning'])
-        return instruction_set_response
-
-    def warning_could_not_unlink_time_record(self, *args):
-        instruction_set_response = {
-            'failed': True,
-            'warning': 'Something went wrong. '
-                       'Could not unlink time record. '\
-                       'Details: {}'.format(args)
-        }
-        log.warning(instruction_set_response['warning'])
-        return instruction_set_response
-
-    def warning_could_not_unlink_transfer_record(self, *args):
-        instruction_set_response = {
-            'failed': True,
-            'warning': 'Something went wrong. '
-                       'Could not unlink transfer record. '\
-                       'Details: {}'.format(args)
-        }
-        log.warning(instruction_set_response['warning'])
-        return instruction_set_response
-
-    def warning_could_not_unlink_transfer_sheet(self, *args):
-        instruction_set_response = {
-            'failed': True,
-            'warning': 'Something went wrong. '
-                       'Could not unlink transfer sheet. '\
-                       'Details: {}'.format(args)
-        }
-        log.warning(instruction_set_response['warning'])
-        return instruction_set_response
-
-    def warning_could_not_unlink_conversion_sheet_record(self, *args):
-        instruction_set_response = {
-            'failed': True,
-            'warning': 'Something went wrong. '
-                       'Could not unlink conversion record. '\
-                       'Details: {}'.format(args)
-        }
-        log.warning(instruction_set_response['warning'])
-        return instruction_set_response
-
-    def warning_could_not_unlink_conversion_sheet(self, *args):
-        instruction_set_response = {
-            'failed': True,
-            'warning': 'Something went wrong. '
-                       'Could not unlink conversion sheet. '\
-                       'Details: {}'.format(args)
-        }
-        log.warning(instruction_set_response['warning'])
-        return instruction_set_response
-
-    def warning_could_not_unlink_contact_record(self, *args):
-        instruction_set_response = {
-            'failed': True,
-            'warning': 'Something went wrong. '
-                       'Could not unlink contact record. '\
-                       'Details: {}'.format(args)
-        }
-        log.warning(instruction_set_response['warning'])
-        return instruction_set_response
-
-    def warning_could_not_unlink_contact_list(self, *args):
-        instruction_set_response = {
-            'failed': True,
-            'warning': 'Something went wrong. '
-                       'Could not unlink contact list. '\
-                       'Details: {}'.format(args)
-        }
-        log.warning(instruction_set_response['warning'])
-        return instruction_set_response
-
-    def warning_could_not_unlink_user_account(self, *args):
-        instruction_set_response = {
-            'failed': True,
-            'warning': 'Something went wrong. '
-                       'Could not unlink user account. '\
-                       'Details: {}'.format(args)
-        }
-        log.warning(instruction_set_response['warning'])
-        return instruction_set_response
-
-    def warning_could_not_switch_contact_list(self, *args):
-        instruction_set_response = {
-            'failed': True,
-            'warning': 'Something went wrong. '
-                       'Could not switch contact list. '\
-                       'Details: {}'.format(args)
-        }
-        log.warning(instruction_set_response['warning'])
-        return instruction_set_response
-
-    def warning_could_not_switch_time_sheet(self, *args):
-        instruction_set_response = {
-            'failed': True,
-            'warning': 'Something went wrong. '
-                       'Could not switch time sheet. '\
-                       'Details: {}'.format(args)
-        }
-        log.warning(instruction_set_response['warning'])
-        return instruction_set_response
-
-    def warning_could_not_switch_conversion_sheet(self, *args):
-        instruction_set_response = {
-            'failed': True,
-            'warning': 'Something went wrong. '
-                       'Could not switch conversion sheet. '\
-                       'Details: {}'.format(args)
-        }
-        log.warning(instruction_set_response['warning'])
-        return instruction_set_response
-
-    def warning_could_not_switch_invoice_sheet(self, *args):
-        instruction_set_response = {
-            'failed': True,
-            'warning': 'Something went wrong. '
-                       'Could not switch invoice sheet. '\
-                       'Details: {}'.format(args)
-        }
-        log.warning(instruction_set_response['warning'])
-        return instruction_set_response
-
-    def warning_could_not_switch_transfer_sheet(self, *args):
-        instruction_set_response = {
-            'failed': True,
-            'warning': 'Something went wrong. '
-                       'Could not switch transfer sheet. '\
-                       'Details: {}'.format(args)
-        }
-        log.warning(instruction_set_response['warning'])
-        return instruction_set_response
-
-    def warning_could_not_switch_credit_clock(self, *args):
-        instruction_set_response = {
-            'failed': True,
-            'warning': 'Something went wrong. '
-                       'Could not switch credit clock. '\
-                       'Details: {}'.format(args)
-        }
-        log.warning(instruction_set_response['warning'])
-        return instruction_set_response
-
-    def warning_could_not_switch_credit_ewallet(self, *args):
-        instruction_set_response = {
-            'failed': True,
-            'warning': 'Something went wrong. '
-                       'Could not switch credit ewallet. '\
-                       'Details: {}'.format(args)
-        }
-        log.warning(instruction_set_response['warning'])
-        return instruction_set_response
-
-    def warning_could_not_create_new_conversion_sheet(self, *args):
-        instruction_set_response = {
-            'failed': True,
-            'warning': 'Something went wrong. '
-                       'Could not create new conversion sheet. '\
-                       'Details: {}'.format(args)
-        }
-        log.warning(instruction_set_response['warning'])
-        return instruction_set_response
-
-    def warning_could_not_create_new_time_sheet(self, *args):
-        instruction_set_response = {
-            'failed': True,
-            'warning': 'Something went wrong. '
-                       'Could not create new time sheet. '\
-                       'Details: {}'.format(args)
-        }
-        log.warning(instruction_set_response['warning'])
-        return instruction_set_response
-
-    def warning_could_not_create_new_invoice_sheet(self, *args):
-        instruction_set_response = {
-            'failed': True,
-            'warning': 'Something went wrong. '
-                       'Could not create new invoice sheet. '\
-                       'Details: {}'.format(args)
-        }
-        log.warning(instruction_set_response['warning'])
-        return instruction_set_response
-
-    def warning_could_not_create_new_transfer_sheet(self, *args):
-        instruction_set_response = {
-            'failed': True,
-            'warning': 'Something went wrong. '
-                       'Could not create new transfer sheet. '\
-                       'Details: {}'.format(args)
-        }
-        log.warning(instruction_set_response['warning'])
-        return instruction_set_response
-
-    def warning_could_not_create_new_credit_ewallet(self, *args):
-        instruction_set_response = {
-            'failed': True,
-            'warning': 'Something went wrong. '
-                       'Could not create new credit ewallet. '\
-                       'Details: {}'.format(args)
-        }
-        log.warning(instruction_set_response['warning'])
-        return instruction_set_response
-
-    def warning_could_not_create_new_credit_clock(self, *args):
-        instruction_set_response = {
-            'failed': True,
-            'warning': 'Something went wrong. '
-                       'Could not create new credit clock. '\
-                       'Details: {}'.format(args)
-        }
-        log.warning(instruction_set_response['warning'])
+                       'Could not view invoice record.',
+        })
+        self.log_warning(**instruction_set_response)
         return instruction_set_response
 
     def warning_could_not_logout_user_account(self, *args):
-        instruction_set_response = {
-            'failed': True,
+        instruction_set_response = res_utils.format_warning_response(**{
+            'failed': True, 'details': args,
             'warning': 'Something went wrong. '
-                       'Could not logout user account. '\
-                       'Details: {}'.format(args)
-        }
-        log.warning(instruction_set_response['warning'])
+                       'Could not logout user account.',
+        })
+        self.log_warning(**instruction_set_response)
+        return instruction_set_response
+
+    def warning_could_not_interogate_session_workers(self, *args):
+        instruction_set_response = res_utils.format_warning_response(**{
+            'failed': True, 'details': args,
+            'warning': 'Something went wrong. '
+                       'Could not interogate session workers.',
+        })
+        self.log_warning(**instruction_set_response)
+        return instruction_set_response
+
+    def warning_could_not_fetch_session_worker_pool(self, *args):
+        instruction_set_response = res_utils.format_warning_response(**{
+            'failed': True, 'details': args,
+            'warning': 'Something went wrong. '
+                       'Could not fetch session worker pool.',
+        })
+        self.log_warning(**instruction_set_response)
+        return instruction_set_response
+
+    def warning_could_not_interogate_ewallet_session(self, *args):
+        instruction_set_response = res_utils.format_warning_response(**{
+            'failed': True, 'details': args,
+            'warning': 'Something went wrong. '
+                       'Could not interogate ewallet session.',
+        })
+        self.log_warning(**instruction_set_response)
+        return instruction_set_response
+
+    def warning_could_not_create_new_ewallet_session(self, *args):
+        instruction_set_response = res_utils.format_warning_response(**{
+            'failed': True, 'details': args,
+            'warning': 'Something went wrong. '
+                       'Could not create new ewallet session.',
+        })
+        self.log_warning(**instruction_set_response)
+        return instruction_set_response
+
+    def warning_no_session_workers_cleaned(self, *args):
+        instruction_set_response = res_utils.format_warning_response(**{
+            'failed': True, 'details': args,
+            'warning': 'No ewallet session workers cleaned.',
+        })
+        self.log_warning(**instruction_set_response)
+        return instruction_set_response
+
+    def warning_could_not_clean_session_worker(self, *args):
+        instruction_set_response = res_utils.format_warning_response(**{
+            'failed': True, 'details': args,
+            'warning': 'Something went wrong. '
+                       'Could not clean ewallet session worker.',
+        })
+        self.log_warning(**instruction_set_response)
+        return instruction_set_response
+
+    def warning_could_not_fetch_vacant_session_workers(self, *args):
+        instruction_set_response = res_utils.format_warning_response(**{
+            'failed': True, 'details': args,
+            'warning': 'Something went wrong. '
+                       'Could not fetch vacant ewallet session workers.',
+        })
+        self.log_warning(**instruction_set_response)
+        return instruction_set_response
+
+    def warning_could_not_cleanup_vacant_ewallet_session_workers(self, *args):
+        instruction_set_response = res_utils.format_warning_response(**{
+            'failed': True, 'details': args,
+            'warning': 'Something went wrong. '
+                       'Could not cleanup vacant ewallet session workers.',
+        })
+        self.log_warning(**instruction_set_response)
+        return instruction_set_response
+
+    def warning_no_vacant_session_workers_found(self, *args):
+        instruction_set_response = res_utils.format_warning_response(**{
+            'failed': True, 'details': args,
+            'warning': 'No vacant session workers found.',
+        })
+        self.log_warning(**instruction_set_response)
+        return instruction_set_response
+
+    def warning_could_not_cleanup_target_ewallet_session(self, *args):
+        instruction_set_response = res_utils.format_warning_response(**{
+            'failed': True, 'details': args,
+            'warning': 'Something went wrong. '
+                       'Could not cleanup target ewallet session.',
+        })
+        self.log_warning(**instruction_set_response)
+        return instruction_set_response
+
+    def warning_could_not_fetch_assigned_session_worker_id(self, *args):
+        instruction_set_response = res_utils.format_warning_response(**{
+            'failed': True, 'details': args,
+            'warning': 'Something went wrong. '
+                       'Could not fetch assigned worker id for ewallet session.',
+        })
+        self.log_warning(**instruction_set_response)
+        return instruction_set_response
+
+    def warning_no_worker_found_assigned_to_session(self, *args):
+        instruction_set_response = res_utils.format_warning_response(**{
+            'failed': True, 'details': args,
+            'warning': 'No worker found assigned to ewallet session.',
+        })
+        self.log_warning(**instruction_set_response)
+        return instruction_set_response
+
+    def warning_could_not_sweep_cleanup_ewallet_sessions(self, *args):
+        instruction_set_response = res_utils.format_warning_response(**{
+            'failed': True, 'details': args,
+            'warning': 'Something went wrong. '
+                       'Could not sweep clean ewallet sessions.',
+        })
+        self.log_warning(**instruction_set_response)
+        return instruction_set_response
+
+    def warning_could_not_clean_expired_worker_sessions(self, *args):
+        instruction_set_response = res_utils.format_warning_response(**{
+            'failed': True, 'details': args,
+            'warning': 'Something went wrong. '
+                       'Could not clean expired worker sessions.',
+        })
+        self.log_warning(**instruction_set_response)
+        return instruction_set_response
+
+    def warning_could_not_fetch_workers_with_expired_sessions(self, *args):
+        instruction_set_response = res_utils.format_warning_response(**{
+            'failed': True, 'details': args,
+            'warning': 'Something went wrong. '
+                       'Could not fetch workers with expired sessions.',
+        })
+        self.log_warning(**instruction_set_response)
+        return instruction_set_response
+
+    def warning_could_not_interogate_worker_session_pool(self, *args):
+        instruction_set_response = res_utils.format_warning_response(**{
+            'failed': True, 'details': args,
+            'warning': 'Something went wrong. '
+                       'Could not interogate worker session pool.',
+        })
+        self.log_warning(**instruction_set_response)
+        return instruction_set_response
+
+    def warning_could_not_fetch_expired_ewallet_sessions_from_worker(self, *args):
+        instruction_set_response = res_utils.format_warning_response(**{
+            'failed': True, 'details': args,
+            'warning': 'Something went wrong. '
+                       'Could not fetch expired ewallet sessions from worker.',
+        })
+        self.log_warning(**instruction_set_response)
+        return instruction_set_response
+
+    def warning_session_manager_socket_handler_not_set(self, *args):
+        instruction_set_response = res_utils.format_warning_response(**{
+            'failed': True, 'details': args,
+            'warning': 'EWallet Session Manager socket handler not set.',
+        })
+        self.log_warning(**instruction_set_response)
+        return instruction_set_response
+
+    def warning_could_not_unlink_invoice_sheet(self, *args):
+        instruction_set_response = res_utils.format_warning_response(**{
+            'failed': True, 'details': args,
+            'warning': 'Something went wrong. '
+                       'Could not unlink invoice sheet.',
+        })
+        self.log_warning(**instruction_set_response)
+        return instruction_set_response
+
+    def warning_could_not_unlink_invoice_sheet_record(self, *args):
+        instruction_set_response = res_utils.format_warning_response(**{
+            'failed': True, 'details': args,
+            'warning': 'Something went wrong. '
+                       'Could not unlink invoice record.',
+        })
+        self.log_warning(**instruction_set_response)
+        return instruction_set_response
+
+    def warning_could_not_recover_user_account(self, *args):
+        instruction_set_response = res_utils.format_warning_response(**{
+            'failed': True, 'details': args,
+            'warning': 'Something went wrong. '
+                       'Could not recover user account.',
+        })
+        self.log_warning(**instruction_set_response)
+        return instruction_set_response
+
+    def warning_could_not_switch_user_account(self, *args):
+        instruction_set_response = res_utils.format_warning_response(**{
+            'failed': True, 'details': args,
+            'warning': 'Something went wrong. '
+                       'Could not switch user account.',
+        })
+        self.log_warning(**instruction_set_response)
+        return instruction_set_response
+
+    def warning_could_not_unlink_credit_clock(self, *args):
+        instruction_set_response = res_utils.format_warning_response(**{
+            'failed': True, 'details': args,
+            'warning': 'Something went wrong. '
+                       'Could not unlink credit clock.',
+        })
+        self.log_warning(**instruction_set_response)
+        return instruction_set_response
+
+    def warning_could_not_unlink_credit_ewallet(self, *args):
+        instruction_set_response = res_utils.format_warning_response(**{
+            'failed': True, 'details': args,
+            'warning': 'Something went wrong. '
+                       'Could not unlink credit ewallet.',
+        })
+        self.log_warning(**instruction_set_response)
+        return instruction_set_response
+
+    def warning_could_not_unlink_time_sheet(self, *args):
+        instruction_set_response = res_utils.format_warning_response(**{
+            'failed': True, 'details': args,
+            'warning': 'Something went wrong. '
+                       'Could not unlink time sheet.',
+        })
+        self.log_warning(**instruction_set_response)
+        return instruction_set_response
+
+    def warning_could_not_unlink_time_record(self, *args):
+        instruction_set_response = res_utils.format_warning_response(**{
+            'failed': True, 'details': args,
+            'warning': 'Something went wrong. '
+                       'Could not unlink time record.',
+        })
+        self.log_warning(**instruction_set_response)
+        return instruction_set_response
+
+    def warning_could_not_unlink_transfer_record(self, *args):
+        instruction_set_response = res_utils.format_warning_response(**{
+            'failed': True, 'details': args,
+            'warning': 'Something went wrong. '
+                       'Could not unlink transfer record.',
+        })
+        self.log_warning(**instruction_set_response)
+        return instruction_set_response
+
+    def warning_could_not_unlink_transfer_sheet(self, *args):
+        instruction_set_response = res_utils.format_warning_response(**{
+            'failed': True, 'details': args,
+            'warning': 'Something went wrong. '
+                       'Could not unlink transfer sheet.',
+        })
+        self.log_warning(**instruction_set_response)
+        return instruction_set_response
+
+    def warning_could_not_unlink_conversion_sheet_record(self, *args):
+        instruction_set_response = res_utils.format_warning_response(**{
+            'failed': True, 'details': args,
+            'warning': 'Something went wrong. '
+                       'Could not unlink conversion record.',
+        })
+        self.log_warning(**instruction_set_response)
+        return instruction_set_response
+
+    def warning_could_not_unlink_conversion_sheet(self, *args):
+        instruction_set_response = res_utils.format_warning_response(**{
+            'failed': True, 'details': args,
+            'warning': 'Something went wrong. '
+                       'Could not unlink conversion sheet.',
+        })
+        self.log_warning(**instruction_set_response)
+        return instruction_set_response
+
+    def warning_could_not_unlink_contact_record(self, *args):
+        instruction_set_response = res_utils.format_warning_response(**{
+            'failed': True, 'details': args,
+            'warning': 'Something went wrong. '
+                       'Could not unlink contact record.',
+        })
+        self.log_warning(**instruction_set_response)
+        return instruction_set_response
+
+    def warning_could_not_unlink_contact_list(self, *args):
+        instruction_set_response = res_utils.format_warning_response(**{
+            'failed': True, 'details': args,
+            'warning': 'Something went wrong. '
+                       'Could not unlink contact list.',
+        })
+        self.log_warning(**instruction_set_response)
+        return instruction_set_response
+
+    def warning_could_not_unlink_user_account(self, *args):
+        instruction_set_response = res_utils.format_warning_response(**{
+            'failed': True, 'details': args,
+            'warning': 'Something went wrong. '
+                       'Could not unlink user account.',
+        })
+        self.log_warning(**instruction_set_response)
+        return instruction_set_response
+
+    def warning_could_not_switch_contact_list(self, *args):
+        instruction_set_response = res_utils.format_warning_response(**{
+            'failed': True, 'details': args,
+            'warning': 'Something went wrong. '
+                       'Could not switch contact list.',
+        })
+        self.log_warning(**instruction_set_response)
+        return instruction_set_response
+
+    def warning_could_not_switch_time_sheet(self, *args):
+        instruction_set_response = res_utils.format_warning_response(**{
+            'failed': True, 'details': args,
+            'warning': 'Something went wrong. '
+                       'Could not switch time sheet.',
+        })
+        self.log_warning(**instruction_set_response)
+        return instruction_set_response
+
+    def warning_could_not_switch_conversion_sheet(self, *args):
+        instruction_set_response = res_utils.format_warning_response(**{
+            'failed': True, 'details': args,
+            'warning': 'Something went wrong. '
+                       'Could not switch conversion sheet.',
+        })
+        self.log_warning(**instruction_set_response)
+        return instruction_set_response
+
+    def warning_could_not_switch_invoice_sheet(self, *args):
+        instruction_set_response = res_utils.format_warning_response(**{
+            'failed': True, 'details': args,
+            'warning': 'Something went wrong. '
+                       'Could not switch invoice sheet.',
+        })
+        self.log_warning(**instruction_set_response)
+        return instruction_set_response
+
+    def warning_could_not_switch_transfer_sheet(self, *args):
+        instruction_set_response = res_utils.format_warning_response(**{
+            'failed': True, 'details': args,
+            'warning': 'Something went wrong. '
+                       'Could not switch transfer sheet.',
+        })
+        self.log_warning(**instruction_set_response)
+        return instruction_set_response
+
+    def warning_could_not_switch_credit_clock(self, *args):
+        instruction_set_response = res_utils.format_warning_response(**{
+            'failed': True, 'details': args,
+            'warning': 'Something went wrong. '
+                       'Could not switch credit clock.',
+        })
+        self.log_warning(**instruction_set_response)
+        return instruction_set_response
+
+    def warning_could_not_switch_credit_ewallet(self, *args):
+        instruction_set_response = res_utils.format_warning_response(**{
+            'failed': True, 'details': args,
+            'warning': 'Something went wrong. '
+                       'Could not switch credit ewallet.',
+        })
+        self.log_warning(**instruction_set_response)
+        return instruction_set_response
+
+    def warning_could_not_create_new_conversion_sheet(self, *args):
+        instruction_set_response = res_utils.format_warning_response(**{
+            'failed': True, 'details': args,
+            'warning': 'Something went wrong. '
+                       'Could not create new conversion sheet.',
+        })
+        self.log_warning(**instruction_set_response)
+        return instruction_set_response
+
+    def warning_could_not_create_new_time_sheet(self, *args):
+        instruction_set_response = res_utils.format_warning_response(**{
+            'failed': True, 'details': args,
+            'warning': 'Something went wrong. '
+                       'Could not create new time sheet.',
+        })
+        self.log_warning(**instruction_set_response)
+        return instruction_set_response
+
+    def warning_could_not_create_new_invoice_sheet(self, *args):
+        instruction_set_response = res_utils.format_warning_response(**{
+            'failed': True, 'details': args,
+            'warning': 'Something went wrong. '
+                       'Could not create new invoice sheet.',
+        })
+        self.log_warning(**instruction_set_response)
+        return instruction_set_response
+
+    def warning_could_not_create_new_transfer_sheet(self, *args):
+        instruction_set_response = res_utils.format_warning_response(**{
+            'failed': True, 'details': args,
+            'warning': 'Something went wrong. '
+                       'Could not create new transfer sheet.',
+        })
+        self.log_warning(**instruction_set_response)
+        return instruction_set_response
+
+    def warning_could_not_create_new_credit_ewallet(self, *args):
+        instruction_set_response = res_utils.format_warning_response(**{
+            'failed': True, 'details': args,
+            'warning': 'Something went wrong. '
+                       'Could not create new credit ewallet.',
+        })
+        self.log_warning(**instruction_set_response)
+        return instruction_set_response
+
+    def warning_could_not_create_new_credit_clock(self, *args):
+        instruction_set_response = res_utils.format_warning_response(**{
+            'failed': True, 'details': args,
+            'warning': 'Something went wrong. '
+                       'Could not create new credit clock.',
+        })
+        self.log_warning(**instruction_set_response)
         return instruction_set_response
 
     def warning_could_not_view_login_records(self, *args):
-        instruction_set_response = {
-            'failed': True,
+        instruction_set_response = res_utils.format_warning_response(**{
+            'failed': True, 'details': args,
             'warning': 'Something went wrong. '
-                       'Could not view login records. '\
-                       'Details: {}'.format(args)
-        }
-        log.warning(instruction_set_response['warning'])
+                       'Could not view login records.',
+        })
+        self.log_warning(**instruction_set_response)
         return instruction_set_response
 
     def warning_could_not_view_logout_records(self, *args):
-        instruction_set_response = {
-            'failed': True,
+        instruction_set_response = res_utils.format_warning_response(**{
+            'failed': True, 'details': args,
             'warning': 'Something went wrong. '
-                       'Could not view logout records. '\
-                       'Details: {}'.format(args)
-        }
-        log.warning(instruction_set_response['warning'])
+                       'Could not view logout records.',
+        })
+        self.log_warning(**instruction_set_response)
         return instruction_set_response
 
     def warning_could_not_view_invoice_sheet_record(self, *args):
-        instruction_set_response = {
-            'failed': True,
+        instruction_set_response = res_utils.format_warning_response(**{
+            'failed': True, 'details': args,
             'warning': 'Something went wrong. '
-                       'Could not view invoice record. '\
-                       'Details: {}'.format(args)
-        }
-        log.warning(instruction_set_response['warning'])
+                       'Could not view invoice record.',
+        })
+        self.log_warning(**instruction_set_response)
         return instruction_set_response
 
     def warning_could_not_view_invoice_sheet(self, *args):
-        instruction_set_response = {
-            'failed': True,
+        instruction_set_response = res_utils.format_warning_response(**{
+            'failed': True, 'details': args,
             'warning': 'Something went wrong. '
-                       'Could not view invoice sheet. '\
-                       'Details: {}'.format(args)
-        }
-        log.warning(instruction_set_response['warning'])
+                       'Could not view invoice sheet.',
+        })
+        self.log_warning(**instruction_set_response)
         return instruction_set_response
 
     def warning_could_not_view_credit_clock(self, *args):
-        instruction_set_response = {
-            'failed': True,
+        instruction_set_response = res_utils.format_warning_response(**{
+            'failed': True, 'details': args,
             'warning': 'Something went wrong. '
-                       'Could not view credit clock. '\
-                       'Details: {}'.format(args)
-        }
-        log.warning(instruction_set_response['warning'])
+                       'Could not view credit clock.',
+        })
+        self.log_warning(**instruction_set_response)
         return instruction_set_response
 
     def warning_could_not_view_credit_ewallet(self, *args):
-        instruction_set_response = {
-            'failed': True,
+        instruction_set_response = res_utils.format_warning_response(**{
+            'failed': True, 'details': args,
             'warning': 'Something went wrong. '
-                       'Could not view credit ewallet. '\
-                       'Details: {}'.format(args)
-        }
-        log.warning(instruction_set_response['warning'])
+                       'Could not view credit ewallet.',
+        })
+        self.log_warning(**instruction_set_response)
         return instruction_set_response
 
     def warning_could_not_view_account(self, *args):
-        instruction_set_response = {
-            'failed': True,
+        instruction_set_response = res_utils.format_warning_response(**{
+            'failed': True, 'details': args,
             'warning': 'Something went wrong. '
-                       'Could not view user account. '\
-                       'Details: {}'.format(args)
-        }
-        log.warning(instruction_set_response['warning'])
+                       'Could not view user account.',
+        })
+        self.log_warning(**instruction_set_response)
         return instruction_set_response
 
     def warning_could_not_view_conversion_record(self, *args):
-        instruction_set_response = {
-            'failed': True,
+        instruction_set_response = res_utils.format_warning_response(**{
+            'failed': True, 'details': args,
             'warning': 'Something went wrong. '
-                       'Could not view conversion record. '\
-                       'Details: {}'.format(args)
-        }
-        log.warning(instruction_set_response['warning'])
+                       'Could not view conversion record.',
+        })
+        self.log_warning(**instruction_set_response)
         return instruction_set_response
 
     def warning_could_not_view_conversion_sheet(self, *args):
-        instruction_set_response = {
-            'failed': True,
+        instruction_set_response = res_utils.format_warning_response(**{
+            'failed': True, 'details': args,
             'warning': 'Something went wrong. '
-                       'Could not view conversion sheet. '\
-                       'Details: {}'.format(args)
-        }
-        log.warning(instruction_set_response['warning'])
+                       'Could not view conversion sheet.',
+        })
+        self.log_warning(**instruction_set_response)
         return instruction_set_response
 
     def warning_could_not_view_time_sheet_record(self, *args):
-        instruction_set_response = {
-            'failed': True,
+        instruction_set_response = res_utils.format_warning_response(**{
+            'failed': True, 'details': args,
             'warning': 'Something went wrong. '
-                       'Could not view time record. '\
-                       'Details: {}'.format(args)
-        }
-        log.warning(instruction_set_response['warning'])
+                       'Could not view time record.',
+        })
+        self.log_warning(**instruction_set_response)
         return instruction_set_response
 
     def warning_could_not_view_time_sheet(self, *args):
-        instruction_set_response = {
-            'failed': True,
+        instruction_set_response = res_utils.format_warning_response(**{
+            'failed': True, 'details': args,
             'warning': 'Something went wrong. '
-                       'Could not view time sheet. '\
-                       'Details: {}'.format(args)
-        }
-        log.warning(instruction_set_response['warning'])
+                       'Could not view time sheet.',
+        })
+        self.log_warning(**instruction_set_response)
         return instruction_set_response
 
     def warning_could_not_view_transfer_sheet_record(self, *args):
-        instruction_set_response = {
-            'failed': True,
+        instruction_set_response = res_utils.format_warning_response(**{
+            'failed': True, 'details': args,
             'warning': 'Something went wrong. '
-                       'Could not view transfer sheet. '
-                       'Details: {}'.format(args)
-        }
-        log.warning(instruction_set_response['warning'])
+                       'Could not view transfer sheet.',
+        })
+        self.log_warning(**instruction_set_response)
         return instruction_set_response
 
     def warning_could_not_view_transfer_sheet(self, *args):
-        instruction_set_response = {
-            'failed': True,
+        instruction_set_response = res_utils.format_warning_response(**{
+            'failed': True, 'details': args,
             'warning': 'Something went wrong. '
-                       'Could not view transfer sheet. '\
-                       'Details: {}'.format(args)
-        }
-        log.warning(instruction_set_response['warning'])
+                       'Could not view transfer sheet.',
+        })
+        self.log_warning(**instruction_set_response)
         return instruction_set_response
 
     def warning_could_not_view_contact_record(self, *args):
-        instruction_set_response = {
-            'failed': True,
+        instruction_set_response = res_utils.format_warning_response(**{
+            'failed': True, 'details': args,
             'warning': 'Something went wrong. '
-                       'Could not view contact record. '\
-                       'Details : {}'.format(args),
-        }
-        log.warning(instruction_set_response['warning'])
+                       'Could not view contact record.',
+        })
+        self.log_warning(**instruction_set_response)
         return instruction_set_response
 
     def warning_could_not_view_contact_list(self, *args):
-        instruction_set_response = {
-            'failed': True,
+        instruction_set_response = res_utils.format_warning_response(**{
+            'failed': True, 'details': args,
             'warning': 'Something went wrong. '
-                       'Could not view active contact list. '\
-                       'Details : {}'.format(args),
-        }
-        log.warning(instruction_set_response['warning'])
+                       'Could not view active contact list.',
+        })
+        self.log_warning(**instruction_set_response)
         return instruction_set_response
 
     def warning_could_not_stop_credit_clock_timer(self, *args):
-        instruction_set_response = {
-            'failed': True,
+        instruction_set_response = res_utils.format_warning_response(**{
+            'failed': True, 'details': args,
             'warning': 'Something went wrong. '
-                       'Could not stop credit clock timer. '\
-                       'Details: {}'.format(args),
-        }
-        log.warning(instruction_set_response['warning'])
+                       'Could not stop credit clock timer.',
+        })
+        self.log_warning(**instruction_set_response)
         return instruction_set_response
 
     def warning_could_not_resume_credit_clock_timer(self, *args):
-        instruction_set_response = {
-            'failed': True,
+        instruction_set_response = res_utils.format_warning_response(**{
+            'failed': True, 'details': args,
             'warning': 'Something went wrong. '
-                       'Could not resume credit clock timer. '\
-                       'Details: {}'.format(args)
-        }
-        log.warning(instruction_set_response['warning'])
+                       'Could not resume credit clock timer.',
+        })
+        self.log_warning(**instruction_set_response)
         return instruction_set_response
 
     def warning_could_not_start_credit_clock_timer(self, *args):
-        instruction_set_response = {
-            'failed': True,
+        instruction_set_response = res_utils.format_warning_response(**{
+            'failed': True, 'details': args,
             'warning': 'Something went wrong. '
-                       'Could not start credit clock timer. '\
-                       'Details: {}'.format(args)
-        }
-        log.warning(instruction_set_response['warning'])
+                       'Could not start credit clock timer.',
+        })
+        self.log_warning(**instruction_set_response)
         return instruction_set_response
 
     def warning_could_not_edit_user_account(self, *args):
-        instruction_set_response = {
-            'failed': True,
+        instruction_set_response = res_utils.format_warning_response(**{
+            'failed': True, 'details': args,
             'warning': 'Something went wrong. '
-                       'Could not edit user account. '\
-                       'Details: {}'.format(args)
-        }
-        log.warning(instruction_set_response['warning'])
+                       'Could not edit user account.',
+        })
+        self.log_warning(**instruction_set_response)
         return instruction_set_response
 
     def warning_could_not_transfer_credits_to_partner(self, *args):
-        instruction_set_response = {
-            'failed': True,
+        instruction_set_response = res_utils.format_warning_response(**{
+            'failed': True, 'details': args,
             'warning': 'Something went wrong. '
-                       'Could not transfer credits to partner. '\
-                       'Details : {}'.format(args)
-        }
-        log.warning(instruction_set_response['warning'])
+                       'Could not transfer credits to partner.',
+        })
+        self.log_warning(**instruction_set_response)
         return instruction_set_response
 
     def warning_could_not_create_new_contact_list(self, *args):
-        instruction_set_response = {
-            'failed': True,
+        instruction_set_response = res_utils.format_warning_response(**{
+            'failed': True, 'details': args,
             'warning': 'Something went wrong. '
-                       'Could not create new contact list. '
-                       'Details: {}'.format(args),
-        }
-        log.warning(instruction_set_response['warning'])
+                       'Could not create new contact list.',
+        })
+        self.log_warning(**instruction_set_response)
         return instruction_set_response
 
     def warning_could_not_create_new_contact_record(self, *args):
-        instruction_set_response = {
-            'failed': True,
+        instruction_set_response = res_utils.format_warning_response(**{
+            'failed': True, 'details': args,
             'warning': 'Something went wrong. '
-                       'Could not create new contact record. '
-                       'Details: {}'.format(args)
-        }
-        log.warning(instruction_set_response['warning'])
+                       'Could not create new contact record.',
+        })
+        self.log_warning(**instruction_set_response)
         return instruction_set_response
 
     def warning_could_not_convert_credit_clock_to_credits(self, *args):
-        instruction_set_response = {
-            'failed': True,
+        instruction_set_response = res_utils.format_warning_response(**{
+            'failed': True, 'details': args,
             'warning': 'Something went wrong. '
-                       'Could not convert credit clock time to credits. '
-                       'Details: {}'.format(args)
-        }
-        log.warning(instruction_set_response['warning'])
+                       'Could not convert credit clock time to credits.',
+        })
+        self.log_warning(**instruction_set_response)
         return instruction_set_response
 
     def warning_could_not_convert_credits_to_credit_clock(self, *args):
-        instruction_set_response = {
-            'failed': True,
+        instruction_set_response = res_utils.format_warning_response(**{
+            'failed': True, 'details': args,
             'warning': 'Something went wrong. '
-                       'Could not convert ewallet credits to credit clock. '
-                       'Details: {}'.format(args),
-        }
-        log.warning(instruction_set_response['warning'])
+                       'Could not convert ewallet credits to credit clock.',
+        })
+        self.log_warning(**instruction_set_response)
         return instruction_set_response
 
     def warning_could_not_pay_partner_account(self, *args):
-        instruction_set_response = {
-            'failed': True,
+        instruction_set_response = res_utils.format_warning_response(**{
+            'failed': True, 'details': args,
             'warning': 'Something went wrong. '
-                       'Could not pay partner account in EWallet Session. '
-                       'Details : {}'.format(args)
-        }
-        log.warning(instruction_set_response['warning'])
+                       'Could not pay partner account.',
+        })
+        self.log_warning(**instruction_set_response)
         return instruction_set_response
 
     def warning_could_not_supply_user_credit_ewallet(self, *args):
-        instruction_set_response = {
-            'failed': True,
+        instruction_set_response = res_utils.format_warning_response(**{
+            'failed': True, 'details': args,
             'warning': 'Something went wrong. '
-                       'Could not supply user credit wallet with credits in EWallet Session. '
-                       'Details : {}'.format(args)
-        }
-        log.warning(instruction_set_response['warning'])
+                       'Could not supply user credit ewallet.',
+        })
+        self.log_warning(**instruction_set_response)
         return instruction_set_response
 
     def warning_could_not_login_user_account(self, *args):
-        instruction_set_response = {
-            'failed': True,
+        instruction_set_response = res_utils.format_warning_response(**{
+            'failed': True, 'details': args,
             'warning': 'Something went wrong. '
-                       'Could not login user account in EWallet Session. '
-                       'Details : {}'.format(args)
-        }
-        log.warning(instruction_set_response['warning'])
+                       'Could not login user account.',
+        })
+        self.log_warning(**instruction_set_response)
         return instruction_set_response
 
     def warning_could_not_create_new_user_account(self, *args):
-        instruction_set_response = {
-            'failed': True,
+        instruction_set_response = res_utils.format_warning_response(**{
+            'failed': True, 'details': args,
             'warning': 'Something went wrong. '
-                       'Could not create new user account in EWallet Session. '
-                       'Details : {}'.format(args)
-        }
-        log.warning(instruction_set_response['warning'])
+                       'Could not create new user account.',
+        })
+        self.log_warning(**instruction_set_response)
         return instruction_set_response
 
     def warning_could_not_request_session_token(self, *args):
-        instruction_set_response = {
-            'failed': True,
-            'warning': 'Something went wrong. Could not request session token. '
-                       'Details: {}'.format(args)
-        }
-        log.warning(instruction_set_response['warning'])
+        instruction_set_response = res_utils.format_warning_response(**{
+            'failed': True, 'details': args,
+            'warning': 'Something went wrong. '
+                       'Could not request ewallet session token.',
+        })
+        self.log_warning(**instruction_set_response)
         return instruction_set_response
 
     def warning_worker_not_found_in_pool_by_id(self, *args):
-        instruction_set_response = {
-            'failed': True,
-            'warning': 'Something went wrong. Worker not found in pool by id. '
-                       'Details: {}'.format(args)
-        }
-        log.warning(instruction_set_response['warning'])
+        instruction_set_response = res_utils.format_warning_response(**{
+            'failed': True, 'details': args,
+            'warning': 'Something went wrong. '
+                       'EWallet session worker not found in pool by id.',
+        })
+        self.log_warning(**instruction_set_response)
         return instruction_set_response
 
     def warning_could_not_fetch_worker_id(self, *args):
-        instruction_set_response = {
-            'failed': True,
-            'warning': 'Could not fetch worker id. '
-                       'Details: {}'.format(args)
-        }
-        log.warning(instruction_set_response['warning'])
+        instruction_set_response = res_utils.format_warning_response(**{
+            'failed': True, 'details': args,
+            'warning': 'Something went wrong. '
+                       'Could not fetch session worker id.',
+        })
+        self.log_warning(**instruction_set_response)
         return instruction_set_response
 
     def warning_no_ctoken_found(self, *args):
-        instruction_set_response = {
-            'failed': True,
-            'warning': 'No client token found. '
-                       'Details: {}'.format(args)
-        }
-        log.warning(instruction_set_response['warning'])
+        instruction_set_response = res_utils.format_warning_response(**{
+            'failed': True, 'details': args,
+            'warning': 'No client token found.',
+        })
+        self.log_warning(**instruction_set_response)
         return instruction_set_response
 
     def warning_no_stoken_found(self, *args):
-        instruction_set_response = {
-            'failed': True,
-            'warning': 'No session token found. '
-                       'Details: {}'.format(args)
-        }
-        log.warning(instruction_set_response['warning'])
+        instruction_set_response = res_utils.format_warning_response(**{
+            'failed': True, 'details': args,
+            'warning': 'No session token found.',
+        })
+        self.log_warning(**instruction_set_response)
         return instruction_set_response
 
     def warning_no_worker_id_found(self, *args):
-        instruction_set_response = {
-            'failed': True,
-            'warning': 'No worker id found. '
-                       'Details: {}'.format(args)
-        }
-        log.warning(instruction_set_response['warning'])
+        instruction_set_response = res_utils.format_warning_response(**{
+            'failed': True, 'details': args,
+            'warning': 'No ewallet session worker id found.',
+        })
+        self.log_warning(**instruction_set_response)
         return instruction_set_response
 
     def warning_no_available_session_worker_found(self, *args):
-        instruction_set_response = {
-            'failed': True,
-            'warning': 'No available session worker found in pool. '
-                       'Details: {}'.format(args)
-        }
-        log.warning(instruction_set_response['warning'])
+        instruction_set_response = res_utils.format_warning_response(**{
+            'failed': True, 'details': args,
+            'warning': 'No available session worker found in pool.',
+        })
+        self.log_warning(**instruction_set_response)
         return instruction_set_response
 
-    def warning_multiple_session_tokens_found_by_label(self, session_token, *args):
-        instruction_set_response = {
-            'failed': True,
-            'warning': 'Multiple session tokens found by label {}. '
-                       'Fetching first. Details: {}'.format(session_token, args)
-        }
-        log.warning(instruction_set_response['warning'])
+    def warning_multiple_session_tokens_found_by_label(self, *args):
+        instruction_set_response = res_utils.format_warning_response(**{
+            'failed': True, 'details': args,
+            'warning': 'Multiple session tokens found. Fetching first.',
+        })
+        self.log_warning(**instruction_set_response)
         return instruction_set_response
 
-    def warning_multiple_client_tokens_found_by_label(self, client_id, *args):
-        instruction_set_response = {
-            'failed': True,
-            'warning': 'Multiple client tokens found by label {}. '
-                       'Fetching first. Details: {}'.format(client_id, args)
-        }
-        log.warning(instruction_set_response['warning'])
+    def warning_multiple_client_tokens_found_by_label(self, *args):
+        instruction_set_response = res_utils.format_warning_response(**{
+            'failed': True, 'details': args,
+            'warning': 'Multiple client tokens found. Fetching first.',
+        })
+        self.log_warning(**instruction_set_response)
         return instruction_set_response
 
-    def warning_could_not_pause_credit_clock_timer(self, ewallet_session, instruction_set):
-        instruction_set_response = {
-            'failed': True,
-            'warning': 'Something went wrong. Could not pause credit clock timer in session {}. '\
-                       'Details : {}'.format(ewallet_session, instruction_set)
-        }
-        log.warning(instruction_set_response['warning'])
+    def warning_could_not_pause_credit_clock_timer(self, *args):
+        instruction_set_response = res_utils.format_warning_response(**{
+            'failed': True, 'details': args,
+            'warning': 'Something went wrong. '
+                       'Could not pause credit clock timer.',
+        })
+        self.log_warning(**instruction_set_response)
         return instruction_set_response
 
-    def warning_no_expired_ewallet_sessions_found(self, instruction_set):
-        instruction_set_response = {
-            'failed': True,
-            'warning': 'No expired ewallet sessions found. Instruction set details : {}'\
-                     .format(instruction_set),
-        }
-        log.warning(instruction_set_response['warning'])
+    def warning_no_expired_ewallet_sessions_found(self, *args):
+        instruction_set_response = res_utils.format_warning_response(**{
+            'failed': True, 'details': args,
+            'warning': 'Something went wrong. '
+                       'No expired ewallet sessions found.',
+        })
+        self.log_warning(**instruction_set_response)
         return instruction_set_response
 
-    def warning_could_not_fetch_expired_ewallet_sessions(self, instruction_set):
-        instruction_set_response = {
-            'failed': True,
-            'warning': 'Something went wrong. Could not fetch expired ewallet sessions. '\
-                       'Instruction set details : {}'.format(instruction_set),
-        }
-        log.warning(instruction_set_response['warning'])
+    def warning_could_not_fetch_expired_ewallet_sessions(self, *args):
+        instruction_set_response = res_utils.format_warning_response(**{
+            'failed': True, 'details': args,
+            'warning': 'Something went wrong. '
+                       'Could not fetch expired ewallet sessions.',
+        })
+        self.log_warning(**instruction_set_response)
         return instruction_set_response
 
-    def warning_could_not_clean_ewallet_session(self, ewallet_session):
-        instruction_set_response = {
-            'failed': True,
-            'warning': 'Something went wrong. Could not clean ewallet session. '\
-                       'Details : {}'.format({
-                           'id': ewallet_session.fetch_active_session_id(),
-                           'reference': ewallet_session.fetch_active_session_reference(),
-                       }),
-        }
-        log.warning(instruction_set_response['warning'])
+    def warning_could_not_clean_ewallet_session(self, *args):
+        instruction_set_response = res_utils.format_warning_response(**{
+            'failed': True, 'details': args,
+            'warning': 'Something went wrong. '
+                       'Could not clean ewallet session.',
+        })
+        self.log_warning(**instruction_set_response)
         return instruction_set_response
 
-    def warning_could_not_cleanup_ewallet_session_worker(self, session_worker):
-        instruction_set_response = {
-            'failed': True,
-            'warning': 'Something went wrong. Could not cleanup ewallet session worker {}.'\
-                       .format(session_worker),
-        }
-        log.warning(instruction_set_response['warning'])
+    def warning_could_not_cleanup_ewallet_session_worker(self, *args):
+        instruction_set_response = res_utils.format_warning_response(**{
+            'failed': True, 'details': args,
+            'warning': 'Something went wrong. '
+                       'Could not cleanup ewallet session worker.',
+        })
+        self.log_warning(**instruction_set_response)
         return instruction_set_response
 
-    def warning_could_not_fulfill_client_id_request(self):
-        instruction_set_response = {
-            'failed': True,
-            'warning': 'Something went wrong. Could not fulfill '\
-                       'client id request.'
-        }
-        log.warning(instruction_set_response['warning'])
+    def warning_could_not_fulfill_client_id_request(self, *args):
+        instruction_set_response = res_utils.format_warning_response(**{
+            'failed': True, 'details': args,
+            'warning': 'Something went wrong. '
+                       'Could not honour client ID request.',
+        })
+        self.log_warning(**instruction_set_response)
         return instruction_set_response
 
-    def warning_could_not_interogate_ewallet_session_workers(self, instruction_set):
-        instruction_set_response = {
-            'failed': True,
-            'warning': 'Something went wrong. Could not interogate ewallet session workers. '\
-                       'Instruction set details : {}'.format(instruction_set),
-        }
-        log.warning(instruction_set_response['warning'])
+    def warning_could_not_interogate_ewallet_session_workers(self, *args):
+        instruction_set_response = res_utils.format_warning_response(**{
+            'failed': True, 'details': args,
+            'warning': 'Something went wrong. '
+                       'Could not interogate ewallet session workers.',
+        })
+        self.log_warning(**instruction_set_response)
         return instruction_set_response
 
-    def warning_ewallet_session_manager_worker_pool_empty(self):
-        instruction_set_response = {
-            'failed': True,
-            'warning': 'Ewallet session manager worker pool empty.'
-        }
-        log.warning(instruction_set_response['warning'])
+    def warning_ewallet_session_manager_worker_pool_empty(self, *args):
+        instruction_set_response = res_utils.format_warning_response(**{
+            'failed': True, 'details': args,
+            'warning': 'Ewallet session manager worker pool empty.',
+        })
+        self.log_warning(**instruction_set_response)
         return instruction_set_response
 
-    def warning_no_ewallet_session_found_by_id(self, ewallet_session_id):
-        instruction_set_response = {
-            'failed': True,
-            'warning': 'No ewallet session found by id {}.'.format(ewallet_session_id),
-        }
-        log.warning(instruction_set_response['warning'])
+    def warning_no_ewallet_session_found_by_id(self, *args):
+        instruction_set_response = res_utils.format_warning_response(**{
+            'failed': True, 'details': args,
+            'warning': 'No ewallet session found by id.',
+        })
+        self.log_warning(**instruction_set_response)
         return instruction_set_response
 
-    def warning_ewallet_session_worker_assignment_failure(self, instruction_set):
-        instruction_set_response = {
-            'failed': True,
-            'warning': 'Something went wrong. Could not assign ewallet session to session manager worker. '\
-                       'Instruction set details : {}'.format(instruction_set),
-        }
-        log.warning(instruction_set_response['warning'])
+    def warning_ewallet_session_worker_assignment_failure(self, *args):
+        instruction_set_response = res_utils.format_warning_response(**{
+            'failed': True, 'details': args,
+            'warning': 'Something went wrong. '
+                       'Could not assign ewallet session to worker.',
+        })
+        self.log_warning(**instruction_set_response)
         return instruction_set_response
 
-    def warning_no_ewallet_session_found_by_id(self, instruction_set):
-        instruction_set_response = {
-            'failed': True,
-            'warning': 'No ewallet session found by id. Instruction set details : {}'\
-                       .format(instruction_set),
-        }
-        log.warning(instruction_set_response['warning'])
-        return instruction_set_response
-
-    def warning_could_not_fetch_ewallet_session(self, instruction_set):
-        instruction_set_response = {
-            'failed': True,
-            'warning': 'Something went wrong. Could not fetch ewallet session. '\
-                       'Instruction set details : {}'.format(instruction_set),
-        }
-        log.warning(instruction_set_response['warning'])
+    def warning_could_not_fetch_ewallet_session(self, *args):
+        instruction_set_response = res_utils.format_warning_response(**{
+            'failed': True, 'details': args,
+            'warning': 'Something went wrong. '
+                       'Could not fetch ewallet session.',
+        })
+        self.log_warning(**instruction_set_response)
         return instruction_set_response
 
     # ERRORS

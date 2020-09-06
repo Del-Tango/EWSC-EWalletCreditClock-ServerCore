@@ -35,6 +35,19 @@ class ResUtils():
 
     # FORMATTERS
 
+    def format_warning_response(self, **kwargs):
+        instruction_set_response = {
+            'failed': kwargs.get('failed'),
+            'warning': kwargs.get('warning'),
+            'details': str(kwargs.get('details'))\
+                .replace('\\', '')\
+                .replace('(', '')\
+                .replace('\'', '')\
+                .replace('\"', '')\
+                .replace(')', ''),
+        }
+        return instruction_set_response
+
     def format_timestamp(self, timestamp):
         return time.strftime('%d-%m-%Y %H:%M:%S', time.localtime(timestamp))
 

@@ -63,7 +63,5 @@ class TestEWalletSessionManagerUserCreateAccount(unittest.TestCase):
         self.assertTrue(isinstance(new_account['account_data']['email'], str))
         self.assertTrue(isinstance(new_account['account_data']['ewallet'], int))
         self.assertTrue(isinstance(new_account['account_data']['contact_list'], int))
-        self.assertTrue(isinstance(new_account['account_data']['state_code'], int))
-        self.assertTrue(isinstance(new_account['account_data']['state_name'], str))
         self.assertTrue(isinstance(new_account['account_data']['ewallet_archive'], dict))
         self.assertTrue(isinstance(new_account['account_data']['contact_list_archive'], dict))

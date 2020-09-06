@@ -76,7 +76,7 @@ class TestEWalletSessionManageUserActionUnlinkTransferSheet(unittest.TestCase):
         print('\n[ * ]: User action Unlink Transfer Sheet')
         instruction_set = {
             'controller': 'client', 'ctype': 'action', 'action': 'unlink',
-            'unlink': 'transfer', 'transfer': 'list', 'list_id': 2,
+            'unlink': 'transfer', 'transfer': 'list', 'list_id': 3,
             'client_id': self.client_id, 'session_token': self.session_token
         }
         unlink = self.session_manager.session_manager_controller(

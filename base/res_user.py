@@ -287,8 +287,7 @@ class ResUser(Base):
             'email': self.user_email,
             'phone': self.user_phone,
             'alias': self.user_alias,
-            'state_code': self.user_state_code,
-            'state_name': self.user_state_name,
+#           'state_code': self.user_state_code,
 #           'user_pass_hash_archive': {
 #               item.fetch_pass_hash_archive_id(): item.fetch_pass_hash_archive_pass_hash() \
 #               for item in self.user_pass_hash_archive

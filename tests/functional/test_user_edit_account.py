@@ -101,7 +101,5 @@ class TestEWalletSessionManageUserActionEditAccount(unittest.TestCase):
         self.assertTrue(isinstance(edit['account_data'].get('email'), str))
         self.assertTrue(isinstance(edit['account_data'].get('phone'), str))
         self.assertTrue(isinstance(edit['account_data'].get('alias'), str))
-        self.assertTrue(isinstance(edit['account_data'].get('state_code'), int))
-        self.assertTrue(isinstance(edit['account_data'].get('state_name'), str))
         self.assertTrue(isinstance(edit['account_data'].get('ewallet_archive'), dict))
         self.assertTrue(isinstance(edit['account_data'].get('contact_list_archive'), dict))

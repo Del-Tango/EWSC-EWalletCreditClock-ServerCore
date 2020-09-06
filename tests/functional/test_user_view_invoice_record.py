@@ -20,13 +20,13 @@ class TestEWalletSessionManageUserActionViewInvoiceRecord(unittest.TestCase):
         # Create new EWallet Session Manager instance
         session_manager = manager.EWalletSessionManager()
         # Generate new Client ID to be able to request a Session Token
-        print('[...]: User action Request Client ID')
+        print('[...]: User action RequestClientID')
         client_id = session_manager.session_manager_controller(
             controller='client', ctype='action', action='request',
             request='client_id'
         )
         # Request a Session Token to be able to operate within a EWallet Session
-        print('[...]: User action Request Session Token')
+        print('[...]: User action RequestSessionToken')
         session_token = session_manager.session_manager_controller(
             controller='client', ctype='action', action='request', request='session_token',
             client_id=client_id['client_id']
@@ -36,7 +36,7 @@ class TestEWalletSessionManageUserActionViewInvoiceRecord(unittest.TestCase):
         cls.client_id = client_id['client_id']
         cls.session_token = session_token['session_token']
         # Create new user account to use as SystemCore account mockup
-        print('[...]: User action Create New Account')
+        print('[...]: User action CreateNewAccount')
         new_account = session_manager.session_manager_controller(
             controller='client', ctype='action', action='new',
             new='account', client_id=cls.client_id,
@@ -51,19 +51,26 @@ class TestEWalletSessionManageUserActionViewInvoiceRecord(unittest.TestCase):
             user_pass=cls.user_pass_2, user_email=cls.user_email_2
         )
         # Login to new user account
-        print('[...]: User action Account Login')
+        print('[...]: User action AccountLogin')
         login = session_manager.session_manager_controller(
             controller='client', ctype='action', action='login',
             client_id=cls.client_id, session_token=cls.session_token,
             user_name=cls.user_name_2, user_pass=cls.user_pass_2,
         )
-        # Supply EWallet with credits to have available for transfer
-        print('[...]: User action Supply EWallet Credits')
+        # Supply EWallet with credits to have available for pay
+        print('[...]: User action SupplyCredits')
         supply = session_manager.session_manager_controller(
             controller='client', ctype='action', action='supply', supply='credits',
             client_id=cls.client_id, session_token=cls.session_token,
             currency='RON', credits=100, cost=4.7,
             notes='EWallet user action Supply notes added by functional test suit.'
+        )
+        # Pay partner to generate invoice sheet
+        print('[...]: User action PayCredits')
+        pay = cls.session_manager.session_manager_controller(
+            controller='client', ctype='action', action='pay',
+            pay=cls.user_email_1, credits=50, client_id=cls.client_id,
+            session_token=cls.session_token,
         )
 
     @classmethod
@@ -76,7 +83,7 @@ class TestEWalletSessionManageUserActionViewInvoiceRecord(unittest.TestCase):
         print('\n[ * ]: User action View Invoice Record')
         instruction_set = {
             'controller': 'client', 'ctype': 'action', 'action': 'view',
-            'view': 'invoice', 'invoice': 'record', 'record_id': 1,
+            'view': 'invoice', 'invoice': 'record', 'record_id': 2,
             'client_id': self.client_id, 'session_token': self.session_token
         }
         view = self.session_manager.session_manager_controller(

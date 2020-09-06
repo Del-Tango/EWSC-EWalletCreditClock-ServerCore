@@ -40,11 +40,11 @@ class CreditInvoiceSheetRecord(Base):
             'reference',
             config.invoice_sheet_config['invoice_record_reference']
         )
-        self.credits = kwargs.get('credits', 0)
-        self.currency = kwargs.get('currency', 'RON')
-        self.cost = kwargs.get('cost', 1)
-        self.seller_id = kwargs.get('seller_id', int())
-        self.notes = kwargs.get('notes', str())
+        self.credits = kwargs.get('credits') or int()
+        self.currency = kwargs.get('currency') or 'RON'
+        self.cost = kwargs.get('cost') or int()
+        self.seller_id = kwargs.get('seller_id') or int()
+        self.notes = kwargs.get('notes') or str()
 
     # FETCHERS (RECORD)
 
