@@ -679,6 +679,33 @@ class EWallet(Base):
         }
         return command_chain_response
 
+    def action_switch_conversion_sheet(self, **kwargs):
+        log.debug('')
+        active_user = self.fetch_active_session_user()
+        if not active_user:
+            return self.error_no_session_active_user_found()
+        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
+            kwargs, 'ctype', 'action', 'target'
+        )
+        switch_conversion_sheet = active_user.user_controller(
+            ctype='action', action='switch', target='conversion_sheet',
+            **sanitized_command_chain
+        )
+        if not switch_conversion_sheet or isinstance(switch_conversion_sheet, dict) and \
+                switch_conversion_sheet.get('failed'):
+            kwargs['active_session'].rollback()
+            return self.warning_could_not_switch_conversion_sheet(
+                kwargs, active_user, switch_conversion_sheet
+            )
+        kwargs['active_session'].commit()
+        log.info('Successfully switched conversion sheet.')
+        command_chain_response = {
+            'failed': False,
+            'conversion_sheet': switch_conversion_sheet.fetch_conversion_sheet_id(),
+            'sheet_data': switch_conversion_sheet.fetch_conversion_sheet_values(),
+        }
+        return command_chain_response
+
     def action_switch_invoice_sheet(self, **kwargs):
         log.debug('')
         active_user = self.fetch_active_session_user()
@@ -2227,33 +2254,6 @@ class EWallet(Base):
         }
         return command_chain_response
 
-    def action_switch_conversion_sheet(self, **kwargs):
-        log.debug('')
-        active_user = self.fetch_active_session_user()
-        if not active_user:
-            return self.error_no_session_active_user_found()
-        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
-            kwargs, 'ctype', 'action', 'target'
-        )
-        switch_conversion_sheet = active_user.user_controller(
-            ctype='action', action='switch', target='conversion_sheet',
-            **sanitized_command_chain
-        )
-        if not switch_conversion_sheet or isinstance(switch_conversion_sheet, dict) and \
-                switch_conversion_sheet.get('failed'):
-            kwargs['active_session'].rollback()
-            return self.warning_could_not_switch_conversion_sheet(
-                active_user.fetch_user_name(), kwargs
-            )
-        kwargs['active_session'].commit()
-        log.info('Successfully switched conversion sheet.')
-        command_chain_response = {
-            'failed': False,
-            'conversion_sheet': switch_conversion_sheet.fetch_conversion_sheet_id(),
-            'sheet_data': switch_conversion_sheet.fetch_conversion_sheet_values(),
-        }
-        return command_chain_response
-
     def action_create_new_contact_list(self, **kwargs):
         log.debug('')
         active_user = self.fetch_active_session_user()
@@ -3368,6 +3368,16 @@ class EWallet(Base):
     [ TODO ]: Fetch warning messages from message file by key codes.
     '''
 
+    def warning_could_not_switch_conversion_sheet(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Something went wrong. '
+                       'Could not switch conversion sheet. '
+                       'Details: {}'.format(args),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
+
     def warning_could_not_switch_invoice_sheet(self, *args):
         command_chain_response = {
             'failed': True,
@@ -3817,15 +3827,6 @@ class EWallet(Base):
         command_chain_response = {
             'failed': True,
             'warning': 'Something went wrong. Could not switch time sheet for ewallet user {}. '\
-                       'Command chain details : {}'.format(user_name, command_chain),
-        }
-        log.warning(command_chain_response['warning'])
-        return command_chain_response
-
-    def warning_could_not_switch_conversion_sheet(self, user_name, command_chain):
-        command_chain_response = {
-            'failed': True,
-            'warning': 'Something went wrong. Could not switch conversion sheet for ewallet session user {}. '\
                        'Command chain details : {}'.format(user_name, command_chain),
         }
         log.warning(command_chain_response['warning'])

@@ -33,18 +33,13 @@ class CreditClock(Base):
     end_time = Column(Float)
     pending_time = Column(Float)
     pending_count = Column(Integer)
-    # O2O
     wallet = relationship('CreditEWallet', back_populates='credit_clock')
-    # O2O
     time_sheet = relationship('CreditClockTimeSheet', back_populates='clock')
     active_time_record = relationship('TimeSheetRecord')
-    # O2O
     conversion_sheet = relationship(
        'CreditClockConversionSheet', back_populates='clock',
     )
-    # O2M
     time_sheet_archive = relationship('CreditClockTimeSheet')
-    # O2M
     conversion_sheet_archive = relationship('CreditClockConversionSheet')
 
     def __init__(self, *args, **kwargs):
@@ -611,6 +606,11 @@ class CreditClock(Base):
 
     # CHECKERS
 
+    def check_conversion_sheet_belongs_to_credit_clock(self, sheet):
+        log.debug('')
+        return False if sheet not in self.conversion_sheet_archive \
+            else True
+
     def check_clock_is_pending(self, **kwargs):
         log.debug('')
         state = self.fetch_credit_clock_state()
@@ -923,6 +923,28 @@ class CreditClock(Base):
 
     # SWITCHERS
 
+    def switch_credit_clock_conversion_sheet(self, **kwargs):
+        log.debug('')
+        new_sheet = self.fetch_credit_clock_conversion_sheet_by_id(**kwargs)
+        if not new_sheet or isinstance(new_sheet, dict) and \
+                new_sheet.get('failed'):
+            return self.warning_could_not_fetch_conversion_sheet_by_id(
+                kwargs, new_sheet
+            )
+        check = self.check_conversion_sheet_belongs_to_credit_clock(new_sheet)
+        if not check:
+            return self.warning_conversion_sheet_does_not_belong_to_credit_clock(
+                kwargs, new_sheet, check
+            )
+        set_sheet = self.set_credit_clock_conversion_sheet(new_sheet)
+        if not set_sheet or isinstance(set_sheet, dict) and \
+                set_sheet.get('failed'):
+            return self.error_could_not_switch_conversion_sheet(
+                kwargs, new_sheet, check, set_sheet
+            )
+        log.info('Successfully switch credit clock conversion sheet by id.')
+        return new_sheet
+
     def switch_credit_clock_time_sheet(self, **kwargs):
         log.debug('')
         new_time_sheet = self.fetch_credit_clock_time_sheet_by_id(**kwargs)
@@ -932,16 +954,6 @@ class CreditClock(Base):
         if set_sheet:
             log.info('Successfully switched credit clock time sheet by id.')
         return new_time_sheet
-
-    def switch_credit_clock_conversion_sheet(self, **kwargs):
-        log.debug('')
-        new_conversion_sheet = self.fetch_credit_clock_conversion_sheet_by_id(**kwargs)
-        if not new_conversion_sheet:
-            return self.warning_could_not_fetch_conversion_sheet_by_id(kwargs)
-        set_sheet = self.set_credit_clock_conversion_sheet(new_conversion_sheet)
-        if set_sheet:
-            log.info('Successfully switch credit clock conversion sheet by id.')
-        return new_conversion_sheet
 
     # CREATORS
 
@@ -1562,6 +1574,16 @@ class CreditClock(Base):
     '''
     [ TODO ]: Fetch error messages from message file by key codes.
     '''
+
+    def error_could_not_switch_conversion_sheet(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Something went wrong. '
+                     'Could not switch conversion sheet. '
+                     'Details: {}'.format(args)
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
 
     def error_could_not_set_time_sheet_to_archive(self, *args):
         command_chain_response = {
@@ -2260,9 +2282,33 @@ class CreditClock(Base):
     [ TODO ]: Fetch warning messages from message file by key codes.
     '''
 
-    def warning_invalid_credit_clock_state(self):
-        log.warning('Invalid credit clock state.')
-        return False
+    def warning_conversion_sheet_does_not_belong_to_credit_clock(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Conversion sheet does not belong to active credit clock. '
+                       'Details: {}'.format(args),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
+
+    def warning_could_not_fetch_conversion_sheet_by_id(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Something went wrong. '
+                       'Could not fetch conversion sheet by id. '
+                       'Details: {}'.format(args),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
+
+    def warning_invalid_credit_clock_state(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Invalid credit clock state. '
+                       'Details: {}'.format(args),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
 
     def warning_could_not_fetch_active_conversion_sheet(self, command_chain):
         command_chain_response = {
@@ -2331,15 +2377,6 @@ class CreditClock(Base):
         command_chain_response = {
             'failed': True,
             'warning': 'Could not fetch time sheet by id. Command chain details : {}'\
-                       .format(command_chain),
-        }
-        log.warning(command_chain_response['warning'])
-        return command_chain_response
-
-    def warning_could_not_fetch_conversion_sheet_by_id(self, command_chain):
-        command_chain_response = {
-            'failed': True,
-            'warning': 'Could not fetch conversion sheet by id. Command chain details : {}'\
                        .format(command_chain),
         }
         log.warning(command_chain_response['warning'])

@@ -727,6 +727,25 @@ class CreditEWallet(Base):
 
     # SWITCHERS
 
+    def switch_credit_wallet_clock_conversion_sheet(self, **kwargs):
+        log.debug('')
+        credit_clock = self.fetch_credit_ewallet_credit_clock()
+        if not credit_clock:
+            return self.error_could_not_fetch_credit_ewallet_credit_clock(kwargs)
+        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
+            kwargs, 'controller', 'action', 'sheet'
+        )
+        switch = credit_clock.main_controller(
+            controller='user', action='switch_sheet', sheet='conversion',
+            **sanitized_command_chain
+        )
+        if not switch or isinstance(switch, dict) and switch.get('failed'):
+            return self.warning_could_not_switch_credit_ewallet_conversion_sheet(
+                kwargs, credit_clock, switch
+            )
+        log.info('Successfully switched conversion sheet.')
+        return switch
+
     def switch_credit_wallet_invoice_sheet(self, **kwargs):
         log.debug('')
         new_invoice_sheet = self.fetch_credit_wallet_invoice_sheet_by_id(
@@ -745,7 +764,7 @@ class CreditEWallet(Base):
             return self.warning_could_not_switch_credit_ewallet_invoice_sheet(
                 kwargs, new_invoice_sheet, set_sheet
             )
-        log.info('Successfully switched invoice sheet by id.')
+        log.info('Successfully switched invoice sheet.')
         return self.warning_could_not_switch_credit_ewallet_invoice_sheet(kwargs) \
             if not set_sheet else new_invoice_sheet
 
@@ -767,7 +786,7 @@ class CreditEWallet(Base):
             return self.warning_could_not_switch_credit_ewallet_transfer_sheet(
                 kwargs, new_transfer_sheet, set_sheet
             )
-        log.info('Successfully switched transfer sheet by id.')
+        log.info('Successfully switched transfer sheet.')
         return new_transfer_sheet
 
     def switch_credit_wallet_clock_time_sheet(self, **kwargs):
@@ -783,26 +802,8 @@ class CreditEWallet(Base):
             **sanitized_command_chain
         )
         if set_sheet:
-            log.info('Successfully switched time sheet by id.')
+            log.info('Successfully switched time sheet.')
         return self.warning_could_not_switch_credit_ewallet_time_sheet(kwargs) \
-            if not set_sheet or isinstance(set_sheet, dict) and set_sheet.get('failed') \
-            else set_sheet
-
-    def switch_credit_wallet_clock_conversion_sheet(self, **kwargs):
-        log.debug('')
-        credit_clock = self.fetch_credit_ewallet_credit_clock()
-        if not credit_clock:
-            return self.error_could_not_fetch_credit_ewallet_credit_clock(kwargs)
-        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
-            kwargs, 'controller', 'action', 'sheet'
-        )
-        set_sheet = credit_clock.main_controller(
-            controller='user', action='switch_sheet', sheet='conversion',
-            **sanitized_command_chain
-        )
-        if set_sheet:
-            log.info('Successfully switched conversion sheet by id.')
-        return self.warning_could_not_switch_credit_ewallet_conversion_sheet(kwargs) \
             if not set_sheet or isinstance(set_sheet, dict) and set_sheet.get('failed') \
             else set_sheet
 
@@ -1271,6 +1272,16 @@ class CreditEWallet(Base):
     [ TODO ]: Fetch error messages from message file by key codes.
     '''
 
+    def warning_could_not_switch_credit_ewallet_conversion_sheet(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Something went wrong. '
+                       'Could not switch conversion sheet. '
+                       'Details: {}'.format(args),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
+
     def warning_invoice_sheet_does_not_belong_to_credit_ewallet(self, *args):
         command_chain_response = {
             'failed': True,
@@ -1413,15 +1424,6 @@ class CreditEWallet(Base):
         command_chain_response = {
             'failed': True,
             'warning': 'Something went wrong. Could not switch credit clock time sheet. '\
-                       'Command chain details : {}'.format(command_chain),
-        }
-        log.warning(command_chain_response['warning'])
-        return command_chain_response
-
-    def warning_could_not_switch_credit_ewallet_conversion_sheet(self, command_chain):
-        command_chain_response = {
-            'failed': True,
-            'warning': 'Something went wrong. Could not switch credit ewallet conversion sheet. '\
                        'Command chain details : {}'.format(command_chain),
         }
         log.warning(command_chain_response['warning'])

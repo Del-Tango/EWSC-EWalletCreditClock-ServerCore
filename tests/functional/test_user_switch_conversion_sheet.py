@@ -75,7 +75,7 @@ class TestEWalletSessionManageUserActionSwitchConversionSheet(unittest.TestCase)
         print('\n[ * ]: User action Switch Conversion Sheet')
         instruction_set = {
             'controller': 'client', 'ctype': 'action', 'action': 'switch',
-            'switch': 'conversion', 'conversion': 'list', 'sheet_id': 2,
+            'switch': 'conversion', 'conversion': 'list', 'sheet_id': 3,
             'client_id': self.client_id, 'session_token': self.session_token
         }
         switch = self.session_manager.session_manager_controller(
