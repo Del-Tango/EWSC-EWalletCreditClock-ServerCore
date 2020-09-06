@@ -446,18 +446,6 @@ class CreditInvoiceSheet(Base):
 
     # FETCHERS (LIST)
 
-    def fetch_credit_invoice_records(self, **kwargs):
-        log.debug('')
-        if not kwargs.get('search_by'):
-            return self.error_no_invoice_record_search_identifier_specified()
-        handlers = {
-            'id': self.fetch_credit_invoice_record_by_id,
-            'reference': self.fetch_credit_invoice_records_by_ref,
-            'date': self.fetch_credit_invoice_records_by_date,
-            'seller': self.fetch_credit_invoice_records_by_seller,
-        }
-        return handlers[kwargs['search_by']](**kwargs)
-
     def fetch_credit_invoice_record_by_id(self, **kwargs):
         log.debug('')
         if not kwargs.get('code'):
@@ -476,10 +464,22 @@ class CreditInvoiceSheet(Base):
                 if item.fetch_record_id() is kwargs['code']
             ]
         record = False if not match else match[0]
-        if not record:
-            return self.warning_could_not_fetch_invoice_record(kwargs)
+        check = self.check_record_in_invoice_sheet(record)
+        if not check:
+            return self.warning_record_not_in_invoice_sheet(
+                kwargs, record
+            )
         log.info('Successfully fetched invoice record by id.')
         return record
+
+    def fetch_credit_invoice_record(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('search_by'):
+            return self.error_no_invoice_record_search_identifier_specified()
+        handlers = {
+            'id': self.fetch_credit_invoice_record_by_id,
+        }
+        return handlers[kwargs['search_by']](**kwargs)
 
     def fetch_invoice_sheet_id(self):
         log.debug('')
@@ -529,41 +529,6 @@ class CreditInvoiceSheet(Base):
             'notes': kwargs.get('notes'),
         }
         return values
-
-    def fetch_credit_invoice_records_by_ref(self, code):
-        log.debug('')
-        _records = []
-        for k, v in self.records.items():
-            if v.fetch_record_reference() == code:
-                _records.append(v)
-        if not _records:
-            return self.warning_could_not_fetch_invoice_record(
-                    'reference', code
-                    )
-        log.info('Successfully fetched invoice records by reference.')
-        return _records
-
-    def fetch_credit_invoice_records_by_date(self, code):
-        log.debug('')
-        _records = []
-        for k, v in self.records.items():
-            if v.fetch_record_create_date() == code:
-                _records.append(v)
-        if not _records:
-            return self.warning_could_not_fetch_invoice_record('date', code)
-        log.info('Successfully fetched invoice records by date.')
-        return _records
-
-    def fetch_credit_invoice_records_by_seller(self, code):
-        log.debug('')
-        _records = []
-        for k, v in self.records.items():
-            if v.fetch_record_seller_id() == code:
-                _records.append(v)
-        if not _records:
-            return self.warning_could_not_fetch_invoice_record('seller', code)
-        log.info('Successfully fetched invoice records by seller.')
-        return _records
 
     # SETTERS (LIST)
 
@@ -793,11 +758,21 @@ class CreditInvoiceSheet(Base):
 
     # WARNINGS (LIST)
 
-    def warning_could_not_fetch_invoice_record(self, command_chain, *args, **kwargs):
+    def warning_record_not_in_invoice_sheet(self, *args):
         command_chain_response = {
             'failed': True,
-            'warning': 'Something went wrong. Could not fetch invoice sheet record. '\
-                       'Command chain details : {}'.format(command_chain),
+            'warning': 'Record not in invoice sheet. '
+                       'Details: {}'.format(args),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
+
+    def warning_could_not_fetch_invoice_record(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Something went wrong. '
+                       'Could not fetch invoice sheet record. '
+                       'Details: {}'.format(args),
         }
         log.warning(command_chain_response['warning'])
         return command_chain_response
