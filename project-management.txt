@@ -76,7 +76,7 @@
 - TODO (EWSC)
 
     - Warning Handler Grooming
-        - Cleanup error stack trace
+        - Cleanup stack trace string
         - Convert cleaned up string to dictionary
         - Add 'details' tag to instruction set response
         - Assign error trace dictionary to 'details'
@@ -97,8 +97,8 @@
         - x - User action Switch Contact List
         - x - User action Unlink Account
         - x - User action Unlink Contact List
-        -   - User action Unlink Contact Record
-        - User action Unlink Conversion Sheet
+        - x - User action Unlink Contact Record
+        -   - User action Unlink Conversion Sheet
         - User action Unlink Conversion Record
         - User action Unlink Transfer Sheet
         - User action Unlink Transfer Record

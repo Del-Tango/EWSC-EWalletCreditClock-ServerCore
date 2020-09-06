@@ -684,6 +684,28 @@ class EWallet(Base):
         }
         return command_chain_response
 
+    def action_unlink_contact_record(self, **kwargs):
+        log.debug('')
+        active_user = self.fetch_active_session_user()
+        contact_list = active_user.fetch_user_contact_list()
+        if not contact_list:
+            return self.error_could_not_fetch_active_session_contact_list(kwargs)
+        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
+            kwargs, 'controller', 'action', 'unlink', 'contact'
+        )
+        unlink_record = contact_list.contact_list_controller(
+            controller='user', action='update', utype='remove',
+            **sanitized_command_chain
+        )
+        if not unlink_record or isinstance(unlink_record, dict) and \
+                unlink_record.get('failed'):
+            kwargs['active_session'].rollback()
+            return self.warning_could_not_unlink_contact_list_record(
+                kwargs, active_user, contact_list, unlink_record
+            )
+        kwargs['active_session'].commit()
+        return unlink_record
+
     def action_unlink_contact_list(self, **kwargs):
         log.debug('')
         active_user = self.fetch_active_session_user()
@@ -2155,28 +2177,6 @@ class EWallet(Base):
         kwargs['active_session'].commit()
         return unlink_sheet
 
-    def action_unlink_contact_record(self, **kwargs):
-        log.debug('')
-        active_user = self.fetch_active_session_user()
-        contact_list = active_user.fetch_user_contact_list()
-        if not contact_list:
-            return self.error_could_not_fetch_active_session_contact_list(kwargs)
-        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
-            kwargs, 'controller', 'action', 'unlink', 'contact'
-        )
-        unlink_record = contact_list.contact_list_controller(
-            controller='user', action='update', utype='remove',
-            **sanitized_command_chain
-        )
-        if not unlink_record or isinstance(unlink_record, dict) and \
-                unlink_record.get('failed'):
-            kwargs['active_session'].rollback()
-            return self.warning_could_not_unlink_contact_list_record(
-                active_user.fetch_user_name(), kwargs
-            )
-        kwargs['active_session'].commit()
-        return unlink_record
-
     def action_unlink_time_record(self, **kwargs):
         log.debug('')
         active_user = self.fetch_active_session_user()
@@ -3379,6 +3379,16 @@ class EWallet(Base):
     [ TODO ]: Fetch warning messages from message file by key codes.
     '''
 
+    def warning_could_not_unlink_contact_list_record(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Something went wrong. '
+                       'Could not unlink contact list record. '
+                       'Details: {}'.format(args),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
+
     def warning_account_does_not_belong_to_ewallet_session(self, *args):
         command_chain_response = {
             'failed': True,
@@ -3796,15 +3806,6 @@ class EWallet(Base):
         command_chain_response = {
             'failed': True,
             'warning': 'Something went wrong. Could not unlink transfer sheet for user {}. '\
-                       'Command chain details : {}'.format(user_name, command_chain),
-        }
-        log.warning(command_chain_response['warning'])
-        return command_chain_response
-
-    def warning_could_not_unlink_contact_list_record(self, user_name, command_chain):
-        command_chain_response = {
-            'failed': True,
-            'warning': 'Something went wrong. Could not unlink contact list record for user {}. '\
                        'Command chain details : {}'.format(user_name, command_chain),
         }
         log.warning(command_chain_response['warning'])

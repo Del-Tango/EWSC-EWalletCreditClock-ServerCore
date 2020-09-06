@@ -640,12 +640,23 @@ class ContactList(Base):
         log.debug('')
         if not kwargs.get('record_id'):
             return self.error_no_contact_record_id_found(kwargs)
+        record = self.fetch_contact_list_record_by_id(
+            code=kwargs['record_id'],
+            active_session=kwargs.get('active_session'),
+        )
+        check = self.check_record_in_contact_list(record)
+        if not check:
+            return self.warning_record_does_not_belong_to_contact_list(
+                kwargs, record, check
+            )
         try:
             kwargs['active_session'].query(
                 ContactListRecord
             ).filter_by(record_id=kwargs['record_id']).delete()
         except:
+            kwargs['active_session'].rollback()
             return self.error_could_not_remove_contact_list_record(kwargs)
+        kwargs['active_session'].commit()
         log.info('Successfully removed contact record.')
         command_chain_response = {
             'failed': False,
@@ -807,6 +818,15 @@ class ContactList(Base):
     '''
     [ TODO ]: Fetch warning messages from message file by key codes.
     '''
+
+    def warning_record_does_not_belong_to_contact_list(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Record does not belong to active contact list. '
+                       'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
 
     def warning_record_not_in_contact_list(self, *args):
         command_chain_response = {
