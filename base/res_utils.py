@@ -35,6 +35,19 @@ class ResUtils():
 
     # FORMATTERS
 
+    def format_error_response(self, **kwargs):
+        instruction_set_response = {
+            'failed': kwargs.get('failed'),
+            'error': kwargs.get('error'),
+            'details': str(kwargs.get('details'))\
+                .replace('\\', '')\
+                .replace('(', '')\
+                .replace('\'', '')\
+                .replace('\"', '')\
+                .replace(')', ''),
+        }
+        return instruction_set_response
+
     def format_warning_response(self, **kwargs):
         instruction_set_response = {
             'failed': kwargs.get('failed'),

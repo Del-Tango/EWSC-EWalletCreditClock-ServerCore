@@ -1209,6 +1209,13 @@ class EWalletSessionManager():
 
     # GENERAL
 
+    def log_error(self, **kwargs):
+        log.warning(
+            '{} - [ DETAILS ] - {}'.format(
+                kwargs.get('error'), kwargs.get('details'),
+            )
+        )
+
     def log_warning(self, **kwargs):
         log.warning(
             '{} - [ DETAILS ] - {}'.format(
@@ -4060,1084 +4067,1173 @@ class EWalletSessionManager():
     '''
 
     def error_could_not_remove_session_worker_from_pool(self, *args):
-        instruction_set_response = {
-            'failed': True,
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
             'error': 'Something went wrong. '
-                     'Could not remove session worker from pool. '
-                     'Details: {}'.format(args),
-        }
-        log.error(instruction_set_response['error'])
+                     'Could not remove session worker from pool.',
+        })
+        self.log_error(**instruction_set_response)
         return instruction_set_response
 
     def error_no_ewallet_session_id_found(self, *args):
-        instruction_set_response = {
-            'failed': True,
-            'error': 'No ewallet session id found. '
-                     'Details: {}'.format(args),
-        }
-        log.error(instruction_set_response['error'])
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
+            'error': 'No ewallet session id found.',
+        })
+        self.log_error(**instruction_set_response)
         return instruction_set_response
 
     def error_could_not_clean_session_worker(self, *args):
-        instruction_set_response = {
-            'failed': True,
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
             'error': 'Something went wrong. '
-                     'Could not clean session worker. '
-                     'Details: {}'.format(args),
-        }
-        log.error(instruction_set_response['error'])
+                     'Could not clean session worker.',
+        })
+        self.log_error(**instruction_set_response)
         return instruction_set_response
 
     def error_could_not_check_if_session_worker_vacant(self, *args):
-        instruction_set_response = {
-            'failed': True,
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
             'error': 'Something went wrong. '
-                     'Could not check if session worker is vacant. '
-                     'Details: {}'.format(args),
-        }
-        log.error(instruction_set_response['error'])
+                     'Could not check if session worker is vacant.',
+        })
+        self.log_error(**instruction_set_response)
         return instruction_set_response
 
     def error_no_action_cleanup_ewallet_session_id_found(self, *args):
-        instruction_set_response = {
-            'failed': True,
-            'error': 'No ewallet session id found for action cleanup. '
-                     'Details: {}'.format(args),
-        }
-        log.error(instruction_set_response['error'])
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
+            'error': 'No ewallet session id found for action cleanup.',
+        })
+        self.log_error(**instruction_set_response)
         return instruction_set_response
 
     def error_could_not_check_if_ewallet_session_is_assigned_to_worker(self, *args):
-        instruction_set_response = {
-            'failed': True,
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
             'error': 'Something went wrong. '
-                     'Could not check if ewallet session is assigned to worker. '
-                     'Details: {}'.format(args),
-        }
-        log.error(instruction_set_response['error'])
+                     'Could not check if ewallet session is assigned to worker.',
+        })
+        self.log_error(**instruction_set_response)
         return instruction_set_response
 
     def error_no_ewallet_session_worker_map_found(self, *args):
-        instruction_set_response = {
-            'failed': True,
-            'error': 'No ewallet session worker map found. '
-                     'Details: {}'.format(args),
-        }
-        log.error(instruction_set_response['error'])
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
+            'error': 'No ewallet session worker map found.',
+        })
+        self.log_error(**instruction_set_response)
         return instruction_set_response
 
     def error_no_worker_id_found(self, *args):
-        instruction_set_response = {
-            'failed': True,
-            'error': 'No session worker id found. '
-                     'Details: {}'.format(args),
-        }
-        log.error(instruction_set_response['error'])
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
+            'error': 'No session worker id found.',
+        })
+        self.log_error(**instruction_set_response)
         return instruction_set_response
 
     def error_could_not_fetch_session_worker_pool(self, *args):
-        instruction_set_response = {
-            'failed': True,
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
             'error': 'Something went wrong. '
-                     'Could not fetch session worker pool. '
-                     'Details: {}'.format(args),
-        }
-        log.error(instruction_set_response['error'])
+                     'Could not fetch session worker pool.',
+        })
+        self.log_error(**instruction_set_response)
         return instruction_set_response
 
     def error_could_not_set_write_date(self, *args):
-        instruction_set_response = {
-            'failed': True,
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
             'error': 'Something went wrong. '
-                     'Could not set EWallet Session Manager write date. '
-                     'Details: {}'.format(args),
-        }
-        log.error(instruction_set_response['error'])
+                     'Could not set ewallet session manager write date.',
+        })
+        self.log_error(**instruction_set_response)
         return instruction_set_response
 
     def error_no_client_action_switch_contact_target_specified(self, *args):
-        instruction_set_response = {
-            'failed': True,
-            'error': 'No client action switch contact target specified. '
-                     'Details: {}'.format(args),
-        }
-        log.error(instruction_set_response['error'])
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
+            'error': 'No client action switch contact target specified.',
+        })
+        self.log_error(**instruction_set_response)
         return instruction_set_response
 
     def error_no_client_action_switch_transfer_target_specified(self, *args):
-        instruction_set_response = {
-            'failed': True,
-            'error': 'No client action switch transfer target specified. '
-                     'Details: {}'.format(args),
-        }
-        log.error(instruction_set_response['error'])
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
+            'error': 'No client action switch transfer target specified.',
+        })
+        self.log_error(**instruction_set_response)
         return instruction_set_response
 
     def error_no_client_action_switch_invoice_target_specified(self, *args):
-        instruction_set_response = {
-            'failed': True,
-            'error': 'No client action switch invoice target specified. '
-                     'Details: {}'.format(args),
-        }
-        log.error(instruction_set_response['error'])
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
+            'error': 'No client action switch invoice target specified.',
+        })
+        self.log_error(**instruction_set_response)
         return instruction_set_response
 
     def error_no_client_action_switch_conversion_target_specified(self, *args):
-        instruction_set_response = {
-            'failed': True,
-            'error': 'No client action switch conversion target specified. '
-                     'Details: {}'.format(args),
-        }
-        log.error(instruction_set_response['error'])
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
+            'error': 'No client action switch conversion target specified.',
+        })
+        self.log_error(**instruction_set_response)
         return instruction_set_response
 
     def error_no_client_action_switch_time_target_specified(self, *args):
-        instruction_set_response = {
-            'failed': True,
-            'error': 'No client action switch time target specified. '
-                     'Details: {}'.format(args),
-        }
-        log.error(instruction_set_response['error'])
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
+            'error': 'No client action switch time target specified.',
+        })
+        self.log_error(**instruction_set_response)
         return instruction_set_response
 
     def error_could_not_fetch_session_token_by_label(self, *args):
-        instruction_set_response = {
-            'failed': True,
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
             'error': 'Something went wrong. '
-                     'Could not fetch session token map. '
-                     'Details: {}'.format(args),
-        }
-        log.error(instruction_set_response['error'])
+                     'Could not fetch session token map.',
+        })
+        self.log_error(**instruction_set_response)
         return instruction_set_response
 
     def error_could_not_fetch_client_session_token_map(self, *args):
-        instruction_set_response = {
-            'failed': True,
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
             'error': 'Something went wrong. '
-                     'Could not fetch client session token map. '
-                     'Details: {}'.format(args),
-        }
-        log.error(instruction_set_response['error'])
+                     'Could not fetch client session token map.',
+        })
+        self.log_error(**instruction_set_response)
         return instruction_set_response
 
     def error_could_not_create_client_session_token_map(self, *args):
-        instruction_set_response = {
-            'failed': True,
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
             'error': 'Something went wrong. '
-                     'Could not create client session token map. '
-                     'Details: {}'.format(args),
-        }
-        log.error(instruction_set_response['error'])
+                     'Could not create client session token map.',
+        })
+        self.log_error(**instruction_set_response)
         return instruction_set_response
 
     def error_invalid_values_for_worker_pool_entry(self, *args):
-        instruction_set_response = {
-            'failed': True,
-            'error': 'Invalid values for worker pool entry. '
-                     'Details: {}'.format(args),
-        }
-        log.error(instruction_set_response['error'])
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
+            'error': 'Invalid values for worker pool entry.',
+        })
+        self.log_error(**instruction_set_response)
         return instruction_set_response
 
     def error_could_not_create_new_ewallet_session(self, *args):
-        instruction_set_response = {
-            'failed': True,
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
             'error': 'Something went wrong. '
-                     'Could not create new EWallet session. '
-                     'Details: {}'.format(args),
-        }
-        log.error(instruction_set_response['error'])
+                     'Could not create new ewallet session.',
+        })
+        self.log_error(**instruction_set_response)
         return instruction_set_response
 
     def error_invalid_client_session_token_pair(self, *args):
-        instruction_set_response = {
-            'failed': True,
-            'error': 'Invalid client session token pair. '
-                     'Details: {}'.format(args),
-        }
-        log.error(instruction_set_response['error'])
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
+            'error': 'Invalid client session token pair.',
+        })
+        self.log_error(**instruction_set_response)
         return instruction_set_response
 
     def error_could_not_map_client_session_tokens(self, *args):
-        instruction_set_response = {
-            'failed': True,
-            'error': 'Something went wrong. Could not create client session token map. '
-                     'Details: {}'.format(args),
-        }
-        log.error(instruction_set_response['error'])
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
+            'error': 'Something went wrong. '
+                     'Could not create client session token map.',
+        })
+        self.log_error(**instruction_set_response)
         return instruction_set_response
 
     def error_invalid_session_worker_instruction_response(self, *args):
-        instruction_set_response = {
-            'failed': True,
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
             'error': 'Software error. '
-                     'Invalid session worker instruction response. '
-                     'Details: {}'.format(args),
-        }
-        log.error(instruction_set_response['error'])
+                     'Invalid session worker instruction response.',
+        })
+        self.log_error(**instruction_set_response)
         return instruction_set_response
 
     def error_could_not_fetch_worker_id_by_client_id(self, *args):
-        instruction_set_response = {
-            'failed': True,
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
             'error': 'Something went wrong. '
-                     'Could not fetch session worker id by given client id. '
-                     'Details: {}'.format(args),
-        }
-        log.error(instruction_set_response['error'])
+                     'Could not fetch session worker ID by given client ID.',
+        })
+        self.log_error(**instruction_set_response)
         return instruction_set_response
 
     def error_invalid_worker_id(self, *args):
-        instruction_set_response = {
-            'failed': True,
-            'error': 'Invalid worker id. '
-                     'Details: {}'.format(args),
-        }
-        log.error(instruction_set_response['error'])
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
+            'error': 'Invalid worker id.',
+        })
+        self.log_error(**instruction_set_response)
         return instruction_set_response
 
     def error_invalid_client_id(self, *args):
-        instruction_set_response = {
-            'failed': True,
-            'error': 'Invalid client id. '
-                     'Details: {}'.format(args),
-        }
-        log.error(instruction_set_response['error'])
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
+            'error': 'Invalid client id.',
+        })
+        self.log_error(**instruction_set_response)
         return instruction_set_response
 
     def error_invalid_client_token(self, *args):
-        instruction_set_response = {
-            'failed': True,
-            'error': 'Invalid client token. '
-                     'Details: {}'.format(args),
-        }
-        log.error(instruction_set_response['error'])
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
+            'error': 'Invalid client token.',
+        })
+        self.log_error(**instruction_set_response)
         return instruction_set_response
 
     def error_could_not_fetch_worker_pool_entry_by_id(self, *args):
-        instruction_set_response = {
-            'failed': True,
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
             'error': 'Something went wrong. '
-                     'Could not fetch worker pool entry by worker id. '
-                     'Details: {}'.format(args),
-        }
-        log.error(instruction_set_response['error'])
+                     'Could not fetch worker pool entry by worker id.',
+        })
+        self.log_error(**instruction_set_response)
         return instruction_set_response
 
     def error_could_not_set_worker_to_pool(self, *args):
-        instruction_set_response = {
-            'failed': True,
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
             'error': 'Something went wrong. '
-                     'Could not set worker to session manager worker pool. '
-                     'Details: {}'.format(args),
-        }
-        log.error(instruction_set_response['error'])
+                     'Could not set worker to session manager worker pool.',
+        })
+        self.log_error(**instruction_set_response)
         return instruction_set_response
 
-    def error_could_not_set_worker_pool(self, worker_pool, args):
-        instruction_set_response = {
-            'failed': True,
+    def error_could_not_set_worker_pool(self, *args):
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
             'error': 'Something went wrong. '
-                     'Could not set worker pool : {}'.format(worker_pool),
-        }
-        log.error(instruction_set_response['error'])
+                     'Could not set worker pool.',
+        })
+        self.log_error(**instruction_set_response)
         return instruction_set_response
 
     def error_worker_pool_empty(self, *args):
-        instruction_set_response = {
-            'failed': True,
-            'error': 'Session manager worker pool empty. Details: {}'.format(args)
-        }
-        log.error(instruction_set_response['error'])
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
+            'error': 'Session manager worker pool empty.',
+        })
+        self.log_error(**instruction_set_response)
         return instruction_set_response
 
     def error_could_not_generate_session_worker_identifier(self, *args):
-        instruction_set_response = {
-            'failed': True,
-            'error': 'Something went wrong. Could not generate EWallet Session '
-                     'Worker identifier. Details: {}'.format(args)
-        }
-        log.error(instruction_set_response['error'])
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
+            'error': 'Something went wrong. '
+                     'Could not generate ewallet session worker identifier.',
+        })
+        self.log_error(**instruction_set_response)
         return instruction_set_response
 
     def error_could_not_generate_id_for_entity_set(self, *args):
-        instruction_set_response = {
-            'failed': True,
-            'error': 'Something went wrong. Could not generate unique identifier '
-                     'for entity set. Details: {}'.format(args)
-        }
-        log.error(instruction_set_response['error'])
-        return instruction_set_response
-
-    def error_could_not_fetch_client_token_by_label(self, client_id, *args):
-        instruction_set_response = {
-            'failed': True,
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
             'error': 'Something went wrong. '
-                     'Could not fetch client token by label {}. '
-                     'Details: {}'.format(client_id, args)
-        }
-        log.error(instruction_set_response['error'])
+                     'Could not generate unique identifier for entity set.',
+        })
+        self.log_error(**instruction_set_response)
         return instruction_set_response
 
-    def error_could_not_set_stoken_pool(self, session_token, *args):
-        instruction_set_response = {
-            'failed': True,
+    def error_could_not_fetch_client_token_by_label(self, *args):
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
             'error': 'Something went wrong. '
-                     'Could not set session token {} to pool. '
-                     'Details: {}'.format(session_token, args)
-        }
-        log.error(instruction_set_response['error'])
+                     'Could not fetch client token by label.',
+        })
+        self.log_error(**instruction_set_response)
         return instruction_set_response
 
-    def error_invalid_client_id(self, client_id, *args):
-        instruction_set_response = {
-            'failed': True,
-            'error': 'Invalid client id {}.'
-                     'Details: {}'.format(client_id, args)
-        }
-        log.error(instruction_set_response['error'])
+    def error_could_not_set_stoken_pool(self, *args):
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
+            'error': 'Something went wrong. '
+                     'Could not set session token to pool.',
+        })
+        self.log_error(**instruction_set_response)
+        return instruction_set_response
+
+    def error_invalid_client_id(self, *args):
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
+            'error': 'Invalid client id.',
+        })
+        self.log_error(**instruction_set_response)
         return instruction_set_response
 
     def error_could_not_fetch_session_token_from_label(self, *args):
-        instruction_set_response = {
-            'failed': True,
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
             'error': 'Something went wrong. '
-                     'Could not fetch session token from label. '
-                     'Details: {}'.format(args)
-        }
-        log.error(instruction_set_response['error'])
+                     'Could not fetch session token from label.',
+        })
+        self.log_error(**instruction_set_response)
         return instruction_set_response
 
     def error_could_not_perform_session_token_validity_check(self, *args):
-        instruction_set_response = {
-            'failed': True,
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
             'error': 'Something went wrong. '
-                     'Could not perform session token validity check. '
-                     'Details: {}'.format(args)
-        }
-        log.error(instruction_set_response['error'])
+                     'Could not perform session token validity check.',
+        })
+        self.log_error(**instruction_set_response)
         return instruction_set_response
 
     def error_could_not_perform_session_token_unlink_check(self, *args):
-        instruction_set_response = {
-            'failed': True,
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
             'error': 'Something went wrong. '
-                     'Could not perform session token unlink check. '
-                     'Details: {}'.format(args)
-        }
-        log.error(instruction_set_response['error'])
+                     'Could not perform session token unlink check.',
+        })
+        self.log_error(**instruction_set_response)
         return instruction_set_response
 
     def error_could_not_perform_session_token_expiration_check(self, *args):
-        instruction_set_response = {
-            'failed': True,
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
             'error': 'Something went wrong. '
-                     'Could not perform session token validity check. '
-                     'Details: {}'.format(args)
-        }
-        log.error(instruction_set_response['error'])
+                     'Could not perform session token validity check.',
+        })
+        self.log_error(**instruction_set_response)
         return instruction_set_response
 
     def error_could_not_perform_client_token_validity_check(self, *args):
-        instruction_set_response = {
-            'failed': True,
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
             'error': 'Something went wrong. '
-                     'Could not perform client token validity check. '
-                     'Details: {}'.format(args)
-        }
-        log.error(instruction_set_response['error'])
+                     'Could not perform client token validity check.',
+        })
+        self.log_error(**instruction_set_response)
         return instruction_set_response
 
     def error_could_not_perform_client_token_unlink_check(self, *args):
-        instruction_set_response = {
-            'failed': True,
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
             'error': 'Something went wrong. '
-                     'Could not perform client token unlink check. '
-                     'Details: {}'.format(args)
-        }
-        log.error(instruction_set_response['error'])
+                     'Could not perform client token unlink check.',
+        })
+        self.log_error(**instruction_set_response)
         return instruction_set_response
 
     def error_could_not_perform_client_token_expiration_check(self, *args):
-        instruction_set_response = {
-            'failed': True,
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
             'error': 'Something went wrong. '
-                     'Could not perform client token expiration check. '
-                     'Details: {}'.format(args)
-        }
-        log.error(instruction_set_response['error'])
+                     'Could not perform client token expiration check.',
+        })
+        self.log_error(**instruction_set_response)
         return instruction_set_response
 
-    def error_could_not_fetch_client_token_from_label(self, client_id, *args):
-        instruction_set_response = {
-            'failed': True,
+    def error_could_not_fetch_client_token_from_label(self, *args):
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
             'error': 'Something went wrong. '
-                     'Could not fetch client token from pool by client id {}. '
-                     'Details: {}'.format(client_id, args)
-        }
-        log.error(instruction_set_response['error'])
+                     'Could not fetch client token from pool by client ID.',
+        })
+        self.log_error(**instruction_set_response)
         return instruction_set_response
 
     def error_no_config_handler_found(self, *args):
-        instruction_set_response = {
-            'failed': True,
-            'error': 'No configuration handler found. Details: {}'.format(args)
-        }
-        log.error(instruction_set_response['error'])
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
+            'error': 'No configuration handler found.',
+        })
+        self.log_error(**instruction_set_response)
         return instruction_set_response
 
-    def error_no_client_id_found(self, instruction_set, *args):
-        instruction_set_response = {
-            'failed': True,
-            'error': 'No client id found. '\
-                     'Instruction set details : {}, {}.'\
-                     .format(instruction_set, args),
-        }
-        log.error(instruction_set_response['error'])
+    def error_no_client_id_found(self, *args):
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
+            'error': 'No client id found.',
+        })
+        self.log_error(**instruction_set_response)
         return instruction_set_response
 
-    def error_no_ewallet_session_found(self, instruction_set, *args):
-        instruction_set_response = {
-            'failed': True,
-            'error': 'No EWallet session found. '\
-                     'Instruction set details : {}, {}.'\
-                     .format(instruction_set, args),
-        }
-        log.error(instruction_set_response['error'])
+    def error_no_ewallet_session_found(self, *args):
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
+            'error': 'No ewallet session found.',
+        })
+        self.log_error(**instruction_set_response)
         return instruction_set_response
 
-    def error_no_session_manager_worker_found(self, instruction_set, *args):
-        instruction_set_response = {
-            'failed': True,
-            'error': 'No EWallet session manager worker found. '\
-                     'Instruction set details : {}, {}.'\
-                     .format(instruction_set, args),
-        }
-        log.error(instruction_set_response['error'])
+    def error_no_session_manager_worker_found(self, *args):
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
+            'error': 'No ewallet session manager worker found.',
+        })
+        self.log_error(**instruction_set_response)
         return instruction_set_response
 
-    def error_no_mapped_session_worker_found_for_client_id(self, client_id, *args):
-        instruction_set_response = {
-            'failed': True,
-            'error': 'No mapped session worker found for client id {}. '
-                     'Details: {}'.format(client_id, args),
-        }
-        log.error(instruction_set_response['error'])
+    def error_no_mapped_session_worker_found_for_client_id(self, *args):
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
+            'error': 'No mapped session worker found for client ID.',
+        })
+        self.log_error(**instruction_set_response)
         return instruction_set_response
 
     def error_invalid_instruction_set_required_data(self, instruction_set, *args):
-        instruction_set_response = {
-            'failed': True,
-            'error': 'Invalid EWallet session manager instruction set '
-                     'required data. Instruction set details : {}, {}'\
-                     .format(instruction_set, args),
-        }
-        log.error(instruction_set_response['error'])
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
+            'error': 'Invalid ewallet session manager instruction set data.',
+        })
+        self.log_error(**instruction_set_response)
         return instruction_set_response
 
     def error_no_session_manager_controller_specified(self, *args):
-        instruction_set_response = {
-            'failed': True,
-            'error': 'Invalid EWallet controller. Details: {}'.format(args)
-        }
-        log.error(instruction_set_response['error'])
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
+            'error': 'Invalid ewallet controller.',
+        })
+        self.log_error(**instruction_set_response)
         return instruction_set_response
 
-    def error_could_not_scrape_ewallet_session(self, ewallet_session, *args):
-        instruction_set_response = {
-            'failed': True,
+    def error_could_not_scrape_ewallet_session(self, *args):
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
+            'error': 'Could not scrape ewallet session.',
+        })
+        self.log_error(**instruction_set_response)
+        return instruction_set_response
+
+    def error_no_ewallet_sessions_found(self, *args):
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
+            'error': 'No ewallet sessions found.',
+        })
+        self.log_error(**instruction_set_response)
+        return instruction_set_response
+
+    def error_could_not_fetch_session_worker_for_ewallet_session(self, *args):
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
             'error': 'Something went wrong. '
-                     'Could not scrape ewallet session {}. Details: {}'\
-                     .format(ewallet_session, args),
-        }
-        log.error(instruction_set_response['error'])
+                     'Could not fetch session worker.',
+        })
+        self.log_error(**instruction_set_response)
         return instruction_set_response
 
-    def error_no_ewallet_sessions_found(self, instruction_set, *args):
-        instruction_set_response = {
-            'failed': True,
-            'error': 'No ewallet sessions found. '
-                     'Instruction set details : {}, {}'\
-                     .format(instruction_set, args),
-        }
-        log.error(instruction_set_response['error'])
+    def error_could_not_remove_ewallet_session_worker_from_pool(self, *args):
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
+            'error': 'Something went wrong. '
+                     'Could not remove ewallet session worker '
+                     'from session worker pool.',
+        })
+        self.log_error(**instruction_set_response)
         return instruction_set_response
 
-    def error_could_not_fetch_session_worker_for_ewallet_session(self, ewallet_session):
-        instruction_set_response = {
-            'failed': True,
-            'error': 'Something went wrong. Could not fetch session worker for '\
-                     'ewallet session {}.'.format(ewallet_session),
-        }
-        log.error(instruction_set_response['error'])
+    def error_could_not_scrape_ewallet_session_worker(self, *args):
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
+            'error': 'Something went wrong. '
+                     'Could not scrape ewallet session worker.',
+        })
+        self.log_error(**instruction_set_response)
         return instruction_set_response
 
-    def error_could_not_remove_ewallet_session_worker_from_pool(self, session_worker):
-        instruction_set_response = {
-            'failed': True,
-            'error': 'Something went wrong. Could not remove ewallet session '\
-                     'worker {} from session worker pool.'.format(session_worker),
-        }
-        log.error(instruction_set_response['error'])
+    def error_no_vacant_session_workers_found(self, *args):
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
+            'error': 'No vacant session workers found.',
+        })
+        self.log_error(**instruction_set_response)
         return instruction_set_response
 
-    def error_could_not_scrape_ewallet_session_worker(self, session_worker):
-        instruction_set_response = {
-            'failed': True,
-            'error': 'Something went wrong. Could not scraper ewallet session '\
-                     'worker {}.'.format(session_worker),
-        }
-        log.error(instruction_set_response['error'])
+    def error_no_system_action_cleanup_target_specified(self, *args):
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
+            'error': 'No system action cleanup target specified.',
+        })
+        self.log_error(**instruction_set_response)
         return instruction_set_response
 
-    def error_no_vacant_session_workers_found(self, instruction_set):
-        instruction_set_response = {
-            'failed': True,
-            'error': 'No vacant session workers found. Instruction set details : {}'\
-                     .format(instruction_set),
-        }
-        log.error(instruction_set_response['error'])
+    def error_could_not_set_client_pool(self, *args):
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
+            'error': 'Something went wrong. '
+                     'Could not set client id to pool.',
+        })
+        self.log_error(**instruction_set_response)
         return instruction_set_response
 
-    def error_no_system_action_cleanup_target_specified(self, instruction_set):
-        instruction_set_response = {
-            'failed': True,
-            'error': 'No system action cleanup target specified. '\
-                     'Instruction set details : {}'.format(instruction_set),
-        }
-        log.error(instruction_set_response['error'])
+    def error_could_not_spawn_new_ewallet_session(self, *args):
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
+            'error': 'Something went wrong. '
+                     'Could not spawn new ewallet session.',
+        })
+        self.log_error(**instruction_set_response)
         return instruction_set_response
 
-    def error_could_not_set_client_pool(self, client_id):
-        instruction_set_response = {
-            'failed': True,
-            'error': 'Something went wrong. Could not set client id {} to pool.'\
-                     .format(client_id),
-        }
-        log.error(instruction_set_response['error'])
-        return instruction_set_response
-
-    def error_could_not_spawn_new_ewallet_session(self, instruction_set):
-        instruction_set_response = {
-            'failed': True,
-            'error': 'Something went wrong. Could not spawn new ewallet session. '\
-                     'Instruction set details : {}'.format(instruction_set),
-        }
-        log.error(instruction_set_response['error'])
-        return instruction_set_response
-
-    def error_could_not_assign_worker_to_new_ewallet_session(self, new_session):
-        instruction_set_response = {
-            'failed': True,
-            'error': 'Something went wrong. Could not assign session worker '\
-                     'for new ewallet session {}.'.format(new_session),
-        }
-        log.error(instruction_set_response['error'])
+    def error_could_not_assign_worker_to_new_ewallet_session(self, *args):
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
+            'error': 'Something went wrong. '
+                     'Could not assign session worker for new ewallet session.',
+        })
+        self.log_error(**instruction_set_response)
         return instruction_set_response
 
     def error_ewallet_session_manager_worker_pool_empty(self, *args):
-        instruction_set_response = {
-            'failed': True,
-            'error': 'EWallet session manager worker pool empty. '
-                     'Details: {}'.format(args),
-        }
-        log.error(instruction_set_response['error'])
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
+            'error': 'EWallet session manager worker pool empty.',
+        })
+        self.log_error(**instruction_set_response)
         return instruction_set_response
 
-    def error_could_not_fetch_ewallet_session_manager_worker_pool(self):
-        instruction_set_response = {
-            'failed': True,
-            'error': 'Something went wrong. Could not fetch ewallet '\
-                     'session manager worker pool.',
-        }
-        log.warning(instruction_set_response['error'])
+    def error_could_not_fetch_ewallet_session_manager_worker_pool(self, *args):
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
+            'error': 'Something went wrong. '
+                     'Could not fetch ewallet session manager worker pool.',
+        })
+        self.log_error(**instruction_set_response)
         return instruction_set_response
 
-    def error_invalid_ewallet_session_id(self, ewallet_session_id):
-        instruction_set_response = {
-            'failed': True,
-            'error': 'Invalid ewallet session id {}.'.format(ewallet_session_id),
-        }
-        log.error(instruction_set_response['error'])
+    def error_invalid_ewallet_session_id(self, *args):
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
+            'error': 'Invalid ewallet session ID.',
+        })
+        self.log_error(**instruction_set_response)
         return instruction_set_response
 
-    def error_could_not_fetch_ewallet_session_by_id(self, ewallet_session_id):
-        instruction_set_response = {
-            'failed': True,
-            'error': 'Something went wrong. Could not fetch ewallet session by id {}.'\
-                     .format(ewallet_session_id),
-        }
-        log.error(instruction_set_response['error'])
+    def error_could_not_fetch_ewallet_session_by_id(self, *args):
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
+            'error': 'Something went wrong. '
+                     'Could not fetch ewallet session by ID.',
+        })
+        self.log_error(**instruction_set_response)
         return instruction_set_response
 
-    def error_no_session_id_found(self, instruction_set):
-        instruction_set_response = {
-            'failed': True,
-            'error': 'No ewallet session id found. Instruction set details : {}'\
-                     .format(instruction_set),
-        }
-        log.error(instruction_set_response['error'])
+    def error_no_session_id_found(self, *args):
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
+            'error': 'No ewallet session ID found.',
+        })
+        self.log_error(**instruction_set_response)
         return instruction_set_response
 
-    def error_no_system_action_interogate_target_specified(self, instruction_set):
-        instruction_set_response = {
-            'failed': True,
-            'error': 'No system action interogate target specified. '\
-                     'Instruction set details : {}'.format(instruction_set),
-        }
-        log.error(instruction_set_response['error'])
+
+    def error_no_system_action_interogate_target_specified(self, *args):
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
+            'error': 'No system action interogate target specified.',
+        })
+        self.log_error(**instruction_set_response)
         return instruction_set_response
 
-    def error_no_client_action_unlink_time_target_specified(self, instruction_set):
-        instruction_set_response = {
-            'failed': True,
-            'error': 'No client action unlink time target specified. Instruction set details : {}'\
-                     .format(instruction_set),
-        }
-        log.error(instruction_set_response['error'])
+    def error_no_client_action_unlink_time_target_specified(self, *args):
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
+            'error': 'No client action unlink time target specified.',
+        })
+        self.log_error(**instruction_set_response)
         return instruction_set_response
 
-    def error_no_client_action_unlink_conversion_target_specified(self, instruction_set):
-        instruction_set_response = {
-            'failed': True,
-            'error': 'No client action unlink conversion target specified. '\
-                     'Instruction set details : {}'.format(instruction_set),
-        }
-        log.error(instruction_set_response['error'])
+    def error_no_client_action_unlink_conversion_target_specified(self, *args):
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
+            'error': 'No client action unlink conversion target specified.',
+        })
+        self.log_error(**instruction_set_response)
         return instruction_set_response
 
-    def error_no_client_action_unlink_invoice_target_specified(self, command_chain):
-        command_chain_response = {
-            'failed': True,
-            'error': 'No client action unlink invoice target specified. Command chain details : {}'\
-                     .format(command_chain),
-        }
-        log.error(command_chain_response['error'])
-        return command_chain_response
-
-    def error_no_client_action_unlink_target_specified(self, instruction_set):
-        instruction_set_response = {
-            'failed': True,
-            'error': 'No client action unlink target specified. Instruction set details : {}'\
-                     .format(instruction_set),
-        }
-        log.error(instruction_set_response['error'])
+    def error_no_client_action_unlink_invoice_target_specified(self, *args):
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
+            'error': 'No client action unlink invoice target specified.',
+        })
+        self.log_error(**instruction_set_response)
         return instruction_set_response
 
-    def error_no_client_action_unlink_transfer_target_specified(self, instruction_set):
-        instruction_set_response = {
-            'failed': True,
-            'error': 'No client action unlink transfer target specified. Instruction set details : {}'\
-                     .format(instruction_set),
-        }
-        log.error(instruction_set_response['error'])
+    def error_no_client_action_unlink_target_specified(self, *args):
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
+            'error': 'No client action unlink target specified.',
+        })
+        self.log_error(**instruction_set_response)
         return instruction_set_response
 
-    def error_no_client_action_switch_target_specified(self, instruction_set):
-        instruction_set_response = {
-            'failed': True,
-            'error': 'No client action switch target specified. Instruction set details : {}'\
-                     .format(instruction_set),
-        }
-        log.error(instruction_set_response['error'])
+    def error_no_client_action_unlink_transfer_target_specified(self, *args):
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
+            'error': 'No client action unlink transfer target specified.',
+        })
+        self.log_error(**instruction_set_response)
         return instruction_set_response
 
-    def error_no_client_action_switch_credit_target_specified(self, instruction_set):
-        instruction_set_response = {
-            'failed': True,
-            'error': 'No client action switch credit target specified. Instruction set details : {}'\
-                     .format(instruction_set),
-        }
-        log.error(instruction_set_response['error'])
+    def error_no_client_action_switch_target_specified(self, *args):
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
+            'error': 'No client action switch target specified.',
+        })
+        self.log_error(**instruction_set_response)
         return instruction_set_response
 
-    def error_no_client_action_new_time_target_specified(self, instruction_set):
-        instruction_set_response = {
-            'failed': True,
-            'error': 'No client action new time target specified. Instruction set details : {}'\
-                     .format(instruction_set),
-        }
-        log.error(instruction_set_response['error'])
+    def error_no_client_action_switch_credit_target_specified(self, *args):
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
+            'error': 'No client action switch credit target specified.',
+        })
+        self.log_error(**instruction_set_response)
         return instruction_set_response
 
-    def error_no_client_action_new_conversion_target_specified(self, instruction_set):
-        instruction_set_response = {
-            'failed': True,
-            'error': 'No client action new conversion target specified. Instruction set details : {} '\
-                     .format(instruction_set),
-        }
-        log.error(instruction_set_response['error'])
+    def error_no_client_action_new_time_target_specified(self, *args):
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
+            'error': 'No client action new time target specified.',
+        })
+        self.log_error(**instruction_set_response)
         return instruction_set_response
 
-    def error_no_client_action_new_invoice_target_specified(self, instruction_set):
-        instruction_set_response = {
-            'failed': True,
-            'error': 'No client action new invoice target specified. Instruction set details : {}'\
-                     .format(instruction_set),
-        }
-        log.error(instruction_set_response['error'])
+    def error_no_client_action_new_conversion_target_specified(self, *args):
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
+            'error': 'No client action new conversion target specified.',
+        })
+        self.log_error(**instruction_set_response)
         return instruction_set_response
 
-    def error_no_client_action_new_transfer_target_specified(self, instruction_set):
-        instruction_set_response = {
-            'failed': True,
-            'error': 'No client action new transfer target specified. Instruction set details : {}'\
-                     .format(instruction_set),
-        }
-        log.error(instruction_set_response['error'])
+    def error_no_client_action_new_invoice_target_specified(self, *args):
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
+            'error': 'No client action new invoice target specified.',
+        })
+        self.log_error(**instruction_set_response)
         return instruction_set_response
 
-    def error_no_client_action_new_credit_target_specified(self, instruction_set):
-        instruction_set_response = {
-                'failed': True,
-                'error': 'No client action new credit target specified. Instruction set details : {}'\
-                         .format(instruction_set),
-        }
-        log.error(instruction_set_response['error'])
+    def error_no_client_action_new_transfer_target_specified(self, *args):
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
+            'error': 'No client action new transfer target specified.',
+        })
+        self.log_error(**instruction_set_response)
         return instruction_set_response
 
-    def error_no_client_action_view_invoice_target_specified(self, instruction_set):
-        instruction_set_response = {
-            'failed': True,
-            'error': 'No client action view invoice target specified. Instruction set details : {}'\
-                     .format(instruction_set),
-        }
-        log.error(instruction_set_response['error'])
+    def error_no_client_action_new_credit_target_specified(self, *args):
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
+            'error': 'No client action new credit target specified.',
+        })
+        self.log_error(**instruction_set_response)
         return instruction_set_response
 
-    def error_no_client_action_view_credit_target_specified(self, instruction_set):
-        instruction_set_response = {
-            'failed': True,
-            'error': 'No client action view credit target specified. Instruction set details : {}'\
-                     .format(instruction_set),
-        }
-        log.error(instruction_set_response['error'])
+    def error_no_client_action_view_invoice_target_specified(self, *args):
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
+            'error': 'No client action view invoice target specified.',
+        })
+        self.log_error(**instruction_set_response)
         return instruction_set_response
 
-    def error_no_client_action_edit_target_specified(self, instruction_set):
-        instruction_set_response = {
-            'failed': True,
-            'error': 'No client action edit target specified. Instruction set details : {}'\
-                     .format(instruction_set)
-        }
-        log.error(instruction_set_response['error'])
+    def error_no_client_action_view_credit_target_specified(self, *args):
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
+            'error': 'No client action view credit target specified.',
+        })
+        self.log_error(**instruction_set_response)
         return instruction_set_response
 
-    def error_no_client_action_view_conversion_target_specified(self, instruction_set):
-        log.error()
-        instruction_set_response = {
-            'failed': True,
-            'error': 'No client action view conversion target specified. Instruction set details : {}'\
-                     .format(instruction_set)
-        }
-        log.error(instruction_set_response['error'])
+    def error_no_client_action_edit_target_specified(self, *args):
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
+            'error': 'No client action edit target specified.',
+        })
+        self.log_error(**instruction_set_response)
         return instruction_set_response
 
-    def error_no_client_action_view_transfer_target_specified(self, instruction_set):
-        instruction_set_response = {
-            'failed': True,
-            'error': 'No client action view transfer target specified. Instruction Set Details : {}'\
-                     .format(instruction_set),
-        }
-        log.error(instruction_set_response['error'])
+    def error_no_client_action_view_conversion_target_specified(self, *args):
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
+            'error': 'No client action view conversion target specified.',
+        })
+        self.log_error(**instruction_set_response)
         return instruction_set_response
 
-    def error_no_conversion_credit_clock_time_specified(self, ewallet_session, instruction_set):
-        log.error(
-            'No conversion credit clock time specified in ewallet session {}. Details : {}'\
-            .format(ewallet_session, instruction_set)
-        )
-        return False
+    def error_no_client_action_view_transfer_target_specified(self, *args):
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
+            'error': 'No client action view transfer target specified.',
+        })
+        self.log_error(**instruction_set_response)
+        return instruction_set_response
 
-    def error_no_client_action_transfer_target_specified(self, instruction_set):
-        log.error(
-            'No client action transfer target specified. Details : {}'\
-            .format(instruction_set)
-        )
-        return False
+    def error_no_conversion_credit_clock_time_specified(self, *args):
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
+            'error': 'No credit clock time specified for conversion.',
+        })
+        self.log_error(**instruction_set_response)
+        return instruction_set_response
 
-    def error_no_client_action_new_contact_target_specified(self, instruction_set):
-        log.error(
-            'No client action new contact target specified. Details : {}'\
-            .format(instruction_set)
-        )
-        return False
+    def error_no_client_action_transfer_target_specified(self, *args):
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
+            'error': 'No client action transfer target specified.',
+        })
+        self.log_error(**instruction_set_response)
+        return instruction_set_response
 
-    def error_no_client_action_view_contact_target_specified(self, instruction_set):
-        log.error(
-            'No client action View Contact target specified. Details : {}'.format(instruction_set)
-        )
-        return False
+    def error_no_client_action_new_contact_target_specified(self, *args):
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
+            'error': 'No client action new contact target specified.',
+        })
+        self.log_error(**instruction_set_response)
+        return instruction_set_response
 
-    def error_no_client_action_view_target_specified(self, instruction_set):
-        log.error(
-            'No client action View target specified. Details : {}'.format(instruction_set)
-        )
-        return False
+    def error_no_client_action_view_contact_target_specified(self, *args):
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
+            'error': 'No client action View Contact target specified.',
+        })
+        self.log_error(**instruction_set_response)
+        return instruction_set_response
 
-    def error_no_client_action_start_target_specified(self):
-        log.error('No client action start target specified.')
-        return False
+    def error_no_client_action_view_target_specified(self, *args):
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
+            'error': 'No client action View target specified.',
+        })
+        self.log_error(**instruction_set_response)
+        return instruction_set_response
 
-    def error_no_conversion_credit_count_specified(self, ewallet_session, instruction_set):
-        log.error(
-                'No conversion credit count specified for ewallet session {}. '\
-                'Details : {}'.format(ewallet_session, instruction_set)
-                )
-        return False
+    def error_no_client_action_start_target_specified(self, *args):
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
+            'error': 'No client action start target specified.',
+        })
+        self.log_error(**instruction_set_response)
+        return instruction_set_response
 
-    def error_no_client_action_convert_target_specified(self):
-        log.error('No client action convert target specified.')
-        return False
+    def error_no_conversion_credit_count_specified(self, *args):
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
+            'error': 'No conversion credit count specified.',
+        })
+        self.log_error(**instruction_set_response)
+        return instruction_set_response
 
-    def error_no_client_action_supply_target_specified(self):
-        log.error('No client action supply target specified.')
-        return False
+    def error_no_client_action_convert_target_specified(self, *args):
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
+            'error': 'No client action convert target specified.',
+        })
+        self.log_error(**instruction_set_response)
+        return instruction_set_response
 
-    def error_cound_not_set_client_pool(self, client_id):
-        log.error(
-                'Something went wrong. Could not set client id {} to session manager client pool.'\
-                .format(client_id)
-                )
-        return False
+    def error_no_client_action_supply_target_specified(self, *args):
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
+            'error': 'No client action supply target specified.',
+        })
+        self.log_error(**instruction_set_response)
+        return instruction_set_response
 
-    def error_invalid_session_token(self, session_token):
-        log.error('Invalid session token {}.'.format(session_token))
-        return False
+    def error_could_not_set_client_pool(self, *args):
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
+            'error': 'Something went wrong. '
+                     'Could not set client ID to session manager client pool.',
+        })
+        self.log_error(**instruction_set_response)
+        return instruction_set_response
 
-    def error_no_client_action_new_target_specified(self):
-        log.error('No aclient action new target specified.')
-        return False
+    def error_invalid_session_token(self, *args):
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
+            'error': 'Invalid session token.',
+        })
+        self.log_error(**instruction_set_response)
+        return instruction_set_response
 
+    def error_no_client_action_new_target_specified(self, *args):
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
+            'error': 'No client action new target specified.',
+        })
+        self.log_error(**instruction_set_response)
+        return instruction_set_response
 
-    def error_no_worker_found_assigned_to_session(self, ewallet_session):
-        log.error('No worker assigned to session {}.'.format(ewallet_session))
-        return False
+    def error_no_worker_found_assigned_to_session(self, *args):
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
+            'error': 'No worker assigned to ewallet session.',
+        })
+        self.log_error(**instruction_set_response)
+        return instruction_set_response
 
-    def error_could_not_update_client_worker_map(self, client_id, assigned_worker):
-        log.error(
-                'Something went wrong. Could not update session manager client '
-                'worker map with values { {}:{} }.'.format(client_id, assigned_worker)
-                )
-        return False
+    def error_could_not_update_client_worker_map(self, *args):
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
+            'error': 'Something went wrong. '
+                     'Could not update session manager client/worker map.',
+        })
+        self.log_error(**instruction_set_response)
+        return instruction_set_response
 
-    def error_could_not_assign_worker_to_new_ewallet_sesion(self, new_session):
-        log.error(
-                'Something went wrong. Could not assign worker new session {}.'\
-                .format(new_session)
-                )
-        return False
+    def error_could_not_assign_worker_to_new_ewallet_sesion(self, *args):
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
+            'error': 'Something went wrong. '
+                     'Could not assign worker to new ewallet session.',
+        })
+        self.log_error(**instruction_set_response)
+        return instruction_set_response
 
-    def error_could_not_generate_ewallet_session_token(self, new_session):
-        log.error(
-                'Somtehing went wrong. Could not generate session token for new session {}.'\
-                .format(new_session)
-                )
-        return False
+    def error_could_not_generate_ewallet_session_token(self, *args):
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
+            'error': 'Something went wrong. '
+                     'Could not generate session token for new ewallet session.',
+        })
+        self.log_error(**instruction_set_response)
+        return instruction_set_response
 
-    def error_could_not_map_client_id_to_session_token(self, client_id, session_token):
-        log.error(
-                'Something went wrong. Could not map client id {} with session token {}.'\
-                .format(client_id, session_token)
-                )
-        return False
+    def error_could_not_map_client_id_to_session_token(self, *args):
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
+            'error': 'Something went wrong. '
+                     'Could not map client ID to ewallet session token.',
+        })
+        self.log_error(**instruction_set_response)
+        return instruction_set_response
 
-    def error_could_not_fetch_socket_handler(self):
-        log.error('Something went wrong. Could not fetch socket handler.')
-        return False
+    def error_could_not_fetch_socket_handler(self, *args):
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
+            'error': 'Something went wrong. '
+                     'Could not fetch socket handler.',
+        })
+        self.log_error(**instruction_set_response)
+        return instruction_set_response
 
-    def error_could_not_fetch_socket_handler_required_values(self):
-        log.error('Could not fetch required values for EWallet Socket Handler.')
-        return False
+    def error_could_not_fetch_socket_handler_required_values(self, *args):
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
+            'error': 'Could not fetch required values for ewallet socket handler.',
+        })
+        self.log_error(**instruction_set_response)
+        return instruction_set_response
 
-    def error_could_not_spawn_socket_handler(self):
-        log.error('Could not spawn new EWallet Socket Handler.')
-        return False
+    def error_could_not_spawn_socket_handler(self, *args):
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
+            'error': 'Could not spawn new ewallet socket handler.',
+        })
+        self.log_error(**instruction_set_response)
+        return instruction_set_response
 
-    def error_could_not_unset_socket_handler(self, socket_handler):
-        log.error('Something went wrong. Could not unset socket handler {}.'.format(socket_handler))
-        return False
+    def error_could_not_unset_socket_handler(self, *args):
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
+            'error': 'Something went wrong. '
+                     'Could not unset socket handler.',
+        })
+        self.log_error(**instruction_set_response)
+        return instruction_set_response
 
-    def error_could_not_set_socket_handler(self, socket_handler):
-        log.error('Something went wrong. Could not set socket handler {}.'.format(socket_handler))
-        return False
+    def error_could_not_set_socket_handler(self, *args):
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
+            'error': 'Something went wrong. '
+                     'Could not set socket handler.',
+        })
+        self.log_error(**instruction_set_response)
+        return instruction_set_response
 
-    def error_no_system_action_start_target_specified(self, **kwargs):
-        log.error('No system action start target specified.')
-        return False
+    def error_no_system_action_start_target_specified(self, *args, **kwargs):
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
+            'error': 'No system action start target specified.',
+        })
+        self.log_error(**instruction_set_response)
+        return instruction_set_response
 
-    def error_no_command_chain_reply_socket_handler_thread_found(self, thread_map):
-        log.error(
-                'No command chain reply socket handler thread found in thread map : {}'\
-                    .format(thread_map)
-                )
-        return False
+    def error_no_command_chain_reply_socket_handler_thread_found(self, *args):
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
+            'error': 'No command chain reply socket handler thread found '
+                     'in thread map.',
+        })
+        self.log_error(**instruction_set_response)
+        return instruction_set_response
 
-    def error_could_not_set_reply_thread_to_socket_handler_map(self, reply_thread):
-        log.error(
-                'Something went wrong. Could not set reply thread {} to socket handler thread map.'\
-                    .format(reply_thread)
-                )
-        return False
+    def error_could_not_set_reply_thread_to_socket_handler_map(self, *args):
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
+            'error': 'Something went wrong. '
+                     'Could not set reply thread to socket handler thread map.',
+        })
+        self.log_error(**instruction_set_response)
+        return instruction_set_response
 
-    def error_could_not_set_listener_thread_to_socket_handler_map(self, listener_thread):
-        log.error(
-                'Something went wrong. Could not set instruction listener socket handler thread {} to map.'\
-                    .format(listener_thread)
-                )
-        return False
+    def error_could_not_set_listener_thread_to_socket_handler_map(self, *args):
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
+            'error': 'Something went wrong. '
+                     'Could not set instruction '
+                     'listener socket handler thread to map.',
+        })
+        self.log_error(**instruction_set_response)
+        return instruction_set_response
 
-    def error_no_socket_handler_thread_map_found(self):
-        log.error('No socket handler thread map found.')
-        return False
+    def error_no_socket_handler_thread_map_found(self, *args):
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
+            'error': 'No socket handler thread map found.',
+        })
+        self.log_error(**instruction_set_response)
+        return instruction_set_response
 
-    def error_no_instruction_set_socket_handler_thread_found(self, thread_map):
-        log.error(
-                'No instruction set listening socket handler thread found in thread map : {}'\
-                    .format(str(thread_map))
-                )
-        return False
+    def error_no_instruction_set_socket_handler_thread_found(self, *args):
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
+            'error': 'No instruction set listening socket handler '
+                     'thread found in thread map.',
+        })
+        self.log_error(**instruction_set_response)
+        return instruction_set_response
 
-    def error_no_instruction_set_listener_socket_handler_found(self):
-        log.error('No instruction set listener socket handler found for session manager.')
-        return False
+    def error_no_instruction_set_listener_socket_handler_found(self, *args):
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
+            'error': 'No instruction set listener socket handler found '
+                     'for session manager.',
+        })
+        self.log_error(**instruction_set_response)
+        return instruction_set_response
 
-    def error_no_command_chain_reply_socket_handler_found(self):
-        log.error('No command chain reply socket handler found for session manager.')
-        return False
+    def error_no_command_chain_reply_socket_handler_found(self, *args):
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
+            'error': 'No command chain reply socket handler found '
+                     'for session manager.',
+        })
+        self.log_error(**instruction_set_response)
+        return instruction_set_response
 
-    def error_invalid_listener_socket_handler(self, socket_handler):
-        log.error(
-                'Invalid listener socket handler {} type {}.'.format(
-                    str(socket_handler), type(socket_handler)
-                    )
-                )
-        return False
+    def error_invalid_listener_socket_handler(self, *args):
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
+            'error': 'Invalid listener socket handler.',
+        })
+        self.log_error(**instruction_set_response)
+        return instruction_set_response
 
-    def error_invalid_reply_socket_handler(self, socket_handler):
-        log.error(
-                'Invalid reply socket handler {} type {}.'.format(
-                    str(socket_handler), type(socket_handler)
-                    )
-                )
-        return False
+    def error_invalid_reply_socket_handler(self, *args):
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
+            'error': 'Invalid reply socket handler.',
+        })
+        self.log_error(**instruction_set_response)
+        return instruction_set_response
 
-    def error_invalid_socket_port(self, socket_port):
-        log.error(
-                'Invalid socket port {} type {}.'.format(
-                    str(socket_port), type(socket_port)
-                    )
-                )
-        return False
+    def error_invalid_socket_port(self, *args):
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
+            'error': 'Invalid socket port.',
+        })
+        self.log_error(**instruction_set_response)
+        return instruction_set_response
 
-    def error_no_worker_pool_found(self):
-        log.error('No worker pool found.')
-        return False
+    def error_no_worker_pool_found(self, *args):
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
+            'error': 'No worker pool found.',
+        })
+        self.log_error(**instruction_set_response)
+        return instruction_set_response
 
-    def error_no_client_pool_found(self):
-        log.error('No client pool found.')
-        return False
+    def error_no_client_pool_found(self, *args):
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
+            'error': 'No client pool found.',
+        })
+        self.log_error(**instruction_set_response)
+        return instruction_set_response
 
-    def error_invalid_worker_pool(self, worker_pool):
-        log.error(
-                'Invalid worker pool {} type {}.'.format(
-                    str(worker_pool), type(worker_pool)
-                    )
-                )
-        return False
+    def error_invalid_worker_pool(self, *args):
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
+            'error': 'Invalid worker pool.',
+        })
+        self.log_error(**instruction_set_response)
+        return instruction_set_response
 
-    def error_client_worker_map_not_found(self):
-        log.error('No client worker map found.')
-        return False
+    def error_client_worker_map_not_found(self, *args):
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
+            'error': 'No client worker map found.',
+        })
+        self.log_error(**instruction_set_response)
+        return instruction_set_response
 
-    def error_invalid_client_pool(self, client_pool):
-        log.error(
-                'Invalid client pool {} type {}.'.format(
-                    str(client_pool), type(client_pool)
-                    )
-                )
-        return False
+    def error_invalid_client_pool(self, *args):
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
+            'error': 'Invalid client pool.',
+        })
+        self.log_error(**instruction_set_response)
+        return instruction_set_response
 
-    def error_invalid_client_worker_map(self, cw_map):
-        log.error(
-                'Invalid client worker map {} type {}.'.format(
-                    str(cw_map), type(cw_map),
-                    )
-                )
-        return False
+    def error_invalid_client_worker_map(self, *args):
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
+            'error': 'Invalid client worker map.',
+        })
+        self.log_error(**instruction_set_response)
+        return instruction_set_response
 
-    def error_could_not_update_worker_pool(self, worker):
-        log.error(
-                'Something went wrong. Could not update worker pool with new worker {}.'\
-                .format(worker)
-                )
+    def error_could_not_update_worker_pool(self, *args):
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
+            'error': 'Something went wrong. '
+                     'Could not update worker pool with new worker.',
+        })
+        self.log_error(**instruction_set_response)
+        return instruction_set_response
 
+    def error_could_not_update_client_pool(self, *args):
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
+            'error': 'Something went wrong. '
+                     'Could not update client pool with new client.',
+        })
+        self.log_error(**instruction_set_response)
+        return instruction_set_response
 
-    def error_could_not_update_client_pool(self, client):
-        log.error(
-                'Something went wrong. Could not update client pool with new client {}.'\
-                .format(client)
-                )
-        return False
+    def error_could_not_update_client_worker_session_map(self, *args):
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
+            'error': 'Something went wrong. '
+                     'Could not update client/worker/session map with values.',
+        })
+        self.log_error(**instruction_set_response)
+        return instruction_set_response
 
-    def error_could_not_update_client_worker_session_map(self, values):
-        log.error(
-                'Something went wrong. Could not update client worker '
-                'session map with values {}'.format(values)
-                )
-        return False
+    def error_could_not_set_client_worker_map(self, *args):
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
+            'error': 'Something went wrong. '
+                     'Could not set client/worker map.',
+        })
+        self.log_error(**instruction_set_response)
+        return instruction_set_response
 
-    def error_could_not_set_client_worker_map(self, cw_map):
-        log.error('Something went wrong. Could not set client worker manp : {}'.format(cw_map))
-        return False
+    def error_no_system_action_open_target_specified(self, *args):
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
+            'error': 'No system action open target specified.',
+        })
+        self.log_error(**instruction_set_response)
+        return instruction_set_response
 
-    def error_no_system_action_open_target_specified(self):
-        log.error('No system action open target specified.')
-        return False
+    def error_no_system_action_close_target_specified(self, *args):
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
+            'error': 'No system action close target specified.',
+        })
+        self.log_error(**instruction_set_response)
+        return instruction_set_response
 
-    def error_no_system_action_close_target_specified(self):
-        log.error('No system action close target specified.')
-        return False
+    def error_no_system_action_new_specified(self, *args):
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
+            'error': 'No system action new specified.',
+        })
+        self.log_error(**instruction_set_response)
+        return instruction_set_response
 
-    def error_no_system_action_new_specified(self):
-        log.error('No system action new specified.')
-        return False
+    def error_no_client_request_specified(self, *args):
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
+            'error': 'No client request specified.',
+        })
+        self.log_error(**instruction_set_response)
+        return instruction_set_response
 
-    def error_no_client_request_specified(self):
-        log.error('No client request specified.')
-        return False
+    def error_no_system_event_client_timeout_target_specified(self, *args):
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
+            'error': 'No system event client timeout target specified.',
+        })
+        self.log_error(**instruction_set_response)
+        return instruction_set_response
 
-    def error_no_system_event_client_timeout_target_specified(self):
-        log.error('No system event client timeout target specified.')
-        return False
+    def error_no_system_event_expire_specified(self, *args):
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
+            'error': 'No system event expire specified.',
+        })
+        self.log_error(**instruction_set_response)
+        return instruction_set_response
 
-    def error_no_system_event_expire_specified(self):
-        log.error('No system event expire specified.')
-        return False
+    def error_no_system_event_timeout_specified(self, *args):
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
+            'error': 'No system event timeout specified.',
+        })
+        self.log_error(**instruction_set_response)
+        return instruction_set_response
 
-    def error_no_system_event_timeout_specified(self):
-        log.error('No system event timeout specified.')
-        return False
+    def error_no_system_session_manager_event_specified(self, *args):
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
+            'error': 'No system session manager event specified.',
+        })
+        self.log_error(**instruction_set_response)
+        return instruction_set_response
 
-    def error_no_system_session_manager_event_specified(self):
-        log.error('No system session manager event specified.')
-        return False
+    def error_no_client_session_manager_action_specified(self, *args):
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
+            'error': 'No client session manager action specified.',
+        })
+        self.log_error(**instruction_set_response)
+        return instruction_set_response
 
-    def error_no_client_session_manager_action_specified(self):
-        log.error('No client session manager action specified.')
-        return False
+    def error_no_system_session_manager_action_specified(self, *args):
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
+            'error': 'No system session manager action specified.',
+        })
+        self.log_error(**instruction_set_response)
+        return instruction_set_response
 
-    def error_no_system_session_manager_action_specified(self):
-        log.error('No system session manager action specified.')
-        return False
+    def error_no_client_session_manager_controller_specified(self, *args):
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
+            'error': 'No client session manager controller specified.',
+        })
+        self.log_error(**instruction_set_response)
+        return instruction_set_response
 
-    def error_no_client_session_manager_controller_specified(self):
-        log.error('No client session manager controller specified.')
-        return False
-
-    def error_no_system_session_manager_controller_specified(self):
-        log.error('No system session manager controller specified.')
-        return False
+    def error_no_system_session_manager_controller_specified(self, *args):
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
+            'error': 'No system session manager controller specified.',
+        })
+        self.log_error(**instruction_set_response)
+        return instruction_set_response
 
     # DEBUG
 

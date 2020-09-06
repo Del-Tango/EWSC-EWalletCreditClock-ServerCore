@@ -21,8 +21,8 @@
     - x - (EWSC) Impose user account state restrictions on all user actions
     - x - (EWSC) Impose entity ownership restrictions on all user actions
     - x - (EWSC) Groom session manager warning handlers
-    -   - (EWSC) Groom session manager error handlers
-    - (EWSC) Fix user action Edit Password
+    - x - (EWSC) Groom session manager error handlers
+    -   - (EWSC) Fix user action Edit Password
     - (EWSC) Fix user action Edit Email
     - (EWSC) Journal record grooming
     - (EWSC) Implement ResUser cleaner cron
@@ -75,11 +75,11 @@
 
 - TODO (EWSC)
 
-    -   - Error Handler Grooming (Session Manager)
-        -   - Cleanup stack trace string
-        -   - Convert cleaned up string to dictionary
-        -   - Add 'details' tag to instruction set response
-        -   - Assign error trace string to 'details'
+    - x - Error Handler Grooming (Session Manager)
+        - x - Cleanup stack trace string
+        - x - Convert cleaned up string to dictionary
+        - x - Add 'details' tag to instruction set response
+        - x - Assign error trace string to 'details'
 
     - x - Warning Handler Grooming (Session Manager)
         - x - Cleanup stack trace string
