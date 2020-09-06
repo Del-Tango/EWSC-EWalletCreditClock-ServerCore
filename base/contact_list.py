@@ -28,7 +28,6 @@ class ContactListRecord(Base):
     reference = Column(String)
 
     def __init__(self, **kwargs):
-#       self.record_id = kwargs.get('record_id')
         self.create_date = kwargs.get('create_date', datetime.datetime.now())
         self.write_date = kwargs.get('write_date', datetime.datetime.now())
         self.contact_list_id = kwargs.get('contact_list_id', int())
@@ -371,7 +370,6 @@ class ContactList(Base):
     records = relationship('ContactListRecord')
 
     def __init__(self, **kwargs):
-#       self.contact_list_id = kwargs.get('contact_list_id')
         self.create_date = kwargs.get('create_date', datetime.datetime.now())
         self.write_date = kwargs.get('write_date', datetime.datetime.now())
         self.client_id = kwargs.get('client_id', int())
@@ -385,6 +383,39 @@ class ContactList(Base):
         self.records = kwargs.get('records', [])
 
     # FETCHERS (LIST)
+
+    def fetch_contact_list_record_by_id(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('code'):
+            return self.error_no_contact_record_id_found()
+        if kwargs.get('active_session'):
+            match = list(
+                kwargs['active_session'].query(ContactListRecord)\
+                .filter_by(record_id=kwargs['code'])
+            )
+        else:
+            match = [
+                item for item in self.records
+                if item.fetch_record_id() is kwargs['code']
+            ]
+        record = False if not match else match[0]
+        check = self.check_record_in_contact_list(record)
+        if not check:
+            return self.warning_record_not_in_contact_list(
+                kwargs, record, check
+            )
+        log.info('Successfully fetched contact record by id.')
+        return record
+
+    # TODO
+    def fetch_contact_list_record(self, **kwargs):
+        log.debug('TODO - Refactor')
+        if not kwargs.get('search_by'):
+            return self.error_no_contact_record_search_identifier_found()
+        handlers = {
+            'id': self.fetch_contact_list_record_by_id,
+        }
+        return handlers[kwargs['search_by']](**kwargs)
 
     def fetch_contact_list_write_date(self):
         log.debug('')
@@ -439,86 +470,6 @@ class ContactList(Base):
                 kwargs
             )
         return records
-
-    def fetch_contact_list_record_by_id(self, **kwargs):
-        log.debug('')
-        if not kwargs.get('code'):
-            return self.error_no_contact_record_id_found()
-        if kwargs.get('active_session'):
-            match = list(
-                kwargs['active_session'].query(ContactListRecord)\
-                .filter_by(record_id=kwargs['code'])
-            )
-        else:
-            match = [
-                item for item in self.records
-                if item.fetch_record_id() is kwargs['code']
-            ]
-        record = False if not match else match[0]
-        if record:
-            log.info('Successfully fetched contact record by id.')
-        return record
-
-    def fetch_contact_list_record_by_ref(self, **kwargs):
-        log.debug('')
-        if not kwargs.get('code'):
-            return self.error_no_contact_record_reference_found()
-        _records = []
-        for k, v in self.records.items():
-            if v.fetch_record_reference() == kwargs['code']:
-                _records.append(v)
-        if _records:
-            log.info('Successfully fetched contact records by reference.')
-        return _records
-
-    def fetch_contact_list_record_by_name(self, **kwargs):
-        log.debug('')
-        if not kwargs.get('code'):
-            return self.error_no_contact_record_name_found()
-        _records = []
-        for k, v in self.records.items():
-            if v.fetch_record_user_name() == kwargs['code']:
-                _records.append(v)
-        if _records:
-            log.info('Successfully fetched contact records by name.')
-        return _records
-
-    def fetch_contact_list_record_by_email(self, **kwargs):
-        log.debug('')
-        if not kwargs.get('code'):
-            return self.error_no_contact_record_email_found()
-        _records = []
-        for k, v in self.records.items():
-            if v.fetch_record_user_email() == kwargs['code']:
-                _records.append(v)
-        if _records:
-            log.info('Successfully fetched contact records by email.')
-        return _records
-
-    def fetch_contact_list_record_by_phone(self, **kwargs):
-        log.debug('')
-        if not kwargs.get('code'):
-            return self.error_no_contact_record_phone_found()
-        _records = []
-        for k, v in self.records.items():
-            if v.fetch_record_user_phone() == kwargs['code']:
-                _records.append(v)
-        if _records:
-            log.info('Successfully fetched contact records by phone.')
-        return _records
-
-    def fetch_contact_list_record(self, **kwargs):
-        log.debug('')
-        if not kwargs.get('search_by'):
-            return self.error_no_contact_record_search_identifier_found()
-        _handlers = {
-                'id': self.fetch_contact_list_record_by_id,
-                'reference': self.fetch_contact_list_record_by_ref,
-                'name': self.fetch_contact_list_record_by_name,
-                'email': self.fetch_contact_list_record_by_email,
-                'phone': self.fetch_contact_list_record_by_phone,
-                }
-        return _handlers[kwargs['search_by']](**kwargs)
 
     # SETTERS (LIST)
 
@@ -677,6 +628,12 @@ class ContactList(Base):
         return set_to if isinstance(set_to, dict) and \
             set_to.get('failed') else self.fetch_contact_list_records()
 
+    # CHECKERS (LIST)
+
+    def check_record_in_contact_list(self, record):
+        log.debug('')
+        return False if record not in self.records else True
+
     # HANDLERS (LIST)
 
     def handle_update_contact_list_remove(self, **kwargs):
@@ -817,8 +774,6 @@ class ContactList(Base):
             return self.error_no_record_display_target_specified()
         handlers = {
             'terminal': self.handle_display_contact_list_records_to_terminal,
-#           'desktop': self.handle_display_contact_list_records_to_desktop,
-#           'web': self.handle_display_contact_list_records_to_web,
         }
         return handlers[kwargs['terminal']](**kwargs)
 
@@ -852,6 +807,15 @@ class ContactList(Base):
     '''
     [ TODO ]: Fetch warning messages from message file by key codes.
     '''
+
+    def warning_record_not_in_contact_list(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Record not found in contact list. '
+                       'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
 
     def warning_could_not_fetch_contact_records_from_database(self, *args):
         command_chain_response = {
@@ -1077,3 +1041,56 @@ class ContactList(Base):
 # ==============================================================================
 # CODE DUMP
 # ==============================================================================
+
+#   # TODO
+#   def fetch_contact_list_record_by_ref(self, **kwargs):
+#       log.debug('TODO - Deprecated')
+#       if not kwargs.get('code'):
+#           return self.error_no_contact_record_reference_found()
+#       _records = []
+#       for k, v in self.records.items():
+#           if v.fetch_record_reference() == kwargs['code']:
+#               _records.append(v)
+#       if _records:
+#           log.info('Successfully fetched contact records by reference.')
+#       return _records
+
+#   # TODO
+#   def fetch_contact_list_record_by_name(self, **kwargs):
+#       log.debug('TODO - Deprecated')
+#       if not kwargs.get('code'):
+#           return self.error_no_contact_record_name_found()
+#       _records = []
+#       for k, v in self.records.items():
+#           if v.fetch_record_user_name() == kwargs['code']:
+#               _records.append(v)
+#       if _records:
+#           log.info('Successfully fetched contact records by name.')
+#       return _records
+
+#   # TODO
+#   def fetch_contact_list_record_by_email(self, **kwargs):
+#       log.debug('TODO - Deprecated')
+#       if not kwargs.get('code'):
+#           return self.error_no_contact_record_email_found()
+#       _records = []
+#       for k, v in self.records.items():
+#           if v.fetch_record_user_email() == kwargs['code']:
+#               _records.append(v)
+#       if _records:
+#           log.info('Successfully fetched contact records by email.')
+#       return _records
+
+#   # TODO
+#   def fetch_contact_list_record_by_phone(self, **kwargs):
+#       log.debug('TODO - Deprecated')
+#       if not kwargs.get('code'):
+#           return self.error_no_contact_record_phone_found()
+#       _records = []
+#       for k, v in self.records.items():
+#           if v.fetch_record_user_phone() == kwargs['code']:
+#               _records.append(v)
+#       if _records:
+#           log.info('Successfully fetched contact records by phone.')
+#       return _records
+

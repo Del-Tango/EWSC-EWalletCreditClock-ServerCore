@@ -645,7 +645,7 @@ class EWallet(Base):
 
     # TODO
     def action_login_user_account(self, **kwargs):
-        log.debug('')
+        log.debug('TODO - Refactor')
         login_record = EWalletLogin()
         sanitized_command_chain = res_utils.remove_tags_from_command_chain(
             kwargs, 'action'
@@ -676,6 +676,36 @@ class EWallet(Base):
                 'session_account_archive': None if not session_values['user_account_archive'] \
                     else session_values['user_account_archive']
             }
+        }
+        return command_chain_response
+
+#   @pysnooper.snoop()
+    def action_view_contact_record(self, **kwargs):
+        '''
+        [ NOTE   ]: User action 'view contact record', accessible from external user api call.
+        [ INPUT  ]: record_id=<id>
+        [ RETURN ]: (Contact record values | False)
+        '''
+        log.debug('')
+        if not kwargs.get('record_id'):
+            return self.error_no_contact_record_id_found(kwargs)
+        contact_list = self.fetch_active_session_contact_list()
+        if not contact_list or isinstance(contact_list, dict) and \
+                contact_list.get('failed'):
+            return self.error_could_not_fetch_contact_list(kwargs)
+        log.info('Attempting to fetch contact record by id...')
+        record = contact_list.fetch_contact_list_record(
+            search_by='id' if not kwargs.get('search_by') else kwargs['search_by'],
+            code=kwargs['record_id'], active_session=self.fetch_active_session()
+        )
+        if not record or isinstance(record, dict) and \
+                record.get('failed'):
+            return self.warning_could_not_fetch_contact_record(kwargs)
+        command_chain_response = {
+            'failed': False,
+            'contact_list': contact_list.fetch_contact_list_id(),
+            'contact_record': kwargs['record_id'],
+            'record_data': record.fetch_record_values(),
         }
         return command_chain_response
 
@@ -1530,36 +1560,6 @@ class EWallet(Base):
             'failed': False,
             'transfer_sheet': transfer_sheet.fetch_transfer_sheet_id(),
             'sheet_data': transfer_sheet.fetch_transfer_sheet_values(),
-        }
-        return command_chain_response
-
-#   @pysnooper.snoop()
-    def action_view_contact_record(self, **kwargs):
-        '''
-        [ NOTE   ]: User action 'view contact record', accessible from external user api call.
-        [ INPUT  ]: record_id=<id>
-        [ RETURN ]: (Contact record values | False)
-        '''
-        log.debug('')
-        if not kwargs.get('record_id'):
-            return self.error_no_contact_record_id_found(kwargs)
-        contact_list = self.fetch_active_session_contact_list()
-        if not contact_list or isinstance(contact_list, dict) and \
-                contact_list.get('failed'):
-            return self.error_could_not_fetch_contact_list(kwargs)
-        log.info('Attempting to fetch contact record by id...')
-        record = contact_list.fetch_contact_list_record(
-            search_by='id' if not kwargs.get('search_by') else kwargs['search_by'],
-            code=kwargs['record_id'], active_session=self.fetch_active_session()
-        )
-        if not record or isinstance(record, dict) and \
-                record.get('failed'):
-            return self.warning_could_not_fetch_contact_record(kwargs)
-        command_chain_response = {
-            'failed': False,
-            'contact_list': contact_list.fetch_contact_list_id(),
-            'contact_record': kwargs['record_id'],
-            'record_data': record.fetch_record_values(),
         }
         return command_chain_response
 

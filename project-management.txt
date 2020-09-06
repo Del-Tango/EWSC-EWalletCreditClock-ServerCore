@@ -62,8 +62,41 @@
 ################################################################################
 
 - BUG REPORT:
-    - 05/09/2020 16:22
-        - Detected possible memory leak upon executing EWSC test suit.
+    - 05/09/2020
+        - 16:22
+            - Detected possible memory leak upon executing EWSC test suit.
+    - 06/09/2020
+        - 02:38
+            - Detected possible bug in credit clock timer actions.
+            - [ NOTE ]: Time record updated too many times.
+
+- Impose entity owner restrictions on user actions
+    - x - User action View Contact Record
+    -   - User action View Transfer Record
+    - User action View Time Record
+    - User action View Conversion Record
+    - User action View Invoice Record
+    - User action Switch Account
+    - User action Switch Credit EWallet
+    - User action Switch Credit Clock
+    - User action Switch Transfer Sheet
+    - User action Switch Invoice Sheet
+    - User action Switch Conversion Sheet
+    - User action Switch Time Sheet
+    - User action Switch Contact List
+    - User action Unlink Account
+    - User action Unlink Contact List
+    - User action Unlink Contact Record
+    - User action Unlink Conversion Sheet
+    - User action Unlink Conversion Record
+    - User action Unlink Transfer Sheet
+    - User action Unlink Transfer Record
+    - User action Unlink Time Sheet
+    - User action Unlink Time Record
+    - User action Unlink Credit EWallet
+    - User action Unlink Credit Clock
+    - User action Unlink Invoice Sheet
+    - User action Unlink Invoice Record
 
 - x - Restrict user actions based on account state
     - x - User action Account Logout
@@ -228,7 +261,6 @@
     - x - User action Convert Credits2Clock
     - x - User action Convert Clock2Credits
     - x - User action Add Contact Record
-    - x - User action Create Contact List
     - x - User action TransferCredits
     - x - User action Edit Account
     - x - User action Start Clock Timer
@@ -250,6 +282,7 @@
     - x - User action View Invoice Record
     - x - User action View Login Records
     - x - User action View Logout Records
+    - x - User action Create Contact List
     - x - User action Create Credit EWallet
     - x - User action Create Credit Clock
     - x - User action Create Transfer Sheet
