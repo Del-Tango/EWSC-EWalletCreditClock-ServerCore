@@ -77,6 +77,20 @@ class CreditClock(Base):
 
     # FETCHERS
 
+    def fetch_credit_clock_conversion_sheet_by_id(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('active_session'):
+            return self.error_no_active_session_found(kwargs)
+        conversion_sheet = list(
+            kwargs['active_session'].query(CreditClockConversionSheet).filter_by(
+                conversion_sheet_id=kwargs['sheet_id']
+            )
+        )
+        if conversion_sheet:
+            log.info('Successfully fetched conversion sheet by id.')
+        return self.warning_could_not_fetch_conversion_sheet_by_id(kwargs) \
+            if not conversion_sheet else conversion_sheet[0]
+
 #   @pysnooper.snoop('logs/ewallet.log')
     def fetch_time_sheet_record_creation_values(self, **kwargs):
         log.debug('')
@@ -112,20 +126,6 @@ class CreditClock(Base):
             log.info('Successfully fetched time sheet by id.')
         return self.warning_could_not_fetch_time_sheet_by_id(kwargs) \
             if not time_sheet else time_sheet[0]
-
-    def fetch_credit_clock_conversion_sheet_by_id(self, **kwargs):
-        log.debug('')
-        if not kwargs.get('active_session'):
-            return self.error_no_active_session_found(kwargs)
-        conversion_sheet = list(
-            kwargs['active_session'].query(CreditClockConversionSheet).filter_by(
-                conversion_sheet_id=kwargs['sheet_id']
-            )
-        )
-        if conversion_sheet:
-            log.info('Successfully fetched conversion sheet by id.')
-        return self.warning_could_not_fetch_conversion_sheet_by_id(kwargs) \
-            if not conversion_sheet else conversion_sheet[0]
 
     def fetch_active_credit_clock_time_record(self, **kwargs):
         log.debug('')
@@ -1310,6 +1310,60 @@ class CreditClock(Base):
 
     # UNLINKERS
 
+    def unlink_conversion_record(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('record_id'):
+            return self.error_no_conversion_sheet_record_id_found(kwargs)
+        conversion_sheet = self.fetch_credit_clock_conversion_sheet()
+        if not conversion_sheet:
+            return self.error_could_not_fetch_conversion_sheet(kwargs)
+        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
+            kwargs, 'action'
+        )
+        unlink = conversion_sheet.credit_clock_conversion_sheet_controller(
+            action='remove', **sanitized_command_chain
+        )
+        if not unlink or isinstance(unlink, dict) and unlink.get('failed'):
+            return self.warning_could_not_unlink_credit_clock_conversion_sheet_record(
+                kwargs, conversion_sheet, unlink
+            )
+        log.info('Successfully removed credit clock conversion record.')
+        command_chain_response = {
+            'failed': False,
+            'conversion_sheet': conversion_sheet.fetch_conversion_sheet_id(),
+            'conversion_record': kwargs['record_id'],
+        }
+        return command_chain_response
+
+    def unlink_conversion_list(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('list_id'):
+            return self.error_no_conversion_list_id_specified(kwargs)
+        conversion_sheet = self.fetch_credit_clock_conversion_sheet_by_id(
+            sheet_id=kwargs['list_id'],
+            active_session=kwargs.get('active_session'),
+        )
+        check = self.check_conversion_sheet_belongs_to_credit_clock(
+            conversion_sheet
+        )
+        if not check:
+            return self.warning_conversion_sheet_does_not_belong_to_credit_clock(
+                kwargs, conversion_sheet, check
+            )
+        try:
+            kwargs['active_session'].query(
+                CreditClockConversionSheet
+            ).filter_by(
+                conversion_sheet_id=kwargs['list_id']
+            ).delete()
+        except:
+            self.error_could_not_remove_conversion_sheet(kwargs)
+        command_chain_response = {
+            'failed': False,
+            'conversion_sheet': kwargs['list_id'],
+        }
+        return command_chain_response
+
     def unlink_time_list(self, **kwargs):
         log.debug('')
         if not kwargs.get('list_id'):
@@ -1325,24 +1379,6 @@ class CreditClock(Base):
         command_chain_response = {
             'failed': False,
             'time_sheet': kwargs['list_id'],
-        }
-        return command_chain_response
-
-    def unlink_conversion_list(self, **kwargs):
-        log.debug('')
-        if not kwargs.get('list_id'):
-            return self.error_no_conversion_list_id_specified(kwargs)
-        try:
-            kwargs['active_session'].query(
-                CreditClockConversionSheet
-            ).filter_by(
-                conversion_sheet_id=kwargs['list_id']
-            ).delete()
-        except:
-            self.error_could_not_remove_conversion_sheet(kwargs)
-        command_chain_response = {
-            'failed': False,
-            'conversion_sheet': kwargs['list_id'],
         }
         return command_chain_response
 
@@ -1378,29 +1414,6 @@ class CreditClock(Base):
             'record': self.unlink_time_record,
         }
         return handlers[kwargs['time']](**kwargs)
-
-    def unlink_conversion_record(self, **kwargs):
-        log.debug('')
-        if not kwargs.get('record_id'):
-            return self.error_no_conversion_sheet_record_id_found(kwargs)
-        conversion_sheet = self.fetch_credit_clock_conversion_sheet()
-        if not conversion_sheet:
-            return self.error_could_not_fetch_conversion_sheet(kwargs)
-        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
-            kwargs, 'action'
-        )
-        unlink = conversion_sheet.credit_clock_conversion_sheet_controller(
-            action='remove', **sanitized_command_chain
-        )
-        if not unlink or isinstance(unlink, dict) and unlink.get('failed'):
-            return self.warning_could_not_unlink_credit_clock_conversion_sheet_record(kwargs)
-        log.info('Successfully removed credit clock conversion record.')
-        command_chain_response = {
-            'failed': False,
-            'conversion_sheet': conversion_sheet.fetch_conversion_sheet_id(),
-            'conversion_record': kwargs['record_id'],
-        }
-        return command_chain_response
 
     def unlink_conversion(self, **kwargs):
         log.debug('')
@@ -2306,6 +2319,16 @@ class CreditClock(Base):
     [ TODO ]: Fetch warning messages from message file by key codes.
     '''
 
+    def warning_could_not_unlink_credit_clock_conversion_sheet_record(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Something went wrong. '
+                       'Could not unlink conversion sheet record. '
+                       'Details: {}'.format(args),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
+
     def warning_time_sheet_does_not_belong_to_credit_clock(self, *args):
         command_chain_response = {
             'failed': True,
@@ -2393,15 +2416,6 @@ class CreditClock(Base):
             'failed': True,
             'warning': 'Something went wrong. Could not unlink credit clock time sheet record. '\
                      'Command chain details : {}'.format(command_chain),
-        }
-        log.warning(command_chain_response['warning'])
-        return command_chain_response
-
-    def warning_could_not_unlink_credit_clock_conversion_sheet_record(self, command_chain):
-        command_chain_response = {
-            'failed': True,
-            'warning': 'Something went wrong. Could not unlink credit clock conversion sheet record. '\
-                       'Command chain details : {}'.format(command_chain),
         }
         log.warning(command_chain_response['warning'])
         return command_chain_response

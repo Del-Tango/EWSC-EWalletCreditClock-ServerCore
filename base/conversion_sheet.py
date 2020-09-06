@@ -625,6 +625,29 @@ class CreditClockConversionSheet(Base):
 
     # ACTIONS (LIST)
 
+    def action_remove_conversion_sheet_record(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('record_id'):
+            return self.error_no_conversion_record_id_found()
+        record = self.fetch_conversion_sheet_record_by_id(
+            record_id=kwargs['record_id'],
+            active_session=kwargs['active_session']
+        )
+        check = self.check_record_in_conversion_sheet(record)
+        if not check:
+            return self.warning_record_not_in_conversion_sheet(
+                kwargs, record, check
+            )
+        try:
+            kwargs['active_session'].query(
+                CreditClockConversionSheetRecord
+            ).filter_by(record_id=kwargs['record_id']).delete()
+        except:
+            return self.error_could_not_remove_conversion_sheet_record(kwargs)
+        kwargs['active_session'].commit()
+        log.info('Successfully removed conversion sheet record.')
+        return True
+
     def action_interogate_conversion_sheet_records(self, **kwargs):
         log.debug('')
         if not kwargs.get('search_by'):
@@ -643,18 +666,6 @@ class CreditClockConversionSheet(Base):
     def action_clear_conversion_sheet_records(self, **kwargs):
         log.debug('')
         return self.set_conversion_sheet_records(records={})
-
-    def action_remove_conversion_sheet_record(self, **kwargs):
-        log.debug('')
-        if not kwargs.get('record_id'):
-            return self.error_no_conversion_record_id_found()
-        try:
-            kwargs['active_session'].query(
-                CreditClockConversionSheetRecord
-            ).filter_by(record_id=kwargs['record_id']).delete()
-        except:
-            return self.error_could_not_remove_conversion_sheet_record(kwargs)
-        return True
 
     def action_add_conversion_sheet_record(self, **kwargs):
         log.debug('')

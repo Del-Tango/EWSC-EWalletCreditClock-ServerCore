@@ -1030,22 +1030,6 @@ class CreditEWallet(Base):
 
     # UNLINKERS
 
-    def unlink_time_list(self, **kwargs):
-        log.debug('')
-        credit_clock = self.fetch_credit_ewallet_credit_clock()
-        if not credit_clock:
-            return self.error_could_not_fetch_ewallet_credit_clock(kwargs)
-        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
-            kwargs, 'controller', 'ctype', 'action', 'unlink', 'time'
-        )
-        unlink = credit_clock.main_controller(
-            controller='user', ctype='action', action='unlink', unlink='time',
-            time='list', **sanitized_command_chain
-        )
-        return self.warning_could_not_unlink_time_sheet(kwargs) \
-            if not unlink or isinstance(unlink, dict) and unlink.get('failed') \
-            else unlink
-
 #   @pysnooper.snoop()
     def unlink_conversion_list(self, **kwargs):
         log.debug('')
@@ -1059,8 +1043,26 @@ class CreditEWallet(Base):
             controller='user', ctype='action', action='unlink', unlink='conversion',
             conversion='list', **sanitized_command_chain
         )
-        return self.warning_could_not_unlink_conversion_sheet(kwargs) \
-            if not unlink or isinstance(unlink, dict) and unlink.get('failed') \
+        return self.warning_could_not_unlink_conversion_sheet(
+            kwargs, credit_clock, unlink
+        ) if not unlink or isinstance(unlink, dict) \
+            and unlink.get('failed') else unlink
+
+    def unlink_time_list(self, **kwargs):
+        log.debug('')
+        credit_clock = self.fetch_credit_ewallet_credit_clock()
+        if not credit_clock:
+            return self.error_could_not_fetch_ewallet_credit_clock(kwargs)
+        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
+            kwargs, 'controller', 'ctype', 'action', 'unlink', 'time'
+        )
+        unlink = credit_clock.main_controller(
+            controller='user', ctype='action', action='unlink', unlink='time',
+            time='list', **sanitized_command_chain
+        )
+        return self.warning_could_not_unlink_time_sheet(
+            kwargs, credit_clock, unlink
+        ) if not unlink or isinstance(unlink, dict) and unlink.get('failed') \
             else unlink
 
     def unlink_invoice_list(self, **kwargs):
@@ -1274,6 +1276,46 @@ class CreditEWallet(Base):
     [ TODO ]: Fetch error messages from message file by key codes.
     '''
 
+    def warning_could_not_unlink_time_sheet(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Something went wrong. '
+                       'Could not unlink time sheet. '
+                       'Details: {}'.format(args),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
+
+    def warning_could_not_unlink_time_record(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Something went wrong. '
+                       'Could not unlink time sheet record. '
+                       'Details: {}'.format(args),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
+
+    def warning_could_not_unlink_conversion_sheet(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Something went wrong. '
+                       'Could not unlink conversion sheet. '
+                       'Details: {}'.format(args),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
+
+    def warning_could_not_unlink_conversion_record(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Something went wrong. '
+                       'Could not unlink conversion record. '
+                       'Details: {}'.format(args),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
+
     def warning_could_not_switch_credit_ewallet_time_sheet(self, *args):
         command_chain_response = {
             'failed': True,
@@ -1347,42 +1389,6 @@ class CreditEWallet(Base):
             'warning': 'Something went wrong. '
                        'Could not switch credit clock. '
                        'Details: {}'.format(args),
-        }
-        log.warning(command_chain_response['warning'])
-        return command_chain_response
-
-    def warning_could_not_unlink_time_sheet(self, command_chain):
-        command_chain_response = {
-            'failed': True,
-            'warning': 'Something went wrong. Could not unlink time sheet. Command chain details : {}'\
-                       .format(command_chain),
-        }
-        log.warning(command_chain_response['warning'])
-        return command_chain_response
-
-    def warning_could_not_unlink_conversion_sheet(self, command_chain):
-        command_chain_response = {
-            'failed': True,
-            'warning': 'Something went wrong. Could not unlink conversion sheet. '\
-                       'Command chain details : {}'.format(command_chain),
-        }
-        log.warning(command_chain_response['warning'])
-        return command_chain_response
-
-    def warning_could_not_unlink_time_record(self, command_chain):
-        command_chain_response = {
-            'failed': True,
-            'warning': 'Something went wrong. Could not unlink time sheet record. '\
-                       'Command chain details : {}'.format(command_chain),
-        }
-        log.warning(command_chain_response['warning'])
-        return command_chain_response
-
-    def warning_could_not_unlink_conversion_record(self, command_chain):
-        command_chain_response = {
-            'failed': True,
-            'warning': 'Something went wrong. Could not unlink conversion record. '\
-                       'Command chain details : {}'.format(command_chain),
         }
         log.warning(command_chain_response['warning'])
         return command_chain_response

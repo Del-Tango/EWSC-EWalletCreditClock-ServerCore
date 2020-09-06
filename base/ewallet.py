@@ -684,6 +684,50 @@ class EWallet(Base):
         }
         return command_chain_response
 
+    def action_unlink_conversion_record(self, **kwargs):
+        log.debug('')
+        active_user = self.fetch_active_session_user()
+        credit_ewallet = active_user.fetch_user_credit_wallet()
+        if not credit_ewallet:
+            return self.error_could_not_fetch_active_session_credit_ewallet(kwargs)
+        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
+            kwargs, 'controller', 'action', 'unlink', 'conversion'
+        )
+        unlink_record = credit_ewallet.main_controller(
+            controller='user', action='unlink', unlink='conversion', conversion='record',
+            **sanitized_command_chain
+        )
+        if not unlink_record or isinstance(unlink_record, dict) and \
+                unlink_record.get('failed'):
+            kwargs['active_session'].rollback()
+            return self.warning_could_not_unlink_conversion_sheet_record(
+                kwargs, active_user, credit_ewallet, unlink_record
+            )
+        kwargs['active_session'].commit()
+        return unlink_record
+
+    def action_unlink_conversion_list(self, **kwargs):
+        log.debug('')
+        active_user = self.fetch_active_session_user()
+        credit_ewallet = self.fetch_active_session_credit_wallet()
+        if not credit_ewallet:
+            return self.error_could_not_fetch_active_session_credit_ewallet(kwargs)
+        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
+            kwargs, 'controller', 'ctype', 'action', 'unlink', 'conversion'
+        )
+        unlink_sheet = credit_ewallet.main_controller(
+            controller='user', ctype='action', action='unlink', unlink='conversion',
+            conversion='list', **sanitized_command_chain
+        )
+        if not unlink_sheet or isinstance(unlink_sheet, dict) and \
+                unlink_sheet.get('failed'):
+            kwargs['active_session'].rollback()
+            return self.warning_could_not_unlink_conversion_sheet(
+                kwargs, active_user, credit_ewallet, unlink_sheet
+            )
+        kwargs['active_session'].commit()
+        return unlink_sheet
+
     def action_unlink_contact_record(self, **kwargs):
         log.debug('')
         active_user = self.fetch_active_session_user()
@@ -2111,28 +2155,6 @@ class EWallet(Base):
         kwargs['active_session'].commit()
         return unlink_sheet
 
-    def action_unlink_conversion_list(self, **kwargs):
-        log.debug('')
-        active_user = self.fetch_active_session_user()
-        credit_ewallet = self.fetch_active_session_credit_wallet()
-        if not credit_ewallet:
-            return self.error_could_not_fetch_active_session_credit_ewallet(kwargs)
-        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
-            kwargs, 'controller', 'ctype', 'action', 'unlink', 'conversion'
-        )
-        unlink_sheet = credit_ewallet.main_controller(
-            controller='user', ctype='action', action='unlink', unlink='conversion',
-            conversion='list', **sanitized_command_chain
-        )
-        if not unlink_sheet or isinstance(unlink_sheet, dict) and \
-                unlink_sheet.get('failed'):
-            kwargs['active_session'].rollback()
-            return self.warning_could_not_unlink_conversion_sheet(
-                active_user.fetch_user_name(), kwargs
-            )
-        kwargs['active_session'].commit()
-        return unlink_sheet
-
     def action_unlink_invoice_list(self, **kwargs):
         log.debug('')
         active_user = self.fetch_active_session_user()
@@ -2194,28 +2216,6 @@ class EWallet(Base):
                 unlink_record.get('failed'):
             kwargs['active_session'].rollback()
             return self.warning_could_not_unlink_time_sheet_record(
-                active_user.fetch_user_name(), kwargs
-            )
-        kwargs['active_session'].commit()
-        return unlink_record
-
-    def action_unlink_conversion_record(self, **kwargs):
-        log.debug('')
-        active_user = self.fetch_active_session_user()
-        credit_ewallet = active_user.fetch_user_credit_wallet()
-        if not credit_ewallet:
-            return self.error_could_not_fetch_active_session_credit_ewallet(kwargs)
-        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
-            kwargs, 'controller', 'action', 'unlink', 'conversion'
-        )
-        unlink_record = credit_ewallet.main_controller(
-            controller='user', action='unlink', unlink='conversion', conversion='record',
-            **sanitized_command_chain
-        )
-        if not unlink_record or isinstance(unlink_record, dict) and \
-                unlink_record.get('failed'):
-            kwargs['active_session'].rollback()
-            return self.warning_could_not_unlink_conversion_sheet_record(
                 active_user.fetch_user_name(), kwargs
             )
         kwargs['active_session'].commit()
@@ -3379,6 +3379,26 @@ class EWallet(Base):
     [ TODO ]: Fetch warning messages from message file by key codes.
     '''
 
+    def warning_could_not_unlink_conversion_sheet_record(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Something went wrong. '
+                       'Could not unlink conversion sheet record. '
+                       'Details: {}'.format(args),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
+
+    def warning_could_not_unlink_conversion_sheet(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Something went wrong. '
+                       'Could not unlink conversion sheet. '
+                       'Details: {}'.format(args),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
+
     def warning_could_not_unlink_contact_list_record(self, *args):
         command_chain_response = {
             'failed': True,
@@ -3784,15 +3804,6 @@ class EWallet(Base):
         log.warning(command_chain_response['warning'])
         return command_chain_response
 
-    def warning_could_not_unlink_conversion_sheet(self, user_name, command_chain):
-        command_chain_response = {
-            'failed': True,
-            'warning': 'Something went wrong. Could not unlink conversion sheet for user {}. '\
-                       'Command chain details : {}'.format(user_name, command_chain),
-        }
-        log.warning(command_chain_response['warning'])
-        return command_chain_response
-
     def warning_could_not_unlink_invoice_sheet(self, user_name, command_chain):
         command_chain_response = {
             'failed': True,
@@ -3815,15 +3826,6 @@ class EWallet(Base):
         command_chain_response = {
             'failed': True,
             'warning': 'Something went wrong. Could not unlink time sheet record for user {}. '\
-                       'Command chain details : {}'.format(user_name, command_chain),
-        }
-        log.warning(command_chain_response['warning'])
-        return command_chain_response
-
-    def warning_could_not_unlink_conversion_sheet_record(self, user_name, command_chain):
-        command_chain_response = {
-            'failed': True,
-            'warning': 'Something went wrong. Could not unlink conversion sheet record for user {}. '\
                        'Command chain details : {}'.format(user_name, command_chain),
         }
         log.warning(command_chain_response['warning'])
