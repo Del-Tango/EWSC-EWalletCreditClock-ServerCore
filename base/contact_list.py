@@ -832,6 +832,24 @@ class ContactList(Base):
     [ TODO ]: Fetch error messages from message file by key codes.
     '''
 
+    def error_no_contact_list_record_removal_target_specified(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No contact list record removal target specified. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_invalid_contact_record_id(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Invalid contact record id. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
     def error_could_not_set_contact_list_client(self, *args):
         command_chain_response = {
             'failed': True,

@@ -448,6 +448,11 @@ class EWallet(Base):
 
     # CHECKERS
 
+    def check_user_account_belongs_to_ewallet_session(self, account):
+        log.debug('')
+        return False if account not in self.user_account_archive \
+            else True
+
     def check_user_logged_in(self):
         log.debug('')
         user_account = self.fetch_active_session_user(obj=True)
@@ -676,6 +681,61 @@ class EWallet(Base):
                 'session_account_archive': None if not session_values['user_account_archive'] \
                     else session_values['user_account_archive']
             }
+        }
+        return command_chain_response
+
+    def action_unlink_contact_list(self, **kwargs):
+        log.debug('')
+        active_user = self.fetch_active_session_user()
+        if not active_user:
+            return self.error_could_not_fetch_active_session_user(kwargs)
+        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
+            kwargs, 'ctype', 'action', 'unlink', 'contact'
+        )
+        unlink_list = active_user.user_controller(
+            ctype='action', action='unlink', unlink='contact_list',
+            **sanitized_command_chain
+        )
+        if not unlink_list or isinstance(unlink_list, dict) and \
+                unlink_list.get('failed'):
+            kwargs['active_session'].rollback()
+            return self.warning_could_not_unlink_contact_list(
+                kwargs, active_user, unlink_list
+            )
+        kwargs['active_session'].commit()
+        command_chain_response = {
+            'failed': False,
+            'contact_list': kwargs['list_id'],
+        }
+        return command_chain_response
+
+#   @pysnooper.snoop('logs/ewallet.log')
+    def action_unlink_user_account(self, **kwargs):
+        log.debug('')
+        user_id = kwargs.get('user_id') or \
+            self.fetch_active_session_user(obj=False)
+        if not user_id or isinstance(user_id, dict) and \
+                user_id.get('failed'):
+            return self.error_no_user_account_id_found(kwargs)
+        user_account = self.fetch_user_by_id(account_id=user_id, **kwargs)
+        if not user_account or isinstance(user_account, dict) and \
+                user_account.get('failed'):
+            return self.warning_could_not_fetch_user_account_by_id(kwargs)
+        check = self.check_user_account_belongs_to_ewallet_session(user_account)
+        if not check:
+            return self.warning_account_does_not_belong_to_ewallet_session(
+                kwargs, user_id, user_account, check
+            )
+        user_email = user_account.fetch_user_email()
+        unlink_account = self.unlink_user_account(user_id=user_id, **kwargs)
+        if not unlink_account or isinstance(unlink_account, dict) and \
+                unlink_account.get('failed'):
+            kwargs['active_session'].rollback()
+            return self.warning_could_not_unlink_user_account(user_id, kwargs)
+        kwargs['active_session'].commit()
+        command_chain_response = {
+            'failed': False,
+            'account': user_email,
         }
         return command_chain_response
 
@@ -1316,30 +1376,6 @@ class EWallet(Base):
             'failed': False,
             'account': kwargs['user_email'],
             'account_data': session_create_account.fetch_user_values(),
-        }
-        return command_chain_response
-
-#   @pysnooper.snoop('logs/ewallet.log')
-    def action_unlink_user_account(self, **kwargs):
-        log.debug('')
-        user_id = kwargs.get('user_id') or self.fetch_active_session_user(obj=False)
-        if not user_id or isinstance(user_id, dict) and \
-                user_id.get('failed'):
-            return self.error_no_user_account_id_found(kwargs)
-        user_account = self.fetch_user_by_id(account_id=user_id, **kwargs)
-        if not user_account or isinstance(user_account, dict) and \
-                user_account.get('failed'):
-            return self.warning_could_not_fetch_user_account_by_id(kwargs)
-        user_email = user_account.fetch_user_email()
-        unlink_account = self.unlink_user_account(user_id=user_id, **kwargs)
-        if not unlink_account or isinstance(unlink_account, dict) and \
-                unlink_account.get('failed'):
-            kwargs['active_session'].rollback()
-            return self.warning_could_not_unlink_user_account(user_id, kwargs)
-        kwargs['active_session'].commit()
-        command_chain_response = {
-            'failed': False,
-            'account': user_email,
         }
         return command_chain_response
 
@@ -2028,31 +2064,6 @@ class EWallet(Base):
         command_chain_response = {
             'failed': False,
             'credit_ewallet': kwargs['ewallet_id'],
-        }
-        return command_chain_response
-
-    def action_unlink_contact_list(self, **kwargs):
-        log.debug('')
-        active_user = self.fetch_active_session_user()
-        if not active_user:
-            return self.error_could_not_fetch_active_session_user(kwargs)
-        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
-            kwargs, 'ctype', 'action', 'unlink', 'contact'
-        )
-        unlink_list = active_user.user_controller(
-            ctype='action', action='unlink', unlink='contact_list',
-            **sanitized_command_chain
-        )
-        if not unlink_list or isinstance(unlink_list, dict) and \
-                unlink_list.get('failed'):
-            kwargs['active_session'].rollback()
-            return self.warning_could_not_unlink_contact_list(
-                active_user.fetch_user_name(), kwargs
-            )
-        kwargs['active_session'].commit()
-        command_chain_response = {
-            'failed': False,
-            'contact_list': kwargs['list_id'],
         }
         return command_chain_response
 
@@ -3368,6 +3379,25 @@ class EWallet(Base):
     [ TODO ]: Fetch warning messages from message file by key codes.
     '''
 
+    def warning_account_does_not_belong_to_ewallet_session(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'User account does not belong to ewallet session. '
+                       'Details: {}'.format(args),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
+
+    def warning_could_not_unlink_contact_list(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Something went wrong. '
+                       'Could not unlink contact list. '
+                       'Details: {}'.format(args),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
+
     def warning_could_not_switch_contact_list(self, *args):
         command_chain_response = {
             'failed': True,
@@ -3730,15 +3760,6 @@ class EWallet(Base):
         command_chain_response = {
             'failed': True,
             'warning': 'Something went wrong. Could not unlink credit ewallet for user {}. '\
-                       'Command chain details : {}'.format(user_name, command_chain),
-        }
-        log.warning(command_chain_response['warning'])
-        return command_chain_response
-
-    def warning_could_not_unlink_contact_list(self, user_name, command_chain):
-        command_chain_response = {
-            'failed': True,
-            'warning': 'Something went wrong. Could not unlink contact list for user {}. '\
                        'Command chain details : {}'.format(user_name, command_chain),
         }
         log.warning(command_chain_response['warning'])

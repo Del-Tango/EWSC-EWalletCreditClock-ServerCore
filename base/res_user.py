@@ -88,15 +88,18 @@ class ResUser(Base):
         log.debug('')
         return self.user_state_code
 
-    def fetch_user_contact_list_by_id(self, list_id, **kwargs):
+    def fetch_user_contact_list_by_id(self, list_id, orm_session):
         log.debug('')
-        active_session = kwargs.get('active_session') or \
-                self.fetch_user_active_ewallet_session().fetch_active_session()
-        contact_list = list(
-            active_session.query(ContactList).filter_by(contact_list_id=list_id)
+        query = list(
+            orm_session.query(ContactList).filter_by(contact_list_id=list_id)
         )
-        return self.warning_no_contact_list_found_by_id(list_id, kwargs) if not \
-            contact_list else contact_list[0]
+        contact_list = None if not query else query[0]
+        if not contact_list:
+            return self.warning_no_contact_list_found_by_id(
+                list_id, orm_session
+            )
+        log.info('Successfully fetched contact list by id.')
+        return contact_list
 
     def fetch_user_credit_ewallet_by_id(self, ewallet_id, **kwargs):
         log.debug('')
@@ -669,6 +672,25 @@ class ResUser(Base):
 
     # GENERAL
 
+    # UNLINKERS
+
+    def unlink_contact_list(self, list_id, **kwargs):
+        log.debug('')
+        active_session = kwargs.get('active_session') or \
+            self.fetch_user_active_session(stype='orm')
+        try:
+            active_session.query(
+                ContactList
+            ).filter_by(
+                contact_list_id=list_id
+            ).delete()
+        except:
+            return self.error_could_not_unlink_contact_list(
+                kwargs, active_session
+            )
+        log.info('Successfully unlinked contact list.')
+        return list_id
+
     # EVENTS
 
 #   @pysnooper.snoop()
@@ -713,12 +735,41 @@ class ResUser(Base):
                 'user_email': set_user_email,
             }
 
+    def action_unlink_contact_list(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('list_id'):
+            return self.error_no_contact_list_id_found(kwargs)
+        contact_list = self.fetch_user_contact_list_by_id(
+            kwargs['list_id'], kwargs['active_session']
+        )
+        if isinstance(contact_list, dict) and \
+                contact_list.get('failed'):
+            return self.error_could_not_fetch_contact_list(
+                kwargs, contact_list
+            )
+        check = self.check_contact_list_belongs_to_user(contact_list)
+        if not check:
+            return self.warning_contact_list_does_not_belong_to_user(
+                kwargs, contact_list, check
+            )
+        unlink = self.unlink_contact_list(
+            kwargs['list_id'], active_session=kwargs['active_session']
+        )
+        if isinstance(unlink, dict) and unlink.get('failed'):
+            return self.error_could_not_unlink_contact_list(
+                kwargs, contact_list, check, unlink
+            )
+        log.info('Successfully removed user contact list.')
+        return kwargs['list_id']
+
     def action_switch_contact_list(self, **kwargs):
         log.debug('')
         if not kwargs.get('list_id'):
             return self.error_no_contact_list_id_found()
         log.info('Attempting to fetch user contact list...')
-        contact_list = self.fetch_user_contact_list_by_id(kwargs['list_id'])
+        contact_list = self.fetch_user_contact_list_by_id(
+            kwargs['list_id'], kwargs['active_session']
+        )
         if not contact_list or isinstance(contact_list, dict) and \
                 contact_list.get('failed'):
             return self.warning_could_not_fetch_contact_list(
@@ -976,21 +1027,6 @@ class ResUser(Base):
             return self.error_could_not_unlink_credit_ewallet(kwargs)
         log.info('Successfully removed user credit ewallet by id.')
         return kwargs['ewallet_id']
-
-    def action_unlink_contact_list(self, **kwargs):
-        log.debug('')
-        if not kwargs.get('list_id'):
-            return self.error_no_contact_list_id_found(kwargs)
-        try:
-            kwargs['active_session'].query(
-                ContactList
-            ).filter_by(
-                contact_list_id=kwargs['list_id']
-            ).delete()
-        except:
-            return self.error_could_not_unlink_contact_list(kwargs)
-        log.info('Successfully removed user contact list by id.')
-        return kwargs['list_id']
 
     def action_edit_user_name(self, **kwargs):
         log.debug('')
@@ -1386,6 +1422,26 @@ class ResUser(Base):
     '''
     [ TODO ]: Fetch error messages from message file by key codes.
     '''
+
+    def error_could_not_unlink_contact_list(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Something went wrong. '
+                     'Could not unlink contact list. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_could_not_fetch_contact_list(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Something went wrong. '
+                     'Could not fetch contact list. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
 
     def error_could_not_switch_contact_list(self, *args):
         command_chain_response = {
