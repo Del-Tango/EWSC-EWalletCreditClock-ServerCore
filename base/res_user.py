@@ -105,11 +105,14 @@ class ResUser(Base):
         log.debug('')
         active_session = kwargs.get('active_session') or \
                 self.fetch_user_active_ewallet_session().fetch_active_session()
-        ewallet = list(
+        query = list(
             active_session.query(CreditEWallet).filter_by(wallet_id=ewallet_id)
         )
-        return self.warning_no_credit_ewallet_found_by_id(ewallet_id, kwargs) if not \
-            ewallet else ewallet[0]
+        ewallet = None if not query else query[0]
+        if not ewallet:
+            return self.warning_no_credit_ewallet_found_by_id(ewallet_id, kwargs)
+        log.info('Successfully fetched credit ewallet.')
+        return ewallet
 
     def fetch_credit_ewallet_creation_values(self, **kwargs):
         log.debug('')
@@ -303,13 +306,6 @@ class ResUser(Base):
                 res_utils.format_datetime(self.to_unlink_timestamp),
         }
         return values
-
-    def fetch_credit_wallet_by_id(self, credit_wallet_id):
-        log.debug('')
-        _record = self.user_credit_wallet_archive.get(credit_wallet_id)
-        if _record:
-            log.info('Successfully fetched credit wallet by id.')
-        return _record
 
     # SETTERS
 
@@ -735,6 +731,53 @@ class ResUser(Base):
                 'user_email': set_user_email,
             }
 
+    def action_unlink_credit_clock(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('clock_id'):
+            return self.error_no_credit_clock_id_found(kwargs)
+        log.info('Attempting to fetch user credit ewallet...')
+        credit_ewallet = self.fetch_user_credit_wallet()
+        if not credit_ewallet:
+            return self.error_could_not_fetch_user_credit_ewallet(kwargs)
+        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
+            kwargs, 'controller', 'action', 'unlink',
+        )
+        unlink = credit_ewallet.main_controller(
+            controller='user', action='unlink', unlink='clock',
+            **sanitized_command_chain
+        )
+        if not unlink or isinstance(unlink, dict) and \
+                unlink.get('failed'):
+            return self.error_could_not_unlink_credit_clock(
+                kwargs, credit_ewallet, unlink
+            )
+        log.info('Successfully unlinked ewallet credit clock.')
+        return unlink
+
+    def action_unlink_credit_wallet(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('ewallet_id'):
+            return self.error_no_ewallet_id_found(kwargs)
+        ewallet = self.fetch_user_credit_ewallet_by_id(
+            kwargs['ewallet_id'],
+            active_session=kwargs['active_session'],
+        )
+        check = self.check_credit_ewallet_belongs_to_user(ewallet)
+        if not check:
+            return self.warning_credit_ewallet_does_not_belong_to_current_user(
+                kwargs, ewallet, check
+            )
+        try:
+            kwargs['active_session'].query(
+                CreditEWallet
+            ).filter_by(
+                wallet_id=kwargs['ewallet_id']
+            ).delete()
+        except Exception as e:
+            return self.error_could_not_unlink_credit_ewallet(kwargs, e)
+        log.info('Successfully removed user credit ewallet.')
+        return kwargs['ewallet_id']
+
     def action_unlink_contact_list(self, **kwargs):
         log.debug('')
         if not kwargs.get('list_id'):
@@ -994,40 +1037,6 @@ class ResUser(Base):
         transaction = transaction_handler.action_init_transaction(**sanitized_command_chain)
         return transaction
 
-    def action_unlink_credit_clock(self, **kwargs):
-        log.debug('')
-        if not kwargs.get('clock_id'):
-            return self.error_no_credit_clock_id_found(kwargs)
-        log.info('Attempting to fetch user credit ewallet...')
-        credit_ewallet = self.fetch_user_credit_wallet()
-        if not credit_ewallet:
-            return self.error_could_not_fetch_user_credit_ewallet(kwargs)
-        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
-            kwargs, 'controller', 'action', 'unlink',
-        )
-        unlink = credit_ewallet.main_controller(
-            controller='user', action='unlink', unlink='clock',
-            **sanitized_command_chain
-        )
-        if unlink:
-            log.info('Successfully unlinked ewallet credit clock.')
-        return unlink
-
-    def action_unlink_credit_wallet(self, **kwargs):
-        log.debug('')
-        if not kwargs.get('ewallet_id'):
-            return self.error_no_ewallet_id_found(kwargs)
-        try:
-            kwargs['active_session'].query(
-                CreditEWallet
-            ).filter_by(
-                wallet_id=kwargs['ewallet_id']
-            ).delete()
-        except:
-            return self.error_could_not_unlink_credit_ewallet(kwargs)
-        log.info('Successfully removed user credit ewallet by id.')
-        return kwargs['ewallet_id']
-
     def action_edit_user_name(self, **kwargs):
         log.debug('')
         set_user_name = self.set_user_name(name=kwargs['user_name'])
@@ -1266,6 +1275,15 @@ class ResUser(Base):
     [ TODO ]: Fetch error messages from message file by key codes.
     '''
 
+    def warning_no_credit_ewallet_found_by_id(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'No credit ewallet found by id. '
+                       'Details: {}'.format(args),
+        }
+        log.warning(command_chain_response['warning'])
+        return False
+
     def warning_contact_list_does_not_belong_to_user(self, *args):
         command_chain_response = {
             'failed': True,
@@ -1363,15 +1381,6 @@ class ResUser(Base):
         log.warning(command_chain_response['warning'])
         return command_chain_response
 
-    def warning_no_credit_ewallet_found_by_id(self, ewallet_id, command_chain):
-        command_chain_response = {
-            'failed': True,
-            'warning': 'No credit ewallet found by id {}. Command chain details : {}'\
-                       .format(ewallet_id, command_chain),
-        }
-        log.warning(command_chain_response['warning'])
-        return False
-
     def warning_credit_transaction_record_share_failure(self, **kwargs):
         log.warning(
                 'Something went wrong. Could not share credit wallet transaction related records. '\
@@ -1422,6 +1431,26 @@ class ResUser(Base):
     '''
     [ TODO ]: Fetch error messages from message file by key codes.
     '''
+
+    def error_could_not_unlink_credit_ewallet(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Something went wrong. '
+                     'Could not unlink credit ewallet. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_could_not_unlink_credit_clock(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Something went wrong. '
+                     'Could not unlink credit clock. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
 
     def error_could_not_unlink_contact_list(self, *args):
         command_chain_response = {
@@ -1773,15 +1802,6 @@ class ResUser(Base):
             'failed': True,
             'error': 'No ewallet credit clock id found. Command chain details : {}'
                      .format(command_chain),
-        }
-        log.error(command_chain_response['error'])
-        return command_chain_response
-
-    def error_could_not_unlink_credit_ewallet(self, command_chain):
-        command_chain_response = {
-            'failed': True,
-            'error': 'Something went wrong. Could not unlink credit ewallet. '
-                     'Command chain details : {}'.format(command_chain),
         }
         log.error(command_chain_response['error'])
         return command_chain_response

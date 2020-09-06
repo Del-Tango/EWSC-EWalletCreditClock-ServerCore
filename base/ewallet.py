@@ -684,6 +684,56 @@ class EWallet(Base):
         }
         return command_chain_response
 
+    def action_unlink_credit_clock(self, **kwargs):
+        log.debug('')
+        active_user = self.fetch_active_session_user()
+        if not active_user:
+            return self.error_could_not_fetch_active_session_user(kwargs)
+        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
+            kwargs, 'ctype', 'action', 'unlink',
+        )
+        unlink_clock = active_user.user_controller(
+            ctype='action', action='unlink', unlink='credit_clock',
+            **sanitized_command_chain
+        )
+        if not unlink_clock or isinstance(unlink_clock, dict) and \
+                unlink_clock.get('failed'):
+            kwargs['active_session'].rollback()
+            return self.warning_could_not_unlink_credit_clock(
+                kwargs, active_user, unlink_clock
+            )
+        kwargs['active_session'].commit()
+        command_chain_response = {
+            'failed': False,
+            'credit_clock': kwargs['clock_id'],
+        }
+        return command_chain_response
+
+    def action_unlink_credit_wallet(self, **kwargs):
+        log.debug('')
+        active_user = self.fetch_active_session_user()
+        if not active_user:
+            return self.error_could_not_fetch_active_session_user(kwargs)
+        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
+            kwargs, 'ctype', 'action', 'unlink',
+        )
+        unlink_ewallet = active_user.user_controller(
+            ctype='action', action='unlink', unlink='credit_wallet',
+            **sanitized_command_chain
+        )
+        if not unlink_ewallet or isinstance(unlink_ewallet, dict) and \
+                unlink_ewallet.get('failed'):
+            kwargs['active_session'].rollback()
+            return self.warning_could_not_unlink_credit_ewallet(
+                kwargs, active_user, unlink_ewallet
+            )
+        kwargs['active_session'].commit()
+        command_chain_response = {
+            'failed': False,
+            'credit_ewallet': kwargs['ewallet_id'],
+        }
+        return command_chain_response
+
     def action_unlink_time_list(self, **kwargs):
         log.debug('')
         active_user = self.fetch_active_session_user()
@@ -2171,56 +2221,6 @@ class EWallet(Base):
         }
         return command_chain_response
 
-    def action_unlink_credit_clock(self, **kwargs):
-        log.debug('')
-        active_user = self.fetch_active_session_user()
-        if not active_user:
-            return self.error_could_not_fetch_active_session_user(kwargs)
-        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
-            kwargs, 'ctype', 'action', 'unlink',
-        )
-        unlink_clock = active_user.user_controller(
-            ctype='action', action='unlink', unlink='credit_clock',
-            **sanitized_command_chain
-        )
-        if not unlink_clock or isinstance(unlink_clock, dict) and \
-                unlink_clock.get('failed'):
-            kwargs['active_session'].rollback()
-            return self.warning_could_not_unlink_credit_clock(
-                active_user.fetch_user_name(), kwargs
-            )
-        kwargs['active_session'].commit()
-        command_chain_response = {
-            'failed': False,
-            'credit_clock': kwargs['clock_id'],
-        }
-        return command_chain_response
-
-    def action_unlink_credit_wallet(self, **kwargs):
-        log.debug('')
-        active_user = self.fetch_active_session_user()
-        if not active_user:
-            return self.error_could_not_fetch_active_session_user(kwargs)
-        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
-            kwargs, 'ctype', 'action', 'unlink',
-        )
-        unlink_ewallet = active_user.user_controller(
-            ctype='action', action='unlink', unlink='credit_wallet',
-            **sanitized_command_chain
-        )
-        if not unlink_ewallet or isinstance(unlink_ewallet, dict) and \
-                unlink_ewallet.get('failed'):
-            kwargs['active_session'].rollback()
-            return self.warning_could_not_unlink_credit_ewallet(
-                active_user.fetch_user_name(), kwargs
-            )
-        kwargs['active_session'].commit()
-        command_chain_response = {
-            'failed': False,
-            'credit_ewallet': kwargs['ewallet_id'],
-        }
-        return command_chain_response
-
     def action_unlink_invoice_list(self, **kwargs):
         log.debug('')
         active_user = self.fetch_active_session_user()
@@ -3379,6 +3379,26 @@ class EWallet(Base):
     [ TODO ]: Fetch warning messages from message file by key codes.
     '''
 
+    def warning_could_not_unlink_credit_clock(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Something went wrong. '
+                       'Could not unlink credit clock. '
+                       'Details: {}'.format(args),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
+
+    def warning_could_not_unlink_credit_ewallet(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Something went wrong. '
+                       'Could not unlink credit ewallet. '
+                       'Details: {}'.format(args),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
+
     def warning_could_not_unlink_time_sheet(self, *args):
         command_chain_response = {
             'failed': True,
@@ -3802,24 +3822,6 @@ class EWallet(Base):
         command_chain_response = {
             'failed': True,
             'warning': 'Something went wrong. Could not unlink user account {}. '\
-                       'Command chain details : {}'.format(user_name, command_chain),
-        }
-        log.warning(command_chain_response['warning'])
-        return command_chain_response
-
-    def warning_could_not_unlink_credit_clock(self, user_name, command_chain):
-        command_chain_response = {
-            'failed': True,
-            'warning': 'Something went wrong. Could not unlink credit clock for user {}. '\
-                       'Command chain details : {}'.format(user_name, command_chain),
-        }
-        log.warning(command_chain_response['warning'])
-        return command_chain_response
-
-    def warning_could_not_unlink_credit_ewallet(self, user_name, command_chain):
-        command_chain_response = {
-            'failed': True,
-            'warning': 'Something went wrong. Could not unlink credit ewallet for user {}. '\
                        'Command chain details : {}'.format(user_name, command_chain),
         }
         log.warning(command_chain_response['warning'])

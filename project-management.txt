@@ -104,10 +104,10 @@
         - x - User action Unlink Transfer Record
         - x - User action Unlink Time Sheet
         - x - User action Unlink Time Record
-        -   - User action Unlink Credit EWallet
-        -   - User action Unlink Credit Clock
-        - User action Unlink Invoice Sheet
-        - User action Unlink Invoice Record
+        - x - User action Unlink Credit EWallet
+        - x - User action Unlink Credit Clock
+        -   - User action Unlink Invoice Sheet
+        -   - User action Unlink Invoice Record
 
     - x - Restrict user actions based on account state
         - x - User action Account Logout

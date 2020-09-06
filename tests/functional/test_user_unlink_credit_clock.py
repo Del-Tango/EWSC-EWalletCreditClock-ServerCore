@@ -75,7 +75,7 @@ class TestEWalletSessionManageUserActionUnlinkCreditClock(unittest.TestCase):
         print('\n[ * ]: User action Unlink Credit Clock')
         instruction_set = {
             'controller': 'client', 'ctype': 'action', 'action': 'unlink',
-            'unlink': 'credit', 'credit': 'clock', 'clock_id': 2,
+            'unlink': 'credit', 'credit': 'clock', 'clock_id': 3,
             'client_id': self.client_id, 'session_token': self.session_token
         }
         unlink = self.session_manager.session_manager_controller(

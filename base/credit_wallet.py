@@ -914,6 +914,30 @@ class CreditEWallet(Base):
 
     # ACTIONS
 
+    def action_unlink_clock(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('clock_id'):
+            return self.error_no_credit_clock_id_found(kwargs)
+        clock = self.fetch_credit_wallet_clock_by_id(
+            code=kwargs['clock_id'],
+            active_session=kwargs.get('active_session'),
+        )
+        check = self.check_clock_belongs_to_credit_ewallet(clock)
+        if not check:
+            return self.warning_clock_does_not_belong_to_current_credit_ewallet(
+                kwargs, clock, check
+            )
+        try:
+            unlink = kwargs['active_session'].query(
+                CreditClock
+            ).filter_by(
+                clock_id=kwargs['clock_id']
+            ).delete()
+        except Exception as e:
+            return self.error_could_not_unlink_credit_clock(kwargs, e)
+        log.info('Successfully unlinked credit clock.')
+        return kwargs['clock_id']
+
     def action_switch_credit_wallet_clock(self, **kwargs):
         log.debug('')
         if not kwargs.get('clock_id'):
@@ -925,21 +949,6 @@ class CreditEWallet(Base):
                 kwargs, clock
             )
         return clock
-
-    def action_unlink_clock(self, **kwargs):
-        log.debug('')
-        if not kwargs.get('clock_id'):
-            return self.error_no_credit_clock_id_found(kwargs)
-        try:
-            unlink = kwargs['active_session'].query(
-                CreditClock
-            ).filter_by(
-                clock_id=kwargs['clock_id']
-            ).delete()
-        except:
-            return self.error_could_not_unlink_credit_clock(kwargs)
-        log.info('Successfully unlinked credit ewallet credit clock by id.')
-        return kwargs['clock_id']
 
     def action_unlink_time(self, **kwargs):
         log.debug('')
@@ -1503,6 +1512,16 @@ class CreditEWallet(Base):
     [ TODO ]: Fetch error messages from message file by key codes.
     '''
 
+    def error_could_not_unlink_credit_clock(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Something went wrong. '
+                     'Could not unlink credit clock. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
     def error_could_not_set_active_credit_clock(self, *args):
         command_chain_response = {
             'failed': True,
@@ -1789,15 +1808,6 @@ class CreditEWallet(Base):
         command_chain_response = {
             'failed': True,
             'error': 'No active session found. '\
-                     'Command chain details : {}'.format(command_chain),
-        }
-        log.error(command_chain_response['error'])
-        return command_chain_response
-
-    def error_could_not_unlink_credit_clock(self, command_chain):
-        command_chain_response = {
-            'failed': True,
-            'error': 'Something went wrong. Could not unlink credit clock. '\
                      'Command chain details : {}'.format(command_chain),
         }
         log.error(command_chain_response['error'])
