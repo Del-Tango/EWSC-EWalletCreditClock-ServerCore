@@ -308,6 +308,18 @@ class ResUser(Base):
 
     # SETTERS
 
+    def set_user_email(self, email_address):
+        log.debug('')
+        try:
+            self.user_email = email_address
+            self.update_write_date()
+        except Exception as e:
+            return self.error_could_not_set_user_email(
+                email_address, self.user_email, e
+            )
+        log.info('Successfully set user email address.')
+        return True
+
     def set_user_pass(self, password_hash):
         log.debug('')
         try:
@@ -319,26 +331,6 @@ class ResUser(Base):
             )
         log.info('Successfully set user password.')
         return True
-
-    # TODO - REFACTOR
-    def set_user_email(self, **kwargs):
-        log.debug('TODO - FIX ME')
-        if not kwargs.get('email') or not kwargs.get('email_check_func'):
-            return self.error_handler_set_user_email(
-                    email=kwargs.get('email'),
-                    email_check_func=kwargs.get('email_check_func'),
-                    )
-#       log.info('Performing user email validation checks...')
-#       _check = kwargs['email_check_func'](kwargs['email'], severity=1)
-#       if not _check:
-#           return _create_user.error_invalid_user_email(
-#                   user_email=kwargs['email']
-#                   )
-#       log.info('User email validated.')
-#       self.user_email = kwargs['email']
-#       self.set_user_write_date()
-#       log.info('Successfully set user email.')
-#       return True
 
     def set_user_write_uid(self, uid):
         log.debug('')
@@ -706,15 +698,31 @@ class ResUser(Base):
 
     # ACTIONS
 
-    # TODO
+#   @pysnooper.snoop('logs/ewallet.log')
     def action_edit_user_email(self, **kwargs):
-        log.debug('TODO - Add email validations here')
-        set_email = self.set_user_email(email=kwargs['user_email'])
-        return self.error_could_not_edit_user_email(kwargs) \
-            if not set_email else {
-                'failed': False,
-                'user_email': set_email,
-            }
+        log.debug('')
+        if not kwargs.get('user_email') or not kwargs.get('email_check_func'):
+            return self.error_handler_set_user_email(
+                email=kwargs.get('user_email'),
+                email_check_func=kwargs.get('email_check_func'),
+            )
+        log.info('Performing user email validation checks...')
+        check = kwargs['email_check_func'](kwargs['user_email'], severity=1)
+        if not check:
+            return self.error_invalid_user_email(
+                kwargs, check
+            )
+        log.info('User email validated.')
+        set_email = self.set_user_email(kwargs['user_email'])
+        if not set_email or isinstance(set_email, dict) and \
+                set_email.get('failed'):
+            return self.error_could_not_edit_user_email(
+                kwargs, check, set_email
+            )
+        return {
+            'failed': False,
+            'user_email': set_email,
+        }
 
     def action_edit_user_pass(self, **kwargs):
         log.debug('')
@@ -735,13 +743,14 @@ class ResUser(Base):
             pass_hash=pass_hash, **kwargs
         )
         set_pass = self.set_user_pass(pass_hash)
-        if isinstance(set_pass, dict) and set_pass.get('failed'):
+        if not set_pass or isinstance(set_pass, dict) and \
+                set_pass.get('failed'):
             kwargs['active_session'].rollback()
-            return set_pass
+            return self.error_could_not_edit_user_pass(
+                kwargs, check, pass_hash, hash_record, set_pass
+            )
         kwargs['active_session'].commit()
-        return self.error_could_not_edit_user_pass(
-            kwargs, check, pass_hash, hash_record, set_pass
-        ) if not set_pass else {
+        return {
             'failed': False,
             'user_pass': set_pass
         }
@@ -1437,6 +1446,25 @@ class ResUser(Base):
     '''
     [ TODO ]: Fetch error messages from message file by key codes.
     '''
+
+    def error_could_not_set_user_email(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Something went wrong. '
+                     'Could not set user email address. '
+                     'Details: {}'.format(args)
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_invalid_user_email(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Invalid user email. '
+                     'Details: {}'.format(args)
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
 
     def error_could_not_set_user_pass_hash(self, *args):
         command_chain_response = {
@@ -2209,89 +2237,4 @@ class ResUser(Base):
 ###############################################################################
 # CODE DUMP
 ###############################################################################
-
-#   def fetch_user_state_code_map(self):
-#       log.debug('')
-#       state_map = {
-#           'code': {
-#               0: 'Logged Out',
-#               1: 'Logged In',
-#               },
-#           'name': {
-#               'Logged Out': 0,
-#               'Logged In': 1,
-#               }
-#           }
-#       return state_map
-
-#   #@pysnooper.snoop('logs/ewallet.log')
-#   def set_user_state_code(self, **kwargs):
-#       log.debug('')
-#       if kwargs.get('state_code') not in [0, 1]:
-#           return self.error_no_state_code_found(kwargs) \
-#               if not kwargs.get('state_code') \
-#               else self.error_invalid_user_state_code(kwargs)
-#       try:
-#           self.user_state_code = kwargs['state_code']
-#           self.update_write_date()
-#       except Exception as e:
-#           return self.error_could_not_set_user_state_code(
-#               kwargs, self.user_state_code, e
-#           )
-
-#       return True
-
-#   def set_user_state_name(self, **kwargs):
-#       log.debug('')
-#       if not kwargs.get('state_name'):
-#           return self.error_no_state_name_found(kwargs)
-#       try:
-#           self.user_state_name = kwargs['state_name']
-#           self.update_write_date()
-#       except Exception as e:
-#           return self.error_could_not_set_state_name(
-#               kwargs, self.user_state_name, e
-#           )
-#       return True
-
-
-
-#       if not kwargs.get('set_by'):
-#           return self.error_no_set_by_parameter_specified(kwargs)
-#       handlers = {
-#           'converters': {
-#               'code': self.convert_user_state_code_to_name,
-#               'name': self.convert_user_state_name_to_code,
-#           },
-#           'setters': {
-#               'code': self.set_user_state_code,
-#               'name': self.set_user_state_name,
-#           },
-#       }
-#       set_command_chain = {
-#           kwargs['set_by']: kwargs.get('code') or kwargs.get('name')
-#       }
-#       set_command_chain.update(kwargs)
-#       value_fetch = handlers['converters'][kwargs['set_by']](
-#           **set_command_chain
-#       )
-#       field_code = kwargs.get('state_code') if kwargs['set_by'] == 'code' \
-#               else value_fetch
-#       field_name = kwargs.get('name') if kwargs['set_by'] == 'name' \
-#               else value_fetch
-#       setter_values = {
-#           'field_names': {
-#               'code': 'state_code',
-#               'name': 'state_name',
-#           },
-#           'field_values': {
-#               'code': field_code,
-#               'name': field_name,
-#           },
-#       }
-#       for item in handlers['setters']:
-#           field_name = setter_values['field_names'][item]
-#           field_values = setter_values['field_values'][item]
-#           set_state = handlers['setters'][item](**{field_name: field_values})
-#       return value_fetch
 

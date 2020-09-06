@@ -24,8 +24,8 @@
     - x - (EWSC) Groom session manager error handlers
     - x - (EWSC, EWCC, EWAT) Add requirements.txt
     - x - (EWSC) Fix user action Edit Password
-    -   - (EWSC) Fix user action Edit Email
-    - (EWSC) Journal record grooming
+    - x - (EWSC) Fix user action Edit Email
+    -   - (EWSC) Journal record grooming
     - (EWSC) Implement ResUser cleaner cron
     - (EWSC) Implement EWallet Session cleaner cron
     - (EWCC) Perform valid input checks on core subroutine SetResource

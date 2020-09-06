@@ -80,6 +80,10 @@ class EWallet(Base):
         log.debug('TODO - Fetch value from config file')
         return 24
 
+    def fetch_email_check_func(self):
+        log.debug('')
+        return EWalletCreateUser().check_user_email
+
     def fetch_user_password_check_function(self):
         log.debug('')
         return EWalletCreateUser().check_user_pass
@@ -675,16 +679,22 @@ class EWallet(Base):
         }
         return command_chain_response
 
-    def action_reset_user_password(self, **kwargs):
+    def action_edit_account_user_email(self, **kwargs):
         log.debug('')
-        if not self.active_user or not kwargs.get('user_pass'):
-            return self.error_no_user_password_found()
-        return self.active_user.user_controller(
-            ctype='action', action='reset', target='field', field='user_pass',
-            password=kwargs['user_pass'],
-            pass_check_func=self.fetch_user_password_check_function(),
-            pass_hash_func=self.fetch_user_password_hash_function(),
+        active_user = self.fetch_active_session_user()
+        if not active_user or isinstance(active_user, dict) and \
+                active_user.get('failed'):
+            return self.warning_could_not_fetch_ewallet_session_active_user(kwargs)
+        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
+            kwargs, 'ctype', 'action', 'edit'
         )
+        edit_user_email = active_user.user_controller(
+            ctype='action', action='edit', edit='user_email',
+            email_check_func=self.fetch_email_check_func(),
+            **sanitized_command_chain
+        )
+        return self.warning_could_not_edit_account_user_email(kwargs) if \
+            edit_user_email.get('failed') else edit_user_email
 
 #   @pysnooper.snoop('logs/ewallet.log')
     def action_edit_account_user_pass(self, **kwargs):
@@ -1867,22 +1877,6 @@ class EWallet(Base):
         return self.warning_could_not_edit_account_user_alias(kwargs) if \
             edit_user_alias.get('failed') else edit_user_alias
 
-    def action_edit_account_user_email(self, **kwargs):
-        log.debug('')
-        active_user = self.fetch_active_session_user()
-        if not active_user or isinstance(active_user, dict) and \
-                active_user.get('failed'):
-            return self.warning_could_not_fetch_ewallet_session_active_user(kwargs)
-        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
-            kwargs, 'ctype', 'action', 'edit'
-        )
-        edit_user_email = active_user.user_controller(
-            ctype='action', action='edit', edit='user_email',
-            **sanitized_command_chain
-        )
-        return self.warning_could_not_edit_account_user_email(kwargs) if \
-            edit_user_email.get('failed') else edit_user_email
-
     def action_edit_account_user_phone(self, **kwargs):
         log.debug('')
         active_user = self.fetch_active_session_user()
@@ -2356,35 +2350,6 @@ class EWallet(Base):
         update = self.update_session_from_user(**kwargs)
         return update or False
 
-    def action_reset_user_email(self, **kwargs):
-        log.debug('')
-        if not self.active_user or not kwargs.get('user_email'):
-            return self.error_no_user_email_found()
-        email_check_func = EWalletCreateUser().check_user_email
-        return self.active_user.user_controller(
-            ctype='action', action='reset', target='field', field='user_email',
-            email=kwargs['user_email'],
-            email_check_func=email_check_func,
-        )
-
-    def action_reset_user_alias(self, **kwargs):
-        log.debug('')
-        if not self.active_user or not kwargs.get('user_alias'):
-            return self.error_no_user_alias_found()
-        return self.active_user.user_controller(
-                ctype='action', action='reset', target='field', field='user_alias',
-                alias=kwargs['user_alias']
-                )
-
-    def action_reset_user_phone(self, **kwargs):
-        log.debug('')
-        if not self.active_user or not kwargs.get('user_phone'):
-            return self.error_no_user_phone_found()
-        return self.active_user.user_controller(
-                ctype='action', action='reset', target='field', field='user_phone',
-                phone=kwargs['user_phone']
-                )
-
 #   @pysnooper.snoop()
     def action_create_new_conversion_clock_to_credits(self, **kwargs):
         log.debug('')
@@ -2812,22 +2777,6 @@ class EWallet(Base):
         log.debug('')
         return self.action_login_user_account(**kwargs)
 
-    def handle_user_action_reset_alias(self, **kwargs):
-        log.debug('')
-        return self.action_reset_user_alias(**kwargs)
-
-    def handle_user_action_reset_password(self, **kwargs):
-        log.debug('')
-        return self.action_reset_user_password(**kwargs)
-
-    def handle_user_action_reset_email(self, **kwargs):
-        log.debug('')
-        return self.action_reset_user_email(**kwargs)
-
-    def handle_user_action_reset_phone(self, **kwargs):
-        log.debug('')
-        return self.action_reset_user_phone(**kwargs)
-
     def handle_system_action_check_user(self, **kwargs):
         log.debug('')
         return self.action_system_user_check(**kwargs)
@@ -2864,7 +2813,7 @@ class EWallet(Base):
         log.debug('')
         return self.action_receive_invoice_record(**kwargs)
 
-    def handle_system_action_receive_invoice_shee(self, **kwargs):
+    def handle_system_action_receive_invoice_sheet(self, **kwargs):
         log.debug('')
         return self.action_receive_invoice_sheet(**kwargs)
 
@@ -3091,18 +3040,6 @@ class EWallet(Base):
         }
         return handlers[kwargs['timer']](**kwargs)
 
-    def handle_user_action_reset(self, **kwargs):
-        log.debug('')
-        if not kwargs.get('target'):
-            return self.error_no_user_reset_target_specified()
-        handlers = {
-            'user_alias': self.handle_user_action_reset_alias,
-            'user_pass': self.handle_user_action_reset_password,
-            'user_email': self.handle_user_action_reset_email,
-            'user_phone': self.handle_user_action_reset_phone,
-        }
-        return handlers[kwargs['target']](**kwargs)
-
     def handle_system_action_check(self, **kwargs):
         log.debug('')
         if not kwargs.get('target'):
@@ -3306,7 +3243,7 @@ class EWallet(Base):
             'logout': self.handle_user_action_logout,
             'create': self.handle_user_action_create,
             'time': self.handle_user_action_time,
-            'reset': self.handle_user_action_reset,
+#           'reset': self.handle_user_action_reset,
             'view': self.handle_user_action_view,
             'unlink': self.handle_user_action_unlink,
             'edit': self.handle_user_action_edit,
@@ -5134,6 +5071,79 @@ class EWallet(Base):
 ################################################################################
 # CODE DUMP
 ################################################################################
+
+#   def handle_user_action_reset_alias(self, **kwargs):
+#       log.debug('')
+#       return self.action_reset_user_alias(**kwargs)
+
+#   def handle_user_action_reset_password(self, **kwargs):
+#       log.debug('')
+#       return self.action_reset_user_password(**kwargs)
+
+#   def handle_user_action_reset_email(self, **kwargs):
+#       log.debug('')
+#       return self.action_reset_user_email(**kwargs)
+
+#   def handle_user_action_reset_phone(self, **kwargs):
+#       log.debug('TODO - DEPRECATED')
+#       return self.action_reset_user_phone(**kwargs)
+
+#   def handle_user_action_reset(self, **kwargs):
+#       log.debug('TODO - DEPRECATAED')
+#       if not kwargs.get('target'):
+#           return self.error_no_user_reset_target_specified()
+#       handlers = {
+#           'user_alias': self.handle_user_action_reset_alias,
+#           'user_pass': self.handle_user_action_reset_password,
+#           'user_email': self.handle_user_action_reset_email,
+#           'user_phone': self.handle_user_action_reset_phone,
+#       }
+#       return handlers[kwargs['target']](**kwargs)
+
+    # TODO
+#   def action_reset_user_alias(self, **kwargs):
+#       log.debug('')
+#       if not self.active_user or not kwargs.get('user_alias'):
+#           return self.error_no_user_alias_found()
+#       return self.active_user.user_controller(
+#               ctype='action', action='reset', target='field', field='user_alias',
+#               alias=kwargs['user_alias']
+#               )
+
+#   # TODO
+#   def action_reset_user_phone(self, **kwargs):
+#       log.debug('')
+#       if not self.active_user or not kwargs.get('user_phone'):
+#           return self.error_no_user_phone_found()
+#       return self.active_user.user_controller(
+#               ctype='action', action='reset', target='field', field='user_phone',
+#               phone=kwargs['user_phone']
+#               )
+
+#   # TODO
+#   def action_reset_user_password(self, **kwargs):
+#       log.debug('TODO - DEPRECATED')
+#       if not self.active_user or not kwargs.get('user_pass'):
+#           return self.error_no_user_password_found()
+#       return self.active_user.user_controller(
+#           ctype='action', action='reset', target='field', field='user_pass',
+#           password=kwargs['user_pass'],
+#           pass_check_func=self.fetch_user_password_check_function(),
+#           pass_hash_func=self.fetch_user_password_hash_function(),
+#       )
+
+#   # TODO
+#   def action_reset_user_email(self, **kwargs):
+#       log.debug('TODO - DEPRECATED')
+#       if not self.active_user or not kwargs.get('user_email'):
+#           return self.error_no_user_email_found()
+#       email_check_func = self.fetch_email_check_func()
+#       return self.active_user.user_controller(
+#           ctype='action', action='reset', target='field', field='user_email',
+#           email=kwargs['user_email'],
+#           email_check_func=email_check_func,
+#       )
+
 
 #   @pysnooper.snoop()
 #   def recover_user_account(self, **kwargs):
