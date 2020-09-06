@@ -19,8 +19,8 @@
     - x - (EWSC) Groom session worker state updates
     - x - (EWSC) Groom user account state updates
     - x - (EWSC) Impose user account state restrictions on all user actions
-    -   - (EWSC) Impose entity ownership restrictions on all user actions
-    - (EWSC) Groom session manager warning handlers
+    - x - (EWSC) Impose entity ownership restrictions on all user actions
+    -   - (EWSC) Groom session manager warning handlers
     - (EWSC) Groom session manager error handlers
     - (EWSC) Fix user action Edit Password
     - (EWSC) Fix user action Edit Email
@@ -76,12 +76,12 @@
 - TODO (EWSC)
 
     - Warning Handler Grooming
-        - Cleanup stack trace string
-        - Convert cleaned up string to dictionary
-        - Add 'details' tag to instruction set response
-        - Assign error trace dictionary to 'details'
+        -   - Cleanup stack trace string
+        -   - Convert cleaned up string to dictionary
+        -   - Add 'details' tag to instruction set response
+        -   - Assign error trace dictionary to 'details'
 
-    - Impose entity owner restrictions on user actions
+    - x - Impose entity owner restrictions on user actions
         - x - User action View Contact Record
         - x - User action View Transfer Record
         - x - User action View Time Record
@@ -106,8 +106,8 @@
         - x - User action Unlink Time Record
         - x - User action Unlink Credit EWallet
         - x - User action Unlink Credit Clock
-        -   - User action Unlink Invoice Sheet
-        -   - User action Unlink Invoice Record
+        - x - User action Unlink Invoice Sheet
+        - x - User action Unlink Invoice Record
 
     - x - Restrict user actions based on account state
         - x - User action Account Logout

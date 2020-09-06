@@ -75,7 +75,7 @@ class TestEWalletSessionManageUserActionUnlinkInvoiceSheet(unittest.TestCase):
         print('\n[ * ]: User action Unlink Invoice Sheet')
         instruction_set = {
             'controller': 'client', 'ctype': 'action', 'action': 'unlink',
-            'unlink': 'invoice', 'invoice': 'list', 'list_id': 2,
+            'unlink': 'invoice', 'invoice': 'list', 'list_id': 3,
             'client_id': self.client_id, 'session_token': self.session_token
         }
         unlink = self.session_manager.session_manager_controller(

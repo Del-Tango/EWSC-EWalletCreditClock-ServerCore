@@ -642,6 +642,12 @@ class CreditInvoiceSheet(Base):
         log.info('Successfully updated invoice sheet records.')
         return self.records
 
+    # CHECKERS
+
+    def check_record_in_invoice_sheet(self, record):
+        log.debug('')
+        return False if record not in self.records else True
+
     # INTEROGATORS (LIST)
 
     def interogate_credit_invoice_record_by_id(self, **kwargs):
@@ -650,31 +656,30 @@ class CreditInvoiceSheet(Base):
         display = self.display_credit_invoice_sheet_records(records=[record])
         return record if display else False
 
-    def interogate_credit_invoice_records_by_ref(self, **kwargs):
-        log.debug('')
-        _records = self.fetch_credit_invoice_records(**kwargs)
-        _display = self.display_credit_invoice_sheet_records(records=_records)
-        return _records if _display else False
-
-    def interogate_credit_invoice_records_by_date(self, **kwargs):
-        log.debug('')
-        _records = self.fetch_credit_invoice_records(**kwargs)
-        _display = self.display_credit_invoice_records(records=_records)
-        return _records if _display else False
-
-    def interogate_credit_invoice_records_by_seller(self, **kwargs):
-        log.debug('')
-        _records = self.fetch_credit_invoice_records(**kwargs)
-        _display = self.display_credit_invoice_records(records=_records)
-        return _records if _display else False
-
-    def interogate_all_credit_invoice_sheet_records(self, **kwargs):
-        log.debug('')
-        _records = [item for item in self.records.values()]
-        _display = self.display_credit_invoice_records(records=_records)
-        return _records if _display else False
-
     # ACTIONS (LIST)
+
+    def action_remove_credit_invoice_sheet_record(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('record_id'):
+            return self.error_no_invoice_record_id_found(kwargs)
+        record = self.fetch_credit_invoice_record_by_id(
+            code=kwargs['record_id'],
+            active_session=kwargs['active_session'],
+        )
+        check = self.check_record_in_invoice_sheet(record)
+        if not check:
+            return self.warning_record_not_in_invoice_sheet(
+                kwargs, record, check
+            )
+        try:
+            kwargs['active_session'].query(
+                CreditInvoiceSheetRecord
+            ).filter_by(
+                record_id=kwargs['record_id']
+            ).delete()
+        except:
+            return self.error_could_not_remove_credit_invoice_sheet_record(kwargs)
+        return True
 
 #   @pysnooper.snoop()
     def action_add_credit_invoice_sheet_record(self, **kwargs):
@@ -691,30 +696,12 @@ class CreditInvoiceSheet(Base):
         kwargs['active_session'].commit()
         return record
 
-    def action_remove_credit_invoice_sheet_record(self, **kwargs):
-        log.debug('')
-        if not kwargs.get('record_id'):
-            return self.error_no_invoice_record_id_found(kwargs)
-        try:
-            kwargs['active_session'].query(
-                CreditInvoiceSheetRecord
-            ).filter_by(
-                record_id=kwargs['record_id']
-            ).delete()
-        except:
-            return self.error_could_not_remove_credit_invoice_sheet_record(kwargs)
-        return True
-
     def action_interogate_credit_invoice_sheet_records(self, **kwargs):
         log.debug('')
         if not kwargs.get('search_by'):
             return self.error_no_invoice_record_interogation_identifier_specified()
         handlers = {
             'id': self.interogate_credit_invoice_record_by_id,
-            'reference': self.interogate_credit_invoice_records_by_ref,
-            'date': self.interogate_credit_invoice_records_by_date,
-            'seller': self.interogate_credit_invoice_records_by_seller,
-            'all': self.interogate_all_credit_invoice_sheet_records,
         }
         return handlers[kwargs['search_by']](**kwargs)
 
