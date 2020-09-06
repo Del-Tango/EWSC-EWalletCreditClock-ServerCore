@@ -468,6 +468,9 @@ class EWallet(Base):
     def check_user_logged_in(self):
         log.debug('')
         user_account = self.fetch_active_session_user(obj=True)
+        if not user_account or isinstance(user_account, dict) and \
+                user_account.get('failed'):
+            return False
         return user_account.check_user_logged_in()
 
 #   @pysnooper.snoop('logs/ewallet.log')

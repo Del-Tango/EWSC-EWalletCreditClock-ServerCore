@@ -2150,10 +2150,6 @@ class CreditEWallet(Base):
         log.error('No credit clock identifier found.')
         return False
 
-    def error_no_credits_found(self):
-        log.error('No credits found.')
-        return False
-
     def error_empty_credit_clock_archive(self):
         log.error('Credit clock archive is empty.')
         return False
