@@ -708,6 +708,30 @@ class ResUser(Base):
                 'user_email': set_user_email,
             }
 
+    def action_switch_transfer_sheet(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('sheet_id'):
+            return self.error_no_transfer_sheet_id_found(kwargs)
+        log.info('Attempting to fetch user credit ewallet...')
+        credit_ewallet = self.fetch_user_credit_wallet()
+        if not credit_ewallet or isinstance(credit_ewallet, dict) and \
+                credit_ewallet.get('failed'):
+            return self.error_could_not_fetch_user_credit_ewallet(kwargs)
+        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
+            kwargs, 'controller', 'action', 'sheet', 'identifier'
+        )
+        switch = credit_ewallet.main_controller(
+            controller='user', action='switch_sheet', sheet='transfer',
+            **sanitized_command_chain
+        )
+        if not switch or isinstance(switch, dict) and \
+                switch.get('failed'):
+            return self.warning_could_not_switch_transfer_sheet(
+                kwargs, credit_ewallet, switch
+            )
+        log.info('Successfully switched credit ewallet transfer sheet.')
+        return switch
+
     def action_switch_credit_clock(self, **kwargs):
         log.debug('')
         if not kwargs.get('clock_id'):
@@ -938,25 +962,6 @@ class ResUser(Base):
         )
         if switch:
             log.info('Successfully switched credit ewallet invoice sheet.')
-        return switch
-
-    def action_switch_transfer_sheet(self, **kwargs):
-        log.debug('')
-        if not kwargs.get('sheet_id'):
-            return self.error_no_transfer_sheet_id_found(kwargs)
-        log.info('Attempting to fetch user credit ewallet...')
-        credit_ewallet = self.fetch_user_credit_wallet()
-        if not credit_ewallet:
-            return self.error_could_not_fetch_user_credit_ewallet(kwargs)
-        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
-            kwargs, 'controller', 'action', 'sheet', 'identifier'
-        )
-        switch = credit_ewallet.main_controller(
-            controller='user', action='switch_sheet', sheet='transfer',
-            **sanitized_command_chain
-        )
-        if switch:
-            log.info('Successfully switched credit ewallet transfer sheet.')
         return switch
 
     def action_edit_user_name(self, **kwargs):
@@ -1196,6 +1201,16 @@ class ResUser(Base):
     '''
     [ TODO ]: Fetch error messages from message file by key codes.
     '''
+
+    def warning_could_not_switch_transfer_sheet(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Something went wrong. '
+                       'Could not switch transfer sheet. '
+                       'Details: {}'.format(args),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
 
     def warning_could_not_switch_credit_clock(self, *args):
         command_chain_response = {
