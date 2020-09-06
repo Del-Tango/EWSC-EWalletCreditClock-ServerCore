@@ -679,6 +679,42 @@ class EWallet(Base):
         }
         return command_chain_response
 
+#   @pysnooper.snoop()
+    def action_view_invoice_record(self, **kwargs):
+        '''
+        [ NOTE   ]: User action 'view invoice record', accessible from external api call.
+        [ INPUT  ]: record_id=<id>
+        [ RETURN ]: (Invoice record values | False)
+        '''
+        log.debug('')
+        if not kwargs.get('record_id'):
+            return self.error_no_invoice_record_id_specified(kwargs)
+        credit_wallet = self.fetch_active_session_credit_wallet()
+        if not credit_wallet or isinstance(credit_wallet, dict) and \
+                credit_wallet.get('failed'):
+            return self.warning_could_not_fetch_credit_ewallet(kwargs)
+        log.info('Attempting to fetch active invoice sheet...')
+        invoice_sheet = credit_wallet.fetch_credit_ewallet_invoice_sheet()
+        if not invoice_sheet or isinstance(invoice_sheet, dict) and \
+                invoice_sheet.get('failed'):
+            return self.warning_could_not_fetch_invoice_sheet(kwargs)
+        log.info('Attempting to fetch invoice record by id...')
+        record = invoice_sheet.fetch_credit_invoice_record(
+            search_by='id', code=kwargs['record_id'], **kwargs
+        )
+        if not record or isinstance(record, dict) and \
+                record.get('failed'):
+            return self.warning_could_not_fetch_invoice_sheet_record(
+                kwargs, credit_wallet, invoice_sheet, record
+            )
+        command_chain_response = {
+            'failed': False,
+            'invoice_sheet': invoice_sheet.fetch_invoice_sheet_id(),
+            'invoice_record': record.fetch_record_id(),
+            'record_data': record.fetch_record_values(),
+        }
+        return command_chain_response
+
     def action_view_conversion_record(self, **kwargs):
         '''
         [ NOTE   ]: User action 'view conversion record', accessible from external api call.
@@ -1285,40 +1321,6 @@ class EWallet(Base):
             'failed': False,
             'ewallet': new_wallet.fetch_credit_ewallet_id(),
             'ewallet_data': new_wallet.fetch_credit_ewallet_values(),
-        }
-        return command_chain_response
-
-#   @pysnooper.snoop()
-    def action_view_invoice_record(self, **kwargs):
-        '''
-        [ NOTE   ]: User action 'view invoice record', accessible from external api call.
-        [ INPUT  ]: record_id=<id>
-        [ RETURN ]: (Invoice record values | False)
-        '''
-        log.debug('')
-        if not kwargs.get('record_id'):
-            return self.error_no_invoice_record_id_specified(kwargs)
-        credit_wallet = self.fetch_active_session_credit_wallet()
-        if not credit_wallet or isinstance(credit_wallet, dict) and \
-                credit_wallet.get('failed'):
-            return self.warning_could_not_fetch_credit_ewallet(kwargs)
-        log.info('Attempting to fetch active invoice sheet...')
-        invoice_sheet = credit_wallet.fetch_credit_ewallet_invoice_sheet()
-        if not invoice_sheet or isinstance(invoice_sheet, dict) and \
-                invoice_sheet.get('failed'):
-            return self.warning_could_not_fetch_invoice_sheet(kwargs)
-        log.info('Attempting to fetch invoice record by id...')
-        record = invoice_sheet.fetch_credit_invoice_records(
-            search_by='id', code=kwargs['record_id'], **kwargs
-        )
-        if not record or isinstance(record, dict) and \
-                record.get('failed'):
-            return self.warning_could_not_fetch_invoice_sheet_record(kwargs)
-        command_chain_response = {
-            'failed': False,
-            'invoice_sheet': invoice_sheet.fetch_invoice_sheet_id(),
-            'invoice_record': record.fetch_record_id(),
-            'record_data': record.fetch_record_values(),
         }
         return command_chain_response
 
@@ -3557,6 +3559,16 @@ class EWallet(Base):
     [ TODO ]: Fetch warning messages from message file by key codes.
     '''
 
+    def warning_could_not_fetch_invoice_sheet_record(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Something went wrong. '
+                       'Could not fetch invoice sheet record. '
+                       'Details: {}'.format(args),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
+
     def warning_could_not_fetch_conversion_record(self, *args):
         command_chain_response = {
             'failed': True,
@@ -3636,15 +3648,6 @@ class EWallet(Base):
         command_chain_response = {
             'failed': True,
             'warning': 'User account not found in EWallet database. '\
-                       'Command chain details : {}'.format(command_chain),
-        }
-        log.warning(command_chain_response['warning'])
-        return command_chain_response
-
-    def warning_could_not_fetch_invoice_sheet_record(self, command_chain):
-        command_chain_response = {
-            'failed': True,
-            'warning': 'Something went wrong. Could not fetch invoice sheet record. '\
                        'Command chain details : {}'.format(command_chain),
         }
         log.warning(command_chain_response['warning'])

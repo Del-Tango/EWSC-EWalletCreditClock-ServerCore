@@ -76,8 +76,8 @@
     - x - User action View Transfer Record
     - x - User action View Time Record
     - x - User action View Conversion Record
-    -   - User action View Invoice Record
-    - User action Switch Account
+    - x - User action View Invoice Record
+    -   - User action Switch Account
     - User action Switch Credit EWallet
     - User action Switch Credit Clock
     - User action Switch Transfer Sheet

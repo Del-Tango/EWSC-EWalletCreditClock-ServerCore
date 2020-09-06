@@ -390,9 +390,12 @@ class CreditClockConversionSheet(Base):
         )
         record = None if not query else query[0]
         check = self.check_record_in_conversion_sheet(record)
-        return self.warning_record_not_in_conversion_sheet(
-            kwargs, record
-        ) if not check else record
+        if not check:
+            return self.warning_record_not_in_conversion_sheet(
+                kwargs, record
+            )
+        log.info('Successfully fetched conversion record by id.')
+        return record
 
     def fetch_conversion_sheet_record(self, **kwargs):
         log.debug('')
