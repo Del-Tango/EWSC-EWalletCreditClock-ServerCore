@@ -63,7 +63,7 @@
 - EWallet Credit Clock - Server Core
 ################################################################################
 
-- BUG REPORT:
+- BUG REPORT (EWSC)
     - 05/09/2020
         - 16:22 Detected possible memory leak upon executing EWSC test suit.
 
@@ -73,247 +73,248 @@
             - [ NOTE ]: Time record write date updates were trigger by the
                         write date setter.
 
-- Impose entity owner restrictions on user actions
-    - x - User action View Contact Record
-    - x - User action View Transfer Record
-    - x - User action View Time Record
-    - x - User action View Conversion Record
-    - x - User action View Invoice Record
-    - x - User action Switch Account
-    - x - User action Switch Credit EWallet
-    - x - User action Switch Credit Clock
-    - x - User action Switch Transfer Sheet
-    -   - User action Switch Invoice Sheet
-    - User action Switch Conversion Sheet
-    - User action Switch Time Sheet
-    - User action Switch Contact List
-    - User action Unlink Account
-    - User action Unlink Contact List
-    - User action Unlink Contact Record
-    - User action Unlink Conversion Sheet
-    - User action Unlink Conversion Record
-    - User action Unlink Transfer Sheet
-    - User action Unlink Transfer Record
-    - User action Unlink Time Sheet
-    - User action Unlink Time Record
-    - User action Unlink Credit EWallet
-    - User action Unlink Credit Clock
-    - User action Unlink Invoice Sheet
-    - User action Unlink Invoice Record
-
-- x - Restrict user actions based on account state
-    - x - User action Account Logout
-    - x - User action Supply Credits
-    - x - User action Pay Credits
-    - x - User action Convert Credits2Clock
-    - x - User action Convert Clock2Credits
-    - x - User action Add Contact Record
-    - x - User action TransferCredits
-    - x - User action Edit Account
-    - x - User action Start Clock Timer
-    - x - User action Pause Clock Timer
-    - x - User action Resume Clock Timer
-    - x - User action Stop Clock Timer
-    - x - User action View Contact List
-    - x - User action View Contact Record
-    - x - User action View Transfer Sheet
-    - x - User action View Transfer Record
-    - x - User action View Time Sheet
-    - x - User action View Time Record
-    - x - User action View Conversion Sheet
-    - x - User action View Conversion Record
-    - x - User action View Account
-    - x - User action View Credit EWallet
-    - x - User action View Credit Clock
-    - x - User action View Invoice Sheet
-    - x - User action View Invoice Record
-    - x - User action View Login Records
-    - x - User action View Logout Records
-    - x - User action Create Contact List
-    - x - User action Create Credit EWallet
-    - x - User action Create Credit Clock
-    - x - User action Create Transfer Sheet
-    - x - User action Create Invoice Sheet
-    - x - User action Create Conversion Sheet
-    - x - User action Create Time Sheet
-    - x - User action Switch Account
-    - x - User action Switch Credit EWallet
-    - x - User action Switch Credit Clock
-    - x - User action Switch Transfer Sheet
-    - x - User action Switch Invoice Sheet
-    - x - User action Switch Conversion Sheet
-    - x - User action Switch Time Sheet
-    - x - User action Switch Contact List
-    - x - User action Unlink Account
-    - x - User action Unlink Contact List
-    - x - User action Unlink Contact Record
-    - x - User action Unlink Conversion Sheet
-    - x - User action Unlink Conversion Record
-    - x - User action Unlink Transfer Sheet
-    - x - User action Unlink Transfer Record
-    - x - User action Unlink Time Sheet
-    - x - User action Unlink Time Record
-    - x - User action Unlink Credit EWallet
-    - x - User action Unlink Credit Clock
-    - x - User action Unlink Invoice Sheet
-    - x - User action Unlink Invoice Record
-    - x - User action Recover Account
-
-- x - Update write dates for:
-    - x - Session Manager
-        - x - System action New Worker
-        - x - System action Cleanup Session Workers
-        - x - System action Open Sockers
-        - x - System action Close Sockers
-        - x - User action Request Client ID
-        - x - User action Request Session Token
-    - x - Session Workers
-        - x - System action New Worker
-        - x - System action New EWallet Session
-        - x - System action Target Cleanup EWallet Session
-        - x - System action Sweep Cleanup EWallet Session
-        - x - System action Add Client ID / Session Token map entry
-        - x - System action Add Client ID
-    - x - EWallet Session
-        - x - User action Account Login
-        - x - User action Create Account
+- TODO (EWSC)
+    - Impose entity owner restrictions on user actions
+        - x - User action View Contact Record
+        - x - User action View Transfer Record
+        - x - User action View Time Record
+        - x - User action View Conversion Record
+        - x - User action View Invoice Record
         - x - User action Switch Account
-        - x - User action Switch Contact List
         - x - User action Switch Credit EWallet
         - x - User action Switch Credit Clock
-    - x - User Account
-        - x - User action Create Account
-        - x - User action Login Account
-        - x - User action Unlink Account
-        - x - User action Recover Account
-        - x - User action Logout Account
-        - x - User action Edit Account
-        - x - User action Create Credit EWallet
-        - x - User action Create Credit Clock
-        - x - User action Create Contact List
-    - x - Credit EWallet
-        - x - User action Create Credit EWallet
-        - x - User action Create Credit Clock
-        - x - User action Create Invoice Sheet
-        - x - User action Create Transfer Sheet
-        - x - User action Switch Credit Clock
-        - x - User action Switch Invoice Sheet
         - x - User action Switch Transfer Sheet
+        - x - User action Switch Invoice Sheet
+        -   - User action Switch Conversion Sheet
+        - User action Switch Time Sheet
+        - User action Switch Contact List
+        - User action Unlink Account
+        - User action Unlink Contact List
+        - User action Unlink Contact Record
+        - User action Unlink Conversion Sheet
+        - User action Unlink Conversion Record
+        - User action Unlink Transfer Sheet
+        - User action Unlink Transfer Record
+        - User action Unlink Time Sheet
+        - User action Unlink Time Record
+        - User action Unlink Credit EWallet
+        - User action Unlink Credit Clock
+        - User action Unlink Invoice Sheet
+        - User action Unlink Invoice Record
+
+    - x - Restrict user actions based on account state
+        - x - User action Account Logout
         - x - User action Supply Credits
         - x - User action Pay Credits
-        - x - User action Transfer Credits
-        - x - User action Convert Credits To Clock
-        - x - User action Convert Clock To Credits
-    - x - Credit Clock
+        - x - User action Convert Credits2Clock
+        - x - User action Convert Clock2Credits
+        - x - User action Add Contact Record
+        - x - User action TransferCredits
+        - x - User action Edit Account
+        - x - User action Start Clock Timer
+        - x - User action Pause Clock Timer
+        - x - User action Resume Clock Timer
+        - x - User action Stop Clock Timer
+        - x - User action View Contact List
+        - x - User action View Contact Record
+        - x - User action View Transfer Sheet
+        - x - User action View Transfer Record
+        - x - User action View Time Sheet
+        - x - User action View Time Record
+        - x - User action View Conversion Sheet
+        - x - User action View Conversion Record
+        - x - User action View Account
+        - x - User action View Credit EWallet
+        - x - User action View Credit Clock
+        - x - User action View Invoice Sheet
+        - x - User action View Invoice Record
+        - x - User action View Login Records
+        - x - User action View Logout Records
+        - x - User action Create Contact List
+        - x - User action Create Credit EWallet
         - x - User action Create Credit Clock
+        - x - User action Create Transfer Sheet
+        - x - User action Create Invoice Sheet
         - x - User action Create Conversion Sheet
-        - x - User action Convert Time Sheet
+        - x - User action Create Time Sheet
+        - x - User action Switch Account
+        - x - User action Switch Credit EWallet
+        - x - User action Switch Credit Clock
+        - x - User action Switch Transfer Sheet
+        - x - User action Switch Invoice Sheet
         - x - User action Switch Conversion Sheet
         - x - User action Switch Time Sheet
-        - x - User action Convert Credits To Clock
-        - x - User action Convert Clock To Credits
-        - x - User action Start Timer
-        - x - User action Pause Timer
-        - x - User action Resume Timer
-        - x - User action Stop Timer
-    - x - Contact List
-        - x - User action Create Contact List
-        - x - User action Create Contact Record
+        - x - User action Switch Contact List
+        - x - User action Unlink Account
+        - x - User action Unlink Contact List
         - x - User action Unlink Contact Record
-    - x - Contact Record
-        - x - User action Create Contact Record
-        - x - User action Edit Contact Record
-    - x - Transfer Sheet
-        - x - User action Create Transfer Sheet
-        - x - User action Create Transfer Record
-        - x - User action Unlink Transfer Record
-    - x - Transfer Record
-        - x - User action Create Transfer Record
-    - x - Conversion Sheet
-        - x - User action Create Conversion Sheet
-        - x - User action Create Conversion Record
+        - x - User action Unlink Conversion Sheet
         - x - User action Unlink Conversion Record
-    - x - Conversion Record
-        - x - User action Create Conversion Record
-    - x - Invoice Sheet
-        - x - User action Create Invoice Sheet
-        - x - User action Create Invoice Record
-        - x - User action Unlink Invoice Record
-    - x - Invoice Record
-        - x - User action Create Invoice Record
-    - x - Time Sheet
-        - x - User action Create Time Sheet
-        - x - User action Create Time Record
+        - x - User action Unlink Transfer Sheet
+        - x - User action Unlink Transfer Record
+        - x - User action Unlink Time Sheet
         - x - User action Unlink Time Record
-    - x - Time Record
-        - x - User action Create Time Record
+        - x - User action Unlink Credit EWallet
+        - x - User action Unlink Credit Clock
+        - x - User action Unlink Invoice Sheet
+        - x - User action Unlink Invoice Record
+        - x - User action Recover Account
 
-- x - Move actions to worker
-    - x - System action Session Sweep Cleanup
-    - x - System action Session Target Cleanup
-    - x - System action Session Workers Cleanup
-    - x - System action New EWallet Session
-    - x - System action Interogate Session Workers
-    - x - System action Interogate EWallet Session
-    - x - User action Request Session token
-    - x - User action Create Account
-    - x - User action Account Login
-    - x - User action Account Logout
-    - x - User action Supply Credits
-    - x - User action Pay Credits
-    - x - User action Convert Credits2Clock
-    - x - User action Convert Clock2Credits
-    - x - User action Add Contact Record
-    - x - User action TransferCredits
-    - x - User action Edit Account
-    - x - User action Start Clock Timer
-    - x - User action Pause Clock Timer
-    - x - User action Resume Clock Timer
-    - x - User action Stop Clock Timer
-    - x - User action View Contact List
-    - x - User action View Contact Record
-    - x - User action View Transfer Sheet
-    - x - User action View Transfer Record
-    - x - User action View Time Sheet
-    - x - User action View Time Record
-    - x - User action View Conversion Sheet
-    - x - User action View Conversion Record
-    - x - User action View Account
-    - x - User action View Credit EWallet
-    - x - User action View Credit Clock
-    - x - User action View Invoice Sheet
-    - x - User action View Invoice Record
-    - x - User action View Login Records
-    - x - User action View Logout Records
-    - x - User action Create Contact List
-    - x - User action Create Credit EWallet
-    - x - User action Create Credit Clock
-    - x - User action Create Transfer Sheet
-    - x - User action Create Invoice Sheet
-    - x - User action Create Conversion Sheet
-    - x - User action Create Time Sheet
-    - x - User action Switch Account
-    - x - User action Switch Credit EWallet
-    - x - User action Switch Credit Clock
-    - x - User action Switch Transfer Sheet
-    - x - User action Switch Invoice Sheet
-    - x - User action Switch Conversion Sheet
-    - x - User action Switch Time Sheet
-    - x - User action Switch Contact List
-    - x - User action Unlink Account
-    - x - User action Unlink Contact List
-    - x - User action Unlink Contact Record
-    - x - User action Unlink Conversion Sheet
-    - x - User action Unlink Conversion Record
-    - x - User action Unlink Transfer Sheet
-    - x - User action Unlink Transfer Record
-    - x - User action Unlink Time Sheet
-    - x - User action Unlink Time Record
-    - x - User action Unlink Credit EWallet
-    - x - User action Unlink Credit Clock
-    - x - User action Unlink Invoice Sheet
-    - x - User action Unlink Invoice Record
-    - x - User action Recover Account
+    - x - Update write dates for:
+        - x - Session Manager
+            - x - System action New Worker
+            - x - System action Cleanup Session Workers
+            - x - System action Open Sockers
+            - x - System action Close Sockers
+            - x - User action Request Client ID
+            - x - User action Request Session Token
+        - x - Session Workers
+            - x - System action New Worker
+            - x - System action New EWallet Session
+            - x - System action Target Cleanup EWallet Session
+            - x - System action Sweep Cleanup EWallet Session
+            - x - System action Add Client ID / Session Token map entry
+            - x - System action Add Client ID
+        - x - EWallet Session
+            - x - User action Account Login
+            - x - User action Create Account
+            - x - User action Switch Account
+            - x - User action Switch Contact List
+            - x - User action Switch Credit EWallet
+            - x - User action Switch Credit Clock
+        - x - User Account
+            - x - User action Create Account
+            - x - User action Login Account
+            - x - User action Unlink Account
+            - x - User action Recover Account
+            - x - User action Logout Account
+            - x - User action Edit Account
+            - x - User action Create Credit EWallet
+            - x - User action Create Credit Clock
+            - x - User action Create Contact List
+        - x - Credit EWallet
+            - x - User action Create Credit EWallet
+            - x - User action Create Credit Clock
+            - x - User action Create Invoice Sheet
+            - x - User action Create Transfer Sheet
+            - x - User action Switch Credit Clock
+            - x - User action Switch Invoice Sheet
+            - x - User action Switch Transfer Sheet
+            - x - User action Supply Credits
+            - x - User action Pay Credits
+            - x - User action Transfer Credits
+            - x - User action Convert Credits To Clock
+            - x - User action Convert Clock To Credits
+        - x - Credit Clock
+            - x - User action Create Credit Clock
+            - x - User action Create Conversion Sheet
+            - x - User action Convert Time Sheet
+            - x - User action Switch Conversion Sheet
+            - x - User action Switch Time Sheet
+            - x - User action Convert Credits To Clock
+            - x - User action Convert Clock To Credits
+            - x - User action Start Timer
+            - x - User action Pause Timer
+            - x - User action Resume Timer
+            - x - User action Stop Timer
+        - x - Contact List
+            - x - User action Create Contact List
+            - x - User action Create Contact Record
+            - x - User action Unlink Contact Record
+        - x - Contact Record
+            - x - User action Create Contact Record
+            - x - User action Edit Contact Record
+        - x - Transfer Sheet
+            - x - User action Create Transfer Sheet
+            - x - User action Create Transfer Record
+            - x - User action Unlink Transfer Record
+        - x - Transfer Record
+            - x - User action Create Transfer Record
+        - x - Conversion Sheet
+            - x - User action Create Conversion Sheet
+            - x - User action Create Conversion Record
+            - x - User action Unlink Conversion Record
+        - x - Conversion Record
+            - x - User action Create Conversion Record
+        - x - Invoice Sheet
+            - x - User action Create Invoice Sheet
+            - x - User action Create Invoice Record
+            - x - User action Unlink Invoice Record
+        - x - Invoice Record
+            - x - User action Create Invoice Record
+        - x - Time Sheet
+            - x - User action Create Time Sheet
+            - x - User action Create Time Record
+            - x - User action Unlink Time Record
+        - x - Time Record
+            - x - User action Create Time Record
+
+    - x - Move actions to worker
+        - x - System action Session Sweep Cleanup
+        - x - System action Session Target Cleanup
+        - x - System action Session Workers Cleanup
+        - x - System action New EWallet Session
+        - x - System action Interogate Session Workers
+        - x - System action Interogate EWallet Session
+        - x - User action Request Session token
+        - x - User action Create Account
+        - x - User action Account Login
+        - x - User action Account Logout
+        - x - User action Supply Credits
+        - x - User action Pay Credits
+        - x - User action Convert Credits2Clock
+        - x - User action Convert Clock2Credits
+        - x - User action Add Contact Record
+        - x - User action TransferCredits
+        - x - User action Edit Account
+        - x - User action Start Clock Timer
+        - x - User action Pause Clock Timer
+        - x - User action Resume Clock Timer
+        - x - User action Stop Clock Timer
+        - x - User action View Contact List
+        - x - User action View Contact Record
+        - x - User action View Transfer Sheet
+        - x - User action View Transfer Record
+        - x - User action View Time Sheet
+        - x - User action View Time Record
+        - x - User action View Conversion Sheet
+        - x - User action View Conversion Record
+        - x - User action View Account
+        - x - User action View Credit EWallet
+        - x - User action View Credit Clock
+        - x - User action View Invoice Sheet
+        - x - User action View Invoice Record
+        - x - User action View Login Records
+        - x - User action View Logout Records
+        - x - User action Create Contact List
+        - x - User action Create Credit EWallet
+        - x - User action Create Credit Clock
+        - x - User action Create Transfer Sheet
+        - x - User action Create Invoice Sheet
+        - x - User action Create Conversion Sheet
+        - x - User action Create Time Sheet
+        - x - User action Switch Account
+        - x - User action Switch Credit EWallet
+        - x - User action Switch Credit Clock
+        - x - User action Switch Transfer Sheet
+        - x - User action Switch Invoice Sheet
+        - x - User action Switch Conversion Sheet
+        - x - User action Switch Time Sheet
+        - x - User action Switch Contact List
+        - x - User action Unlink Account
+        - x - User action Unlink Contact List
+        - x - User action Unlink Contact Record
+        - x - User action Unlink Conversion Sheet
+        - x - User action Unlink Conversion Record
+        - x - User action Unlink Transfer Sheet
+        - x - User action Unlink Transfer Record
+        - x - User action Unlink Time Sheet
+        - x - User action Unlink Time Record
+        - x - User action Unlink Credit EWallet
+        - x - User action Unlink Credit Clock
+        - x - User action Unlink Invoice Sheet
+        - x - User action Unlink Invoice Record
+        - x - User action Recover Account
 
 
 ################################################################################

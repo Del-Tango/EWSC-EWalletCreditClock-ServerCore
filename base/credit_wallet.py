@@ -563,6 +563,11 @@ class CreditEWallet(Base):
 
     # CHECKERS
 
+    def check_invoice_sheet_belongs_to_credit_ewallet(self, sheet):
+        log.debug('')
+        return False if sheet not in self.invoice_sheet_archive \
+            else True
+
     def check_transfer_sheet_belongs_to_credit_ewallet(self, sheet):
         log.debug('')
         return False if sheet not in self.transfer_sheet_archive \
@@ -722,6 +727,28 @@ class CreditEWallet(Base):
 
     # SWITCHERS
 
+    def switch_credit_wallet_invoice_sheet(self, **kwargs):
+        log.debug('')
+        new_invoice_sheet = self.fetch_credit_wallet_invoice_sheet_by_id(
+            code=kwargs['sheet_id'], **kwargs
+        )
+        check = self.check_invoice_sheet_belongs_to_credit_ewallet(
+            new_invoice_sheet
+        )
+        if not check:
+            return self.warning_invoice_sheet_does_not_belong_to_credit_ewallet(
+                kwargs, new_invoice_sheet, check
+            )
+        set_sheet = self.set_invoice_sheet(new_invoice_sheet)
+        if not set_sheet or isinstance(set_sheet, dict) and \
+                set_sheet.get('failed'):
+            return self.warning_could_not_switch_credit_ewallet_invoice_sheet(
+                kwargs, new_invoice_sheet, set_sheet
+            )
+        log.info('Successfully switched invoice sheet by id.')
+        return self.warning_could_not_switch_credit_ewallet_invoice_sheet(kwargs) \
+            if not set_sheet else new_invoice_sheet
+
     def switch_credit_wallet_transfer_sheet(self, **kwargs):
         log.debug('')
         new_transfer_sheet = self.fetch_credit_wallet_transfer_sheet_by_id(
@@ -778,17 +805,6 @@ class CreditEWallet(Base):
         return self.warning_could_not_switch_credit_ewallet_conversion_sheet(kwargs) \
             if not set_sheet or isinstance(set_sheet, dict) and set_sheet.get('failed') \
             else set_sheet
-
-    def switch_credit_wallet_invoice_sheet(self, **kwargs):
-        log.debug('')
-        new_invoice_sheet = self.fetch_credit_wallet_invoice_sheet_by_id(
-            code=kwargs['sheet_id'], **kwargs
-        )
-        set_sheet = self.set_invoice_sheet(new_invoice_sheet)
-        if set_sheet:
-            log.info('Successfully switched invoice sheet by id.')
-        return self.warning_could_not_switch_credit_ewallet_invoice_sheet(kwargs) \
-            if not set_sheet else new_invoice_sheet
 
     # CREATORS
 
@@ -1255,6 +1271,25 @@ class CreditEWallet(Base):
     [ TODO ]: Fetch error messages from message file by key codes.
     '''
 
+    def warning_invoice_sheet_does_not_belong_to_credit_ewallet(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Invoice sheet does not belong to active credit ewallet. '
+                       'Details: {}'.format(args),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
+
+    def warning_could_not_switch_credit_ewallet_invoice_sheet(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Something went wrong. '
+                       'Could not switch invoice sheet. '
+                       'Details: {}'.format(args),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
+
     def warning_transfer_sheet_does_not_belong_to_credit_ewallet(self, *args):
         command_chain_response = {
             'failed': True,
@@ -1396,15 +1431,6 @@ class CreditEWallet(Base):
         command_chain_response = {
             'failed': True,
             'warning': 'No invoice sheet found by id. Command chain details : {}'.format(command_chain),
-        }
-        log.warning(command_chain_response['warning'])
-        return command_chain_response
-
-    def warning_could_not_switch_credit_ewallet_invoice_sheet(self, command_chain):
-        command_chain_response = {
-            'failed': True,
-            'warning': 'Something went wrong. Could not switch credit ewallet invoice sheet. '\
-                       'Command chain details : {}'.format(command_chain),
         }
         log.warning(command_chain_response['warning'])
         return command_chain_response
