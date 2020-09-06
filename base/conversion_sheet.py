@@ -27,7 +27,6 @@ class CreditClockConversionSheetRecord(Base):
     credits = Column(Integer)
 
     def __init__(self, **kwargs):
-#       self.record_id = kwargs.get('record_id')
         self.create_date = kwargs.get('create_date', datetime.datetime.now())
         self.write_date = kwargs.get('write_date', datetime.datetime.now())
         self.conversion_sheet_id = kwargs.get('conversion_sheet_id', int())
@@ -368,7 +367,6 @@ class CreditClockConversionSheet(Base):
 
 #   @pysnooper.snoop('logs/ewallet.log')
     def __init__(self, **kwargs):
-#       self.conversion_sheet_id = kwargs.get('conversion_sheet_id')
         self.create_date = kwargs.get('create_date', datetime.datetime.now())
         self.write_date = kwargs.get('write_date', datetime.datetime.now())
         self.clock_id = kwargs.get('clock_id', int())
@@ -381,77 +379,20 @@ class CreditClockConversionSheet(Base):
 
     # FETCHERS (LIST)
 
-    def fetch_conversion_sheet_records_by_date(self, **kwargs):
-        log.debug('TODO - Refactor')
-        if not kwargs.get('code'):
-            return self.error_no_conversion_record_date_found()
-        _records = [
-                self.records[item] for item in self.records
-                if self.records[item].fetch_record_create_date() == kwargs['code']
-                ]
-        if not _records:
-            return self.warning_could_not_fetch_conversion_record(
-                    'date', kwargs['code']
-                    )
-        log.info('Successfully fetched conversion records by date.')
-        return _records
-
-    def fetch_conversion_sheet_records_by_credits(self, **kwargs):
-        log.debug('TODO - Refactor')
-        if not kwargs.get('code'):
-            return self.error_no_conversion_record_credits_found()
-        _records = [
-                self.records[item] for item in self.records
-                if self.records[item].fetch_record_credits() == kwargs['code']
-                ]
-        if not _records:
-            return self.warning_could_not_fetch_conversion_records(
-                    'credits'. kwargs['code']
-                    )
-        log.info('Successfully fetched conversion records by credits.')
-        return _records
-
-    def fetch_conversion_sheet_records_by_minutes(self, **kwargs):
-        log.debug('TODO - Refactor')
-        if not kwargs.get('code'):
-            return self.error_no_conversion_record_minutes_found()
-        _records = [
-                self.records[item] for item in self.records
-                if self.records[item].fetch_record_minutes() == kwargs['code']
-                ]
-        if not _records:
-            return self.warning_could_not_fetch_conversion_records(
-                    'minutes', kwargs['code']
-                    )
-        log.info('Successfully fetched conversion records by minutes.')
-        return _records
-
-    def fetch_conversion_sheet_records_by_type(self, **kwargs):
-        log.debug('TODO - Refactor')
-        if not kwargs.get('code'):
-            return self.error_no_conversion_record_type_found()
-        _records = [
-                self.records[item] for item in self.records
-                if self.records[item].fetch_record_conversion_type() == kwargs['code']
-                ]
-        if not _records:
-            return self.warning_could_not_fetch_conversion_records(
-                    'type', kwargs['code']
-                    )
-        log.info('Successfully fetched conversion records by type.')
-        return _records
-
     def fetch_conversion_sheet_record_by_id(self, **kwargs):
         log.debug('')
         if not kwargs.get('record_id'):
             return self.error_no_conversion_record_id_found(kwargs)
-        record = list(
+        query = list(
             kwargs['active_session'].query(
                 CreditClockConversionSheetRecord
             ).filter_by(record_id=kwargs['record_id'])
         )
-        return self.error_could_not_fetch_conversion_sheet_record_by_id(kwargs) \
-            if not record else record[0]
+        record = None if not query else query[0]
+        check = self.check_record_in_conversion_sheet(record)
+        return self.warning_record_not_in_conversion_sheet(
+            kwargs, record
+        ) if not check else record
 
     def fetch_conversion_sheet_record(self, **kwargs):
         log.debug('')
@@ -459,11 +400,6 @@ class CreditClockConversionSheet(Base):
             return self.error_no_conversion_sheet_record_identifier_specified()
         handlers = {
             'id': self.fetch_conversion_sheet_record_by_id,
-            'reference': self.fetch_conversion_sheet_record_by_ref,
-            'date': self.fetch_conversion_sheet_records_by_date,
-            'credits': self.fetch_conversion_sheet_records_by_credits,
-            'minutes': self.fetch_conversion_sheet_records_by_minutes,
-            'conversion_type': self.fetch_conversion_sheet_records_by_type,
             'all': self.fetch_conversion_sheet_records,
         }
         return handlers[kwargs['identifier']](**kwargs)
@@ -598,6 +534,12 @@ class CreditClockConversionSheet(Base):
             )
         log.info('Successfully set conversion sheet records.')
         return True
+
+    # CHECKERS (LIST)
+
+    def check_record_in_conversion_sheet(self, record):
+        log.debug('')
+        return False if record not in self.records else True
 
     # UPDATERS (LIST)
 
@@ -815,6 +757,15 @@ class CreditClockConversionSheet(Base):
         return handlers[kwargs['action']](**kwargs)
 
     # WARNINGS (LIST)
+
+    def warning_record_not_in_conversion_sheet(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Record not in conversion sheet. '
+                       'Details: {}'.format(args),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
 
     def warning_could_not_fetch_conversion_record(self, *args):
         command_chain_response = {

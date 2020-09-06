@@ -679,6 +679,44 @@ class EWallet(Base):
         }
         return command_chain_response
 
+    def action_view_conversion_record(self, **kwargs):
+        '''
+        [ NOTE   ]: User action 'view conversion record', accessible from external api call.
+        [ INPUT  ]: record_id=<id>
+        [ RETURN ]: (Conversion record values | False)
+        '''
+        log.debug('')
+        if not kwargs.get('record_id'):
+            return self.error_no_conversion_record_id_found(kwargs)
+        credit_wallet = self.fetch_active_session_credit_wallet()
+        if not credit_wallet or isinstance(credit_wallet, dict) and \
+                credit_wallet.get('failed'):
+            return self.warning_could_not_fetch_active_session_credit_ewallet(kwargs)
+        log.info('Attempting to fetch active credit clock...')
+        credit_clock = credit_wallet.fetch_credit_ewallet_credit_clock()
+        if not credit_clock or isinstance(credit_clock, dict) and credit_clock.get('failed'):
+            return self.warning_could_not_fetch_credit_clock()
+        log.info('Attempting to fetch active conversion sheet...')
+        conversion_sheet = credit_clock.fetch_credit_clock_conversion_sheet()
+        if not conversion_sheet or isinstance(conversion_sheet, dict) and \
+                conversion_sheet.get('failed'):
+            return self.warning_could_not_fetch_conversion_sheet(kwargs)
+        log.info('Attempting to fetch conversion record by id...')
+        record = conversion_sheet.fetch_conversion_sheet_record(
+            identifier='id', **kwargs
+        )
+        if not record or isinstance(record, dict) and record.get('failed'):
+            return self.warning_could_not_fetch_conversion_record(
+                kwargs, credit_wallet, credit_clock, conversion_sheet, record
+            )
+        command_chain_response = {
+            'failed': False,
+            'conversion_sheet': conversion_sheet.fetch_conversion_sheet_id(),
+            'conversion_record': record.fetch_record_id(),
+            'record_data': record.fetch_record_values(),
+        }
+        return command_chain_response
+
     def action_view_time_record(self, **kwargs):
         '''
         [ NOTE   ]: User action 'view time record', accessible from external api call.
@@ -1425,42 +1463,6 @@ class EWallet(Base):
             'failed': False,
             'account': active_user.fetch_user_email(),
             'account_data': active_user.fetch_user_values(),
-        }
-        return command_chain_response
-
-    def action_view_conversion_record(self, **kwargs):
-        '''
-        [ NOTE   ]: User action 'view conversion record', accessible from external api call.
-        [ INPUT  ]: record_id=<id>
-        [ RETURN ]: (Conversion record values | False)
-        '''
-        log.debug('')
-        if not kwargs.get('record_id'):
-            return self.error_no_conversion_record_id_found(kwargs)
-        credit_wallet = self.fetch_active_session_credit_wallet()
-        if not credit_wallet or isinstance(credit_wallet, dict) and \
-                credit_wallet.get('failed'):
-            return self.warning_could_not_fetch_active_session_credit_ewallet(kwargs)
-        log.info('Attempting to fetch active credit clock...')
-        credit_clock = credit_wallet.fetch_credit_ewallet_credit_clock()
-        if not credit_clock or isinstance(credit_clock, dict) and credit_clock.get('failed'):
-            return self.warning_could_not_fetch_credit_clock()
-        log.info('Attempting to fetch active conversion sheet...')
-        conversion_sheet = credit_clock.fetch_credit_clock_conversion_sheet()
-        if not conversion_sheet or isinstance(conversion_sheet, dict) and \
-                conversion_sheet.get('failed'):
-            return self.warning_could_not_fetch_conversion_sheet(kwargs)
-        log.info('Attempting to fetch conversion record by id...')
-        record = conversion_sheet.fetch_conversion_sheet_record(
-            identifier='id', **kwargs
-        )
-        if not record or isinstance(record, dict) and record.get('failed'):
-            return self.warning_could_not_fetch_conversion_record(kwargs)
-        command_chain_response = {
-            'failed': False,
-            'conversion_sheet': conversion_sheet.fetch_conversion_sheet_id(),
-            'conversion_record': record.fetch_record_id(),
-            'record_data': record.fetch_record_values(),
         }
         return command_chain_response
 
@@ -3555,6 +3557,16 @@ class EWallet(Base):
     [ TODO ]: Fetch warning messages from message file by key codes.
     '''
 
+    def warning_could_not_fetch_conversion_record(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Something went wrong. '
+                       'Could not fetch conversion sheet record. '
+                       'Details: {}'.format(args),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
+
     def warning_could_not_fetch_time_sheet_record(self, *args):
         command_chain_response = {
             'failed': True,
@@ -3662,15 +3674,6 @@ class EWallet(Base):
         command_chain_response = {
             'failed': True,
             'warning': 'Something went wrong. Could not fetch ewallet session active user. '\
-                       'Command chain details : {}'.format(command_chain),
-        }
-        log.warning(command_chain_response['warning'])
-        return command_chain_response
-
-    def warning_could_not_fetch_conversion_record(self, command_chain):
-        command_chain_response = {
-            'failed': True,
-            'warning': 'Something went wrong. Could not fetch conversion sheet record. '\
                        'Command chain details : {}'.format(command_chain),
         }
         log.warning(command_chain_response['warning'])
