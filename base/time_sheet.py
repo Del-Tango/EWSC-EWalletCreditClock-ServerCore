@@ -23,8 +23,6 @@ class TimeSheetRecord(Base):
     reference = Column(String)
     create_date = Column(DateTime)
     write_date = Column(DateTime)
-    create_uid = Column(Integer, ForeignKey('res_user.user_id'))
-    write_uid = Column(Integer, ForeignKey('res_user.user_id'))
     time_start = Column(Float)
     time_stop = Column(Float)
     time_spent = Column(Float)
@@ -41,8 +39,6 @@ class TimeSheetRecord(Base):
     def __init__(self, **kwargs):
         self.create_date = datetime.datetime.now()
         self.write_date = datetime.datetime.now()
-        self.create_uid = kwargs.get('create_uid')
-        self.write_uid = kwargs.get('write_uid')
         self.reference = kwargs.get('reference') or \
             config.time_sheet_config['time_record_reference']
         self.time_start = kwargs.get('time_start', float())
@@ -61,20 +57,8 @@ class TimeSheetRecord(Base):
             return self.error_no_time_record_identifier_specified()
         handlers = {
             'id': self.fetch_time_sheet_record_by_id,
-            'reference': self.fetch_time_sheet_record_by_ref,
-            'date': self.fetch_time_sheet_record_by_date,
-            'time': self.fetch_time_sheet_record_by_time,
-            'all': self.fetch_time_sheet_records,
         }
         return handlers[kwargs['identifier']](**kwargs)
-
-    def fetch_create_uid(self):
-        log.debug('')
-        return self.create_uid
-
-    def fetch_write_uid(self):
-        log.debug('')
-        return self.write_uid
 
     def fetch_time_pending(self):
         log.debug('')
@@ -148,34 +132,6 @@ class TimeSheetRecord(Base):
                 clock_id, self.credit_clock_id, e
             )
         log.info('Successfully set record credit clock id.')
-        return True
-
-    def set_create_uid(self, **kwargs):
-        log.debug('')
-        if not kwargs.get('create_uid'):
-            return self.error_no_create_uid_found(kwargs)
-        try:
-            self.create_uid = kwargs['create_uid']
-            self.update_write_date()
-        except Exception as e:
-            return self.error_could_not_set_time_record_create_uid(
-                kwargs, self.create_uid, e
-            )
-        log.info('Successfully set time record write date.')
-        return True
-
-    def set_write_uid(self, **kwargs):
-        log.debug('')
-        if not kwargs.get('write_uid'):
-            return self.error_no_write_uid_found(kwargs)
-        try:
-            self.write_uid = kwargs['write_uid']
-            self.update_write_date()
-        except Exception as e:
-            return self.error_could_not_set_time_record_write_uid(
-                kwargs, self.write_uid, e
-            )
-        log.info('Successfully set time record write UID.')
         return True
 
     def set_time_pending(self, **kwargs):
@@ -309,7 +265,6 @@ class TimeSheetRecord(Base):
             'time_spent': self.set_time_spent,
             'time_pending': self.set_time_pending,
             'pending_count': self.set_pending_count,
-            'write_uid': self.set_write_uid,
         }
         for field_name, field_value in values.items():
             try:
@@ -463,34 +418,6 @@ class TimeSheetRecord(Base):
         log.error(command_chain_response['error'])
         return command_chain_response
 
-    def error_could_not_set_write_uid(self, *args):
-        command_chain_response = {
-            'failed': True,
-            'error': 'Something went wrong. '
-                     'Could not set time sheet write UID. '
-                     'Details: {}'.format(args),
-        }
-        log.error(command_chain_response['error'])
-        return command_chain_response
-
-    def error_no_create_uid_found(self, *args):
-        command_chain_response = {
-            'failed': True,
-            'error': 'No time sheet create UID found. '
-                     'Details: {}'.format(args),
-        }
-        log.error(command_chain_response['error'])
-        return command_chain_response
-
-    def error_no_write_uid_found(self, *args):
-        command_chain_response = {
-            'failed': True,
-            'error': 'No time sheet write UID found. '
-                     'Details: {}'.format(args),
-        }
-        log.error(command_chain_response['error'])
-        return command_chain_response
-
     def error_no_pending_time_found(self, *args):
         command_chain_response = {
             'failed': True,
@@ -618,8 +545,6 @@ class CreditClockTimeSheet(Base):
         log.debug('')
         values = {
             'record_id': kwargs.get('record_id'),
-            'create_uid': kwargs.get('create_uid'),
-            'write_uid': kwargs.get('write_uid'),
             'time_sheet_id': self.time_sheet_id,
             'reference': kwargs.get('reference'),
             'credit_clock': kwargs.get('credit_clock'),
@@ -1150,6 +1075,14 @@ class CreditClockTimeSheet(Base):
 ###############################################################################
 # CODE DUMP
 ###############################################################################
+
+#   def fetch_create_uid(self):
+#       log.debug('')
+#       return self.create_uid
+
+#   def fetch_write_uid(self):
+#       log.debug('')
+#       return self.write_uid
 
     # TODO
 #   def fetch_time_sheet_record_by_ref(self, **kwargs):

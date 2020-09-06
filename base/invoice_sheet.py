@@ -73,6 +73,7 @@ class CreditInvoiceSheetRecord(Base):
         values = {
             'id': self.record_id,
             'invoice_sheet': self.invoice_sheet_id,
+            'transfer_record': self.transfer_record_id,
             'reference': self.reference,
             'create_date': res_utils.format_datetime(self.create_date),
             'write_date': res_utils.format_datetime(self.write_date),
