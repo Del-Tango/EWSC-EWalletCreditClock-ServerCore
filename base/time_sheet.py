@@ -37,7 +37,7 @@ class TimeSheetRecord(Base):
         Integer, ForeignKey('credit_clock.clock_id')
     )
 
-    @pysnooper.snoop('logs/ewallet.log')
+#   @pysnooper.snoop('logs/ewallet.log')
     def __init__(self, **kwargs):
         self.create_date = datetime.datetime.now()
         self.write_date = datetime.datetime.now()
@@ -240,7 +240,6 @@ class TimeSheetRecord(Base):
             return self.error_no_write_date_found(kwargs)
         try:
             self.write_date = kwargs['write_date']
-            self.update_write_date()
         except Exception as e:
             return self.error_could_not_set_time_record_write_date(
                 kwargs, self.write_date, e
@@ -585,7 +584,7 @@ class CreditClockTimeSheet(Base):
     clock = relationship('CreditClock', back_populates='time_sheet')
     records = relationship('TimeSheetRecord')
 
-    @pysnooper.snoop('logs/ewallet.log')
+#   @pysnooper.snoop('logs/ewallet.log')
     def __init__(self, **kwargs):
         self.create_date = kwargs.get('create_date', datetime.datetime.now())
         self.write_date = kwargs.get('write_date', datetime.datetime.now())
@@ -597,44 +596,23 @@ class CreditClockTimeSheet(Base):
 
     # FETCHERS (LIST)
 
-    # TODO
-    def fetch_time_sheet_record_by_ref(self, **kwargs):
-        log.debug('TODO - Refactor')
-        if not kwargs.get('code'):
-            return self.error_no_time_record_reference_found()
-        for item in self.records:
-            if self.records[item].fetch_record_reference() == kwargs['code']:
-                log.info('Successfully fetched time record by reference.')
-                return self.records[item]
-        return self.warning_could_not_fetch_time_record(
-                'reference', kwargs['code']
-                )
-
-    # TODO
-    def fetch_time_sheet_record_by_date(self, **kwargs):
-        log.debug('TODO - Refactor')
-        if not kwargs.get('code'):
-            return self.error_no_time_record_date_found()
-        for item in self.records:
-            if self.records[item].fetch_record_create_date() == kwargs['code']:
-                log.info('Successfully fetched time record by date.')
-                return self.records[item]
-        return self.warning_could_not_fetch_time_record(
-                'date', kwargs['code']
-                )
-
-    # TODO
-    def fetch_time_sheet_record_by_time(self, **kwargs):
-        log.debug('TODO - Refactor')
-        if not kwargs.get('code'):
-            return self.error_no_time_record_time_found()
-        for item in self.records:
-            if self.record[item].fetch_record_time_spent() == kwargs['code']:
-                log.info('Successfully fetched time record by time.')
-                return self.records[item]
-        return self.warning_could_not_fetch_time_record(
-                'time', kwargs['code']
-                )
+    def fetch_time_sheet_record_by_id(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('record_id'):
+            return self.error_no_time_record_id_found(kwargs)
+        query = list(
+            kwargs['active_session'].query(
+                TimeSheetRecord
+            ).filter_by(record_id=kwargs['record_id'])
+        )
+        record = None if not query else query[0]
+        check = self.check_record_in_time_sheet(record)
+        if not check:
+            return self.warning_record_not_in_time_sheet(
+                kwrags, record
+            )
+        log.info('Successfully fetched time record by id.')
+        return record
 
     def fetch_time_record_creation_values(self, **kwargs):
         log.debug('')
@@ -650,20 +628,6 @@ class CreditClockTimeSheet(Base):
             'time_spent': kwargs.get('time_spent'),
         }
         return values
-
-    def fetch_time_sheet_record_by_id(self, **kwargs):
-        log.debug('')
-        if not kwargs.get('record_id'):
-            return self.error_no_time_record_id_found(kwargs)
-        record = list(
-            kwargs['active_session'].query(
-                TimeSheetRecord
-            ).filter_by(record_id=kwargs['record_id'])
-        )
-        if record:
-            log.info('Successfully fetched time record by id.')
-        return self.warning_could_not_fetch_time_record(kwargs) if not \
-            record else record[0]
 
     def fetch_time_sheet_record(self, **kwargs):
         log.debug('')
@@ -825,6 +789,12 @@ class CreditClockTimeSheet(Base):
         return set_date if isinstance(set_date, dict) and \
             set_date.get('failed') else self.fetch_time_sheet_write_date()
 
+    # CHECKERS (LIST)
+
+    def check_record_in_time_sheet(self, record):
+        log.debug('')
+        return False if record not in self.records else True
+
     # ACTIONS (LIST)
 
 #   @pysnooper.snoop('logs/ewallet.log')
@@ -956,6 +926,15 @@ class CreditClockTimeSheet(Base):
     '''
     [ TODO ]: Fetch warning messages from message file by key codes.
     '''
+
+    def warning_record_not_in_time_sheet(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Record no in time sheet. '
+                       'Details: {}'.format(args),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
 
     def warning_could_not_fetch_time_record(self, *args):
         command_chain_response = {
@@ -1165,4 +1144,42 @@ class CreditClockTimeSheet(Base):
 # CODE DUMP
 ###############################################################################
 
+    # TODO
+#   def fetch_time_sheet_record_by_ref(self, **kwargs):
+#       log.debug('TODO - Refactor')
+#       if not kwargs.get('code'):
+#           return self.error_no_time_record_reference_found()
+#       for item in self.records:
+#           if self.records[item].fetch_record_reference() == kwargs['code']:
+#               log.info('Successfully fetched time record by reference.')
+#               return self.records[item]
+#       return self.warning_could_not_fetch_time_record(
+#               'reference', kwargs['code']
+#               )
+
+#   # TODO
+#   def fetch_time_sheet_record_by_date(self, **kwargs):
+#       log.debug('TODO - Refactor')
+#       if not kwargs.get('code'):
+#           return self.error_no_time_record_date_found()
+#       for item in self.records:
+#           if self.records[item].fetch_record_create_date() == kwargs['code']:
+#               log.info('Successfully fetched time record by date.')
+#               return self.records[item]
+#       return self.warning_could_not_fetch_time_record(
+#               'date', kwargs['code']
+#               )
+
+#   # TODO
+#   def fetch_time_sheet_record_by_time(self, **kwargs):
+#       log.debug('TODO - Refactor')
+#       if not kwargs.get('code'):
+#           return self.error_no_time_record_time_found()
+#       for item in self.records:
+#           if self.record[item].fetch_record_time_spent() == kwargs['code']:
+#               log.info('Successfully fetched time record by time.')
+#               return self.records[item]
+#       return self.warning_could_not_fetch_time_record(
+#               'time', kwargs['code']
+#               )
 

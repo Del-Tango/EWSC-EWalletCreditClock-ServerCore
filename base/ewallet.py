@@ -679,6 +679,44 @@ class EWallet(Base):
         }
         return command_chain_response
 
+    def action_view_time_record(self, **kwargs):
+        '''
+        [ NOTE   ]: User action 'view time record', accessible from external api call.
+        [ INPUT  ]: record_id=<id>
+        [ RETURN ]: (Time record values | False)
+        '''
+        log.debug('')
+        if not kwargs.get('record_id'):
+            return self.error_no_time_record_id_found(kwargs)
+        credit_wallet = self.fetch_active_session_credit_wallet()
+        if not credit_wallet:
+            return self.error_could_not_fetch_credit_ewallet(kwargs)
+        log.info('Attempting to fetch active credit clock...')
+        credit_clock = credit_wallet.fetch_credit_ewallet_credit_clock()
+        if not credit_clock or isinstance(credit_clock, dict) and \
+                credit_clock.get('failed'):
+            return self.warning_could_not_fetch_credit_clock(kwargs)
+        log.info('Attempting to fetch active time sheet...')
+        time_sheet = credit_clock.fetch_credit_clock_time_sheet()
+        if not time_sheet or isinstance(time_sheet, dict) and \
+                time_sheet.get('failed'):
+            return self.warning_could_not_fetch_time_sheet(kwargs)
+        log.info('Attempting to fetch time record...')
+        record = time_sheet.fetch_time_sheet_record(
+            identifier='id', **kwargs
+        )
+        if not record or isinstance(record, dict) and record.get('failed'):
+            return self.warning_could_not_fetch_time_sheet_record(
+                kwargs, credit_wallet, credit_clock, time_sheet, record
+            )
+        command_chain_response = {
+            'failed': False,
+            'time_sheet': time_sheet.fetch_time_sheet_id(),
+            'time_record': record.fetch_record_id(),
+            'record_data': record.fetch_record_values(),
+        }
+        return command_chain_response
+
     def action_view_transfer_record(self, **kwargs):
         '''
         [ NOTE   ]: User action 'view transfer record', accessible from external api call.
@@ -1477,42 +1515,6 @@ class EWallet(Base):
             'failed': False,
             'conversion_sheet': conversion_sheet.fetch_conversion_sheet_id(),
             'sheet_data': conversion_sheet.fetch_conversion_sheet_values(),
-        }
-        return command_chain_response
-
-    def action_view_time_record(self, **kwargs):
-        '''
-        [ NOTE   ]: User action 'view time record', accessible from external api call.
-        [ INPUT  ]: record_id=<id>
-        [ RETURN ]: (Time record values | False)
-        '''
-        log.debug('')
-        if not kwargs.get('record_id'):
-            return self.error_no_time_record_id_found(kwargs)
-        credit_wallet = self.fetch_active_session_credit_wallet()
-        if not credit_wallet:
-            return self.error_could_not_fetch_credit_ewallet(kwargs)
-        log.info('Attempting to fetch active credit clock...')
-        credit_clock = credit_wallet.fetch_credit_ewallet_credit_clock()
-        if not credit_clock or isinstance(credit_clock, dict) and \
-                credit_clock.get('failed'):
-            return self.warning_could_not_fetch_credit_clock(kwargs)
-        log.info('Attempting to fetch active time sheet...')
-        time_sheet = credit_clock.fetch_credit_clock_time_sheet()
-        if not time_sheet or isinstance(time_sheet, dict) and \
-                time_sheet.get('failed'):
-            return self.warning_could_not_fetch_time_sheet(kwargs)
-        log.info('Attempting to fetch time record...')
-        record = time_sheet.fetch_time_sheet_record(
-            identifier='id', **kwargs
-        )
-        if not record or isinstance(record, dict) and record.get('failed'):
-            return self.warning_could_not_fetch_time_sheet_record(kwargs)
-        command_chain_response = {
-            'failed': False,
-            'time_sheet': time_sheet.fetch_time_sheet_id(),
-            'time_record': record.fetch_record_id(),
-            'record_data': record.fetch_record_values(),
         }
         return command_chain_response
 
@@ -3553,11 +3555,21 @@ class EWallet(Base):
     [ TODO ]: Fetch warning messages from message file by key codes.
     '''
 
+    def warning_could_not_fetch_time_sheet_record(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Something went wrong. '
+                       'Could not fetch time sheet record. '
+                       'Details: {}'.format(args),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
+
     def warning_could_not_fetch_transfer_sheet_record(self, *args):
         command_chain_response = {
             'failed': True,
             'warning': 'Something went wrong. '
-                       'Could not fetch transfer sheet record. '\
+                       'Could not fetch transfer sheet record. '
                        'Details: {}'.format(args),
         }
         log.warning(command_chain_response['warning'])
@@ -3888,15 +3900,6 @@ class EWallet(Base):
             'failed': True,
             'warning': 'Something went wrong. Could not unlink contact list record for user {}. '\
                        'Command chain details : {}'.format(user_name, command_chain),
-        }
-        log.warning(command_chain_response['warning'])
-        return command_chain_response
-
-    def warning_could_not_fetch_time_sheet_record(self, command_chain):
-        command_chain_response = {
-            'failed': True,
-            'warning': 'Something went wrong. Could not fetch time sheet record. '\
-                       'Command chain details : {}'.format(command_chain),
         }
         log.warning(command_chain_response['warning'])
         return command_chain_response
