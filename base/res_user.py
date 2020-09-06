@@ -708,6 +708,27 @@ class ResUser(Base):
                 'user_email': set_user_email,
             }
 
+    def action_switch_time_sheet(self, **kwargs):
+        log.debug('')
+        log.info('Attempting to fetch user credit ewallet...')
+        credit_ewallet = self.fetch_user_credit_wallet()
+        if not credit_ewallet:
+            return self.error_could_not_fetch_user_credit_ewallet(kwargs)
+        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
+            kwargs, 'controller', 'action', 'sheet', 'identifier'
+        )
+        switch = credit_ewallet.main_controller(
+            controller='user', action='switch_sheet', sheet='time',
+            **sanitized_command_chain
+        )
+        if not switch or isinstance(switch, dict) and \
+                switch.get('failed'):
+            return self.warning_could_not_switch_time_sheet(
+                kwargs, credit_ewallet, switch
+            )
+        log.info('Successfully switched credit clock time sheet.')
+        return switch
+
     def action_switch_conversion_sheet(self, **kwargs):
         log.debug('')
         log.info('Attempting to fetch user credit ewallet...')
@@ -954,23 +975,6 @@ class ResUser(Base):
             log.info('Successfully switched user contact list.')
         return contact_list
 
-    def action_switch_time_sheet(self, **kwargs):
-        log.debug('')
-        log.info('Attempting to fetch user credit ewallet...')
-        credit_ewallet = self.fetch_user_credit_wallet()
-        if not credit_ewallet:
-            return self.error_could_not_fetch_user_credit_ewallet(kwargs)
-        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
-            kwargs, 'controller', 'action', 'sheet', 'identifier'
-        )
-        switch = credit_ewallet.main_controller(
-            controller='user', action='switch_sheet', sheet='time',
-            **sanitized_command_chain
-        )
-        if switch:
-            log.info('Successfully switched credit clock time sheet.')
-        return switch
-
     def action_edit_user_name(self, **kwargs):
         log.debug('')
         set_user_name = self.set_user_name(name=kwargs['user_name'])
@@ -1208,6 +1212,16 @@ class ResUser(Base):
     '''
     [ TODO ]: Fetch error messages from message file by key codes.
     '''
+
+    def warning_could_not_switch_time_sheet(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Something went wrong. '
+                       'Could not switch time sheet. '
+                       'Details: {}'.format(args),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
 
     def warning_could_not_switch_conversion_sheet(self, *args):
         command_chain_response = {

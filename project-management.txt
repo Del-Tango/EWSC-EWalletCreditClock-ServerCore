@@ -20,6 +20,8 @@
     - x - (EWSC) Groom user account state updates
     - x - (EWSC) Impose user account state restrictions on all user actions
     -   - (EWSC) Impose entity ownership restrictions on all user actions
+    - (EWSC) Groom session manager warning handlers
+    - (EWSC) Groom session manager error handlers
     - (EWSC) Fix user action Edit Password
     - (EWSC) Fix user action Edit Email
     - (EWSC) Journal record grooming
@@ -34,8 +36,6 @@
     - (EWSC, EWCC, EWAT) Implement issue report
 
 * v.WhiteRabbit (1.0.0/MVP - stable) - Planned
-    - (EWSC) Error handler grooming
-    - (EWSC) Warning handler grooming
     - (EWSC, EWCC, EWAT) Add SSL certificates for master accounts
     - (EWSC) Use PostgreSql
     - (EWSC) Implement session manager thread pool
@@ -93,8 +93,8 @@
         - x - User action Switch Transfer Sheet
         - x - User action Switch Invoice Sheet
         - x - User action Switch Conversion Sheet
-        -   - User action Switch Time Sheet
-        - User action Switch Contact List
+        - x - User action Switch Time Sheet
+        -   - User action Switch Contact List
         - User action Unlink Account
         - User action Unlink Contact List
         - User action Unlink Contact Record

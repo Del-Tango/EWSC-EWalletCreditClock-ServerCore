@@ -606,6 +606,11 @@ class CreditClock(Base):
 
     # CHECKERS
 
+    def check_time_sheet_belongs_to_credit_clock(self, sheet):
+        log.debug('')
+        return False if sheet not in self.time_sheet_archive \
+            else True
+
     def check_conversion_sheet_belongs_to_credit_clock(self, sheet):
         log.debug('')
         return False if sheet not in self.conversion_sheet_archive \
@@ -923,6 +928,25 @@ class CreditClock(Base):
 
     # SWITCHERS
 
+    def switch_credit_clock_time_sheet(self, **kwargs):
+        log.debug('')
+        new_sheet = self.fetch_credit_clock_time_sheet_by_id(**kwargs)
+        if not new_sheet:
+            return self.warning_could_not_fetch_time_sheet_by_id(kwargs)
+        check = self.check_time_sheet_belongs_to_credit_clock(new_sheet)
+        if not check:
+            return self.warning_time_sheet_does_not_belong_to_credit_clock(
+                kwargs, new_sheet, check
+            )
+        set_sheet = self.set_credit_clock_time_sheet(new_sheet)
+        if not set_sheet or isinstance(set_sheet, dict) and \
+                set_sheet.get('failed'):
+            return self.error_could_not_switch_time_sheet(
+                kwargs, new_sheet, check, set_sheet
+            )
+        log.info('Successfully switched credit clock time sheet.')
+        return new_sheet
+
     def switch_credit_clock_conversion_sheet(self, **kwargs):
         log.debug('')
         new_sheet = self.fetch_credit_clock_conversion_sheet_by_id(**kwargs)
@@ -942,18 +966,8 @@ class CreditClock(Base):
             return self.error_could_not_switch_conversion_sheet(
                 kwargs, new_sheet, check, set_sheet
             )
-        log.info('Successfully switch credit clock conversion sheet by id.')
+        log.info('Successfully switched credit clock conversion sheet.')
         return new_sheet
-
-    def switch_credit_clock_time_sheet(self, **kwargs):
-        log.debug('')
-        new_time_sheet = self.fetch_credit_clock_time_sheet_by_id(**kwargs)
-        if not new_time_sheet:
-            return self.warning_could_not_fetch_time_sheet_by_id(kwargs)
-        set_sheet = self.set_credit_clock_time_sheet(new_time_sheet)
-        if set_sheet:
-            log.info('Successfully switched credit clock time sheet by id.')
-        return new_time_sheet
 
     # CREATORS
 
@@ -1574,6 +1588,16 @@ class CreditClock(Base):
     '''
     [ TODO ]: Fetch error messages from message file by key codes.
     '''
+
+    def error_could_not_switch_time_sheet(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Something went wrong. '
+                     'Could not switch time sheet. '
+                     'Details: {}'.format(args)
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
 
     def error_could_not_switch_conversion_sheet(self, *args):
         command_chain_response = {
@@ -2281,6 +2305,15 @@ class CreditClock(Base):
     '''
     [ TODO ]: Fetch warning messages from message file by key codes.
     '''
+
+    def warning_time_sheet_does_not_belong_to_credit_clock(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Time sheet does not belong to active credit clock. '
+                       'Details: {}'.format(args),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
 
     def warning_conversion_sheet_does_not_belong_to_credit_clock(self, *args):
         command_chain_response = {
