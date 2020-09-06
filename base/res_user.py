@@ -33,7 +33,7 @@ class ResUser(Base):
     user_phone = Column(String)
     user_alias = Column(String)
     user_state_code = Column(Integer)
-    user_state_name = Column(String)
+#   user_state_name = Column(String)
     active_session_id = Column(Integer, ForeignKey('ewallet.id'))
     active_session = relationship(
        'EWallet', back_populates='active_user'
@@ -307,20 +307,6 @@ class ResUser(Base):
         if _record:
             log.info('Successfully fetched credit wallet by id.')
         return _record
-
-    def fetch_user_state_code_map(self):
-        log.debug('')
-        state_map = {
-            'code': {
-                0: 'Logged Out',
-                1: 'Logged In',
-                },
-            'name': {
-                'Logged Out': 0,
-                'Logged In': 1,
-                }
-            }
-        return state_map
 
     # SETTERS
 
@@ -611,6 +597,11 @@ class ResUser(Base):
 
     # CHECKERS
 
+    def check_credit_ewallet_belongs_to_user(self, ewallet):
+        log.debug('')
+        return False if ewallet not in self.user_credit_wallet_archive \
+            else True
+
 #   @pysnooper.snoop('logs/ewallet.log')
     def check_user_logged_in(self):
         log.debug('')
@@ -716,6 +707,26 @@ class ResUser(Base):
                 'failed': False,
                 'user_email': set_user_email,
             }
+
+    def action_switch_credit_wallet(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('ewallet_id'):
+            return self.error_no_wallet_id_found()
+        log.info('Attempting to fetch user credit ewallet...')
+        ewallet = self.fetch_user_credit_ewallet_by_id(kwargs['ewallet_id'])
+        if not ewallet or isinstance(ewallet, dict) and ewallet.get('failed'):
+            return self.warning_could_not_fetch_credit_wallet(
+                kwargs, ewallet
+            )
+        check = self.check_credit_ewallet_belongs_to_user(ewallet)
+        if not check:
+            return self.warning_credit_ewallet_does_not_belong_to_current_user(
+                kwargs, ewallet
+            )
+        switch = self.set_user_credit_wallet(credit_ewallet=ewallet)
+        if switch:
+            log.info('Successfully switched credit ewallet by id.')
+        return ewallet
 
     def action_create_credit_clock(self, **kwargs):
         log.debug('')
@@ -927,19 +938,6 @@ class ResUser(Base):
         if switch:
             log.info('Successfully switched credit ewallet transfer sheet.')
         return switch
-
-    def action_switch_credit_wallet(self, **kwargs):
-        log.debug('')
-        if not kwargs.get('ewallet_id'):
-            return self.error_no_wallet_id_found()
-        log.info('Attempting to fetch user credit ewallet...')
-        ewallet = self.fetch_user_credit_ewallet_by_id(kwargs['ewallet_id'])
-        if not ewallet:
-            return self.warning_could_not_fetch_credit_wallet()
-        switch = self.set_user_credit_wallet(credit_ewallet=ewallet)
-        if switch:
-            log.info('Successfully switched credit ewallet by id.')
-        return ewallet
 
     def action_edit_user_name(self, **kwargs):
         log.debug('')
@@ -1196,6 +1194,25 @@ class ResUser(Base):
     [ TODO ]: Fetch error messages from message file by key codes.
     '''
 
+    def warning_credit_ewallet_does_not_belong_to_current_user(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Credit ewallet does not belong to current user. '
+                       'Details: {}'.format(args),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
+
+    def warning_could_not_fetch_credit_wallet(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Something went wrong. '
+                       'Could not fetch credit ewallet. '
+                       'Details: {}'.format(args),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
+
     def warning_no_contact_list_found_by_id(self, list_id, command_chain):
         command_chain_response = {
             'failed': True,
@@ -1251,13 +1268,6 @@ class ResUser(Base):
             'Something went wrong. Could not fetch credit wallet for partner {}.'\
             .format(partner_name)
         )
-        return False
-
-    def warning_could_not_fetch_credit_wallet(self):
-        log.warning(
-                'Something went wrong. '
-                'Could not fetch credit wallet.'
-                )
         return False
 
     def warning_could_not_fetch_contact_list(self):
@@ -1989,6 +1999,20 @@ class ResUser(Base):
 ###############################################################################
 # CODE DUMP
 ###############################################################################
+
+#   def fetch_user_state_code_map(self):
+#       log.debug('')
+#       state_map = {
+#           'code': {
+#               0: 'Logged Out',
+#               1: 'Logged In',
+#               },
+#           'name': {
+#               'Logged Out': 0,
+#               'Logged In': 1,
+#               }
+#           }
+#       return state_map
 
 #   #@pysnooper.snoop('logs/ewallet.log')
 #   def set_user_state_code(self, **kwargs):

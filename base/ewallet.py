@@ -679,6 +679,72 @@ class EWallet(Base):
         }
         return command_chain_response
 
+    def action_switch_credit_ewallet(self, **kwargs):
+        log.debug('')
+        active_user = self.fetch_active_session_user()
+        if not active_user:
+            return self.error_no_session_active_user_found()
+        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
+            kwargs, 'ctype', 'action', 'target'
+        )
+        switch_credit_ewallet = active_user.user_controller(
+            ctype='action', action='switch', target='credit_wallet',
+            **sanitized_command_chain
+        )
+        if not switch_credit_ewallet or \
+                isinstance(switch_credit_ewallet, dict) and \
+                switch_credit_ewallet.get('failed'):
+            kwargs['active_session'].rollback()
+            return self.warning_could_not_switch_credit_ewallet(
+                kwargs, active_user, switch_credit_ewallet
+            )
+        kwargs['active_session'].commit()
+        log.info('Successfully switched credit ewallet.')
+        command_chain_response = {
+            'failed': False,
+            'ewallet': switch_credit_ewallet.fetch_credit_ewallet_id(),
+            'ewallet_data': switch_credit_ewallet.fetch_credit_ewallet_values(),
+        }
+        return command_chain_response
+
+    def action_switch_active_user_account(self, **kwargs):
+        log.debug('')
+        account_record = self.fetch_user_by_email(email=kwargs.get('account'))
+        if not account_record or isinstance(account_record, dict) and \
+                account_record.get('failed'):
+            return self.warning_user_account_not_found_in_database(kwargs)
+        new_account = self.interogate_active_session_user_archive_for_user_account(
+            account_id=account_record.fetch_user_id(), **kwargs
+        )
+        if not new_account or isinstance(new_account, dict) and \
+                new_account.get('failed'):
+            return self.warning_account_not_logged_in(
+                kwargs, new_account
+            )
+        update_session = self.update_session_from_user(session_active_user=new_account)
+        if not update_session or isinstance(update_session, dict) and \
+                update_session.get('failed'):
+            return self.error_could_not_update_ewallet_session_from_user_account(kwargs)
+        kwargs['active_session'].commit()
+        account_archive = self.fetch_active_session_user_account_archive()
+        command_chain_response = {
+            'failed': False,
+            'account': new_account.fetch_user_email(),
+            'session_data': {
+                'session_user_account': None if not update_session['active_user'] \
+                    else update_session['active_user'].fetch_user_email(),
+                'session_credit_ewallet': None if not update_session['credit_wallet'] \
+                    else update_session['credit_wallet'].fetch_credit_ewallet_id(),
+                'session_contact_list': None if not update_session['contact_list'] \
+                    else update_session['contact_list'].fetch_contact_list_id(),
+                'session_account_archive': None if not account_archive else {
+                    item.fetch_user_email(): item.fetch_user_name()
+                    for item in account_archive
+                }
+            }
+        }
+        return command_chain_response
+
 #   @pysnooper.snoop()
     def action_view_invoice_record(self, **kwargs):
         '''
@@ -914,42 +980,6 @@ class EWallet(Base):
                     else session_values['contact_list'].fetch_contact_list_id(),
                 'session_account_archive': None if not session_values['user_account_archive'] \
                     else session_values['user_account_archive']
-            }
-        }
-        return command_chain_response
-
-    def action_switch_active_user_account(self, **kwargs):
-        log.debug('')
-        account_record = self.fetch_user_by_email(email=kwargs.get('account'))
-        if not account_record or isinstance(account_record, dict) and \
-                account_record.get('failed'):
-            return self.warning_user_account_not_found_in_database(kwargs)
-        new_account = self.interogate_active_session_user_archive_for_user_account(
-            account_id=account_record.fetch_user_id(), **kwargs
-        )
-        if not new_account or isinstance(new_account, dict) and \
-                new_account.get('failed'):
-            return self.warning_could_not_find_user_action_switch_target_account(kwargs)
-        update_session = self.update_session_from_user(session_active_user=new_account)
-        if not update_session or isinstance(update_session, dict) and \
-                update_session.get('failed'):
-            return self.error_could_not_update_ewallet_session_from_user_account(kwargs)
-        kwargs['active_session'].commit()
-        account_archive = self.fetch_active_session_user_account_archive()
-        command_chain_response = {
-            'failed': False,
-            'account': new_account.fetch_user_email(),
-            'session_data': {
-                'session_user_account': None if not update_session['active_user'] \
-                    else update_session['active_user'].fetch_user_email(),
-                'session_credit_ewallet': None if not update_session['credit_wallet'] \
-                    else update_session['credit_wallet'].fetch_credit_ewallet_id(),
-                'session_contact_list': None if not update_session['contact_list'] \
-                    else update_session['contact_list'].fetch_contact_list_id(),
-                'session_account_archive': None if not account_archive else {
-                    item.fetch_user_email(): item.fetch_user_name()
-                    for item in account_archive
-                }
             }
         }
         return command_chain_response
@@ -2379,32 +2409,6 @@ class EWallet(Base):
         }
         return command_chain_response
 
-    def action_switch_credit_ewallet(self, **kwargs):
-        log.debug('')
-        active_user = self.fetch_active_session_user()
-        if not active_user:
-            return self.error_no_session_active_user_found()
-        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
-            kwargs, 'ctype', 'action', 'target'
-        )
-        switch_credit_ewallet = active_user.user_controller(
-            ctype='action', action='switch', target='credit_wallet',
-            **sanitized_command_chain
-        )
-        if not switch_credit_ewallet:
-            kwargs['active_session'].rollback()
-            return self.warning_could_not_switch_credit_ewallet(
-                active_user.fetch_user_name(), kwargs
-            )
-        kwargs['active_session'].commit()
-        log.info('Successfully switched credit ewallet.')
-        command_chain_response = {
-            'failed': False,
-            'ewallet': switch_credit_ewallet.fetch_credit_ewallet_id(),
-            'ewallet_data': switch_credit_ewallet.fetch_credit_ewallet_values(),
-        }
-        return command_chain_response
-
     def action_create_new_contact_list(self, **kwargs):
         '''
         [ NOTE   ]: User action 'create new contact list', accessible from external api calls.
@@ -3559,6 +3563,35 @@ class EWallet(Base):
     [ TODO ]: Fetch warning messages from message file by key codes.
     '''
 
+    def warning_could_not_switch_credit_clock(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Something went wrong. '
+                       'Could not switch credit clock. '
+                       'Details: {}'.format(args),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
+
+    def warning_could_not_switch_credit_ewallet(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Something went wrong. '
+                       'Could not switch credit ewallet. '
+                       'Command chain details : {}'.format(args),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
+
+    def warning_account_not_logged_in(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Account not logged in. '
+                       'Details: {}'.format(args),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
+
     def warning_could_not_fetch_invoice_sheet_record(self, *args):
         command_chain_response = {
             'failed': True,
@@ -3986,24 +4019,6 @@ class EWallet(Base):
         command_chain_response = {
             'failed': True,
             'warning': 'Something went wrong. Could not switch invoice sheet for user {}. '\
-                       'Command chain details : {}'.format(user_name, command_chain),
-        }
-        log.warning(command_chain_response['warning'])
-        return command_chain_response
-
-    def warning_could_not_switch_credit_clock(self, user_name, command_chain):
-        command_chain_response = {
-            'failed': True,
-            'warning': 'Something went wrong. Could not switch credit clock for user {}. '\
-                       'Command chain details : {}'.format(user_name, command_chain),
-        }
-        log.warning(command_chain_response['warning'])
-        return command_chain_response
-
-    def warning_could_not_switch_credit_ewallet(self, user_name, command_chain):
-        command_chain_response = {
-            'failed': True,
-            'warning': 'Something went wrong. Could not switch credit ewallet for user {}. '\
                        'Command chain details : {}'.format(user_name, command_chain),
         }
         log.warning(command_chain_response['warning'])
