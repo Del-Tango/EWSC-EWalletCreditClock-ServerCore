@@ -71,8 +71,8 @@ class TestEWalletSessionManageUserActionEditAccount(unittest.TestCase):
             'controller': 'client', 'ctype': 'action', 'action': 'edit',
             'edit': 'account', 'client_id': self.client_id,
             'session_token': self.session_token, 'user_name': 'Edited',
-            'user_phone': 'Edited', 'user_email': 'Edited', 'user_pass': 'Edited',
-            'user_alias': 'Edited'
+            'user_phone': 'Edited', 'user_email': 'Edited',
+            'user_pass': 'Editedsdas@!@R2312e.', 'user_alias': 'Edited'
         }
         edit = self.session_manager.session_manager_controller(
             **instruction_set

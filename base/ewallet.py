@@ -80,6 +80,14 @@ class EWallet(Base):
         log.debug('TODO - Fetch value from config file')
         return 24
 
+    def fetch_user_password_check_function(self):
+        log.debug('')
+        return EWalletCreateUser().check_user_pass
+
+    def fetch_user_password_hash_function(self):
+        log.debug('')
+        return EWalletLogin().hash_password
+
 #   @pysnooper.snoop('logs/ewallet.log')
     def fetch_active_session_user(self, obj=True):
         log.debug('')
@@ -632,23 +640,6 @@ class EWallet(Base):
         log.debug('TODO - UNIMPLEMENTED')
 
     # TODO
-    def action_edit_account_user_pass(self, **kwargs):
-        log.debug('TODO - FIX ME')
-        active_user = self.fetch_active_session_user()
-        if not active_user or isinstance(active_user, dict) and \
-                active_user.get('failed'):
-            return self.warning_could_not_fetch_ewallet_session_active_user(kwargs)
-        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
-            kwargs, 'ctype', 'action', 'edit'
-        )
-        edit_user_pass = active_user.user_controller(
-            ctype='action', action='edit', edit='user_pass',
-            **sanitized_command_chain
-        )
-        return self.warning_could_not_edit_account_user_pass(kwargs) if \
-            edit_user_pass.get('failed') else edit_user_pass
-
-    # TODO
     def action_login_user_account(self, **kwargs):
         log.debug('TODO - Refactor')
         login_record = EWalletLogin()
@@ -683,6 +674,40 @@ class EWallet(Base):
             }
         }
         return command_chain_response
+
+    def action_reset_user_password(self, **kwargs):
+        log.debug('')
+        if not self.active_user or not kwargs.get('user_pass'):
+            return self.error_no_user_password_found()
+        return self.active_user.user_controller(
+            ctype='action', action='reset', target='field', field='user_pass',
+            password=kwargs['user_pass'],
+            pass_check_func=self.fetch_user_password_check_function(),
+            pass_hash_func=self.fetch_user_password_hash_function(),
+        )
+
+#   @pysnooper.snoop('logs/ewallet.log')
+    def action_edit_account_user_pass(self, **kwargs):
+        log.debug('')
+        active_user = self.fetch_active_session_user()
+        if not active_user or isinstance(active_user, dict) and \
+                active_user.get('failed'):
+            return self.warning_could_not_fetch_ewallet_session_active_user(kwargs)
+        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
+            kwargs, 'ctype', 'action', 'edit'
+        )
+        edit_user_pass = active_user.user_controller(
+            ctype='action', action='edit', edit='user_pass',
+            pass_check_func=self.fetch_user_password_check_function(),
+            pass_hash_func=self.fetch_user_password_hash_function(),
+            **sanitized_command_chain
+        )
+        if not edit_user_pass or isinstance(edit_user_pass, dict) and \
+                edit_user_pass.get('failed'):
+            return self.warning_could_not_edit_account_user_pass(
+                kwargs, active_user, edit_user_pass
+            )
+        return edit_user_pass
 
     def action_unlink_invoice_list(self, **kwargs):
         log.debug('')
@@ -2331,19 +2356,6 @@ class EWallet(Base):
         update = self.update_session_from_user(**kwargs)
         return update or False
 
-    def action_reset_user_password(self, **kwargs):
-        log.debug('')
-        if not self.active_user or not kwargs.get('user_pass'):
-            return self.error_no_user_password_found()
-        pass_check_func = EWalletCreateUser().check_user_pass
-        pass_hash_func = EWalletLogin().hash_password
-        return self.active_user.user_controller(
-            ctype='action', action='reset', target='field', field='user_pass',
-            password=kwargs['user_pass'],
-            pass_check_func=pass_check_func,
-            pass_hash_func=pass_hash_func,
-        )
-
     def action_reset_user_email(self, **kwargs):
         log.debug('')
         if not self.active_user or not kwargs.get('user_email'):
@@ -3379,6 +3391,16 @@ class EWallet(Base):
     [ TODO ]: Fetch warning messages from message file by key codes.
     '''
 
+    def warning_could_not_edit_account_user_pass(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Something went wrong. '
+                       'Could not edit account user account password. '
+                       'Details: {}'.format(args)
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
+
     def warning_could_not_unlink_invoice_sheet(self, *args):
         command_chain_response = {
             'failed': True,
@@ -3896,15 +3918,6 @@ class EWallet(Base):
         command_chain_response = {
             'failed': True,
             'warning': 'Something went wrong. Could not edit account user name. Command chain details : {}'\
-                       .format(command_chain)
-        }
-        log.warning(command_chain_response['warning'])
-        return command_chain_response
-
-    def warning_could_not_edit_account_user_pass(self, command_chain):
-        command_chain_response = {
-            'failed': True,
-            'warning': 'Something went wrong. Could not edit account user pass. Command chain details : {}'\
                        .format(command_chain)
         }
         log.warning(command_chain_response['warning'])

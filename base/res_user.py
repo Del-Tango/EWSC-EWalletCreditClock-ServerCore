@@ -308,31 +308,17 @@ class ResUser(Base):
 
     # SETTERS
 
-    # TODO - Refactor
-    def set_user_pass(self, **kwargs):
-        log.debug('TODO - FIX ME')
-        if not kwargs.get('password') or not kwargs.get('pass_check_func') \
-                or not kwargs.get('pass_hash_func'):
-            return self.error_handler_set_user_pass(
-                password=kwargs.get('password'),
-                pass_check_func=kwargs.get('pass_check_func'),
-                pass_hash_func=kwargs.get('pass_hash_func'),
+    def set_user_pass(self, password_hash):
+        log.debug('')
+        try:
+            self.user_pass_hash = password_hash
+            self.update_write_date()
+        except Exception as e:
+            return self.error_could_not_set_user_pass_hash(
+                password_hash, self.user_pass_hash, e
             )
-#       log.info('Performing user password checks...')
-#       check = kwargs['pass_check_func'](kwargs['password'])
-#       if not check:
-#           return create_user.error_invalid_user_pass()
-#       log.info('Password coresponds with security standards. Hashing...')
-#       pass_hash = kwargs['pass_hash_func'](kwargs['password'])
-#       hash_record = self.create_user_pass_hash_record(
-#               pass_hash=pass_hash, **kwargs
-#               )
-#       self.user_pass = pass_hash
-#       kwargs['active_session'].add(hash_record)
-#       kwargs['active_session'].commit()
-#       self.set_user_write_date()
-#       log.info('Successfully set user password.')
-#       return True
+        log.info('Successfully set user password.')
+        return True
 
     # TODO - REFACTOR
     def set_user_email(self, **kwargs):
@@ -723,12 +709,42 @@ class ResUser(Base):
     # TODO
     def action_edit_user_email(self, **kwargs):
         log.debug('TODO - Add email validations here')
-        set_user_email = self.set_user_email(email=kwargs['user_email'])
+        set_email = self.set_user_email(email=kwargs['user_email'])
         return self.error_could_not_edit_user_email(kwargs) \
-            if not set_user_email else {
+            if not set_email else {
                 'failed': False,
-                'user_email': set_user_email,
+                'user_email': set_email,
             }
+
+    def action_edit_user_pass(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('user_pass') or not kwargs.get('pass_check_func') \
+                or not kwargs.get('pass_hash_func'):
+            return self.error_handler_set_user_pass(
+                password=kwargs.get('user_pass'),
+                pass_check_func=kwargs.get('pass_check_func'),
+                pass_hash_func=kwargs.get('pass_hash_func'),
+            )
+        log.info('Performing user password checks...')
+        check = kwargs['pass_check_func'](kwargs['user_pass'])
+        if not check:
+            return self.error_invalid_user_pass(kwargs, check)
+        log.info('Password coresponds with security standards. Hashing...')
+        pass_hash = kwargs['pass_hash_func'](kwargs['user_pass'])
+        hash_record = self.create_user_pass_hash_record(
+            pass_hash=pass_hash, **kwargs
+        )
+        set_pass = self.set_user_pass(pass_hash)
+        if isinstance(set_pass, dict) and set_pass.get('failed'):
+            kwargs['active_session'].rollback()
+            return set_pass
+        kwargs['active_session'].commit()
+        return self.error_could_not_edit_user_pass(
+            kwargs, check, pass_hash, hash_record, set_pass
+        ) if not set_pass else {
+            'failed': False,
+            'user_pass': set_pass
+        }
 
     def action_unlink_credit_clock(self, **kwargs):
         log.debug('')
@@ -1045,15 +1061,6 @@ class ResUser(Base):
                 'user_name': set_user_name
             }
 
-    def action_edit_user_pass(self, **kwargs):
-        log.debug('')
-        set_user_pass = self.set_user_name(password=kwargs['user_pass'])
-        return self.error_could_not_edit_user_pass(kwargs) \
-            if not set_user_pass else {
-                'failed': False,
-                'user_pass': set_user_pass
-            }
-
     def action_edit_user_alias(self, **kwargs):
         log.debug('')
         set_user_alias = self.set_user_alias(alias=kwargs['user_alias'])
@@ -1094,6 +1101,19 @@ class ResUser(Base):
     def handle_user_event_signal(self, **kwargs):
         pass
 
+    def handle_user_action_edit(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('edit'):
+            return self.error_no_user_action_edit_target_specified(kwargs)
+        handlers = {
+            'user_name': self.handle_user_action_edit_name,
+            'user_pass': self.handle_user_action_edit_pass,
+            'user_alias': self.handle_user_action_edit_alias,
+            'user_email': self.handle_user_action_edit_email,
+            'user_phone': self.handle_user_action_edit_phone,
+        }
+        return handlers[kwargs['edit']](**kwargs)
+
     def handle_user_action_edit_name(self, **kwargs):
         log.debug('')
         if not kwargs.get('user_name'):
@@ -1128,19 +1148,6 @@ class ResUser(Base):
             return self.error_no_user_phone_specified_for_user_action_edit(kwargs)
         edit_user_phone = self.action_edit_user_phone(**kwargs)
         return edit_user_phone
-
-    def handle_user_action_edit(self, **kwargs):
-        log.debug('')
-        if not kwargs.get('edit'):
-            return self.error_no_user_action_edit_target_specified(kwargs)
-        handlers = {
-            'user_name': self.handle_user_action_edit_name,
-            'user_pass': self.handle_user_action_edit_pass,
-            'user_alias': self.handle_user_action_edit_alias,
-            'user_email': self.handle_user_action_edit_email,
-            'user_phone': self.handle_user_action_edit_phone,
-        }
-        return handlers[kwargs['edit']](**kwargs)
 
     def handle_user_action_transfer(self, **kwargs):
         log.debug('')
@@ -1430,6 +1437,35 @@ class ResUser(Base):
     '''
     [ TODO ]: Fetch error messages from message file by key codes.
     '''
+
+    def error_could_not_set_user_pass_hash(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Something went wrong. '
+                     'Could not set user password hash. '
+                     'Details: {}'.format(args)
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_could_not_edit_user_pass(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Something went wrong. '
+                     'Could not edit user password. '
+                     'Details: {}'.format(args)
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_invalid_user_pass(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Invalid user password. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
 
     def error_could_not_unlink_credit_ewallet(self, *args):
         command_chain_response = {
@@ -1885,15 +1921,6 @@ class ResUser(Base):
         command_chain_response = {
             'failed': True,
             'error': 'Something went wrong. Could not edit user name. Command chain details : {}'
-                     .format(command_chain)
-        }
-        log.error(command_chain_response['error'])
-        return command_chain_response
-
-    def error_could_not_edit_user_pass(self, command_chain):
-        command_chain_response = {
-            'failed': True,
-            'error': 'Something went wrong. Could not edit user password. Command chain details : {}'
                      .format(command_chain)
         }
         log.error(command_chain_response['error'])

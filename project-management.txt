@@ -22,8 +22,9 @@
     - x - (EWSC) Impose entity ownership restrictions on all user actions
     - x - (EWSC) Groom session manager warning handlers
     - x - (EWSC) Groom session manager error handlers
-    -   - (EWSC) Fix user action Edit Password
-    - (EWSC) Fix user action Edit Email
+    - x - (EWSC, EWCC, EWAT) Add requirements.txt
+    - x - (EWSC) Fix user action Edit Password
+    -   - (EWSC) Fix user action Edit Email
     - (EWSC) Journal record grooming
     - (EWSC) Implement ResUser cleaner cron
     - (EWSC) Implement EWallet Session cleaner cron
@@ -43,7 +44,6 @@
     - (EWSC, EWCC) Configuration file grooming and refactoring
     - (EWSC) Impose master account state restrictions on all user actions
     - (EWSC) Impose master account subordonate account restriction limit
-    - (EWSC, EWCC, EWAT) Add requirements.txt
     - (EWSC, EWCC, EWAT) Implement exports
     - (EWSC, EWCC, EWAT) Implement reports (activity reports)
     - (EWSC, EWCC, EWAT) Add documentation
