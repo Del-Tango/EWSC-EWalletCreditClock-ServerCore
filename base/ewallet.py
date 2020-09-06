@@ -707,6 +707,33 @@ class EWallet(Base):
         }
         return command_chain_response
 
+    def action_switch_credit_clock(self, **kwargs):
+        log.debug('')
+        active_user = self.fetch_active_session_user()
+        if not active_user:
+            return self.error_no_session_active_user_found()
+        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
+            kwargs, 'ctype', 'action', 'target'
+        )
+        switch_credit_clock = active_user.user_controller(
+            ctype='action', action='switch', target='credit_clock',
+            **sanitized_command_chain
+        )
+        if not switch_credit_clock or isinstance(switch_credit_clock, dict) and \
+                switch_credit_clock.get('failed'):
+            kwargs['active_session'].rollback()
+            return self.warning_could_not_switch_credit_clock(
+                kwargs, active_user, switch_credit_clock
+            )
+        kwargs['active_session'].commit()
+        log.info('Successfully switched credit clock.')
+        command_chain_response = {
+            'failed': False,
+            'clock': switch_credit_clock.fetch_credit_clock_id(),
+            'clock_data': switch_credit_clock.fetch_credit_clock_values(),
+        }
+        return command_chain_response
+
     def action_switch_active_user_account(self, **kwargs):
         log.debug('')
         account_record = self.fetch_user_by_email(email=kwargs.get('account'))
@@ -820,11 +847,6 @@ class EWallet(Base):
         return command_chain_response
 
     def action_view_time_record(self, **kwargs):
-        '''
-        [ NOTE   ]: User action 'view time record', accessible from external api call.
-        [ INPUT  ]: record_id=<id>
-        [ RETURN ]: (Time record values | False)
-        '''
         log.debug('')
         if not kwargs.get('record_id'):
             return self.error_no_time_record_id_found(kwargs)
@@ -858,11 +880,6 @@ class EWallet(Base):
         return command_chain_response
 
     def action_view_transfer_record(self, **kwargs):
-        '''
-        [ NOTE   ]: User action 'view transfer record', accessible from external api call.
-        [ INPUT  ]: record_id=<id>
-        [ RETURN ]: (Transfer record values | False)
-        '''
         log.debug('')
         if not kwargs.get('record_id'):
             return self.error_no_transfer_sheet_record_id_found(kwargs)
@@ -901,11 +918,6 @@ class EWallet(Base):
 
 #   @pysnooper.snoop()
     def action_view_contact_record(self, **kwargs):
-        '''
-        [ NOTE   ]: User action 'view contact record', accessible from external user api call.
-        [ INPUT  ]: record_id=<id>
-        [ RETURN ]: (Contact record values | False)
-        '''
         log.debug('')
         if not kwargs.get('record_id'):
             return self.error_no_contact_record_id_found(kwargs)
@@ -1115,11 +1127,6 @@ class EWallet(Base):
         return command_chain_response
 
     def action_create_new_contact_record(self, **kwargs):
-        '''
-        [ NOTE   ]: User action 'create new contact record', accessible from external api calls.
-        [ INPUT  ]: user_name=<name>, user_email=<email>, user_phone=<phone>, notes=<notes>
-        [ RETURN ]: (ContactRecord object | False)
-        '''
         log.debug('')
         contact_list = self.fetch_active_session_contact_list()
         if not contact_list:
@@ -1149,10 +1156,6 @@ class EWallet(Base):
 
 #   @pysnooper.snoop('logs/ewallet.log')
     def action_create_new_user_account(self, **kwargs):
-        '''
-        [ NOTE   ]: User action create new account, accessible from external user api calls.
-        [ INPUT  ]: user_name=<name> user_pass=<pass> user_email=<email> user_alias=<alias>
-        '''
         log.debug('')
         sanitized_command_chain = res_utils.remove_tags_from_command_chain(
             kwargs, 'action'
@@ -1183,11 +1186,6 @@ class EWallet(Base):
 
 #   @pysnooper.snoop('logs/ewallet.log')
     def action_unlink_user_account(self, **kwargs):
-        '''
-        [ NOTE   ]: User action 'unlink user account', accessible from external api calls.
-        [ INPUT  ]: user=<user>, active_session=<session>
-        [ RETURN ]: (True | False)
-        '''
         log.debug('')
         user_id = kwargs.get('user_id') or self.fetch_active_session_user(obj=False)
         if not user_id or isinstance(user_id, dict) and \
@@ -1289,11 +1287,6 @@ class EWallet(Base):
         return command_chain_response
 
     def action_create_new_credit_clock(self, **kwargs):
-        '''
-        [ NOTE   ]: User action 'create new credit clock', accessible from external api calls.
-        [ INPUT  ]: reference=<ref>, credit_clock=<clock credits>
-        [ RETURN ]: (CreditClock object | False)
-        '''
         log.debug('')
         active_user = self.fetch_active_session_user()
         if not active_user or isinstance(active_user, dict) and \
@@ -1322,11 +1315,6 @@ class EWallet(Base):
         return command_chain_response
 
     def action_create_new_credit_wallet(self, **kwargs):
-        '''
-        [ NOTE   ]: User action 'create new credit wallet', accessible from external api calls.
-        [ INPUT  ]: reference=<ref>, credits=<wallet credits>
-        [ RETURN ]: (CreditWallet object | False)
-        '''
         log.debug('')
         active_user = self.fetch_active_session_user()
         if not active_user or isinstance(active_user, dict) and \
@@ -1355,10 +1343,6 @@ class EWallet(Base):
         return command_chain_response
 
     def action_view_invoice_list(self, **kwargs):
-        '''
-        [ NOTE   ]: User action 'view invoice list', accessible from external api call.
-        [ RETURN ]: (Invoice sheet values | False)
-        '''
         log.debug('')
         credit_wallet = self.fetch_active_session_credit_wallet()
         if not credit_wallet or isinstance(credit_wallet, dict) and \
@@ -1377,10 +1361,6 @@ class EWallet(Base):
         return command_chain_response
 
     def action_view_credit_clock(self, **kwargs):
-        '''
-        [ NOTE   ]: User action 'view credit clock', accessible from external api call.
-        [ RETURN ]: (Credit clock values | False)
-        '''
         log.debug('')
         credit_wallet = self.fetch_active_session_credit_wallet()
         if not credit_wallet or isinstance(credit_wallet, dict) and \
@@ -1399,10 +1379,6 @@ class EWallet(Base):
         return command_chain_response
 
     def action_view_credit_wallet(self, **kwargs):
-        '''
-        [ NOTE   ]: User action 'view credit wallet', accessible from external api call.
-        [ RETURN ]: (Credit wallet values | False)
-        '''
         log.debug('')
         credit_wallet = self.fetch_active_session_credit_wallet()
         if not credit_wallet or isinstance(credit_wallet, dict) and \
@@ -1480,10 +1456,6 @@ class EWallet(Base):
             edit_user_phone.get('failed') else edit_user_phone
 
     def action_view_user_account(self, **kwargs):
-        '''
-        [ NOTE   ]: User action 'view user account', accessible from external api call.
-        [ RETURN ]: (Active user values | False)
-        '''
         log.debug('')
         active_user = self.fetch_active_session_user()
         if not active_user or isinstance(active_user, dict) and \
@@ -1499,11 +1471,6 @@ class EWallet(Base):
         return command_chain_response
 
     def action_create_new_conversion_credits_to_clock(self, **kwargs):
-        '''
-        [ NOTE   ]: User action 'convert credits to clock', accessible from external api calls.
-        [ INPUT  ]: credit_ewallet=<wallet>, active_session=<session>,
-        [ RETURN ]: Post conversion value.
-        '''
         log.debug('')
         credit_wallet = kwargs.get('credit_ewallet') or \
                 self.fetch_active_session_credit_wallet()
@@ -1531,10 +1498,6 @@ class EWallet(Base):
         return convert
 
     def action_view_conversion_list(self, **kwargs):
-        '''
-        [ NOTE   ]: User action 'view conversion list', accessible from external api call.
-        [ RETURN ]: (Conversion sheet values | False)
-        '''
         log.debug('')
         credit_clock = self.fetch_active_session_credit_clock()
         if not credit_clock or isinstance(credit_clock, dict) and \
@@ -1553,10 +1516,6 @@ class EWallet(Base):
         return command_chain_response
 
     def action_view_time_list(self, **kwargs):
-        '''
-        [ NOTE   ]: User action 'view time list', accessible from external api call.
-        [ RETURN ]: (Time sheet values | False)
-        '''
         log.debug('')
         credit_wallet = self.fetch_active_session_credit_wallet()
         if not credit_wallet or isinstance(credit_wallet, dict) and \
@@ -1580,10 +1539,6 @@ class EWallet(Base):
         return command_chain_response
 
     def action_view_transfer_list(self, **kwargs):
-        '''
-        [ NOTE   ]: User action 'view transfer list', accessible from external api call.
-        [ RETURN ]: (Transfer sheet values | False)
-        '''
         log.debug('')
         credit_wallet = self.fetch_active_session_credit_wallet()
         if not credit_wallet or isinstance(credit_wallet, dict) and \
@@ -1602,10 +1557,6 @@ class EWallet(Base):
         return command_chain_response
 
     def action_view_contact_list(self, **kwargs):
-        '''
-        [ NOTE   ]: User action 'view contact list', accessible from external api call.
-        [ RETURN ]: (Contact list values | False)
-        '''
         log.debug('')
         contact_list = self.fetch_active_session_contact_list()
         if not contact_list:
@@ -1704,11 +1655,6 @@ class EWallet(Base):
         return command_chain_response
 
     def action_stop_credit_clock_timer(self, **kwargs):
-        '''
-        [ NOTE   ]: User action 'stop credit clock timer', accessible from external api call.
-        [ INPUT  ]: credit_clock=<clock>, active_session=<session>
-        [ RETURN ]: (Credit clock elapsed time | False)
-        '''
         log.debug('')
         credit_clock = kwargs.get('credit_clock') or \
                 self.fetch_active_session_credit_clock()
@@ -1741,11 +1687,6 @@ class EWallet(Base):
 
 #   @pysnooper.snoop()
     def action_resume_credit_clock_timer(self, **kwargs):
-        '''
-        [ NOTE   ]: User action 'resume credit clock timer', accessible from external api call.
-        [ INPUT  ]: credit_clock=<clock>, active_session=<session>
-        [ RETURN ]: (Elapsed clock time | False)
-        '''
         log.debug('')
         credit_clock = kwargs.get('credit_clock') or \
                 self.fetch_active_session_credit_clock()
@@ -1779,11 +1720,6 @@ class EWallet(Base):
         return command_chain_response
 
     def action_pause_credit_clock_timer(self, **kwargs):
-        '''
-        [ NOTE   ]: User action 'pause credit clock timer', accessible from external api call.
-        [ INPUT  ]: credit_clock=<clock>, active_session=<session>
-        [ RETURN ]: (Pause count | False)
-        '''
         log.debug('')
         credit_clock = kwargs.get('credit_clock') or \
                 self.fetch_active_session_credit_clock()
@@ -1817,11 +1753,6 @@ class EWallet(Base):
 
 #   @pysnooper.snoop('logs/ewallet.log')
     def action_start_credit_clock_timer(self, **kwargs):
-        '''
-        [ NOTE   ]: User action 'start credit clock timer', accessible from external api call.
-        [ INPUT  ]: credit_clock=<clock>, active_session=<session>
-        [ RETURN ]: (Legacy start time | False)
-        '''
         log.debug('')
         credit_clock = kwargs.get('credit_clock') or \
                 self.fetch_active_session_credit_clock()
@@ -1855,10 +1786,6 @@ class EWallet(Base):
 
 #   @pysnooper.snoop('logs/ewallet.log')
     def action_system_user_logout(self, **kwargs):
-        '''
-        [ NOTE   ]: System action 'user logout', accessible from external api call.
-        [ RETURN ]: (Next user in login stack | True if login stack empty | False)
-        '''
         log.debug('')
         user = self.fetch_active_session_user()
         if not user:
@@ -1945,11 +1872,6 @@ class EWallet(Base):
         return command_chain_response
 
     def action_unlink_credit_wallet(self, **kwargs):
-        '''
-        [ NOTE   ]: User action 'unlink credit wallet', accessible from external api calls.
-        [ INPUT  ]: wallet_id=<id>
-        [ RETURN ]: (True | False)
-        '''
         log.debug('')
         active_user = self.fetch_active_session_user()
         if not active_user:
@@ -1975,11 +1897,6 @@ class EWallet(Base):
         return command_chain_response
 
     def action_unlink_contact_list(self, **kwargs):
-        '''
-        [ NOTE   ]: User action 'unlink contact list', accessible from external api calls.
-        [ INPUT  ]: list_id=<id>
-        [ RETURN ]: (True | False)
-        '''
         log.debug('')
         active_user = self.fetch_active_session_user()
         if not active_user:
@@ -2005,11 +1922,6 @@ class EWallet(Base):
         return command_chain_response
 
     def action_unlink_time_list(self, **kwargs):
-        '''
-        [ NOTE   ]: User action 'unlink time list', accessible from external api calls.
-        [ INPUT  ]: list_id=<id>
-        [ RETURN ]: (True | False)
-        '''
         log.debug('')
         active_user = self.fetch_active_session_user()
         credit_ewallet = self.fetch_active_session_credit_wallet()
@@ -2032,11 +1944,6 @@ class EWallet(Base):
         return unlink_sheet
 
     def action_unlink_conversion_list(self, **kwargs):
-        '''
-        [ NOTE   ]: User action 'unlink conversion list', accessible from external api calls.
-        [ INPUT  ]: list_id=<id>
-        [ RETURN ]: (True | False)
-        '''
         log.debug('')
         active_user = self.fetch_active_session_user()
         credit_ewallet = self.fetch_active_session_credit_wallet()
@@ -2059,11 +1966,6 @@ class EWallet(Base):
         return unlink_sheet
 
     def action_unlink_invoice_list(self, **kwargs):
-        '''
-        [ NOTE   ]: User action 'unlink invoice list', accessible from external api calls.
-        [ INPUT  ]: list_id=<id>
-        [ RETURN ]: (True | False)
-        '''
         log.debug('')
         active_user = self.fetch_active_session_user()
         credit_ewallet = self.fetch_active_session_credit_wallet()
@@ -2086,11 +1988,6 @@ class EWallet(Base):
         return unlink_sheet
 
     def action_unlink_transfer_list(self, **kwargs):
-        '''
-        [ NOTE   ]: User action 'unlink transfer list', accessible from external api calls.
-        [ INPUT  ]: list_id=<id>
-        [ RETURN ]: (True | False)
-        '''
         log.debug('')
         active_user = self.fetch_active_session_user()
         credit_ewallet = self.fetch_active_session_credit_wallet()
@@ -2113,11 +2010,6 @@ class EWallet(Base):
         return unlink_sheet
 
     def action_unlink_contact_record(self, **kwargs):
-        '''
-        [ NOTE   ]: User action 'unlink contact record', accessible from external api calls.
-        [ INPUT  ]: record_id=<id>
-        [ RETURN ]: (True | False)
-        '''
         log.debug('')
         active_user = self.fetch_active_session_user()
         contact_list = active_user.fetch_user_contact_list()
@@ -2140,11 +2032,6 @@ class EWallet(Base):
         return unlink_record
 
     def action_unlink_time_record(self, **kwargs):
-        '''
-        [ NOTE   ]: User action 'unlink time record', accessible from external api calls.
-        [ INPUT  ]: record_id=<id>
-        [ RETURN ]: (True | False)
-        '''
         log.debug('')
         active_user = self.fetch_active_session_user()
         credit_ewallet = active_user.fetch_user_credit_wallet()
@@ -2167,11 +2054,6 @@ class EWallet(Base):
         return unlink_record
 
     def action_unlink_conversion_record(self, **kwargs):
-        '''
-        [ NOTE   ]: User action 'unlink conversion record', accessible from external api calls.
-        [ INPUT  ]: record_id=<id>
-        [ RETURN ]: (True | False)
-        '''
         log.debug('')
         active_user = self.fetch_active_session_user()
         credit_ewallet = active_user.fetch_user_credit_wallet()
@@ -2194,11 +2076,6 @@ class EWallet(Base):
         return unlink_record
 
     def action_unlink_invoice_record(self, **kwargs):
-        '''
-        [ NOTE   ]: User action 'unlink invoice record', accessible from external api calls.
-        [ INPUT  ]: record_id=<id>
-        [ RETURN ]: (True | False)
-        '''
         log.debug('')
         active_user = self.fetch_active_session_user()
         credit_ewallet = active_user.fetch_user_credit_wallet()
@@ -2221,11 +2098,6 @@ class EWallet(Base):
         return unlink_record
 
     def action_unlink_transfer_record(self, **kwargs):
-        '''
-        [ NOTE   ]: User action 'unlink transfer record', accessible from external api calls.
-        [ INPUT  ]: record_id=<id>
-        [ RETURN ]: (True | False)
-        '''
         log.debug('')
         active_user = self.fetch_active_session_user()
         credit_ewallet = active_user.fetch_user_credit_wallet()
@@ -2382,39 +2254,7 @@ class EWallet(Base):
         }
         return command_chain_response
 
-    def action_switch_credit_clock(self, **kwargs):
-        log.debug('')
-        active_user = self.fetch_active_session_user()
-        if not active_user:
-            return self.error_no_session_active_user_found()
-        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
-            kwargs, 'ctype', 'action', 'target'
-        )
-        switch_credit_clock = active_user.user_controller(
-            ctype='action', action='switch', target='credit_clock',
-            **sanitized_command_chain
-        )
-        if not switch_credit_clock or isinstance(switch_credit_clock, dict) and \
-                switch_credit_clock.get('failed'):
-            kwargs['active_session'].rollback()
-            return self.warning_could_not_switch_credit_clock(
-                active_user.fetch_user_name(), kwargs
-            )
-        kwargs['active_session'].commit()
-        log.info('Successfully switched credit clock.')
-        command_chain_response = {
-            'failed': False,
-            'clock': switch_credit_clock.fetch_credit_clock_id(),
-            'clock_data': switch_credit_clock.fetch_credit_clock_values(),
-        }
-        return command_chain_response
-
     def action_create_new_contact_list(self, **kwargs):
-        '''
-        [ NOTE   ]: User action 'create new contact list', accessible from external api calls.
-        [ INPUT  ]: reference=<ref>
-        [ RETURN ]: (ContactList object | False)
-        '''
         log.debug('')
         active_user = self.fetch_active_session_user()
         if not active_user:
@@ -2465,11 +2305,6 @@ class EWallet(Base):
         return command_chain_response
 
     def action_system_user_update(self, **kwargs):
-        '''
-        [ NOTE   ]: System action 'user update'. Allows multiple logged in users to switch.
-        [ INPUT  ]: user=<user>
-        [ RETURN ]: (Active user | False)
-        '''
         log.debug('')
         if not kwargs.get('user'):
             return self.error_no_user_specified()
@@ -2480,22 +2315,12 @@ class EWallet(Base):
         return self.active_user[0]
 
     def action_system_session_update(self, **kwargs):
-        '''
-        [ NOTE   ]: System action 'session update', not accessible from external api call.
-        [ INPUT  ]: session_active_user=<active_user>
-        [ RETURN ]: (True | False)
-        '''
         log.debug('')
         kwargs.update({'session_active_user': self.fetch_active_session_user()})
         update = self.update_session_from_user(**kwargs)
         return update or False
 
     def action_reset_user_password(self, **kwargs):
-        '''
-        [ NOTE   ]: User action 'reser user account password', accessible from external user api calls.
-        [ INPUT  ]: user_pass=<pass>
-        [ RETURN ]: (True | False)
-        '''
         log.debug('')
         if not self.active_user or not kwargs.get('user_pass'):
             return self.error_no_user_password_found()
@@ -2509,11 +2334,6 @@ class EWallet(Base):
         )
 
     def action_reset_user_email(self, **kwargs):
-        '''
-        [ NOTE   ]: User action 'reset user account email', accessible from external user api calls.
-        [ INPUT  ]: user_email=<email>
-        [ RETURN ]: (True | False)
-        '''
         log.debug('')
         if not self.active_user or not kwargs.get('user_email'):
             return self.error_no_user_email_found()
@@ -2525,11 +2345,6 @@ class EWallet(Base):
         )
 
     def action_reset_user_alias(self, **kwargs):
-        '''
-        [ NOTE   ]: User action 'reset user account alias', accessible from external user api calls.
-        [ INPUT  ]: user_alias=<alias>
-        [ RETURN ]: (True | False)
-        '''
         log.debug('')
         if not self.active_user or not kwargs.get('user_alias'):
             return self.error_no_user_alias_found()
@@ -2539,11 +2354,6 @@ class EWallet(Base):
                 )
 
     def action_reset_user_phone(self, **kwargs):
-        '''
-        [ NOTE   ]: User action 'reset user account phone', accessible from external user api calls.
-        [ INPUT  ]: user_phone=<phone>
-        [ RETURN ]: (True | False)
-        '''
         log.debug('')
         if not self.active_user or not kwargs.get('user_phone'):
             return self.error_no_user_phone_found()
@@ -2554,11 +2364,6 @@ class EWallet(Base):
 
 #   @pysnooper.snoop()
     def action_create_new_conversion_clock_to_credits(self, **kwargs):
-        '''
-        [ NOTE   ]: User action 'convert clock to credits', accessible from external api calls.
-        [ INPUT  ]: credit_ewallet=<wallet>, credit_clock=<clock>, active_session=<session>
-        [ RETURN ]: Post conversion value.
-        '''
         log.debug('')
         credit_wallet = kwargs.get('credit_ewallet') or \
                 self.fetch_active_session_credit_wallet()

@@ -708,6 +708,26 @@ class ResUser(Base):
                 'user_email': set_user_email,
             }
 
+    def action_switch_credit_clock(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('clock_id'):
+            return self.error_no_clock_id_found()
+        credit_wallet = self.fetch_user_credit_wallet()
+        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
+            kwargs, 'controller', 'action'
+        )
+        clock_switch = credit_wallet.main_controller(
+            controller='user', action='switch_clock',
+            **sanitized_command_chain
+        )
+        if not clock_switch or isinstance(clock_switch, dict) and \
+                clock_switch.get('failed'):
+            return self.warning_could_not_switch_credit_clock(
+                kwargs, credit_wallet, clock_switch
+            )
+        log.info('Successfully switched user credit clock.')
+        return clock_switch
+
     def action_switch_credit_wallet(self, **kwargs):
         log.debug('')
         if not kwargs.get('ewallet_id'):
@@ -989,23 +1009,6 @@ class ResUser(Base):
         log.info('Successfully created new user contact list.')
         return _new_contact_list
 
-    def action_switch_credit_clock(self, **kwargs):
-        log.debug('')
-        if not kwargs.get('clock_id'):
-            return self.error_no_clock_id_found()
-        credit_wallet = self.fetch_user_credit_wallet()
-        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
-            kwargs, 'controller', 'action'
-        )
-        clock_switch = credit_wallet.main_controller(
-            controller='user', action='switch_clock',
-            **sanitized_command_chain
-        )
-        if not clock_switch:
-            return self.warning_could_not_fetch_credit_clock()
-        log.info('Successfully switched user credit clock.')
-        return clock_switch
-
     # HANDLERS
 
     # TODO
@@ -1193,6 +1196,16 @@ class ResUser(Base):
     '''
     [ TODO ]: Fetch error messages from message file by key codes.
     '''
+
+    def warning_could_not_switch_credit_clock(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Something went wrong. '
+                       'Could not switch credit clock. '
+                       'Details: {}'.format(args),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
 
     def warning_credit_ewallet_does_not_belong_to_current_user(self, *args):
         command_chain_response = {
