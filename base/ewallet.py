@@ -635,6 +635,11 @@ class EWallet(Base):
                 user_id=kwargs['user_id']
             )
             user = list(user_account)
+            # Forced user account removal easter egg
+            if kwargs.get('forced_removal'):
+                user_account.delete()
+                kwargs['active_session'].commit()
+                return kwargs['user_id']
             # If account not marked for removal, mark now
             if not user[0].to_unlink:
                 user[0].set_to_unlink(True)
@@ -645,8 +650,7 @@ class EWallet(Base):
                 user[0].to_unlink_timestamp, 30
             )
             # If 30 days since account marked for removal, remove from db
-            if check or kwargs.get('forced_removal'):
-                user_account.delete()
+            if check:
                 kwargs['active_session'].commit()
                 return kwargs['user_id']
             return self.warning_user_account_pending_deletion(kwargs)

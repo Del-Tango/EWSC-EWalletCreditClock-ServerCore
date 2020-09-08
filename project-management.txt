@@ -28,9 +28,9 @@
     - x - (EWSC) Journal record grooming
     - x - (EWSC) Impose user account to_unlink restrictions on user actions
     - x - (EWCC) Groom client core functional tests
-    -   - (EWSC) Groom server core functional tests
-    -   - (EWSC, EWCC, EWAT) Implement forced account removal
-    - (EWCC) Groom core endpoint warning handlers
+    - x - (EWSC) Groom server core functional tests
+    - x - (EWSC, EWCC, EWAT) Implement forced account removal
+    -   - (EWCC) Groom core endpoint warning handlers
     - (EWCC) Groom core endpoint error handlers
     - (EWSC) Implement ResUser cleaner cron
     - (EWSC) Implement EWallet Session cleaner cron
@@ -88,7 +88,7 @@
 
 - TODO (EWSC)
 
-    - Implement forced user account removal.
+    - x - Implement forced user account removal.
     - Add ResUser cleaner cron
     - Add ResUser cleaner cron functional test
 
@@ -347,9 +347,11 @@
         - x - User action Recover Account
 
 - TESTS:
+
     - Unit
+        -
     - Functional
-        - Add ForcedUnlinkAccount test case.
+        - x - Add ForcedUnlinkAccount test case.
 
 
 ################################################################################
@@ -362,7 +364,9 @@
     - Groom EWCC endpoint warning handlers
 
 - TESTS:
+
     - Unit
+        -
     - Functional
         - x - Refactor functional test cases
 
@@ -580,6 +584,11 @@ EWSC - User Actions
     - User action Unlink Account
         - User Account States:
             - Logged In
+
+    - User action Forced-Unlink Account
+        - User Account States:
+            - Logged In
+        - EWSC Debug Mode
 
     - User action Unlink Contact List
         - User Account States:
