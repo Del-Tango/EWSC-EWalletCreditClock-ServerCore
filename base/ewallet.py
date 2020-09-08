@@ -80,6 +80,31 @@ class EWallet(Base):
         log.debug('TODO - Fetch value from config file')
         return 24
 
+#   @pysnooper.snoop()
+    def fetch_user_by_email(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('email'):
+            return self.error_no_user_email_found(kwargs)
+        active_session = kwargs.get('active_session') or \
+            self.fetch_active_session()
+        if not active_session or isinstance('active_session', dict) and \
+                active_session.get('failed'):
+            return self.error_no_active_session_found(kwargs, active_session)
+        try:
+            user_account = list(
+                active_session.query(
+                    ResUser
+                ).filter_by(
+                    user_email=kwargs['email']
+                )
+            )
+            return self.warning_no_user_account_found(kwargs, active_session) \
+                    if not user_account else user_account[0]
+        except Exception as e:
+            return self.error_could_not_fetch_user_by_email(
+                kwargs, active_session, e
+            )
+
     def fetch_email_check_func(self):
         log.debug('')
         return EWalletCreateUser().check_user_email
@@ -182,24 +207,6 @@ class EWallet(Base):
                 partner_account.user_credit_wallet[0]
         return self.warning_no_partner_credit_wallet_found() if not partner_wallet \
                 else partner_wallet
-
-#   @pysnooper.snoop()
-    def fetch_user_by_email(self, **kwargs):
-        log.debug('')
-        if not kwargs.get('email'):
-            return self.error_no_user_email_found()
-        active_session = kwargs.get('active_session') or self.fetch_active_session()
-        if not active_session:
-            return self.error_no_active_session_found()
-        user_account = list(
-            active_session.query(
-                ResUser
-            ).filter_by(
-                user_email=kwargs['email']
-            )
-        )
-        return self.warning_no_user_account_found(kwargs) \
-                if not user_account else user_account[0]
 
     def fetch_system_core_user_account(self, **kwargs):
         '''
@@ -460,6 +467,24 @@ class EWallet(Base):
 
     # CHECKERS
 
+    def check_user_account_flag_for_unlink(self):
+        log.debug('')
+        user_account = self.fetch_active_session_user(obj=True)
+        if not user_account or isinstance(user_account, dict) and \
+                user_account.get('failed'):
+            return False
+        flagged_for_unlink = user_account.fetch_user_to_unlink()
+        if flagged_for_unlink:
+            log.debug(
+                'User account {} was flagged for unlink on {}.'.format(
+                    user_account.fetch_user_name(),
+                    res_utils.format_datetime(
+                        user_account.fetch_user_to_unlink_timestamp()
+                    )
+                )
+            )
+        return flagged_for_unlink
+
     def check_user_account_belongs_to_ewallet_session(self, account):
         log.debug('')
         return False if account not in self.user_account_archive \
@@ -529,7 +554,8 @@ class EWallet(Base):
         [ RETURN ]: (User login stack | False)
         '''
         log.debug('')
-        if not kwargs.get('user'):
+        if not kwargs.get('user') or isinstance(kwargs['user'], dict) and \
+                kwargs['user'].get('failed'):
             return self.error_no_user_object_found(kwargs)
         set_to_archive = self.set_to_user_account_archive(kwargs['user'])
         log.info(
@@ -647,46 +673,6 @@ class EWallet(Base):
         log.debug('TODO - UNIMPLEMENTED')
 
     # TODO
-#   @pysnooper.snoop('logs/ewallet.log')
-    def action_create_new_transfer_type_pay(self, **kwargs):
-        log.debug('TODO - Remove error handler')
-        if not kwargs.get('pay'):
-            return self.error_no_user_action_pay_target_specified()
-        active_session = kwargs.get('active_session') or \
-            self.fetch_active_session()
-        partner_account = kwargs.get('partner_account') or \
-            self.fetch_user(identifier='email', email=kwargs['pay'])
-        if not partner_account:
-            return self.error_handler_create_new_transfer(
-                partner_account=partner_account,
-            )
-        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
-            kwargs, 'ctype', 'action', 'ttype', 'partner_account', 'pay'
-        )
-        credits_before = self.fetch_credit_wallet_credits()
-        current_account = self.fetch_active_session_user()
-        action_pay = current_account.user_controller(
-            ctype='action', action='transfer', ttype='payment',
-            pay=partner_account, **sanitized_command_chain
-        )
-        credits_after = self.fetch_credit_wallet_credits()
-        if str(credits_after) != str(credits_before - int(kwargs.get('credits'))) or \
-                not action_pay or isinstance(action_pay, dict) and \
-                action_pay.get('failed'):
-            active_session.rollback()
-            return self.error_pay_type_transfer_failure(kwargs)
-        active_session.commit()
-        command_chain_response = {
-            'failed': False,
-            'payed': kwargs['pay'],
-            'ewallet_credits': action_pay['ewallet_credits'],
-            'spent_credits': int(kwargs['credits']),
-            'invoice_record': action_pay['invoice_record'].fetch_record_id(),
-            'transfer_record': action_pay['transfer_record'].fetch_record_id(),
-        }
-        return command_chain_response
-
-    # TODO
     def action_login_user_account(self, **kwargs):
         log.debug('TODO - Refactor')
         login_record = EWalletLogin()
@@ -698,10 +684,16 @@ class EWallet(Base):
             user_archive=self.fetch_active_session_user_account_archive(),
             **sanitized_command_chain
         )
-        if not session_login:
+        if not session_login or isinstance(session_login, dict) and \
+                session_login.get('failed'):
             return self.warning_could_not_login_user_account(kwargs)
         update_archive = self.update_user_account_archive(user=session_login)
         update_session = self.action_system_user_update(user=session_login)
+        if not update_session or isinstance(update_session, dict) and \
+                update_session.get('failed'):
+            return self.warning_could_not_update_ewallet_session(
+                kwargs, session_login, update_archive, update_session
+            )
         kwargs['active_session'].add(login_record)
         kwargs['active_session'].commit()
         log.info('User successfully logged in.')
@@ -719,6 +711,48 @@ class EWallet(Base):
                 'session_account_archive': None if not session_values['user_account_archive'] \
                     else session_values['user_account_archive']
             }
+        }
+        return command_chain_response
+
+#   @pysnooper.snoop('logs/ewallet.log')
+    def action_create_new_transfer_type_pay(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('pay'):
+            return self.error_no_user_action_pay_target_specified(kwargs)
+        active_session = kwargs.get('active_session') or \
+            self.fetch_active_session()
+        partner_account = kwargs.get('partner_account') or \
+            self.fetch_user(identifier='email', email=kwargs['pay'])
+        if not partner_account:
+            return self.error_could_not_fetch_partner_account(
+                kwargs, active_session, partner_account
+            )
+        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
+            kwargs, 'ctype', 'action', 'ttype', 'partner_account', 'pay'
+        )
+        credits_before = self.fetch_credit_wallet_credits()
+        current_account = self.fetch_active_session_user()
+        action_pay = current_account.user_controller(
+            ctype='action', action='transfer', ttype='payment',
+            pay=partner_account, **sanitized_command_chain
+        )
+        credits_after = self.fetch_credit_wallet_credits()
+        if str(credits_after) != str(credits_before - int(kwargs.get('credits'))) or \
+                not action_pay or isinstance(action_pay, dict) and \
+                action_pay.get('failed'):
+            active_session.rollback()
+            return self.error_pay_type_transfer_failure(
+                kwargs, active_session, partner_account, credits_before,
+                current_account, action_pay, credits_after
+            )
+        active_session.commit()
+        command_chain_response = {
+            'failed': False,
+            'payed': kwargs['pay'],
+            'ewallet_credits': action_pay['ewallet_credits'],
+            'spent_credits': int(kwargs['credits']),
+            'invoice_record': action_pay['invoice_record'].fetch_record_id(),
+            'transfer_record': action_pay['transfer_record'].fetch_record_id(),
         }
         return command_chain_response
 
@@ -1684,10 +1718,11 @@ class EWallet(Base):
         session_create_account = EWalletCreateUser().action_create_new_user(
             **sanitized_command_chain
         )
-        if not session_create_account or isinstance(session_create_account, dict) and \
+        if not session_create_account or \
+                isinstance(session_create_account, dict) and \
                 session_create_account.get('failed'):
             return self.warning_could_not_create_user_account(
-                kwargs['user_name'], kwargs
+                kwargs, session_create_account
             )
         kwargs['active_session'].add(session_create_account)
         log.info('Successfully created new user account.')
@@ -2401,93 +2436,154 @@ class EWallet(Base):
 
     def handle_user_action_recover_account(self, **kwargs):
         log.debug('')
-        check = self.check_user_logged_in()
-        return self.warning_user_not_logged_in(check, kwargs) if not check \
-            else self.action_recover_user_account(**kwargs)
+        check_logged_in = self.check_user_logged_in()
+        if not check_logged_in:
+            return self.warning_user_not_logged_in(check_logged_in, kwargs)
+        check_unlinked = self.check_user_account_flag_for_unlink()
+        return self.warning_user_account_flaged_for_removal(
+            kwargs, check_logged_in, check_unlinked
+        ) if check_unlinked else self.action_recover_user_account(**kwargs)
 
     def handle_user_action_unlink_invoice_list(self, **kwargs):
         log.debug('')
-        check = self.check_user_logged_in()
-        return self.warning_user_not_logged_in(check, kwargs) if not check \
-            else self.action_unlink_invoice_list(**kwargs)
+        check_logged_in = self.check_user_logged_in()
+        if not check_logged_in:
+            return self.warning_user_not_logged_in(check_logged_in, kwargs)
+        check_unlinked = self.check_user_account_flag_for_unlink()
+        return self.warning_user_account_flaged_for_removal(
+            kwargs, check_logged_in, check_unlinked
+        ) if check_unlinked else self.action_unlink_invoice_list(**kwargs)
 
     def handle_user_action_unlink_invoice_record(self, **kwargs):
         log.debug('')
-        check = self.check_user_logged_in()
-        return self.warning_user_not_logged_in(check, kwargs) if not check \
-            else self.action_unlink_invoice_record(**kwargs)
+        check_logged_in = self.check_user_logged_in()
+        if not check_logged_in:
+            return self.warning_user_not_logged_in(check_logged_in, kwargs)
+        check_unlinked = self.check_user_account_flag_for_unlink()
+        return self.warning_user_account_flaged_for_removal(
+            kwargs, check_logged_in, check_unlinked
+        ) if check_unlinked else self.action_unlink_invoice_record(**kwargs)
 
     def handle_user_action_unlink_credit_ewallet(self, **kwargs):
         log.debug('')
-        check = self.check_user_logged_in()
-        return self.warning_user_not_logged_in(check, kwargs) if not check \
-            else self.action_unlink_credit_wallet(**kwargs)
+        check_logged_in = self.check_user_logged_in()
+        if not check_logged_in:
+            return self.warning_user_not_logged_in(check_logged_in, kwargs)
+        check_unlinked = self.check_user_account_flag_for_unlink()
+        return self.warning_user_account_flaged_for_removal(
+            kwargs, check_logged_in, check_unlinked
+        ) if check_unlinked else self.action_unlink_credit_wallet(**kwargs)
 
     def handle_user_action_unlink_credit_clock(self, **kwargs):
         log.debug('')
-        check = self.check_user_logged_in()
-        return self.warning_user_not_logged_in(check, kwargs) if not check \
-            else self.action_unlink_credit_clock(**kwargs)
+        check_logged_in = self.check_user_logged_in()
+        if not check_logged_in:
+            return self.warning_user_not_logged_in(check_logged_in, kwargs)
+        check_unlinked = self.check_user_account_flag_for_unlink()
+        return self.warning_user_account_flaged_for_removal(
+            kwargs, check_logged_in, check_unlinked
+        ) if check_unlinked else self.action_unlink_credit_clock(**kwargs)
 
     def handle_user_action_unlink_time_list(self, **kwargs):
         log.debug('')
-        check = self.check_user_logged_in()
-        return self.warning_user_not_logged_in(check, kwargs) if not check \
-            else self.action_unlink_time_list(**kwargs)
+        check_logged_in = self.check_user_logged_in()
+        if not check_logged_in:
+            return self.warning_user_not_logged_in(check_logged_in, kwargs)
+        check_unlinked = self.check_user_account_flag_for_unlink()
+        return self.warning_user_account_flaged_for_removal(
+            kwargs, check_logged_in, check_unlinked
+        ) if check_unlinked else self.action_unlink_time_list(**kwargs)
 
     def handle_user_action_unlink_time_record(self, **kwargs):
         log.debug('')
-        check = self.check_user_logged_in()
-        return self.warning_user_not_logged_in(check, kwargs) if not check \
-            else self.action_unlink_time_record(**kwargs)
+        check_logged_in = self.check_user_logged_in()
+        if not check_logged_in:
+            return self.warning_user_not_logged_in(check_logged_in, kwargs)
+        check_unlinked = self.check_user_account_flag_for_unlink()
+        return self.warning_user_account_flaged_for_removal(
+            kwargs, check_logged_in, check_unlinked
+        ) if check_unlinked else self.action_unlink_time_record(**kwargs)
 
     def handle_user_action_unlink_transfer_list(self, **kwargs):
         log.debug('')
-        check = self.check_user_logged_in()
-        return self.warning_user_not_logged_in(check, kwargs) if not check \
-            else self.action_unlink_transfer_list(**kwargs)
+        check_logged_in = self.check_user_logged_in()
+        if not check_logged_in:
+            return self.warning_user_not_logged_in(check_logged_in, kwargs)
+        check_unlinked = self.check_user_account_flag_for_unlink()
+        return self.warning_user_account_flaged_for_removal(
+            kwargs, check_logged_in, check_unlinked
+        ) if check_unlinked else self.action_unlink_transfer_list(**kwargs)
 
     def handle_user_action_unlink_transfer_record(self, **kwargs):
         log.debug('')
-        check = self.check_user_logged_in()
-        return self.warning_user_not_logged_in(check, kwargs) if not check \
-            else self.action_unlink_transfer_record(**kwargs)
+        check_logged_in = self.check_user_logged_in()
+        if not check_logged_in:
+            return self.warning_user_not_logged_in(check_logged_in, kwargs)
+        check_unlinked = self.check_user_account_flag_for_unlink()
+        return self.warning_user_account_flaged_for_removal(
+            kwargs, check_logged_in, check_unlinked
+        ) if check_unlinked else self.action_unlink_transfer_record(**kwargs)
 
     def handle_user_action_unlink_conversion_list(self, **kwargs):
         log.debug('')
-        check = self.check_user_logged_in()
-        return self.warning_user_not_logged_in(check, kwargs) if not check \
-            else self.action_unlink_conversion_list(**kwargs)
+        check_logged_in = self.check_user_logged_in()
+        if not check_logged_in:
+            return self.warning_user_not_logged_in(check_logged_in, kwargs)
+        check_unlinked = self.check_user_account_flag_for_unlink()
+        return self.warning_user_account_flaged_for_removal(
+            kwargs, check_logged_in, check_unlinked
+        ) if check_unlinked else self.action_unlink_conversion_list(**kwargs)
 
     def handle_user_action_unlink_conversion_record(self, **kwargs):
         log.debug('')
-        check = self.check_user_logged_in()
-        return self.warning_user_not_logged_in(check, kwargs) if not check \
-            else self.action_unlink_conversion_record(**kwargs)
+        check_logged_in = self.check_user_logged_in()
+        if not check_logged_in:
+            return self.warning_user_not_logged_in(check_logged_in, kwargs)
+        check_unlinked = self.check_user_account_flag_for_unlink()
+        return self.warning_user_account_flaged_for_removal(
+            kwargs, check_logged_in, check_unlinked
+        ) if check_unlinked else self.action_unlink_conversion_record(**kwargs)
 
     def handle_user_action_unlink_contact_list(self, **kwargs):
         log.debug('')
-        check = self.check_user_logged_in()
-        return self.warning_user_not_logged_in(check, kwargs) if not check \
-            else self.action_unlink_contact_list(**kwargs)
+        check_logged_in = self.check_user_logged_in()
+        if not check_logged_in:
+            return self.warning_user_not_logged_in(check_logged_in, kwargs)
+        check_unlinked = self.check_user_account_flag_for_unlink()
+        return self.warning_user_account_flaged_for_removal(
+            kwargs, check_logged_in, check_unlinked
+        ) if check_unlinked else self.action_unlink_contact_list(**kwargs)
 
     def handle_user_action_unlink_contact_record(self, **kwargs):
         log.debug('')
-        check = self.check_user_logged_in()
-        return self.warning_user_not_logged_in(check, kwargs) if not check \
-            else self.action_unlink_contact_record(**kwargs)
+        check_logged_in = self.check_user_logged_in()
+        if not check_logged_in:
+            return self.warning_user_not_logged_in(check_logged_in, kwargs)
+        check_unlinked = self.check_user_account_flag_for_unlink()
+        return self.warning_user_account_flaged_for_removal(
+            kwargs, check_logged_in, check_unlinked
+        ) if check_unlinked else self.action_unlink_contact_record(**kwargs)
 
     def handle_user_action_unlink_account(self, **kwargs):
         log.debug('')
-        check = self.check_user_logged_in()
-        return self.warning_user_not_logged_in(check, kwargs) if not check \
-            else self.action_unlink_user_account(**kwargs)
+        check_logged_in = self.check_user_logged_in()
+        if not check_logged_in:
+            return self.warning_user_not_logged_in(check_logged_in, kwargs)
+        check_unlinked = self.check_user_account_flag_for_unlink()
+        return self.warning_user_account_flaged_for_removal(
+            kwargs, check_logged_in, check_unlinked
+        ) if check_unlinked else self.action_unlink_user_account(**kwargs)
 
     def handle_user_action_switch_contact_list(self, **kwargs):
         log.debug('')
-        check = self.check_user_logged_in()
-        if not check:
-            return self.warning_user_not_logged_in(check, kwargs)
+        check_logged_in = self.check_user_logged_in()
+        if not check_logged_in:
+            return self.warning_user_not_logged_in(check_logged_in, kwargs)
+        check_unlinked = self.check_user_account_flag_for_unlink()
+        if not check_unlinked:
+            return self.warning_user_account_flaged_for_removal(
+                kwargs, check_logged_in, check_unlinked
+            )
         if not kwargs.get('list_id'):
             return self.error_no_user_action_switch_contact_list_id_specified(
                 kwargs
@@ -2497,9 +2593,14 @@ class EWallet(Base):
 
     def handle_user_action_switch_time_sheet(self, **kwargs):
         log.debug('')
-        check = self.check_user_logged_in()
-        if not check:
-            return self.warning_user_not_logged_in(check, kwargs)
+        check_logged_in = self.check_user_logged_in()
+        if not check_logged_in:
+            return self.warning_user_not_logged_in(check_logged_in, kwargs)
+        check_unlinked = self.check_user_account_flag_for_unlink()
+        if not check_unlinked:
+            return self.warning_user_account_flaged_for_removal(
+                kwargs, check_logged_in, check_unlinked
+            )
         if not kwargs.get('sheet_id'):
             return self.error_no_user_action_switch_time_sheet_id_specified(
                 kwargs
@@ -2509,9 +2610,14 @@ class EWallet(Base):
 
     def handle_user_action_switch_conversion_sheet(self, **kwargs):
         log.debug('')
-        check = self.check_user_logged_in()
-        if not check:
-            return self.warning_user_not_logged_in(check, kwargs)
+        check_logged_in = self.check_user_logged_in()
+        if not check_logged_in:
+            return self.warning_user_not_logged_in(check_logged_in, kwargs)
+        check_unlinked = self.check_user_account_flag_for_unlink()
+        if not check_unlinked:
+            return self.warning_user_account_flaged_for_removal(
+                kwargs, check_logged_in, check_unlinked
+            )
         if not kwargs.get('sheet_id'):
             return self.error_no_user_action_switch_conversion_sheet_id_specified(
                 kwargs
@@ -2521,9 +2627,14 @@ class EWallet(Base):
 
     def handle_user_action_switch_invoice_sheet(self, **kwargs):
         log.debug('')
-        check = self.check_user_logged_in()
-        if not check:
-            return self.warning_user_not_logged_in(check, kwargs)
+        check_logged_in = self.check_user_logged_in()
+        if not check_logged_in:
+            return self.warning_user_not_logged_in(check_logged_in, kwargs)
+        check_unlinked = self.check_user_account_flag_for_unlink()
+        if not check_unlinked:
+            return self.warning_user_account_flaged_for_removal(
+                kwargs, check_logged_in, check_unlinked
+            )
         if not kwargs.get('sheet_id'):
             return self.error_no_user_action_switch_invoice_sheet_id_specified(
                 kwargs
@@ -2533,9 +2644,14 @@ class EWallet(Base):
 
     def handle_user_action_switch_transfer_sheet(self, **kwargs):
         log.debug('')
-        check = self.check_user_logged_in()
-        if not check:
-            return self.warning_user_not_logged_in(check, kwargs)
+        check_logged_in = self.check_user_logged_in()
+        if not check_logged_in:
+            return self.warning_user_not_logged_in(check_logged_in, kwargs)
+        check_unlinked = self.check_user_account_flag_for_unlink()
+        if not check_unlinked:
+            return self.warning_user_account_flaged_for_removal(
+                kwargs, check_logged_in, check_unlinked
+            )
         if not kwargs.get('sheet_id'):
             return self.error_no_user_action_switch_transfer_sheet_id_specified(
                 kwargs
@@ -2545,9 +2661,14 @@ class EWallet(Base):
 
     def handle_user_action_switch_credit_clock(self, **kwargs):
         log.debug('')
-        check = self.check_user_logged_in()
-        if not check:
-            return self.warning_user_not_logged_in(check, kwargs)
+        check_logged_in = self.check_user_logged_in()
+        if not check_logged_in:
+            return self.warning_user_not_logged_in(check_logged_in, kwargs)
+        check_unlinked = self.check_user_account_flag_for_unlink()
+        if not check_unlinked:
+            return self.warning_user_account_flaged_for_removal(
+                kwargs, check_logged_in, check_unlinked
+            )
         if not kwargs.get('clock_id'):
             return self.error_no_user_action_switch_credit_clock_id_specified(
                 kwargs
@@ -2557,9 +2678,14 @@ class EWallet(Base):
 
     def handle_user_action_switch_credit_ewallet(self, **kwargs):
         log.debug('')
-        check = self.check_user_logged_in()
-        if not check:
-            return self.warning_user_not_logged_in(check, kwargs)
+        check_logged_in = self.check_user_logged_in()
+        if not check_logged_in:
+            return self.warning_user_not_logged_in(check_logged_in, kwargs)
+        check_unlinked = self.check_user_account_flag_for_unlink()
+        if not check_unlinked:
+            return self.warning_user_account_flaged_for_removal(
+                kwargs, check_logged_in, check_unlinked
+            )
         if not kwargs.get('ewallet_id'):
             return self.error_no_user_action_switch_credit_ewallet_id_specified(
                 kwargs
@@ -2575,63 +2701,103 @@ class EWallet(Base):
 
     def handle_user_action_create_new_time_sheet(self, **kwargs):
         log.debug('')
-        check = self.check_user_logged_in()
-        return self.warning_user_not_logged_in(check, kwargs) if not check \
-            else self.action_create_new_time_sheet(**kwargs)
+        check_logged_in = self.check_user_logged_in()
+        if not check_logged_in:
+            return self.warning_user_not_logged_in(check_logged_in, kwargs)
+        check_unlinked = self.check_user_account_flag_for_unlink()
+        return self.warning_user_account_flaged_for_removal(
+            kwargs, check_logged_in, check_unlinked
+        ) if check_unlinked else self.action_create_new_time_sheet(**kwargs)
 
     def handle_user_action_create_new_conversion_sheet(self, **kwargs):
         log.debug('')
-        check = self.check_user_logged_in()
-        return self.warning_user_not_logged_in(check, kwargs) if not check \
-            else self.action_create_new_conversion_sheet(**kwargs)
+        check_logged_in = self.check_user_logged_in()
+        if not check_logged_in:
+            return self.warning_user_not_logged_in(check_logged_in, kwargs)
+        check_unlinked = self.check_user_account_flag_for_unlink()
+        return self.warning_user_account_flaged_for_removal(
+            kwargs, check_logged_in, check_unlinked
+        ) if check_unlinked else self.action_create_new_conversion_sheet(**kwargs)
 
     def handle_user_action_create_new_invoice_sheet(self, **kwargs):
         log.debug('')
-        check = self.check_user_logged_in()
-        return self.warning_user_not_logged_in(check, kwargs) if not check \
-            else self.action_create_new_invoice_sheet(**kwargs)
+        check_logged_in = self.check_user_logged_in()
+        if not check_logged_in:
+            return self.warning_user_not_logged_in(check_logged_in, kwargs)
+        check_unlinked = self.check_user_account_flag_for_unlink()
+        return self.warning_user_account_flaged_for_removal(
+            kwargs, check_logged_in, check_unlinked
+        ) if check_unlinked else self.action_create_new_invoice_sheet(**kwargs)
 
     def handle_user_action_create_new_transfer_sheet(self, **kwargs):
         log.debug('')
-        check = self.check_user_logged_in()
-        return self.warning_user_not_logged_in(check, kwargs) if not check \
-            else self.action_create_new_transfer_sheet(**kwargs)
+        check_logged_in = self.check_user_logged_in()
+        if not check_logged_in:
+            return self.warning_user_not_logged_in(check_logged_in, kwargs)
+        check_unlinked = self.check_user_account_flag_for_unlink()
+        return self.warning_user_account_flaged_for_removal(
+            kwargs, check_logged_in, check_unlinked
+        ) if check_unlinked else self.action_create_new_transfer_sheet(**kwargs)
 
     def handle_user_action_create_new_credit_clock(self, **kwargs):
         log.debug('')
-        check = self.check_user_logged_in()
-        return self.warning_user_not_logged_in(check, kwargs) if not check \
-            else self.action_create_new_credit_clock(**kwargs)
+        check_logged_in = self.check_user_logged_in()
+        if not check_logged_in:
+            return self.warning_user_not_logged_in(check_logged_in, kwargs)
+        check_unlinked = self.check_user_account_flag_for_unlink()
+        return self.warning_user_account_flaged_for_removal(
+            kwargs, check_logged_in, check_unlinked
+        ) if check_unlinked else self.action_create_new_credit_clock(**kwargs)
 
     def handle_user_action_create_new_credit_wallet(self, **kwargs):
         log.debug('')
-        check = self.check_user_logged_in()
-        return self.warning_user_not_logged_in(check, kwargs) if not check \
-            else self.action_create_new_credit_wallet(**kwargs)
+        check_logged_in = self.check_user_logged_in()
+        if not check_logged_in:
+            return self.warning_user_not_logged_in(check_logged_in, kwargs)
+        check_unlinked = self.check_user_account_flag_for_unlink()
+        return self.warning_user_account_flaged_for_removal(
+            kwargs, check_logged_in, check_unlinked
+        ) if check_unlinked else self.action_create_new_credit_wallet(**kwargs)
 
     def handle_user_action_view_login_records(self, **kwargs):
         log.debug('')
-        check = self.check_user_logged_in()
-        return self.warning_user_not_logged_in(check, kwargs) if not check \
-            else self.action_view_login_records(**kwargs)
+        check_logged_in = self.check_user_logged_in()
+        if not check_logged_in:
+            return self.warning_user_not_logged_in(check_logged_in, kwargs)
+        check_unlinked = self.check_user_account_flag_for_unlink()
+        return self.warning_user_account_flaged_for_removal(
+            kwargs, check_logged_in, check_unlinked
+        ) if check_unlinked else self.action_view_login_records(**kwargs)
 
     def handle_user_action_view_logout_records(self, **kwargs):
         log.debug('')
-        check = self.check_user_logged_in()
-        return self.warning_user_not_logged_in(check, kwargs) if not check \
-            else self.action_view_logout_records(**kwargs)
+        check_logged_in = self.check_user_logged_in()
+        if not check_logged_in:
+            return self.warning_user_not_logged_in(check_logged_in, kwargs)
+        check_unlinked = self.check_user_account_flag_for_unlink()
+        return self.warning_user_account_flaged_for_removal(
+            kwargs, check_logged_in, check_unlinked
+        ) if check_unlinked else self.action_view_logout_records(**kwargs)
 
     def handle_user_action_view_invoice_list(self, **kwargs):
         log.debug('')
-        check = self.check_user_logged_in()
-        return self.warning_user_not_logged_in(check, kwargs) if not check \
-            else self.action_view_invoice_list(**kwargs)
+        check_logged_in = self.check_user_logged_in()
+        if not check_logged_in:
+            return self.warning_user_not_logged_in(check_logged_in, kwargs)
+        check_unlinked = self.check_user_account_flag_for_unlink()
+        return self.warning_user_account_flaged_for_removal(
+            kwargs, check_logged_in, check_unlinked
+        ) if check_unlinked else self.action_view_invoice_list(**kwargs)
 
     def handle_user_action_view_invoice_record(self, **kwargs):
         log.debug('')
-        check = self.check_user_logged_in()
-        return self.warning_user_not_logged_in(check, kwargs) if not check \
-            else self.action_view_invoice_record(**kwargs)
+        check_logged_in = self.check_user_logged_in()
+        if not check_logged_in:
+            return self.warning_user_not_logged_in(check_logged_in, kwargs)
+        check_unlinked = self.check_user_account_flag_for_unlink()
+        return self.warning_user_account_flaged_for_removal(
+            kwargs, check_logged_in, check_unlinked
+        ) if check_unlinked else self.action_view_invoice_record(**kwargs)
 
     def handle_user_action_view_account(self, **kwargs):
         log.debug('')
@@ -2641,129 +2807,213 @@ class EWallet(Base):
 
     def handle_user_action_view_credit_ewallet(self, **kwargs):
         log.debug('')
-        check = self.check_user_logged_in()
-        return self.warning_user_not_logged_in(check, kwargs) if not check \
-            else self.action_view_credit_wallet(**kwargs)
+        check_logged_in = self.check_user_logged_in()
+        if not check_logged_in:
+            return self.warning_user_not_logged_in(check_logged_in, kwargs)
+        check_unlinked = self.check_user_account_flag_for_unlink()
+        return self.warning_user_account_flaged_for_removal(
+            kwargs, check_logged_in, check_unlinked
+        ) if check_unlinked else self.action_view_credit_wallet(**kwargs)
 
     def handle_user_action_view_credit_clock(self, **kwargs):
         log.debug('')
-        check = self.check_user_logged_in()
-        return self.warning_user_not_logged_in(check, kwargs) if not check \
-            else self.action_view_credit_clock(**kwargs)
+        check_logged_in = self.check_user_logged_in()
+        if not check_logged_in:
+            return self.warning_user_not_logged_in(check_logged_in, kwargs)
+        check_unlinked = self.check_user_account_flag_for_unlink()
+        return self.warning_user_account_flaged_for_removal(
+            kwargs, check_logged_in, check_unlinked
+        ) if check_unlinked else self.action_view_credit_clock(**kwargs)
 
     def handle_user_action_view_conversion_list(self, **kwargs):
         log.debug('')
-        check = self.check_user_logged_in()
-        return self.warning_user_not_logged_in(check, kwargs) if not check \
-            else self.action_view_conversion_list(**kwargs)
+        check_logged_in = self.check_user_logged_in()
+        if not check_logged_in:
+            return self.warning_user_not_logged_in(check_logged_in, kwargs)
+        check_unlinked = self.check_user_account_flag_for_unlink()
+        return self.warning_user_account_flaged_for_removal(
+            kwargs, check_logged_in, check_unlinked
+        ) if check_unlinked else self.action_view_conversion_list(**kwargs)
 
     def handle_user_action_view_conversion_record(self, **kwargs):
         log.debug('')
-        check = self.check_user_logged_in()
-        return self.warning_user_not_logged_in(check, kwargs) if not check \
-            else self.action_view_conversion_record(**kwargs)
+        check_logged_in = self.check_user_logged_in()
+        if not check_logged_in:
+            return self.warning_user_not_logged_in(check_logged_in, kwargs)
+        check_unlinked = self.check_user_account_flag_for_unlink()
+        return self.warning_user_account_flaged_for_removal(
+            kwargs, check_logged_in, check_unlinked
+        ) if check_unlinked else self.action_view_conversion_record(**kwargs)
 
     def handle_user_action_view_time_list(self, **kwargs):
         log.debug('')
-        check = self.check_user_logged_in()
-        return self.warning_user_not_logged_in(check, kwargs) if not check \
-            else self.action_view_time_list(**kwargs)
+        check_logged_in = self.check_user_logged_in()
+        if not check_logged_in:
+            return self.warning_user_not_logged_in(check_logged_in, kwargs)
+        check_unlinked = self.check_user_account_flag_for_unlink()
+        return self.warning_user_account_flaged_for_removal(
+            kwargs, check_logged_in, check_unlinked
+        ) if check_unlinked else self.action_view_time_list(**kwargs)
 
     def handle_user_action_view_time_record(self, **kwargs):
         log.debug('')
-        check = self.check_user_logged_in()
-        return self.warning_user_not_logged_in(check, kwargs) if not check \
-            else self.action_view_time_record(**kwargs)
+        check_logged_in = self.check_user_logged_in()
+        if not check_logged_in:
+            return self.warning_user_not_logged_in(check_logged_in, kwargs)
+        check_unlinked = self.check_user_account_flag_for_unlink()
+        return self.warning_user_account_flaged_for_removal(
+            kwargs, check_logged_in, check_unlinked
+        ) if check_unlinked else self.action_view_time_record(**kwargs)
 
     def handle_user_action_view_transfer_list(self, **kwargs):
         log.debug('')
-        check = self.check_user_logged_in()
-        return self.warning_user_not_logged_in(check, kwargs) if not check \
-            else self.action_view_transfer_list(**kwargs)
+        check_logged_in = self.check_user_logged_in()
+        if not check_logged_in:
+            return self.warning_user_not_logged_in(check_logged_in, kwargs)
+        check_unlinked = self.check_user_account_flag_for_unlink()
+        return self.warning_user_account_flaged_for_removal(
+            kwargs, check_logged_in, check_unlinked
+        ) if check_unlinked else self.action_view_transfer_list(**kwargs)
 
     def handle_user_action_view_transfer_record(self, **kwargs):
         log.debug('')
-        check = self.check_user_logged_in()
-        return self.warning_user_not_logged_in(check, kwargs) if not check \
-            else self.action_view_transfer_record(**kwargs)
+        check_logged_in = self.check_user_logged_in()
+        if not check_logged_in:
+            return self.warning_user_not_logged_in(check_logged_in, kwargs)
+        check_unlinked = self.check_user_account_flag_for_unlink()
+        return self.warning_user_account_flaged_for_removal(
+            kwargs, check_logged_in, check_unlinked
+        ) if check_unlinked else self.action_view_transfer_record(**kwargs)
 
     def handle_user_action_view_contact_list(self, **kwargs):
         log.debug('')
-        check = self.check_user_logged_in()
-        return self.warning_user_not_logged_in(check, kwargs) if not check \
-            else self.action_view_contact_list(**kwargs)
+        check_logged_in = self.check_user_logged_in()
+        if not check_logged_in:
+            return self.warning_user_not_logged_in(check_logged_in, kwargs)
+        check_unlinked = self.check_user_account_flag_for_unlink()
+        return self.warning_user_account_flaged_for_removal(
+            kwargs, check_logged_in, check_unlinked
+        ) if check_unlinked else self.action_view_contact_list(**kwargs)
 
     def handle_user_action_view_contact_record(self, **kwargs):
         log.debug('')
-        check = self.check_user_logged_in()
-        return self.warning_user_not_logged_in(check, kwargs) if not check \
-            else self.action_view_contact_record(**kwargs)
+        check_logged_in = self.check_user_logged_in()
+        if not check_logged_in:
+            return self.warning_user_not_logged_in(check_logged_in, kwargs)
+        check_unlinked = self.check_user_account_flag_for_unlink()
+        return self.warning_user_account_flaged_for_removal(
+            kwargs, check_logged_in, check_unlinked
+        ) if check_unlinked else self.action_view_contact_record(**kwargs)
 
     def handle_user_action_start_credit_clock_timer(self, **kwargs):
         log.debug('')
-        check = self.check_user_logged_in()
-        return self.warning_user_not_logged_in(check, kwargs) if not check \
-            else self.action_start_credit_clock_timer(**kwargs)
+        check_logged_in = self.check_user_logged_in()
+        if not check_logged_in:
+            return self.warning_user_not_logged_in(check_logged_in, kwargs)
+        check_unlinked = self.check_user_account_flag_for_unlink()
+        return self.warning_user_account_flaged_for_removal(
+            kwargs, check_logged_in, check_unlinked
+        ) if check_unlinked else self.action_start_credit_clock_timer(**kwargs)
 
     def handle_user_action_pause_credit_clock_timer(self, **kwargs):
         log.debug('')
-        check = self.check_user_logged_in()
-        return self.warning_user_not_logged_in(check, kwargs) if not check \
-            else self.action_pause_credit_clock_timer(**kwargs)
+        check_logged_in = self.check_user_logged_in()
+        if not check_logged_in:
+            return self.warning_user_not_logged_in(check_logged_in, kwargs)
+        check_unlinked = self.check_user_account_flag_for_unlink()
+        return self.warning_user_account_flaged_for_removal(
+            kwargs, check_logged_in, check_unlinked
+        ) if check_unlinked else self.action_pause_credit_clock_timer(**kwargs)
 
     def handle_user_action_resume_credit_clock_timer(self, **kwargs):
         log.debug('')
-        check = self.check_user_logged_in()
-        return self.warning_user_not_logged_in(check, kwargs) if not check \
-            else self.action_resume_credit_clock_timer(**kwargs)
+        check_logged_in = self.check_user_logged_in()
+        if not check_logged_in:
+            return self.warning_user_not_logged_in(check_logged_in, kwargs)
+        check_unlinked = self.check_user_account_flag_for_unlink()
+        return self.warning_user_account_flaged_for_removal(
+            kwargs, check_logged_in, check_unlinked
+        ) if check_unlinked else self.action_resume_credit_clock_timer(**kwargs)
 
     def handle_user_action_stop_credit_clock_timer(self, **kwargs):
         log.debug('')
-        check = self.check_user_logged_in()
-        return self.warning_user_not_logged_in(check, kwargs) if not check \
-            else self.action_stop_credit_clock_timer(**kwargs)
+        check_logged_in = self.check_user_logged_in()
+        if not check_logged_in:
+            return self.warning_user_not_logged_in(check_logged_in, kwargs)
+        check_unlinked = self.check_user_account_flag_for_unlink()
+        return self.warning_user_account_flaged_for_removal(
+            kwargs, check_logged_in, check_unlinked
+        ) if check_unlinked else self.action_stop_credit_clock_timer(**kwargs)
 
     def handle_user_action_create_new_transfer_type_transfer(self, **kwargs):
         log.debug('')
-        check = self.check_user_logged_in()
-        return self.warning_user_not_logged_in(check, kwargs) if not check \
-            else self.action_create_new_transfer_type_transfer(**kwargs)
+        check_logged_in = self.check_user_logged_in()
+        if not check_logged_in:
+            return self.warning_user_not_logged_in(check_logged_in, kwargs)
+        check_unlinked = self.check_user_account_flag_for_unlink()
+        return self.warning_user_account_flaged_for_removal(
+            kwargs, check_logged_in, check_unlinked
+        ) if check_unlinked else self.action_create_new_transfer_type_transfer(**kwargs)
 
     def handle_user_action_edit_account(self, **kwargs):
         log.debug('')
-        check = self.check_user_logged_in()
-        return self.warning_user_not_logged_in(check, kwargs) if not check \
-            else self.action_edit_user_account(**kwargs)
+        check_logged_in = self.check_user_logged_in()
+        if not check_logged_in:
+            return self.warning_user_not_logged_in(check_logged_in, kwargs)
+        check_unlinked = self.check_user_account_flag_for_unlink()
+        return self.warning_user_account_flaged_for_removal(
+            kwargs, check_logged_in, check_unlinked
+        ) if check_unlinked else self.action_edit_user_account(**kwargs)
 
     def handle_user_action_create_new_contact_list(self, **kwargs):
         log.debug('')
-        check = self.check_user_logged_in()
-        return self.warning_user_not_logged_in(check, kwargs) if not check \
-            else self.action_create_new_contact_list(**kwargs)
+        check_logged_in = self.check_user_logged_in()
+        if not check_logged_in:
+            return self.warning_user_not_logged_in(check_logged_in, kwargs)
+        check_unlinked = self.check_user_account_flag_for_unlink()
+        return self.warning_user_account_flaged_for_removal(
+            kwargs, check_logged_in, check_unlinked
+        ) if check_unlinked else self.action_create_new_contact_list(**kwargs)
 
     def handle_user_action_create_new_contact_record(self, **kwargs):
         log.debug('')
-        check = self.check_user_logged_in()
-        return self.warning_user_not_logged_in(check, kwargs) if not check \
-            else self.action_create_new_contact_record(**kwargs)
+        check_logged_in = self.check_user_logged_in()
+        if not check_logged_in:
+            return self.warning_user_not_logged_in(check_logged_in, kwargs)
+        check_unlinked = self.check_user_account_flag_for_unlink()
+        return self.warning_user_account_flaged_for_removal(
+            kwargs, check_logged_in, check_unlinked
+        ) if check_unlinked else self.action_create_new_contact_record(**kwargs)
 
     def handle_user_action_create_new_conversion_credits_to_clock(self, **kwargs):
         log.debug('')
-        check = self.check_user_logged_in()
-        return self.warning_user_not_logged_in(check, kwargs) if not check \
-            else self.action_create_new_conversion_credits_to_clock(**kwargs)
+        check_logged_in = self.check_user_logged_in()
+        if not check_logged_in:
+            return self.warning_user_not_logged_in(check_logged_in, kwargs)
+        check_unlinked = self.check_user_account_flag_for_unlink()
+        return self.warning_user_account_flaged_for_removal(
+            kwargs, check_logged_in, check_unlinked
+        ) if check_unlinked else self.action_create_new_conversion_credits_to_clock(**kwargs)
 
     def handle_user_action_create_new_conversion_clock_to_credits(self, **kwargs):
         log.debug('')
-        check = self.check_user_logged_in()
-        return self.warning_user_not_logged_in(check, kwargs) if not check \
-            else self.action_create_new_conversion_clock_to_credits(**kwargs)
+        check_logged_in = self.check_user_logged_in()
+        if not check_logged_in:
+            return self.warning_user_not_logged_in(check_logged_in, kwargs)
+        check_unlinked = self.check_user_account_flag_for_unlink()
+        return self.warning_user_account_flaged_for_removal(
+            kwargs, check_logged_in, check_unlinked
+        ) if check_unlinked else self.action_create_new_conversion_clock_to_credits(**kwargs)
 
     def handle_user_action_create_new_transfer_type_pay(self, **kwargs):
         log.debug('')
-        check = self.check_user_logged_in()
-        return self.warning_user_not_logged_in(check, kwargs) if not check \
-            else self.action_create_new_transfer_type_pay(**kwargs)
+        check_logged_in = self.check_user_logged_in()
+        if not check_logged_in:
+            return self.warning_user_not_logged_in(check_logged_in, kwargs)
+        check_unlinked = self.check_user_account_flag_for_unlink()
+        return self.warning_user_account_flaged_for_removal(
+            kwargs, check_logged_in, check_unlinked
+        ) if check_unlinked else self.action_create_new_transfer_type_pay(**kwargs)
 
     def handle_user_action_logout(self, **kwargs):
         log.debug('')
@@ -2773,9 +3023,13 @@ class EWallet(Base):
 
     def handle_user_action_create_new_transfer_type_supply(self, **kwargs):
         log.debug('')
-        check = self.check_user_logged_in()
-        return self.warning_user_not_logged_in(check, kwargs) if not check \
-            else self.action_create_new_transfer_type_supply(**kwargs)
+        check_logged_in = self.check_user_logged_in()
+        if not check_logged_in:
+            return self.warning_user_not_logged_in(check_logged_in, kwargs)
+        check_unlinked = self.check_user_account_flag_for_unlink()
+        return self.warning_user_account_flaged_for_removal(
+            kwargs, check_logged_in, check_unlinked
+        ) if check_unlinked else self.action_create_new_transfer_type_supply(**kwargs)
 
     def handle_user_action_login(self, **kwargs):
         log.debug('')
@@ -3332,6 +3586,44 @@ class EWallet(Base):
     [ TODO ]: Fetch warning messages from message file by key codes.
     '''
 
+    def warning_could_not_update_ewallet_session(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Could not update ewallet session. '
+                       'Details: {}'.format(args),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
+
+    def warning_user_account_flaged_for_removal(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'User account marked for removal. '
+                       'Details: {}'.format(args),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
+
+    def warning_no_user_account_found(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Something went wrong. '
+                       'No user account found. '
+                       'Details: {}'.format(args),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
+
+    def warning_could_not_create_user_account(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Something went wrong. '
+                       'Could not create new user account. '
+                       'Details: {}'.format(args),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
+
     def warning_could_not_edit_account_user_pass(self, *args):
         command_chain_response = {
             'failed': True,
@@ -3643,17 +3935,6 @@ class EWallet(Base):
         log.warning(command_chain_response['warning'])
         return command_chain_response
 
-    def warning_could_not_create_user_account(self, user_name, command_chain):
-        command_chain_response = {
-            'failed': True,
-            'warning': 'Something went wrong. Could not create user account. '\
-                       'for {}. Command chain details : {}'.format(
-                           user_name, command_chain
-                       ),
-        }
-        log.warning(command_chain_response['warning'])
-        return command_chain_response
-
     def warning_could_not_fetch_ewallet_session_active_user(self, command_chain):
         command_chain_response = {
             'failed': True,
@@ -3900,12 +4181,6 @@ class EWallet(Base):
         log.warning(command_chain_response['warning'])
         return command_chain_response
 
-    def warning_no_user_account_found(self, command_chain):
-        log.warning(
-            'No user account found. Details : {}'.format(command_chain)
-        )
-        return False
-
     def warning_user_not_in_session_archive(self):
         log.error('User account not found in session user archive.')
         return False
@@ -3956,35 +4231,66 @@ class EWallet(Base):
                 )
         return False
 
-    # ERROR HANDLERS
-    '''
-    [ TODO ]: All error handlers are deprecated, remove and refactor.
-    '''
-
-    def error_handler_action_create_new_transfer(self, **kwargs):
-        _reasons_and_handlers = {
-                'reasons': {
-                    'partner_account': kwargs.get('partner_account'),
-#                   'session_wallet': kwargs.get('session_wallet'),
-#                   'transfer_type': kwargs.get('transfer_type'),
-#                   'partner_wallet': kwargs.get('partner_wallet'),
-                    },
-                'handlers': {
-                    'partner_account': self.error_no_partner_account_found,
-#                   'session_wallet': self.error_no_session_credit_wallet_found,
-#                   'transfer_type': self.error_no_transfer_type_found,
-#                   'partner_wallet': self.error_no_partner_credit_wallet_found,
-                    }
-                }
-        for item in _reasons_and_handlers['reasons']:
-            if not _reasons_and_handlers['reasons'][item]:
-                return _reasons_and_handlers['handlers'][item]()
-        return False
-
     # ERRORS
     '''
     [ TODO ]: Fetch error messages from message file by key codes.
     '''
+
+    def error_no_user_action_pay_target_specified(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No user action pay target specified. '
+                     'Details: {}'.format(args)
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_pay_type_transfer_failure(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Credit payment failure. '
+                     'Details: {}'.format(args)
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_no_active_session_found(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No active SqlAlchemy ORM session found. '
+                     'Details: {}'.format(args)
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_no_user_email_found(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No user email found. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_could_not_fetch_user_by_email(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Something went wrong. '
+                     'Could not fetch user account by email address. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_could_not_fetch_partner_account(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Something went wrong. '
+                     'Could not fetch partner account. '
+                     'Details: {}'.format(*args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
 
     def error_no_session_active_user_found(self, *args):
         command_chain_response = {
@@ -4261,15 +4567,6 @@ class EWallet(Base):
         log.error(command_chain_response['error'])
         return command_chain_response
 
-    def error_could_not_fetch_partner_account(self, command_chain):
-        command_chain_response = {
-            'failed': True,
-            'error': 'Something went wrong. Could not fetch partner account. '\
-                     'Command chain details : {}'.format(command_chain),
-        }
-        log.error(command_chain_response['error'])
-        return command_chain_response
-
     def error_no_user_action_transfer_credits_target_specified(self, command_chain):
         command_chain_response = {
             'failed': True,
@@ -4330,15 +4627,6 @@ class EWallet(Base):
             'failed': True,
             'error': 'Something went wrong. Could not start credit clock timer. '\
                      'Command chain details : {}'.format(command_chain)
-        }
-        log.error(command_chain_response['error'])
-        return command_chain_response
-
-    def error_no_active_session_found(self, command_chain):
-        command_chain_response = {
-            'failed': True,
-            'error': 'No active session found. Command chain details : {}'\
-                     .format(command_chain)
         }
         log.error(command_chain_response['error'])
         return command_chain_response
@@ -4586,19 +4874,6 @@ class EWallet(Base):
         log.error(command_chain_response['error'])
         return command_chain_response
 
-    def error_pay_type_transfer_failure(self, command_chain, *args):
-        command_chain_response = {
-            'failed': True,
-            'error': 'Credit payment failure. Details : {}, {}'
-                     .format(command_chain, args)
-        }
-        log.error(command_chain_response['error'])
-        return command_chain_response
-
-    def error_no_user_action_pay_target_specified(self):
-        log.error('No user action pay target specified.')
-        return False
-
     def error_no_partner_account_found(self):
         log.error('No partner account found.')
         return False
@@ -4729,10 +5004,6 @@ class EWallet(Base):
 
     def error_no_user_name_found(self):
         log.error('No user name found.')
-        return False
-
-    def error_no_user_email_found(self):
-        log.error('No user email found.')
         return False
 
     def error_no_user_phone_found(self):

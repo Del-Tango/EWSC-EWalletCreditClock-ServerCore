@@ -202,7 +202,9 @@ class CreditClock(Base):
     def fetch_credit_clock_state(self):
         log.debug('')
         return self.credit_clock_state or \
-               self.error_no_state_found_for_credit_clock()
+               self.error_no_state_found_for_credit_clock(
+                   self.credit_clock_state
+               )
 
     def fetch_credit_clock_start_time(self):
         log.debug('')
@@ -620,37 +622,43 @@ class CreditClock(Base):
         log.debug('')
         state = self.fetch_credit_clock_state()
         if not state:
-            return self.error_no_credit_clock_state_found()
+            return self.error_no_state_found_for_credit_clock(kwargs, state)
         return True if state == 'pending' else False
 
     def check_clock_is_active(self, **kwargs):
         log.debug('')
         state = self.fetch_credit_clock_state()
         if not state:
-            return self.error_no_credit_clock_state_found()
+            return self.error_no_state_found_for_credit_clock(kwargs, state)
         return True if state == 'active' else False
 
     def check_clock_is_inactive(self, **kwargs):
         log.debug('')
         state = self.fetch_credit_clock_state()
         if not state:
-            return self.error_no_credit_clock_state_found()
+            return self.error_no_state_found_for_credit_clock(kwargs, state)
         return True if state == 'inactive' else False
 
 #   @pysnooper.snoop('logs/ewallet.log')
     def check_clock_state(self, check=None, **kwargs):
         log.debug('')
         if not check:
-            return self.error_no_clock_state_check_type_specified()
+            return self.error_no_clock_state_check_type_specified(
+                check, kwargs
+            )
         checkers = {
             'active': self.check_clock_is_active,
             'inactive': self.check_clock_is_inactive,
             'pending': self.check_clock_is_pending,
         }
         if check not in ('state_is', 'state_not', 'current'):
-            return self.error_clock_state_check_type_not_supported()
+            return self.error_clock_state_check_type_not_supported(
+                check, kwargs
+            )
         if kwargs[check] not in self.fetch_credit_clock_states():
-            return self.error_invalid_clock_state()
+            return self.error_illegal_credit_clock_state(
+                check, kwargs
+            )
         if check == 'current':
             return self.fetch_credit_clock_state()
         _check = checkers[kwargs[check]](**kwargs)
@@ -1060,9 +1068,12 @@ class CreditClock(Base):
         update_record = self.update_credit_clock_time_sheet_record(
             record_update_values, time_record=time_record, **kwargs
         )
-        if not update_record:
+        if not update_record or isinstance(update_record, dict) and \
+                update_record.get('failed'):
             self.warning_unsuccessful_credit_clock_time_sheet_record_update(
-                kwargs
+                kwargs, check_clock_state, start_time, stop_time, set_stop_time,
+                compute_used_time, time_record, check_used_time,
+                record_update_values, update_record
             )
         set_inactive = self.set_credit_clock_state(clock_state='inactive')
         command_chain_response = {
@@ -1115,9 +1126,13 @@ class CreditClock(Base):
         update_record = self.update_credit_clock_time_sheet_record(
             record_update_values, time_record=time_record, **kwargs
         )
-        if not update_record:
+        if not update_record or isinstance(update_record, dict) and \
+                update_record.get('failed'):
             self.warning_unsuccessful_credit_clock_time_sheet_record_update(
-                kwargs
+                kwargs, check_clock_state, compute_pending_time,
+                set_pending_time, time_record, record_update_values,
+                update_record
+
             )
         set_active = self.set_credit_clock_state(clock_state='active')
         kwargs['active_session'].commit()
@@ -1169,9 +1184,12 @@ class CreditClock(Base):
             record_update_values, time_record=fetch_active_time_record,
             **kwargs
         )
-        if not update_record:
+        if not update_record or isinstance(update_record, dict) and \
+                update_record.get('failed'):
             self.warning_unsuccessful_credit_clock_time_sheet_record_update(
-                kwargs
+                kwargs, check_clock_state, set_end_time, fetch_pending_count,
+                increase_pending_count, fetch_active_time_record,
+                record_update_values, update_record
             )
         kwargs['active_session'].commit()
         set_pending = self.set_credit_clock_state(clock_state='pending')
@@ -1204,7 +1222,6 @@ class CreditClock(Base):
         )
         if not check_state:
             return self.warning_illegal_credit_clock_state(kwargs)
-        set_state = self.set_credit_clock_state(clock_state='active')
         start_time = time.time()
         record_creation_values = self.fetch_time_sheet_record_creation_values(
             time_start=start_time, **kwargs
@@ -1215,11 +1232,16 @@ class CreditClock(Base):
         start = self.set_credit_clock_time_start(
             time_start=float(record_creation_values['time_start'])
         )
-        if not set_state or not start:
-            return self.error_could_not_start_credit_clock_timer(kwargs)
+        if not start or isinstance(start, dict) and \
+                start.get('failed'):
+            return self.error_could_not_start_credit_clock_timer(
+                kwargs, check_state, start_time, record_creation_values,
+                time_sheet_record, start
+            )
         set_active = self.set_credit_clock_active_time_record(
             active_time_record=time_sheet_record
         )
+        set_state = self.set_credit_clock_state(clock_state='active')
         kwargs['active_session'].commit()
         log.info('Credit Clock timer started.')
         return record_creation_values['time_start']
@@ -1247,15 +1269,17 @@ class CreditClock(Base):
     def action_interogate_credit_clock(self, **kwargs):
         log.debug('')
         if not kwargs.get('target'):
-            return self.error_no_credit_clock_interogation_target_specified()
-        _handlers = {
-                'credit_clock': self.interogate_credit_clock_time_left,
-                'time_sheets': self.interogate_time_sheets,
-                'time_records': self.interogate_time_sheet_records,
-                'conversion_sheets': self.interogate_conversion_sheets,
-                'conversion_records': self.interogate_conversion_sheet_records,
-                }
-        return _handlers[kwargs.get('target')](**kwargs)
+            return self.error_no_credit_clock_interogation_target_specified(
+                kwargs
+            )
+        handlers = {
+            'credit_clock': self.interogate_credit_clock_time_left,
+            'time_sheets': self.interogate_time_sheets,
+            'time_records': self.interogate_time_sheet_records,
+            'conversion_sheets': self.interogate_conversion_sheets,
+            'conversion_records': self.interogate_conversion_sheet_records,
+        }
+        return handlers[kwargs.get('target')](**kwargs)
 
     # INTEROGATERS
 
@@ -1614,6 +1638,61 @@ class CreditClock(Base):
     '''
     [ TODO ]: Fetch error messages from message file by key codes.
     '''
+
+    def error_clock_state_check_type_not_supported(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Credit clock state check type not supported. '
+                     'Details: {}'.format(*args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_no_clock_state_check_type_specified(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No clock state check type specified. '
+                     'Details: {}'.format(*args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_illegal_credit_clock_state(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Illegal credit clock state. '
+                     'Details: {}'.format(*args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_no_state_found_for_credit_clock(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No state found for credit clock. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_no_credit_clock_interogation_target_specified(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No credit clock interogation target specified. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_could_not_start_credit_clock_timer(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Something went wrong. '
+                     'Could not start credit clock timer. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
 
     def error_could_not_remove_time_sheet(self, *args):
         command_chain_response = {
@@ -2009,29 +2088,11 @@ class CreditClock(Base):
         log.error(command_chain_response['error'])
         return command_chain_response
 
-    def error_illegal_credit_clock_state(self, command_chain):
-        command_chain_response = {
-            'failed': True,
-            'error': 'Illegal credit clock state {}. Command chain details : {}'\
-                     .format(self.credit_clock_state, command_chain),
-        }
-        log.error(command_chain_response['error'])
-        return command_chain_response
-
     def error_no_active_session_found(self, command_chain):
         command_chain_response = {
             'failed': True,
             'error': 'No active SqlAlchemy ORM session found. Command chain details : {}'\
                      .format(command_chain),
-        }
-        log.error(command_chain_response['error'])
-        return command_chain_response
-
-    def error_could_not_start_credit_clock_timer(self, command_chain):
-        command_chain_response = {
-            'failed': True,
-            'error': 'Something went wrong. Could not start credit clock timer. '\
-                     'Command chain details : {}'.format(command_chain),
         }
         log.error(command_chain_response['error'])
         return command_chain_response
@@ -2117,20 +2178,8 @@ class CreditClock(Base):
         log.error(command_chain_response['error'])
         return command_chain_response
 
-    def error_no_clock_state_check_type_specified(self):
-        log.error('No clock state check type specified.')
-        return False
-
-    def error_clock_state_check_type_not_supported(self):
-        log.error('Credit clock state check type not supported.')
-        return False
-
     def error_no_active_session_found(self):
         log.error('No active session found.')
-        return False
-
-    def error_no_credit_clock_state_found(self, **kwargs):
-        log.error('No credit clock state found.')
         return False
 
     def error_no_ewallet_found(self):
@@ -2179,10 +2228,6 @@ class CreditClock(Base):
 
     def error_no_conversion_sheet_id_found(self):
         log.error('No conversion sheet id found.')
-        return False
-
-    def error_no_credit_clock_interogation_target_specified(self):
-        log.error('No credit clock interogation target specified.')
         return False
 
     def error_no_credit_clock_sheet_target_specified(self):
@@ -2261,10 +2306,6 @@ class CreditClock(Base):
         log.error('Could not extract credit clock minutes.')
         return False
 
-    def error_no_state_found_for_credit_clock(self):
-        log.error('No state found for credit clock.')
-        return False
-
     def error_could_not_create_time_sheet_record(self):
         log.error('Could not create time sheet record.')
         return False
@@ -2333,6 +2374,15 @@ class CreditClock(Base):
     '''
     [ TODO ]: Fetch warning messages from message file by key codes.
     '''
+
+    def warning_unsuccessful_credit_clock_time_sheet_record_update(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Unsuccessful credit clock time sheet record update. '\
+                       'Details: {}'.format(args),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
 
     def warning_could_not_unlink_credit_clock_time_sheet_record(self, *args):
         command_chain_response = {
@@ -2404,15 +2454,6 @@ class CreditClock(Base):
         command_chain_response = {
             'failed': True,
             'warning': 'Something went wrong. Conversion failure. '\
-                       'Command chain details : {}'.format(command_chain),
-        }
-        log.warning(command_chain_response['warning'])
-        return command_chain_response
-
-    def warning_unsuccessful_credit_clock_time_sheet_record_update(self, command_chain):
-        command_chain_response = {
-            'failed': True,
-            'warning': 'Unsuccessful credit clock time sheet record update. '\
                        'Command chain details : {}'.format(command_chain),
         }
         log.warning(command_chain_response['warning'])

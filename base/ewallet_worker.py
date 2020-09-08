@@ -2739,7 +2739,7 @@ class EWalletWorker():
         )
         # Formulate response
         response = self.warning_could_not_stop_clock_timer(
-            ewallet_session, kwargs, stop_timer
+            kwargs, ewallet_session, orm_session, stop_timer
         ) if not stop_timer or \
             isinstance(stop_timer, dict) and \
             stop_timer.get('failed') else stop_timer
@@ -2768,7 +2768,7 @@ class EWalletWorker():
         )
         # Formulate response
         response = self.warning_could_not_resume_clock_timer(
-            ewallet_session, kwargs, resume_timer
+            kwargs, ewallet_session, orm_session, resume_timer
         ) if not resume_timer or \
             isinstance(resume_timer, dict) and \
             resume_timer.get('failed') else resume_timer
@@ -2797,7 +2797,7 @@ class EWalletWorker():
         )
         # Formulate response
         response = self.warning_could_not_pause_clock_timer(
-            ewallet_session, kwargs, pause_timer
+            kwargs, ewallet_session, orm_session, pause_timer
         ) if not pause_timer or \
             isinstance(pause_timer, dict) and \
             pause_timer.get('failed') else pause_timer
@@ -2826,7 +2826,7 @@ class EWalletWorker():
         )
         # Formulate response
         response = self.warning_could_not_start_clock_timer(
-            ewallet_session, kwargs, start_timer
+            kwargs, ewallet_session, orm_session, start_timer
         ) if not start_timer or \
             isinstance(start_timer, dict) and \
             start_timer.get('failed') else start_timer
@@ -4010,6 +4010,56 @@ class EWalletWorker():
     '''
     [ TODO ]: Fetch warning messages from message file by key codes.
     '''
+
+    def warning_could_not_view_time_record(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Something went wrong. '
+                       'Could not view time record. '
+                       'Details: {}'.format(args),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
+
+    def warning_could_not_view_transfer_sheet(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Something went wrong. '
+                       'Could not view transfer sheet. '
+                       'Details: {}'.format(args),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
+
+    def warning_could_not_view_time_sheet(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Something went wrong. '
+                       'Could not view time sheet. '
+                       'Details: {}'.format(args),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
+
+    def warning_could_not_edit_account(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Something went wrong. '
+                       'Could not edit user account. '
+                       'Details: {}'.format(args),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
+
+    def warning_could_not_resume_clock_timer(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Something went wrong. '
+                       'Could not resume credit clock timer. '
+                       'Details: {}'.format(args),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
 
     def warning_could_not_switch_contact_list(self, *args):
         command_chain_response = {

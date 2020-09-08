@@ -58,12 +58,16 @@ class EWalletTransactionHandler():
         if not source_wallet and not target_wallet:
             return self.error_no_wallets_found({}, source_wallet, target_wallet)
         return {
-            'source': self.error_could_not_fetch_wallet_invoice_sheet(source_wallet)\
-                if not source_wallet \
-                else source_wallet.fetch_credit_ewallet_invoice_sheet(),
-            'target': self.error_could_not_fetch_wallet_invoice_sheet(target_wallet)\
-                if not target_wallet \
-                else target_wallet.fetch_credit_ewallet_invoice_sheet(),
+            'source': self.error_could_not_fetch_wallet_invoice_sheet(
+                    source_wallet, target_wallet
+                ) if not source_wallet or isinstance(source_wallet, dict) and \
+                source_wallet.get('failed') else \
+                source_wallet.fetch_credit_ewallet_invoice_sheet(),
+            'target': self.error_could_not_fetch_wallet_invoice_sheet(
+                    source_wallet, target_wallet
+                ) if not target_wallet or isinstance(target_wallet, dict) and \
+                target_wallet.get('failed') else \
+                target_wallet.fetch_credit_ewallet_invoice_sheet(),
         }
 
     def fetch_credit_wallet_pair_transfer_sheets(self, source_wallet, target_wallet):
@@ -71,12 +75,16 @@ class EWalletTransactionHandler():
         if not source_wallet and not target_wallet:
             return self.error_no_wallets_found({}, source_wallet, target_wallet)
         return {
-            'source': self.error_could_not_fetch_wallet_transfer_sheet(source_wallet) \
-                if not source_wallet \
-                else source_wallet.fetch_credit_ewallet_transfer_sheet(),
-            'target': self.error_could_not_fetch_wallet_transfer_sheet(target_wallet) \
-                if not target_wallet \
-                else target_wallet.fetch_credit_ewallet_transfer_sheet(),
+            'source': self.error_could_not_fetch_wallet_transfer_sheet(
+                    source_wallet, target_wallet
+                ) if not source_wallet or isinstance(source_wallet, dict) and \
+                source_wallet.get('failed') else \
+                source_wallet.fetch_credit_ewallet_transfer_sheet(),
+            'target': self.error_could_not_fetch_wallet_transfer_sheet(
+                    source_wallet, target_wallet
+                ) if not target_wallet or isinstance(target_wallet, dict) and \
+                target_wallet.get('failed') else \
+                target_wallet.fetch_credit_ewallet_transfer_sheet(),
         }
 
     def fetch_transaction_handler_value_set(self):
@@ -92,6 +100,9 @@ class EWalletTransactionHandler():
 
     def fetch_credit_wallet_from_user_account(self, user_account):
         log.debug('')
+        if not user_account or isinstance(user_account, dict) and \
+                user_account.get('failed'):
+            return self.error_no_user_account_found(user_account)
         credit_wallet = user_account.fetch_user_credit_wallet()
         return self.error_no_credit_wallet_found(user_account) if not credit_wallet \
             else credit_wallet
@@ -150,9 +161,21 @@ class EWalletTransactionHandler():
         extract_credits_from_source = kwargs['source_credit_wallet'].main_controller(
             controller='system', action='extract', **sanitized_command_chain
         )
+        if not extract_credits_from_source or \
+                isinstance(extract_credits_from_source, dict) and \
+                extract_credits_from_source.get('failed'):
+            return self.error_could_not_extract_credits_from_source(
+                kwargs, extract_credits_from_source
+            )
         supply_credits_to_target = kwargs['target_credit_wallet'].main_controller(
             controller='system', action='supply', **sanitized_command_chain
         )
+        if not supply_credits_to_target or \
+                isinstance(supply_credits_to_target, dict) and \
+                supply_credits_to_target.get('failed'):
+            return self.error_could_not_supply_credits_to_target(
+                kwargs, extract_credits_from_source, supply_credits_to_target
+            )
         return {
             'extract': extract_credits_from_source,
             'supply': supply_credits_to_target
@@ -190,13 +213,14 @@ class EWalletTransactionHandler():
 
     def compute_transaction_type_pay(self, **kwargs):
         log.debug('')
+        if not kwargs.get('target_credit_wallet') or \
+                isinstance(kwargs['target_credit_wallet'], dict) and \
+                kwargs['target_credit_wallet'].get('failed'):
+            return self.error_no_source_credit_wallet_found(kwargs)
         if not kwargs.get('source_credit_wallet') or \
-                not kwargs.get('target_credit_wallet'):
-            if not kwargs.get('source_credit_wallet'):
-                return self.error_no_source_credit_wallet_found(kwargs)
-            elif not kwargs.get('target_credit_wallet'):
-                return self.error_no_target_credit_wallet_found(kwargs)
-            return self.error_no_wallets_found(kwargs)
+                isinstance(kwargs['source_credit_wallet'], dict) and \
+                kwargs['source_credit_wallet'].get('failed'):
+            return self.error_no_target_credit_wallet_found(kwargs)
         sanitized_command_chain = res_utils.remove_tags_from_command_chain(
             kwargs, 'controller', 'action'
         )
@@ -434,6 +458,11 @@ class EWalletTransactionHandler():
     def handle_action_start_transaction_type_pay(self, **kwargs):
         log.debug('')
         compute = self.compute_transaction_type_pay(**kwargs)
+        if not compute or isinstance(compute, dict) and \
+                compute.get('failed'):
+            return self.error_could_not_compute_transaction_type_pay(
+                kwargs, compute
+            )
         journal = self.journal_transaction_type_pay(**kwargs)
         share = self.share_partner_transaction_pay_journal_records(journal, **kwargs)
         if not share or isinstance(share, dict) and share.get('failed'):
@@ -521,17 +550,74 @@ class EWalletTransactionHandler():
     # WARNINGS
 
     def warning_credit_transaction_record_share_failure(self, **kwargs):
-        log.warning(
-            'Credit transaction failure of transfer sheet {} or invoice sheet {}. Details : {}'\
-            .format(
-                kwargs.get('share_transfer_record'),
-                kwargs.get('share_invoice_record'),
-                kwargs.get('command_chain'),
-            )
-        )
-        return False
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Credit transaction failure. '
+                       'Details: {}'.format(kwargs)
+        }
+        log.warning(command_chain_response['warnings'])
+        return command_chain_response
 
     # ERRORS
+
+    def error_could_not_extract_credits_from_source(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Something went wrong. '
+                     'Could not extract credits from source ewallet. '
+                     'Details: {}'.format(args)
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_could_not_supply_credits_to_target(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Something went wrong. '
+                     'Could not supply credits to target ewallet. '
+                     'Details: {}'.format(args)
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_could_not_compute_transaction_type_pay(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Something went wrong. '
+                     'Could not compute transaction type pay. '
+                     'Details: {}'.format(args)
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_could_not_fetch_wallet_transfer_sheet(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Something went wrong. '
+                     'Could not fetch user credit ewallet transfer sheet. '
+                     'Details: {}'.format(args)
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_could_not_fetch_wallet_invoice_sheet(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Something went wrong. '
+                     'Could not fetch user credit ewallet invoice sheet. '
+                     'Details: {}'.format(args)
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_no_user_account_found(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No user account found. '
+                     'Details: {}'.format(args)
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
 
     def error_no_source_transfer_sheet_found(self, command_chain, *args):
         command_chain_response = {
@@ -596,24 +682,6 @@ class EWalletTransactionHandler():
         command_chain_response = {
             'failed': True,
             'error': 'Something went wrong. Could not fetch user account credit ewallet. '
-                     'Details: {}'.format(args)
-        }
-        log.error(command_chain_response['error'])
-        return command_chain_response
-
-    def error_could_not_fetch_wallet_invoice_sheet(self, *args):
-        command_chain_response = {
-            'failed': True,
-            'error': 'Something went wrong. Could not fetch user credit ewallet invoice sheet. '
-                     'Details: {}'.format(args)
-        }
-        log.error(command_chain_response['error'])
-        return command_chain_response
-
-    def error_could_not_fetch_wallet_transfer_sheet(self, *args):
-        command_chain_response = {
-            'failed': True,
-            'error': 'Something went wrong. Could not fetch user credit ewallet transfer sheet. '
                      'Details: {}'.format(args)
         }
         log.error(command_chain_response['error'])
@@ -691,11 +759,7 @@ class EWalletTransactionHandler():
         log.error(command_chain_response['error'])
         return command_chain_response
 
-    def error_could_not_fetch_wallet_invoice_sheet(self, credit_wallet):
-        log.error('Could not fetch invoice sheet from credit wallet {}.'.format(credit_wallet))
-        return False
-
-    def error_coult_not_fetch_wallet_transfer_sheet(self, credit_wallet):
+    def error_could_not_fetch_wallet_transfer_sheet(self, credit_wallet):
         log.error('Could not fetch transfer sheet from credit wallet {}.'.format(credit_wallet))
         return False
 

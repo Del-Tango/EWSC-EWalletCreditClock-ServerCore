@@ -1,13 +1,15 @@
-from pytz import timezone
-from sqlalchemy import create_engine
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
 import datetime
 import logging
 import string
 import time
 import random
 import pysnooper
+import hashlib
+
+from pytz import timezone
+from sqlalchemy import create_engine
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import sessionmaker
 
 from .config import Config
 config, Base = Config(), declarative_base()
@@ -68,6 +70,9 @@ class ResUtils():
         return datetime_obj.strftime('%d-%m-%Y %H:%M:%S')
 
     # GENERAL
+
+    def hash_password(self, password):
+        return str(hashlib.sha256(password.encode()).hexdigest())
 
     def remove_tags_from_command_chain(self, command_chain, *args):
         sanitized_command_chain = command_chain.copy()

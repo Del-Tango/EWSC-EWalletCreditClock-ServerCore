@@ -15,7 +15,8 @@ from .contact_list import ContactList
 from .res_utils import ResUtils, Base
 from .config import Config
 
-log_config = Config().log_config
+res_utils, config = ResUtils(), Config()
+log_config = config.log_config
 log = logging.getLogger(log_config['log_name'])
 
 
@@ -33,6 +34,8 @@ class EWalletLogin(Base):
     def __init__(self, *args, **kwargs):
         self.user_id = kwargs.get('user_id') or None
         self.login_status = kwargs.get('login_status') or False
+
+    # FETCHERS
 
 #   @pysnooper.snoop('logs/ewallet.log')
     def fetch_all_user_records(self, active_session=None):
@@ -67,6 +70,24 @@ class EWalletLogin(Base):
         return _user_names
 
 #   @pysnooper.snoop('logs/ewallet.log')
+    def fetch_user_by_email(self, user_email=None, active_session=None):
+        '''
+        [ NOTE   ]: Fetches specified user account object by user email.
+        [ INPUT  ]: user_email=<name>, active_session=<session>
+        [ RETURN ]: (ResUser object | False)
+        '''
+        if not active_session:
+            return self.error_no_active_session_found(
+                user_email, active_session
+            )
+        user = list(active_session.query(ResUser).filter(
+            ResUser.user_email==user_email
+        ))
+        return self.error_no_user_record_found_by_email(
+            user_email, active_session, user
+        ) if not user else user[0]
+
+#   @pysnooper.snoop('logs/ewallet.log')
     def fetch_user_by_name(self, user_name=None, active_session=None):
         '''
         [ NOTE   ]: Fetches specified user account object by user name.
@@ -75,10 +96,13 @@ class EWalletLogin(Base):
         '''
         if not active_session:
             return self.error_no_active_session_found()
-        _user = active_session.query(ResUser) \
-                .filter(ResUser.user_name==user_name)
+        user = list(active_session.query(ResUser).filter(
+            ResUser.user_name==user_name
+        ))
         return self.error_no_user_record_found_by_name(user_name) \
-            if not _user else _user
+            if not user else user[0]
+
+    # SETTERS
 
     def set_user_id(self, user_id):
         '''
@@ -117,14 +141,12 @@ class EWalletLogin(Base):
         }
         return _values
 
-    def hash_password(self, password):
-        '''
-        [ NOTE   ]: Uses the sha256 algorithm to hash password string.
-        [ INPUT  ]: <password>
-        [ RETURN ]: Password Hash
-        '''
+    def check_user_email_exists(self, user_email, active_session):
         log.debug('')
-        return str(hashlib.sha256(password.encode()).hexdigest())
+        user = self.fetch_user_by_email(
+            user_email, active_session=active_session
+        )
+        return user or False
 
 #   @pysnooper.snoop()
     def check_user_name_exists(self, user_name, active_session):
@@ -134,12 +156,12 @@ class EWalletLogin(Base):
         [ RETURN ]: (ResUser object | False)
         '''
         log.debug('')
-        _user = self.fetch_user_by_name(
+        user = self.fetch_user_by_name(
             user_name, active_session=active_session
         )
-        return _user or False
+        return user or False
 
-#   @pysnooper.snoop()
+    @pysnooper.snoop('logs/ewallet.log')
     def check_user_pass_hash(self, user_pass, known_hash):
         '''
         [ NOTE   ]: Checks if user password and known sha256 hash match.
@@ -147,40 +169,37 @@ class EWalletLogin(Base):
         [ RETURN ]: (True | False)
         '''
         log.debug('')
-        _pass_hash = self.hash_password(user_pass)
-        if str(_pass_hash) == str(known_hash):
+        pass_hash = res_utils.hash_password(user_pass)
+        if str(pass_hash) == str(known_hash):
             return True
         return False
 
-#   @pysnooper.snoop()
+#   @pysnooper.snoop('logs/ewallet.log')
     def authenticate_user(self, **kwargs):
         log.debug('')
-        user_query = self.check_user_name_exists(
-            kwargs['user_name'], kwargs.get('active_session')
+        user_query = self.check_user_email_exists(
+            kwargs['user_email'], kwargs.get('active_session')
         )
         if not user_query or isinstance(user_query, dict) and \
                 user_query.get('failed'):
             return self.warning_user_name_not_found(kwargs)
-        if user_query.count() > 1:
-            self.warning_user_not_found_by_name(kwargs['user_name'])
-        try:
-            user = list(user_query)[0]
-        except Exception as e:
-            return self.warning_user_name_not_found(kwargs, e)
         pass_check = self.check_user_pass_hash(
-            kwargs['user_pass'], user.fetch_user_pass_hash()
+            kwargs['user_pass'], user_query.fetch_user_pass_hash()
         )
-        if not pass_check:
-            return self.warning_user_password_incorrect()
-        return user
+        if not pass_check or isinstance(pass_check, dict) and \
+                pass_check.get('failed'):
+            return self.warning_user_password_incorrect(
+                kwargs, user_query, pass_check
+            )
+        return user_query
 
     # ACTIONS
 
     def action_login(self, **kwargs):
         log.debug('')
-        if not kwargs.get('user_name') or not kwargs.get('user_pass'):
+        if not kwargs.get('user_email') or not kwargs.get('user_pass'):
             return self.error_handler_action_login(
-                user_name=kwargs.get('user_name'),
+                user_email=kwargs.get('user_email'),
                 user_pass=kwargs.get('user_pass'),
             )
         authenticated_user = self.authenticate_user(**kwargs)
@@ -229,19 +248,66 @@ class EWalletLogin(Base):
         reasons_and_handlers = {
             'reasons': {
                 'user_name': kwargs.get('user_name'),
+                'user_email': kwargs.get('user_email'),
                 'user_pass': kwargs.get('user_pass'),
             },
             'handlers': {
                 'user_name': self.error_no_user_name_found,
-                'user_pass': self.error_no_user_pass_found,
+                'user_email': self.error_no_user_email_found,
+                'user_pass': self.error_no_user_password_found,
             },
         }
         for item in reasons_and_handlers['reasons']:
             if not reasons_and_handlers['reasons'][item]:
-                return reasons_and_handlers['handlers'][item]()
+                return reasons_and_handlers['handlers'][item](kwargs)
         return False
 
     # ERRORS
+
+    def error_no_user_record_found_by_email(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No user account record found by email. '
+                     'Details: {}'.format(args)
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_multiple_users_found_by_email(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Multiple user accounts found by email. '
+                     'Fetching first. Details: {}'.format(args)
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_no_user_password_found(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No user account login password found. '
+                     'Details: {}'.format(args)
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_no_user_name_found(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No user account name found. '
+                     'Details: {}'.format(args)
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_no_user_email_found(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No user account email address found. '
+                     'Details: {}'.format(args)
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
 
     def error_no_active_session_found(self, *args):
         command_chain_response = {
@@ -256,24 +322,12 @@ class EWalletLogin(Base):
         log.error('No active user found.')
         return False
 
-    def error_no_user_name_found(self):
-        log.error('No user name found.')
-        return False
-
-    def error_no_user_password_found(self):
-        log.error('No user password found.')
-        return False
-
     def error_no_login_controller_action_specified(self):
         log.error('No login controller action specified.')
         return False
 
     def error_invalid_login_credentials(self):
         log.error('Invalid login credentials.')
-        return False
-
-    def error_no_user_record_found_by_name(self, user_name):
-        log.error('No user record found by name {}.'.format(user_name))
         return False
 
     def error_no_user_id_found(self):
@@ -285,6 +339,24 @@ class EWalletLogin(Base):
         return False
 
     # WARNINGS
+
+    def warning_user_password_incorrect(self, *args):
+        instruction_set_response = {
+            'failed': True,
+            'warning': 'Invalid user account password. '
+                       'Details: {}'.format(args)
+        }
+        log.warning(instruction_set_response['warning'])
+        return instruction_set_response
+
+    def warning_user_not_found_by_name(self, *args):
+        instruction_set_response = {
+            'failed': True,
+            'warning': 'User account not found by email address. '
+                       'Details: {}'.format(args)
+        }
+        log.warning(instruction_set_response['warning'])
+        return instruction_set_response
 
     def warning_could_not_create_new_user_account(self):
         log.warning(
@@ -301,10 +373,6 @@ class EWalletLogin(Base):
         }
         log.warning(command_chain_response['warning'])
         return command_chain_response
-
-    def warning_user_password_incorrect(self):
-        log.warning('User password is incorrect.')
-        return False
 
     def warning_user_not_found_by_name(self, user_name, *args):
         log.warning('No user found by name {}.'.format(user_name, args))
@@ -524,15 +592,6 @@ class EWalletCreateUser(): #EWalletLogin,
 
     # GENERAL
 
-    def hash_password(self, password):
-        '''
-        [ NOTE   ]: Uses the sha256 algorithm to hash password string.
-        [ INPUT  ]: <password>
-        [ RETURN ]: Password Hash
-        '''
-        log.debug('')
-        return str(hashlib.sha256(password.encode()).hexdigest())
-
     # CREATORS
 
 #   @pysnooper.snoop('logs/ewallet.log')
@@ -546,7 +605,7 @@ class EWalletCreateUser(): #EWalletLogin,
         log.debug('')
         if not kwargs.get('active_session'):
             return self.error_no_active_session_found(kwargs)
-        pass_hash = self.hash_password(kwargs['user_pass'])
+        pass_hash = res_utils.hash_password(kwargs['user_pass'])
         new_user = ResUser(
             user_name=kwargs['user_name'],
             user_pass_hash=pass_hash,
@@ -638,19 +697,47 @@ class EWalletCreateUser(): #EWalletLogin,
 
     # ERRORS
 
-    def error_database_exception(self, *args):
+    def error_no_user_name_found(self, *args):
         command_chain_response = {
             'failed': True,
-            'error': 'Database exception. Details : {}'.format(args)
+            'error': 'No user name found. '
+                     'Details: {}'.format(args)
         }
         log.error(command_chain_response['error'])
         return command_chain_response
 
-    def error_no_active_session_found(self, command_chain):
+    def error_no_user_record_found_by_email(self, *args):
         command_chain_response = {
             'failed': True,
-            'error': 'No active sqlalchemy orm session found. Command chain details : {}'\
-                     .format(command_chain),
+            'error': 'No user account record found by email. '
+                     'Details: {}'.format(args)
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_no_user_record_found_by_name(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No user account record found by name. '
+                     'Details: {}'.format(args)
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_database_exception(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Database exception. '
+                     'Details: {}'.format(args)
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_no_active_session_found(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No active sqlalchemy orm session found. '
+                     'Details : {}'.format(args),
         }
         log.error(command_chain_response['error'])
         return command_chain_response
@@ -669,10 +756,6 @@ class EWalletCreateUser(): #EWalletLogin,
         for item in _reasons_and_handlers['reasons']:
             if not _reasons_and_handlers['reasons'][item]:
                 return _reasons_and_handlers['handlers'][item]()
-        return False
-
-    def error_no_user_name_found(self):
-        log.error('No user name found.')
         return False
 
     def error_no_user_password_found(self):

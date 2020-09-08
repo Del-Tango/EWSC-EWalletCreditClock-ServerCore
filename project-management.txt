@@ -18,17 +18,22 @@
     - x - (EWSC) Gracefully cleanup Session Worker
     - x - (EWSC) Groom session worker state updates
     - x - (EWSC) Groom user account state updates
-    - x - (EWSC) Impose user account state restrictions on all user actions
+    - x - (EWSC) Impose user account state restrictions on user actions
     - x - (EWSC) Impose entity ownership restrictions on all user actions
-    - x - (EWSC) Groom session manager warning handlers
-    - x - (EWSC) Groom session manager error handlers
+    - x - (EWSC) Groom session manager endpoint warning handlers
+    - x - (EWSC) Groom session manager endpoint error handlers
     - x - (EWSC, EWCC, EWAT) Add requirements.txt
     - x - (EWSC) Fix user action Edit Password
     - x - (EWSC) Fix user action Edit Email
     - x - (EWSC) Journal record grooming
-    -   - (EWSC) Implement ResUser cleaner cron
+    - x - (EWSC) Impose user account to_unlink restrictions on user actions
+    -   - (EWCC) Groom core functional tests
+    - (EWCC) Groom core endpoint warning handlers
+    - (EWCC) Groom core endpoint error handlers
+    - (EWSC) Implement ResUser cleaner cron
     - (EWSC) Implement EWallet Session cleaner cron
     - (EWCC) Perform valid input checks on core subroutine SetResource
+    - (EWCC) Make library importable
     - (EWSC, EWCC, EWAT) Implement master accounts
     - (EWSC, EWCC, EWAT) Implement forced account removal
     - (EWSC, EWCC, EWAT) Implement EWallet Session keep alive signal
@@ -37,6 +42,7 @@
     - (EWSC, EWCC, EWAT) Implement issue report
 
 * v.WhiteRabbit (1.0.0/MVP - stable) - Planned
+    - (EWSC, EWCC, EWAT) Send user account password as hash
     - (EWSC, EWCC, EWAT) Add SSL certificates for master accounts
     - (EWSC) Use PostgreSql
     - (EWSC) Implement session manager thread pool
@@ -74,6 +80,9 @@
                         write date setter.
 
 - TODO (EWSC)
+
+    - Add ResUser cleaner cron
+    - Add ResUser cleaner cron functional test
 
     - x - Error Handler Grooming (Session Manager)
         - x - Cleanup stack trace string
@@ -333,6 +342,18 @@
 ################################################################################
 - EWallet Credit Clock - Client Core
 ################################################################################
+
+- TODO:
+
+    - Groom EWCC endpoint error handlers
+    - Groom EWCC endpoint warning handlers
+
+- TESTS:
+    - Unit
+    - Functional
+        - Refactor functional test cases
+
+
 
 ################################################################################
 - EWallet Credit Clock - API Tutor

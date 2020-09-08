@@ -84,6 +84,14 @@ class ResUser(Base):
 
     # FETCHERS
 
+    def fetch_user_to_unlink(self):
+        log.debug('')
+        return self.to_unlink
+
+    def fetch_user_to_unlink_timestamp(self):
+        log.debug('')
+        return self.to_unlink_timestamp
+
     def fetch_user_state(self):
         log.debug('')
         return self.user_state_code

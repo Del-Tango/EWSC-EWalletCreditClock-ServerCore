@@ -1724,7 +1724,7 @@ class EWalletSessionManager():
                 and instruction_set_validation.get('failed'):
             return instruction_set_validation
         unlink_invoice_record = self.action_execute_user_instruction_set(**kwargs)
-        return self.warning_could_not_unlink_invoice_record(
+        return self.warning_could_not_unlink_invoice_sheet_record(
             kwargs, unlink_invoice_record
         ) if not unlink_invoice_record or isinstance(unlink_invoice_record, dict) and \
             unlink_invoice_record.get('failed') else unlink_invoice_record
@@ -1841,7 +1841,7 @@ class EWalletSessionManager():
                 and instruction_set_validation.get('failed'):
             return instruction_set_validation
         unlink_conversion_record = self.action_execute_user_instruction_set(**kwargs)
-        return self.warning_could_not_unlink_conversion_record(
+        return self.warning_could_not_unlink_conversion_sheet_record(
             kwargs, unlink_conversion_record
         ) if not unlink_conversion_record or isinstance(unlink_conversion_record, dict) and \
             unlink_conversion_record.get('failed') else unlink_conversion_record
@@ -3208,6 +3208,15 @@ class EWalletSessionManager():
     '''
     [ TODO ]: Fetch warning messages from message file by key codes.
     '''
+
+    def warning_could_not_view_time_record(self, *args):
+        instruction_set_response = res_utils.format_warning_response(**{
+            'failed': True, 'details': args,
+            'warning': 'Something went wrong. '
+                       'Could not view time record.',
+        })
+        self.log_warning(**instruction_set_response)
+        return instruction_set_response
 
     def warning_could_not_view_invoice_record(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
