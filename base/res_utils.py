@@ -17,7 +17,9 @@ config, Base = Config(), declarative_base()
 
 class ResUtils():
 
-    engine = create_engine('sqlite:///data/ewallet.db', connect_args={'check_same_thread': False})
+    engine = create_engine(
+        'sqlite:///data/ewallet.db', connect_args={'check_same_thread': False}
+    )
     _SessionFactory = sessionmaker(bind=engine)
 
     # FETCHERS
@@ -41,12 +43,11 @@ class ResUtils():
         instruction_set_response = {
             'failed': kwargs.get('failed'),
             'error': kwargs.get('error'),
-            'details': str(kwargs.get('details'))\
-                .replace('\\', '')\
-                .replace('(', '')\
-                .replace('\'', '')\
-                .replace('\"', '')\
-                .replace(')', ''),
+            'details': ''.join(map(str, [
+                item for item in filter(
+                    lambda ch: ch not in "\\(\')\"", str(kwargs.get('details'))
+                )
+            ]))
         }
         return instruction_set_response
 
@@ -54,12 +55,11 @@ class ResUtils():
         instruction_set_response = {
             'failed': kwargs.get('failed'),
             'warning': kwargs.get('warning'),
-            'details': str(kwargs.get('details'))\
-                .replace('\\', '')\
-                .replace('(', '')\
-                .replace('\'', '')\
-                .replace('\"', '')\
-                .replace(')', ''),
+            'details': ''.join(map(str, [
+                item for item in filter(
+                    lambda ch: ch not in "\\(\')\"", str(kwargs.get('details'))
+                )
+            ]))
         }
         return instruction_set_response
 
@@ -133,4 +133,17 @@ def log_init():
     return log
 
 log = log_init()
+
+
+# CODE DUMP
+
+#           'details': str(kwargs.get('details'))\
+#               .replace('\\', '')\
+#               .replace('(', '')\
+#               .replace('\'', '')\
+#               .replace('\"', '')\
+#               .replace(')', ''),
+#       }
+#       return instruction_set_response
+
 

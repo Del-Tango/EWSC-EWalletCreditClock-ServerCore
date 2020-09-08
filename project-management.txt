@@ -43,6 +43,7 @@
     - (EWSC, EWCC, EWAT) Implement issue report
 
 * v.WhiteRabbit (1.0.0/MVP - stable) - Planned
+    - (EWSC, EWCC, EWAT) Implement entity record limiter queue mechanism
     - (EWSC, EWCC, EWAT) Send user account password as hash
     - (EWSC, EWCC, EWAT) Implement AddNotes mechanism for journal records
     - (EWSC, EWCC, EWAT) Add SSL certificates for master accounts
@@ -79,6 +80,8 @@
                         the EWSC functional test suit.
             - [ NOTE ]: No memory leak symptoms detected upon execution of the
                         EWCC functional test suit.
+            - [ NOTE ]: Cause is the instantiation of SessionManager entity
+                        for each test case.
 
     - x - 06/09/2020
         - x - 02:38 Detected possible bug in credit clock timer actions.
@@ -351,7 +354,7 @@
     - Unit
         -
     - Functional
-        - x - Add ForcedUnlinkAccount test case.
+        - x - Add Forced-UnlinkAccount test case.
 
 
 ################################################################################
@@ -360,8 +363,8 @@
 
 - TODO:
 
-    - Groom EWCC endpoint error handlers
-    - Groom EWCC endpoint warning handlers
+    - x - Groom EWCC endpoint warning handlers
+    -   - Groom EWCC endpoint error handlers
 
 - TESTS:
 
