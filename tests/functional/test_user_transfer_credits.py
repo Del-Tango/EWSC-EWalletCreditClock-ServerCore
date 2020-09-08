@@ -19,46 +19,54 @@ class TestEWalletSessionManageUserActionTransferCredits(unittest.TestCase):
         print('[ + ]: Prerequisites -')
         # Create new EWallet Session Manager instance
         session_manager = manager.EWalletSessionManager()
+
         # Generate new Client ID to be able to request a Session Token
-        print('[...]: User action Request Client ID')
+        print('[...]: User action RequestClientID')
         client_id = session_manager.session_manager_controller(
             controller='client', ctype='action', action='request',
             request='client_id'
         )
+
         # Request a Session Token to be able to operate within a EWallet Session
-        print('[...]: User action Request Session Token')
+        print('[...]: User action RequestSessionToken')
         session_token = session_manager.session_manager_controller(
             controller='client', ctype='action', action='request', request='session_token',
             client_id=client_id['client_id']
         )
+
         # Set global values
         cls.session_manager = session_manager
         cls.client_id = client_id['client_id']
         cls.session_token = session_token['session_token']
+
         # Create new user account to use as SystemCore account mockup
-        print('[...]: User action Create New Account')
+        print('[...]: User action CreateNewAccount (1)')
         new_account = session_manager.session_manager_controller(
             controller='client', ctype='action', action='new',
             new='account', client_id=cls.client_id,
             session_token=cls.session_token, user_name=cls.user_name_1,
             user_pass=cls.user_pass_1, user_email=cls.user_email_1
         )
+
         # Create new user account to user as Client account mockup
+        print('[...]: User action CreateNewAccount (2)')
         new_account = session_manager.session_manager_controller(
             controller='client', ctype='action', action='new',
             new='account', client_id=cls.client_id,
             session_token=cls.session_token, user_name=cls.user_name_2,
             user_pass=cls.user_pass_2, user_email=cls.user_email_2
         )
+
         # Login to new user account
-        print('[...]: User action Account Login')
+        print('[...]: User action AccountLogin (2)')
         login = session_manager.session_manager_controller(
             controller='client', ctype='action', action='login',
             client_id=cls.client_id, session_token=cls.session_token,
-            user_name=cls.user_name_2, user_pass=cls.user_pass_2,
+            user_pass=cls.user_pass_2, user_email=cls.user_email_2
         )
+
         # Add new contact record to populate active contact list
-        print('[...]: User action New Contact Record')
+        print('[...]: User action NewContactRecord')
         add_contact_record = session_manager.session_manager_controller(
             controller='client', ctype='action', action='new', new='contact',
             contact='record', client_id=cls.client_id,
@@ -67,13 +75,15 @@ class TestEWalletSessionManageUserActionTransferCredits(unittest.TestCase):
             user_phone='123454321', user_reference='Test Mockup',
             notes='Notes added by functional test',
         )
+
         # Supply EWallet with credits to have available for transfer
-        print('[...]: User action Supply EWallet Credits')
+        print('[...]: User action SupplyCredits')
         supply = session_manager.session_manager_controller(
             controller='client', ctype='action', action='supply', supply='credits',
             client_id=cls.client_id, session_token=cls.session_token,
             currency='RON', credits=100, cost=4.7,
-            notes='EWallet user action Supply notes added by functional test suit.'
+            notes='EWallet user action SupplyCredits notes added by '
+                  'EWSC functional test suit.'
         )
 
     @classmethod
@@ -83,7 +93,7 @@ class TestEWalletSessionManageUserActionTransferCredits(unittest.TestCase):
             os.remove('data/ewallet.db')
 
     def test_user_action_transfer_credits(self):
-        print('\n[ * ]: User action Transfer Credits.')
+        print('\n[ * ]: User action TransferCredits.')
         instruction_set = {
             'controller': 'client', 'ctype': 'action', 'action': 'transfer',
             'transfer': 'credits', 'client_id': self.client_id,

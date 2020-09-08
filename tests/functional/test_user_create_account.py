@@ -16,18 +16,21 @@ class TestEWalletSessionManagerUserCreateAccount(unittest.TestCase):
         print('[ + ]: Prerequisites -')
         # Create new EWallet Session Manager instance
         session_manager = manager.EWalletSessionManager()
+
         # Generate new Client ID to be able to request a Session Token
-        print('[...]: User action Request Client ID')
+        print('[...]: User action RequestClientID')
         client_id = session_manager.session_manager_controller(
             controller='client', ctype='action', action='request',
             request='client_id'
         )
+
         # Request a Session Token to be able to operate within a EWallet Session
-        print('[...]: User action Request Session Token')
+        print('[...]: User action RequestSessionToken')
         session_token = session_manager.session_manager_controller(
             controller='client', ctype='action', action='request', request='session_token',
             client_id=client_id['client_id']
         )
+
         # Set global values
         cls.session_manager = session_manager
         cls.client_id = client_id['client_id']
@@ -40,7 +43,7 @@ class TestEWalletSessionManagerUserCreateAccount(unittest.TestCase):
             os.remove('data/ewallet.db')
 
     def test_user_action_create_account_functionality(self):
-        print('\n[ * ]: User action Create New Account')
+        print('\n[ * ]: User action CreateNewAccount')
         instruction_set = {
             'controller': 'client', 'ctype': 'action', 'action': 'new',
             'new': 'account', 'client_id': self.client_id,

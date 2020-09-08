@@ -115,7 +115,7 @@ class EWallet(Base):
 
     def fetch_user_password_hash_function(self):
         log.debug('')
-        return EWalletLogin().hash_password
+        return res_utils.hash_password
 
 #   @pysnooper.snoop('logs/ewallet.log')
     def fetch_active_session_user(self, obj=True):
@@ -645,13 +645,14 @@ class EWallet(Base):
                 user[0].to_unlink_timestamp, 30
             )
             # If 30 days since account marked for removal, remove from db
-            if check:
+            if check or kwargs.get('forced_removal'):
                 user_account.delete()
+                kwargs['active_session'].commit()
                 return kwargs['user_id']
             return self.warning_user_account_pending_deletion(kwargs)
-        except:
-            return self.error_could_not_unlink_user_account(kwargs)
-        return kwargs['user_id']
+        except Exception as e:
+            kwargs['active_session'].rollback()
+            return self.error_could_not_unlink_user_account(kwargs, e)
 
     # ACTIONS
     '''
@@ -2437,12 +2438,9 @@ class EWallet(Base):
     def handle_user_action_recover_account(self, **kwargs):
         log.debug('')
         check_logged_in = self.check_user_logged_in()
-        if not check_logged_in:
-            return self.warning_user_not_logged_in(check_logged_in, kwargs)
-        check_unlinked = self.check_user_account_flag_for_unlink()
-        return self.warning_user_account_flaged_for_removal(
-            kwargs, check_logged_in, check_unlinked
-        ) if check_unlinked else self.action_recover_user_account(**kwargs)
+        return self.warning_user_not_logged_in(check_logged_in, kwargs) \
+            if not check_logged_in else \
+            self.action_recover_user_account(**kwargs)
 
     def handle_user_action_unlink_invoice_list(self, **kwargs):
         log.debug('')
@@ -2580,7 +2578,7 @@ class EWallet(Base):
         if not check_logged_in:
             return self.warning_user_not_logged_in(check_logged_in, kwargs)
         check_unlinked = self.check_user_account_flag_for_unlink()
-        if not check_unlinked:
+        if check_unlinked:
             return self.warning_user_account_flaged_for_removal(
                 kwargs, check_logged_in, check_unlinked
             )
@@ -2597,7 +2595,7 @@ class EWallet(Base):
         if not check_logged_in:
             return self.warning_user_not_logged_in(check_logged_in, kwargs)
         check_unlinked = self.check_user_account_flag_for_unlink()
-        if not check_unlinked:
+        if check_unlinked:
             return self.warning_user_account_flaged_for_removal(
                 kwargs, check_logged_in, check_unlinked
             )
@@ -2614,7 +2612,7 @@ class EWallet(Base):
         if not check_logged_in:
             return self.warning_user_not_logged_in(check_logged_in, kwargs)
         check_unlinked = self.check_user_account_flag_for_unlink()
-        if not check_unlinked:
+        if check_unlinked:
             return self.warning_user_account_flaged_for_removal(
                 kwargs, check_logged_in, check_unlinked
             )
@@ -2631,7 +2629,7 @@ class EWallet(Base):
         if not check_logged_in:
             return self.warning_user_not_logged_in(check_logged_in, kwargs)
         check_unlinked = self.check_user_account_flag_for_unlink()
-        if not check_unlinked:
+        if check_unlinked:
             return self.warning_user_account_flaged_for_removal(
                 kwargs, check_logged_in, check_unlinked
             )
@@ -2648,7 +2646,7 @@ class EWallet(Base):
         if not check_logged_in:
             return self.warning_user_not_logged_in(check_logged_in, kwargs)
         check_unlinked = self.check_user_account_flag_for_unlink()
-        if not check_unlinked:
+        if check_unlinked:
             return self.warning_user_account_flaged_for_removal(
                 kwargs, check_logged_in, check_unlinked
             )
@@ -2665,7 +2663,7 @@ class EWallet(Base):
         if not check_logged_in:
             return self.warning_user_not_logged_in(check_logged_in, kwargs)
         check_unlinked = self.check_user_account_flag_for_unlink()
-        if not check_unlinked:
+        if check_unlinked:
             return self.warning_user_account_flaged_for_removal(
                 kwargs, check_logged_in, check_unlinked
             )
@@ -2682,7 +2680,7 @@ class EWallet(Base):
         if not check_logged_in:
             return self.warning_user_not_logged_in(check_logged_in, kwargs)
         check_unlinked = self.check_user_account_flag_for_unlink()
-        if not check_unlinked:
+        if check_unlinked:
             return self.warning_user_account_flaged_for_removal(
                 kwargs, check_logged_in, check_unlinked
             )
@@ -4236,6 +4234,16 @@ class EWallet(Base):
     [ TODO ]: Fetch error messages from message file by key codes.
     '''
 
+    def error_could_not_unlink_user_account(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Something went wrong. '
+                     'Could not unlink user account. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
     def error_no_user_action_pay_target_specified(self, *args):
         command_chain_response = {
             'failed': True,
@@ -4726,15 +4734,6 @@ class EWallet(Base):
             'failed': True,
             'error': 'Something went wrong. Could not fetch active session user. '\
                      'Command chain details : {}'.format(command_chain),
-        }
-        log.error(command_chain_response['error'])
-        return command_chain_response
-
-    def error_could_not_unlink_user_account(self, command_chain):
-        command_chain_response = {
-            'failed': True,
-            'error': 'Could not unlink user account. Command chain details : {}'\
-                     .format(command_chain),
         }
         log.error(command_chain_response['error'])
         return command_chain_response

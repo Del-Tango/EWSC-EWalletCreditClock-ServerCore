@@ -27,7 +27,9 @@
     - x - (EWSC) Fix user action Edit Email
     - x - (EWSC) Journal record grooming
     - x - (EWSC) Impose user account to_unlink restrictions on user actions
-    -   - (EWCC) Groom core functional tests
+    - x - (EWCC) Groom client core functional tests
+    -   - (EWSC) Groom server core functional tests
+    -   - (EWSC, EWCC, EWAT) Implement forced account removal
     - (EWCC) Groom core endpoint warning handlers
     - (EWCC) Groom core endpoint error handlers
     - (EWSC) Implement ResUser cleaner cron
@@ -35,7 +37,6 @@
     - (EWCC) Perform valid input checks on core subroutine SetResource
     - (EWCC) Make library importable
     - (EWSC, EWCC, EWAT) Implement master accounts
-    - (EWSC, EWCC, EWAT) Implement forced account removal
     - (EWSC, EWCC, EWAT) Implement EWallet Session keep alive signal
     - (EWSC, EWCC, EWAT) Implement check client id validity
     - (EWSC, EWCC, EWAT) Implement check session token validity
@@ -43,6 +44,7 @@
 
 * v.WhiteRabbit (1.0.0/MVP - stable) - Planned
     - (EWSC, EWCC, EWAT) Send user account password as hash
+    - (EWSC, EWCC, EWAT) Implement AddNotes mechanism for journal records
     - (EWSC, EWCC, EWAT) Add SSL certificates for master accounts
     - (EWSC) Use PostgreSql
     - (EWSC) Implement session manager thread pool
@@ -56,6 +58,7 @@
 
 * v.Tac (2.0.0 - stable) - Planned
     - (EWSC) Complete refactoring
+    - (EWCC) Add action/event orientation property on resource handlers
     - (EWSC, EWCC, EWAT) Implement user action TransferTime
     - (EWSC, EWCC, EWAT) Implement credit based software licencing
     - (EWSC, EWCC, EWAT) Implement clock based software licencing
@@ -70,8 +73,12 @@
 ################################################################################
 
 - BUG REPORT (EWSC)
-    - 05/09/2020
-        - 16:22 Detected possible memory leak upon executing EWSC test suit.
+    - x - 05/09/2020
+        - x - 16:22 Detected possible memory leak upon executing EWSC test suit.
+            - [ NOTE ]: Memory leak symptoms detected only upon execution of
+                        the EWSC functional test suit.
+            - [ NOTE ]: No memory leak symptoms detected upon execution of the
+                        EWCC functional test suit.
 
     - x - 06/09/2020
         - x - 02:38 Detected possible bug in credit clock timer actions.
@@ -81,6 +88,7 @@
 
 - TODO (EWSC)
 
+    - Implement forced user account removal.
     - Add ResUser cleaner cron
     - Add ResUser cleaner cron functional test
 
@@ -338,6 +346,11 @@
         - x - User action Unlink Invoice Record
         - x - User action Recover Account
 
+- TESTS:
+    - Unit
+    - Functional
+        - Add ForcedUnlinkAccount test case.
+
 
 ################################################################################
 - EWallet Credit Clock - Client Core
@@ -351,7 +364,7 @@
 - TESTS:
     - Unit
     - Functional
-        - Refactor functional test cases
+        - x - Refactor functional test cases
 
 
 

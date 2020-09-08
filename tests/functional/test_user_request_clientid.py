@@ -11,6 +11,7 @@ class TestEWalletUserActionRequestClientId(unittest.TestCase):
     def setUpClass(cls):
         # Create new EWallet Session Manager instance
         session_manager = manager.EWalletSessionManager()
+
         # Set global values
         cls.session_manager = session_manager
 
@@ -21,7 +22,7 @@ class TestEWalletUserActionRequestClientId(unittest.TestCase):
             os.remove('data/ewallet.db')
 
     def test_user_request_client_id_functionality(self):
-        print('[ * ]: User action Request Client ID')
+        print('[ * ]: User action RequestClientID')
         instruction_set = {
             'controller': 'client', 'ctype': 'action', 'action': 'request',
             'request': 'client_id'

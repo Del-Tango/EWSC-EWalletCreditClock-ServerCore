@@ -20,71 +20,88 @@ class TestEWalletSessionManageUserActionViewTimeRecord(unittest.TestCase):
         print('[ + ]: Prerequisits -')
         # Create new EWallet Session Manager instance
         session_manager = manager.EWalletSessionManager()
+
         # Generate new Client ID to be able to request a Session Token
-        print('[...]: User action Request Client ID')
+        print('[...]: User action RequestClientID')
         client_id = session_manager.session_manager_controller(
             controller='client', ctype='action', action='request',
             request='client_id'
         )
+
         # Request a Session Token to be able to operate within a EWallet Session
-        print('[...]: User action Request Session Token')
+        print('[...]: User action RequestSessionToken')
         session_token = session_manager.session_manager_controller(
             controller='client', ctype='action', action='request', request='session_token',
             client_id=client_id['client_id']
         )
+
         # Set global values
         cls.session_manager = session_manager
         cls.client_id = client_id['client_id']
         cls.session_token = session_token['session_token']
+
         # Create new user account to use as SystemCore account mockup
-        print('[...]: User action Create New Account')
+        print('[...]: User action CreateNewAccount (1)')
         new_account = session_manager.session_manager_controller(
             controller='client', ctype='action', action='new',
             new='account', client_id=cls.client_id,
             session_token=cls.session_token, user_name=cls.user_name_1,
             user_pass=cls.user_pass_1, user_email=cls.user_email_1
         )
+
         # Create new user account to user as Client account mockup
+        print('[...]: User action CreateNewAccount (2)')
         new_account = session_manager.session_manager_controller(
             controller='client', ctype='action', action='new',
             new='account', client_id=cls.client_id,
             session_token=cls.session_token, user_name=cls.user_name_2,
             user_pass=cls.user_pass_2, user_email=cls.user_email_2
         )
+
         # Login to new user account
-        print('[...]: User action Account Login')
+        print('[...]: User action AccountLogin (2)')
         login = session_manager.session_manager_controller(
             controller='client', ctype='action', action='login',
             client_id=cls.client_id, session_token=cls.session_token,
-            user_name=cls.user_name_2, user_pass=cls.user_pass_2,
+            user_pass=cls.user_pass_2, user_email=cls.user_email_2
         )
+
         # Supply EWallet with credits to have available for transfer
-        print('[...]: User action Supply EWallet Credits')
+        print('[...]: User action SupplyCredits')
         supply = session_manager.session_manager_controller(
-            controller='client', ctype='action', action='supply', supply='credits',
-            client_id=cls.client_id, session_token=cls.session_token,
-            currency='RON', credits=100, cost=4.7,
-            notes='EWallet user action Supply notes added by functional test suit.'
+            controller='client', ctype='action', action='supply',
+            supply='credits', client_id=cls.client_id,
+            session_token=cls.session_token, currency='RON',
+            credits=100, cost=4.7,
+            notes='EWallet user action SupplyCredits notes added by '
+                  'EWSC functional test suit.'
         )
+
         # Convert EWallet credits to Credit Clock minutes
-        print('[...]: User action Convert Credits To Clock')
+        print('[...]: User action ConvertCreditsToClock')
         convert = session_manager.session_manager_controller(
             controller='client', ctype='action', action='convert',
             convert='credits2clock', client_id=cls.client_id,
             session_token=cls.session_token, credits=20,
-            notes='EWallet user action Convert Credits To Clock notes added by functional test suit.'
+            notes='EWallet user action ConvertCreditsToClock notes added by '
+                  'EWSC functional test suit.'
         )
+
         # Use Credit Clock time
-        print('[...]: User action Start Clock Timer')
+        print('[...]: User action StartClockTimer')
         start = session_manager.session_manager_controller(
-            controller='client', ctype='action', action='start', start='clock_timer',
-            client_id=cls.client_id, session_token=cls.session_token
+            controller='client', ctype='action', action='start',
+            start='clock_timer', client_id=cls.client_id,
+            session_token=cls.session_token
         )
+
         time.sleep(3)
-        print('[...]: User action Stop Clock Timer')
+
+        print('[...]: User action StopClockTimer')
         stop = session_manager.session_manager_controller(
-            controller='client', ctype='action', action='stop', stop='clock_timer',
-            client_id=cls.client_id, session_token=cls.session_token
+            controller='client', ctype='action', action='stop',
+            stop='clock_timer', client_id=cls.client_id,
+            session_token=cls.session_token
         )
 
     @classmethod
@@ -95,7 +112,7 @@ class TestEWalletSessionManageUserActionViewTimeRecord(unittest.TestCase):
 
 
     def test_user_action_view_time_record(self):
-        print('\n[ * ]: User action View Time Record')
+        print('\n[ * ]: User action ViewTimeRecord')
         instruction_set = {
             'controller': 'client', 'ctype': 'action', 'action': 'view',
             'view': 'time', 'time': 'record', 'record_id': 1,

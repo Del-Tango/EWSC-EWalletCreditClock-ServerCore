@@ -19,52 +19,62 @@ class TestEWalletSessionManageUserActionUnlinkTimeRecord(unittest.TestCase):
         print('[ + ]: Prerequisits -')
         # Create new EWallet Session Manager instance
         session_manager = manager.EWalletSessionManager()
+
         # Generate new Client ID to be able to request a Session Token
-        print('[...]: User action Request Client ID')
+        print('[...]: User action RequestClientID')
         client_id = session_manager.session_manager_controller(
             controller='client', ctype='action', action='request',
             request='client_id'
         )
+
         # Request a Session Token to be able to operate within a EWallet Session
-        print('[...]: User action Request Session Token')
+        print('[...]: User action RequestSessionToken')
         session_token = session_manager.session_manager_controller(
             controller='client', ctype='action', action='request', request='session_token',
             client_id=client_id['client_id']
         )
+
         # Set global values
         cls.session_manager = session_manager
         cls.client_id = client_id['client_id']
         cls.session_token = session_token['session_token']
+
         # Create new user account to use as SystemCore account mockup
-        print('[...]: User action Create New Account')
+        print('[...]: User action CreateNewAccount (1)')
         new_account = session_manager.session_manager_controller(
             controller='client', ctype='action', action='new',
             new='account', client_id=cls.client_id,
             session_token=cls.session_token, user_name=cls.user_name_1,
             user_pass=cls.user_pass_1, user_email=cls.user_email_1
         )
+
         # Create new user account to user as Client account mockup
+        print('[...]: User action CreateNewAccount (2)')
         new_account = session_manager.session_manager_controller(
             controller='client', ctype='action', action='new',
             new='account', client_id=cls.client_id,
             session_token=cls.session_token, user_name=cls.user_name_2,
             user_pass=cls.user_pass_2, user_email=cls.user_email_2
         )
+
         # Login to new user account
-        print('[...]: User action Account Login')
+        print('[...]: User action AccountLogin (2)')
         login = session_manager.session_manager_controller(
             controller='client', ctype='action', action='login',
             client_id=cls.client_id, session_token=cls.session_token,
-            user_name=cls.user_name_2, user_pass=cls.user_pass_2,
+            user_email=cls.user_email_2, user_pass=cls.user_pass_2,
         )
+
         # Create clock consumption to generate time record for action unlink
-        print('[...]: User action Start Clock Timer')
+        print('[...]: User action StartClockTimer')
         start = session_manager.session_manager_controller(
             controller='client', ctype='action', action='start', start='clock_timer',
             client_id=cls.client_id, session_token=cls.session_token
         )
+
         time.sleep(3)
-        print('[...]: User action Stop Clock Timer')
+
+        print('[...]: User action StopClockTimer')
         stop = session_manager.session_manager_controller(
             controller='client', ctype='action', action='stop', stop='clock_timer',
             client_id=cls.client_id, session_token=cls.session_token
@@ -78,7 +88,7 @@ class TestEWalletSessionManageUserActionUnlinkTimeRecord(unittest.TestCase):
 
 
     def test_user_action_unlink_time_record(self):
-        print('\n[ * ]: User action Unlink Time Record')
+        print('\n[ * ]: User action UnlinkTimeRecord')
         instruction_set = {
             'controller': 'client', 'ctype': 'action', 'action': 'unlink',
             'unlink': 'time', 'time': 'record', 'record_id': 1,

@@ -12,23 +12,29 @@ class TestEWalletSessionManagerSystemWorkerCleanup(unittest.TestCase):
         # Create new EWallet Session Manager instance
         session_manager = manager.EWalletSessionManager()
         cls.session_manager = session_manager
+
         # Spawn 4 EWallet Session Workers
+
         # [ NOTE ]: On cleanup, one of the vacant workers should be reserved if
         # not passed over worker limit defined in config file to handle new
         # session token requests
-        print('[...]: System action New Session Worker (1)')
+
+        print('[...]: System action NewWorker (1)')
         worker = session_manager.session_manager_controller(
             controller='system', ctype='action', action='new', new='worker'
         )
-        print('[...]: System action New Session Worker (2)')
+
+        print('[...]: System action NewWorker (2)')
         worker = session_manager.session_manager_controller(
             controller='system', ctype='action', action='new', new='worker'
         )
-        print('[...]: System action New Session Worker (3)')
+
+        print('[...]: System action NewWorker (3)')
         worker = session_manager.session_manager_controller(
             controller='system', ctype='action', action='new', new='worker'
         )
-        print('[...]: System action New Session Worker (4)')
+
+        print('[...]: System action NewWorker (4)')
         worker = session_manager.session_manager_controller(
             controller='system', ctype='action', action='new', new='worker'
         )
@@ -40,7 +46,7 @@ class TestEWalletSessionManagerSystemWorkerCleanup(unittest.TestCase):
             os.remove('data/ewallet.db')
 
     def test_system_action_cleanup_worker_functionality(self):
-        print('\n[ * ]: System action Cleanup Session Workers')
+        print('\n[ * ]: System action CleanupSessionWorkers')
         instruction_set = {
             'controller': 'system', 'ctype': 'action', 'action': 'cleanup',
             'cleanup': 'workers'

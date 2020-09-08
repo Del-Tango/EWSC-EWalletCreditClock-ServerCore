@@ -11,8 +11,9 @@ class TestEWalletSessionManagerSystemActionNewSession(unittest.TestCase):
         print('[ + ]: Prerequisites -')
         # Create new EWallet Session Manager instance
         session_manager = manager.EWalletSessionManager()
+
         # Create first EWallet Session Worker
-        print('[...]: System action New Session Worker')
+        print('[...]: System action NewWorker')
         worker = session_manager.session_manager_controller(
             controller='system', ctype='action', action='new', new='worker'
         )
@@ -25,7 +26,7 @@ class TestEWalletSessionManagerSystemActionNewSession(unittest.TestCase):
             os.remove('data/ewallet.db')
 
     def test_system_new_session_functionality(self):
-        print('\n[ * ]: System action New EWallet Session')
+        print('\n[ * ]: System action NewSession')
         instruction_set = {
             'controller': 'system', 'ctype': 'action', 'action': 'new',
             'new': 'session', 'reference': 'EWallet Session Test'
