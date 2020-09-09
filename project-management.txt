@@ -30,10 +30,11 @@
     - x - (EWCC) Groom client core functional tests
     - x - (EWSC) Groom server core functional tests
     - x - (EWSC, EWCC, EWAT) Implement forced account removal
-    -   - (EWCC) Groom core endpoint warning handlers
-    - (EWCC) Groom core endpoint error handlers
-    - (EWSC) Implement ResUser cleaner cron
-    - (EWSC) Implement EWallet Session cleaner cron
+    - x - (EWCC) Groom core endpoint warning handlers
+    - x - (EWCC) Groom core endpoint error handlers
+    - x - (EWSC) Implement system action StartAccountCleaner
+    -   - (EWSC) Implement system action StartSessionCleaner
+    - (EWSC) Implement system action StartWorkerCleaner
     - (EWCC) Perform valid input checks on core subroutine SetResource
     - (EWCC) Make library importable
     - (EWSC, EWCC, EWAT) Implement master accounts
@@ -41,8 +42,14 @@
     - (EWSC, EWCC, EWAT) Implement check client id validity
     - (EWSC, EWCC, EWAT) Implement check session token validity
     - (EWSC, EWCC, EWAT) Implement issue report
+    - (EWAT) Groom tutor functional test suit
+    - (EWAT) Groom tutor instruction set inspections
+    - (EWAT) Groom tutor interactive actions
 
 * v.WhiteRabbit (1.0.0/MVP - stable) - Planned
+    - (EWSC) Implement system action StopAccountCleaner cron
+    - (EWSC) Implement system action StopWorkerCleaner cron
+    - (EWSC) Implement system action StopSessionCleaner cron
     - (EWSC, EWCC, EWAT) Implement entity record limiter queue mechanism
     - (EWSC, EWCC, EWAT) Send user account password as hash
     - (EWSC, EWCC, EWAT) Implement AddNotes mechanism for journal records
@@ -364,7 +371,7 @@
 - TODO:
 
     - x - Groom EWCC endpoint warning handlers
-    -   - Groom EWCC endpoint error handlers
+    - x - Groom EWCC endpoint error handlers
 
 - TESTS:
 

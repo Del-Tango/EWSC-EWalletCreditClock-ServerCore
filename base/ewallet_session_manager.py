@@ -6,12 +6,15 @@ import pysnooper
 import ast
 import multiprocessing as mp
 import json
+import schedule
+import threading
 
 from multiprocessing import Process, Queue, Lock, Value
 
 from .ewallet import EWallet
 from .config import Config
 from .res_utils import ResUtils
+from .res_user import ResUser
 from .ewallet_worker import EWalletWorker
 from .socket_handler import EWalletSocketHandler
 from .client_id import ClientID
@@ -31,6 +34,8 @@ class EWalletSessionManager():
     worker_pool = dict() # {<worker id>: {process: <Proc>, instruction: <Queue>, response: <Queue>, lock: <Value type-bool>}}
     client_pool = dict() # {<label>: <ClientToken>}
     stoken_pool = dict() # {<label>: <SessionToken>}
+    cron_pool = dict() # {<label>: {command: <list>, lock: <Lock>, state: <bool>}}
+    cleaner_thread = None
     primary_session = None
 
     def __init__(self, *args, **kwargs):
@@ -46,14 +51,21 @@ class EWalletSessionManager():
             )
         self.client_pool = kwargs.get('client_pool') or {}
         self.stoken_pool = kwargs.get('stoken_pool') or {}
+        self.cron_pool = kwargs.get('cron_pool') or {}
         self.primary_session = kwargs.get('primary_session') or \
             self.create_new_ewallet_session(
                 reference='S:CorePrimary',
                 expiration_date=None,
             )
+        self.cleaner_thread = kwargs.get('cleaner_thread')
         check_score = self.check_system_core_account_exists()
         if not check_score:
             res_utils.create_system_user(self.primary_session)
+        # Start cleaner crons on seperate thread
+        self.session_manager_controller(**{
+            'controller': 'system', 'ctype': 'action', 'action': 'start',
+            'start': 'cleaner_cron', 'clean': 'accounts'
+        })
 
     # FETCHERS
 
@@ -121,6 +133,86 @@ class EWalletSessionManager():
             'ewallet_session': ewallet_session,
         }
         return False if False in value_set.keys() else value_set
+
+    def fetch_cron_pool(self):
+        log.debug('')
+        return self.cron_pool
+
+    def fetch_cleaner_thread(self):
+        log.debug('')
+        cleaner_thread = self.cleaner_thread
+        return self.error_no_cleaner_thread_found(self.cleaner_thread) \
+            if not cleaner_thread else cleaner_thread
+
+    def fetch_account_unlink_freeze_interval(self):
+        log.debug('')
+        days = self.config.client_config['account_unlink_freeze_interval']
+        return int(days)
+
+    def fetch_cron_pool_entry_by_label(self, label=str()):
+        log.debug('')
+        cron_pool = self.fetch_session_manager_cron_pool()
+        if not cron_pool or isinstance(cron_pool, dict) and \
+                cron_pool.get('failed'):
+            return self.error_could_not_fetch_cron_pool(label, cron_pool)
+        pool_entry = cron_pool.get(label)
+        return self.warning_could_not_fetch_cron_pool_entry_by_label(
+            label, cron_pool, pool_entry
+        ) if not pool_entry else pool_entry
+
+    def fetch_account_cleaner_cron_state(self):
+        cron_pool = self.fetch_session_manager_cron_pool()
+        if not cron_pool or isinstance(cron_pool, dict) and \
+                cron_pool.get('failed'):
+            return self.error_could_not_fetch_cron_pool(cron_pool)
+        pool_entry = cron_pool.get(
+            self.fetch_account_cleaner_cron_default_label()
+        )
+        return self.error_could_not_fetch_cleaner_cron_state(
+            cron_pool, pool_entry
+        ) if not pool_entry else pool_entry.get('state')
+
+    def fetch_account_cleaner_cron_lock(self):
+        log.debug('')
+        cron_pool = self.fetch_session_manager_cron_pool()
+        if not cron_pool or isinstance(cron_pool, dict) and \
+                cron_pool.get('failed'):
+            return self.error_could_not_fetch_cron_pool(cron_pool)
+        pool_entry = cron_pool.get(
+            self.fetch_account_cleaner_cron_default_label()
+        )
+        return self.error_could_not_fetch_cleaner_cron_lock(
+            cron_pool, pool_entry
+        ) if not pool_entry else pool_entry.get('lock')
+
+    def fetch_account_cleaner_cron_default_label(self):
+        log.debug('')
+        return self.config.cron_config['account_cleaner_cron_label']
+
+    def fetch_session_manager_cron_pool(self):
+        log.debug('')
+        return self.cron_pool
+
+    def fetch_account_cleaner_cron_command_interface(self):
+        log.debug('')
+        cron_pool = self.fetch_session_manager_cron_pool()
+        if not cron_pool or isinstance(cron_pool, dict) and \
+                cron_pool.get('failed'):
+            return self.error_could_not_fetch_cron_pool(cron_pool)
+        pool_entry = cron_pool.get(
+            self.fetch_account_cleaner_cron_default_label()
+        )
+        return self.error_could_not_fetch_cleaner_cron_command_interface(
+            cron_pool, pool_entry
+        ) if not pool_entry else pool_entry.get('command')
+    def fetch_user_account_cleaner_cron_function(self):
+        log.debug('')
+        return self.cleanup_user_accounts
+
+    def fetch_user_account_cleaner_cron_default_interval(self):
+        log.debug('')
+        hours = self.config.cron_config['account_cleaner_cron_interval']
+        return int(hours)
 
     def fetch_session_worker_cleanup_instruction(self):
         log.debug('')
@@ -518,6 +610,69 @@ class EWalletSessionManager():
     [ NOTE ]: Write date updates are done here.
     '''
 
+    def set_cleaner_cron_states(self, flag=None):
+        log.debug('')
+        cron_pool = self.fetch_cron_pool()
+        if not cron_pool or isinstance(cron_pool, dict) and \
+                cron_pool.get('failed'):
+            return self.error_could_not_fetch_cron_pool(flag, cron_pool)
+        updated, update_count = [], 0
+        for item in cron_pool:
+            try:
+                cron_pool[item]['active'] = flag
+                self.update_write_date()
+            except Exception as e:
+                self.warning_could_not_set_cron_state_flag(
+                    flag, cron_pool, item, e
+                )
+            updated.append(item)
+            update_count += 1
+        log.info(
+            'Successfully updated {} session manager '
+            'cron pool entry states - {}'.format(update_count, updated)
+        )
+        return True
+
+    def set_cleaner_thread(self, cleaner_thread):
+        log.debug('')
+        try:
+            self.cleaner_thread = cleaner_thread
+            self.update_write_date()
+        except Exception as e:
+            return self.error_could_not_set_cleaner_thread(
+                cleaner_thread, self.cleaner_thread, e
+            )
+        return True
+
+    def set_user_account_cleaner_cron_state(self, flag=None):
+        log.debug('')
+        pool_entry = self.fetch_cron_pool_entry_by_label(
+            label=self.fetch_account_cleaner_cron_default_label()
+        )
+        try:
+            pool_entry['active'] = flag
+        except Exception as e:
+            return self.error_cold_not_set_cleaner_cron_state(
+                flag, pool_entry, e
+            )
+        log.info('Succesfully set AccountCleaner cron state.')
+        return True
+
+    def set_cron_job_pool_entry(self, **kwargs):
+        log.debug('')
+        try:
+            self.cron_pool.update({
+                kwargs.get('label'): {
+                    'active': kwargs.get('active') or False,
+                }
+            })
+            self.update_write_date()
+        except Exception as e:
+            return self.error_could_no_set_cron_job_pool_entry(
+                kwargs, self.cron_pool, e
+            )
+        return True
+
     def remove_session_worker_from_pool(self, session_worker_id):
         log.debug('')
         try:
@@ -601,7 +756,8 @@ class EWalletSessionManager():
 
     def set_socket_handler(self, socket_handler):
         '''
-        [ NOTE   ]: Overrides socket_handler attribute with new EWalletSocketHandler object.
+        [ NOTE   ]: Overrides socket_handler attribute with
+                    new EWalletSocketHandler object.
         [ RETURN ]: (True | False)
         '''
         log.debug('')
@@ -691,7 +847,8 @@ class EWalletSessionManager():
 
     def update_worker_pool(self, worker_pool):
         '''
-        [ NOTE   ]: Overrides Session Manager Worker Pool and checks for type errors.
+        [ NOTE   ]: Overrides Session Manager Worker Pool
+                    and checks for type errors.
         [ INPUT  ]: [worker1, worker2, ...]
         [ RETURN ]: (True | False)
         '''
@@ -704,7 +861,8 @@ class EWalletSessionManager():
 
     def update_client_pool(self, client_pool):
         '''
-        [ NOTE   ]: Overrides Session Manager Client Pool and checks for type errors.
+        [ NOTE   ]: Overrides Session Manager Client Pool
+                    and checks for type errors.
         [ INPUT  ]: [user_id1, user_id2, ...]
         [ RETURN ]: (True | False)
         '''
@@ -717,7 +875,8 @@ class EWalletSessionManager():
 
     def update_client_worker_map(self, cw_map):
         '''
-        [ NOTE   ]: Overrides Session Manager Client Worker map and checks for type errors.
+        [ NOTE   ]: Overrides Session Manager Client Worker map
+                    and checks for type errors.
         [ INPUT  ]: {user_id: session_token, ...}
         [ RETURN ]: (True | False)
         '''
@@ -776,6 +935,14 @@ class EWalletSessionManager():
             return False
         elif response.get('state') in [0, 1]:
             return True
+
+    def check_cleaner_thread_active(self):
+        log.debug('')
+        cleaner_thread = self.fetch_cleaner_thread()
+        if isinstance(cleaner_thread, dict) and \
+                cleaner_thread.get('failed'):
+            return self.error_could_not_fetch_cleaner_thread(cleaner_thread)
+        return False if not cleaner_thread.is_alive() else True
 
 #   @pysnooper.snoop('logs/ewallet.log')
     def check_system_core_account_exists(self):
@@ -860,6 +1027,31 @@ class EWalletSessionManager():
             session_manager=self, in_port=in_port, out_port=out_port,
             host=self.fetch_socket_handler_default_address()
         )
+
+    # SETUPS
+
+    def setup_user_account_cleaner_cron(self):
+        log.debug('')
+        interval = res_utils.compute_number_of_minutes_in_hours(
+            self.fetch_user_account_cleaner_cron_default_interval()
+        )
+        try:
+            schedule.every(interval).minutes.do(
+                self.fetch_user_account_cleaner_cron_function()
+            ).tag(self.fetch_account_cleaner_cron_default_label(), 'Cron')
+        except Exception as e:
+            return self.error_could_not_setup_account_cleaner_cron(interval)
+        active_state = False if not self.check_cleaner_thread_active() else True
+        set_pool_entry = self.set_cron_job_pool_entry(
+            label=self.fetch_account_cleaner_cron_default_label(),
+            active=active_state
+        )
+        instruction_set_response = {
+            'failed': False,
+            'interval': interval,
+            'active': active_state,
+        }
+        return instruction_set_response
 
     # SCRAPERS
 
@@ -1136,6 +1328,45 @@ class EWalletSessionManager():
 
     # CLEANERS
 
+    # TODO
+#   @pysnooper.snoop('logs/ewallet.log')
+    def cleanup_user_accounts(self):
+        log.debug('TODO - Refactor')
+        freeze_interval = self.fetch_account_unlink_freeze_interval()
+        orm_session = res_utils.session_factory()
+        accounts_removed = []
+        user_query = list(
+            orm_session.query(ResUser).filter_by(to_unlink=True)
+        )
+        if not user_query:
+            log.info('No user accounts marked for unlink found.')
+            return False
+        accounts_to_unlink = len(user_query)
+        try:
+            for account in user_query:
+                user_id = account.fetch_user_id()
+                check = res_utils.check_days_since_timestamp(
+                    account.to_unlink_timestamp, freeze_interval
+                )
+                log.info('Checking unlink timestamp...')
+                if not check:
+                    log.info('Account {} not ready for unlink.'.format(user_id))
+                    continue
+                log.info('Cleaning up user account {}.'.format(user_id))
+                try:
+                    orm_session.query(ResUser).filter_by(user_id=user_id).delete()
+                    orm_session.commit()
+                except Exception as e:
+                    self.warning_could_not_cleanup_user_account(
+                        freeze_interval, orm_session, accounts_removed, user_query,
+                        accounts_to_unlink, account, check, user_id, e
+                    )
+                    continue
+                accounts_removed.append(user_id)
+        finally:
+            orm_session.close()
+
+#   @pysnooper.snoop('logs/ewallet.log')
     def cleanup_session_worker(self, worker_id):
         log.debug('')
         instruction = self.fetch_session_worker_cleanup_instruction()
@@ -1206,6 +1437,26 @@ class EWalletSessionManager():
             'worker_count': worker_count,
         }
         return instruction_set_response
+
+    # INIT
+
+#   @pysnooper.snoop('logs/ewallet.log')
+    def init_cleaner_thread(self, **kwargs):
+        log.debug('')
+        try:
+            t = threading.Thread(
+                target=self.cron_session_manager_cleaners,
+                daemon=True,
+                name='CleanerThread',
+            )
+            set_thread = self.set_cleaner_thread(t)
+            t.start()
+        except Exception as e:
+            return self.error_could_not_init_user_account_cleaner_cron(
+                kwargs, e
+            )
+        self.set_cleaner_cron_states(flag=True)
+        return True
 
     # GENERAL
 
@@ -1456,7 +1707,44 @@ class EWalletSessionManager():
         socket = self.spawn_ewallet_session_manager_socket_handler(in_port, out_port)
         return self.error_could_not_spawn_socket_handler() if not socket else socket
 
+    # CRONJOBS
+
+#   @pysnooper.snoop('logs/ewallet.log')
+    def cron_session_manager_cleaners(self):
+        log.debug('CRON')
+        while True:
+            schedule.run_pending()
+            time.sleep(1)
+
     # ACTIONS
+
+    # TODO
+    def action_start_ewallet_session_cleaner_cron(self, **kwargs):
+        log.debug('TODO - UNIMPLEMENTED')
+    def action_start_session_worker_cleaner_cron(self, **kwargs):
+        log.debug('TODO - UNIMPLEMENTED')
+    def action_stop_user_account_cleaner_cron(self, **kwargs):
+        log.debug('TODO - UNIMPLEMENTED')
+    def action_stop_session_worker_cleaner_cron(self, **kwargs):
+        log.debug('TODO - UNIMPLEMENTED')
+    def action_stop_ewallet_session_cleaner_cron(self, **kwargs):
+        log.debug('TODO - UNIMPLEMENTED')
+
+#   @pysnooper.snoop('logs/ewallet.log')
+    def action_start_user_account_cleaner_cron(self, **kwargs):
+        log.debug('')
+        label = self.fetch_account_cleaner_cron_default_label()
+        setup = self.setup_user_account_cleaner_cron()
+        check = self.check_cleaner_thread_active()
+        if not check or isinstance(check, dict) and check.get('failed'):
+            init = self.init_cleaner_thread()
+        log.info('Successfully started AccountCleaner cron job thread.')
+        instruction_set_response = {
+            'failed': False,
+            'cron': label,
+            'pool_entry': self.fetch_cron_pool_entry_by_label(label=label),
+        }
+        return instruction_set_response
 
 #   @pysnooper.snoop('logs/ewallet.log')
     def action_cleanup_session_workers(self, **kwargs):
@@ -1686,6 +1974,14 @@ class EWalletSessionManager():
     '''
     [ NOTE ]: Instruction set validation and sanitizations are performed here.
     '''
+
+    def handle_system_action_start_user_account_cleaner_cron(self, **kwargs):
+        log.debug('')
+        return self.action_start_user_account_cleaner_cron(**kwargs)
+
+    def handle_system_action_start_session_worker_cleaner_cron(self, **kwargs):
+        log.debug('')
+        return self.action_start_session_worker_cleaner_cron(**kwargs)
 
     def handle_system_action_interogate_ewallet_workers(self, **kwargs):
         log.debug('')
@@ -2596,6 +2892,37 @@ class EWalletSessionManager():
         log.debug('TODO - UNIMPLEMENTED')
         expire = self.event_session_token_expire()
 
+    # TODO
+    def handle_client_action_transfer(self, **kwargs):
+        log.debug('TODO - Add support for client action transfer time')
+        if not kwargs.get('transfer'):
+            return self.error_no_client_action_transfer_target_specified(kwargs)
+        handlers = {
+            'credits': self.handle_client_action_transfer_credits,
+#           'time': self.handle_client_action_transfer_time,
+        }
+        return handlers[kwargs['transfer']](**kwargs)
+
+    def handle_system_action_start_cleaner_cron(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('clean'):
+            return self.error_no_system_cleaner_cron_target_specified(kwargs)
+        handlers = {
+            'accounts': self.handle_system_action_start_user_account_cleaner_cron,
+            'workers': self.handle_system_action_start_session_worker_cleaner_cron,
+        }
+        return handlers[kwargs['clean']](**kwargs)
+
+    def handle_system_action_start(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('start'):
+            return self.error_no_system_action_start_target_specified()
+        handlers = {
+            'instruction_listener': self.handle_system_action_start_instruction_listener,
+            'cleaner_cron': self.handle_system_action_start_cleaner_cron,
+        }
+        return handlers[kwargs['start']](**kwargs)
+
     def handle_system_action_cleanup_ewallet_sessions(self, **kwargs):
         log.debug('')
         cleanup_mode = 'target' if kwargs.get('session_id') else 'sweep'
@@ -2624,17 +2951,6 @@ class EWalletSessionManager():
             'workers': self.handle_system_action_interogate_ewallet_workers,
         }
         return handlers[kwargs['interogate']](**kwargs)
-
-    # TODO
-    def handle_client_action_transfer(self, **kwargs):
-        log.debug('TODO - Add support for client action transfer time')
-        if not kwargs.get('transfer'):
-            return self.error_no_client_action_transfer_target_specified(kwargs)
-        handlers = {
-            'credits': self.handle_client_action_transfer_credits,
-#           'time': self.handle_client_action_transfer_time,
-        }
-        return handlers[kwargs['transfer']](**kwargs)
 
     def handle_client_action_switch_transfer(self, **kwargs):
         log.debug('')
@@ -3006,18 +3322,6 @@ class EWalletSessionManager():
         }
         return handlers[kwargs['new']](**kwargs)
 
-    def handle_system_action_start(self, **kwargs):
-        '''
-        [ NOTE   ]: System action handler for start type actions.
-        '''
-        log.debug('')
-        if not kwargs.get('start'):
-            return self.error_no_system_action_start_target_specified()
-        handlers = {
-            'instruction_listener': self.handle_system_action_start_instruction_listener,
-        }
-        return handlers[kwargs['start']](**kwargs)
-
     def handle_system_action_open(self, **kwargs):
         '''
         [ NOTE   ]: System action handler for open type actions.
@@ -3208,6 +3512,33 @@ class EWalletSessionManager():
     '''
     [ TODO ]: Fetch warning messages from message file by key codes.
     '''
+
+    def warning_could_not_set_cron_state_flag(self, *args):
+        instruction_set_response = res_utils.format_warning_response(**{
+            'failed': True, 'details': args,
+            'warning': 'Something went wrong. '
+                       'Could not set cron state flag.',
+        })
+        self.log_warning(**instruction_set_response)
+        return instruction_set_response
+
+    def warning_could_not_cleanup_user_account(self, *args):
+        instruction_set_response = res_utils.format_warning_response(**{
+            'failed': True, 'details': args,
+            'warning': 'Something went wrong. '
+                       'Could not cleanup user account.',
+        })
+        self.log_warning(**instruction_set_response)
+        return instruction_set_response
+
+    def warning_could_not_fetch_cron_pool_entry_by_label(self, *args):
+        instruction_set_response = res_utils.format_warning_response(**{
+            'failed': True, 'details': args,
+            'warning': 'Something went wrong. '
+                       'Could not fetch cron pool entry by label.',
+        })
+        self.log_warning(**instruction_set_response)
+        return instruction_set_response
 
     def warning_could_not_view_time_record(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
@@ -4074,6 +4405,121 @@ class EWalletSessionManager():
     '''
     [ TODO ]: Fetch error messages from message file by key codes.
     '''
+
+    def error_could_not_fetch_cron_pool(self, *args):
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
+            'error': 'Something went wrong. '
+                     'Could not fetch session manager cron pool.',
+        })
+        self.log_error(**instruction_set_response)
+        return instruction_set_response
+
+    def error_could_not_set_cleaner_thread(self, *args):
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
+            'error': 'Something went wrong. '
+                     'Could not set cleaner thread.',
+        })
+        self.log_error(**instruction_set_response)
+        return instruction_set_response
+
+    def error_could_not_fetch_cleaner_thread(self, *args):
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
+            'error': 'Something went wrong. '
+                     'Could not fetch cleaner thread.',
+        })
+        self.log_error(**instruction_set_response)
+        return instruction_set_response
+
+    def error_no_cleaner_thread_found(self, *args):
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
+            'error': 'No cleaner thread found.',
+        })
+        self.log_error(**instruction_set_response)
+        return instruction_set_response
+
+    def error_could_not_fetch_cron_pool(self, *args):
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
+            'error': 'Something went wrong. '
+                     'Could not fetch session manager cron pool.',
+        })
+        self.log_error(**instruction_set_response)
+        return instruction_set_response
+
+    def error_cold_not_set_cleaner_cron_state(self, *args):
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
+            'error': 'Something went wrong. '
+                     'Could not set cleaner cron state.',
+        })
+        self.log_error(**instruction_set_response)
+        return instruction_set_response
+
+    def error_could_not_fetch_cleaner_cron_state(self, *args):
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
+            'error': 'Something went wrong. '
+                     'Could not fetch cleaner cron state.',
+        })
+        self.log_error(**instruction_set_response)
+        return instruction_set_response
+
+    def error_could_not_fetch_cleaner_cron_command_interface(self, *args):
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
+            'error': 'Something went wrong. '
+                     'Could not fetch cleaner cron command interface.',
+        })
+        self.log_error(**instruction_set_response)
+        return instruction_set_response
+
+    def error_could_not_fetch_cleaner_cron_lock(self, *args):
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
+            'error': 'Something went wrong. '
+                     'Could not fetch account cleaner cron lock.',
+        })
+        self.log_error(**instruction_set_response)
+        return instruction_set_response
+
+    def error_could_no_set_cron_job_pool_entry(self, *args):
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
+            'error': 'Something went wrong. '
+                     'Could not setup cron job pool entry.',
+        })
+        self.log_error(**instruction_set_response)
+        return instruction_set_response
+
+    def error_could_not_setup_account_cleaner_cron(self, *args):
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
+            'error': 'Something went wrong. '
+                     'Could not setup user account cleaner cron.',
+        })
+        self.log_error(**instruction_set_response)
+        return instruction_set_response
+
+    def error_could_not_init_user_account_cleaner_cron(self, *args):
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
+            'error': 'Something went wrong. '
+                     'Could not initialise user account cleaner cron.',
+        })
+        self.log_error(**instruction_set_response)
+        return instruction_set_response
+
+    def error_no_system_cleaner_cron_target_specified(self, *args):
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
+            'error': 'No system CleanerCron orientation target specified.',
+        })
+        self.log_error(**instruction_set_response)
+        return instruction_set_response
 
     def error_could_not_remove_session_worker_from_pool(self, *args):
         instruction_set_response = res_utils.format_error_response(**{

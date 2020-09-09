@@ -69,6 +69,11 @@ class ResUtils():
     def format_datetime(self, datetime_obj):
         return datetime_obj.strftime('%d-%m-%Y %H:%M:%S')
 
+    # COMPUTERS
+
+    def compute_number_of_minutes_in_hours(self, hours):
+        return 60 * int(hours)
+
     # GENERAL
 
     def hash_password(self, password):
