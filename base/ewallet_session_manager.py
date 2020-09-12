@@ -32,7 +32,7 @@ class EWalletSessionManager():
     create_date = None
     write_date = None
     worker_pool = dict() # {<worker id>: {process: <Proc>, instruction: <Queue>, response: <Queue>, lock: <Value type-bool>}}
-    client_pool = dict() # {<label>: <ClientToken>}
+    ctoken_pool = dict() # {<label>: <ClientToken>}
     stoken_pool = dict() # {<label>: <SessionToken>}
     cron_pool = dict() # {<label>: {command: <list>, lock: <Lock>, state: <bool>}}
     cleaner_thread = None
@@ -49,7 +49,7 @@ class EWalletSessionManager():
             self.session_manager_controller(
                 controller='system', ctype='action', action='new', new='worker'
             )
-        self.client_pool = kwargs.get('client_pool') or {}
+        self.ctoken_pool = kwargs.get('ctoken_pool') or {}
         self.stoken_pool = kwargs.get('stoken_pool') or {}
         self.cron_pool = kwargs.get('cron_pool') or {}
         self.primary_session = kwargs.get('primary_session') or \
@@ -68,6 +68,23 @@ class EWalletSessionManager():
         })
 
     # FETCHERS
+
+    def fetch_ctoken_pool(self):
+        log.debug('')
+        return self.ctoken_pool
+
+    def fetch_client_token_cleaner_cron_function(self):
+        log.debug('')
+        return self.action_sweep_cleanup_client_tokens
+
+    def fetch_client_token_cleaner_cron_default_interval(self):
+        log.debug('')
+        hours = self.config.cron_config['ctoken_cleaner_cron_interval']
+        return int(hours)
+
+    def fetch_client_token_cleaner_cron_default_label(self):
+        log.debug('')
+        return self.config.cron_config['ctoken_cleaner_cron_label']
 
     def fetch_ewallet_session_cleaner_cron_function(self):
         log.debug('')
@@ -502,7 +519,7 @@ class EWalletSessionManager():
 
     def fetch_worker_identifier_by_client_id(self, client_id):
         log.debug('')
-        client_pool = self.fetch_client_pool()
+        client_pool = self.fetch_ctoken_pool()
         if client_id not in client_pool:
             return self.error_invalid_client_id(client_id, client_pool)
         ctoken = client_pool[client_id]
@@ -518,13 +535,9 @@ class EWalletSessionManager():
         ) if not worker_id or isinstance(worker_id, dict) and \
             worker_id.get('failed') else worker_id
 
-    def fetch_client_pool(self):
-        log.debug('')
-        return self.client_pool
-
     def fetch_client_token_by_label(self, client_id):
         log.debug('')
-        client_pool = self.fetch_client_pool()
+        client_pool = self.fetch_ctoken_pool()
         if client_id not in client_pool:
             return self.error_invalid_client_id(client_id, client_pool)
         return client_pool[client_id]
@@ -638,6 +651,38 @@ class EWalletSessionManager():
     [ NOTE ]: Write date updates are done here.
     '''
 
+    def remove_client_token_from_pool(self, client_id, **kwargs):
+        log.debug('')
+        ctoken_pool = kwargs.get('ctoken_pool') or self.fetch_ctoken_pool()
+        try:
+            del ctoken_pool[client_id]
+            self.update_write_date()
+        except Exception as e:
+            return self.error_could_not_remove_client_token_from_pool(
+                client_id, ctoken_pool, kwargs, e
+            )
+        log.info(
+            'Successfully removed client token {} from pool'.format(client_id)
+        )
+        return True
+
+    def remove_session_worker_from_pool(self, session_worker_id, **kwargs):
+        log.debug('')
+        worker_pool = kwargs.get('worker_pool') or self.fetch_worker_pool()
+        try:
+            del worker_pool[session_worker_id]
+            self.update_write_date()
+        except Exception as e:
+            return self.error_could_not_remove_ewallet_session_worker_from_pool(
+                session_worker_id, worker_pool, e
+            )
+        log.info(
+            'Successfully removed ewallet session worker {} from pool.'.format(
+                session_worker_id
+            )
+        )
+        return True
+
     def set_cleaner_cron_states(self, flag=None):
         log.debug('')
         cron_pool = self.fetch_cron_pool()
@@ -701,19 +746,6 @@ class EWalletSessionManager():
             )
         return True
 
-    def remove_session_worker_from_pool(self, session_worker_id, **kwargs):
-        log.debug('')
-        worker_pool = kwargs.get('worker_pool') or self.fetch_worker_pool()
-        try:
-            del worker_pool[session_worker_id]
-            self.update_write_date()
-        except Exception as e:
-            return self.error_could_not_remove_ewallet_session_worker_from_pool(
-                session_worker_id, worker_pool, e
-            )
-        log.info('Successfully removed ewallet session worker from pool.')
-        return True
-
     def set_write_date(self, write_date):
         log.debug('')
         try:
@@ -741,11 +773,11 @@ class EWalletSessionManager():
     def set_new_client_id_to_pool(self, client_id_map):
         log.debug('')
         try:
-            self.client_pool.update(client_id_map)
+            self.ctoken_pool.update(client_id_map)
             self.update_write_date()
         except Exception as e:
             return self.error_could_not_set_client_pool(
-                client_id_map, self.client_pool, e
+                client_id_map, self.ctoken_pool, e
             )
         log.info('Successfully updated client id pool.')
         return True
@@ -825,11 +857,11 @@ class EWalletSessionManager():
         '''
         log.debug('')
         try:
-            self.client_pool = client_pool
+            self.ctoken_pool = client_pool
             self.update_write_date()
         except Exception as e:
             return self.error_coult_not_set_client_pool(
-                client_pool, self.client_pool, e
+                client_pool, self.ctoken_pool, e
             )
         log.info('Successfully set session manager client pool.')
         return True
@@ -859,11 +891,11 @@ class EWalletSessionManager():
         '''
         log.debug('')
         try:
-            self.client_pool.append(client)
+            self.ctoken_pool.append(client)
             self.update_write_date()
         except Exception as e:
             return self.error_could_not_update_client_pool(
-                client, self.client_pool, e
+                client, self.ctoken_pool, e
             )
         log.info('Successfully set session manager client pool.')
         return True
@@ -917,6 +949,16 @@ class EWalletSessionManager():
             self.set_client_worker_session_map(cw_map)
 
     # CHECKERS
+
+    def check_client_token_expired(self, client_id):
+        log.debug('')
+        client_token = self.fetch_client_token_by_label(client_id)
+        if isinstance(client_token, dict) and \
+                client_token.get('failed'):
+            return self.error_could_not_fetch_client_token(
+                client_id, client_token
+            )
+        return client_token.check_token_expired()
 
     # TODO
     def check_command_chain_session_token(self):
@@ -1059,6 +1101,33 @@ class EWalletSessionManager():
 
     # SETUPS
 
+    def setup_client_token_cleaner_cron(self):
+        log.debug('')
+        interval = res_utils.compute_number_of_minutes_from_hours(
+            self.fetch_client_token_cleaner_cron_default_interval()
+        )
+        label = self.fetch_client_token_cleaner_cron_default_label()
+        try:
+            schedule.every(interval).hours.do(
+                self.fetch_client_token_cleaner_cron_function(),
+                self.fetch_ctoken_pool(),
+                from_cron=True,
+            ).tag(label, 'Cron')
+        except Exception as e:
+            return self.error_could_not_setup_client_token_cleaner_cron(
+                label, interval, e
+            )
+        active_state = False if not self.check_cleaner_thread_active() else True
+        set_pool_entry = self.set_cron_job_pool_entry(
+            label=label, active=active_state
+        )
+        instruction_set_response = {
+            'failed': False,
+            'interval': interval,
+            'active': active_state,
+        }
+        return instruction_set_response
+
     def setup_ewallet_session_cleaner_cron(self):
         log.debug('')
         interval = res_utils.compute_number_of_minutes_from_hours(
@@ -1139,26 +1208,6 @@ class EWalletSessionManager():
 
     # SCRAPERS
 
-    # TODO
-#   @pysnooper.snoop()
-    def scrape_ewallet_session(self, ewallet_session):
-        log.debug('TODO - Refactor')
-#       session_worker = self.fetch_ewallet_session_assigned_worker(
-#           ewallet_session
-#       )
-#       if not session_worker or isinstance(session_worker, dict) and \
-#               session_worker.get('failed'):
-#           return self.error_could_not_fetch_session_worker_for_ewallet_session(
-#               ewallet_session
-#           )
-#       remove_from_pool = session_worker.main_controller(
-#           controller='system', ctype='action', action='remove',
-#           remove='session', session=ewallet_session
-#       )
-#       return self.error_could_not_scrape_ewallet_session(ewallet_session) \
-#           if not remove_from_pool or isinstance(remove_from_pool, dict) and \
-#           remove_from_pool.get('failed') else True
-
     def scrape_ewallet_session_worker(self, session_worker):
         log.debug('')
         remove_from_pool = self.remove_session_worker_from_pool(session_worker)
@@ -1186,10 +1235,13 @@ class EWalletSessionManager():
 #   @pysnooper.snoop('logs/ewallet.log')
     def map_client_id_to_worker(self, client_id, assigned_worker_id):
         log.debug('')
-        update_map = self.update_client_worker_map({client_id: assigned_worker_id})
+        update_map = self.update_client_worker_map(
+            {client_id: assigned_worker_id}
+        )
         return update_map or False
 
-    def map_client_id_to_ewallet_session(self, client_id, session_token, assigned_worker, ewallet_session):
+    def map_client_id_to_ewallet_session(
+        self, client_id, session_token, assigned_worker, ewallet_session):
         '''
         [ NOTE   ]: Maps Client ID to Worker for Session Manager and Client ID
                     with Session Token and EWallet Session object for Worker.
@@ -1205,11 +1257,13 @@ class EWalletSessionManager():
         }
         return False if False in mappers.values() else True
 
-    def map_client_id_to_session_token(self, client_id, session_token, assigned_worker, ewallet_session):
+    def map_client_id_to_session_token(
+        self, client_id, session_token, assigned_worker, ewallet_session):
         log.debug('')
         update_map = assigned_worker.main_controller(
             controller='system', ctype='action', action='add', add='session_map',
-            client_id=client_id, session_token=session_token, session=ewallet_session
+            client_id=client_id, session_token=session_token,
+            session=ewallet_session
         )
         return update_map or False
 
@@ -1229,7 +1283,7 @@ class EWalletSessionManager():
 
     def validate_client_token_in_pool(self, client_token):
         log.debug('')
-        return False if client_token not in self.client_pool.values() else True
+        return False if client_token not in self.ctoken_pool.values() else True
 
 #   @pysnooper.snoop()
     def validate_client_id(self, client_id):
@@ -1437,6 +1491,128 @@ class EWalletSessionManager():
 
     # CLEANERS
 
+    # TODO
+    def sweep_cleanup_session_tokens(self, **kwargs):
+        log.debug('TODO - UNIMPLEMENTED')
+
+#       ctoken_pool = kwargs.get('ctoken_pool') or self.fetch_ctoken_pool()
+#       tokens_to_remove = [
+#           client_id for client_id in ctoken_pool
+#           if self.check_client_token_expired(client_id)
+#       ]
+#       if not tokens_to_remove:
+#           return self.warning_no_client_tokens_to_remove(
+#               kwargs, ctoken_pool, tokens_to_remove
+#           )
+#       sanitized_instruction_set = res_utils.remove_tags_from_command_chain(
+#           kwargs, 'ctoken_pool'
+#       )
+#       cleanup = self.cleanup_client_tokens(
+#           tokens_to_remove, ctoken_pool=ctoken_pool,
+#           **sanitized_instruction_set
+#       )
+#       return self.error_could_not_cleanup_client_tokens(
+#           kwargs, ctoken_pool, tokens_to_remove, cleanup
+#       ) if isinstance(cleanup, dict) and cleanup.get('failed') \
+#       else cleanup
+
+    def sweep_cleanup_client_tokens(self, **kwargs):
+        log.debug('TODO - CLEANUP SESSION TOKENS LINKED TO CLIENT ID')
+        ctoken_pool = kwargs.get('ctoken_pool') or self.fetch_ctoken_pool()
+        tokens_to_remove = [
+            client_id for client_id in ctoken_pool
+            if self.check_client_token_expired(client_id)
+        ]
+        if not tokens_to_remove:
+            return self.warning_no_client_tokens_to_remove(
+                kwargs, ctoken_pool, tokens_to_remove
+            )
+        sanitized_instruction_set = res_utils.remove_tags_from_command_chain(
+            kwargs, 'ctoken_pool'
+        )
+        cleanup = self.cleanup_client_tokens(
+            tokens_to_remove, ctoken_pool=ctoken_pool,
+            **sanitized_instruction_set
+        )
+        return self.error_could_not_cleanup_client_tokens(
+            kwargs, ctoken_pool, tokens_to_remove, cleanup
+        ) if isinstance(cleanup, dict) and cleanup.get('failed') \
+        else cleanup
+
+
+
+#   @pysnooper.snoop('logs/ewallet.log')
+    def sweep_cleanup_ewallet_sessions(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('session_worker_map'):
+            return self.error_no_ewallet_session_worker_map_found(kwargs)
+        instruction = self.fetch_session_worker_remove_session_set_instruction()
+        worker_count, session_count = 0, 0
+        for worker_id in kwargs['session_worker_map']:
+            instruction.update({
+                'sessions': kwargs['session_worker_map'][worker_id]
+            })
+            clean = self.action_execute_system_instruction_set(
+                worker_id=worker_id, **instruction
+            )
+            if not clean or isinstance(clean, dict) and \
+                    clean.get('failed'):
+                return self.warning_could_not_clean_expired_worker_sessions(
+                    kwargs, instruction, worker_id, clean
+                )
+            session_count += len(kwargs['session_worker_map'][worker_id])
+            worker_count += 1
+        cleanup_stokens = self.sweep_cleanup_session_tokens(**kwargs)
+        instruction_set_response = {
+            'failed': False,
+            'sessions_cleaned': session_count,
+            'worker_count': worker_count,
+        }
+        return instruction_set_response
+
+    def cleanup_client_token(self, client_id, **kwargs):
+        log.debug('')
+        ctoken_pool = kwargs.get('ctoken_pool') or self.fetch_ctoken_pool()
+        if client_id not in ctoken_pool:
+            return self.error_client_id_not_found_in_ctoken_pool(
+                client_id, ctoken_pool, kwargs
+            )
+        remove = self.remove_client_token_from_pool(client_id, **kwargs)
+        if not remove or isinstance(remove, dict) and \
+                remove.get('failed'):
+            return self.error_could_not_remove_client_token_from_pool(
+                client_id, remove
+            )
+        return {
+            'failed': False,
+            'ctokens_cleaned': 1,
+            'ctokens': [client_id],
+        }
+
+    def cleanup_client_tokens(self, client_ids, **kwargs):
+        log.debug('')
+        ctoken_pool = kwargs.get('ctoken_pool') or \
+            self.fetch_ctoken_pool()
+        cleaned_tokens, cleaning_failures = [], 0
+        for client_id in client_ids:
+            clean = self.cleanup_client_token(
+                client_id, **kwargs
+            )
+            if isinstance(clean, dict) and clean.get('failed'):
+                self.warning_could_not_clean_client_token(
+                    client_id, client_ids, clean
+                )
+                cleaning_failures += 1
+                continue
+            cleaned_tokens.append(client_id)
+        return self.warning_no_client_tokens_cleaned(client_ids) \
+            if not cleaned_tokens else {
+                'failed': False,
+                'ctokens_cleaned': len(cleaned_tokens),
+                'cleaning_failures': cleaning_failures,
+                'ctokens': cleaned_tokens
+            }
+
 #   @pysnooper.snoop('logs/ewallet.log')
     def cleanup_session_worker(self, worker_id, **kwargs):
         log.debug('')
@@ -1525,34 +1701,6 @@ class EWalletSessionManager():
                 accounts_removed.append(user_id)
         finally:
             orm_session.close()
-
-#   @pysnooper.snoop('logs/ewallet.log')
-    def sweep_cleanup_ewallet_sessions(self, **kwargs):
-        log.debug('')
-        if not kwargs.get('session_worker_map'):
-            return self.error_no_ewallet_session_worker_map_found(kwargs)
-        instruction = self.fetch_session_worker_remove_session_set_instruction()
-        worker_count, session_count = 0, 0
-        for worker_id in kwargs['session_worker_map']:
-            instruction.update({
-                'sessions': kwargs['session_worker_map'][worker_id]
-            })
-            clean = self.action_execute_system_instruction_set(
-                worker_id=worker_id, **instruction
-            )
-            if not clean or isinstance(clean, dict) and \
-                    clean.get('failed'):
-                return self.warning_could_not_clean_expired_worker_sessions(
-                    kwargs, instruction, worker_id, clean
-                )
-            session_count += len(kwargs['session_worker_map'][worker_id])
-            worker_count += 1
-        instruction_set_response = {
-            'failed': False,
-            'sessions_cleaned': session_count,
-            'worker_count': worker_count,
-        }
-        return instruction_set_response
 
     # INIT
 
@@ -1839,10 +1987,6 @@ class EWalletSessionManager():
     # ACTIONS
 
     # TODO
-    def action_start_client_token_cleaner_cron(self, **kwargs):
-        log.debug('TODO - UNIMPLEMENTED')
-
-    # TODO
     def action_stop_user_account_cleaner_cron(self, **kwargs):
         log.debug('TODO - UNIMPLEMENTED')
     def action_stop_session_worker_cleaner_cron(self, **kwargs):
@@ -1852,7 +1996,33 @@ class EWalletSessionManager():
     def action_stop_client_token_cleaner_cron(self, **kwargs):
         log.debug('TODO - UNIMPLEMENTED')
 
+    def action_sweep_cleanup_client_tokens(self, **kwargs):
+        log.debug(
+            '' if not kwargs.get('from_cron') else \
+            '- Automated Action: {} -'.format(
+                self.fetch_client_token_cleaner_cron_default_label()
+            )
+        )
+        ctoken_pool = kwargs.get('ctoken_pool') or self.fetch_ctoken_pool()
+        sweep = self.sweep_cleanup_client_tokens(ctoken_pool=ctoken_pool)
+        return self.warning_could_not_sweep_cleanup_client_tokens(
+            kwargs, ctoken_pool, sweep
+        ) if isinstance(sweep, dict) and sweep.get('failed') else sweep
 
+    def action_start_client_token_cleaner_cron(self, **kwargs):
+        log.debug('')
+        label = self.fetch_client_token_cleaner_cron_default_label()
+        setup = self.setup_client_token_cleaner_cron()
+        check = self.check_cleaner_thread_active()
+        if not check or isinstance(check, dict) and check.get('failed'):
+            init = self.init_cleaner_thread()
+        log.info('Successfully started {} cron job thread.'.format(label))
+        instruction_set_response = {
+            'failed': False,
+            'cron': label,
+            'pool_entry': self.fetch_cron_pool_entry_by_label(label=label),
+        }
+        return instruction_set_response
 
     def action_sweep_cleanup_ewallet_sessions(self, **kwargs):
         log.debug(
@@ -3081,7 +3251,7 @@ class EWalletSessionManager():
             'accounts': self.handle_system_action_start_user_account_cleaner_cron,
             'workers': self.handle_system_action_start_session_worker_cleaner_cron,
             'sessions': self.handle_system_action_start_ewallet_session_cleaner_cron,
-#           'ctokens': self.handle_system_action_start_client_token_cleaner_cron,
+            'ctokens': self.handle_system_action_start_client_token_cleaner_cron,
 #           'all': ,
         }
         return handlers[kwargs['clean']](**kwargs)
@@ -3697,6 +3867,41 @@ class EWalletSessionManager():
     '''
     [ TODO ]: Fetch warning messages from message file by key codes.
     '''
+
+    def warning_could_not_sweep_cleanup_client_tokens(self, *args):
+        instruction_set_response = res_utils.format_warning_response(**{
+            'failed': True, 'details': args,
+            'warning': 'Something went wrong. '
+                       'Could not sweep cleanup client tokens.',
+        })
+        self.log_warning(**instruction_set_response)
+        return instruction_set_response
+
+    def warning_no_client_tokens_to_remove(self, *args):
+        instruction_set_response = res_utils.format_warning_response(**{
+            'failed': True, 'details': args,
+            'warning': 'No client tokens staged for removal.',
+        })
+        self.log_warning(**instruction_set_response)
+        return instruction_set_response
+
+    def warning_could_not_clean_client_token(self, *args):
+        instruction_set_response = res_utils.format_warning_response(**{
+            'failed': True, 'details': args,
+            'warning': 'Something went wrong. '
+                       'Could not clean client token',
+        })
+        self.log_warning(**instruction_set_response)
+        return instruction_set_response
+
+    def warning_no_client_tokens_cleaned(self, *args):
+        instruction_set_response = res_utils.format_warning_response(**{
+            'failed': True, 'details': args,
+            'warning': 'Something went wrong. '
+                       'No client tokens cleanead.',
+        })
+        self.log_warning(**instruction_set_response)
+        return instruction_set_response
 
     def warning_invalid_session_worker_state_code(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
@@ -4607,6 +4812,50 @@ class EWalletSessionManager():
     '''
     [ TODO ]: Fetch error messages from message file by key codes.
     '''
+
+    def error_could_not_setup_client_token_cleaner_cron(self, *args):
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
+            'error': 'Something went wrong. '
+                     'Could not setup client token cleaner cron.',
+        })
+        self.log_error(**instruction_set_response)
+        return instruction_set_response
+
+    def error_could_not_cleanup_client_tokens(self, *args):
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
+            'error': 'Something went wrong. '
+                     'Could not cleanup client tokens.',
+        })
+        self.log_error(**instruction_set_response)
+        return instruction_set_response
+
+    def error_could_not_fetch_client_token(self, *args):
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
+            'error': 'Something went wrong. '
+                     'Could not fetch client token.',
+        })
+        self.log_error(**instruction_set_response)
+        return instruction_set_response
+
+    def error_could_not_remove_client_token_from_pool(self, *args):
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
+            'error': 'Something went wrong. '
+                     'Could not remove client token from pool.',
+        })
+        self.log_error(**instruction_set_response)
+        return instruction_set_response
+
+    def error_client_id_not_found_in_ctoken_pool(self, *args):
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
+            'error': 'Client  ID not found in CToken pool.',
+        })
+        self.log_error(**instruction_set_response)
+        return instruction_set_response
 
     def error_could_not_setup_ewallet_session_cleaner_cron(self, *args):
         instruction_set_response = res_utils.format_error_response(**{

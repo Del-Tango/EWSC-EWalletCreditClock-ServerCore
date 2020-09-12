@@ -30,6 +30,10 @@ class Token():
 
     # FETCHERS
 
+    def fetch_token_expiration_date(self):
+        log.debug('')
+        return self.valid_to
+
     def fetch_token_values(self):
         log.debug('')
         return {
@@ -44,6 +48,14 @@ class Token():
             'valid_to': self.valid_to or \
                 self.error_no_valid_to_date_found(),
         }
+
+    # CHECKERS
+
+    def check_token_expired(self):
+        log.debug('')
+        now = datetime.datetime.now()
+        expiration_date = self.fetch_token_expiration_date()
+        return True if now > expiration_date else False
 
     # GENERAL
 

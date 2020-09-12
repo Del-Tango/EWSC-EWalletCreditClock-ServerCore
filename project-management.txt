@@ -33,8 +33,9 @@
     - x - (EWCC) Groom core endpoint warning handlers
     - x - (EWCC) Groom core endpoint error handlers
     - x - (EWSC) Implement system action StartAccountCleaner
-    -   - (EWSC) Implement system action StartSessionCleaner
-    - (EWSC) Implement system action StartWorkerCleaner
+    - . - (EWSC) Implement system action StartSessionCleaner
+    - x - (EWSC) Implement system action StartWorkerCleaner
+    - . - (EWSC) Implement system action StartCTokenCleaner
     - (EWCC) Perform valid input checks on core subroutine SetResource
     - (EWCC) Make library importable
     - (EWSC, EWCC, EWAT) Implement master accounts
@@ -101,6 +102,8 @@
     - x - Implement forced user account removal.
     - x - Add AccountCleaner cleaner cron
     - x - Add system action StartAccountCleaner functional test
+    -   - Cleanup session tokens on system action StartSessionCleaner
+    -   - Cleanup session tokens on system action StartCTokenCleaner
 
     - x - Error Handler Grooming (Session Manager)
         - x - Cleanup stack trace string
@@ -393,14 +396,49 @@
 EWSC - System Actions
     - System action New Worker
     - System action New Session
-    - System action Start Instruction Listener
-    - System action Start Account Cleaner
-    - System action Open Sockets
-    - System action Close Sockets
     - System action Interogate Session Workers
-    - System action Cleanup Session Workers
     - System action Target Cleanup Session
+
+    - System action Cleanup Session Workers
+        - Session Worker States:
+            - Vacant
+
     - System action Sweep Cleanup Sessions
+        - EWallet Session States:
+            - Expired
+            - TODO - Empty
+
+    - System action Start Account Cleaner
+        - Cleaner Thread States:
+            - Active
+            - Inactive
+
+    - System action Start Session Cleaner
+        - Cleaner Thread States:
+            - Active
+            - Inactive
+
+    - System action Start Worker Cleaner
+        - Cleaner Thread States:
+            - Active
+            - Inactive
+
+    - System action Start CToken Cleaner
+        - Cleaner Thread States:
+            - Active
+            - Inactive
+
+    - System action Open Sockets
+        - Socket Handler States:
+            - Sockets Closed
+
+    - System action Close Sockets
+        - Socket Handler States:
+            - Sockets Open
+
+    - System action Start Instruction Listener
+        - Socket Handler States:
+            - Sockets Open
 
 EWSC - User Actions
 

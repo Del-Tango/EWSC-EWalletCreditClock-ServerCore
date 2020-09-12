@@ -142,13 +142,4 @@ log = log_init()
 
 # CODE DUMP
 
-#           'details': str(kwargs.get('details'))\
-#               .replace('\\', '')\
-#               .replace('(', '')\
-#               .replace('\'', '')\
-#               .replace('\"', '')\
-#               .replace(')', ''),
-#       }
-#       return instruction_set_response
-
 
