@@ -73,19 +73,34 @@ class EWalletSessionManager():
         log.debug('')
         return self.stoken_pool
 
+#   @pysnooper.snoop('logs/ewallet.log')
     def fetch_stokens_from_client_token_set(self, client_token_set):
         '''
         [ NOTE ]: Fetches stoken for each ctoken in client token set,
                   assures unique item values and filters out None items.
         '''
         log.debug('')
+        session_tokens = []
         try:
-            session_tokens = list(filter(None, list(dict.fromkeys([
-                ctoken.fetch_session_token() for ctoken in client_token_set
-            ]))))
+            for client_id in client_token_set:
+                ctoken = self.fetch_client_token_by_label(client_id)
+                if not ctoken or isinstance(ctoken, dict) and \
+                        ctoken.get('failed'):
+                    self.warning_invalid_client_token_label(
+                        client_id, client_token_set, session_tokens, client_id
+                    )
+                    continue
+                session_token = ctoken.fetch_stoken()
+                if not session_token:
+                    continue
+                session_tokens.append(session_token)
+#           session_tokens = list(filter(None, list(dict.fromkeys([
+#               client_token_set[ctoken].fetch_session_token()
+#               for ctoken in client_token_set
+#           ]))))
         except Exception as e:
             return self.error_could_not_fetch_stokens_from_client_token_set(
-                client_token_set, e
+                client_token_set, session_tokens, e
             )
         return session_tokens
 
@@ -4031,6 +4046,14 @@ class EWalletSessionManager():
     '''
     [ TODO ]: Fetch warning messages from message file by key codes.
     '''
+
+    def warning_invalid_client_token_label(self, *args):
+        instruction_set_response = res_utils.format_warning_response(**{
+            'failed': True, 'details': args,
+            'warning': 'Invalid client token label.',
+        })
+        self.log_warning(**instruction_set_response)
+        return instruction_set_response
 
     def warning_could_not_sweep_cleanup_session_tokens(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
