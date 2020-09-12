@@ -1,5 +1,6 @@
 import os
 import unittest
+import datetime
 from base import ewallet_session_manager as manager
 
 
@@ -16,8 +17,8 @@ class TestEWalletSessionManagerSystemWorkerCleanup(unittest.TestCase):
         # Spawn 4 EWallet Session Workers
 
         # [ NOTE ]: On cleanup, one of the vacant workers should be reserved if
-        # not passed over worker limit defined in config file to handle new
-        # session token requests
+        #           not passed over worker limit defined in config file to handle new
+        #           session token requests
 
         print('[...]: System action NewWorker (1)')
         worker = session_manager.session_manager_controller(

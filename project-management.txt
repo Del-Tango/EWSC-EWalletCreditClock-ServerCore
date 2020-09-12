@@ -38,8 +38,10 @@
     - . - (EWSC) Implement system action StartCTokenCleaner
     - x - (EWSC) Implement system action SweepCleanupSTokens
     - x - (EWSC) Implement system action SweepCleanupCTokens
+    - x - (EWSC) Fix system action SweepCleanupWorkers
     - (EWSC) Implement system action TargetCleanupSToken
     - (EWSC) Implement system action TargetCleanupCToken
+    - (EWSC) Implement system action TargetCleanupWorker
     - (EWCC) Perform valid input checks on core subroutine SetResource
     - (EWCC) Make library importable
     - (EWSC, EWCC, EWAT) Implement master accounts
@@ -85,7 +87,8 @@
 - EWallet Credit Clock - Server Core
 ################################################################################
 
-- BUG REPORT (EWSC)
+- (EWSC) - BUG REPORT:
+
     - x - 05/09/2020
         - x - 16:22 Detected possible memory leak upon executing EWSC test suit.
             - [ NOTE ]: Memory leak symptoms detected only upon execution of
@@ -101,7 +104,7 @@
             - [ NOTE ]: Time record write date updates were trigger by the
                         write date setter.
 
-- TODO (EWSC)
+- (EWSC) - TODO:
 
     - x - Implement forced user account removal.
     - x - Add AccountCleaner cleaner cron
@@ -111,9 +114,12 @@
     - x - Cleanup session tokens on system action StartSessionCleaner
     - x - Implement system action SweepCleanupSTokens
     -   - Implement system action TargetCleanupStoken
+    - Implement system action TargetCleanupWorker
     - Implement system action TargetCleanupCToken
+    - Implement system action TargetCleanupWorker
     - Cleanup EWallet Sessions on system action SweepCleanupSTokens
     - Cleanup EWallet Sessions on system action SweepCleanupCTokens
+    - Cleanup EWallet Sessions on system action SweepCleanupSessions that are empty
 
     - x - Error Handler Grooming (Session Manager)
         - x - Cleanup stack trace string
@@ -402,10 +408,12 @@
 - EWallet Credit Clock - Server Core - Tech Dox
 ################################################################################
 
-EWSC - System Actions
+- (EWSC) - System Actions:
+
     - System action New Worker
     - System action New Session
     - System action Interogate Session Workers
+    - System action Target Cleanup Worker
     - System action Target Cleanup Session
     - System action Target Cleanup CToken
     - System action Target Cleanup SToken
@@ -420,49 +428,59 @@ EWSC - System Actions
             - Session Token States:
                 - Expired
 
-    - System action Cleanup Session Workers
+    - System action Sweep Cleanup Workers
         - State Oriented Restrictions:
             - Session Worker States:
                 - Vacant
 
     - System action Sweep Cleanup Sessions
-        - EWallet Session States:
-            - Expired
-            - TODO - Empty
+        - State Oriented Restrictions:
+            - EWallet Session States:
+                - Expired
+                - Empty
 
     - System action Start Account Cleaner
-        - Cleaner Thread States:
-            - Active
-            - Inactive
+        - State Oriented Restrictions:
+            - Cleaner Thread States:
+                - Active
+                - Inactive
 
     - System action Start Session Cleaner
-        - Cleaner Thread States:
-            - Active
-            - Inactive
+        - State Oriented Restrictions:
+            - Cleaner Thread States:
+                - Active
+                - Inactive
 
     - System action Start Worker Cleaner
-        - Cleaner Thread States:
-            - Active
-            - Inactive
+        - State Oriented Restrictions:
+            - Cleaner Thread States:
+                - Active
+                - Inactive
 
     - System action Start CToken Cleaner
-        - Cleaner Thread States:
-            - Active
-            - Inactive
+        - State Oriented Restrictions:
+            - Cleaner Thread States:
+                - Active
+                - Inactive
 
     - System action Open Sockets
-        - Socket Handler States:
-            - Sockets Closed
+        - State Oriented Restrictions:
+            - Socket Handler States:
+                - Sockets Closed
 
     - System action Close Sockets
-        - Socket Handler States:
-            - Sockets Open
+        - State Oriented Restrictions:
+            - Socket Handler States:
+                - Sockets Open
 
     - System action Start Instruction Listener
-        - Socket Handler States:
-            - Sockets Open
+        - State Oriented Restrictions:
+            - Socket Handler States:
+                - Sockets Open
 
-EWSC - User Actions
+- (EWSC) - Master Actions:
+
+- (EWSC) - User Actions:
 
     - User action Request Client ID
         - User Account States:
