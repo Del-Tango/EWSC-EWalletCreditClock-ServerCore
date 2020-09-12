@@ -99,8 +99,8 @@
 - TODO (EWSC)
 
     - x - Implement forced user account removal.
-    - Add ResUser cleaner cron
-    - Add ResUser cleaner cron functional test
+    - x - Add AccountCleaner cleaner cron
+    - x - Add system action StartAccountCleaner functional test
 
     - x - Error Handler Grooming (Session Manager)
         - x - Cleanup stack trace string
@@ -394,6 +394,7 @@ EWSC - System Actions
     - System action New Worker
     - System action New Session
     - System action Start Instruction Listener
+    - System action Start Account Cleaner
     - System action Open Sockets
     - System action Close Sockets
     - System action Interogate Session Workers

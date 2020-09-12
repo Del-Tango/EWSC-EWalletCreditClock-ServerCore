@@ -35,7 +35,7 @@ class TestEWalletSessionManagerSocketHandler(unittest.TestCase):
 #       print('[ * ]: System Action Start Instruction Set Listener')
 #       listen = self.session_manager_controller(
 #               controller='system', ctype='action', action='start',
-#               start='instruction_listener'
+#               start='listener'
 #               )
 #       print(str(listen) + '\n')
 #       return listen

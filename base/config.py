@@ -46,8 +46,13 @@ class Config():
         }
         self.cron_config = {
             'account_cleaner_cron_label': 'AccountCleaner',
-            'account_cleaner_cron_interval': 24,
-            'worker_cleaner_cron_interval': 1,
+            'account_cleaner_cron_interval': 24, #h
+            'worker_cleaner_cron_label': 'WorkerCleaner',
+            'worker_cleaner_cron_interval': 1, #h
+            'session_cleaner_cron_label': 'SessionCleaner',
+            'session_cleaner_cron_interval': 30, #m
+            'ctoken_cleaner_cron_label': 'ClientTokenCleaner',
+            'ctoken_cleaner_cron_interval': 30, #m
         }
         self.wallet_config = {
             'wallet_reference': 'EWallet',

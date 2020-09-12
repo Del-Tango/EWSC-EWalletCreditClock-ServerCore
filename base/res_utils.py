@@ -71,7 +71,7 @@ class ResUtils():
 
     # COMPUTERS
 
-    def compute_number_of_minutes_in_hours(self, hours):
+    def compute_number_of_minutes_from_hours(self, hours):
         return 60 * int(hours)
 
     # GENERAL

@@ -3,6 +3,7 @@ from . import test_system_session_sweep_cleanup
 from . import test_system_session_target_cleanup
 from . import test_system_worker_cleanup
 from . import test_system_start_account_cleaner_cron
+from . import test_system_start_worker_cleaner_cron
 
 from . import test_user_request_clientid
 from . import test_user_request_stoken
