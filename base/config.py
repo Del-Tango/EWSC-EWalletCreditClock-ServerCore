@@ -125,7 +125,7 @@ class Config():
 
 #   @pysnooper.snoop()
     def config_file_parser_compute(self, config_dicts, line):
-        if line[0] == '#':
+        if line[0] == '#' or line[0] == ' ':
             return False
         key_val = line.split(' : ')
         if len(key_val) == 1:
