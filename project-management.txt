@@ -35,7 +35,11 @@
     - x - (EWSC) Implement system action StartAccountCleaner
     - . - (EWSC) Implement system action StartSessionCleaner
     - x - (EWSC) Implement system action StartWorkerCleaner
-    -   - (EWSC) Implement system action StartCTokenCleaner
+    - . - (EWSC) Implement system action StartCTokenCleaner
+    -   - (EWSC) Implement system action SweepCleanupSTokens
+    - x - (EWSC) Implement system action SweepCleanupCTokens
+    - (EWSC) Implement system action TargetCleanupSToken
+    - (EWSC) Implement system action TargetCleanupCToken
     - (EWCC) Perform valid input checks on core subroutine SetResource
     - (EWCC) Make library importable
     - (EWSC, EWCC, EWAT) Implement master accounts
@@ -102,8 +106,13 @@
     - x - Implement forced user account removal.
     - x - Add AccountCleaner cleaner cron
     - x - Add system action StartAccountCleaner functional test
-    -   - Cleanup session tokens on system action StartSessionCleaner
-    -   - Cleanup session tokens on system action StartCTokenCleaner
+    - x - Cleanup session tokens on system action StartCTokenCleaner
+    - x - Implement system action SweepCleanupCTokens
+    - . - Cleanup session tokens on system action StartSessionCleaner
+    -   - Implement system action SweepCleanupSTokens
+    - Implement system action TargetCleanupStoken
+    - Implement system action TargetCleanupCToken
+    - Cleanup EWallet Sessions on system action SweepCleanupSTokens
 
     - x - Error Handler Grooming (Session Manager)
         - x - Cleanup stack trace string

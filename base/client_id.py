@@ -26,7 +26,8 @@ class ClientID(Token):
             else kwargs.pop('expires_on')
         return super(ClientID, self).__init__(
             label=self.label, active=self.active,
-            unlink_flag=self.unlink_flag, valid_to=self.valid_to, *args, **kwargs
+            unlink_flag=self.unlink_flag, valid_to=self.valid_to,
+            *args, **kwargs
         )
 
     # FETCHERS

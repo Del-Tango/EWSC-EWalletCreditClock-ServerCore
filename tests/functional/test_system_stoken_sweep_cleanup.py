@@ -4,7 +4,7 @@ import unittest
 from base import ewallet_session_manager as manager
 
 
-class TestEWalletSessionManagerSystemSessionCleanupSweep(unittest.TestCase):
+class TestEWalletSessionManagerSystemSTokenCleanupSweep(unittest.TestCase):
     session_manager = None
 
     @classmethod
@@ -71,12 +71,11 @@ class TestEWalletSessionManagerSystemSessionCleanupSweep(unittest.TestCase):
         if os.path.isfile('data/ewallet.db'):
             os.remove('data/ewallet.db')
 
-    def test_system_action_sweep_cleanup_ewallet_sessions(self):
-        # Create EWallet Session with expiration date 30 days in the past
-        print('\n[ * ]: System action SweepCleanupSessions')
+    def test_system_action_sweep_cleanup_session_tokens(self):
+        print('\n[ * ]: System action SweepCleanupSTokens')
         instruction_set = {
             'controller': 'system', 'ctype': 'action', 'action': 'cleanup',
-            'cleanup': 'sessions'
+            'cleanup': 'stokens'
         }
         clean = self.session_manager.session_manager_controller(
             **instruction_set
