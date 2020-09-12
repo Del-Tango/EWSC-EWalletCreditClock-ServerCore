@@ -31,21 +31,40 @@ class ClientID(Token):
 
     # FETCHERS
 
+    def fetch_label(self):
+        log.debug('')
+        return self.label
+
     def fetch_stoken(self):
         log.debug('')
         return self.stoken
+
+    # CHECKERS
+
+    def check_has_stoken(self, stoken_label):
+        log.debug('')
+        stoken = self.fetch_stoken()
+        if not stoken:
+            return False
+        return True if stoken.fetch_label() == stoken_label else False
 
     # SETTERS
 
     def set_stoken(self, stoken):
         log.debug('')
-        if not isinstance(stoken, object):
+        if not isinstance(stoken, object) and isinstance != None:
             return self.error_invalid_session_token(stoken)
         try:
             self.stoken = stoken
         except Exception as e:
             return self.warning_could_not_set_session_token(stoken, e)
         return True
+
+    # CLEANERS
+
+    def clear_stoken(self):
+        log.debug('')
+        return self.set_stoken(None)
 
     # GENERAL
 

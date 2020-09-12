@@ -35,7 +35,7 @@
     - x - (EWSC) Implement system action StartAccountCleaner
     - . - (EWSC) Implement system action StartSessionCleaner
     - x - (EWSC) Implement system action StartWorkerCleaner
-    - . - (EWSC) Implement system action StartCTokenCleaner
+    -   - (EWSC) Implement system action StartCTokenCleaner
     - (EWCC) Perform valid input checks on core subroutine SetResource
     - (EWCC) Make library importable
     - (EWSC, EWCC, EWAT) Implement master accounts
@@ -384,7 +384,6 @@
         - x - Refactor functional test cases
 
 
-
 ################################################################################
 - EWallet Credit Clock - API Tutor
 ################################################################################
@@ -400,8 +399,9 @@ EWSC - System Actions
     - System action Target Cleanup Session
 
     - System action Cleanup Session Workers
-        - Session Worker States:
-            - Vacant
+        - State Oriented Restrictions:
+            - Session Worker States:
+                - Vacant
 
     - System action Sweep Cleanup Sessions
         - EWallet Session States:

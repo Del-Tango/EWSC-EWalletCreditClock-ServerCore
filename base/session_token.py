@@ -29,6 +29,10 @@ class SessionToken(Token):
 
     # FETCHERS
 
+    def fetch_label(self):
+        log.debug('')
+        return self.label
+
     def fetch_ctoken(self):
         log.debug('')
         return self.ctoken
