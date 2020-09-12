@@ -1001,15 +1001,23 @@ class EWalletSessionManager():
 
     # CHECKERS
 
+    def check_session_token_expired(self, session_token):
+        log.debug('')
+        stoken = self.fetch_session_token_by_label(session_token)
+        if isinstance(stoken, dict) and stoken.get('failed'):
+            return self.error_could_not_fetch_client_token(
+                session_token, stoken
+            )
+        return stoken.check_token_expired()
+
     def check_client_token_expired(self, client_id):
         log.debug('')
-        client_token = self.fetch_client_token_by_label(client_id)
-        if isinstance(client_token, dict) and \
-                client_token.get('failed'):
+        ctoken = self.fetch_client_token_by_label(client_id)
+        if isinstance(ctoken, dict) and ctoken.get('failed'):
             return self.error_could_not_fetch_client_token(
-                client_id, client_token
+                client_id, ctoken
             )
-        return client_token.check_token_expired()
+        return ctoken.check_token_expired()
 
     # TODO
     def check_command_chain_session_token(self):
@@ -1473,6 +1481,31 @@ class EWalletSessionManager():
 
     # CREATORS
 
+    @pysnooper.snoop('logs/ewallet.log')
+    def create_client_session_token_map(self, client_id, **kwargs):
+        log.debug('')
+        # Validate client id label
+        validation = self.validate_client_id(client_id)
+        if not validation or isinstance(validation, dict) and \
+                validation.get('failed'):
+            return self.error_invalid_client_id(client_id, kwargs)
+        # Fetch client token from client id
+        client_token = self.fetch_client_token_by_label(client_id)
+        if not client_token or isinstance(client_token, dict) and \
+                client_token.get('failed'):
+            return self.error_could_not_fetch_client_token_by_label(
+                client_id, kwargs
+            )
+        # Generate new session token object
+        session_token = self.generate_ewallet_session_token(**kwargs)
+        if not session_token or isinstance(session_token, dict) and \
+                session_token.get('failed'):
+            return self.error_could_not_generate_ewallet_session_token(
+                session_token, kwargs
+            )
+        # Map tokens
+        return self.map_client_session_tokens(client_token, session_token)
+
     def create_new_system_session(self, **kwargs):
         log.debug('')
         worker_id = kwargs.get('worker_id') or \
@@ -1490,30 +1523,6 @@ class EWalletSessionManager():
         orm_session.add(ewallet_session)
         orm_session.commit()
         return ewallet_session
-
-    def create_client_session_token_map(self, client_id, **kwargs):
-        log.debug('')
-        # Validate client id label
-        validation = self.validate_client_id(client_id)
-        if not validation or isinstance(validation, dict) and \
-                validation.get('failed'):
-            return self.error_invalid_client_id(client_id, kwargs)
-        # Fetch client token from client id
-        client_token = self.fetch_client_token_by_label(client_id)
-        if not client_token or isinstance(client_token, dict) and \
-                client_token.get('failed'):
-            return self.error_could_not_fetch_client_token_by_label(
-                client_id, kwargs
-            )
-        # Generate new session token object
-        session_token = self.generate_ewallet_session_token()
-        if not session_token or isinstance(session_token, dict) and \
-                session_token.get('failed'):
-            return self.error_could_not_generate_ewallet_session_token(
-                session_token, kwargs
-            )
-        # Map tokens
-        return self.map_client_session_tokens(client_token, session_token)
 
     # SORTERS
 
@@ -1543,38 +1552,17 @@ class EWalletSessionManager():
     # CLEANERS
 
     # TODO
-    def sweep_cleanup_session_tokens(self, **kwargs):
-        log.debug('TODO - UNIMPLEMENTED')
-
-#       ctoken_pool = kwargs.get('ctoken_pool') or self.fetch_ctoken_pool()
-#       tokens_to_remove = [
-#           client_id for client_id in ctoken_pool
-#           if self.check_client_token_expired(client_id)
-#       ]
-#       if not tokens_to_remove:
-#           return self.warning_no_client_tokens_to_remove(
-#               kwargs, ctoken_pool, tokens_to_remove
-#           )
-#       sanitized_instruction_set = res_utils.remove_tags_from_command_chain(
-#           kwargs, 'ctoken_pool'
-#       )
-#       cleanup = self.cleanup_client_tokens(
-#           tokens_to_remove, ctoken_pool=ctoken_pool,
-#           **sanitized_instruction_set
-#       )
-#       return self.error_could_not_cleanup_client_tokens(
-#           kwargs, ctoken_pool, tokens_to_remove, cleanup
-#       ) if isinstance(cleanup, dict) and cleanup.get('failed') \
-#       else cleanup
-
-    # TODO
     def cleanup_session_tokens(self, stoken_labels, **kwargs):
         log.debug('TODO - Remove EWallet Sessions from worker on SToken cleanup.')
         stoken_pool = kwargs.get('stoken_pool') or self.fetch_stoken_pool()
         cleaned_tokens, cleaning_failures = [], 0
+        sanitized_instruction_set = res_utils.remove_tags_from_command_chain(
+            kwargs, 'stoken_pool'
+        )
         for stoken_label in stoken_labels:
             clean = self.cleanup_session_token(
-                stoken_label, stoken_pool=stoken_pool, **kwargs
+                stoken_label, stoken_pool=stoken_pool,
+                **sanitized_instruction_set
             )
             if isinstance(clean, dict) and clean.get('failed'):
                 self.warning_could_not_clean_session_token(
@@ -1582,14 +1570,64 @@ class EWalletSessionManager():
                 )
                 cleaning_failures += 1
                 continue
-            cleaned_tokens.append(stoken_labels)
+            cleaned_tokens.append(stoken_label)
         return self.warning_no_session_tokens_cleaned(stoken_labels) \
             if not cleaned_tokens else {
                 'failed': False,
                 'stokens_cleaned': len(cleaned_tokens),
-                'sleaning_failures': cleaning_failures,
+                'cleaning_failures': cleaning_failures,
                 'stokens': cleaned_tokens
             }
+
+    def cleanup_vacant_session_workers(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('vacant_workers'):
+            return self.error_no_vacant_session_workers_found(kwargs)
+        reserved_buffer_worker = kwargs['vacant_workers'][0]
+        log.info(
+            'Reserved vacant ewallet session worker {}.'.format(
+                reserved_buffer_worker
+            )
+        )
+        kwargs['vacant_workers'].remove(kwargs['vacant_workers'][0])
+        worker_count = len(kwargs['vacant_workers'])
+        for worker in kwargs['vacant_workers']:
+            clean = self.scrape_ewallet_session_worker(worker)
+            if not clean or isinstance(clean, dict) and clean.get('failed'):
+                self.warning_could_not_cleanup_ewallet_session_worker(worker)
+                worker_count -= 1
+                continue
+            log.info('Successfully scraped ewallet session worker.')
+        instruction_set_response = {
+            'failed': False,
+            'workers_cleaned': worker_count,
+            'worker_reserved': reserved_buffer_worker,
+            'worker_pool': self.fetch_ewallet_session_manager_worker_pool(),
+        }
+        return instruction_set_response
+
+    def sweep_cleanup_session_tokens(self, **kwargs):
+        log.debug('')
+        stoken_pool = kwargs.get('stoken_pool') or self.fetch_stoken_pool()
+        tokens_to_remove = [
+            session_token for session_token in stoken_pool
+            if self.check_session_token_expired(session_token)
+        ]
+        if not tokens_to_remove:
+            return self.warning_no_session_tokens_to_remove(
+                kwargs, stoken_pool, tokens_to_remove
+            )
+        sanitized_instruction_set = res_utils.remove_tags_from_command_chain(
+            kwargs, 'stoken_pool'
+        )
+        cleanup = self.cleanup_session_tokens(
+            tokens_to_remove, stoken_pool=stoken_pool,
+            **sanitized_instruction_set
+        )
+        return self.error_could_not_cleanup_session_tokens(
+            kwargs, stoken_pool, tokens_to_remove, cleanup
+        ) if isinstance(cleanup, dict) and cleanup.get('failed') \
+            else cleanup
 
     def clear_ctoken_linked_stoken(self, stoken_label, **kwargs):
         log.debug('')
@@ -1959,9 +1997,46 @@ class EWalletSessionManager():
         response = pool_entry['response'].get()
         return response
 
+    def start_instruction_set_listener(self):
+        '''
+        [ NOTE   ]: Starts socket based command chain instruction set listener.
+        [ NOTE   ]: Program hangs here until interrupt.
+        '''
+        log.debug('')
+        socket_handler = self.fetch_ewallet_session_manager_socket_handler()
+        if not socket_handler:
+            return self.error_could_not_fetch_socket_handler()
+        log.info(
+            'Starting instruction set listener using socket handler '
+            'values: {}.'.format(socket_handler.view_handler_values())
+        )
+        socket_handler.start_listener()
+        return True
+
+    def open_ewallet_session_manager_sockets(self, **kwargs):
+        '''
+        [ NOTE ]: Creates new EWalletSocketHandler object using
+                  default configuration values.
+        '''
+        log.debug('')
+        in_port = kwargs.get('in_port') or \
+            self.fetch_default_ewallet_command_chain_instruction_port()
+        out_port = kwargs.get('out_port') or \
+            self.fetch_default_ewallet_command_chain_reply_port()
+        if not in_port or not out_port:
+            return self.error_could_not_fetch_socket_handler_required_values()
+        socket = self.spawn_ewallet_session_manager_socket_handler(
+            in_port, out_port
+        )
+        return self.error_could_not_spawn_socket_handler() \
+            if not socket else socket
+
+    # GENERATORS
+
     def generate_id_for_entity_set(self, entity_set):
         '''
-        [ NOTE   ]: Entity identifier generator, for session workers and ewallet sessions.
+        [ NOTE   ]: Entity identifier generator, for session workers and
+                    ewallet sessions.
         [ INPUT  ]: Mode unique numeric id in set - list of numeric ids
                     Mode next uniq id from current - integer
                     Mode unique alphanemeric id in set - list of string codes
@@ -1996,10 +2071,12 @@ class EWalletSessionManager():
             'Software error.', entity_set
         )
 
-    def generate_ewallet_session_token(self):
+    def generate_ewallet_session_token(self, **kwargs):
         '''
-        [ NOTE   ]: Generates a new unique session token using default format and prefix.
-        [ NOTE   ]: Session Token follows the following format <prefix-string>:<code>:<timestamp>
+        [ NOTE ]: Generates a new unique session token using
+                  default format and prefix.
+        [ NOTE ]: Session Token follows the following format
+                  <prefix-string>:<code>:<timestamp>
         '''
         log.debug('')
         prefix = self.fetch_session_token_default_prefix()
@@ -2009,20 +2086,30 @@ class EWalletSessionManager():
             string_length=length
         )
         label = prefix + ':' + st_code + ':' + timestamp
+
+        now = datetime.datetime.now()
+        interval = self.fetch_default_session_token_validity_interval_in_minutes()
+        default_expiration_date = now + datetime.timedelta(minutes=interval)
+        specific_expiration_date = kwargs.get('expires_on')
+
+        expiration_datetime = default_expiration_date if \
+            not specific_expiration_date \
+            or specific_expiration_date > default_expiration_date \
+            else specific_expiration_date
+
         session_token = self.spawn_session_token(
             session_token=label,
-            expires_on=datetime.datetime.now() + \
-            datetime.timedelta(
-                minutes=self.fetch_default_session_token_validity_interval_in_minutes()
-            ),
+            expires_on=expiration_datetime,
         )
         return session_token
 
 #   @pysnooper.snoop()
     def generate_client_id(self, **kwargs):
         '''
-        [ NOTE   ]: Generates a new unique client id using default format and prefix.
-        [ NOTE   ]: User ID follows the following format <prefix-string>:<code>:<timestamp>
+        [ NOTE   ]: Generates a new unique client id using default
+                    format and prefix.
+        [ NOTE   ]: User ID follows the following format
+                    <prefix-string>:<code>:<timestamp>
         '''
         log.debug('')
         prefix = self.fetch_client_id_default_prefix()
@@ -2032,74 +2119,22 @@ class EWalletSessionManager():
             string_length=length
         )
         label = prefix + ':' + uid_code + ':' + timestamp
+
         now = datetime.datetime.now()
-        default_validity_interval = self.fetch_default_client_id_validity_interval_in_minutes()
-        default_expiration_date = now + datetime.timedelta(minutes=default_validity_interval)
+        interval = self.fetch_default_client_id_validity_interval_in_minutes()
+        default_expiration_date = now + datetime.timedelta(minutes=interval)
         specific_expiration_date = kwargs.get('expires_on')
+
         expiration_datetime = default_expiration_date if \
             not specific_expiration_date \
             or specific_expiration_date > default_expiration_date \
             else specific_expiration_date
+
         client_id_token = self.spawn_client_id(
             client_id=label,
             expires_on=expiration_datetime,
         )
         return client_id_token
-
-    def cleanup_vacant_session_workers(self, **kwargs):
-        log.debug('')
-        if not kwargs.get('vacant_workers'):
-            return self.error_no_vacant_session_workers_found(kwargs)
-        reserved_buffer_worker = kwargs['vacant_workers'][0]
-        log.info(
-            'Reserved vacant ewallet session worker {}.'.format(
-                reserved_buffer_worker
-            )
-        )
-        kwargs['vacant_workers'].remove(kwargs['vacant_workers'][0])
-        worker_count = len(kwargs['vacant_workers'])
-        for worker in kwargs['vacant_workers']:
-            clean = self.scrape_ewallet_session_worker(worker)
-            if not clean or isinstance(clean, dict) and clean.get('failed'):
-                self.warning_could_not_cleanup_ewallet_session_worker(worker)
-                worker_count -= 1
-                continue
-            log.info('Successfully scraped ewallet session worker.')
-        instruction_set_response = {
-            'failed': False,
-            'workers_cleaned': worker_count,
-            'worker_reserved': reserved_buffer_worker,
-            'worker_pool': self.fetch_ewallet_session_manager_worker_pool(),
-        }
-        return instruction_set_response
-
-    def start_instruction_set_listener(self):
-        '''
-        [ NOTE   ]: Starts socket based command chain instruction set listener.
-        [ NOTE   ]: Program hangs here until interrupt.
-        '''
-        log.debug('')
-        socket_handler = self.fetch_ewallet_session_manager_socket_handler()
-        if not socket_handler:
-            return self.error_could_not_fetch_socket_handler()
-        log.info(
-            'Starting instruction set listener using socket handler values : {}.'\
-            .format(socket_handler.view_handler_values())
-        )
-        socket_handler.start_listener()
-        return True
-
-    def open_ewallet_session_manager_sockets(self, **kwargs):
-        '''
-        [ NOTE   ]: Creates new EWalletSocketHandler object using default configuration values.
-        '''
-        log.debug('')
-        in_port = kwargs.get('in_port') or self.fetch_default_ewallet_command_chain_instruction_port()
-        out_port = kwargs.get('out_port') or self.fetch_default_ewallet_command_chain_reply_port()
-        if not in_port or not out_port:
-            return self.error_could_not_fetch_socket_handler_required_values()
-        socket = self.spawn_ewallet_session_manager_socket_handler(in_port, out_port)
-        return self.error_could_not_spawn_socket_handler() if not socket else socket
 
     # CRONJOBS
 
@@ -2459,6 +2494,52 @@ class EWalletSessionManager():
     '''
     [ NOTE ]: Instruction set validation and sanitizations are performed here.
     '''
+
+#   @pysnooper.snoop('logs/ewallet.log')
+    def handle_client_action_request_session_token(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('client_id'):
+            return self.error_no_client_id_found(kwargs)
+        client_id = kwargs['client_id']
+        sanitized_instruction_set = res_utils.remove_tags_from_command_chain(
+            kwargs, 'client_id'
+        )
+        # Map tokens
+        cst_map = self.create_client_session_token_map(
+            client_id, **sanitized_instruction_set
+        )
+        if not cst_map or isinstance(cst_map, dict) and cst_map.get('failed'):
+            return self.error_could_not_create_client_session_token_map(
+                kwargs, cst_map
+            )
+        # Fetch worker id by client id
+        worker_id = self.fetch_available_worker_id(client_id=kwargs['client_id'])
+        if not worker_id or isinstance(worker_id, dict) and \
+                worker_id.get('failed'):
+            return self.warning_could_not_fetch_worker_id(
+                worker_id, cst_map['ctoken'].label, cst_map['stoken'].label
+            )
+        # Reference worker id on session token
+        cst_map['stoken'].set_worker_id(worker_id)
+        # Execute instruction
+        request_session_token = self.action_request_session_token(
+            worker_id, cst_map, **kwargs
+        )
+        if not request_session_token or isinstance(request_session_token, dict) and \
+                request_session_token.get('failed'):
+            return self.warning_could_not_request_session_token(
+                kwargs, request_session_token, worker_id, cst_map
+            )
+        # Set session token to pool
+        set_to_pool = self.set_new_session_token_to_pool({
+            cst_map['stoken'].label: cst_map['stoken']
+        })
+        # Formulate instruction set
+        instruction_set_response = {
+            'failed': False,
+            'session_token': cst_map['stoken'].label,
+        }
+        return instruction_set_response
 
     def handle_system_action_cleanup_target_client_token(self, **kwargs):
         log.debug('')
@@ -3299,46 +3380,6 @@ class EWalletSessionManager():
             new_account.get('failed') else new_account
 
 #   @pysnooper.snoop()
-    def handle_client_action_request_session_token(self, **kwargs):
-        log.debug('')
-        if not kwargs.get('client_id'):
-            return self.error_no_client_id_found(kwargs)
-        # Map tokens
-        cst_map = self.create_client_session_token_map(kwargs['client_id'])
-        if not cst_map or isinstance(cst_map, dict) and cst_map.get('failed'):
-            return self.error_could_not_create_client_session_token_map(
-                kwargs, cst_map
-            )
-        # Fetch worker id by client id
-        worker_id = self.fetch_available_worker_id(client_id=kwargs['client_id'])
-        if not worker_id or isinstance(worker_id, dict) and \
-                worker_id.get('failed'):
-            return self.warning_could_not_fetch_worker_id(
-                worker_id, cst_map['ctoken'].label, cst_map['stoken'].label
-            )
-        # Reference worker id on session token
-        cst_map['stoken'].set_worker_id(worker_id)
-        # Execute instruction
-        request_session_token = self.action_request_session_token(
-            worker_id, cst_map, **kwargs
-        )
-        if not request_session_token or isinstance(request_session_token, dict) and \
-                request_session_token.get('failed'):
-            return self.warning_could_not_request_session_token(
-                kwargs, request_session_token, worker_id, cst_map
-            )
-        # Set session token to pool
-        set_to_pool = self.set_new_session_token_to_pool({
-            cst_map['stoken'].label: cst_map['stoken']
-        })
-        # Formulate instruction set
-        instruction_set_response = {
-            'failed': False,
-            'session_token': cst_map['stoken'].label,
-        }
-        return instruction_set_response
-
-#   @pysnooper.snoop()
     def handle_system_action_new_worker(self, **kwargs):
         '''
         [ NOTE   ]: Creates new EWallet Session Manager Worker object and sets
@@ -3401,6 +3442,31 @@ class EWalletSessionManager():
         log.debug('TODO - UNIMPLEMENTED')
         expire = self.event_session_token_expire()
 
+    # TODO
+    def handle_system_action_start_cleaner_cron(self, **kwargs):
+        log.debug('TODO - Add support for system action start all cleaners')
+        if not kwargs.get('clean'):
+            return self.error_no_system_cleaner_cron_target_specified(kwargs)
+        handlers = {
+            'accounts': self.handle_system_action_start_user_account_cleaner_cron,
+            'workers': self.handle_system_action_start_session_worker_cleaner_cron,
+            'sessions': self.handle_system_action_start_ewallet_session_cleaner_cron,
+            'ctokens': self.handle_system_action_start_client_token_cleaner_cron,
+#           'all': ,
+        }
+        return handlers[kwargs['clean']](**kwargs)
+
+    # TODO
+    def handle_client_action_transfer(self, **kwargs):
+        log.debug('TODO - Add support for client action transfer time')
+        if not kwargs.get('transfer'):
+            return self.error_no_client_action_transfer_target_specified(kwargs)
+        handlers = {
+            'credits': self.handle_client_action_transfer_credits,
+#           'time': self.handle_client_action_transfer_time,
+        }
+        return handlers[kwargs['transfer']](**kwargs)
+
     def handle_system_action_cleanup_client_tokens(self, **kwargs):
         log.debug('')
         cleanup_mode = 'target' if kwargs.get('client_id') else 'sweep'
@@ -3430,31 +3496,6 @@ class EWalletSessionManager():
             'stokens': self.handle_system_action_cleanup_session_tokens,
         }
         return handlers[kwargs['cleanup']](**kwargs)
-
-    # TODO
-    def handle_system_action_start_cleaner_cron(self, **kwargs):
-        log.debug('TODO - Add support for system action start all cleaners')
-        if not kwargs.get('clean'):
-            return self.error_no_system_cleaner_cron_target_specified(kwargs)
-        handlers = {
-            'accounts': self.handle_system_action_start_user_account_cleaner_cron,
-            'workers': self.handle_system_action_start_session_worker_cleaner_cron,
-            'sessions': self.handle_system_action_start_ewallet_session_cleaner_cron,
-            'ctokens': self.handle_system_action_start_client_token_cleaner_cron,
-#           'all': ,
-        }
-        return handlers[kwargs['clean']](**kwargs)
-
-    # TODO
-    def handle_client_action_transfer(self, **kwargs):
-        log.debug('TODO - Add support for client action transfer time')
-        if not kwargs.get('transfer'):
-            return self.error_no_client_action_transfer_target_specified(kwargs)
-        handlers = {
-            'credits': self.handle_client_action_transfer_credits,
-#           'time': self.handle_client_action_transfer_time,
-        }
-        return handlers[kwargs['transfer']](**kwargs)
 
 #   @pysnooper.snoop('logs/ewallet.log')
     def handle_system_action_start(self, **kwargs):
@@ -4046,6 +4087,14 @@ class EWalletSessionManager():
     '''
     [ TODO ]: Fetch warning messages from message file by key codes.
     '''
+
+    def warning_no_session_tokens_to_remove(self, *args):
+        instruction_set_response = res_utils.format_warning_response(**{
+            'failed': True, 'details': args,
+            'warning': 'No session tokens staged for removal.',
+        })
+        self.log_warning(**instruction_set_response)
+        return instruction_set_response
 
     def warning_invalid_client_token_label(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
@@ -5036,11 +5085,20 @@ class EWalletSessionManager():
     [ TODO ]: Fetch error messages from message file by key codes.
     '''
 
+    def error_could_not_cleanup_session_tokens(self, *args):
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
+            'error': 'Something went wrong. '
+                     'Could not cleanup session tokens.',
+        })
+        self.log_error(**instruction_set_response)
+        return instruction_set_response
+
     def error_could_not_remove_session_token_from_pool(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
             'failed': True, 'details': args,
             'error': 'Something went wrong. '
-                     'Could not remove session token from SToken pool',
+                     'Could not remove session token from SToken pool.',
         })
         self.log_error(**instruction_set_response)
         return instruction_set_response
