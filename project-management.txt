@@ -113,13 +113,12 @@
     - x - Implement system action SweepCleanupCTokens
     - x - Cleanup session tokens on system action StartSessionCleaner
     - x - Implement system action SweepCleanupSTokens
-    - . - Implement system action TargetCleanupStoken
     - x - Cleanup EWallet Sessions on system action SweepCleanupSessions that are empty
     - x - Cleanup EWallet Sessions on system action SweepCleanupSTokens
     - x - Cleanup EWallet Sessions on system action SweepCleanupCTokens
     - x - Cleanup STokens on system action TargetCleanupSession
-    -   - Cleanup CTokens, EWallet Sessions and STokens on system action SweepCleanupWorkers
-    - Implement system action TargetCleanupWorker
+    - . - Implement system action TargetCleanupStoken
+    - x - Implement system action TargetCleanupWorker
     - Implement system action TargetCleanupCToken
     - Implement system action TargetCleanupWorker
 
