@@ -64,10 +64,75 @@ class EWalletSessionManager():
         # Start cleaner crons on seperate thread
         self.session_manager_controller(**{
             'controller': 'system', 'ctype': 'action', 'action': 'start',
-            'start': 'cleaner', 'clean': 'accounts'
+            'start': 'cleaner', 'clean': 'all'
         })
 
     # FETCHERS
+
+    # TODO
+    def fetch_from_worker_pool(self):
+        log.debug('TODO - UNIMPLEMENTED')
+    def fetch_from_client_pool(self):
+        log.debug('TODO - UNIMPLEMENTED')
+    def fetch_from_client_session_map(self):
+        log.debug('TODO - UNIMPLEMENTED')
+    def fetch_ewallet_worker_sessions(self, ewallet_worker):
+        log.debug('TODO - UNIMPLEMENTED')
+    def fetch_from_ewallet_worker_session(self):
+        log.debug('TODO - UNIMPLEMENTED')
+
+    # TODO - Refactor
+#   @pysnooper.snoop()
+    def fetch_ewallet_session_by_id(self, ewallet_session_id):
+        log.debug('TODO - Refactor')
+        if not ewallet_session_id or not isinstance(ewallet_session_id, int):
+            return self.error_invalid_ewallet_session_id(ewallet_session_id)
+        try:
+            orm_session = self.res_utils.session_factory()
+            ewallet_session = list(orm_session.query(
+                EWallet
+            ).filter_by(id=ewallet_session_id))
+            set_orm = None if not ewallet_session else \
+                ewallet_session[0].set_orm_session(orm_session)
+        except:
+            return self.error_could_not_fetch_ewallet_session_by_id(ewallet_session_id)
+        return self.warning_no_ewallet_session_found_by_id(ewallet_session_id) \
+            if not ewallet_session else ewallet_session[0]
+
+    # TODO - Refactor
+    def fetch_ewallet_session_for_system_action_using_id(self, **kwargs):
+        log.debug('TODO - Refactor')
+        if not kwargs.get('session_id'):
+            return self.error_no_session_id_found(kwargs)
+        ewallet_session = self.fetch_ewallet_session_by_id(kwargs['session_id'])
+        return self.warning_no_ewallet_session_found_by_id(kwargs) if not \
+            ewallet_session else ewallet_session
+
+    # TODO - Refactor
+#   @pysnooper.snoop()
+    def fetch_ewallet_session_for_client_action_using_instruction_set(self, instruction_set):
+        log.debug('TODO - Refactor')
+        if not instruction_set.get('client_id'):
+            return self.error_no_client_id_found(instruction_set)
+        session_manager_worker = self.fetch_client_id_mapped_session_worker(
+            instruction_set['client_id']
+        )
+        sanitized_instruction_set = self.res_utils.remove_tags_from_command_chain(
+            instruction_set, 'controller', 'ctype', 'action'
+        )
+        ewallet_session = self.fetch_ewallet_session_from_worker(
+            session_manager_worker, sanitized_instruction_set
+        )
+        if ewallet_session and isinstance(ewallet_session, dict) and \
+                not ewallet_session.get('failed'):
+            ewallet_session = self.fetch_ewallet_session_by_id(
+                ewallet_session['ewallet_session'].fetch_active_session_id()
+            )
+        value_set = {
+            'sanitized_instruction_set': sanitized_instruction_set,
+            'ewallet_session': ewallet_session,
+        }
+        return False if False in value_set.keys() else value_set
 
 #   @pysnooper.snoop('logs/ewallet.log')
     def fetch_stokens_from_client_token_set(self, client_token_set):
@@ -237,71 +302,6 @@ class EWalletSessionManager():
                 continue
         return self.warning_no_expired_ewallet_sessions_found(kwargs) \
             if not expired_sessions else expired_sessions
-
-    # TODO
-    def fetch_from_worker_pool(self):
-        log.debug('TODO - UNIMPLEMENTED')
-    def fetch_from_client_pool(self):
-        log.debug('TODO - UNIMPLEMENTED')
-    def fetch_from_client_session_map(self):
-        log.debug('TODO - UNIMPLEMENTED')
-    def fetch_ewallet_worker_sessions(self, ewallet_worker):
-        log.debug('TODO - UNIMPLEMENTED')
-    def fetch_from_ewallet_worker_session(self):
-        log.debug('TODO - UNIMPLEMENTED')
-
-    # TODO - Refactor
-#   @pysnooper.snoop()
-    def fetch_ewallet_session_by_id(self, ewallet_session_id):
-        log.debug('TODO - Refactor')
-        if not ewallet_session_id or not isinstance(ewallet_session_id, int):
-            return self.error_invalid_ewallet_session_id(ewallet_session_id)
-        try:
-            orm_session = self.res_utils.session_factory()
-            ewallet_session = list(orm_session.query(
-                EWallet
-            ).filter_by(id=ewallet_session_id))
-            set_orm = None if not ewallet_session else \
-                ewallet_session[0].set_orm_session(orm_session)
-        except:
-            return self.error_could_not_fetch_ewallet_session_by_id(ewallet_session_id)
-        return self.warning_no_ewallet_session_found_by_id(ewallet_session_id) \
-            if not ewallet_session else ewallet_session[0]
-
-    # TODO - Refactor
-    def fetch_ewallet_session_for_system_action_using_id(self, **kwargs):
-        log.debug('TODO - Refactor')
-        if not kwargs.get('session_id'):
-            return self.error_no_session_id_found(kwargs)
-        ewallet_session = self.fetch_ewallet_session_by_id(kwargs['session_id'])
-        return self.warning_no_ewallet_session_found_by_id(kwargs) if not \
-            ewallet_session else ewallet_session
-
-    # TODO - Refactor
-#   @pysnooper.snoop()
-    def fetch_ewallet_session_for_client_action_using_instruction_set(self, instruction_set):
-        log.debug('TODO - Refactor')
-        if not instruction_set.get('client_id'):
-            return self.error_no_client_id_found(instruction_set)
-        session_manager_worker = self.fetch_client_id_mapped_session_worker(
-            instruction_set['client_id']
-        )
-        sanitized_instruction_set = self.res_utils.remove_tags_from_command_chain(
-            instruction_set, 'controller', 'ctype', 'action'
-        )
-        ewallet_session = self.fetch_ewallet_session_from_worker(
-            session_manager_worker, sanitized_instruction_set
-        )
-        if ewallet_session and isinstance(ewallet_session, dict) and \
-                not ewallet_session.get('failed'):
-            ewallet_session = self.fetch_ewallet_session_by_id(
-                ewallet_session['ewallet_session'].fetch_active_session_id()
-            )
-        value_set = {
-            'sanitized_instruction_set': sanitized_instruction_set,
-            'ewallet_session': ewallet_session,
-        }
-        return False if False in value_set.keys() else value_set
 
 #   @pysnooper.snoop('logs/ewallet.log')
     def fetch_vacant_session_workers(self, **kwargs):
@@ -1096,24 +1096,6 @@ class EWalletSessionManager():
 
     # CHECKERS
 
-    def check_session_token_expired(self, session_token):
-        log.debug('')
-        stoken = self.fetch_session_token_by_label(session_token)
-        if isinstance(stoken, dict) and stoken.get('failed'):
-            return self.error_could_not_fetch_client_token(
-                session_token, stoken
-            )
-        return stoken.check_token_expired()
-
-    def check_client_token_expired(self, client_id):
-        log.debug('')
-        ctoken = self.fetch_client_token_by_label(client_id)
-        if isinstance(ctoken, dict) and ctoken.get('failed'):
-            return self.error_could_not_fetch_client_token(
-                client_id, ctoken
-            )
-        return ctoken.check_token_expired()
-
     # TODO
     def check_command_chain_session_token(self):
         log.debug('TODO - UNIMPLEMENTED')
@@ -1160,6 +1142,24 @@ class EWalletSessionManager():
             return False
         elif response.get('state') in [0, 1]:
             return True
+
+    def check_session_token_expired(self, session_token):
+        log.debug('')
+        stoken = self.fetch_session_token_by_label(session_token)
+        if isinstance(stoken, dict) and stoken.get('failed'):
+            return self.error_could_not_fetch_client_token(
+                session_token, stoken
+            )
+        return stoken.check_token_expired()
+
+    def check_client_token_expired(self, client_id):
+        log.debug('')
+        ctoken = self.fetch_client_token_by_label(client_id)
+        if isinstance(ctoken, dict) and ctoken.get('failed'):
+            return self.error_could_not_fetch_client_token(
+                client_id, ctoken
+            )
+        return ctoken.check_token_expired()
 
     def check_cleaner_thread_active(self):
         log.debug('')
@@ -1645,6 +1645,44 @@ class EWalletSessionManager():
 
     # CLEANERS
 
+    # TODO
+#   @pysnooper.snoop('logs/ewallet.log')
+    def cleanup_user_accounts(self):
+        log.debug('TODO - Refactor')
+        freeze_interval = self.fetch_account_unlink_freeze_interval()
+        orm_session = res_utils.session_factory()
+        accounts_removed = []
+        user_query = list(
+            orm_session.query(ResUser).filter_by(to_unlink=True)
+        )
+        if not user_query:
+            log.info('No user accounts marked for unlink found.')
+            return False
+        accounts_to_unlink = len(user_query)
+        try:
+            for account in user_query:
+                user_id = account.fetch_user_id()
+                check = res_utils.check_days_since_timestamp(
+                    account.to_unlink_timestamp, freeze_interval
+                )
+                log.info('Checking unlink timestamp...')
+                if not check:
+                    log.info('Account {} not ready for unlink.'.format(user_id))
+                    continue
+                log.info('Cleaning up user account {}.'.format(user_id))
+                try:
+                    orm_session.query(ResUser).filter_by(user_id=user_id).delete()
+                    orm_session.commit()
+                except Exception as e:
+                    self.warning_could_not_cleanup_user_account(
+                        freeze_interval, orm_session, accounts_removed, user_query,
+                        accounts_to_unlink, account, check, user_id, e
+                    )
+                    continue
+                accounts_removed.append(user_id)
+        finally:
+            orm_session.close()
+
 #   @pysnooper.snoop('logs/ewallet.log')
     def cleanup_ewallet_sessions(self, **kwargs):
         log.debug('')
@@ -2001,44 +2039,6 @@ class EWalletSessionManager():
             'stokens_cleaned': 1,
             'stokens': [stoken_label],
         }
-
-    # TODO
-#   @pysnooper.snoop('logs/ewallet.log')
-    def cleanup_user_accounts(self):
-        log.debug('TODO - Refactor')
-        freeze_interval = self.fetch_account_unlink_freeze_interval()
-        orm_session = res_utils.session_factory()
-        accounts_removed = []
-        user_query = list(
-            orm_session.query(ResUser).filter_by(to_unlink=True)
-        )
-        if not user_query:
-            log.info('No user accounts marked for unlink found.')
-            return False
-        accounts_to_unlink = len(user_query)
-        try:
-            for account in user_query:
-                user_id = account.fetch_user_id()
-                check = res_utils.check_days_since_timestamp(
-                    account.to_unlink_timestamp, freeze_interval
-                )
-                log.info('Checking unlink timestamp...')
-                if not check:
-                    log.info('Account {} not ready for unlink.'.format(user_id))
-                    continue
-                log.info('Cleaning up user account {}.'.format(user_id))
-                try:
-                    orm_session.query(ResUser).filter_by(user_id=user_id).delete()
-                    orm_session.commit()
-                except Exception as e:
-                    self.warning_could_not_cleanup_user_account(
-                        freeze_interval, orm_session, accounts_removed, user_query,
-                        accounts_to_unlink, account, check, user_id, e
-                    )
-                    continue
-                accounts_removed.append(user_id)
-        finally:
-            orm_session.close()
 
     # INIT
 
@@ -2815,6 +2815,14 @@ class EWalletSessionManager():
     [ NOTE ]: Instruction set validation and sanitizations are performed here.
     '''
 
+    # TODO
+    def handle_system_action_close_sockets(self, **kwargs):
+        '''
+        [ NOTE   ]: Desociates Ewallet Socket Handler from Session Manager.
+        '''
+        log.debug('TODO - Kill process')
+        return self.unset_socket_handler()
+
     def handle_system_action_start_all_cleaner_crons(self, **kwargs):
         log.debug('')
         cleaner_crons = {
@@ -3217,14 +3225,6 @@ class EWalletSessionManager():
             kwargs, switch_transfer_sheet
         ) if not switch_transfer_sheet or isinstance(switch_transfer_sheet, dict) and \
             switch_transfer_sheet.get('failed') else switch_transfer_sheet
-
-    # TODO
-    def handle_system_action_close_sockets(self, **kwargs):
-        '''
-        [ NOTE   ]: Desociates Ewallet Socket Handler from Session Manager.
-        '''
-        log.debug('TODO - Kill process')
-        return self.unset_socket_handler()
 
     def handle_client_action_request_client_id(self, **kwargs):
         log.debug('')

@@ -43,6 +43,7 @@
     - x - (EWSC) Implement system action TargetCleanupSToken
     - x - (EWSC) Implement system action TargetCleanupCToken
     - x - (EWSC) Implement system action StartAllCleaners
+    - x - (EWSC) Fix user action SupplyCredits
     -   - (EWCC) Perform valid input checks on core subroutine SetResource
     - (EWCC) Make library importable
     - (EWSC, EWCC, EWAT) Implement master accounts
@@ -105,6 +106,10 @@
             - [ NOTE ]: Time record updated too many times.
             - [ NOTE ]: Time record write date updates were trigger by the
                         write date setter.
+
+    - x - 13/09/2020
+        - x - 14:29 Detected issue with the journaling of user action SupplyCredits.
+            - [ NOTE ]: No transfer record or invoice record returned.
 
 - (EWSC) - TODO:
 

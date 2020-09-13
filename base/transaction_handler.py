@@ -237,39 +237,14 @@ class EWalletTransactionHandler():
 
     # GENERAL
 
-#   @pysnooper.snoop()
-    def share_partner_transaction_transfer_journal_records(self, journal_records, **kwargs):
-        log.debug('')
-        if not journal_records.get('transfer_sheets'):
-            return self.error_no_transfer_sheets_found(kwargs, journal_records)
-        transfer_from = kwargs['source_user_account'].fetch_user_id()
-        transfer_to = kwargs['transfer_to'].fetch_user_id()
-        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
-            kwargs, 'action', 'transfer_from', 'transfer_to'
-        )
-        share_transfer_record = journal_records['transfer_sheets']['target'].credit_transfer_sheet_controller(
-            action='add', transfer_type='incoming',
-            transfer_from=transfer_from, transfer_to=transfer_to,
-            **sanitized_command_chain
-        )
-        if not share_transfer_record or isinstance(share_transfer_record, dict) and \
-                share_transfer_record.get('failed'):
-            return self.warning_credit_transaction_record_share_failure(
-                share_transfer_record=share_transfer_record,
-                share_invoice_record=None,
-                command_chain=sanitized_command_chain
-            )
-        return {
-            'failed': False,
-            'transfer_record': share_transfer_record,
-        }
-
+#   @pysnooper.snoop('logs/ewallet.log')
     def share_partner_transaction_supply_journal_records(self, journal_records, **kwargs):
         log.debug('')
-        if not kwargs.get('transfer_sheets') or not kwargs.get('invoice_sheets'):
-            if not kwargs.get('transfer_sheets'):
+        if not journal_records.get('transfer_sheets') or \
+                not journal_records.get('invoice_sheets'):
+            if not journal_records.get('transfer_sheets'):
                 return self.error_no_transfer_sheets_found(kwargs, journal_records)
-            elif not kwargs.get('invoice_sheets'):
+            elif not journal_records.get('invoice_sheets'):
                 return self.error_no_invoice_sheets_found(kwargs, journal_records)
         sanitized_command_chain = res_utils.remove_tags_from_command_chain(
             kwargs, 'action'
@@ -298,6 +273,33 @@ class EWalletTransactionHandler():
         return {
             'transfer_record': share_transfer_record,
             'invoice_record': share_invoice_record,
+        }
+
+#   @pysnooper.snoop()
+    def share_partner_transaction_transfer_journal_records(self, journal_records, **kwargs):
+        log.debug('')
+        if not journal_records.get('transfer_sheets'):
+            return self.error_no_transfer_sheets_found(kwargs, journal_records)
+        transfer_from = kwargs['source_user_account'].fetch_user_id()
+        transfer_to = kwargs['transfer_to'].fetch_user_id()
+        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
+            kwargs, 'action', 'transfer_from', 'transfer_to'
+        )
+        share_transfer_record = journal_records['transfer_sheets']['target'].credit_transfer_sheet_controller(
+            action='add', transfer_type='incoming',
+            transfer_from=transfer_from, transfer_to=transfer_to,
+            **sanitized_command_chain
+        )
+        if not share_transfer_record or isinstance(share_transfer_record, dict) and \
+                share_transfer_record.get('failed'):
+            return self.warning_credit_transaction_record_share_failure(
+                share_transfer_record=share_transfer_record,
+                share_invoice_record=None,
+                command_chain=sanitized_command_chain
+            )
+        return {
+            'failed': False,
+            'transfer_record': share_transfer_record,
         }
 
     def share_partner_transaction_pay_journal_records(self, journal_records, **kwargs):

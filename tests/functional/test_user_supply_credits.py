@@ -94,4 +94,6 @@ class TestEWalletSessionManagerUserSupplyCredits(unittest.TestCase):
         self.assertFalse(supply.get('failed'))
         self.assertEqual(supply.get('supplied_credits'), 100)
         self.assertTrue(isinstance(supply.get('ewallet_credits'), int))
+        self.assertTrue(isinstance(supply.get('transfer_record'), int))
+        self.assertTrue(isinstance(supply.get('invoice_record'), int))
 
