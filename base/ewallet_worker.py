@@ -295,25 +295,6 @@ class EWalletWorker():
         }
         return values
 
-    def fetch_ctoken_by_label(self, client_id):
-        if not self.rtoken_pool:
-            self.error_empty_client_token_pool(client_id, self.ctoken_pool)
-            return False
-        ctoken = [
-            item for item in self.ctoken_pool if item.label == client_id
-        ]
-        return False if not ctoken else ctoken[0]
-
-    def fetch_stoken_by_label(self, session_token):
-        log.debug('')
-        if not self.stoken_pool:
-            self.error_empty_session_token_pool(session_token, self.stoken_pool)
-            return False
-        stoken = [
-            item for item in self.stoken_pool if item.label == session_token
-        ]
-        return False if not stoken else stoken[0]
-
 #   @pysnooper.snoop()
     def fetch_ewallet_session_map_client_id_by_ewallet_session(self, **kwargs):
         log.debug('')
@@ -904,6 +885,25 @@ class EWalletWorker():
 
     # GENERAL
 
+#   @pysnooper.snoop()
+    def search_ewallet_session(self, session_token):
+        log.debug('')
+        token_map = self.fetch_session_token_map()
+        if not token_map:
+            return self.warning_empty_session_token_map()
+        for client_id in token_map:
+            if list(token_map[client_id].keys())[0] == session_token:
+                return {
+                    'failed': False,
+                    'session': token_map[client_id][session_token]\
+                        .fetch_active_session_id(),
+                    'stoken': session_token,
+                    'ctoken': client_id,
+                }
+        return self.warning_no_ewallet_session_found_by_session_token(
+            session_token, token_map
+        )
+
     def search_ewallet_session_set_in_pool_by_ids(self, session_ids):
         log.debug('')
         session_pool = self.fetch_session_worker_ewallet_session_pool()
@@ -1025,22 +1025,6 @@ class EWalletWorker():
             response_queue.put(error)
             return error
         return instruction_set
-
-    # TODO - Refactor - Efficiency deficit
-#   @pysnooper.snoop()
-    def search_ewallet_session(self, session_token):
-        log.debug('')
-        token_map = self.fetch_session_token_map()
-        if not token_map:
-            return self.warning_empty_session_token_map()
-        stoken = self.fetch_stoken_by_label(session_token)
-        if not stoken or isinstance(stoken, dict) and \
-                stoken.get('failed'):
-            return self.error_could_not_fetch_session_token_by_label(session_token, stoken)
-        for client_id in token_map:
-            if token_map[client_id]['token'] == stoken:
-                return token_map[client_id]['session']
-        return self.warning_no_ewallet_session_found_by_session_token(session_token)
 
     # MAPPERS
 
@@ -1197,7 +1181,6 @@ class EWalletWorker():
         self.send_instruction_response(response)
         return response
 
-
     def action_remove_ewallet_session_set_from_pool(self, **kwargs):
         log.debug('')
         if not kwargs.get('sessions'):
@@ -1225,7 +1208,7 @@ class EWalletWorker():
         response =  {
             'failed': False,
             'worker': self.fetch_worker_id(),
-            'sessions': list(remove_from_pool['session_pool'].keys()),
+            'sessions': kwargs['sessions'],
             'session_cleaned': remove_from_pool['sessions_removed'],
             'cleanup_failures': remove_from_disk['removal_failures'] \
                 + remove_from_pool['removal_failures'] \
@@ -4134,6 +4117,15 @@ class EWalletWorker():
     [ TODO ]: Fetch warning messages from message file by key codes.
     '''
 
+    def warning_no_ewallet_session_found_by_session_token(self, *args):
+        instruction_set_response = {
+            'failed': True,
+            'warning': 'No ewallet session found by session token. '
+                       'Details: {}'.format(args),
+        }
+        log.warning(instruction_set_response['warning'])
+        return instruction_set_response
+
     def warning_could_not_view_time_record(self, *args):
         command_chain_response = {
             'failed': True,
@@ -5028,14 +5020,6 @@ class EWalletWorker():
             'failed': True,
             'warning': 'Session worker state {}. Ewallet session pool full.'\
                        .formaT(current_state),
-        }
-        log.warning(instruction_set_response['warning'])
-        return instruction_set_response
-
-    def warning_no_ewallet_session_found_by_session_token(self, session_token):
-        instruction_set_response = {
-            'failed': True,
-            'warning': 'No ewallet session found by session token {}.'.format(session_token),
         }
         log.warning(instruction_set_response['warning'])
         return instruction_set_response

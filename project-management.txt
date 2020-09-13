@@ -35,9 +35,9 @@
     - x - (EWSC) Implement system action StartAccountCleaner
     - x - (EWSC) Implement system action StartSessionCleaner
     - x - (EWSC) Implement system action StartWorkerCleaner
-    -   - (EWSC) Implement system action StartCTokenCleaner
+    - x - (EWSC) Implement system action StartCTokenCleaner
     - x - (EWSC) Implement system action SweepCleanupSTokens
-    - x - (EWSC) Implement system action SweepCleanupCTokens
+    -   - (EWSC) Implement system action SweepCleanupCTokens
     - x - (EWSC) Fix system action SweepCleanupWorkers
     - (EWSC) Implement system action TargetCleanupSToken
     - (EWSC) Implement system action TargetCleanupCToken
@@ -115,11 +115,13 @@
     - x - Implement system action SweepCleanupSTokens
     - . - Implement system action TargetCleanupStoken
     - x - Cleanup EWallet Sessions on system action SweepCleanupSessions that are empty
-    -   - Cleanup EWallet Sessions on system action SweepCleanupSTokens
+    - x - Cleanup EWallet Sessions on system action SweepCleanupSTokens
+    -   - Cleanup EWallet Sessions on system action SweepCleanupCTokens
     - Implement system action TargetCleanupWorker
     - Implement system action TargetCleanupCToken
     - Implement system action TargetCleanupWorker
-    - Cleanup EWallet Sessions on system action SweepCleanupCTokens
+    - Cleanup EWallet Sessions and STokens on system action SweepCleanupWorkers
+    - Cleanup STokens on system action TargetCleanupSession
 
     - x - Error Handler Grooming (Session Manager)
         - x - Cleanup stack trace string
