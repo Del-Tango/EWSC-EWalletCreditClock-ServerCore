@@ -72,7 +72,7 @@ class TestEWalletSessionManagerSystemSessionCleanupTarget(unittest.TestCase):
             os.remove('data/ewallet.db')
 
     def test_system_action_cleanup_target_session(self):
-        print('\n[ * ]: System action CleanupEwalletSession')
+        print('\n[ * ]: System action TargetSessionCleanup')
         instruction_set = {
             'controller': 'system', 'ctype': 'action', 'action': 'cleanup',
             'cleanup': 'sessions', 'session_id': 3
@@ -85,9 +85,12 @@ class TestEWalletSessionManagerSystemSessionCleanupTarget(unittest.TestCase):
             '\n[ < ]: Response: ' + str(clean) + '\n'
         )
         self.assertTrue(isinstance(clean, dict))
-        self.assertEqual(len(clean.keys()), 5)
+        self.assertEqual(len(clean.keys()), 8)
         self.assertFalse(clean.get('failed'))
         self.assertTrue(isinstance(clean['sessions'], list))
-        self.assertTrue(isinstance(clean['worker'], int))
-        self.assertTrue(isinstance(clean['session_cleaned'], int))
-        self.assertTrue(isinstance(clean['cleaning_failures'], int))
+        self.assertTrue(isinstance(clean['workers'], list))
+        self.assertTrue(isinstance(clean['stokens'], list))
+        self.assertTrue(isinstance(clean['worker_count'], int))
+        self.assertTrue(isinstance(clean['sessions_cleaned'], int))
+        self.assertTrue(isinstance(clean['stokens_cleaned'], int))
+        self.assertTrue(isinstance(clean['cleanup_failures'], int))

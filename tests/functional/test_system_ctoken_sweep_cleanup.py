@@ -27,19 +27,19 @@ class TestEWalletSessionManagerSystemCTokenCleanupSweep(unittest.TestCase):
 
         # EWallet Server users
         print('[...]: User action RequestClientID (1)')
-        client_id = session_manager.session_manager_controller(
+        client_id1 = session_manager.session_manager_controller(
             controller='client', ctype='action', action='request',
             request='client_id', expires_on=past_date
         )
 
         print('[...]: User action RequestClientID (2)')
-        client_id = session_manager.session_manager_controller(
+        client_id2 = session_manager.session_manager_controller(
             controller='client', ctype='action', action='request',
             request='client_id', expires_on=past_date
         )
 
         print('[...]: User action RequestClientID (3)')
-        client_id = session_manager.session_manager_controller(
+        client_id3 = session_manager.session_manager_controller(
             controller='client', ctype='action', action='request',
             request='client_id', expires_on=past_date
         )
@@ -64,8 +64,13 @@ class TestEWalletSessionManagerSystemCTokenCleanupSweep(unittest.TestCase):
             '\n[ < ]: Response: ' + str(clean) + '\n'
         )
         self.assertTrue(isinstance(clean, dict))
-        self.assertEqual(len(clean.keys()), 4)
+        self.assertEqual(len(clean.keys()), 10)
         self.assertFalse(clean.get('failed'))
         self.assertTrue(isinstance(clean['ctokens_cleaned'], int))
         self.assertTrue(isinstance(clean['cleaning_failures'], int))
         self.assertTrue(isinstance(clean['ctokens'], list))
+        self.assertTrue(isinstance(clean['stokens_cleaned'], int))
+        self.assertTrue(isinstance(clean['stokens'], list))
+        self.assertTrue(isinstance(clean['worker_count'], int))
+        self.assertTrue(isinstance(clean['workers'], list))
+        self.assertTrue(isinstance(clean['sessions'], list))
