@@ -1814,14 +1814,14 @@ class EWalletSessionManager():
             )
         instruction_set_response = {
             'failed': False,
-            'stokens_cleaned': cleanup_stokens['stokens_cleaned'],
-            'cleanup_failures': cleanup_stokens['cleanup_failures']
-                + cleanup_sessions['cleanup_failures'],
-            'stokens': cleanup_stokens['stokens'],
-            'sessions_cleaned': cleanup_sessions['sessions_cleaned'],
-            'sessions': cleanup_sessions['sessions'],
-            'worker_count': cleanup_sessions['worker_count'],
-            'workers': cleanup_sessions['session_workers'],
+            'stokens_cleaned': cleanup_stokens.get('stokens_cleaned', 0),
+            'cleanup_failures': cleanup_stokens.get('cleanup_failures', 0)
+                + cleanup_sessions.get('cleanup_failures', 0),
+            'stokens': cleanup_stokens.get('stokens', []),
+            'sessions_cleaned': cleanup_sessions.get('sessions_cleaned', 0),
+            'sessions': cleanup_sessions.get('sessions', []),
+            'worker_count': cleanup_sessions.get('worker_count', 0),
+            'workers': cleanup_sessions.get('workers', []),
         }
         return instruction_set_response
 
@@ -2313,8 +2313,6 @@ class EWalletSessionManager():
     # TODO
     def action_target_cleanup_client_token(self, **kwargs):
         log.debug('TODO - UNIMPLEMENTED')
-    def action_target_cleanup_session_token(self, **kwargs):
-        log.debug('TODO - UNIMPLEMENTED')
     def action_stop_user_account_cleaner_cron(self, **kwargs):
         log.debug('TODO - UNIMPLEMENTED')
     def action_stop_session_worker_cleaner_cron(self, **kwargs):
@@ -2323,6 +2321,43 @@ class EWalletSessionManager():
         log.debug('TODO - UNIMPLEMENTED')
     def action_stop_client_token_cleaner_cron(self, **kwargs):
         log.debug('TODO - UNIMPLEMENTED')
+
+    def action_target_cleanup_session_token(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('session_token'):
+            return self.error_no_session_token_specified(kwargs)
+        stoken_pool = kwargs.get('stoken_pool') or self.fetch_stoken_pool()
+        if kwargs['session_token'] not in stoken_pool:
+            return self.error_session_token_not_found_in_pool(
+                kwargs, stoken_pool
+            )
+        sessions_to_remove = self.fetch_ewallet_session_ids_by_session_tokens(
+            [kwargs['session_token']]
+        )
+        clean_sessions = self.cleanup_ewallet_sessions(
+            session_worker_map=sessions_to_remove
+        )
+        clean_stokens = self.cleanup_session_tokens(
+            [kwargs['session_token']], stoken_pool=stoken_pool
+        )
+        if not clean_stokens or isinstance(clean_stokens, dict) and \
+                clean_stokens.get('failed'):
+            return self.warning_could_not_cleanup_session_token(
+                kwargs, stoken_pool, sessions_to_remove,
+                clean_sessions, clean_stokens,
+            )
+        instruction_set_response = {
+            'failed': False,
+            'sessions_cleaned': clean_sessions.get('sessions_cleaned', 0),
+            'cleanup_failures': clean_sessions.get('cleanup_failures', 0)
+                + clean_stokens.get('cleanup_failures', 0),
+            'worker_count': clean_sessions.get('worker_count', 0),
+            'workers': clean_sessions.get('workers', []),
+            'sessions': clean_sessions.get('sessions', []),
+            'stokens_cleaned': clean_stokens.get('stokens_cleaned', 0),
+            'stokens': clean_stokens.get('stokens', []),
+        }
+        return instruction_set_response
 
     def action_target_cleanup_session_worker(self, **kwargs):
         log.debug('')
@@ -4317,6 +4352,15 @@ class EWalletSessionManager():
     [ TODO ]: Fetch warning messages from message file by key codes.
     '''
 
+    def warning_could_not_clean_session_tokens(self, *args):
+        instruction_set_response = res_utils.format_warning_response(**{
+            'failed': True, 'details': args,
+            'warning': 'Something went wrong. '
+                       'Could not cleanup session tokens.',
+        })
+        self.log_warning(**instruction_set_response)
+        return instruction_set_response
+
     def warning_could_not_fetch_session_worker_pool_entry_by_id(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
             'failed': True, 'details': args,
@@ -5356,6 +5400,22 @@ class EWalletSessionManager():
     '''
     [ TODO ]: Fetch error messages from message file by key codes.
     '''
+
+    def error_session_token_not_found_in_pool(self, *args):
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
+            'error': 'Specified session token not found in pool.',
+        })
+        self.log_error(**instruction_set_response)
+        return instruction_set_response
+
+    def error_no_session_token_specified(self, *args):
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
+            'error': 'No session token specified.',
+        })
+        self.log_error(**instruction_set_response)
+        return instruction_set_response
 
     def error_no_session_worker_id_specified(self, *args):
         instruction_set_response = res_utils.format_error_response(**{

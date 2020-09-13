@@ -4,7 +4,7 @@ import datetime
 from base import ewallet_session_manager as manager
 
 
-class TestEWalletSessionManagerSystemWorkerCleanup(unittest.TestCase):
+class TestEWalletSessionManagerSystemWorkerSweepCleanup(unittest.TestCase):
     session_manager = None
 
     @classmethod
@@ -47,7 +47,7 @@ class TestEWalletSessionManagerSystemWorkerCleanup(unittest.TestCase):
             os.remove('data/ewallet.db')
 
     def test_system_action_cleanup_worker_functionality(self):
-        print('\n[ * ]: System action CleanupSessionWorkers')
+        print('\n[ * ]: System action SweepCleanupWorkers')
         instruction_set = {
             'controller': 'system', 'ctype': 'action', 'action': 'cleanup',
             'cleanup': 'workers'
@@ -63,7 +63,7 @@ class TestEWalletSessionManagerSystemWorkerCleanup(unittest.TestCase):
         self.assertEqual(len(clean.keys()), 6)
         self.assertFalse(clean.get('failed'))
         self.assertTrue(isinstance(clean['workers_cleaned'], int))
-        self.assertTrue(isinstance(clean['cleaning_failures'], int))
+        self.assertTrue(isinstance(clean['cleanup_failures'], int))
         self.assertTrue(isinstance(clean['worker_pool'], dict))
         self.assertTrue(isinstance(clean.get('worker_reserved'), int))
         self.assertTrue(isinstance(clean['workers'], list))

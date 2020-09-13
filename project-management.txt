@@ -39,9 +39,10 @@
     - x - (EWSC) Implement system action SweepCleanupSTokens
     - x - (EWSC) Implement system action SweepCleanupCTokens
     - x - (EWSC) Fix system action SweepCleanupWorkers
-    -   - (EWSC) Implement system action TargetCleanupWorker
-    - (EWSC) Implement system action TargetCleanupSToken
-    - (EWSC) Implement system action TargetCleanupCToken
+    - x - (EWSC) Implement system action TargetCleanupWorker
+    - x - (EWSC) Implement system action TargetCleanupSToken
+    -   - (EWSC) Implement system action TargetCleanupCToken
+    - (EWSC) Implement system action StartAllCleaners
     - (EWCC) Perform valid input checks on core subroutine SetResource
     - (EWCC) Make library importable
     - (EWSC, EWCC, EWAT) Implement master accounts
@@ -57,6 +58,7 @@
     - (EWSC) Implement system action StopAccountCleaner cron
     - (EWSC) Implement system action StopWorkerCleaner cron
     - (EWSC) Implement system action StopSessionCleaner cron
+    - (EWSC) Implement system action StopCTokenCleaner cron
     - (EWSC, EWCC, EWAT) Implement entity record limiter queue mechanism
     - (EWSC, EWCC, EWAT) Send user account password as hash
     - (EWSC, EWCC, EWAT) Implement AddNotes mechanism for journal records
@@ -117,10 +119,11 @@
     - x - Cleanup EWallet Sessions on system action SweepCleanupSTokens
     - x - Cleanup EWallet Sessions on system action SweepCleanupCTokens
     - x - Cleanup STokens on system action TargetCleanupSession
-    - . - Implement system action TargetCleanupStoken
+    - x - Implement system action TargetCleanupStoken
     - x - Implement system action TargetCleanupWorker
-    - Implement system action TargetCleanupCToken
-    - Implement system action TargetCleanupWorker
+    -   - Implement system action TargetCleanupCToken
+    - x - Implement system action TargetCleanupWorker
+    - Cleanup ewallet sessions and stokens on system action TargetCleanupWorker
 
     - x - Error Handler Grooming (Session Manager)
         - x - Cleanup stack trace string
