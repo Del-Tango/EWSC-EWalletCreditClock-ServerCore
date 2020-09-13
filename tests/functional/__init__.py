@@ -7,6 +7,7 @@ from . import test_system_start_account_cleaner_cron
 from . import test_system_start_worker_cleaner_cron
 from . import test_system_start_session_cleaner_cron
 from . import test_system_start_ctoken_cleaner_cron
+from . import test_system_start_all_cleaner_crons
 from . import test_system_stoken_sweep_cleanup
 from . import test_system_ctoken_sweep_cleanup
 from . import test_system_worker_target_cleanup

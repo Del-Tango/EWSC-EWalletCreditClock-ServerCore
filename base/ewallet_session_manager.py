@@ -1896,7 +1896,7 @@ class EWalletSessionManager():
         elif not session_count:
             return self.warning_could_not_cleanup_ewallet_sessions(
                 kwargs, instruction, session_tokens_to_remove, session_workers,
-                cleanup_failures, sessions_count, cleanup_stokens
+                cleanup_failures, session_count, cleanup_stokens
             )
         instruction_set_response = {
             'failed': False,
@@ -2814,6 +2814,19 @@ class EWalletSessionManager():
     '''
     [ NOTE ]: Instruction set validation and sanitizations are performed here.
     '''
+
+    def handle_system_action_start_all_cleaner_crons(self, **kwargs):
+        log.debug('')
+        cleaner_crons = {
+            'accounts': self.handle_system_action_start_user_account_cleaner_cron(**kwargs),
+            'workers': self.handle_system_action_start_session_worker_cleaner_cron(**kwargs),
+            'sessions': self.handle_system_action_start_ewallet_session_cleaner_cron(**kwargs),
+            'ctokens': self.handle_system_action_start_client_token_cleaner_cron(**kwargs),
+        }
+        return {
+            'failed': False,
+            'cleaners': cleaner_crons,
+        }
 
 #   @pysnooper.snoop('logs/ewallet.log')
     def handle_system_action_new_worker(self, **kwargs):
@@ -3776,7 +3789,7 @@ class EWalletSessionManager():
             'workers': self.handle_system_action_start_session_worker_cleaner_cron,
             'sessions': self.handle_system_action_start_ewallet_session_cleaner_cron,
             'ctokens': self.handle_system_action_start_client_token_cleaner_cron,
-#           'all': ,
+            'all': self.handle_system_action_start_all_cleaner_crons,
         }
         return handlers[kwargs['clean']](**kwargs)
 
