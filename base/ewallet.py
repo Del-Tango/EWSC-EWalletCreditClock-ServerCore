@@ -75,10 +75,53 @@ class EWallet(Base):
 
     # FETCHERS
 
-    # TODO
+    def fetch_active_session_credit_wallet(self, obj=True):
+        log.debug('')
+        return self.error_no_session_credit_wallet_found(
+            {'credit_wallet': self.credit_wallet}
+        ) if not self.credit_wallet else (
+            self.credit_wallet[0] if obj else
+            self.credit_wallet[0].fetch_credit_ewallet_id()
+        )
+
+    def fetch_active_session_user_account_archive(self):
+        log.debug('')
+        return False if not self.user_account_archive \
+            else self.user_account_archive
+
+    def fetch_active_session_contact_list(self, obj=True):
+        log.debug('')
+        return self.error_no_session_contact_list_found(
+            {'contact_list': self.contact_list}
+        ) if not self.contact_list else (
+            self.contact_list[0] if obj else
+            self.contact_list[0].fetch_contact_list_id()
+        )
+
+#   @pysnooper.snoop('logs/ewallet.log')
+    def fetch_active_session_user(self, obj=True):
+        log.debug('')
+        try:
+            if not self.active_user:
+                return self.error_no_session_active_user_found(
+                    self.active_user
+                )
+            return self.active_user[0] if obj else \
+                self.active_user[0].fetch_user_id()
+        except:
+            return self.error_could_not_fetch_active_session_user({
+                'account': self.active_user
+            })
+
     def fetch_default_ewallet_session_validity_interval_in_hours(self):
-        log.debug('TODO - Fetch value from config file')
-        return 24
+        log.debug('')
+        minutes = int(config.session_config['ewallet_session_validity'])
+        minutes_in_hour = 60
+        return minutes / minutes_in_hour
+
+    def fetch_default_ewallet_session_validity_interval_in_minutes(self):
+        log.debug('')
+        return int(config.session_config['ewallet_session_validity'])
 
 #   @pysnooper.snoop()
     def fetch_user_by_email(self, **kwargs):
@@ -116,21 +159,6 @@ class EWallet(Base):
     def fetch_user_password_hash_function(self):
         log.debug('')
         return res_utils.hash_password
-
-#   @pysnooper.snoop('logs/ewallet.log')
-    def fetch_active_session_user(self, obj=True):
-        log.debug('')
-        try:
-            if not self.active_user:
-                return self.error_no_session_active_user_found(
-                    self.active_user
-                )
-            return self.active_user[0] if obj else \
-                self.active_user[0].fetch_user_id()
-        except:
-            return self.error_could_not_fetch_active_session_user({
-                'account': self.active_user
-            })
 
     def fetch_active_session_reference(self):
         log.debug('')
@@ -190,16 +218,6 @@ class EWallet(Base):
         log.info('Successfully fetched user by id.')
         return self.warning_no_user_account_found_by_id(kwargs) if not \
             user_account else user_account[0]
-
-    def fetch_active_session_user_account_archive(self):
-        log.debug('')
-        return False if not self.user_account_archive \
-            else self.user_account_archive
-
-    def fetch_active_session_contact_list(self):
-        log.debug('')
-        return False if not self.contact_list else \
-            self.contact_list[0]
 
     def fetch_partner_credit_wallet(self, partner_account):
         log.debug('')
@@ -281,15 +299,6 @@ class EWallet(Base):
             return self.error_no_active_session_found()
         return self.session
 
-    def fetch_active_session_credit_wallet(self):
-        log.debug('')
-        if not len(self.credit_wallet):
-            self.error_no_session_credit_wallet_found({
-                'credit_wallet': self.credit_wallet
-            })
-            return False
-        return self.credit_wallet[0]
-
     def fetch_active_session_credit_clock(self, **kwargs):
         log.debug('')
         _credit_wallet = kwargs.get('credit_ewallet') or \
@@ -298,12 +307,6 @@ class EWallet(Base):
             return self.error_could_not_fetch_active_session_credit_wallet()
         _credit_clock = _credit_wallet.fetch_credit_ewallet_credit_clock()
         return _credit_clock or False
-
-    def fetch_active_session_contact_list(self):
-        log.debug('')
-        if not len(self.contact_list):
-            return self.error_no_session_contact_list_found()
-        return self.contact_list[0]
 
     '''
     [ NOTE   ]: Fetches either specified credit wallet or active user credit wallet credit count.
@@ -466,6 +469,44 @@ class EWallet(Base):
         return archive
 
     # CHECKERS
+
+    def check_session_user_account_is_set(self):
+        log.debug('')
+        account = self.fetch_active_session_user()
+        return False if not account or (
+            isinstance(account, dict) and account.get('failed')
+        ) else True
+
+    def check_session_contact_list_is_set(self):
+        log.debug('')
+        contact_list = self.fetch_active_session_contact_list()
+        return False if not contact_list or (
+            isinstance(contact_list, dict) and contact_list.get('failed')
+        ) else True
+
+    def check_session_credit_ewallet_is_set(self):
+        log.debug('')
+        ewallet = self.fetch_active_session_credit_wallet()
+        return False if not ewallet or (
+            isinstance(ewallet, dict) and ewallet.get('failed')
+        ) else True
+
+    def check_session_user_archive_is_set(self):
+        log.debug('')
+        account_archive = self.fetch_active_session_user_account_archive()
+        return False if not account_archive or (
+            isinstance(account_archive, dict) and account_archive.get('failed')
+        ) else True
+
+    def check_if_active_ewallet_session_empty(self):
+        log.debug('')
+        checks = {
+            'active_user': self.check_session_user_account_is_set(),
+            'contact_list': self.check_session_contact_list_is_set(),
+            'credit_ewallet': self.check_session_credit_ewallet_is_set(),
+            'user_archive': self.check_session_user_archive_is_set(),
+        }
+        return True if True not in checks.values() else False
 
     def check_user_account_flag_for_unlink(self):
         log.debug('')
@@ -716,6 +757,20 @@ class EWallet(Base):
                 'session_account_archive': None if not session_values['user_account_archive'] \
                     else session_values['user_account_archive']
             }
+        }
+        return command_chain_response
+
+    def action_interogate_ewallet_session_empty(self, **kwargs):
+        log.debug('')
+        empty = self.check_if_active_ewallet_session_empty()
+        if isinstance(empty, dict) and empty.get('failed'):
+            return self.error_could_not_check_if_ewallet_session_empty(
+                kwargs, empty
+            )
+        command_chain_response = {
+            'failed': False,
+            'ewallet_session': self.fetch_active_session_id(),
+            'empty': empty,
         }
         return command_chain_response
 
@@ -2439,6 +2494,10 @@ class EWallet(Base):
     [ NOTES ]: Enviroment checks for proper action execution are performed here.
     '''
 
+    def handle_system_action_interogate_session_empty(self, **kwargs):
+        log.debug('')
+        return self.action_interogate_ewallet_session_empty(**kwargs)
+
     def handle_user_action_recover_account(self, **kwargs):
         log.debug('')
         check_logged_in = self.check_user_logged_in()
@@ -3425,6 +3484,7 @@ class EWallet(Base):
             )
         handlers = {
             'expired': self.handle_system_action_interogate_session_expired,
+            'empty': self.handle_system_action_interogate_session_empty,
             'state': self.handle_system_action_interogate_session_state,
         }
         return handlers[kwargs['session']](**kwargs)
@@ -4238,6 +4298,25 @@ class EWallet(Base):
     [ TODO ]: Fetch error messages from message file by key codes.
     '''
 
+    def error_no_session_contact_list_found(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No active session contact list found. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_could_not_check_if_ewallet_session_empty(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Something went wrong. '
+                     'Could not check if ewallet session is empty. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
     def error_could_not_unlink_user_account(self, *args):
         command_chain_response = {
             'failed': True,
@@ -4999,10 +5078,6 @@ class EWallet(Base):
 
     def error_no_invoice_list_id_found(self):
         log.error('No invoice list id found.')
-        return False
-
-    def error_no_session_contact_list_found(self):
-        log.error('No active session contact list found.')
         return False
 
     def error_no_user_name_found(self):

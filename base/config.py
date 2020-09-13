@@ -24,6 +24,9 @@ class Config():
             'worker_sigterm': 'terminate_worker',
             'session_limit': 10,
         }
+        self.session_config = {
+            'ewallet_session_validity': 30, # minutes
+        }
         self.log_config = {
             'log_name': 'EWallet',
             'log_dir': 'logs',
@@ -37,22 +40,22 @@ class Config():
         self.client_config = {
             'keep_logged_in': 0,
             'client_id_prefix': 'ewsm-uid',
-            'client_id_length': 20,
-            'client_id_validity': 30,
+            'client_id_length': 20, # characters
+            'client_id_validity': 30, # minutes
             'session_token_prefix': 'ewsm-st',
-            'session_token_length': 20,
-            'session_token_validity': 30,
-            'account_unlink_freeze_interval': 30,
+            'session_token_length': 20, # characters
+            'session_token_validity': 30, # minutes
+            'account_unlink_freeze_interval': 30, # days
         }
         self.cron_config = {
             'account_cleaner_cron_label': 'AccountCleaner',
-            'account_cleaner_cron_interval': 24, #h
+            'account_cleaner_cron_interval': 24, # hours
             'worker_cleaner_cron_label': 'WorkerCleaner',
-            'worker_cleaner_cron_interval': 1, #h
+            'worker_cleaner_cron_interval': 1, # hours
             'session_cleaner_cron_label': 'SessionCleaner',
-            'session_cleaner_cron_interval': 30, #m
+            'session_cleaner_cron_interval': 30, # minutes
             'ctoken_cleaner_cron_label': 'ClientTokenCleaner',
-            'ctoken_cleaner_cron_interval': 30, #m
+            'ctoken_cleaner_cron_interval': 30, # minutes
         }
         self.wallet_config = {
             'wallet_reference': 'EWallet',
@@ -107,7 +110,7 @@ class Config():
             self.conversion_sheet_config, self.transfer_sheet_config,
             self.invoice_sheet_config, self.system_config,
             self.system_user_values, self.contact_list_config,
-            self.worker_config, self.cron_config
+            self.worker_config, self.cron_config, self.session_config
         ]
 
     def fetch_config_dict_by_key(self, dict_set, key):
