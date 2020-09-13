@@ -123,7 +123,7 @@
     - x - Implement system action TargetCleanupWorker
     - x - Implement system action TargetCleanupCToken
     - x - Implement system action TargetCleanupWorker
-    - Cleanup ewallet sessions and stokens on system action TargetCleanupWorker
+    - x - Cleanup stokens on system action TargetCleanupWorker
 
     - x - Error Handler Grooming (Session Manager)
         - x - Cleanup stack trace string

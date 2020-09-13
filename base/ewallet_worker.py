@@ -55,6 +55,10 @@ class EWalletWorker():
 
     # FETCHERS
 
+    def fetch_stoken_pool(self):
+        log.debug('')
+        return self.stoken_pool
+
     def fetch_next_empty_ewallet_session_from_pool(self, ewallet_session_pool):
         log.debug('')
         empty_session = self.fetch_empty_ewallet_sessions_from_pool(
@@ -1239,6 +1243,7 @@ class EWalletWorker():
         log.debug('')
         session_pool = self.fetch_session_worker_ewallet_session_pool()
         command = self.fetch_ewallet_session_cleanup_command()
+        stoken_pool = self.fetch_stoken_pool()
         for session_id in session_pool:
             ewallet_session = session_pool[session_id]
             cleanup = ewallet_session.ewallet_controller(**command)
@@ -1272,6 +1277,7 @@ class EWalletWorker():
             'worker_data': self.sanitize_session_worker_values(
                 self.fetch_session_worker_values()
             ),
+            'orphaned_stokens': stoken_pool,
         }
         self.send_instruction_response(response)
         return response

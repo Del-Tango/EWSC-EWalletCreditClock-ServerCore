@@ -1942,7 +1942,7 @@ class EWalletSessionManager():
                 self.fetch_session_worker_cleaner_cron_default_label()
             )
         )
-        cleaned_workers, cleaning_failures = [], 0
+        orphaned_stokens, cleaned_workers, cleaning_failures = [], [], 0
         for worker_id in worker_ids:
             clean = self.cleanup_session_worker(
                 worker_id, **kwargs
@@ -1953,13 +1953,16 @@ class EWalletSessionManager():
                 )
                 cleaning_failures += 1
                 continue
+            if clean.get('orphaned_stokens'):
+                orphaned_stokens += clean['orphaned_stokens']
             cleaned_workers.append(worker_id)
         return self.warning_no_session_workers_cleaned(worker_ids) \
             if not cleaned_workers else {
                 'failed': False,
                 'workers_cleaned': len(cleaned_workers),
                 'cleanup_failures': cleaning_failures,
-                'workers': cleaned_workers
+                'workers': cleaned_workers,
+                'orphaned_stokens': orphaned_stokens,
             }
 
     def clear_ctoken_linked_stoken(self, stoken_label, **kwargs):
@@ -2333,6 +2336,33 @@ class EWalletSessionManager():
     def action_stop_client_token_cleaner_cron(self, **kwargs):
         log.debug('TODO - UNIMPLEMENTED')
 
+    def action_target_cleanup_session_worker(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('worker_id'):
+            return self.error_no_session_worker_id_specified(kwargs)
+        worker_pool = kwargs.get('worker_pool') or self.fetch_worker_pool()
+        clean_workers = self.cleanup_session_workers(
+            [kwargs['worker_id']], worker_pool=worker_pool
+        )
+        if not clean_workers or isinstance(clean_workers, dict) and \
+                clean_workers.get('failed'):
+            return self.warning_could_not_cleanup_ewallet_session_workers(
+                kwargs, worker_pool, clean_workers,
+            )
+        stokens_to_remove = clean_workers.get('orphaned_stokens', [])
+        clean_stokens = self.cleanup_session_tokens(stokens_to_remove)
+        instruction_set_response = {
+            'failed': False,
+            'worker_pool': self.fetch_worker_pool(),
+            'workers_cleaned': clean_workers.get('workers_cleaned', 0),
+            'cleanup_failures': clean_workers.get('cleanup_failures', 0)
+                + clean_stokens.get('cleanup_failures', 0),
+            'workers': clean_workers.get('workers', []),
+            'stokens_cleaned': clean_stokens.get('stokens_cleaned', 0),
+            'stokens': clean_stokens.get('stokens', [])
+        }
+        return instruction_set_response
+
 #   @pysnooper.snoop('logs/ewallet.log')
     def action_target_cleanup_client_token(self, **kwargs):
         log.debug('')
@@ -2414,28 +2444,6 @@ class EWalletSessionManager():
             'sessions': clean_sessions.get('sessions', []),
             'stokens_cleaned': clean_stokens.get('stokens_cleaned', 0),
             'stokens': clean_stokens.get('stokens', []),
-        }
-        return instruction_set_response
-
-    def action_target_cleanup_session_worker(self, **kwargs):
-        log.debug('')
-        if not kwargs.get('worker_id'):
-            return self.error_no_session_worker_id_specified(kwargs)
-        worker_pool = kwargs.get('worker_pool') or self.fetch_worker_pool()
-        clean = self.cleanup_session_workers(
-            [kwargs['worker_id']], worker_pool=worker_pool
-        )
-        if not clean or isinstance(clean, dict) and \
-                clean.get('failed'):
-            return self.warning_could_not_cleanup_ewallet_session_workers(
-                kwargs, worker_pool, clean,
-            )
-        instruction_set_response = {
-            'failed': False,
-            'worker_pool': self.fetch_worker_pool(),
-            'workers_cleaned': clean['workers_cleaned'],
-            'cleanup_failures': clean['cleanup_failures'],
-            'workers': clean['workers'],
         }
         return instruction_set_response
 
