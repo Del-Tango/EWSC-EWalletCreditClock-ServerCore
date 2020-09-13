@@ -4,7 +4,7 @@ import unittest
 from base import ewallet_session_manager as manager
 
 
-class TestEWalletSessionManagerSystemCTokenCleanupSweep(unittest.TestCase):
+class TestEWalletSessionManagerSystemCTokenTargetCleanup(unittest.TestCase):
     session_manager = None
 
     @classmethod
@@ -44,6 +44,8 @@ class TestEWalletSessionManagerSystemCTokenCleanupSweep(unittest.TestCase):
             request='client_id', expires_on=past_date
         )
 
+        cls.client_id = client_id1['client_id']
+
     @classmethod
     def tearDownClass(cls):
         # Clean Sqlite3 database used for testing environment
@@ -54,7 +56,7 @@ class TestEWalletSessionManagerSystemCTokenCleanupSweep(unittest.TestCase):
         print('\n[ * ]: System action SweepCleanupCTokens')
         instruction_set = {
             'controller': 'system', 'ctype': 'action', 'action': 'cleanup',
-            'cleanup': 'ctokens'
+            'cleanup': 'ctokens', 'client_id': self.client_id,
         }
         clean = self.session_manager.session_manager_controller(
             **instruction_set
@@ -67,6 +69,7 @@ class TestEWalletSessionManagerSystemCTokenCleanupSweep(unittest.TestCase):
         self.assertEqual(len(clean.keys()), 10)
         self.assertFalse(clean.get('failed'))
         self.assertTrue(isinstance(clean['ctokens_cleaned'], int))
+        self.assertTrue(isinstance(clean['sessions_cleaned'], int))
         self.assertTrue(isinstance(clean['cleanup_failures'], int))
         self.assertTrue(isinstance(clean['ctokens'], list))
         self.assertTrue(isinstance(clean['stokens_cleaned'], int))

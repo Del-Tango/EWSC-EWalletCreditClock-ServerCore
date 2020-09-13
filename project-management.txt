@@ -41,8 +41,8 @@
     - x - (EWSC) Fix system action SweepCleanupWorkers
     - x - (EWSC) Implement system action TargetCleanupWorker
     - x - (EWSC) Implement system action TargetCleanupSToken
-    -   - (EWSC) Implement system action TargetCleanupCToken
-    - (EWSC) Implement system action StartAllCleaners
+    - x - (EWSC) Implement system action TargetCleanupCToken
+    -   - (EWSC) Implement system action StartAllCleaners
     - (EWCC) Perform valid input checks on core subroutine SetResource
     - (EWCC) Make library importable
     - (EWSC, EWCC, EWAT) Implement master accounts
@@ -121,7 +121,7 @@
     - x - Cleanup STokens on system action TargetCleanupSession
     - x - Implement system action TargetCleanupStoken
     - x - Implement system action TargetCleanupWorker
-    -   - Implement system action TargetCleanupCToken
+    - x - Implement system action TargetCleanupCToken
     - x - Implement system action TargetCleanupWorker
     - Cleanup ewallet sessions and stokens on system action TargetCleanupWorker
 
