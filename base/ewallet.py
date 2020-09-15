@@ -718,6 +718,114 @@ class EWallet(Base):
     def action_receive_transfer_record(self, **kwargs):
         log.debug('TODO - UNIMPLEMENTED')
 
+    @pysnooper.snoop('logs/ewallet.log')
+    def action_view_transfer_record(self, **kwargs):
+        log.debug('TODO - FIX ME')
+        if not kwargs.get('record_id'):
+            return self.error_no_transfer_sheet_record_id_found(kwargs)
+
+
+        # TODO - Remove
+        log.info('\n\nINSTRUCTION : {}\n'.format(kwargs))
+
+        credit_wallet = self.fetch_active_session_credit_wallet()
+        if not credit_wallet or isinstance(credit_wallet, dict) and \
+                credit_wallet.get('failed'):
+            return self.error_could_not_fetch_credit_ewallet(kwargs)
+        log.info('Attempting to fetch active transfer sheet...')
+
+        transfer_sheet = credit_wallet.fetch_credit_ewallet_transfer_sheet()
+        if not transfer_sheet or isinstance(transfer_sheet, dict) and \
+                transfer_sheet.get('failed'):
+            return self.warning_could_not_fetch_transfer_sheet(kwargs)
+        log.info('Attempting to fetch transfer record by id...')
+
+        record = transfer_sheet.fetch_transfer_sheet_record(
+            search_by='id', code=kwargs['record_id'], active_session=self.session
+        )
+        if not record or isinstance(record, dict) and \
+                record.get('failed'):
+            return self.warning_could_not_fetch_transfer_sheet_record(
+                kwargs, credit_wallet, transfer_sheet, record
+            )
+
+        record_values = record.fetch_record_values()
+
+        # TODO - Remove
+        log.info('\n\RECORD VALUES : {}\n'.format(record_values))
+
+
+        transfer_from_id = record.fetch_record_transfer_from()
+        transfer_to_id = record.fetch_record_transfer_to()
+
+        record_values['transfer_from'] = None if not transfer_from_id \
+            else self.fetch_user(
+                identifier='id',
+                account_id=transfer_from_id,
+                **kwargs
+            ).fetch_user_email()
+
+        record_values['transfer_to'] = None if not transfer_to_id \
+            else self.fetch_user(
+                identifier='id',
+                account_id=transfer_to_id,
+                **kwargs
+            ).fetch_user_email()
+
+        command_chain_response = {
+            'failed': False,
+            'transfer_sheet': transfer_sheet.fetch_transfer_sheet_id(),
+            'transfer_record': record.fetch_record_id(),
+            'record_data': record_values,
+        }
+        return command_chain_response
+
+#   @pysnooper.snoop('logs/ewallet.log')
+    def action_logout_user_account(self, **kwargs):
+        log.debug('')
+        user = self.fetch_active_session_user()
+        session_logout = self.action_system_user_logout()
+        logout_record = EWalletLogout(
+            user_id=user.fetch_user_id(),
+            logout_status=False if not session_logout else True,
+        )
+        kwargs['active_session'].add(logout_record)
+        if not session_logout:
+            kwargs['active_session'].rollback()
+            return self.warning_could_not_logout_user_account(kwargs)
+        update_next = False if isinstance(session_logout, bool) \
+                else self.action_system_user_update(user=session_logout)
+        try:
+            self.user_account_archive.remove(user)
+        except:
+            kwargs['active_session'].rollback()
+            return self.error_could_not_remove_user_from_account_archive(kwargs)
+        kwargs['active_session'].commit()
+        session_values = self.fetch_active_session_values()
+        command_chain_response = {
+            'failed': False,
+            'account': user.fetch_user_email(),
+            'session_data': {
+                'session_user_account': None if
+                    not isinstance(session_values.get('user_account'), list)
+                    or len(session_values['user_account']) == 0
+                    else session_values['user_account'][0].fetch_user_email(),
+                'session_credit_ewallet': None if
+                    not isinstance(session_values['credit_ewallet'], list)
+                    or len(session_values['credit_ewallet']) == 0
+                    else session_values['credit_ewallet'][0].fetch_credit_ewallet_id(),
+                'session_contact_list': None if
+                    not isinstance(session_values['contact_list'], list)
+                    or len(session_values['contact_list']) == 0
+                    else session_values['contact_list'].fetch_contact_list_id(),
+                'session_account_archive': {} if
+                    not session_values['user_account_archive']
+                    or session_values.get('failed')
+                    else session_values['user_account_archive']
+            }
+        }
+        return command_chain_response
+
     # TODO
     def action_login_user_account(self, **kwargs):
         log.debug('TODO - Refactor')
@@ -1494,43 +1602,6 @@ class EWallet(Base):
         }
         return command_chain_response
 
-    def action_view_transfer_record(self, **kwargs):
-        log.debug('')
-        if not kwargs.get('record_id'):
-            return self.error_no_transfer_sheet_record_id_found(kwargs)
-        credit_wallet = self.fetch_active_session_credit_wallet()
-        if not credit_wallet or isinstance(credit_wallet, dict) and \
-                credit_wallet.get('failed'):
-            return self.error_could_not_fetch_credit_ewallet(kwargs)
-        log.info('Attempting to fetch active transfer sheet...')
-        transfer_sheet = credit_wallet.fetch_credit_ewallet_transfer_sheet()
-        if not transfer_sheet or isinstance(transfer_sheet, dict) and \
-                transfer_sheet.get('failed'):
-            return self.warning_could_not_fetch_transfer_sheet(kwargs)
-        log.info('Attempting to fetch transfer record by id...')
-        record = transfer_sheet.fetch_transfer_sheet_record(
-            search_by='id', code=kwargs['record_id'], active_session=self.session
-        )
-        if not record or isinstance(record, dict) and \
-                record.get('failed'):
-            return self.warning_could_not_fetch_transfer_sheet_record(
-                kwargs, credit_wallet, transfer_sheet, record
-            )
-        record_values = record.fetch_record_values()
-        record_values['transfer_from'] = self.fetch_user(
-            identifier='id', account_id=record_values['transfer_from'], **kwargs
-        ).fetch_user_email()
-        record_values['transfer_to'] = self.fetch_user(
-            identifier='id', account_id=record_values['transfer_to'], **kwargs
-        ).fetch_user_email()
-        command_chain_response = {
-            'failed': False,
-            'transfer_sheet': transfer_sheet.fetch_transfer_sheet_id(),
-            'transfer_record': record.fetch_record_id(),
-            'record_data': record_values,
-        }
-        return command_chain_response
-
 #   @pysnooper.snoop()
     def action_view_contact_record(self, **kwargs):
         log.debug('')
@@ -1573,43 +1644,6 @@ class EWallet(Base):
                 'edit': edit_value_set,
                 'account_data': user.fetch_user_values(),
             }
-
-    def action_logout_user_account(self, **kwargs):
-        log.debug('')
-        user = self.fetch_active_session_user()
-        session_logout = self.action_system_user_logout()
-        logout_record = EWalletLogout(
-            user_id=user.fetch_user_id(),
-            logout_status=False if not session_logout else True,
-        )
-        kwargs['active_session'].add(logout_record)
-        if not session_logout:
-            kwargs['active_session'].rollback()
-            return self.warning_could_not_logout_user_account(kwargs)
-        update_next = False if isinstance(session_logout, bool) \
-                else self.action_system_user_update(user=session_logout)
-        try:
-            self.user_account_archive.remove(user)
-        except:
-            kwargs['active_session'].rollback()
-            return self.error_could_not_remove_user_from_account_archive(kwargs)
-        kwargs['active_session'].commit()
-        session_values = self.fetch_active_session_values()
-        command_chain_response = {
-            'failed': False,
-            'account': user.fetch_user_email(),
-            'session_data': {
-                'session_user_account': None if not session_values['user_account'] \
-                    else session_values['user_account'].fetch_user_email(),
-                'session_credit_ewallet': None if not session_values['credit_ewallet'] \
-                    else session_values['credit_ewallet'].fetch_credit_ewallet_id(),
-                'session_contact_list': None if not session_values['contact_list'] \
-                    else session_values['contact_list'].fetch_contact_list_id(),
-                'session_account_archive': None if not session_values['user_account_archive'] \
-                    else session_values['user_account_archive']
-            }
-        }
-        return command_chain_response
 
     def action_recover_user_account(self, **kwargs):
         log.debug('')

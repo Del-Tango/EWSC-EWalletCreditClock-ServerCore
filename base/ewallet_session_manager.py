@@ -1094,6 +1094,46 @@ class EWalletSessionManager():
             if not isinstance(cw_map, dict) else \
             self.set_client_worker_session_map(cw_map)
 
+    # VERIFIERS
+
+#   @pysnooper.snoop('logs/ewallet.log')
+    def verify_ctoken_in_pool(self, ctoken):
+        log.debug('')
+        in_pool = self.check_ctoken_in_pool(ctoken)
+        if isinstance(in_pool, dict) and in_pool.get('failed'):
+            return self.warning_could_not_verify_ctoken_in_pool(ctoken, in_pool)
+        instruction_set_response = {
+            'failed': False,
+            'ctoken': ctoken,
+            'valid': in_pool,
+        }
+        if not in_pool:
+            instruction_set_response.update({
+                'reason': 'Unregistered',
+                'details': 'Token not found in pool.',
+            })
+        return instruction_set_response
+
+#   @pysnooper.snoop('logs/ewallet.log')
+    def verify_ctoken_expired(self, ctoken):
+        log.debug('')
+        ctoken_expired = self.check_client_token_expired(ctoken.fetch_label())
+        instruction_set_response = {
+            'failed': False,
+            'ctoken': ctoken,
+            'valid': True if not ctoken_expired else False,
+        }
+        if ctoken_expired:
+            instruction_set_response.update({
+                'reason': 'Expired',
+                'details': 'Expiration date: {}'.format(
+                    res_utils.format_datetime(
+                    ctoken.fetch_token_expiration_date()
+                    )
+                ),
+            })
+        return instruction_set_response
+
     # CHECKERS
 
     # TODO
@@ -1142,6 +1182,13 @@ class EWalletSessionManager():
             return False
         elif response.get('state') in [0, 1]:
             return True
+
+    def check_ctoken_in_pool(self, ctoken):
+        log.debug('')
+        ctoken_pool = self.fetch_ctoken_pool()
+        if not isinstance(ctoken_pool, dict):
+            return self.error_invalid_ctoken_pool(ctoken, ctoken_pool)
+        return False if ctoken not in ctoken_pool.values() else True
 
     def check_session_token_expired(self, session_token):
         log.debug('')
@@ -1264,7 +1311,7 @@ class EWalletSessionManager():
         try:
             schedule.every(interval).hours.do(
                 self.fetch_client_token_cleaner_cron_function(),
-                self.fetch_ctoken_pool(),
+                ctoken_pool=self.fetch_ctoken_pool(),
                 from_cron=True,
             ).tag(label, 'Cron')
         except Exception as e:
@@ -2336,6 +2383,35 @@ class EWalletSessionManager():
     def action_stop_client_token_cleaner_cron(self, **kwargs):
         log.debug('TODO - UNIMPLEMENTED')
 
+#   @pysnooper.snoop('logs/ewallet.log')
+    def action_verify_client_id_validity(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('client_id'):
+            return self.error_no_client_id_specified(kwargs)
+        ctoken = self.fetch_client_token_by_label(kwargs['client_id'])
+        verify_registered = self.verify_ctoken_in_pool(ctoken)
+        verify_expired = self.verify_ctoken_expired(ctoken)
+        instruction_set_response = {
+            'failed': False,
+            'client_id': kwargs['client_id'],
+            'valid': False if (
+                verify_registered.get('failed') or
+                verify_expired.get('failed')
+            ) else True,
+            'registered': verify_registered.get('valid'),
+            'expired': True if not verify_expired.get('failed') and \
+                not verify_expired.get('valid') else False,
+        }
+        if not verify_registered.get('valid') or \
+                not verify_expired.get('valid'):
+            instruction_set_response.update({
+                'reasons': verify_registered.get('reason') or
+                    verify_expired.get('reason'),
+                'details': verify_registered.get('details') or
+                    verify_expired.get('details'),
+            })
+        return instruction_set_response
+
     def action_target_cleanup_session_worker(self, **kwargs):
         log.debug('')
         if not kwargs.get('worker_id'):
@@ -2816,12 +2892,32 @@ class EWalletSessionManager():
     '''
 
     # TODO
+    def handle_client_action_verify_client_id_linked_stoken(self, **kwargs):
+        log.debug('TODO - UNIMPLEMENTED')
+    def handle_client_action_verify_client_id_ewallet_session(self, **kwargs):
+        log.debug('TODO - UNIMPLEMENTED')
+    def handle_client_action_verify_client_id_status(self, **kwargs):
+        log.debug('TODO - UNIMPLEMENTED')
+    def handle_client_action_verify_session_token_validity(self, **kwargs):
+        log.debug('TODO - UNIMPLEMENTED')
+    def handle_client_action_verify_session_token_linked_ctoken(self, **kwargs):
+        log.debug('TODO - UNIMPLEMENTED')
+    def handle_client_action_verify_session_token_ewallet_session(self, **kwargs):
+        log.debug('TODO - UNIMPLEMENTED')
+    def handle_client_action_verify_session_token_status(self, **kwargs):
+        log.debug('TODO - UNIMPLEMENTED')
+
+    # TODO
     def handle_system_action_close_sockets(self, **kwargs):
         '''
         [ NOTE   ]: Desociates Ewallet Socket Handler from Session Manager.
         '''
         log.debug('TODO - Kill process')
         return self.unset_socket_handler()
+
+    def handle_client_action_verify_client_id_validity(self, **kwargs):
+        log.debug('')
+        return self.action_verify_client_id_validity(**kwargs)
 
     def handle_system_action_start_all_cleaner_crons(self, **kwargs):
         log.debug('')
@@ -3779,19 +3875,39 @@ class EWalletSessionManager():
         log.debug('TODO - UNIMPLEMENTED')
         expire = self.event_session_token_expire()
 
-    # TODO
-    def handle_system_action_start_cleaner_cron(self, **kwargs):
-        log.debug('TODO - Add support for system action start all cleaners')
-        if not kwargs.get('clean'):
-            return self.error_no_system_cleaner_cron_target_specified(kwargs)
+    def handle_client_action_verify_client_id(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('ctoken'):
+            return self.error_no_client_action_verify_ctoken_target_specified(kwargs)
         handlers = {
-            'accounts': self.handle_system_action_start_user_account_cleaner_cron,
-            'workers': self.handle_system_action_start_session_worker_cleaner_cron,
-            'sessions': self.handle_system_action_start_ewallet_session_cleaner_cron,
-            'ctokens': self.handle_system_action_start_client_token_cleaner_cron,
-            'all': self.handle_system_action_start_all_cleaner_crons,
+            'validity': self.handle_client_action_verify_client_id_validity,
+            'stoken': self.handle_client_action_verify_client_id_linked_stoken,
+            'session': self.handle_client_action_verify_client_id_ewallet_session,
+            'status': self.handle_client_action_verify_client_id_status,
         }
-        return handlers[kwargs['clean']](**kwargs)
+        return handlers[kwargs['ctoken']](**kwargs)
+
+    def handle_client_action_verify_session_token(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('stoken'):
+            return self.error_no_client_action_verify_stoken_target_specified(kwargs)
+        handlers = {
+            'validity': self.handle_client_action_verify_session_token_validity,
+            'ctoken': self.handle_client_action_verify_session_token_linked_ctoken,
+            'session': self.handle_client_action_verify_session_token_ewallet_session,
+            'status': self.handle_client_action_verify_session_token_status,
+        }
+        return handlers[kwargs['stoken']](**kwargs)
+
+    def handle_client_action_verify(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('verify'):
+            return self.error_no_client_action_verify_target_specified(kwargs)
+        handlers = {
+            'ctoken': self.handle_client_action_verify_client_id,
+            'stoken': self.handle_client_action_verify_session_token,
+        }
+        return handlers[kwargs['verify']](**kwargs)
 
     # TODO
     def handle_client_action_transfer(self, **kwargs):
@@ -3803,6 +3919,19 @@ class EWalletSessionManager():
 #           'time': self.handle_client_action_transfer_time,
         }
         return handlers[kwargs['transfer']](**kwargs)
+
+    def handle_system_action_start_cleaner_cron(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('clean'):
+            return self.error_no_system_cleaner_cron_target_specified(kwargs)
+        handlers = {
+            'accounts': self.handle_system_action_start_user_account_cleaner_cron,
+            'workers': self.handle_system_action_start_session_worker_cleaner_cron,
+            'sessions': self.handle_system_action_start_ewallet_session_cleaner_cron,
+            'ctokens': self.handle_system_action_start_client_token_cleaner_cron,
+            'all': self.handle_system_action_start_all_cleaner_crons,
+        }
+        return handlers[kwargs['clean']](**kwargs)
 
     def handle_system_action_cleanup_session_workers(self, **kwargs):
         log.debug('')
@@ -4310,23 +4439,16 @@ class EWalletSessionManager():
 
     # TODO
     def client_session_manager_event_controller(self, **kwargs):
-        '''
-        [ NOTE   ]: Client event controller for the EWallet Session Manager, accessible
-                    to regular user api calls.
-        [ INPUT  ]: event=('timeout' | 'expire')+
-        [ WARNING ]: Unimplemented
-        '''
         log.debug('TODO - UNIMPLEMENTED')
 
     # TODO
     def client_session_manager_action_controller(self, **kwargs):
         '''
-        [ NOTE   ]: Client action controller for the EWallet Session Manager, accessible
-                    to regular user api calls.
+        [ NOTE ]: Accessible to regular user api calls.
         '''
         log.debug('TODO - Add support for action categories scrape and search.')
         if not kwargs.get('action'):
-            return self.error_no_client_session_manager_action_specified()
+            return self.error_no_client_session_manager_action_specified(kwargs)
         handlers = {
             'new': self.handle_client_action_new,
 #           'scrape': self.handle_client_action_scrape,
@@ -4347,17 +4469,17 @@ class EWalletSessionManager():
             'unlink': self.handle_client_action_unlink,
             'logout': self.handle_client_action_logout,
             'recover': self.handle_client_action_recover,
+            'verify': self.handle_client_action_verify,
         }
         return handlers[kwargs['action']](**kwargs)
 
     def system_session_manager_action_controller(self, **kwargs):
         '''
-        [ NOTE   ]: System action controller for the EWallet Session Manager,
-                    not accessible to regular user api calls.
+        [ NOTE ]: Not accessible to regular user api calls.
         '''
         log.debug('')
         if not kwargs.get('action'):
-            return self.error_no_system_session_manager_action_specified()
+            return self.error_no_system_session_manager_action_specified(kwargs)
         handlers = {
             'new': self.handle_system_action_new,
             'start': self.handle_system_action_start,
@@ -4430,6 +4552,15 @@ class EWalletSessionManager():
     '''
     [ TODO ]: Fetch warning messages from message file by key codes.
     '''
+
+    def warning_could_not_verify_ctoken_in_pool(self, *args):
+        instruction_set_response = res_utils.format_warning_response(**{
+            'failed': True, 'details': args,
+            'warning': 'Something went wrong. '
+                       'Could not verify if CToken belongs to pool.',
+        })
+        self.log_warning(**instruction_set_response)
+        return instruction_set_response
 
     def warning_could_not_cleanup_ewallet_sessions(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
@@ -5506,6 +5637,30 @@ class EWalletSessionManager():
     '''
     [ TODO ]: Fetch error messages from message file by key codes.
     '''
+
+    def error_invalid_ctoken_pool(self, *args):
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
+            'error': 'Invalid CToken pool found.',
+        })
+        self.log_error(**instruction_set_response)
+        return instruction_set_response
+
+    def error_no_client_action_verify_ctoken_target_specified(self, *args):
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
+            'error': 'No client action verify CToken target specified.',
+        })
+        self.log_error(**instruction_set_response)
+        return instruction_set_response
+
+    def error_no_client_action_verify_target_specified(self, *args):
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
+            'error': 'No client action verify target specified.',
+        })
+        self.log_error(**instruction_set_response)
+        return instruction_set_response
 
     def error_client_token_not_found_in_pool(self, *args):
         instruction_set_response = res_utils.format_error_response(**{

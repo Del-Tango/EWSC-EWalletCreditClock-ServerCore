@@ -44,7 +44,10 @@
     - x - (EWSC) Implement system action TargetCleanupCToken
     - x - (EWSC) Implement system action StartAllCleaners
     - x - (EWSC) Fix user action SupplyCredits
-    -   - (EWCC) Perform valid input checks on core subroutine SetResource
+    - x - (EWSC) Fix user action ViewTransferRecord
+    -   - (EWSC, EWCC, EWAT) Implement Client ID validity check
+    - (EWSC, EWCC, EWAT) Implement Session Token validity check
+    - (EWCC) Perform valid input checks on core subroutine SetResource
     - (EWCC) Make library importable
     - (EWSC, EWCC, EWAT) Implement master accounts
     - (EWSC, EWCC, EWAT) Implement EWallet Session keep alive signal
@@ -64,6 +67,7 @@
     - (EWSC, EWCC, EWAT) Send user account password as hash
     - (EWSC, EWCC, EWAT) Implement AddNotes mechanism for journal records
     - (EWSC, EWCC, EWAT) Add SSL certificates for master accounts
+    - (EWSC, EWCC, EWAT) Implement system event ClockTimerDepleted
     - (EWSC) Use PostgreSql
     - (EWSC) Implement session manager thread pool
     - (EWSC, EWCC, EWAT) Fetch error and warning messages from message file
@@ -110,9 +114,22 @@
     - x - 13/09/2020
         - x - 14:29 Detected issue with the journaling of user action SupplyCredits.
             - [ NOTE ]: No transfer record or invoice record returned.
+            - [ NOTE ]: The transaction handler was searching for journal
+                        sheets in the wrong data set.
+
+    - x - 13/09/2020
+        - x - 15:23 Detected issue with user action ViewTransferRecord.
 
 - (EWSC) - TODO:
 
+    - x - Implement Client ID validity check
+    -   - Implement Client ID stoken check
+    - Implement Client ID session check
+    - Implement Client ID status check
+    - Implement Session token validity check
+    - Implement Session token ctoken check
+    - Implement Session token session check
+    - Implement Session token status check
     - x - Implement forced user account removal.
     - x - Add AccountCleaner cleaner cron
     - x - Add system action StartAccountCleaner functional test
@@ -389,6 +406,15 @@
     - Unit
         -
     - Functional
+
+        - x - Add client action CheckCTokenValid test case
+        -   - Add client action CheckCTokenLinked test case
+        - Add client action CheckCTokenSession test case
+        - Add client action CheckCTokenStatus test case
+        - Add client action CheckSTokenValid test case
+        - Add client action CheckSTokenLinked test case
+        - Add client action CheckSTokenSession test case
+        - Add client action CheckSTokenStatus test case
         - x - Add Forced-UnlinkAccount test case.
 
 
