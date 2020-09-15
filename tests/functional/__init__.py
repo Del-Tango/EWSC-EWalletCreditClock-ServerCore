@@ -20,7 +20,7 @@ from . import test_user_request_stoken
 from . import test_user_check_ctoken_valid
 from . import test_user_check_ctoken_linked
 from . import test_user_check_ctoken_session
-#   from . import test_user_check_ctoken_status
+from . import test_user_check_ctoken_status
 #   from . import test_user_check_stoken_valid
 #   from . import test_user_check_stoken_linked
 #   from . import test_user_check_stoken_session

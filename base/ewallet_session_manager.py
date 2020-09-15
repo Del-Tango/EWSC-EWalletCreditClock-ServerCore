@@ -2391,6 +2391,9 @@ class EWalletSessionManager():
             time.sleep(1)
 
     # ACTIONS
+    '''
+    [ NOTE ]: Instruction set responses are formulated here.
+    '''
 
     # TODO
     def action_stop_user_account_cleaner_cron(self, **kwargs):
@@ -2401,6 +2404,26 @@ class EWalletSessionManager():
         log.debug('TODO - UNIMPLEMENTED')
     def action_stop_client_token_cleaner_cron(self, **kwargs):
         log.debug('TODO - UNIMPLEMENTED')
+
+    def action_verify_client_id_status(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('client_id'):
+            return self.error_no_client_id_specified(kwargs)
+        instruction_set_response = {
+            'failed': False,
+            'client_id': kwargs['client_id'],
+        }
+        validity = self.action_verify_client_id_validity(**kwargs)
+        linked = self.action_verify_client_id_linked_stoken(**kwargs)
+        plugged = self.action_verify_client_id_ewallet_session(**kwargs)
+        instruction_set_response.update({
+            'valid': validity['valid'],
+            'linked': linked['linked'],
+            'plugged': plugged['plugged'],
+            'session_token': linked.get('session_token'),
+            'session': plugged.get('session'),
+        })
+        return instruction_set_response
 
 #   @pysnooper.snoop('logs/ewallet.log')
     def action_verify_client_id_ewallet_session(self, **kwargs):
@@ -2974,8 +2997,6 @@ class EWalletSessionManager():
     '''
 
     # TODO
-    def handle_client_action_verify_client_id_status(self, **kwargs):
-        log.debug('TODO - UNIMPLEMENTED')
     def handle_client_action_verify_session_token_validity(self, **kwargs):
         log.debug('TODO - UNIMPLEMENTED')
     def handle_client_action_verify_session_token_linked_ctoken(self, **kwargs):
@@ -2992,6 +3013,10 @@ class EWalletSessionManager():
         '''
         log.debug('TODO - Kill process')
         return self.unset_socket_handler()
+
+    def handle_client_action_verify_client_id_status(self, **kwargs):
+        log.debug('')
+        return self.action_verify_client_id_status(**kwargs)
 
     def handle_client_action_verify_client_id_ewallet_session(self, **kwargs):
         log.debug('')
