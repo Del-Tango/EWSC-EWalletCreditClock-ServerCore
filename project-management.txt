@@ -124,8 +124,8 @@
 
     - x - Implement Client ID validity check
     - x - Implement Client ID linked stoken check
-    -   - Implement Client ID session check
-    - Implement Client ID status check
+    - x - Implement Client ID session check
+    -   - Implement Client ID status check
     - Implement Session token validity check
     - Implement Session token ctoken check
     - Implement Session token session check
@@ -409,8 +409,8 @@
 
         - x - Add client action CheckCTokenValid test case
         - x - Add client action CheckCTokenLinked test case
-        -   - Add client action CheckCTokenSession test case
-        - Add client action CheckCTokenStatus test case
+        - x - Add client action CheckCTokenSession test case
+        -   - Add client action CheckCTokenStatus test case
         - Add client action CheckSTokenValid test case
         - Add client action CheckSTokenLinked test case
         - Add client action CheckSTokenSession test case

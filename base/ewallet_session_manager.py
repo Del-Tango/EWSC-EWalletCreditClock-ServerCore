@@ -135,6 +135,28 @@ class EWalletSessionManager():
         return False if False in value_set.keys() else value_set
 
 #   @pysnooper.snoop('logs/ewallet.log')
+    def fetch_ewallet_session_ids_by_session_tokens(self, session_token_labels):
+        log.debug('')
+        worker_pool, session_worker_map = self.fetch_worker_pool(), {}
+        instruction = self.fetch_ewallet_worker_session_search_by_stoken_instruction()
+        for session_token in session_token_labels:
+            instruction.update({'session_token': session_token})
+            for worker_id in worker_pool:
+                search = self.action_execute_system_instruction_set(
+                    worker_id=worker_id, **instruction
+                )
+                if not search or isinstance(search, dict) and \
+                        search.get('failed'):
+                    continue
+                try:
+                    session_worker_map[worker_id].append(search['session'])
+                except KeyError:
+                    session_worker_map.update({worker_id: [search['session']]})
+        return self.warning_no_ewallet_sessions_found_by_stokens(
+            session_token_labels, worker_pool, instruction
+        ) if not session_worker_map else session_worker_map
+
+#   @pysnooper.snoop('logs/ewallet.log')
     def fetch_stokens_from_client_token_set(self, client_token_set):
         '''
         [ NOTE ]: Fetches stoken for each ctoken in client token set,
@@ -182,28 +204,6 @@ class EWalletSessionManager():
             'search': 'session',
             'session_token': str(),
         }
-
-#   @pysnooper.snoop('logs/ewallet.log')
-    def fetch_ewallet_session_ids_by_session_tokens(self, session_token_labels):
-        log.debug('')
-        worker_pool, session_worker_map = self.fetch_worker_pool(), {}
-        instruction = self.fetch_ewallet_worker_session_search_by_stoken_instruction()
-        for session_token in session_token_labels:
-            instruction.update({'session_token': session_token})
-            for worker_id in worker_pool:
-                search = self.action_execute_system_instruction_set(
-                    worker_id=worker_id, **instruction
-                )
-                if not search or isinstance(search, dict) and \
-                        search.get('failed'):
-                    continue
-                try:
-                    session_worker_map[worker_id].append(search['session'])
-                except KeyError:
-                    session_worker_map.update({worker_id: [search['session']]})
-        return self.warning_no_ewallet_sessions_found_by_stokens(
-            session_token_labels, worker_pool, instruction
-        ) if not session_worker_map else session_worker_map
 
     def fetch_session_worker_interogate_session_pool_instruction(self):
         log.debug('')
@@ -2402,6 +2402,41 @@ class EWalletSessionManager():
     def action_stop_client_token_cleaner_cron(self, **kwargs):
         log.debug('TODO - UNIMPLEMENTED')
 
+#   @pysnooper.snoop('logs/ewallet.log')
+    def action_verify_client_id_ewallet_session(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('client_id'):
+            return self.error_no_client_id_specified(kwargs)
+        instruction_set_response = {
+            'failed': False,
+            'client_id': kwargs['client_id'],
+        }
+        stoken = self.fetch_stokens_from_client_token_set(
+            [kwargs['client_id']]
+        )
+        if isinstance(stoken, dict) and stoken.get('failed'):
+            instruction_set_response.update({
+                'plugged': False,
+                'reason': 'Unlinked',
+            })
+            return instruction_set_response
+        session_token = stoken[0].fetch_label()
+        session = self.fetch_ewallet_session_ids_by_session_tokens(
+            [session_token]
+        )
+        if isinstance(session, dict) and session.get('failed'):
+            instruction_set_response.update({
+                'plugged': False,
+                'reason': 'Unplugged',
+            })
+            return instruction_set_response
+        instruction_set_response.update({
+            'plugged': True,
+            'session_token': session_token,
+            'session': list(session.values())[0][0]
+        })
+        return instruction_set_response
+
     def action_verify_client_id_linked_stoken(self, **kwargs):
         log.debug('')
         if not kwargs.get('client_id'):
@@ -2939,8 +2974,6 @@ class EWalletSessionManager():
     '''
 
     # TODO
-    def handle_client_action_verify_client_id_ewallet_session(self, **kwargs):
-        log.debug('TODO - UNIMPLEMENTED')
     def handle_client_action_verify_client_id_status(self, **kwargs):
         log.debug('TODO - UNIMPLEMENTED')
     def handle_client_action_verify_session_token_validity(self, **kwargs):
@@ -2959,6 +2992,10 @@ class EWalletSessionManager():
         '''
         log.debug('TODO - Kill process')
         return self.unset_socket_handler()
+
+    def handle_client_action_verify_client_id_ewallet_session(self, **kwargs):
+        log.debug('')
+        return self.action_verify_client_id_ewallet_session(**kwargs)
 
     def handle_client_action_verify_client_id_linked_stoken(self, **kwargs):
         log.debug('')
