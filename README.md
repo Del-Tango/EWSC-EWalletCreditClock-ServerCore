@@ -81,6 +81,9 @@ EWSC Fun Facts! -
     * Initially was a way for a hacker with money on his mind to take it easy
       and relax doing what he loved to do, now its all mainstream, man. (Hopefully)
 
+    * The client can orphan sessions by requesting a new session token with an
+      old client id
+
 
 EWSC Contribuitors -
 

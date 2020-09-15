@@ -1096,6 +1096,25 @@ class EWalletSessionManager():
 
     # VERIFIERS
 
+    def verify_ctoken_linked_stoken(self, ctoken):
+        log.debug('')
+        stoken = ctoken.fetch_stoken()
+        if isinstance(stoken, dict) and stoken.get('failed'):
+            return self.warning_could_not_fetch_ctoken_linked_stoken(
+                ctoken, stoken
+            )
+        instruction_set_response = {
+            'failed': False,
+            'stoken': stoken,
+            'valid': False if not stoken else True,
+        }
+        if not stoken:
+            instruction_set_response.update({
+                'reason': 'Unlinked',
+                'details': 'No linked SToken found.',
+            })
+        return instruction_set_response
+
 #   @pysnooper.snoop('logs/ewallet.log')
     def verify_ctoken_in_pool(self, ctoken):
         log.debug('')
@@ -2383,6 +2402,34 @@ class EWalletSessionManager():
     def action_stop_client_token_cleaner_cron(self, **kwargs):
         log.debug('TODO - UNIMPLEMENTED')
 
+    def action_verify_client_id_linked_stoken(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('client_id'):
+            return self.error_no_client_id_specified(kwargs)
+        instruction_set_response = {
+            'failed': False,
+            'client_id': kwargs['client_id'],
+        }
+        ctoken = self.fetch_client_token_by_label(kwargs['client_id'])
+        if isinstance(ctoken, dict) and ctoken.get('failed'):
+            self.warning_could_not_fetch_client_token(kwargs, ctoken)
+            instruction_set_response.update({
+                'valid': False,
+                'reason': 'Unregistered',
+            })
+            return instruction_set_response
+        verify_stoken = self.verify_ctoken_linked_stoken(ctoken)
+        instruction_set_response = {
+            'failed': False,
+            'client_id': kwargs['client_id'],
+            'linked': True if verify_stoken.get('valid') else False,
+        }
+        if verify_stoken.get('valid'):
+            instruction_set_response.update({
+                'session_token': verify_stoken['stoken'].fetch_label(),
+            })
+        return instruction_set_response
+
 #   @pysnooper.snoop('logs/ewallet.log')
     def action_verify_client_id_validity(self, **kwargs):
         log.debug('')
@@ -2892,8 +2939,6 @@ class EWalletSessionManager():
     '''
 
     # TODO
-    def handle_client_action_verify_client_id_linked_stoken(self, **kwargs):
-        log.debug('TODO - UNIMPLEMENTED')
     def handle_client_action_verify_client_id_ewallet_session(self, **kwargs):
         log.debug('TODO - UNIMPLEMENTED')
     def handle_client_action_verify_client_id_status(self, **kwargs):
@@ -2914,6 +2959,10 @@ class EWalletSessionManager():
         '''
         log.debug('TODO - Kill process')
         return self.unset_socket_handler()
+
+    def handle_client_action_verify_client_id_linked_stoken(self, **kwargs):
+        log.debug('')
+        return self.action_verify_client_id_linked_stoken(**kwargs)
 
     def handle_client_action_verify_client_id_validity(self, **kwargs):
         log.debug('')
@@ -3881,7 +3930,7 @@ class EWalletSessionManager():
             return self.error_no_client_action_verify_ctoken_target_specified(kwargs)
         handlers = {
             'validity': self.handle_client_action_verify_client_id_validity,
-            'stoken': self.handle_client_action_verify_client_id_linked_stoken,
+            'linked': self.handle_client_action_verify_client_id_linked_stoken,
             'session': self.handle_client_action_verify_client_id_ewallet_session,
             'status': self.handle_client_action_verify_client_id_status,
         }
@@ -3893,7 +3942,7 @@ class EWalletSessionManager():
             return self.error_no_client_action_verify_stoken_target_specified(kwargs)
         handlers = {
             'validity': self.handle_client_action_verify_session_token_validity,
-            'ctoken': self.handle_client_action_verify_session_token_linked_ctoken,
+            'linked': self.handle_client_action_verify_session_token_linked_ctoken,
             'session': self.handle_client_action_verify_session_token_ewallet_session,
             'status': self.handle_client_action_verify_session_token_status,
         }
@@ -4552,6 +4601,24 @@ class EWalletSessionManager():
     '''
     [ TODO ]: Fetch warning messages from message file by key codes.
     '''
+
+    def warning_could_not_fetch_ctoken_linked_stoken(self, *args):
+        instruction_set_response = res_utils.format_warning_response(**{
+            'failed': True, 'details': args,
+            'warning': 'Something went wrong. '
+                       'Could not fetch CToken linked SToken.',
+        })
+        self.log_warning(**instruction_set_response)
+        return instruction_set_response
+
+    def warning_could_not_fetch_client_token(self, *args):
+        instruction_set_response = res_utils.format_warning_response(**{
+            'failed': True, 'details': args,
+            'warning': 'Something went wrong. '
+                       'Could not fetch CToken.',
+        })
+        self.log_warning(**instruction_set_response)
+        return instruction_set_response
 
     def warning_could_not_verify_ctoken_in_pool(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
