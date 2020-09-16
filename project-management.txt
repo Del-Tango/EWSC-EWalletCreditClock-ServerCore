@@ -133,8 +133,9 @@
     - x - Implement Client ID status check
     - x - Implement Session token validity check
     - x - Implement Session token ctoken check
-    -   - Implement Session token session check
-    - Implement Session token status check
+    - x - Implement Session token session check
+    - x - Implement Session token status check
+    -   - Validate Client ID on all Session oriented verification actions
     - x - Implement forced user account removal.
     - x - Add AccountCleaner cleaner cron
     - x - Add system action StartAccountCleaner functional test
@@ -418,8 +419,8 @@
         - x - Add client action CheckCTokenStatus test case
         - x - Add client action CheckSTokenValid test case
         - x - Add client action CheckSTokenLinked test case
-        -   - Add client action CheckSTokenSession test case
-        - Add client action CheckSTokenStatus test case
+        - x - Add client action CheckSTokenSession test case
+        - x - Add client action CheckSTokenStatus test case
         - x - Add Forced-UnlinkAccount test case.
 
 

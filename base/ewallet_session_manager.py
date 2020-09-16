@@ -2467,10 +2467,60 @@ class EWalletSessionManager():
     def action_stop_client_token_cleaner_cron(self, **kwargs):
         log.debug('TODO - UNIMPLEMENTED')
 
+    def action_verify_session_token_status(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('session_token'):
+            return self.error_no_session_token_specified(kwargs)
+        instruction_set_response = {
+            'failed': False,
+            'session_token': kwargs['session_token'],
+        }
+        validity = self.action_verify_session_token_validity(**kwargs)
+        linked = self.action_verify_session_token_linked_ctoken(**kwargs)
+        plugged = self.action_verify_session_token_ewallet_session(**kwargs)
+        instruction_set_response.update({
+            'valid': validity['valid'],
+            'linked': linked['linked'],
+            'plugged': plugged['plugged'],
+            'client_id': linked.get('client_id'),
+            'session': plugged.get('session'),
+        })
+        return instruction_set_response
+
+    def action_verify_session_token_ewallet_session(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('session_token'):
+            return self.error_no_session_token_specified(kwargs)
+        instruction_set_response = {
+            'failed': False,
+            'session_token': kwargs['session_token'],
+        }
+        stoken = self.fetch_session_token_by_label(kwargs['session_token'])
+        if isinstance(stoken, dict) and stoken.get('failed'):
+            instruction_set_response.update({
+                'valid': False,
+                'reason': 'Unregistered',
+            })
+            return instruction_set_response
+        session = self.fetch_ewallet_session_ids_by_session_tokens(
+            [kwargs['session_token']]
+        )
+        if isinstance(session, dict) and session.get('failed'):
+            instruction_set_response.update({
+                'plugged': False,
+                'reason': 'Unplugged',
+            })
+            return instruction_set_response
+        instruction_set_response.update({
+            'plugged': True,
+            'session': list(session.values())[0][0]
+        })
+        return instruction_set_response
+
     def action_verify_session_token_linked_ctoken(self, **kwargs):
         log.debug('')
         if not kwargs.get('session_token'):
-            return self.error_no_client_id_specified(kwargs)
+            return self.error_no_session_token_specified(kwargs)
         instruction_set_response = {
             'failed': False,
             'session_token': kwargs['session_token'],
@@ -2571,7 +2621,6 @@ class EWalletSessionManager():
             return instruction_set_response
         instruction_set_response.update({
             'plugged': True,
-            'session_token': session_token,
             'session': list(session.values())[0][0]
         })
         return instruction_set_response
@@ -3111,18 +3160,20 @@ class EWalletSessionManager():
     '''
 
     # TODO
-    def handle_client_action_verify_session_token_ewallet_session(self, **kwargs):
-        log.debug('TODO - UNIMPLEMENTED')
-    def handle_client_action_verify_session_token_status(self, **kwargs):
-        log.debug('TODO - UNIMPLEMENTED')
-
-    # TODO
     def handle_system_action_close_sockets(self, **kwargs):
         '''
         [ NOTE   ]: Desociates Ewallet Socket Handler from Session Manager.
         '''
         log.debug('TODO - Kill process')
         return self.unset_socket_handler()
+
+    def handle_client_action_verify_session_token_ewallet_session(self, **kwargs):
+        log.debug('')
+        return self.action_verify_session_token_ewallet_session(**kwargs)
+
+    def handle_client_action_verify_session_token_status(self, **kwargs):
+        log.debug('')
+        return self.action_verify_session_token_status(**kwargs)
 
     def handle_client_action_verify_session_token_linked_ctoken(self, **kwargs):
         log.debug('')
