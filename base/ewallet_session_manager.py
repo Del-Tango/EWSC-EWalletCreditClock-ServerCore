@@ -1419,7 +1419,7 @@ class EWalletSessionManager():
         try:
             schedule.every(interval).hours.do(
                 self.fetch_ewallet_session_cleaner_cron_function(),
-                self.fetch_worker_pool(),
+                worker_pool=self.fetch_worker_pool(),
                 from_cron=True,
             ).tag(label, 'Cron')
         except Exception as e:
@@ -1446,7 +1446,7 @@ class EWalletSessionManager():
         try:
             schedule.every(interval).minutes.do(
                 self.fetch_session_worker_cleaner_cron_function(),
-                self.fetch_worker_pool(),
+                worker_pool=self.fetch_worker_pool(),
                 from_cron=True,
             ).tag(label, 'Cron')
         except Exception as e:

@@ -45,8 +45,10 @@
     - x - (EWSC) Implement system action StartAllCleaners
     - x - (EWSC) Fix user action SupplyCredits
     - x - (EWSC) Fix user action ViewTransferRecord
-    -   - (EWSC, EWCC, EWAT) Implement Client ID validity check
-    - (EWSC, EWCC, EWAT) Implement Session Token validity check
+    - . - (EWSC-x-, EWCC- -, EWAT- -) Implement Client ID validity check
+    - . - (EWSC-x-, EWCC- -, EWAT- -) Implement Session Token validity check
+    -   - (EWCC) Groom action handlers and add support for user actions
+          CheckCToken, CheckSToken, ForcefullyUnlinkAccount,
     - (EWCC) Perform valid input checks on core subroutine SetResource
     - (EWCC) Make library importable
     - (EWSC, EWCC, EWAT) Implement master accounts
@@ -135,7 +137,6 @@
     - x - Implement Session token ctoken check
     - x - Implement Session token session check
     - x - Implement Session token status check
-    -   - Validate Client ID on all Session oriented verification actions
     - x - Implement forced user account removal.
     - x - Add AccountCleaner cleaner cron
     - x - Add system action StartAccountCleaner functional test
