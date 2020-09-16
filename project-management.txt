@@ -120,15 +120,20 @@
     - x - 13/09/2020
         - x - 15:23 Detected issue with user action ViewTransferRecord.
 
+    - 16/09/2020
+        - 02:31 Detected issue with user action SupplyCredits journaling
+            - [ NOTE ]: Transfer record has no source and target accounts
+
+
 - (EWSC) - TODO:
 
     - x - Implement Client ID validity check
     - x - Implement Client ID linked stoken check
     - x - Implement Client ID session check
     - x - Implement Client ID status check
-    -   - Implement Session token validity check
-    - Implement Session token ctoken check
-    - Implement Session token session check
+    - x - Implement Session token validity check
+    - x - Implement Session token ctoken check
+    -   - Implement Session token session check
     - Implement Session token status check
     - x - Implement forced user account removal.
     - x - Add AccountCleaner cleaner cron
@@ -411,9 +416,9 @@
         - x - Add client action CheckCTokenLinked test case
         - x - Add client action CheckCTokenSession test case
         - x - Add client action CheckCTokenStatus test case
-        - Add client action CheckSTokenValid test case
-        - Add client action CheckSTokenLinked test case
-        - Add client action CheckSTokenSession test case
+        - x - Add client action CheckSTokenValid test case
+        - x - Add client action CheckSTokenLinked test case
+        -   - Add client action CheckSTokenSession test case
         - Add client action CheckSTokenStatus test case
         - x - Add Forced-UnlinkAccount test case.
 

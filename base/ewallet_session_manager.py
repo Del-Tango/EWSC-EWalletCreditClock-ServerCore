@@ -1096,6 +1096,25 @@ class EWalletSessionManager():
 
     # VERIFIERS
 
+    def verify_stoken_linked_ctoken(self, stoken):
+        log.debug('')
+        ctoken = stoken.fetch_ctoken()
+        if isinstance(ctoken, dict) and ctoken.get('failed'):
+            return self.warning_could_not_fetch_stoken_linked_ctoken(
+                stoken, ctoken
+            )
+        instruction_set_response = {
+            'failed': False,
+            'ctoken': ctoken,
+            'valid': False if not ctoken else True,
+        }
+        if not ctoken:
+            instruction_set_response.update({
+                'reason': 'Unlinked',
+                'details': 'No linked CToken found.',
+            })
+        return instruction_set_response
+
     def verify_ctoken_linked_stoken(self, ctoken):
         log.debug('')
         stoken = ctoken.fetch_stoken()
@@ -1130,6 +1149,42 @@ class EWalletSessionManager():
             instruction_set_response.update({
                 'reason': 'Unregistered',
                 'details': 'Token not found in pool.',
+            })
+        return instruction_set_response
+
+    def verify_stoken_in_pool(self, stoken):
+        log.debug('')
+        in_pool = self.check_stoken_in_pool(stoken)
+        if isinstance(in_pool, dict) and in_pool.get('failed'):
+            return self.warning_could_not_verify_stoken_in_pool(stoken, in_pool)
+        instruction_set_response = {
+            'failed': False,
+            'stoken': stoken,
+            'valid': in_pool,
+        }
+        if not in_pool:
+            instruction_set_response.update({
+                'reason': 'Unregistered',
+                'details': 'Token not found in pool.',
+            })
+        return instruction_set_response
+
+    def verify_stoken_expired(self, stoken):
+        log.debug('')
+        stoken_expired = self.check_session_token_expired(stoken.fetch_label())
+        instruction_set_response = {
+            'failed': False,
+            'stoken': stoken,
+            'valid': True if not stoken_expired else False,
+        }
+        if stoken_expired:
+            instruction_set_response.update({
+                'reason': 'Expired',
+                'details': 'Expiration date: {}'.format(
+                    res_utils.format_datetime(
+                    stoken.fetch_token_expiration_date()
+                    )
+                ),
             })
         return instruction_set_response
 
@@ -1201,6 +1256,13 @@ class EWalletSessionManager():
             return False
         elif response.get('state') in [0, 1]:
             return True
+
+    def check_stoken_in_pool(self, stoken):
+        log.debug('')
+        stoken_pool = self.fetch_stoken_pool()
+        if not isinstance(stoken_pool, dict):
+            return self.error_invalid_stoken_pool(stoken, stoken_pool)
+        return False if stoken not in stoken_pool.values() else True
 
     def check_ctoken_in_pool(self, ctoken):
         log.debug('')
@@ -2405,6 +2467,60 @@ class EWalletSessionManager():
     def action_stop_client_token_cleaner_cron(self, **kwargs):
         log.debug('TODO - UNIMPLEMENTED')
 
+    def action_verify_session_token_linked_ctoken(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('session_token'):
+            return self.error_no_client_id_specified(kwargs)
+        instruction_set_response = {
+            'failed': False,
+            'session_token': kwargs['session_token'],
+        }
+        stoken = self.fetch_session_token_by_label(kwargs['session_token'])
+        if isinstance(stoken, dict) and stoken.get('failed'):
+            self.warning_could_not_fetch_session_token(kwargs, stoken)
+            instruction_set_response.update({
+                'valid': False,
+                'reason': 'Unregistered',
+            })
+            return instruction_set_response
+        verify_ctoken = self.verify_stoken_linked_ctoken(stoken)
+        instruction_set_response.update({
+            'linked': True if verify_ctoken.get('valid') else False,
+        })
+        if verify_ctoken.get('valid'):
+            instruction_set_response.update({
+                'client_id': verify_ctoken['ctoken'].fetch_label(),
+            })
+        return instruction_set_response
+
+    def action_verify_session_token_validity(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('session_token'):
+            return self.error_no_session_token_specified(kwargs)
+        stoken = self.fetch_session_token_by_label(kwargs['session_token'])
+        verify_registered = self.verify_stoken_in_pool(stoken)
+        verify_expired = self.verify_stoken_expired(stoken)
+        instruction_set_response = {
+            'failed': False,
+            'session_token': kwargs['session_token'],
+            'valid': False if (
+                verify_registered.get('failed') or
+                verify_expired.get('failed')
+            ) else True,
+            'registered': verify_registered.get('valid'),
+            'expired': True if not verify_expired.get('failed') and \
+                not verify_expired.get('valid') else False,
+        }
+        if not verify_registered.get('valid') or \
+                not verify_expired.get('valid'):
+            instruction_set_response.update({
+                'reasons': verify_registered.get('reason') or
+                    verify_expired.get('reason'),
+                'details': verify_registered.get('details') or
+                    verify_expired.get('details'),
+            })
+        return instruction_set_response
+
     def action_verify_client_id_status(self, **kwargs):
         log.debug('')
         if not kwargs.get('client_id'):
@@ -2477,11 +2593,9 @@ class EWalletSessionManager():
             })
             return instruction_set_response
         verify_stoken = self.verify_ctoken_linked_stoken(ctoken)
-        instruction_set_response = {
-            'failed': False,
-            'client_id': kwargs['client_id'],
+        instruction_set_response.update({
             'linked': True if verify_stoken.get('valid') else False,
-        }
+        })
         if verify_stoken.get('valid'):
             instruction_set_response.update({
                 'session_token': verify_stoken['stoken'].fetch_label(),
@@ -2997,10 +3111,6 @@ class EWalletSessionManager():
     '''
 
     # TODO
-    def handle_client_action_verify_session_token_validity(self, **kwargs):
-        log.debug('TODO - UNIMPLEMENTED')
-    def handle_client_action_verify_session_token_linked_ctoken(self, **kwargs):
-        log.debug('TODO - UNIMPLEMENTED')
     def handle_client_action_verify_session_token_ewallet_session(self, **kwargs):
         log.debug('TODO - UNIMPLEMENTED')
     def handle_client_action_verify_session_token_status(self, **kwargs):
@@ -3013,6 +3123,14 @@ class EWalletSessionManager():
         '''
         log.debug('TODO - Kill process')
         return self.unset_socket_handler()
+
+    def handle_client_action_verify_session_token_linked_ctoken(self, **kwargs):
+        log.debug('')
+        return self.action_verify_session_token_linked_ctoken(**kwargs)
+
+    def handle_client_action_verify_session_token_validity(self, **kwargs):
+        log.debug('')
+        return self.action_verify_session_token_validity(**kwargs)
 
     def handle_client_action_verify_client_id_status(self, **kwargs):
         log.debug('')
@@ -3986,6 +4104,17 @@ class EWalletSessionManager():
         log.debug('TODO - UNIMPLEMENTED')
         expire = self.event_session_token_expire()
 
+    # TODO
+    def handle_client_action_transfer(self, **kwargs):
+        log.debug('TODO - Add support for client action transfer time')
+        if not kwargs.get('transfer'):
+            return self.error_no_client_action_transfer_target_specified(kwargs)
+        handlers = {
+            'credits': self.handle_client_action_transfer_credits,
+#           'time': self.handle_client_action_transfer_time,
+        }
+        return handlers[kwargs['transfer']](**kwargs)
+
     def handle_client_action_verify_client_id(self, **kwargs):
         log.debug('')
         if not kwargs.get('ctoken'):
@@ -4019,17 +4148,6 @@ class EWalletSessionManager():
             'stoken': self.handle_client_action_verify_session_token,
         }
         return handlers[kwargs['verify']](**kwargs)
-
-    # TODO
-    def handle_client_action_transfer(self, **kwargs):
-        log.debug('TODO - Add support for client action transfer time')
-        if not kwargs.get('transfer'):
-            return self.error_no_client_action_transfer_target_specified(kwargs)
-        handlers = {
-            'credits': self.handle_client_action_transfer_credits,
-#           'time': self.handle_client_action_transfer_time,
-        }
-        return handlers[kwargs['transfer']](**kwargs)
 
     def handle_system_action_start_cleaner_cron(self, **kwargs):
         log.debug('')
@@ -4663,6 +4781,24 @@ class EWalletSessionManager():
     '''
     [ TODO ]: Fetch warning messages from message file by key codes.
     '''
+
+    def warning_could_not_fetch_stoken_linked_ctoken(self, *args):
+        instruction_set_response = res_utils.format_warning_response(**{
+            'failed': True, 'details': args,
+            'warning': 'Something went wrong. '
+                       'Could not fetch SToken linked CToken.',
+        })
+        self.log_warning(**instruction_set_response)
+        return instruction_set_response
+
+    def warning_could_not_fetch_session_token(self, *args):
+        instruction_set_response = res_utils.format_warning_response(**{
+            'failed': True, 'details': args,
+            'warning': 'Something went wrong. '
+                       'Could not fetch SToken.',
+        })
+        self.log_warning(**instruction_set_response)
+        return instruction_set_response
 
     def warning_could_not_fetch_ctoken_linked_stoken(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
@@ -5766,6 +5902,22 @@ class EWalletSessionManager():
     '''
     [ TODO ]: Fetch error messages from message file by key codes.
     '''
+
+    def error_no_client_action_verify_stoken_target_specified(self, *args):
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
+            'error': 'No client action verify SToken target specified.',
+        })
+        self.log_error(**instruction_set_response)
+        return instruction_set_response
+
+    def error_invalid_stoken_pool(self, *args):
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
+            'error': 'Invalid SToken pool found.',
+        })
+        self.log_error(**instruction_set_response)
+        return instruction_set_response
 
     def error_invalid_ctoken_pool(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
