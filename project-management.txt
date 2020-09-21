@@ -45,10 +45,10 @@
     - x - (EWSC) Implement system action StartAllCleaners
     - x - (EWSC) Fix user action SupplyCredits
     - x - (EWSC) Fix user action ViewTransferRecord
-    - . - (EWSC-x-, EWCC- -, EWAT- -) Implement Client ID validity check
+    - x - (EWSC) Fix bug in user action SupplyCredits journaling
+    -   - (EWCC) Groom action handlers and add support for new user actions
+    -   - (EWSC-x-, EWCC- -, EWAT- -) Implement Client ID validity check
     - . - (EWSC-x-, EWCC- -, EWAT- -) Implement Session Token validity check
-    -   - (EWCC) Groom action handlers and add support for user actions
-          CheckCToken, CheckSToken, ForcefullyUnlinkAccount,
     - (EWCC) Perform valid input checks on core subroutine SetResource
     - (EWCC) Make library importable
     - (EWSC, EWCC, EWAT) Implement master accounts
@@ -59,6 +59,8 @@
     - (EWAT) Groom tutor functional test suit
     - (EWAT) Groom tutor instruction set inspections
     - (EWAT) Groom tutor interactive actions
+    - (EWAT) Implement support for new user action inspections
+    - (EWAT) Implement support for new tutor interactive actions
 
 * v.WhiteRabbit (1.0.0/MVP - stable) - Planned
     - (EWSC) Implement system action StopAccountCleaner cron
@@ -431,6 +433,15 @@
 
 - TODO:
 
+    - Implement user action CheckCTokenValidity
+    - Implement user action CheckCTokenLinked
+    - Implement user action CheckCTokenSession
+    - Implement user action CheckCTokenStatus
+    - Implement user action CheckSTokenValidity
+    - Implement user action CheckSTokenLinked
+    - Implement user action CheckSTokenSession
+    - Implement user action CheckSTokenStatus
+    - Perform valid input checks on core subroutine SetResource
     - x - Groom EWCC endpoint warning handlers
     - x - Groom EWCC endpoint error handlers
 
@@ -438,7 +449,16 @@
 
     - Unit
         -
+
     - Functional
+        - Test user action CheckCTokenValidity
+        - Test user action CheckCTokenLinked
+        - Test user action CheckCTokenSession
+        - Test user action CheckCTokenStatus
+        - Test user action CheckSTokenValidity
+        - Test user action CheckSTokenLinked
+        - Test user action CheckSTokenSession
+        - Test user action CheckSTokenStatus
         - x - Refactor functional test cases
 
 

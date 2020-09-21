@@ -101,7 +101,7 @@ class TestEWalletSessionManageUserActionPayCredits(unittest.TestCase):
         self.assertTrue(isinstance(pay, dict))
         self.assertEqual(len(pay.keys()), 6)
         self.assertFalse(pay.get('failed'))
-        self.assertTrue(isinstance(pay.get('payed'), str))
+        self.assertTrue(isinstance(pay.get('paid'), str))
         self.assertTrue(isinstance(pay.get('ewallet_credits'), int))
         self.assertTrue(isinstance(pay.get('spent_credits'), int))
         self.assertTrue(isinstance(pay.get('transfer_record'), int))

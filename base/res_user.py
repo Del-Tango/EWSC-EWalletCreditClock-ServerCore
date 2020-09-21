@@ -84,6 +84,16 @@ class ResUser(Base):
 
     # FETCHERS
 
+    def fetch_transaction_handler_creation_values_for_event_request_credits(self, **kwargs):
+        log.debug('')
+        creation_values = {
+            'transaction_type': 'supply',
+            'source_user_account': self,
+            'target_user_account': kwargs.get('partner_account'),
+            'active_session': kwargs.get('active_session'),
+        }
+        return creation_values
+
     def fetch_user_to_unlink(self):
         log.debug('')
         return self.to_unlink
@@ -137,16 +147,6 @@ class ResUser(Base):
             'transaction_type': 'transfer',
             'source_user_account': self,
             'target_user_account': kwargs.get('transfer_to'),
-            'active_session': kwargs.get('active_session'),
-        }
-        return creation_values
-
-    def fetch_transaction_handler_creation_values_for_event_request_credits(self, **kwargs):
-        log.debug('')
-        creation_values = {
-            'transaction_type': 'supply',
-            'source_user_account': self,
-            'target_user_account': kwargs.get('partner_account'),
             'active_session': kwargs.get('active_session'),
         }
         return creation_values
@@ -653,6 +653,20 @@ class ResUser(Base):
 
     # GENERAL
 
+    def link_journal_records_for_transaction(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('invoice_record') or \
+                not kwargs.get('transfer_record'):
+            return self.error_invalid_data_set_for_journal_record_link(kwargs)
+        invoice_data = kwargs['invoice_record'].fetch_record_values()
+        transfer_data = kwargs['transfer_record'].fetch_record_values()
+        if invoice_data.get('transfer_record'):
+            return self.warning_invoice_record_already_linked(
+                kwargs, invoice_data, transfer_data
+            )
+        kwargs['invoice_record'].set_transfer_record_id(transfer_data['id'])
+        return True
+
     # UNLINKERS
 
     def unlink_contact_list(self, list_id, **kwargs):
@@ -674,7 +688,7 @@ class ResUser(Base):
 
     # EVENTS
 
-#   @pysnooper.snoop()
+#   @pysnooper.snoop('logs/ewallet.log')
     def event_request_credits(self, **kwargs):
         '''
         [ NOTE   ]: User event Request Credit. Creates transaction
@@ -686,7 +700,7 @@ class ResUser(Base):
         '''
         log.debug('')
         if not kwargs.get('partner_account'):
-            return self.error_no_partner_account_found()
+            return self.error_no_partner_account_found(kwargs)
         active_session = kwargs.get('active_session') or \
                 self.fetch_user_active_session(stype='orm')
         if not active_session:
@@ -702,9 +716,38 @@ class ResUser(Base):
         transaction = transaction_handler.action_init_transaction(
             active_session=active_session, **sanitized_command_chain
         )
+
+
+        link = self.link_journal_records_for_transaction(**transaction)
+        if not link or isinstance(link, dict) and link.get('failed'):
+            self.warning_could_not_link_journal_records_for_credit_request_event(
+                kwargs, active_session, creation_values, transaction_handler,
+                transaction, link
+            )
         return transaction
 
     # ACTIONS
+
+#   @pysnooper.snoop('logs/ewallet.log')
+    def action_pay_partner_account(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('pay'):
+            return self.error_no_user_action_pay_target_partner_account_found()
+        active_session = kwargs.get('active_session') or \
+                self.fetch_user_active_session(stype='orm')
+        if not active_session:
+            return self.error_could_not_fetch_active_orm_session(kwargs)
+        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
+            kwargs, 'active_session'
+        )
+        creation_values = self.fetch_transaction_handler_creation_values_for_action_pay(
+            active_session=active_session, **sanitized_command_chain
+        )
+        transaction_handler = self.create_transaction_handler(creation_values)
+        transaction = transaction_handler.action_init_transaction(
+            active_session=active_session, **sanitized_command_chain
+        )
+        return transaction
 
 #   @pysnooper.snoop('logs/ewallet.log')
     def action_edit_user_email(self, **kwargs):
@@ -1051,24 +1094,6 @@ class ResUser(Base):
         transaction = transaction_handler.action_init_transaction(**sanitized_command_chain)
         return transaction
 
-    def action_pay_partner_account(self, **kwargs):
-        log.debug('')
-        if not kwargs.get('pay'):
-            return self.error_no_user_action_pay_target_partner_account_found()
-        active_session = kwargs.get('active_session') or \
-                self.fetch_user_active_session(stype='orm')
-        if not active_session:
-            return self.error_could_not_fetch_active_orm_session(kwargs)
-        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
-            kwargs, 'active_session'
-        )
-        creation_values = self.fetch_transaction_handler_creation_values_for_action_pay(
-            active_session=active_session, **sanitized_command_chain
-        )
-        transaction_handler = self.create_transaction_handler(creation_values)
-        transaction = transaction_handler.action_init_transaction(**sanitized_command_chain)
-        return transaction
-
     def action_edit_user_name(self, **kwargs):
         log.debug('')
         set_user_name = self.set_user_name(name=kwargs['user_name'])
@@ -1298,6 +1323,25 @@ class ResUser(Base):
     [ TODO ]: Fetch error messages from message file by key codes.
     '''
 
+    def warning_could_not_link_journal_records_for_credit_request_event(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Something went wrong. '
+                       'Could not link journal records for credit request event. '
+                       'Details: {}'.format(args),
+        }
+        log.warning(command_chain_response['warning'])
+        return False
+
+    def warning_invoice_record_already_linked(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Invoice record already linked to a transfer record. '
+                       'Details: {}'.format(args),
+        }
+        log.warning(command_chain_response['warning'])
+        return False
+
     def warning_no_credit_ewallet_found_by_id(self, *args):
         command_chain_response = {
             'failed': True,
@@ -1454,6 +1498,24 @@ class ResUser(Base):
     '''
     [ TODO ]: Fetch error messages from message file by key codes.
     '''
+
+    def error_no_partner_account_found(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No partner account found. '
+                     'Details: {}'.format(args)
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_invalid_data_set_for_journal_record_link(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Invalid data set for journal record link. '
+                     'Details: {}'.format(args)
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
 
     def error_could_not_set_user_email(self, *args):
         command_chain_response = {
@@ -2127,10 +2189,6 @@ class ResUser(Base):
         for item in _reasons_and_handlers['reasons']:
             if not _reasons_and_handlers['reasons'][item]:
                 return _reasons_and_handlers['handlers'][item]()
-        return False
-
-    def error_no_partner_account_found(self):
-        log.error('No partner account found.')
         return False
 
     def error_could_not_fetch_remote_transfer_sheet(self):

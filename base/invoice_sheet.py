@@ -40,16 +40,16 @@ class CreditInvoiceSheetRecord(Base):
             'reference',
             config.invoice_sheet_config['invoice_record_reference']
         )
-        self.credits = kwargs.get('credits') or int()
+        self.credits = kwargs.get('credits', 0)
         self.currency = kwargs.get('currency') or 'RON'
-        self.cost = kwargs.get('cost') or int()
-        self.seller_id = kwargs.get('seller_id') or int()
-        self.notes = kwargs.get('notes') or str()
+        self.cost = kwargs.get('cost', 0)
+        self.seller_id = kwargs.get('seller_id')
+        self.notes = kwargs.get('notes', '')
 
     # FETCHERS (RECORD)
 
     def fetch_record_write_date(self):
-        log.debg('')
+        log.debug('')
         return self.write_date
 
     def fetch_record_id(self):
@@ -243,6 +243,9 @@ class CreditInvoiceSheetRecord(Base):
             set_date.get('failed') else self.fetch_record_write_date()
 
     # ERRORS (RECORD)
+    '''
+    [ NOTE ]: All error handler messages should be fetched from message file by key codes
+    '''
 
     def error_could_not_set_invoice_record_create_date(self, *args):
         command_chain_response = {
@@ -659,6 +662,25 @@ class CreditInvoiceSheet(Base):
 
     # ACTIONS (LIST)
 
+#   @pysnooper.snoop('logs/ewallet.log')
+    def action_add_credit_invoice_sheet_record(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('credits'):
+            return self.error_no_credits_found(kwargs)
+        if not kwargs.get('source_user_account'):
+            return self.error_no_seller_id_found(kwargs)
+        command_chain = kwargs.copy()
+        command_chain.update({
+            'seller_id': kwargs['source_user_account'].fetch_user_id()
+        })
+        values = self.fetch_invoice_record_creation_values(**command_chain)
+        record = CreditInvoiceSheetRecord(**values)
+        kwargs['active_session'].add(record)
+        update = self.update_records(record)
+        log.info('Successfully added new invoice record.')
+        kwargs['active_session'].commit()
+        return record
+
     def action_remove_credit_invoice_sheet_record(self, **kwargs):
         log.debug('')
         if not kwargs.get('record_id'):
@@ -681,21 +703,6 @@ class CreditInvoiceSheet(Base):
         except:
             return self.error_could_not_remove_credit_invoice_sheet_record(kwargs)
         return True
-
-#   @pysnooper.snoop()
-    def action_add_credit_invoice_sheet_record(self, **kwargs):
-        log.debug('')
-        if not kwargs.get('credits'):
-            return self.error_no_credits_found(kwargs)
-        if not kwargs.get('seller_id'):
-            return self.error_no_seller_id_found(kwargs)
-        values = self.fetch_invoice_record_creation_values(**kwargs)
-        record = CreditInvoiceSheetRecord(**values)
-        kwargs['active_session'].add(record)
-        update = self.update_records(record)
-        log.info('Successfully added new invoice record.')
-        kwargs['active_session'].commit()
-        return record
 
     def action_interogate_credit_invoice_sheet_records(self, **kwargs):
         log.debug('')
@@ -745,6 +752,9 @@ class CreditInvoiceSheet(Base):
         return False
 
     # WARNINGS (LIST)
+    '''
+    [ NOTE ]: All warning handle messages should be fetched from message file by key codes
+    '''
 
     def warning_record_not_in_invoice_sheet(self, *args):
         command_chain_response = {
@@ -766,6 +776,9 @@ class CreditInvoiceSheet(Base):
         return command_chain_response
 
     # ERRORS (LIST)
+    '''
+    [ NOTE ]: All error handle messages should be fetched from message file by key codes
+    '''
 
     def error_could_not_set_invoice_sheet_ewallet(self, *args):
         command_chain_response = {

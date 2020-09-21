@@ -5938,7 +5938,7 @@ class EWalletWorker():
 
     def debug_cleaning_response_queue(self, lock_value, garbage):
         log.debug(
-            'Worker locked {} - PID: {} - '
+            'Worker locked - {} - PID: {} - '
             'Cleaning response queue. Garbage {}.'.format(
                 lock_value, os.getpid(), garbage
             )

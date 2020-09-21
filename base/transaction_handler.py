@@ -146,6 +146,36 @@ class EWalletTransactionHandler():
 
     # COMPUTERS
 
+#   @pysnooper.snoop('logs/ewallet.log')
+    def compute_transaction_type_supply(self, **kwargs):
+        '''
+        [ NOTE ]: Command Chain Details
+            - seller - Supplier user account
+            - source_credit_wallet - Supplier credit wallet
+            - target_credit_wallet - Supplied credit wallet
+        '''
+        log.debug('')
+        if not kwargs.get('source_credit_wallet') or \
+                not kwargs.get('target_credit_wallet'):
+            if not kwargs.get('source_credit_wallet'):
+                return self.error_no_source_credit_wallet_found(kwargs)
+            elif not kwargs.get('target_credit_wallet'):
+                return self.error_no_target_credit_wallet_found(kwargs)
+            return self.error_no_wallets_found(kwargs)
+        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
+            kwargs, 'controller', 'action'
+        )
+        extract_credits_from_source = kwargs['source_credit_wallet'].main_controller(
+            controller='system', action='extract', **sanitized_command_chain
+        )
+        supply_credits_to_target = kwargs['target_credit_wallet'].main_controller(
+            controller='system', action='supply', **sanitized_command_chain
+        )
+        return {
+            'extract': extract_credits_from_source,
+            'supply': supply_credits_to_target
+        }
+
     def compute_transaction_type_transfer(self, **kwargs):
         log.debug('')
         if not kwargs.get('source_credit_wallet') or \
@@ -176,36 +206,6 @@ class EWalletTransactionHandler():
             return self.error_could_not_supply_credits_to_target(
                 kwargs, extract_credits_from_source, supply_credits_to_target
             )
-        return {
-            'extract': extract_credits_from_source,
-            'supply': supply_credits_to_target
-        }
-
-#   @pysnooper.snoop()
-    def compute_transaction_type_supply(self, **kwargs):
-        '''
-        [ NOTE ]: Command Chain Details
-            - seller - Supplier user account
-            - source_credit_wallet - Supplier credit wallet
-            - target_credit_wallet - Supplied credit wallet
-        '''
-        log.debug('')
-        if not kwargs.get('source_credit_wallet') or \
-                not kwargs.get('target_credit_wallet'):
-            if not kwargs.get('source_credit_wallet'):
-                return self.error_no_source_credit_wallet_found(kwargs)
-            elif not kwargs.get('target_credit_wallet'):
-                return self.error_no_target_credit_wallet_found(kwargs)
-            return self.error_no_wallets_found(kwargs)
-        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
-            kwargs, 'controller', 'action'
-        )
-        extract_credits_from_source = kwargs['source_credit_wallet'].main_controller(
-            controller='system', action='extract', **sanitized_command_chain
-        )
-        supply_credits_to_target = kwargs['target_credit_wallet'].main_controller(
-            controller='system', action='supply', **sanitized_command_chain
-        )
         return {
             'extract': extract_credits_from_source,
             'supply': supply_credits_to_target
@@ -275,7 +275,7 @@ class EWalletTransactionHandler():
             'invoice_record': share_invoice_record,
         }
 
-#   @pysnooper.snoop()
+#   @pysnooper.snoop('logs/ewallet.log')
     def share_partner_transaction_transfer_journal_records(self, journal_records, **kwargs):
         log.debug('')
         if not journal_records.get('transfer_sheets'):
@@ -285,11 +285,12 @@ class EWalletTransactionHandler():
         sanitized_command_chain = res_utils.remove_tags_from_command_chain(
             kwargs, 'action', 'transfer_from', 'transfer_to'
         )
-        share_transfer_record = journal_records['transfer_sheets']['target'].credit_transfer_sheet_controller(
-            action='add', transfer_type='incoming',
-            transfer_from=transfer_from, transfer_to=transfer_to,
-            **sanitized_command_chain
-        )
+        share_transfer_record = journal_records['transfer_sheets']['target']\
+            .credit_transfer_sheet_controller(
+                action='add', transfer_type='incoming',
+                transfer_from=transfer_from, transfer_to=transfer_to,
+                **sanitized_command_chain
+            )
         if not share_transfer_record or isinstance(share_transfer_record, dict) and \
                 share_transfer_record.get('failed'):
             return self.warning_credit_transaction_record_share_failure(
@@ -336,7 +337,7 @@ class EWalletTransactionHandler():
 
     # JOURNALS
 
-#   @pysnooper.snoop()
+#   @pysnooper.snoop('logs/ewallet.log')
     def journal_transaction_type_transfer(self, **kwargs):
         log.debug('')
         transfer_sheets = self.fetch_credit_wallet_pair_transfer_sheets(
@@ -357,11 +358,13 @@ class EWalletTransactionHandler():
             **sanitized_command_chain
         )
         kwargs['active_session'].add(transfer_record)
+        kwargs['active_session'].commit()
         return {
             'transfer_sheets': transfer_sheets,
             'transfer_record': transfer_record,
         }
 
+#   @pysnooper.snoop('logs/ewallet.log')
     def journal_transaction_type_supply(self, **kwargs):
         log.debug('')
         invoice_sheets = self.fetch_credit_wallet_pair_invoice_sheets(
@@ -390,10 +393,10 @@ class EWalletTransactionHandler():
             **sanitized_command_chain
         )
         transfer_record = transfer_sheets['source'].credit_transfer_sheet_controller(
-            action='add', reference=kwargs.get('reference'),
-            credits=kwargs['credits'], transfer_type='supply',
+            action='add', transfer_type='supply',
             transfer_from=kwargs['source_user_account'].fetch_user_id(),
             transfer_to=kwargs['target_user_account'].fetch_user_id(),
+            **sanitized_command_chain
         )
         return {
             'transfer_sheets': transfer_sheets,
@@ -424,11 +427,11 @@ class EWalletTransactionHandler():
             **sanitized_command_chain
         )
         transfer_record = transfer_sheets['source'].credit_transfer_sheet_controller(
-            action='add', reference=kwargs.get('reference'),
-            credits=kwargs['credits'], transfer_type='payment',
+            action='add', transfer_type='payment',
             transfer_from=kwargs['source_user_account'].fetch_user_id(),
             transfer_to=kwargs['pay'].fetch_user_id(),
             seller_id=kwargs['pay'].fetch_user_id(),
+            **sanitized_command_chain
         )
         return {
             'transfer_sheets': transfer_sheets,
@@ -438,23 +441,6 @@ class EWalletTransactionHandler():
         }
 
     # HANDLERS
-
-#   @pysnooper.snoop()
-    def handle_action_start_transaction_type_transfer(self, **kwargs):
-        log.debug('')
-        compute = self.compute_transaction_type_transfer(**kwargs)
-        journal = self.journal_transaction_type_transfer(**kwargs)
-        share = self.share_partner_transaction_transfer_journal_records(journal, **kwargs)
-        if not share or isinstance(share, dict) and share.get('failed'):
-            return share
-        if not share.get('transfer_record'):
-            return self.error_no_transfer_record_shared(kwargs)
-        kwargs['active_session'].add(share['transfer_record'])
-        return {
-            'ewallet_credits': kwargs['source_credit_wallet'].fetch_credit_ewallet_credits(),
-            'transfered_credits': kwargs['credits'],
-            'transfer_record': journal['transfer_record'].fetch_record_id(),
-        }
 
 #   @pysnooper.snoop()
     def handle_action_start_transaction_type_pay(self, **kwargs):
@@ -484,7 +470,7 @@ class EWalletTransactionHandler():
             'invoice_record': journal['invoice_record'],
         }
 
-#   @pysnooper.snoop()
+#   @pysnooper.snoop('logs/ewallet.log')
     def handle_action_start_transaction_type_supply(self, **kwargs):
         log.debug('')
         compute = self.compute_transaction_type_supply(**kwargs)
@@ -496,12 +482,29 @@ class EWalletTransactionHandler():
             share['transfer_record'], share['invoice_record']
         )
         command_chain_response = {
-            'ewallet_credits': kwargs['source_credit_wallet'].fetch_credit_ewallet_credits(),
+            'ewallet_credits': kwargs['target_credit_wallet'].fetch_credit_ewallet_credits(),
             'supplied_credits': compute['supply'],
             'transfer_record': journal['transfer_record'],
             'invoice_record': journal['invoice_record'],
         }
         return command_chain_response
+
+#   @pysnooper.snoop()
+    def handle_action_start_transaction_type_transfer(self, **kwargs):
+        log.debug('')
+        compute = self.compute_transaction_type_transfer(**kwargs)
+        journal = self.journal_transaction_type_transfer(**kwargs)
+        share = self.share_partner_transaction_transfer_journal_records(journal, **kwargs)
+        if not share or isinstance(share, dict) and share.get('failed'):
+            return share
+        if not share.get('transfer_record'):
+            return self.error_no_transfer_record_shared(kwargs)
+        kwargs['active_session'].add(share['transfer_record'])
+        return {
+            'ewallet_credits': kwargs['source_credit_wallet'].fetch_credit_ewallet_credits(),
+            'transfered_credits': kwargs['credits'],
+            'transfer_record': journal['transfer_record'].fetch_record_id(),
+        }
 
     def handle_action_start_transaction(self, **kwargs):
         log.debug('')

@@ -36,12 +36,27 @@ class CreditTransferSheetRecord(Base):
             config.transfer_sheet_config['transfer_record_reference']
         )
         self.transfer_type = kwargs.get('transfer_type', str())
-        self.transfer_from = kwargs.get('transfer_from', int())
-        self.transfer_to = kwargs.get('transfer_to', int())
-        self.credits = kwargs.get('credits', int())
-        self.transfer_sheet_id = kwargs.get('transfer_sheet_id', int())
+        self.transfer_from = kwargs.get('transfer_from')
+        self.transfer_to = kwargs.get('transfer_to')
+        self.credits = kwargs.get('credits', 0)
+        self.transfer_sheet_id = kwargs.get('transfer_sheet_id')
 
     # FETCHERS (RECORD)
+
+    def fetch_record_values(self):
+        log.debug('')
+        values = {
+            'id': self.record_id,
+            'transfer_sheet': self.transfer_sheet_id,
+            'reference': self.reference,
+            'create_date': res_utils.format_datetime(self.create_date),
+            'write_date': res_utils.format_datetime(self.write_date),
+            'transfer_type': self.transfer_type,
+            'transfer_from': self.transfer_from,
+            'transfer_to': self.transfer_to,
+            'credits': self.credits,
+        }
+        return values
 
     def fetch_record_id(self):
         log.debug('')
@@ -62,21 +77,6 @@ class CreditTransferSheetRecord(Base):
     def fetch_record_transfer_to(self):
         log.debug('')
         return self.transfer_to
-
-    def fetch_record_values(self):
-        log.debug('')
-        values = {
-            'id': self.record_id,
-            'transfer_sheet': self.transfer_sheet_id,
-            'reference': self.reference,
-            'create_date': res_utils.format_datetime(self.create_date),
-            'write_date': res_utils.format_datetime(self.write_date),
-            'transfer_type': self.transfer_type,
-            'transfer_from': self.transfer_from,
-            'transfer_to': self.transfer_to,
-            'credits': self.credits,
-        }
-        return values
 
     # SETTERS (RECORD)
 
@@ -371,6 +371,28 @@ class CreditTransferSheet(Base):
 
     # FETCHERS (LIST)
 
+#   @pysnooper.snoop('logs/ewallet.log')
+    def fetch_transfer_record_creation_values(self, **kwargs):
+        '''
+        [ NOTE ]: Transfer Type : (incomming | outgoing | expence)
+        '''
+        log.debug('')
+        values = {
+            'reference': kwargs.get('reference') or
+                config.transfer_sheet_config['transfer_record_reference'],
+            'transfer_sheet': self,
+            'transfer_type': kwargs.get('transfer_type'),
+            'transfer_from': kwargs.get('transfer_from'),
+            'transfer_to': kwargs.get('transfer_to'),
+            'credits': kwargs.get('credits'),
+        }
+        return values
+
+    def fetch_transfer_sheet_records(self, obj=True):
+        log.debug('')
+        return self.records if obj else \
+            [record.fetch_record_id() for record in self.records]
+
     def fetch_transfer_sheet_record_by_id(self, **kwargs):
         log.debug('')
         if not kwargs.get('code'):
@@ -479,10 +501,6 @@ class CreditTransferSheet(Base):
         log.debug('')
         return self.create_date
 
-    def fetch_transfer_sheet_records(self):
-        log.debug('')
-        return self.records
-
     def fetch_transfer_sheet_values(self):
         log.debug('')
         values = {
@@ -496,22 +514,6 @@ class CreditTransferSheet(Base):
                 record.fetch_record_id(): record.fetch_record_reference()
                 for record in self.records
             },
-        }
-        return values
-
-    def fetch_transfer_record_creation_values(self, **kwargs):
-        '''
-        [ NOTE ]: Transfer Type : (incomming | outgoing | expence)
-        '''
-        log.debug('')
-        values = {
-            'reference': kwargs.get('reference') or
-                config.transfer_sheet_config['transfer_record_reference'],
-            'transfer_sheet': self,
-            'transfer_type': kwargs.get('transfer_type'),
-            'transfer_from': kwargs.get('transfer_from'),
-            'transfer_to': kwargs.get('transfer_to'),
-            'credits': kwargs.get('credits'),
         }
         return values
 
@@ -655,6 +657,36 @@ class CreditTransferSheet(Base):
 
     # ACTIONS (LIST)
 
+#   @pysnooper.snoop('logs/ewallet.log')
+    def add_transfer_sheet_record(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('transfer_type') or not kwargs.get('credits'):
+            return self.error_handler_add_transfer_sheet_record(
+                transfer_type=kwargs.get('transfer_type'),
+                credits=kwargs.get('credits'),
+            )
+
+        transfer_from = kwargs.get('transfer_from') or \
+            kwargs['source_user_account'].fetch_user_id()
+        transfer_to = kwargs.get('transfer_to') or \
+            kwargs['target_user_account'].fetch_user_id()
+        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
+            kwargs, 'transfer_from', 'transfer_to'
+        )
+
+        values = self.fetch_transfer_record_creation_values(
+            transfer_from=transfer_from, transfer_to=transfer_to,
+            **sanitized_command_chain
+        )
+
+        record = self.create_transfer_sheet_record(values=values)
+        update = self.update_records(record)
+        kwargs['active_session'].add(record)
+        kwargs['active_session'].commit()
+
+        log.info('Successfully added new transfer record.')
+        return record
+
     def remove_transfer_sheet_record(self, **kwargs):
         log.debug('')
         if not kwargs.get('record_id'):
@@ -684,19 +716,6 @@ class CreditTransferSheet(Base):
             log.error('No transfer sheet record creation values found.')
             return False
         record = CreditTransferSheetRecord(**values)
-        return record
-
-    def add_transfer_sheet_record(self, **kwargs):
-        log.debug('')
-        if not kwargs.get('transfer_type') or not kwargs.get('credits'):
-            return self.error_handler_add_transfer_sheet_record(
-                transfer_type=kwargs.get('transfer_type'),
-                credits=kwargs.get('credits'),
-            )
-        values = self.fetch_transfer_record_creation_values(**kwargs)
-        record = self.create_transfer_sheet_record(values=values)
-        update = self.update_records(record)
-        log.info('Successfully added new transfer record.')
         return record
 
     def append_transfer_sheet_record(self, **kwargs):

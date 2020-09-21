@@ -718,16 +718,11 @@ class EWallet(Base):
     def action_receive_transfer_record(self, **kwargs):
         log.debug('TODO - UNIMPLEMENTED')
 
-    @pysnooper.snoop('logs/ewallet.log')
+#   @pysnooper.snoop('logs/ewallet.log')
     def action_view_transfer_record(self, **kwargs):
-        log.debug('TODO - FIX ME')
+        log.debug('')
         if not kwargs.get('record_id'):
             return self.error_no_transfer_sheet_record_id_found(kwargs)
-
-
-        # TODO - Remove
-        log.info('\n\nINSTRUCTION : {}\n'.format(kwargs))
-
         credit_wallet = self.fetch_active_session_credit_wallet()
         if not credit_wallet or isinstance(credit_wallet, dict) and \
                 credit_wallet.get('failed'):
@@ -738,8 +733,14 @@ class EWallet(Base):
         if not transfer_sheet or isinstance(transfer_sheet, dict) and \
                 transfer_sheet.get('failed'):
             return self.warning_could_not_fetch_transfer_sheet(kwargs)
-        log.info('Attempting to fetch transfer record by id...')
 
+        sheet_records = transfer_sheet.fetch_transfer_sheet_records(obj=False)
+        if kwargs['record_id'] not in sheet_records:
+            return self.warning_record_id_not_in_transfer_sheet(
+                kwargs, credit_wallet, transfer_sheet, sheet_records
+            )
+
+        log.info('Attempting to fetch transfer record by id...')
         record = transfer_sheet.fetch_transfer_sheet_record(
             search_by='id', code=kwargs['record_id'], active_session=self.session
         )
@@ -751,25 +752,17 @@ class EWallet(Base):
 
         record_values = record.fetch_record_values()
 
-        # TODO - Remove
-        log.info('\n\RECORD VALUES : {}\n'.format(record_values))
-
-
         transfer_from_id = record.fetch_record_transfer_from()
         transfer_to_id = record.fetch_record_transfer_to()
 
         record_values['transfer_from'] = None if not transfer_from_id \
             else self.fetch_user(
-                identifier='id',
-                account_id=transfer_from_id,
-                **kwargs
+                identifier='id', account_id=transfer_from_id, **kwargs
             ).fetch_user_email()
 
         record_values['transfer_to'] = None if not transfer_to_id \
             else self.fetch_user(
-                identifier='id',
-                account_id=transfer_to_id,
-                **kwargs
+                identifier='id', account_id=transfer_to_id, **kwargs
             ).fetch_user_email()
 
         command_chain_response = {
@@ -777,6 +770,57 @@ class EWallet(Base):
             'transfer_sheet': transfer_sheet.fetch_transfer_sheet_id(),
             'transfer_record': record.fetch_record_id(),
             'record_data': record_values,
+        }
+        return command_chain_response
+
+#   @pysnooper.snoop('logs/ewallet.log')
+    def action_create_new_transfer_type_supply(self, **kwargs):
+        '''
+        [ NOTE   ]: User action 'supply credits' for active session user becomes
+                    User event 'request credits' for SystemCore account.
+                    Accessible from external api calls.
+        [ INPUT  ]: active_session=<orm-session>, partner_account=<partner>,
+                    credits=<credits>
+        [ RETURN ]: ({'ewallet_credits': <count>, 'supplied_credits': <count>} | False)
+        '''
+        log.debug('')
+        active_session = kwargs.get('active_session') or \
+                self.fetch_active_session()
+        partner_account = kwargs.get('partner_account') or \
+                self.fetch_system_core_user_account(**kwargs)
+        if not partner_account or isinstance(partner_account, dict) and \
+                partner_account.get('failed'):
+            return self.error_could_not_fetch_partner_account_for_transfer_type_supply(
+                kwargs
+            )
+        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
+            kwargs, 'ctype', 'partner_account', 'active_session'
+        )
+        credits_before = self.fetch_credit_wallet_credits()
+        credit_request = partner_account.user_controller(
+            ctype='event', event='request', request='credits',
+            partner_account=self.fetch_active_session_user(),
+            active_session=active_session, **sanitized_command_chain
+        )
+
+        credits_after = self.fetch_credit_wallet_credits()
+        if not credits_after or isinstance(credits_after, dict) and \
+                credits_after.get('failed'):
+            return credits_after
+        if str(credits_after) != str(credits_before + kwargs.get('credits')):
+            active_session.rollback()
+            return self.error_supply_type_transfer_failure(kwargs)
+        active_session.add(credit_request['invoice_record'])
+        active_session.add(credit_request['transfer_record'])
+        active_session.commit()
+        command_chain_response = {
+            'failed': False,
+            'ewallet_credits': credits_after,
+            'supplied_credits': kwargs['credits'],
+            'transfer_record': None if not credit_request.get('transfer_record') else \
+                credit_request['transfer_record'].fetch_record_id(),
+            'invoice_record': None if not credit_request.get('invoice_record') else \
+                credit_request['invoice_record'].fetch_record_id(),
         }
         return command_chain_response
 
@@ -916,7 +960,7 @@ class EWallet(Base):
         active_session.commit()
         command_chain_response = {
             'failed': False,
-            'payed': kwargs['pay'],
+            'paid': kwargs['pay'],
             'ewallet_credits': action_pay['ewallet_credits'],
             'spent_credits': int(kwargs['credits']),
             'invoice_record': action_pay['invoice_record'].fetch_record_id(),
@@ -2175,53 +2219,6 @@ class EWallet(Base):
             'failed': False,
             'contact_list': contact_list.fetch_contact_list_id(),
             'list_data': contact_list.fetch_contact_list_values(),
-        }
-        return command_chain_response
-
-#   @pysnooper.snoop('logs/ewallet.log')
-    def action_create_new_transfer_type_supply(self, **kwargs):
-        '''
-        [ NOTE   ]: User action 'supply credits' for active session user becomes
-                    User event 'request credits' for SystemCore account.
-                    Accessible from external api calls.
-        [ INPUT  ]: active_session=<orm-session>, partner_account=<partner>,
-                    credits=<credits>
-        [ RETURN ]: ({'ewallet_credits': <count>, 'supplied_credits': <count>} | False)
-        '''
-        log.debug('')
-        active_session = kwargs.get('active_session') or \
-                self.fetch_active_session()
-        partner_account = kwargs.get('partner_account') or \
-                self.fetch_system_core_user_account(**kwargs)
-        if not partner_account:
-            return self.error_could_not_fetch_partner_account_for_transfer_type_supply(
-                kwargs
-            )
-        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
-            kwargs, 'ctype', 'partner_account', 'active_session'
-        )
-        credits_before = self.fetch_credit_wallet_credits()
-        credit_request = partner_account.user_controller(
-            ctype='event', event='request', request='credits',
-            partner_account=self.fetch_active_session_user(),
-            active_session=active_session, **sanitized_command_chain
-        )
-        credits_after = self.fetch_credit_wallet_credits()
-        if not credits_after or isinstance(credits_after, dict) and \
-                credits_after.get('failed'):
-            return credits_after
-        if str(credits_after) != str(credits_before + kwargs.get('credits')):
-            active_session.rollback()
-            return self.error_supply_type_transfer_failure(kwargs)
-        active_session.commit()
-        command_chain_response = {
-            'failed': False,
-            'ewallet_credits': credits_after,
-            'supplied_credits': kwargs['credits'],
-            'transfer_record': None if not credit_request.get('transfer_record') else \
-                credit_request['transfer_record'].fetch_record_id(),
-            'invoice_record': None if not credit_request.get('invoice_record') else \
-                credit_request['invoice_record'].fetch_record_id(),
         }
         return command_chain_response
 
@@ -3681,6 +3678,15 @@ class EWallet(Base):
     '''
     [ TODO ]: Fetch warning messages from message file by key codes.
     '''
+
+    def warning_record_id_not_in_transfer_sheet(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Transfer record ID not found in active transfer sheet. '
+                       'Details: {}'.format(args),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
 
     def warning_could_not_update_ewallet_session(self, *args):
         command_chain_response = {
