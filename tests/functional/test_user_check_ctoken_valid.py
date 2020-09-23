@@ -31,7 +31,7 @@ class TestEWalletUserActionCheckCTokenValid(unittest.TestCase):
             os.remove('data/ewallet.db')
 
     def test_user_check_ctoken_valid_functionality(self):
-        print('\n[ * ]: User action CheckCTokenValidity')
+        print('\n[ * ]: User action CheckCTokenValid')
         instruction_set = {
             'controller': 'client', 'ctype': 'action', 'action': 'verify',
             'verify': 'ctoken', 'ctoken': 'validity',

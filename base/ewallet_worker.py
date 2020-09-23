@@ -1091,6 +1091,61 @@ class EWalletWorker():
     [ NOTE ]: Command chain responses are formulated here.
     '''
 
+    def action_new_master_account(self, **kwargs):
+        log.debug('')
+        # Fetch ewallet session by token keys
+        ewallet_session = self.fetch_ewallet_session_by_client_session_tokens(
+            kwargs['client_id'], kwargs['session_token']
+        )
+        if not ewallet_session or isinstance(ewallet_session, dict) and \
+                ewallet_session.get('failed'):
+            return ewallet_session
+        sanitized_instruction_set = res_utils.remove_tags_from_command_chain(
+            kwargs, 'controller', 'ctype', 'action', 'create', 'master',
+            'active_session'
+        )
+        # Execute action in session
+        orm_session = ewallet_session.fetch_active_session()
+        new_account = ewallet_session.ewallet_controller(
+            controller='user', ctype='action', action='create', create='master',
+            master='account', active_session=orm_session, **sanitized_instruction_set
+        )
+        # Formulate response
+        response = self.warning_could_not_create_new_master_account(
+             new_account, ewallet_session, kwargs
+        ) if not new_account or isinstance(new_account, dict) and \
+            new_account.get('failed') else new_account
+        # Respond to session manager
+        self.send_instruction_response(response)
+        return response
+
+    def action_create_new_user_account(self, **kwargs):
+        log.debug('')
+        # Fetch ewallet session by token keys
+        ewallet_session = self.fetch_ewallet_session_by_client_session_tokens(
+            kwargs['client_id'], kwargs['session_token']
+        )
+        if not ewallet_session or isinstance(ewallet_session, dict) and \
+                ewallet_session.get('failed'):
+            return ewallet_session
+        sanitized_instruction_set = res_utils.remove_tags_from_command_chain(
+            kwargs, 'controller', 'ctype', 'action', 'create', 'active_session'
+        )
+        # Execute action in session
+        orm_session = ewallet_session.fetch_active_session()
+        new_account = ewallet_session.ewallet_controller(
+            controller='user', ctype='action', action='create', create='account',
+            active_session=orm_session, **sanitized_instruction_set
+        )
+        # Formulate response
+        response = self.warning_could_not_create_new_user_account(
+             new_account, ewallet_session, kwargs
+        ) if not new_account or isinstance(new_account, dict) and \
+            new_account.get('failed') else new_account
+        # Respond to session manager
+        self.send_instruction_response(response)
+        return response
+
     def action_interogate_session_pool_has_empty(self, **kwargs):
         log.debug('')
         session_pool = self.fetch_session_worker_ewallet_session_pool()
@@ -3198,34 +3253,11 @@ class EWalletWorker():
         self.send_instruction_response(response)
         return response
 
-    def action_create_new_user_account(self, **kwargs):
-        log.debug('')
-        # Fetch ewallet session by token keys
-        ewallet_session = self.fetch_ewallet_session_by_client_session_tokens(
-            kwargs['client_id'], kwargs['session_token']
-        )
-        if not ewallet_session or isinstance(ewallet_session, dict) and \
-                ewallet_session.get('failed'):
-            return ewallet_session
-        sanitized_instruction_set = res_utils.remove_tags_from_command_chain(
-            kwargs, 'controller', 'ctype', 'action', 'create', 'active_session'
-        )
-        # Execute action in session
-        orm_session = ewallet_session.fetch_active_session()
-        new_account = ewallet_session.ewallet_controller(
-            controller='user', ctype='action', action='create', create='account',
-            active_session=orm_session, **sanitized_instruction_set
-        )
-        # Formulate response
-        response = self.warning_could_not_create_new_user_account(
-             new_account, ewallet_session, kwargs
-        ) if not new_account or isinstance(new_account, dict) and \
-            new_account.get('failed') else new_account
-        # Respond to session manager
-        self.send_instruction_response(response)
-        return response
-
     # ACTION HANDLERS
+
+    def handle_client_action_new_master_account(self, **kwargs):
+        log.debug('')
+        return self.action_new_master_account(**kwargs)
 
     def handle_system_action_interogate_session_pool_empty(self, **kwargs):
         log.debug('')
@@ -3819,6 +3851,7 @@ class EWalletWorker():
         if not kwargs.get('new'):
             return self.error_no_session_worker_client_action_new_target_specified(kwargs)
         handlers = {
+            'master': self.handle_client_action_new_master_account,
             'account': self.handle_client_action_new_user_account,
             'contact': self.handle_client_action_new_contact,
             'credit': self.handle_client_action_new_credit,
@@ -4122,6 +4155,16 @@ class EWalletWorker():
     '''
     [ TODO ]: Fetch warning messages from message file by key codes.
     '''
+
+    def warning_could_not_create_new_master_account(self, *args):
+        instruction_set_response = {
+            'failed': True,
+            'warning': 'Something went wrong. '
+                       'Could not create new master account. '
+                       'Details: {}'.format(args),
+        }
+        log.warning(instruction_set_response['warning'])
+        return instruction_set_response
 
     def warning_no_ewallet_session_found_by_session_token(self, *args):
         instruction_set_response = {

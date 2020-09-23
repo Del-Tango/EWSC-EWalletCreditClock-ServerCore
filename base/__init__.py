@@ -5,6 +5,7 @@ from . import session_token
 from . import ewallet_session_manager
 from . import ewallet
 from . import res_user
+from . import res_master
 from . import res_utils
 from . import res_user_pass_hash_archive
 from . import credit_clock

@@ -29,7 +29,6 @@
     - x - (EWSC) Impose user account to_unlink restrictions on user actions
     - x - (EWCC) Groom client core functional tests
     - x - (EWSC) Groom server core functional tests
-    - x - (EWSC, EWCC, EWAT) Implement forced account removal
     - x - (EWCC) Groom core endpoint warning handlers
     - x - (EWCC) Groom core endpoint error handlers
     - x - (EWSC) Implement system action StartAccountCleaner
@@ -46,21 +45,104 @@
     - x - (EWSC) Fix user action SupplyCredits
     - x - (EWSC) Fix user action ViewTransferRecord
     - x - (EWSC) Fix bug in user action SupplyCredits journaling
-    -   - (EWCC) Groom action handlers and add support for new user actions
-    -   - (EWSC-x-, EWCC- -, EWAT- -) Implement Client ID validity check
-    - . - (EWSC-x-, EWCC- -, EWAT- -) Implement Session Token validity check
-    - (EWCC) Perform valid input checks on core subroutine SetResource
+    - . - (EWSC-x-, EWCC-x-, EWAT- -) Implement Client ID validity checkers
+    - . - (EWSC-x-, EWCC-x-, EWAT- -) Implement Session Token validity checkers
+    - . - (EWSC-x-, EWCC-x-, EWAT- -) Implement forced account removal
+    - x - (EWCC) Perform valid input checks on core subroutine SetResource
+    - < - (EWSC- -, EWCC- -, EWAT- -) Implement master accounts
+    - x - (EWSC) Implement client action NewMasterAccount
+    -   - (EWSC) Refactor client action CheckCTokenState to include master link
+    - (EWSC) Refactor user action CreateAccount to link to master
+    - (EWSC) Implement system action TargetCleanupMaster
+    - (EWSC) Implement system action FreezeMaster
+    - (EWSC) Implement system action UnfreezeMaster
+    - (EWSC) Implement system action IncreaseMasterSubPool
+    - (EWSC) Implement system action DecreaseMasterSubPool
+    - (EWSC) Refactor user actions to impose master oriented restrictions
+    - (EWSC- -, EWCC- -, EWAT- -) Implement master action AccountLogin
+    - (EWSC- -, EWCC- -, EWAT- -) Implement master action AccountLogout
+    - (EWSC- -, EWCC- -, EWAT- -) Implement master action ViewAccount
+    - (EWSC- -, EWCC- -, EWAT- -) Implement master action EditAccount
+    - (EWSC- -, EWCC- -, EWAT- -) Implement master action UnlinkAccount
+    - (EWSC- -, EWCC- -, EWAT- -) Implement master action InspectCTokens
+    - (EWSC- -, EWCC- -, EWAT- -) Implement master action InspectSubPool
+    - (EWSC- -, EWCC- -, EWAT- -) Implement master action InspectSub
+    - (EWSC- -, EWCC- -, EWAT- -) Implement EWallet Session keep alive signal
+    - (EWSC- -, EWCC- -, EWAT- -) Implement issue report
     - (EWCC) Make library importable
-    - (EWSC, EWCC, EWAT) Implement master accounts
-    - (EWSC, EWCC, EWAT) Implement EWallet Session keep alive signal
-    - (EWSC, EWCC, EWAT) Implement check client id validity
-    - (EWSC, EWCC, EWAT) Implement check session token validity
-    - (EWSC, EWCC, EWAT) Implement issue report
+    - (EWSC) Add EWDox support for client ID validity checkers
+    - (EWSC) Add EWDox support for session token validity checkers
+    - (EWSC) Add EWDox support for user action Forcefully-UnlinkAccount
+    - (EWSC) Add EWDox support for master action AccountLogin
+    - (EWSC) Add EWDox support for master action AccountLogout
+    - (EWSC) Add EWDox support for master action ViewAccount
+    - (EWSC) Add EWDox support for master action EditAccount
+    - (EWSC) Add EWDox support for master action UnlinkAccount
+    - (EWSC) Add EWDox support for master action InspectCTokens
+    - (EWSC) Add EWDox support for master action InspectSubPool
+    - (EWSC) Add EWDox support for master action InspectSub
+    - (EWSC) Groom EWDox to comply with new error and warning handlers
     - (EWAT) Groom tutor functional test suit
     - (EWAT) Groom tutor instruction set inspections
     - (EWAT) Groom tutor interactive actions
-    - (EWAT) Implement support for new user action inspections
-    - (EWAT) Implement support for new tutor interactive actions
+    - (EWAT) Implement support for client ID validity checker inspections
+    - (EWAT) Implement support for session token validity checker inspections
+    - (EWAT) Implement support for client ID validity checker interactions
+    - (EWAT) Implement support for session token validity checker interactions
+
+    [ NOTE ]: EWCreditClock suit version Chronos introduces the concept of
+              Master User Accounts. On user action AcquireMasterAccess, the
+              CToken is linked to the Master Account and reported as acquired.
+
+    [ NOTE ]: The Master Account class ResMaster inherits from subordonate
+              account class ResUser.
+
+    [ NOTE ]: The introduction of Master User Accounts comes with the following
+              implications:
+
+        * System actions SweepCleanupCToken and TargetCleanupCToken require
+          refactoring to release any acquired Master accounts.
+
+        * All subordonate account actions need refactoring to honour imposed
+          Master oriented restrictions.
+
+        * CToken requires refactoring to adjust to linked Master Account.
+
+        * All EWSC and EWCC functional tests require refactoring to acquire
+          default Master account (S:CoreMaster).
+
+        * EWSessionManager setup procedure requires refactoring to create
+          S:CoreMaster account.
+
+        * The following client actions are required:
+            . NewMasterAccount {
+                controller: system,
+                ctype: action,
+                action: new,
+                new: master,
+                master: account,
+                client_id: ctoken,
+                session_token: stoken,
+                user_email: email,
+                user_pass: pass,
+            }
+
+        * The following system actions are required:
+            . TargetCleanupMaster
+            . FreezeMaster
+            . UnfreezeMaster
+            . IncreaseMasterSubPool
+            . DecreaseMasterSubPool
+
+        * The following master actions are required:
+            . AccountLogin
+            . AccountLogout
+            . ViewAccount
+            . EditAccount
+            . UnlinkAccount
+            . InspectCTokens
+            . InspectSubPool
+            . InspectSub
 
 * v.WhiteRabbit (1.0.0/MVP - stable) - Planned
     - (EWSC) Implement system action StopAccountCleaner cron
@@ -70,7 +152,7 @@
     - (EWSC, EWCC, EWAT) Implement entity record limiter queue mechanism
     - (EWSC, EWCC, EWAT) Send user account password as hash
     - (EWSC, EWCC, EWAT) Implement AddNotes mechanism for journal records
-    - (EWSC, EWCC, EWAT) Add SSL certificates for master accounts
+    - (EWSC, EWCC, EWAT) Add SSL certificates for CToken - Master Accounts link
     - (EWSC, EWCC, EWAT) Implement system event ClockTimerDepleted
     - (EWSC) Use PostgreSql
     - (EWSC) Implement session manager thread pool
@@ -410,7 +492,7 @@
         - x - User action Unlink Invoice Record
         - x - User action Recover Account
 
-- TESTS:
+- (EWSC) - TESTS:
 
     - Unit
         -
@@ -431,34 +513,102 @@
 - EWallet Credit Clock - Client Core
 ################################################################################
 
-- TODO:
+- (EWCC) - TODO:
 
-    - Implement user action CheckCTokenValidity
-    - Implement user action CheckCTokenLinked
-    - Implement user action CheckCTokenSession
-    - Implement user action CheckCTokenStatus
-    - Implement user action CheckSTokenValidity
-    - Implement user action CheckSTokenLinked
-    - Implement user action CheckSTokenSession
-    - Implement user action CheckSTokenStatus
-    - Perform valid input checks on core subroutine SetResource
+    - x - Implement user action CheckCTokenValid
+    - x - Implement user action CheckCTokenLinked
+    - x - Implement user action CheckCTokenSession
+    - x - Implement user action CheckCTokenStatus
+    - x - Implement user action CheckSTokenValid
+    - x - Implement user action CheckSTokenLinked
+    - x - Implement user action CheckSTokenSession
+    - x - Implement user action CheckSTokenStatus
+    - x - Perform valid input checks on core subroutine SetResource
+        - x - User action RequestClientID
+        - x - User action RequestSessionToken
+        - x - User action CheckCTokenValid
+        - x - User action CheckCTokenLinked
+        - x - User action CheckCTokenSession
+        - x - User action CheckCTokenStatus
+        - x - User action CheckSTokenValid
+        - x - User action CheckSTokenLinked
+        - x - User action CheckSTokenSession
+        - x - User action CheckSTokenStatus
+        - x - User action Account Login
+        - x - User action Account Logout
+        - x - User action Supply Credits
+        - x - User action Pay Credits
+        - x - User action Convert Credits2Clock
+        - x - User action Convert Clock2Credits
+        - x - User action Add Contact Record
+        - x - User action TransferCredits
+        - x - User action Edit Account
+        - x - User action Start Clock Timer
+        - x - User action Pause Clock Timer
+        - x - User action Resume Clock Timer
+        - x - User action Stop Clock Timer
+        - x - User action View Contact List
+        - x - User action View Contact Record
+        - x - User action View Transfer Sheet
+        - x - User action View Transfer Record
+        - x - User action View Time Sheet
+        - x - User action View Time Record
+        - x - User action View Conversion Sheet
+        - x - User action View Conversion Record
+        - x - User action View Account
+        - x - User action View Credit EWallet
+        - x - User action View Credit Clock
+        - x - User action View Invoice Sheet
+        - x - User action View Invoice Record
+        - x - User action View Login Records
+        - x - User action View Logout Records
+        - x - User action Create Account
+        - x - User action Create Contact List
+        - x - User action Create Credit EWallet
+        - x - User action Create Credit Clock
+        - x - User action Create Transfer Sheet
+        - x - User action Create Invoice Sheet
+        - x - User action Create Conversion Sheet
+        - x - User action Create Time Sheet
+        - x - User action Switch Account
+        - x - User action Switch Credit EWallet
+        - x - User action Switch Credit Clock
+        - x - User action Switch Transfer Sheet
+        - x - User action Switch Invoice Sheet
+        - x - User action Switch Conversion Sheet
+        - x - User action Switch Time Sheet
+        - x - User action Switch Contact List
+        - x - User action Unlink Account
+        - x - User action Unlink Contact List
+        - x - User action Unlink Contact Record
+        - x - User action Unlink Conversion Sheet
+        - x - User action Unlink Conversion Record
+        - x - User action Unlink Transfer Sheet
+        - x - User action Unlink Transfer Record
+        - x - User action Unlink Time Sheet
+        - x - User action Unlink Time Record
+        - x - User action Unlink Credit EWallet
+        - x - User action Unlink Credit Clock
+        - x - User action Unlink Invoice Sheet
+        - x - User action Unlink Invoice Record
+        - x - User action Recover Account
     - x - Groom EWCC endpoint warning handlers
     - x - Groom EWCC endpoint error handlers
 
-- TESTS:
+- (EWCC) - TESTS:
 
     - Unit
         -
 
     - Functional
-        - Test user action CheckCTokenValidity
-        - Test user action CheckCTokenLinked
-        - Test user action CheckCTokenSession
-        - Test user action CheckCTokenStatus
-        - Test user action CheckSTokenValidity
-        - Test user action CheckSTokenLinked
-        - Test user action CheckSTokenSession
-        - Test user action CheckSTokenStatus
+        - x - Test user action CheckCTokenValidity
+        - x - Test user action CheckCTokenLinked
+        - x - Test user action CheckCTokenSession
+        - x - Test user action CheckCTokenStatus
+        - x - Test user action CheckSTokenValidity
+        - x - Test user action CheckSTokenLinked
+        - x - Test user action CheckSTokenSession
+        - x - Test user action CheckSTokenStatus
         - x - Refactor functional test cases
 
 
@@ -470,11 +620,119 @@
 - EWallet Credit Clock - Server Core - Tech Dox
 ################################################################################
 
+- (EWSC) - Client Actions:
+
+    - Client action New Master Account
+        - State Oriented Restrictions:
+            - CToken States:
+                - Master Unlinked
+                - SToken Linked
+
+    - Client action Request Client ID
+        - State Oriented Restrictions:
+            - User Account States:
+                - Logged In
+                - Logged Out
+
+    - Client action Request Session Token
+        - State Oriented Restrictions:
+            - User Account States:
+                - Logged In
+                - Logged Out
+            - CToken States:
+                - Master Linked
+                - Master Unlinked
+
+    - Client action Check CToken Valid
+        - State Oriented Restrictions:
+            - User Account States:
+                - Logged In
+                - Logged Out
+            - CToken States:
+                - Master Linked
+                - Master Unlinked
+
+    - Client action Check CToken Linked
+        - State Oriented Restrictions:
+            - User Account States:
+                - Logged In
+                - Logged Out
+            - CToken States:
+                - Master Linked
+                - Master Unlinked
+
+    - Client action Check CToken Session
+        - State Oriented Restrictions:
+            - User Account States:
+                - Logged In
+                - Logged Out
+
+    - Client action Check CToken Status
+        - State Oriented Restrictions:
+            - User Account States:
+                - Logged In
+                - Logged Out
+            - CToken States:
+                - Master Linked
+                - Master Unlinked
+
+    - Client action Check SToken Valid
+        - State Oriented Restrictions:
+            - User Account States:
+                - Logged In
+                - Logged Out
+            - CToken States:
+                - Master Linked
+                - Master Unlinked
+
+    - Client action Check SToken Linked
+        - State Oriented Restrictions:
+            - User Account States:
+                - Logged In
+                - Logged Out
+            - CToken States:
+                - Master Linked
+                - Master Unlinked
+
+    - Client action Check SToken Session
+        - State Oriented Restrictions:
+            - User Account States:
+                - Logged In
+                - Logged Out
+            - CToken States:
+                - Master Linked
+                - Master Unlinked
+
+    - Client action Check SToken Status
+        - State Oriented Restrictions:
+            - User Account States:
+                - Logged In
+                - Logged Out
+            - CToken States:
+                - Master Linked
+                - Master Unlinked
+
+- (EWSC) - Master Actions:
+
+    - Master action AccountLogin    #
+    - Master action AccountLogout   #
+    - Master action ViewAccount     #
+    - Master action EditAccount     #
+    - Master action UnlinkAccount   #
+    - Master action InspectCTokens  #
+    - Master action InspectSubPool  #
+    - Master action InspectSub      #
+
 - (EWSC) - System Actions:
 
     - System action New Worker
     - System action New Session
+    - System action Freeze Master #
+    - System action Unfreeze Master #
+    - System action Increase Master SubPool #
+    - System action Decrease Master SubPool #
     - System action Interogate Session Workers
+    - System action Target Cleanup Master #
     - System action Target Cleanup Worker
     - System action Target Cleanup Session
     - System action Target Cleanup CToken
@@ -544,20 +802,13 @@
 
 - (EWSC) - User Actions:
 
-    - User action Request Client ID
-        - User Account States:
-            - Logged In
-            - Logged Out
-
-    - User action Request Session Token
-        - User Account States:
-            - Logged In
-            - Logged Out
-
     - User action Create Account
-        - User Account States:
-            - Logged In
-            - Logged Out
+        - State Oriented Restrictions:
+            - User Account States:
+                - Logged In
+                - Logged Out
+            - CToken States:
+                - Master Linked
 
     - User action Account Login
         - User Account States:

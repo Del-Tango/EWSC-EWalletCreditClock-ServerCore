@@ -10,6 +10,7 @@ from sqlalchemy import orm
 from sqlalchemy.orm import relationship
 
 from .res_user import ResUser
+from .res_master import ResMaster
 from .credit_wallet import CreditEWallet
 from .contact_list import ContactList
 from .res_utils import ResUtils, Base
@@ -594,6 +595,25 @@ class EWalletCreateUser(): #EWalletLogin,
 
     # CREATORS
 
+    def create_res_master(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('active_session'):
+            return self.error_no_active_session_found(kwargs)
+        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
+            kwargs, 'master'
+        )
+        pass_hash = res_utils.hash_password(kwargs['user_pass'])
+        new_user = ResMaster(
+            user_pass_hash=pass_hash, **sanitized_command_chain
+        )
+        kwargs['active_session'].add(new_user)
+        pass_hash_record = new_user.create_user_pass_hash_record(
+            pass_hash=pass_hash,
+        )
+        kwargs['active_session'].add(pass_hash_record)
+        kwargs['active_session'].commit()
+        return new_user
+
 #   @pysnooper.snoop('logs/ewallet.log')
     def create_res_user(self, **kwargs):
         '''
@@ -605,14 +625,12 @@ class EWalletCreateUser(): #EWalletLogin,
         log.debug('')
         if not kwargs.get('active_session'):
             return self.error_no_active_session_found(kwargs)
+        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
+            kwargs, 'master'
+        )
         pass_hash = res_utils.hash_password(kwargs['user_pass'])
         new_user = ResUser(
-            user_name=kwargs['user_name'],
-            user_pass_hash=pass_hash,
-            user_email=kwargs['user_email'],
-            user_phone=kwargs.get('user_phone'),
-            user_alias=kwargs.get('user_alias'),
-            active_session=kwargs['active_session'],
+            user_pass_hash=pass_hash, **sanitized_command_chain
         )
         kwargs['active_session'].add(new_user)
         pass_hash_record = new_user.create_user_pass_hash_record(
@@ -623,6 +641,22 @@ class EWalletCreateUser(): #EWalletLogin,
         return new_user
 
     # ACTIONS
+
+#   @pysnooper.snoop('logs/ewallet.log')
+    def action_create_new_master(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('user_name') or not kwargs.get('user_pass'):
+            return self.error_handler_action_create_new_user(
+                user_name=kwargs.get('user_name'),
+                user_pass=kwargs.get('user_pass'),
+            )
+        parameter_checks = self.perform_new_user_checks(**kwargs)
+        if False in parameter_checks.values():
+            return self.warning_handler_action_create_new_user(
+                parameter_checks=parameter_checks
+            )
+        new_user = self.create_res_master(**kwargs)
+        return new_user
 
 #   @pysnooper.snoop('logs/ewallet.log')
     def action_create_new_user(self, **kwargs):

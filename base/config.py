@@ -47,6 +47,9 @@ class Config():
             'session_token_validity': 30, # minutes
             'account_unlink_freeze_interval': 30, # days
         }
+        self.master_config = {
+            'subordonate_pool_size': 50,
+        }
         self.cron_config = {
             'account_cleaner_cron_label': 'AccountCleaner',
             'account_cleaner_cron_interval': 24, # hours
@@ -110,7 +113,8 @@ class Config():
             self.conversion_sheet_config, self.transfer_sheet_config,
             self.invoice_sheet_config, self.system_config,
             self.system_user_values, self.contact_list_config,
-            self.worker_config, self.cron_config, self.session_config
+            self.worker_config, self.cron_config, self.session_config,
+            self.master_config
         ]
 
     def fetch_config_dict_by_key(self, dict_set, key):

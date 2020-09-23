@@ -360,6 +360,10 @@ class EWalletSessionManager():
         log.debug('')
         return self.config.cron_config['worker_cleaner_cron_label']
 
+    def fetch_user_account_cleaner_cron_default_label(self):
+        log.debug('')
+        return self.config.cron_config['account_cleaner_cron_label']
+
     def fetch_worker_state_interogation_instruction(self):
         log.debug('')
         return {
@@ -1217,6 +1221,7 @@ class EWalletSessionManager():
         log.debug('TODO - UNIMPLEMENTED')
 
     # TODO
+#   @pysnooper.snoop('logs/ewallet.log')
     def check_worker_is_available(self, worker_id, **kwargs):
         log.debug('TODO - Refactor, sync processes with Semaphore objects.')
         worker_pool = kwargs.get('worker_pool') or self.fetch_worker_pool()
@@ -1256,6 +1261,12 @@ class EWalletSessionManager():
             return False
         elif response.get('state') in [0, 1]:
             return True
+
+    def check_ctoken_acquired_master_account(self, client_id):
+        log.debug('')
+        ctoken = self.fetch_client_token_by_label(client_id)
+        has_master = ctoken.fetch_master()
+        return False if not has_master else True
 
     def check_stoken_in_pool(self, stoken):
         log.debug('')
@@ -1775,8 +1786,14 @@ class EWalletSessionManager():
 
     # TODO
 #   @pysnooper.snoop('logs/ewallet.log')
-    def cleanup_user_accounts(self):
-        log.debug('TODO - Refactor')
+    def cleanup_user_accounts(self, **kwargs):
+        log.debug(
+            'TODO - Refactor '
+            '' if not kwargs.get('from_cron') else \
+            '- Automated Action: {} -'.format(
+                self.fetch_account_cleaner_cron_default_label()
+            )
+        )
         freeze_interval = self.fetch_account_unlink_freeze_interval()
         orm_session = res_utils.session_factory()
         accounts_removed = []
@@ -2467,6 +2484,32 @@ class EWalletSessionManager():
     def action_stop_client_token_cleaner_cron(self, **kwargs):
         log.debug('TODO - UNIMPLEMENTED')
 
+    def action_execute_system_instruction_set(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('worker_id'):
+            return self.error_no_worker_id_found(kwargs)
+        return self.execute_worker_instruction(kwargs['worker_id'], kwargs)
+
+    def action_execute_user_instruction_set(self, **kwargs):
+        log.debug('')
+        # Fetch worker id from client token label
+        worker_id = self.fetch_worker_identifier_by_client_id(kwargs['client_id'])
+        if not worker_id or isinstance(worker_id, dict) and \
+                worker_id.get('failed'):
+            return worker_id
+        # Fetch client session token map
+        cst_map = self.fetch_client_session_tokens(
+            kwargs['client_id'], kwargs['session_token']
+        )
+        if not cst_map or isinstance(cst_map, dict) and cst_map.get('failed'):
+            return self.error_could_not_fetch_client_session_token_map(
+                kwargs, cst_map, worker_id
+            )
+        # Instruction set processing
+        return self.execute_worker_instruction(
+            worker_id, kwargs
+        )
+
     def action_verify_session_token_status(self, **kwargs):
         log.debug('')
         if not kwargs.get('session_token'):
@@ -3056,36 +3099,10 @@ class EWalletSessionManager():
         }
         return instruction_set_response
 
-    def action_execute_system_instruction_set(self, **kwargs):
-        log.debug('')
-        if not kwargs.get('worker_id'):
-            return self.error_no_worker_id_found(kwargs)
-        return self.execute_worker_instruction(kwargs['worker_id'], kwargs)
-
     def action_new_session(self, **kwargs):
         log.debug('')
         session = self.create_new_ewallet_session(**kwargs)
         return session
-
-    def action_execute_user_instruction_set(self, **kwargs):
-        log.debug('')
-        # Fetch worker id from client token label
-        worker_id = self.fetch_worker_identifier_by_client_id(kwargs['client_id'])
-        if not worker_id or isinstance(worker_id, dict) and \
-                worker_id.get('failed'):
-            return worker_id
-        # Fetch client session token map
-        cst_map = self.fetch_client_session_tokens(
-            kwargs['client_id'], kwargs['session_token']
-        )
-        if not cst_map or isinstance(cst_map, dict) and cst_map.get('failed'):
-            return self.error_could_not_fetch_client_session_token_map(
-                kwargs, cst_map, worker_id
-            )
-        # Instruction set processing
-        return self.execute_worker_instruction(
-            worker_id, kwargs
-        )
 
 #   @pysnooper.snoop()
     def action_request_session_token(self, worker_id, cst_map, **kwargs):
@@ -3166,6 +3183,44 @@ class EWalletSessionManager():
         '''
         log.debug('TODO - Kill process')
         return self.unset_socket_handler()
+
+    def handle_client_action_new_account(self, **kwargs):
+        '''
+        [ NOTE   ]: Validates received instruction set, searches for worker and session
+                    and proceeds to create new User Account in said session. Requiers
+                    valid Client ID and Session Token.
+        '''
+        log.debug('')
+        instruction_set_validation = self.validate_instruction_set(kwargs)
+        if not instruction_set_validation \
+                or isinstance(instruction_set_validation, dict) \
+                and instruction_set_validation.get('failed'):
+            return instruction_set_validation
+        new_account = self.action_execute_user_instruction_set(**kwargs)
+        return self.warning_could_not_create_new_user_account(
+            kwargs, new_account
+        ) if not new_account or isinstance(new_account, dict) and \
+            new_account.get('failed') else new_account
+
+    def handle_client_action_new_master_account(self, **kwargs):
+        log.debug('')
+        instruction_set_validation = self.validate_instruction_set(kwargs)
+        if not instruction_set_validation \
+                or isinstance(instruction_set_validation, dict) \
+                and instruction_set_validation.get('failed'):
+            return instruction_set_validation
+        check_ctoken_master = self.check_ctoken_acquired_master_account(
+            kwargs['client_id']
+        )
+        if check_ctoken_master:
+            return self.warning_ctoken_has_acquired_master_account(
+                kwargs, instruction_set_validation, check_ctoken_master
+            )
+        new_account = self.action_execute_user_instruction_set(**kwargs)
+        return self.warning_could_not_create_new_user_account(
+            kwargs, new_account
+        ) if not new_account or isinstance(new_account, dict) and \
+            new_account.get('failed') else new_account
 
     def handle_client_action_verify_session_token_ewallet_session(self, **kwargs):
         log.debug('')
@@ -4106,24 +4161,6 @@ class EWalletSessionManager():
         ) if not account_login or isinstance(account_login, dict) and \
             account_login.get('failed') else account_login
 
-    def handle_client_action_new_account(self, **kwargs):
-        '''
-        [ NOTE   ]: Validates received instruction set, searches for worker and session
-                    and proceeds to create new User Account in said session. Requiers
-                    valid Client ID and Session Token.
-        '''
-        log.debug('')
-        instruction_set_validation = self.validate_instruction_set(kwargs)
-        if not instruction_set_validation \
-                or isinstance(instruction_set_validation, dict) \
-                and instruction_set_validation.get('failed'):
-            return instruction_set_validation
-        new_account = self.action_execute_user_instruction_set(**kwargs)
-        return self.warning_could_not_create_new_user_account(
-            kwargs, new_account
-        ) if not new_account or isinstance(new_account, dict) and \
-            new_account.get('failed') else new_account
-
     def handle_system_action_new_session(self, **kwargs):
         log.debug('')
         return self.action_new_ewallet_session(**kwargs)
@@ -4165,6 +4202,44 @@ class EWalletSessionManager():
 #           'time': self.handle_client_action_transfer_time,
         }
         return handlers[kwargs['transfer']](**kwargs)
+
+    def handle_client_action_new(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('new'):
+            return self.error_no_client_action_new_target_specified()
+        handlers = {
+            'master': self.handle_client_action_new_master,
+            'account': self.handle_client_action_new_account,
+            'contact': self.handle_client_action_new_contact,
+            'credit': self.handle_client_action_new_credit,
+            'transfer': self.handle_client_action_new_transfer,
+            'invoice': self.handle_client_action_new_invoice,
+            'conversion': self.handle_client_action_new_conversion,
+            'time': self.handle_client_action_new_time,
+        }
+        return handlers[kwargs['new']](**kwargs)
+
+    def handle_client_action_new_master(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('master'):
+            return self.error_no_client_action_new_master_target_specified(kwargs)
+        handlers = {
+            'account': self.handle_client_action_new_master_account,
+        }
+        return handlers[kwargs['master']](**kwargs)
+
+    def handle_system_action_new(self, **kwargs):
+        '''
+        [ NOTE   ]: System action handler for new type actions.
+        '''
+        log.debug('')
+        if not kwargs.get('new'):
+            return self.error_no_system_action_new_specified()
+        handlers = {
+            'worker': self.handle_system_action_new_worker,
+            'session': self.handle_system_action_new_session,
+        }
+        return handlers[kwargs['new']](**kwargs)
 
     def handle_client_action_verify_client_id(self, **kwargs):
         log.debug('')
@@ -4608,24 +4683,6 @@ class EWalletSessionManager():
         }
         return handlers[kwargs['supply']](**kwargs)
 
-    def handle_client_action_new(self, **kwargs):
-        '''
-        [ NOTE   ]: Client action handler for new type actions.
-        '''
-        log.debug('')
-        if not kwargs.get('new'):
-            return self.error_no_client_action_new_target_specified()
-        handlers = {
-            'account': self.handle_client_action_new_account,
-            'contact': self.handle_client_action_new_contact,
-            'credit': self.handle_client_action_new_credit,
-            'transfer': self.handle_client_action_new_transfer,
-            'invoice': self.handle_client_action_new_invoice,
-            'conversion': self.handle_client_action_new_conversion,
-            'time': self.handle_client_action_new_time,
-        }
-        return handlers[kwargs['new']](**kwargs)
-
     def handle_client_action_request(self, **kwargs):
         '''
         [ NOTE   ]: Client action handler for request type actions.
@@ -4638,19 +4695,6 @@ class EWalletSessionManager():
             'session_token': self.handle_client_action_request_session_token,
         }
         return handlers[kwargs['request']](**kwargs)
-
-    def handle_system_action_new(self, **kwargs):
-        '''
-        [ NOTE   ]: System action handler for new type actions.
-        '''
-        log.debug('')
-        if not kwargs.get('new'):
-            return self.error_no_system_action_new_specified()
-        handlers = {
-            'worker': self.handle_system_action_new_worker,
-            'session': self.handle_system_action_new_session,
-        }
-        return handlers[kwargs['new']](**kwargs)
 
     def handle_system_action_open(self, **kwargs):
         '''
@@ -4832,6 +4876,23 @@ class EWalletSessionManager():
     '''
     [ TODO ]: Fetch warning messages from message file by key codes.
     '''
+
+    def warning_ctoken_has_acquired_master_account(self, *args):
+        instruction_set_response = res_utils.format_warning_response(**{
+            'failed': True, 'details': args,
+            'warning': 'CToken already has a Master account acquired.',
+        })
+        self.log_warning(**instruction_set_response)
+        return instruction_set_response
+
+    def warning_could_not_create_new_master_account(self, *args):
+        instruction_set_response = res_utils.format_warning_response(**{
+            'failed': True, 'details': args,
+            'warning': 'Something went wrong. '
+                       'Could not create new Master user account.',
+        })
+        self.log_warning(**instruction_set_response)
+        return instruction_set_response
 
     def warning_could_not_fetch_stoken_linked_ctoken(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
@@ -5953,6 +6014,14 @@ class EWalletSessionManager():
     '''
     [ TODO ]: Fetch error messages from message file by key codes.
     '''
+
+    def error_no_client_action_new_master_target_specified(self, *args):
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
+            'error': 'No system action new master target specified.',
+        })
+        self.log_error(**instruction_set_response)
+        return instruction_set_response
 
     def error_no_client_action_verify_stoken_target_specified(self, *args):
         instruction_set_response = res_utils.format_error_response(**{

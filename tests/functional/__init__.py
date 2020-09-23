@@ -27,6 +27,7 @@ from . import test_user_check_stoken_session
 from . import test_user_check_stoken_status
 
 from . import test_user_create_account
+from . import test_user_create_master
 from . import test_user_account_login
 from . import test_user_supply_credits
 from . import test_user_pay_credits

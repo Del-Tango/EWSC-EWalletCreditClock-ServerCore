@@ -12,7 +12,8 @@ log = logging.getLogger(config.log_config['log_name'])
 
 class ClientID(Token):
 
-    stoken = None
+    stoken = None           # <stoken type-object>
+    acquired_master = None  # <master-id type-int>
 
     def __init__(self, *args, **kwargs):
         self.stoken = kwargs.get('session_token')
@@ -24,6 +25,8 @@ class ClientID(Token):
             else kwargs.pop('unlink')
         self.valid_to = None if not kwargs.get('expires_on') \
             else kwargs.pop('expires_on')
+        self.acquired_master = None if not kwargs.get('acquired_master') \
+            else kwargs.pop('acquired_master')
         return super(ClientID, self).__init__(
             label=self.label, active=self.active,
             unlink_flag=self.unlink_flag, valid_to=self.valid_to,
@@ -39,6 +42,10 @@ class ClientID(Token):
     def fetch_stoken(self):
         log.debug('')
         return self.stoken
+
+    def fetch_master(self):
+        log.debug('')
+        return self.acquired_master
 
     # CHECKERS
 

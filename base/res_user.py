@@ -33,23 +33,34 @@ class ResUser(Base):
     user_phone = Column(String)
     user_alias = Column(String)
     user_state_code = Column(Integer)
-#   user_state_name = Column(String)
     active_session_id = Column(Integer, ForeignKey('ewallet.id'))
     active_session = relationship(
        'EWallet', back_populates='active_user'
-       )
+    )
     user_contact_list = relationship(
        'ContactList', back_populates='client',
-       )
+    )
     user_credit_wallet = relationship(
        'CreditEWallet', back_populates='client',
-       )
-    user_session_archive = relationship('EWallet', secondary='ewallet_session_user')
+    )
+    user_session_archive = relationship(
+        'EWallet', secondary='ewallet_session_user'
+    )
+    master_account_id = Column(Integer, ForeignKey('res_master.user_id'))
+    subordonate_of = relationship(
+        'ResMaster', back_populates='subordonate_pool',
+        foreign_keys='ResUser.master_account_id'
+    )
     user_pass_hash_archive = relationship('ResUserPassHashArchive')
     user_credit_wallet_archive = relationship('CreditEWallet')
     user_contact_list_archive = relationship('ContactList')
     to_unlink = Column(Boolean)
     to_unlink_timestamp = Column(DateTime)
+
+    __mapper_args__ = {
+        'polymorphic_identity': 'res_user',
+        'concrete': True,
+    }
 
 #   @pysnooper.snoop('logs/ewallet.log')
     def __init__(self, **kwargs):
@@ -57,28 +68,29 @@ class ResUser(Base):
         self.user_write_date = datetime.datetime.now()
         self.user_create_uid = kwargs.get('user_create_uid')
         self.user_write_uid = kwargs.get('user_write_uid')
-        user_credit_wallet = kwargs.get('user_credit_wallet') or \
-            self.user_action_controller(
-                action='create', target='credit_wallet', **kwargs
-            )
-        user_contact_list = kwargs.get('user_contact_list') or \
-            self.user_action_controller(
-                action='create', target='contact_list', **kwargs
-            )
         self.user_name = kwargs.get('user_name')
-        self.user_credit_wallet = [user_credit_wallet]
-        self.user_contact_list = [user_contact_list]
-        self.user_pass_hash = kwargs.get('user_pass_hash')
         self.user_email = kwargs.get('user_email')
         self.user_phone = kwargs.get('user_phone')
         self.user_alias = kwargs.get('user_alias')
         self.user_state_code = kwargs.get('user_state_code') or 0
         self.user_state_name = kwargs.get('user_state_name') or 'LoggedOut'
-        self.user_pass_hash_archive = kwargs.get('user_pass_hash_archive') or []
-        self.user_credit_wallet_archive = kwargs.get('user_credit_wallet_archive') or \
-                [user_credit_wallet]
-        self.user_contact_list_archive = kwargs.get('user_contact_list_archive') or \
-                [user_contact_list]
+        if not kwargs.get('master'):
+            user_credit_wallet = kwargs.get('user_credit_wallet') or \
+                self.user_action_controller(
+                    action='create', target='credit_wallet', **kwargs
+                )
+            user_contact_list = kwargs.get('user_contact_list') or \
+                self.user_action_controller(
+                    action='create', target='contact_list', **kwargs
+                )
+            self.user_credit_wallet = [user_credit_wallet]
+            self.user_contact_list = [user_contact_list]
+            self.user_pass_hash = kwargs.get('user_pass_hash')
+            self.user_pass_hash_archive = kwargs.get('user_pass_hash_archive') or []
+            self.user_credit_wallet_archive = kwargs.get('user_credit_wallet_archive') or \
+                    [user_credit_wallet]
+            self.user_contact_list_archive = kwargs.get('user_contact_list_archive') or \
+                    [user_contact_list]
         self.to_unlink = False
         self.to_unlink_timestamp = None
 

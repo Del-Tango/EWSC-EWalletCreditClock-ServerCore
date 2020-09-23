@@ -46,15 +46,18 @@ class EWallet(Base):
     session = None
     contact_list = relationship(
        'ContactList', back_populates='active_session',
-       )
+    )
     credit_wallet = relationship(
        'CreditEWallet', back_populates='active_session',
-       )
+    )
     active_user = relationship(
        'ResUser', back_populates='active_session',
-       )
+    )
+    active_master = relationship(
+       'ResMaster', back_populates='active_session',
+    )
     user_account_archive = relationship(
-        'ResUser', secondary='ewallet_session_user'
+       'ResUser', secondary='ewallet_session_user',
     )
 
 #   @pysnooper.snoop()
@@ -74,6 +77,36 @@ class EWallet(Base):
         self.user_account_archive = kwargs.get('user_account_archive') or []
 
     # FETCHERS
+
+    def fetch_active_session_master(self, obj=True):
+        log.debug('')
+        try:
+            if not self.active_master:
+                return self.error_no_session_active_master_found(
+                    self.active_master
+                )
+            return self.active_master[0] if obj else \
+                self.active_master[0].fetch_user_id()
+        except Exception as e:
+            return self.error_could_not_fetch_active_session_master({
+                'account': self.active_user
+            }, e)
+
+
+#   @pysnooper.snoop('logs/ewallet.log')
+    def fetch_active_session_user(self, obj=True):
+        log.debug('')
+        try:
+            if not self.active_user:
+                return self.error_no_session_active_user_found(
+                    self.active_user
+                )
+            return self.active_user[0] if obj else \
+                self.active_user[0].fetch_user_id()
+        except:
+            return self.error_could_not_fetch_active_session_user({
+                'account': self.active_user
+            })
 
     def fetch_active_session_credit_wallet(self, obj=True):
         log.debug('')
@@ -97,21 +130,6 @@ class EWallet(Base):
             self.contact_list[0] if obj else
             self.contact_list[0].fetch_contact_list_id()
         )
-
-#   @pysnooper.snoop('logs/ewallet.log')
-    def fetch_active_session_user(self, obj=True):
-        log.debug('')
-        try:
-            if not self.active_user:
-                return self.error_no_session_active_user_found(
-                    self.active_user
-                )
-            return self.active_user[0] if obj else \
-                self.active_user[0].fetch_user_id()
-        except:
-            return self.error_could_not_fetch_active_session_user({
-                'account': self.active_user
-            })
 
     def fetch_default_ewallet_session_validity_interval_in_hours(self):
         log.debug('')
@@ -340,6 +358,19 @@ class EWallet(Base):
 
     # SETTERS
 
+    def set_session_active_master(self, active_master):
+        log.debug('')
+        try:
+            self.active_master = active_master if \
+                isinstance(active_master, list) else [active_master]
+            self.update_write_date()
+        except Exception as e:
+            return self.error_could_not_set_active_session_master(
+                active_master, self.active_master, e
+            )
+        log.info('Successfully set ewallet session active master.')
+        return self.active_master
+
     def set_session_name(self, name):
         log.debug('')
         try:
@@ -448,6 +479,7 @@ class EWallet(Base):
         log.debug('')
         handlers = {
             'active_user': self.set_session_active_user,
+            'active_master': self.set_session_active_master,
             'credit_wallet': self.set_session_credit_wallet,
             'contact_list': self.set_session_contact_list,
         }
@@ -469,6 +501,13 @@ class EWallet(Base):
         return archive
 
     # CHECKERS
+
+    def check_session_master_account_is_set(self):
+        log.debug('')
+        account = self.fetch_active_session_master()
+        return False if not account or (
+            isinstance(account, dict) and account.get('failed')
+        ) else True
 
     def check_session_user_account_is_set(self):
         log.debug('')
@@ -502,6 +541,7 @@ class EWallet(Base):
         log.debug('')
         checks = {
             'active_user': self.check_session_user_account_is_set(),
+            'active_master': self.check_session_master_account_is_set(),
             'contact_list': self.check_session_contact_list_is_set(),
             'credit_ewallet': self.check_session_credit_ewallet_is_set(),
             'user_archive': self.check_session_user_archive_is_set(),
@@ -587,28 +627,22 @@ class EWallet(Base):
 
     # UPDATERS
 
-#   @pysnooper.snoop()
-    def update_user_account_archive(self, **kwargs):
-        '''
-        [ NOTE   ]: Update EWallet session user login stack with new user.
-        [ INPUT  ]: user=<user>
-        [ RETURN ]: (User login stack | False)
-        '''
+    def update_session_from_master(self, **kwargs):
         log.debug('')
-        if not kwargs.get('user') or isinstance(kwargs['user'], dict) and \
-                kwargs['user'].get('failed'):
-            return self.error_no_user_object_found(kwargs)
-        set_to_archive = self.set_to_user_account_archive(kwargs['user'])
+        if not kwargs.get('session_active_master'):
+            return self.error_no_session_active_master_found()
+        user = kwargs['session_active_master']
+        orm_session = kwargs.get('active_session') or \
+            self.fetch_active_session()
+        session_data = {
+            'active_master': user,
+        }
+        set_data = self.set_session_data(session_data)
+        orm_session.commit()
         log.info(
-            'Successfully updated session user account archive with user {}.'
-            .format(kwargs['user'].fetch_user_name())
+            'Successfully updated ewallet session from current active master.'
         )
-        return set_to_archive
-
-    def update_write_date(self):
-        log.debug('')
-        self.set_write_date(datetime.datetime.now())
-        return True
+        return session_data
 
     def update_session_from_user(self, **kwargs):
         '''
@@ -631,6 +665,29 @@ class EWallet(Base):
         orm_session.commit()
         log.info('Successfully updated ewallet session from current active user.')
         return session_data
+
+#   @pysnooper.snoop()
+    def update_user_account_archive(self, **kwargs):
+        '''
+        [ NOTE   ]: Update EWallet session user login stack with new user.
+        [ INPUT  ]: user=<user>
+        [ RETURN ]: (User login stack | False)
+        '''
+        log.debug('')
+        if not kwargs.get('user') or isinstance(kwargs['user'], dict) and \
+                kwargs['user'].get('failed'):
+            return self.error_no_user_object_found(kwargs)
+        set_to_archive = self.set_to_user_account_archive(kwargs['user'])
+        log.info(
+            'Successfully updated session user account archive with user {}.'
+            .format(kwargs['user'].fetch_user_name())
+        )
+        return set_to_archive
+
+    def update_write_date(self):
+        log.debug('')
+        self.set_write_date(datetime.datetime.now())
+        return True
 
     # GENERAL
 
@@ -717,6 +774,69 @@ class EWallet(Base):
         log.debug('TODO - UNIMPLEMENTED')
     def action_receive_transfer_record(self, **kwargs):
         log.debug('TODO - UNIMPLEMENTED')
+
+    def action_create_new_master_account(self, **kwargs):
+        log.debug('')
+        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
+            kwargs, 'action'
+        )
+        session_create_account = EWalletCreateUser().action_create_new_master(
+            **sanitized_command_chain
+        )
+        if not session_create_account or \
+                isinstance(session_create_account, dict) and \
+                session_create_account.get('failed'):
+            return self.warning_could_not_create_user_account(
+                kwargs, session_create_account
+            )
+        kwargs['active_session'].add(session_create_account)
+        log.info('Successfully created new master account.')
+        self.update_session_from_master(
+            session_active_master=session_create_account,
+        )
+        kwargs['active_session'].commit()
+        account_data = session_create_account.fetch_user_values()
+        subpool = account_data['subordonate_pool']
+        account_data['subordonate_pool'] = {
+            user.fetch_user_id(): user.fetch_user_name() for user in subpool
+        }
+        command_chain_response = {
+            'failed': False,
+            'account': kwargs['user_email'],
+            'account_data': account_data,
+        }
+        return command_chain_response
+
+#   @pysnooper.snoop('logs/ewallet.log')
+    def action_create_new_user_account(self, **kwargs):
+        log.debug('')
+        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
+            kwargs, 'action'
+        )
+        session_create_account = EWalletCreateUser().action_create_new_user(
+            **sanitized_command_chain
+        )
+        if not session_create_account or \
+                isinstance(session_create_account, dict) and \
+                session_create_account.get('failed'):
+            return self.warning_could_not_create_user_account(
+                kwargs, session_create_account
+            )
+        kwargs['active_session'].add(session_create_account)
+        log.info('Successfully created new user account.')
+        self.update_user_account_archive(
+            user=session_create_account,
+        )
+        self.update_session_from_user(
+            session_active_user=session_create_account,
+        )
+        kwargs['active_session'].commit()
+        command_chain_response = {
+            'failed': False,
+            'account': kwargs['user_email'],
+            'account_data': session_create_account.fetch_user_values(),
+        }
+        return command_chain_response
 
 #   @pysnooper.snoop('logs/ewallet.log')
     def action_view_transfer_record(self, **kwargs):
@@ -1847,37 +1967,6 @@ class EWallet(Base):
         }
         return command_chain_response
 
-#   @pysnooper.snoop('logs/ewallet.log')
-    def action_create_new_user_account(self, **kwargs):
-        log.debug('')
-        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
-            kwargs, 'action'
-        )
-        session_create_account = EWalletCreateUser().action_create_new_user(
-            **sanitized_command_chain
-        )
-        if not session_create_account or \
-                isinstance(session_create_account, dict) and \
-                session_create_account.get('failed'):
-            return self.warning_could_not_create_user_account(
-                kwargs, session_create_account
-            )
-        kwargs['active_session'].add(session_create_account)
-        log.info('Successfully created new user account.')
-        self.update_user_account_archive(
-            user=session_create_account,
-        )
-        self.update_session_from_user(
-            session_active_user=session_create_account,
-        )
-        kwargs['active_session'].commit()
-        command_chain_response = {
-            'failed': False,
-            'account': kwargs['user_email'],
-            'account_data': session_create_account.fetch_user_values(),
-        }
-        return command_chain_response
-
     def action_create_new_time_sheet(self, **kwargs):
         log.debug('')
         credit_wallet = self.fetch_active_session_credit_wallet()
@@ -2524,6 +2613,10 @@ class EWallet(Base):
     '''
     [ NOTES ]: Enviroment checks for proper action execution are performed here.
     '''
+
+    def handle_user_action_create_new_master_account(self, **kwargs):
+        log.debug('')
+        return self.action_create_new_master_account(**kwargs)
 
     def handle_system_action_interogate_session_empty(self, **kwargs):
         log.debug('')
@@ -3244,6 +3337,15 @@ class EWallet(Base):
 
     # JUMPTABLE HANDLERS
 
+    def handle_user_action_create_new_master(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('master'):
+            return self.error_no_create_new_master_target_specified()
+        handlers = {
+            'account': self.handle_user_action_create_new_master_account,
+        }
+        return handlers[kwargs['master']](**kwargs)
+
     def handle_user_action_unlink(self, **kwargs):
         log.debug('')
         if not kwargs.get('unlink'):
@@ -3464,6 +3566,7 @@ class EWallet(Base):
         if not kwargs.get('create'):
             return self.error_no_user_create_target_specified()
         handlers = {
+            'master': self.handle_user_action_create_new_master,
             'account': self.handle_user_action_create_new_user_account,
             'credit_wallet': self.handle_user_action_create_new_credit_wallet,
             'credit_clock': self.handle_user_action_create_new_credit_clock,
@@ -4337,6 +4440,35 @@ class EWallet(Base):
     '''
     [ TODO ]: Fetch error messages from message file by key codes.
     '''
+
+    def error_could_not_fetch_active_session_master(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Something went wrong. '
+                     'Could not fetch active session master account. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_could_not_set_active_session_master(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Something went wrong. '
+                     'Could not set active session master account. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_no_session_active_master_found(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No active session master user account found. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
 
     def error_no_session_contact_list_found(self, *args):
         command_chain_response = {
