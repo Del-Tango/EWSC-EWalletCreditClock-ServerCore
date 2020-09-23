@@ -39,6 +39,7 @@ class ResMaster(ResUser):
     active_session = relationship(
        'EWallet', back_populates='active_master'
     )
+    key_code = Column(String)
     account_limit = Column(Integer)
     company = Column(String)
     address = Column(String)
@@ -59,12 +60,22 @@ class ResMaster(ResUser):
             self.fetch_default_master_account_subpool_size_limit()
         self.company = kwargs.get('company')
         self.address = kwargs.get('address')
+        self.key_code = kwargs.get('key_code') or \
+            self.fetch_default_master_account_key_code()
         self.subordonate_pool = kwargs.get('subordonate_pool', [])
         self.is_active = kwargs.get('is_active', True)
         self.acquired_ctokens = kwargs.get('acquired_ctokens', [])
         return super(ResMaster, self).__init__(master=True, **kwargs)
 
     # FETCHERS
+
+    def fetch_key_code(self):
+        log.debug('')
+        return self.key_code
+
+    def fetch_default_master_account_key_code(self):
+        log.debug('')
+        return str(config.master_config['master_key_code'])
 
     def fetch_default_master_account_subpool_size_limit(self):
         log.debug('')
@@ -80,6 +91,7 @@ class ResMaster(ResUser):
             'email': self.user_email,
             'phone': self.user_phone,
             'alias': self.user_alias,
+            'key_code': self.key_code,
             'account_limit': self.account_limit,
             'company': self.company,
             'address': self.address,
@@ -101,6 +113,28 @@ class ResMaster(ResUser):
             )
         return True
 
+    def set_account_key_code(self, key_code):
+        log.debug('')
+        try:
+            self.key_code = key_code
+            self.update_write_date()
+        except Exception as e:
+            return self.error_could_not_set_master_account_key_code(
+                key_code, self.key_code, e
+            )
+        return True
+
+    def set_acquired_ctoken_to_pool(self, client_id):
+        log.debug('')
+        try:
+            self.acquired_ctokens.append(client_id)
+            self.update_write_date()
+        except Exception as e:
+            return self.error_could_not_set_master_acquired_ctoken(
+                client_id, self.acquired_ctokens, e
+            )
+        return True
+
     # GENERAL
 
     def add_subordonate_to_pool(self, subordonate_account):
@@ -114,9 +148,35 @@ class ResMaster(ResUser):
             )
         return set_to_pool
 
+    def add_ctoken_to_acquired(self, client_id):
+        log.debug('')
+        set_to_pool = self.set_acquired_ctoken_to_pool(client_id)
+        if isinstance(set_to_pool, dict) and set_to_pool.get('failed'):
+            return self.warning_could_not_add_acquired_ctoken_to_pool(
+                client_id, set_to_pool
+            )
+        return set_to_pool
+
+    # VALIDATORS
+
+    def validate_key_code(self, key_code):
+        log.debug('')
+        secret_key = self.fetch_key_code()
+        return False if key_code != secret_key else True
+
     # CONTROLLERS
 
     # WARNINGS
+
+    def warning_could_not_add_acquired_ctoken_to_pool(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Something went wrong. '
+                       'Could not add acquired CToken to pool. '
+                       'Details: {}'.format(args),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
 
     def warning_could_not_add_new_subordonate_account(self, *args):
         command_chain_response = {
@@ -129,6 +189,16 @@ class ResMaster(ResUser):
         return command_chain_response
 
     # ERRORS
+
+    def error_could_not_set_master_account_key_code(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Something went wrong. '
+                     'Could not set master user account key code. '
+                     'Details: {}'.format(args),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
 
     def error_could_not_set_subordonate_user_account_to_pool(self, *args):
         command_chain_response = {

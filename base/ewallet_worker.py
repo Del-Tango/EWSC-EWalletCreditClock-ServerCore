@@ -1091,6 +1091,64 @@ class EWalletWorker():
     [ NOTE ]: Command chain responses are formulated here.
     '''
 
+    @pysnooper.snoop('logs/ewallet.log')
+    def action_add_master_acquired_ctoken_to_pool(self, **kwargs):
+        log.debug('')
+        # Fetch ewallet session by token keys
+        ewallet_session = self.fetch_ewallet_session_by_client_session_tokens(
+            kwargs['client_id'], kwargs['session_token']
+        )
+        if not ewallet_session or isinstance(ewallet_session, dict) and \
+                ewallet_session.get('failed'):
+            return ewallet_session
+        sanitized_instruction_set = res_utils.remove_tags_from_command_chain(
+            kwargs, 'controller', 'ctype', 'action', 'add', 'ctoken',
+            'active_session'
+        )
+        # Execute action in session
+        orm_session = ewallet_session.fetch_active_session()
+        add_ctoken = ewallet_session.ewallet_controller(
+            controller='master', ctype='action', action='add', add='ctoken',
+            ctoken='acquired', active_session=orm_session,
+            **sanitized_instruction_set
+        )
+        # Formulate response
+        response = self.warning_could_not_add_master_acquired_ctoken_to_pool(
+             add_ctoken, ewallet_session, kwargs
+        ) if not add_ctoken or isinstance(add_ctoken, dict) and \
+            add_ctoken.get('failed') else add_ctoken
+        # Respond to session manager
+        self.send_instruction_response(response)
+        return response
+
+    def action_acquire_master_account(self, **kwargs):
+        log.debug('')
+        # Fetch ewallet session by token keys
+        ewallet_session = self.fetch_ewallet_session_by_client_session_tokens(
+            kwargs['client_id'], kwargs['session_token']
+        )
+        if not ewallet_session or isinstance(ewallet_session, dict) and \
+                ewallet_session.get('failed'):
+            return ewallet_session
+        sanitized_instruction_set = res_utils.remove_tags_from_command_chain(
+            kwargs, 'controller', 'ctype', 'action', 'acquire',
+            'active_session'
+        )
+        # Execute action in session
+        orm_session = ewallet_session.fetch_active_session()
+        master_account = ewallet_session.ewallet_controller(
+            controller='user', ctype='action', action='search', search='master',
+            search_by='email', active_session=orm_session, **sanitized_instruction_set
+        )
+        # Formulate response
+        response = self.warning_could_not_fetch_master_account_by_email(
+             master_account, ewallet_session, kwargs
+        ) if not master_account or isinstance(master_account, dict) and \
+            master_account.get('failed') else master_account
+        # Respond to session manager
+        self.send_instruction_response(response)
+        return response
+
     def action_new_master_account(self, **kwargs):
         log.debug('')
         # Fetch ewallet session by token keys
@@ -3255,6 +3313,14 @@ class EWalletWorker():
 
     # ACTION HANDLERS
 
+    def handle_master_action_add_acquired_ctoken(self, **kwargs):
+        log.debug('')
+        return self.action_add_master_acquired_ctoken_to_pool(**kwargs)
+
+    def handle_client_action_acquire_master_account(self, **kwargs):
+        log.debug('')
+        return self.action_acquire_master_account(**kwargs)
+
     def handle_client_action_new_master_account(self, **kwargs):
         log.debug('')
         return self.action_new_master_account(**kwargs)
@@ -3586,7 +3652,35 @@ class EWalletWorker():
 
     # JUMPTABLE HANDLERS
 
+    def handle_master_action_add_ctoken(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('ctoken'):
+            return self.error_no_master_action_add_ctoken_target_specified(kwargs)
+        handlers = {
+            'acquired': self.handle_master_action_add_acquired_ctoken,
+        }
+        return handlers[kwargs['ctoken']](**kwargs)
+
+    def handle_master_action_add(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('add'):
+            return self.error_no_master_action_add_target_specified(kwargs)
+        handlers = {
+            'ctoken': self.handle_master_action_add_ctoken,
+        }
+        return handlers[kwargs['add']](**kwargs)
+
+    def handle_client_action_acquire(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('acquire'):
+            return self.error_no_client_action_acquire_target_specified(kwargs)
+        handlers = {
+            'master': self.handle_client_action_acquire_master_account,
+        }
+        return handlers[kwargs['acquire']](**kwargs)
+
     def handle_system_action_cleanup(self, **kwargs):
+        log.debug('')
         if not kwargs.get('cleanup'):
             return self.error_no_worker_cleanup_target_specified(kwargs)
         handlers = {
@@ -4082,6 +4176,17 @@ class EWalletWorker():
         log.debug('TODO - No events supported.')
     def client_event_controller(self, **kwargs):
         log.debug('TODO - No events supported.')
+    def master_event_controller(self, **kwargs):
+        log.debug('TODO - UNIMPLEMENTED')
+
+    def master_action_controller(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('action'):
+            return self.error_no_master_session_manager_worker_action_specified(kwargs)
+        handlers = {
+            'add': self.handle_master_action_add,
+        }
+        return handlers[kwargs['action']](**kwargs)
 
     def client_action_controller(self, **kwargs):
         log.debug('')
@@ -4105,13 +4210,29 @@ class EWalletWorker():
             'switch': self.handle_client_action_switch,
             'unlink': self.handle_client_action_unlink,
             'recover': self.handle_client_action_recover,
+            'acquire': self.handle_client_action_acquire,
         }
         return handlers[kwargs['action']](**kwargs)
+
+    def master_controller(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('ctype'):
+            return self.error_no_master_session_manager_worker_controller_specified(
+                kwargs
+            )
+        handlers = {
+            'action': self.master_action_controller,
+            'event': self.master_event_controller,
+        }
+        return handlers[kwargs['ctype']](**kwargs)
+
 
     def client_controller(self, **kwargs):
         log.debug('')
         if not kwargs.get('ctype'):
-            return self.error_no_system_session_manager_worker_controller_specified()
+            return self.error_no_client_session_manager_worker_controller_specified(
+                kwargs
+            )
         handlers = {
             'action': self.client_action_controller,
             'event': self.client_event_controller,
@@ -4121,7 +4242,9 @@ class EWalletWorker():
     def system_action_controller(self, **kwargs):
         log.debug('')
         if not kwargs.get('action'):
-            return self.error_no_system_session_manager_worker_action_specified()
+            return self.error_no_system_session_manager_worker_action_specified(
+                kwargs
+            )
         handlers = {
             'add': self.handle_system_action_add,
             'search': self.handle_system_action_search,
@@ -4148,6 +4271,7 @@ class EWalletWorker():
         handlers = {
             'system': self.system_controller,
             'client': self.client_controller,
+            'master': self.master_controller,
         }
         return handlers[kwargs['controller']](**kwargs)
 
@@ -4155,6 +4279,26 @@ class EWalletWorker():
     '''
     [ TODO ]: Fetch warning messages from message file by key codes.
     '''
+
+    def warning_could_not_add_master_acquired_ctoken_to_pool(self, *args):
+        instruction_set_response = {
+            'failed': True,
+            'warning': 'Something went wrong. '
+                       'Could not add master acquired CToken to pool. '
+                       'Details: {}'.format(args),
+        }
+        log.warning(instruction_set_response['warning'])
+        return instruction_set_response
+
+    def warning_could_not_fetch_master_account_by_email(self, *args):
+        instruction_set_response = {
+            'failed': True,
+            'warning': 'Something went wrong. '
+                       'Could not fetch master account by email address. '
+                       'Details: {}'.format(args),
+        }
+        log.warning(instruction_set_response['warning'])
+        return instruction_set_response
 
     def warning_could_not_create_new_master_account(self, *args):
         instruction_set_response = {
@@ -5086,6 +5230,69 @@ class EWalletWorker():
     [ TODO ]: Fetch error messages from message file by key codes.
     '''
 
+    def error_no_master_action_add_target_specified(self, *args):
+        instruction_set_response = {
+            'failed': True,
+            'error': 'No master action Add target specified. '
+                     'Details: {}.'.format(args),
+        }
+        log.error(instruction_set_response['error'])
+        return instruction_set_response
+
+    def error_no_master_action_add_ctoken_target_specified(self, *args):
+        instruction_set_response = {
+            'failed': True,
+            'error': 'No master action AddCToken target specified. '
+                     'Details: {}.'.format(args),
+        }
+        log.error(instruction_set_response['error'])
+        return instruction_set_response
+
+    def error_no_master_session_manager_worker_action_specified(self, *args):
+        instruction_set_response = {
+            'failed': True,
+            'error': 'No session worker master action controller specified. '
+                     'Details: {}.'.format(args),
+        }
+        log.error(instruction_set_response['error'])
+        return instruction_set_response
+
+    def error_no_system_session_manager_worker_action_specified(self, *args):
+        instruction_set_response = {
+            'failed': True,
+            'error': 'No session worker system action controller specified. '
+                     'Details: {}.'.format(args),
+        }
+        log.error(instruction_set_response['error'])
+        return instruction_set_response
+
+    def error_no_master_session_manager_worker_controller_specified(self, *args):
+        instruction_set_response = {
+            'failed': True,
+            'error': 'No session worker master controller specified. '
+                     'Details: {}.'.format(args),
+        }
+        log.error(instruction_set_response['error'])
+        return instruction_set_response
+
+    def error_no_client_session_manager_worker_controller_specified(self, *args):
+        instruction_set_response = {
+            'failed': True,
+            'error': 'No session worker client controller specified. '
+                     'Details: {}.'.format(args),
+        }
+        log.error(instruction_set_response['error'])
+        return instruction_set_response
+
+    def error_no_client_action_acquire_target_specified(self, *args):
+        instruction_set_response = {
+            'failed': True,
+            'error': 'No client action acquire target specified. '
+                     'Details: {}.'.format(args),
+        }
+        log.error(instruction_set_response['error'])
+        return instruction_set_response
+
     def error_could_not_fetch_next_empty_ewallet_session_from_pool(self, *args):
         instruction_set_response = {
             'failed': True,
@@ -5963,10 +6170,6 @@ class EWalletWorker():
 
     def error_no_worker_action_new_target_specified(self):
         log.error('No worker action new target specified.')
-        return False
-
-    def error_no_system_session_manager_worker_action_specified(self):
-        log.error('No system session manager worker action specified.')
         return False
 
     def error_no_session_manager_controller_specified(self):

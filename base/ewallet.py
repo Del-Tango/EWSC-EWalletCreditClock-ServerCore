@@ -79,7 +79,36 @@ class EWallet(Base):
 
     # FETCHERS
 
+    def fetch_master_account_by_email(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('master'):
+            return self.error_no_master_account_email_specified(kwargs)
+        try:
+            user_account = list(kwargs['active_session'].query(
+                ResMaster
+            ).filter_by(user_email=kwargs['master']))
+        except Exception as e:
+            return self.error_could_not_fetch_master_account_by_email(kwargs, e)
+        log.info('Successfully fetched master user account by email.')
+        return self.warning_no_master_account_found_by_email(kwargs) if not \
+            user_account else user_account[0]
+
+    def fetch_master_account(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('search_by'):
+            return self.error_no_master_account_search_by_specified(kwargs)
+        handlers = {
+            'id': self.fetch_master_account_by_id,
+            'email': self.fetch_master_account_by_email,
+        }
+        if kwargs['search_by'] not in handlers.keys():
+            return self.warning_invalid_search_by_parameter_for_master_account(
+                kwargs, set(handlers.keys())
+            )
+        return handlers[kwargs['search_by']](**kwargs)
+
     def fetch_master_account_by_id(self, **kwargs):
+        log.debug('')
         if not kwargs.get('master_id'):
             return self.error_no_master_account_id_specified(kwargs)
         try:
@@ -516,6 +545,12 @@ class EWallet(Base):
 
     # CHECKERS
 
+    def check_master_user_account_key_code(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('key') or not kwargs.get('master_account'):
+            return self.error_invalid_data_set_for_master_key_code_check(kwargs)
+        return kwargs['master_account'].validate_key_code(kwargs['key'])
+
     def check_session_master_account_is_set(self):
         log.debug('')
         account = self.fetch_active_session_master()
@@ -789,6 +824,64 @@ class EWallet(Base):
     def action_receive_transfer_record(self, **kwargs):
         log.debug('TODO - UNIMPLEMENTED')
 
+    def action_add_master_acquired_ctoken(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('master_id'):
+            return self.error_no_master_account_identifier_specified(kwargs)
+        if not kwargs.get('key'):
+            return self.warning_no_master_key_code_specified(kwargs)
+        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
+            kwargs, 'action'
+        )
+        master_account = self.fetch_master_account(
+            search_by='id', **sanitized_command_chain
+        )
+        if not master_account or isinstance(master_account, dict) and \
+                master_account.get('failed'):
+            return self.warning_no_master_account_found_by_email(
+                kwargs, master_account
+            )
+        check_master_key_code = self.check_master_user_account_key_code(
+            key_code=kwargs['key'], master_account=master_account
+        )
+        if not check_master_key_code:
+            return self.warning_invalid_master_account_key_code(
+                kwargs, master_account, check_master_key_code
+            )
+        add_ctoken = master_account.add_ctoken_to_acquired(kwargs['client_id'])
+        if not add_ctoken or isinstance(add_ctoken, dict) and \
+                add_ctoken.get('failed'):
+            return self.error_could_not_add_master_acquired_ctoken(
+                kwargs, master_account, check_master_key_code, add_ctoken
+            )
+        command_chain_response = {
+            'failed': False,
+            'client_id': kwargs['client_id'],
+            'master': master_account.fetch_user_email(),
+            'master_id': kwargs['master_id'],
+        }
+        return command_chain_response
+
+    def action_search_master_account(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('master'):
+            return self.error_no_master_account_identifier_specified(kwargs)
+        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
+            kwargs, 'action'
+        )
+        master_account = self.fetch_master_account(**sanitized_command_chain)
+        if not master_account or isinstance(master_account, dict) and \
+                master_account.get('failed'):
+            return self.warning_no_master_account_found_by_email(
+                kwargs, master_account
+            )
+        command_chain_response = {
+            'failed': False,
+            'master': kwargs['master'],
+            'master_data': master_account.fetch_user_values()
+        }
+        return command_chain_response
+
 #   @pysnooper.snoop('logs/ewallet.log')
     def action_create_new_user_account(self, **kwargs):
         log.debug('')
@@ -798,7 +891,7 @@ class EWallet(Base):
             kwargs, 'action'
         )
         master_account = self.fetch_master_account_by_id(
-            master_id=kwargs['master_id'], **sanitized_command_chain
+            **sanitized_command_chain
         )
         if not master_account or isinstance(master_account, dict) and \
                 master_account.get('failed'):
@@ -816,7 +909,6 @@ class EWallet(Base):
             )
         kwargs['active_session'].add(session_create_account)
         log.info('Successfully created new user account.')
-
         link_master = master_account.add_subordonate_to_pool(
             session_create_account
         )
@@ -824,7 +916,6 @@ class EWallet(Base):
             return self.warning_could_not_link_new_user_account_to_master(
                 kwargs, master_account, session_create_account, link_master
             )
-
         self.update_user_account_archive(
             user=session_create_account,
         )
@@ -2647,6 +2738,14 @@ class EWallet(Base):
     [ NOTES ]: Enviroment checks for proper action execution are performed here.
     '''
 
+    def handle_master_action_add_acquired_ctoken(self, **kwargs):
+        log.debug('')
+        return self.action_add_master_acquired_ctoken(**kwargs)
+
+    def handle_user_action_search_master_account(self, **kwargs):
+        log.debug('')
+        return self.action_search_master_account(**kwargs)
+
     def handle_user_action_create_new_master_account(self, **kwargs):
         log.debug('')
         return self.action_create_new_master_account(**kwargs)
@@ -3370,6 +3469,33 @@ class EWallet(Base):
 
     # JUMPTABLE HANDLERS
 
+    def handle_master_action_add_ctoken(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('ctoken'):
+            return self.error_no_master_action_add_ctoken_target_specified(kwargs)
+        handlers = {
+            'acquired': self.handle_master_action_add_acquired_ctoken,
+        }
+        return handlers[kwargs['ctoken']](**kwargs)
+
+    def handle_master_action_add(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('add'):
+            return self.error_no_master_action_add_target_specified(kwargs)
+        handlers = {
+            'ctoken': self.handle_master_action_add_ctoken,
+        }
+        return handlers[kwargs['add']](**kwargs)
+
+    def handle_user_action_search(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('search'):
+            return self.error_no_client_action_search_target_specified()
+        handlers = {
+            'master': self.handle_user_action_search_master_account,
+        }
+        return handlers[kwargs['search']](**kwargs)
+
     def handle_user_action_create_new_master(self, **kwargs):
         log.debug('')
         if not kwargs.get('master'):
@@ -3721,6 +3847,25 @@ class EWallet(Base):
 
     # CONTROLLERS
 
+    def ewallet_master_action_controller(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('action'):
+            return self.error_no_master_controller_type_specified(kwargs)
+        handlers = {
+            'add': self.handle_master_action_add,
+        }
+        return handlers[kwargs['action']](**kwargs)
+
+    def ewallet_master_controller(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('ctype'):
+            return self.error_no_master_controller_type_specified(kwargs)
+        handlers = {
+            'action': self.ewallet_master_action_controller,
+#           'event': self.ewallet_master_event_controller,
+        }
+        return handlers[kwargs['ctype']](**kwargs)
+
     def ewallet_user_action_controller(self, **kwargs):
         log.debug('')
         if not kwargs.get('action'):
@@ -3736,6 +3881,7 @@ class EWallet(Base):
             'edit': self.handle_user_action_edit,
             'switch': self.handle_user_action_switch,
             'recover': self.handle_user_action_recover,
+            'search': self.handle_user_action_search,
         }
         return handlers[kwargs['action']](**kwargs)
 
@@ -3807,6 +3953,7 @@ class EWallet(Base):
         controllers = {
             'system': self.ewallet_system_controller,
             'user': self.ewallet_user_controller,
+            'master': self.ewallet_master_controller,
         }
         return controllers[kwargs['controller']](**kwargs)
 
@@ -3814,6 +3961,52 @@ class EWallet(Base):
     '''
     [ TODO ]: Fetch warning messages from message file by key codes.
     '''
+
+    def warning_could_not_fetch_credit_ewallet(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Something went wrong. '
+                       'Could not fetch credit ewallet. '
+                       'Details: {}'.format(args),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
+
+    def warning_no_master_key_code_specified(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'No master key code specified. '
+                       'Details: {}'.format(args),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
+
+    def warning_invalid_master_account_key_code(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Invalid master account key code. '
+                       'Details: {}'.format(args),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
+
+    def warning_no_master_account_found_by_email(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'No master user account found by email address. '
+                       'Details: {}'.format(args),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
+
+    def warning_invalid_search_by_parameter_for_master_account(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Invalid search by parameter for master account query. '
+                       'Details: {}'.format(args),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
 
     def warning_no_master_account_found_by_id(self, *args):
         command_chain_response = {
@@ -4492,6 +4685,99 @@ class EWallet(Base):
     '''
     [ TODO ]: Fetch error messages from message file by key codes.
     '''
+
+    def error_could_not_add_master_acquired_ctoken(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Something went wrong. '
+                     'Could not add master acquired CToken to pool. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_invalid_data_set_for_master_key_code_check(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Invalid data set for master account '
+                     'key code verification. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_no_master_action_add_target_specified(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No master action Add target specified. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_no_master_action_add_ctoken_target_specified(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No master action AddCToken target specified. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_no_master_controller_type_specified(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No master controller type specified. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_no_master_account_email_specified(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No master account email address specified. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_could_not_fetch_master_account_by_email(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Something went wrong. '
+                     'Could not fetch master user account by email address. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_no_master_account_search_by_specified(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No master account search by parameter specified. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_no_master_account_identifier_specified(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No master account identifier specified. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_no_client_action_search_target_specified(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No client action search target specified. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
 
     def error_could_not_fetch_master_account_by_id(self, *args):
         command_chain_response = {

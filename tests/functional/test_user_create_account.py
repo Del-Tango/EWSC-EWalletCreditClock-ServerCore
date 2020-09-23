@@ -11,12 +11,13 @@ class TestEWalletSessionManagerUserCreateAccount(unittest.TestCase):
     user_email_1 = 'ewallet1@alvearesolutions.ro'
     user_pass_1 = 'abc123!@#Secret'
     user_name_2 = 'TestEWalletMaster2'
+    user_alias_2 = 'TEWM2'
     user_email_2 = 'master2@alvearesolutions.ro'
     user_pass_2 = 'abc123!@#Secret'
     user_phone_2 = '555 555 555'
-    user_alias_2 = 'TEWM2'
-    user_company_2 = 'TestCompany INC'
-    user_address_2 = 'Test, Address No.17'
+    user_company_2 = 'TestClient INC'
+    user_address_2 = 'Iasi, jud. Iasi, Str. Canta, Nr. 40'
+    master_key_code = 'EWSC-Master-Key-Code'
 
     @classmethod
     def setUpClass(cls):
@@ -52,11 +53,17 @@ class TestEWalletSessionManagerUserCreateAccount(unittest.TestCase):
             'user_phone': cls.user_phone_2, 'user_alias': cls.user_alias_2,
             'company': cls.user_company_2, 'address': cls.user_address_2,
         }
-        new_account = cls.session_manager.session_manager_controller(
+        new_account = session_manager.session_manager_controller(
             **instruction_set
         )
 
-        print('[TODO]: Client action AcquireMaster')
+        print('[...]: Client action AcquireMaster')
+        acquire = session_manager.session_manager_controller(
+            controller='client', ctype='action', action='acquire',
+            acquire='master', master=cls.user_email_2, key=cls.master_key_code,
+            client_id=client_id['client_id'],
+            session_token=session_token['session_token']
+        )
 
     @classmethod
     def tearDownClass(cls):

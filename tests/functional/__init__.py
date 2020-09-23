@@ -16,6 +16,7 @@ from . import test_system_ctoken_target_cleanup
 
 from . import test_user_request_clientid
 from . import test_user_request_stoken
+from . import test_user_acquire_master
 
 from . import test_user_check_ctoken_valid
 from . import test_user_check_ctoken_linked

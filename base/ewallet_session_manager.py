@@ -82,6 +82,20 @@ class EWalletSessionManager():
     def fetch_from_ewallet_worker_session(self):
         log.debug('TODO - UNIMPLEMENTED')
 
+    def fetch_master_add_ctoken_worker_instruction(self, **kwargs):
+        log.debug('')
+        return {
+            'controller': 'master',
+            'ctype': 'action',
+            'action': 'add',
+            'add': 'ctoken',
+            'ctoken': 'acquired',
+            'client_id': kwargs.get('client_id', ''),
+            'session_token': kwargs.get('session_token', ''),
+            'master_id': kwargs.get('master_id'),
+            'key': kwargs.get('key'),
+        }
+
 #   @pysnooper.snoop('logs/ewallet.log')
     def fetch_master_account_by_id(self, master_account_id):
         log.debug('')
@@ -2530,6 +2544,34 @@ class EWalletSessionManager():
     def action_stop_client_token_cleaner_cron(self, **kwargs):
         log.debug('TODO - UNIMPLEMENTED')
 
+    def action_acquire_master_user_account(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('client_id') or not kwargs.get('master_id'):
+            return self.error_invalid_acquire_master_action_data_set(kwargs)
+        ctoken = self.fetch_client_token_by_label(kwargs['client_id'])
+        if isinstance(ctoken, dict) and ctoken.get('failed'):
+            return self.warning_could_not_fetch_client_token(kwargs, ctoken)
+        instruction_set = self.fetch_master_add_ctoken_worker_instruction(**kwargs)
+        add_acquired_ctoken = self.action_execute_user_instruction_set(**instruction_set)
+        if not add_acquired_ctoken or isinstance(add_acquired_ctoken, dict) and \
+                add_acquired_ctoken.get('failed'):
+            return self.warning_could_not_add_acquired_ctoken_to_master_pool(
+                kwargs, ctoken, instruction_set, add_acquired_ctoken
+            )
+        set_master = ctoken.set_master(kwargs['master_id'])
+        if isinstance(set_master, dict) and set_master.get('failed'):
+            return self.error_could_not_set_master_user_account_to_ctoken(
+                kwargs, ctoken, set_master
+            )
+        instruction_set_response = {
+            'failed': False,
+            'client_id': kwargs['client_id'],
+            'master_id': kwargs['master_id'],
+            'ctoken': ctoken,
+            'ctoken_data': ctoken.fetch_token_values(),
+        }
+        return instruction_set_response
+
 #   @pysnooper.snoop('logs/ewallet.log')
     def action_verify_client_id_master_account(self, **kwargs):
         log.debug('')
@@ -3257,6 +3299,36 @@ class EWalletSessionManager():
         '''
         log.debug('TODO - Kill process')
         return self.unset_socket_handler()
+
+    def handle_client_action_acquire_master(self, **kwargs):
+        log.debug('')
+        instruction_set_validation = self.validate_instruction_set(kwargs)
+        if not instruction_set_validation \
+                or isinstance(instruction_set_validation, dict) \
+                and instruction_set_validation.get('failed'):
+            return instruction_set_validation
+        search_master = self.action_execute_user_instruction_set(**kwargs)
+        if not search_master or isinstance(search_master, dict) and \
+                search_master.get('failed'):
+            return self.warning_master_user_account_search_failure(
+                kwargs, search_master
+            )
+        acquire_account = self.action_acquire_master_user_account(
+            master_id=search_master['master_data']['id'],
+            **kwargs
+        )
+        if not acquire_account or isinstance(acquire_account, dict) and \
+                acquire_account.get('failed'):
+            return self.warning_could_not_acquire_master_user_account(
+                kwargs, instruction_set_validation, search_master,
+                acquire_account
+            )
+        instruction_set_response = {
+            'failed': False,
+            'client_id': kwargs['client_id'],
+            'master': kwargs['master'],
+        }
+        return instruction_set_response
 
     def handle_client_action_new_account(self, **kwargs):
         '''
@@ -4285,6 +4357,15 @@ class EWalletSessionManager():
         }
         return handlers[kwargs['transfer']](**kwargs)
 
+    def handle_client_action_acquire(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('acquire'):
+            return self.error_no_client_action_acquire_target_specified(kwargs)
+        handlers = {
+            'master': self.handle_client_action_acquire_master,
+        }
+        return handlers[kwargs['acquire']](**kwargs)
+
     def handle_client_action_new(self, **kwargs):
         log.debug('')
         if not kwargs.get('new'):
@@ -4876,6 +4957,7 @@ class EWalletSessionManager():
             'logout': self.handle_client_action_logout,
             'recover': self.handle_client_action_recover,
             'verify': self.handle_client_action_verify,
+            'acquire': self.handle_client_action_acquire,
         }
         return handlers[kwargs['action']](**kwargs)
 
@@ -4947,7 +5029,7 @@ class EWalletSessionManager():
         '''
         log.debug('')
         if not kwargs.get('controller'):
-            return self.error_no_session_manager_controller_specified()
+            return self.error_no_session_manager_controller_specified(kwargs)
         handlers = {
             'client': self.client_session_manager_controller,
             'system': self.system_session_manager_controller,
@@ -4958,6 +5040,33 @@ class EWalletSessionManager():
     '''
     [ TODO ]: Fetch warning messages from message file by key codes.
     '''
+
+    def warning_could_not_add_acquired_ctoken_to_master_pool(self, *args):
+        instruction_set_response = res_utils.format_warning_response(**{
+            'failed': True, 'details': args,
+            'warning': 'Something went wrong. '
+                       'Could not add acquired CToken to Master account pool.',
+        })
+        self.log_warning(**instruction_set_response)
+        return instruction_set_response
+
+    def warning_master_user_account_search_failure(self, *args):
+        instruction_set_response = res_utils.format_warning_response(**{
+            'failed': True, 'details': args,
+            'warning': 'Something went wrong. '
+                       'Master user account search has failed.',
+        })
+        self.log_warning(**instruction_set_response)
+        return instruction_set_response
+
+    def warning_could_not_acquire_master_user_account(self, *args):
+        instruction_set_response = res_utils.format_warning_response(**{
+            'failed': True, 'details': args,
+            'warning': 'Something went wrong. '
+                       'Could not acquire master user account.',
+        })
+        self.log_warning(**instruction_set_response)
+        return instruction_set_response
 
     def warning_no_master_account_acquired_by_ctoken(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
@@ -6120,6 +6229,31 @@ class EWalletSessionManager():
     '''
     [ TODO ]: Fetch error messages from message file by key codes.
     '''
+
+    def error_could_not_set_master_user_account_to_ctoken(self, *args):
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
+            'error': 'Something went wrong. '
+                     'Could not set master user account to CToken.',
+        })
+        self.log_error(**instruction_set_response)
+        return instruction_set_response
+
+    def error_invalid_acquire_master_action_data_set(self, *args):
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
+            'error': 'Invalid acquire master action data set.',
+        })
+        self.log_error(**instruction_set_response)
+        return instruction_set_response
+
+    def error_no_client_action_acquire_target_specified(self, *args):
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
+            'error': 'No client action acquire target specified.',
+        })
+        self.log_error(**instruction_set_response)
+        return instruction_set_response
 
     def error_could_not_fetch_master_account_by_id(self, *args):
         instruction_set_response = res_utils.format_error_response(**{

@@ -6,6 +6,14 @@ from base import ewallet_session_manager as manager
 class TestEWalletUserActionCheckCTokenStatus(unittest.TestCase):
     session_manager = None
     client_id = None
+    user_name_1 = 'TestEWalletMaster1'
+    user_alias_1 = 'TEWM1'
+    user_email_1 = 'master1@alvearesolutions.ro'
+    user_pass_1 = 'abc123!@#Secret'
+    user_phone_1 = '555 555 555'
+    user_company_1 = 'TestClient INC'
+    user_address_1 = 'Iasi, jud. Iasi, Str. Canta, Nr. 40'
+    master_key_code = 'EWSC-Master-Key-Code'
 
     @classmethod
     def setUpClass(cls):
@@ -27,9 +35,22 @@ class TestEWalletUserActionCheckCTokenStatus(unittest.TestCase):
             request='session_token', client_id=client_id['client_id']
         )
 
-        # TODO
-        print('[TODO]: Client action NewMasterAccount')
-        print('[TODO]: Client action AcquireMaster')
+        print('[...]: Client action NewMasterAccount')
+        master = session_manager.session_manager_controller(
+            controller='client', ctype='action', action='new', new='master',
+            master='account', client_id=client_id['client_id'],
+            session_token=session_token['session_token'],
+            user_name=cls.user_name_1, user_email=cls.user_email_1,
+            user_pass=cls.user_pass_1
+        )
+
+        print('[...]: Client action AcquireMaster')
+        acquire = session_manager.session_manager_controller(
+            controller='client', ctype='action', action='acquire',
+            acquire='master', key=cls.master_key_code, master=cls.user_email_1,
+            client_id=client_id['client_id'],
+            session_token=session_token['session_token']
+        )
 
         # Set global values
         cls.session_manager = session_manager

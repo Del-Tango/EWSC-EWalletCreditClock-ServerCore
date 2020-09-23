@@ -2,10 +2,10 @@
 - EWallet Credit Clock - Virtual Payment System
 ################################################################################
 
-* v.DeltaT (alpha/Core - bleeding edge) - Released
+* v.DeltaT (alpha/POC - bleeding edge) - Released
     - x - EWallet Credit Clock - Virtual Payment System - initial suit version.
 
-* v.Chronos (beta/POC - bleeding edge) - Under development
+* v.Chronos (beta/MVP - bleeding edge) - Under development
     - x - (EWSC) Refactor client id to token object
     - x - (EWSC) Refactor session token to token object
     - x - (EWSC) Separater workers on different processes
@@ -51,16 +51,17 @@
     - x - (EWCC) Perform valid input checks on core subroutine SetResource
     - < - (EWSC- -, EWCC- -, EWAT- -) Implement master accounts
     - x - (EWSC) Implement client action NewMasterAccount
-    - . - (EWSC) Refactor client action CheckCTokenState to include master link
-    - . - (EWSC) Refactor user action CreateAccount to check if account is
-                 subordonate of master and link to master account
-    -   - (EWSC) Implement client action AcquireMaster
+    - x - (EWSC) Refactor client action CheckCTokenState to include master link
+    - x - (EWSC) Refactor user action CreateAccount to link to master account
+    - x - (EWSC) Implement client action AcquireMaster
     - (EWSC) Implement system action TargetCleanupMaster
     - (EWSC) Implement system action FreezeMaster
     - (EWSC) Implement system action UnfreezeMaster
     - (EWSC) Implement system action IncreaseMasterSubPool
     - (EWSC) Implement system action DecreaseMasterSubPool
     - (EWSC) Refactor user actions to impose master oriented restrictions
+    -   - (EWSC) Groom functional test suit to add client action AcquireMaster
+                 prerequisite
     - (EWSC- -, EWCC- -, EWAT- -) Implement master action AccountLogin
     - (EWSC- -, EWCC- -, EWAT- -) Implement master action AccountLogout
     - (EWSC- -, EWCC- -, EWAT- -) Implement master action ViewAccount
@@ -124,16 +125,27 @@
 
         * The following client actions are required:
             . NewMasterAccount {
-                controller: system,
+                controller: client,
                 ctype: action,
                 action: new,
                 new: master,
                 master: account,
-                client_id: ctoken,
-                session_token: stoken,
-                user_email: email,
-                user_pass: pass,
+                client_id: <ctoken-label>,
+                session_token: <stoken-label>,
+                user_email: <email-address>,
+                user_pass: <password>,
             }
+            . AcquireMaster {
+                controller: client,
+                ctype: action,
+                action: acquire,
+                acquire: master,
+                client_id: <ctoken-label>,
+                session_token: <stoken-label>,
+                master: <email-address>,
+                key: <master-key-code>,
+            }
+            . ReleaseMaster
 
         * The following system actions are required:
             . TargetCleanupMaster
@@ -152,7 +164,7 @@
             . InspectSubPool
             . InspectSub
 
-* v.WhiteRabbit (1.0.0/MVP - stable) - Planned
+* v.WhiteRabbit (1.0.0 - stable) - Planned
     - (EWSC) Implement system action StopAccountCleaner cron
     - (EWSC) Implement system action StopWorkerCleaner cron
     - (EWSC) Implement system action StopSessionCleaner cron
@@ -171,6 +183,11 @@
     - (EWSC, EWCC, EWAT) Implement exports
     - (EWSC, EWCC, EWAT) Implement reports (activity reports)
     - (EWSC, EWCC, EWAT) Add documentation
+    - (EWDWC) Introduce Default Web Client as web portal
+    - (EWEX) Add example application for credit oriented license consumption
+    - (EWEX) Add example application for clock oriented license consumption
+    - (EWEX) Add example application for credit oriented transactions
+    - (EWEX) Add example application for clock oriented transactions
 
 * v.Tac (2.0.0 - stable) - Planned
     - (EWSC) Complete refactoring
@@ -179,7 +196,6 @@
     - (EWSC, EWCC, EWAT) Implement credit based software licencing
     - (EWSC, EWCC, EWAT) Implement clock based software licencing
     - (EWJCC) Introduce Java Client Core for Android apps
-    - (EWDWC) Introduce Default Web Client as web portal
     - (EWDMC) Introduce Default Mobile Client as mobile portal
     - (EWSC, EWJCC, EWDWC, EWDMC) - Add requirements.txt
     - (EWSC, EWJCC, EWDWC, EWDMC) - Add documentation
@@ -252,6 +268,14 @@
 ################################################################################
 
 - (EWSC) - Client Actions:
+
+    - Client action Acquire Master
+        - State Oriented Restrictions:
+            - CToken States:
+                - Master Unlinked
+                - SToken Linked
+            - SToken States:
+                - Session Plugged
 
     - Client action New Master Account
         - State Oriented Restrictions:

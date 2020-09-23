@@ -35,6 +35,16 @@ class ClientID(Token):
 
     # FETCHERS
 
+    def fetch_token_values(self, **kwargs):
+        log.debug('')
+        res = super(ClientID, self).fetch_token_values()
+        values = {
+            'stoken': self.stoken,
+            'acquired_master': self.acquired_master,
+        }
+        values.update(res)
+        return values
+
     def fetch_label(self):
         log.debug('')
         return self.label
@@ -64,8 +74,24 @@ class ClientID(Token):
             return self.error_invalid_session_token(stoken)
         try:
             self.stoken = stoken
+            self.update_write_date()
         except Exception as e:
-            return self.warning_could_not_set_session_token(stoken, e)
+            return self.warning_could_not_set_session_token(
+                stoken, self.stoken, e
+            )
+        return True
+
+    def set_master(self, master_id):
+        log.debug('')
+        if not isinstance(master_id, int):
+            return self.error_invalid_master_id(master_id)
+        try:
+            self.acquired_master = master_id
+            self.update_write_date()
+        except Exception as e:
+            return self.warning_could_not_set_acquired_master(
+                master_id, self.acquired_master, e
+            )
         return True
 
     # CLEANERS
@@ -96,6 +122,16 @@ class ClientID(Token):
 
     # WARNINGS
 
+    def warning_could_not_set_acquired_master(self, *args):
+        response = {
+            'failed': True,
+            'warning': 'Something went wrong. '
+                       'Could not set acquired master user account. '
+                       'Details: {}'.format(args),
+        }
+        log.warning(response['warning'])
+        return response
+
     def warning_could_not_set_session_token(self, session_token, *args):
         response = {
             'failed': True,
@@ -107,6 +143,15 @@ class ClientID(Token):
         return response
 
     # ERRORS
+
+    def error_invalid_master_id(self, *args):
+        response = {
+            'failed': True,
+            'error': 'Invalid master user account ID. '
+                     'Details: {}'.format(args),
+        }
+        log.error(response['error'])
+        return response
 
     def error_invalid_session_token(self, session_token, *args):
         response = {

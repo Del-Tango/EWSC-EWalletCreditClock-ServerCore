@@ -49,6 +49,25 @@ class Token():
                 self.error_no_valid_to_date_found(),
         }
 
+    # SETTERS
+
+    def set_write_date(self, write_datetime):
+        log.debug('')
+        try:
+            self.write_date = write_datetime
+        except Exception as e:
+            return self.error_could_not_set_token_write_date(
+                write_datetime, self.write_date, e
+            )
+        return True
+
+    # UPDATERS
+
+    def update_write_date(self):
+        log.debug('')
+        now = datetime.datetime.now()
+        return self.set_write_date(now)
+
     # CHECKERS
 
     def check_token_expired(self):

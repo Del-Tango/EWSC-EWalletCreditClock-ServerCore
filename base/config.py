@@ -49,6 +49,7 @@ class Config():
         }
         self.master_config = {
             'subordonate_pool_size': 50,
+            'master_key_code': 'EWSC-Master-Key-Code',
         }
         self.cron_config = {
             'account_cleaner_cron_label': 'AccountCleaner',
