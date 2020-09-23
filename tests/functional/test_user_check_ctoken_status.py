@@ -14,18 +14,22 @@ class TestEWalletUserActionCheckCTokenStatus(unittest.TestCase):
         session_manager = manager.EWalletSessionManager()
 
         # Request client id for session token request
-        print('[...]: User action RequestClientID')
+        print('[...]: Client action RequestClientID')
         client_id = session_manager.session_manager_controller(
             controller='client', ctype='action', action='request',
             request='client_id'
         )
 
         # Request a Session Token to be able to operate within a EWalletSession
-        print('[...]: User action RequestSessionToken')
+        print('[...]: Client action RequestSessionToken')
         session_token = session_manager.session_manager_controller(
             controller='client', ctype='action', action='request',
             request='session_token', client_id=client_id['client_id']
         )
+
+        # TODO
+        print('[TODO]: Client action NewMasterAccount')
+        print('[TODO]: Client action AcquireMaster')
 
         # Set global values
         cls.session_manager = session_manager
@@ -39,7 +43,7 @@ class TestEWalletUserActionCheckCTokenStatus(unittest.TestCase):
             os.remove('data/ewallet.db')
 
     def test_user_check_ctoken_session_functionality(self):
-        print('\n[ * ]: User action CheckCTokenSession')
+        print('\n[ * ]: Client action CheckCTokenSession')
         instruction_set = {
             'controller': 'client', 'ctype': 'action', 'action': 'verify',
             'verify': 'ctoken', 'ctoken': 'status',
@@ -53,11 +57,13 @@ class TestEWalletUserActionCheckCTokenStatus(unittest.TestCase):
             '\n[ < ]: Response: ' + str(check) + '\n'
         )
         self.assertTrue(isinstance(check, dict))
-        self.assertEqual(len(check.keys()), 7)
+        self.assertEqual(len(check.keys()), 9)
         self.assertFalse(check.get('failed'))
         self.assertTrue(isinstance(check.get('client_id'), str))
         self.assertTrue(check.get('valid'))
         self.assertTrue(check.get('linked'))
         self.assertTrue(check.get('plugged'))
+        self.assertTrue(check.get('master'))
         self.assertTrue(isinstance(check.get('session_token'), str))
         self.assertTrue(isinstance(check.get('session'), int))
+        self.assertTrue(isinstance(check.get('acquired'), str))

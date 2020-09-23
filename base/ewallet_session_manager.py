@@ -15,6 +15,7 @@ from .ewallet import EWallet
 from .config import Config
 from .res_utils import ResUtils
 from .res_user import ResUser
+from .res_master import ResMaster
 from .ewallet_worker import EWalletWorker
 from .socket_handler import EWalletSocketHandler
 from .client_id import ClientID
@@ -81,6 +82,23 @@ class EWalletSessionManager():
     def fetch_from_ewallet_worker_session(self):
         log.debug('TODO - UNIMPLEMENTED')
 
+#   @pysnooper.snoop('logs/ewallet.log')
+    def fetch_master_account_by_id(self, master_account_id):
+        log.debug('')
+        if not master_account_id or not isinstance(master_account_id, int):
+            return self.error_invalid_master_account_id(master_account_id)
+        try:
+            orm_session = self.res_utils.session_factory()
+            master_account = list(orm_session.query(
+               ResMaster
+            ).filter_by(user_id=master_account_id))
+        except Exception as e:
+            return self.error_could_not_fetch_master_account_by_id(
+                master_account_id, e
+            )
+        return self.warning_no_master_account_found_by_id(master_account_id) \
+            if not master_account else master_account[0]
+
     # TODO - Refactor
 #   @pysnooper.snoop()
     def fetch_ewallet_session_by_id(self, ewallet_session_id):
@@ -133,6 +151,34 @@ class EWalletSessionManager():
             'ewallet_session': ewallet_session,
         }
         return False if False in value_set.keys() else value_set
+
+    def fetch_acquired_masters_from_client_token_set(self, client_token_set):
+        '''
+        [ NOTE ]: Fetches acquired master accounts for each ctoken in client token set,
+                  assures unique item values and filters out None items.
+        '''
+        log.debug('')
+        acquired_masters = []
+        try:
+            for client_id in client_token_set:
+                ctoken = self.fetch_client_token_by_label(client_id)
+                if not ctoken or isinstance(ctoken, dict) and \
+                        ctoken.get('failed'):
+                    self.warning_invalid_client_token_label(
+                        client_id, client_token_set, acquired_masters, client_id
+                    )
+                    continue
+                master_id = ctoken.fetch_master()
+                if not master_id:
+                    continue
+                acquired_masters.append(master_id)
+        except Exception as e:
+            return self.error_could_not_fetch_acquired_masters_from_client_token_set(
+                client_token_set, acquired_masters, e
+            )
+        return self.warning_no_acquired_master_accounts_found_by_ctokens(
+            client_token_set, acquired_masters
+        ) if not acquired_masters else acquired_masters
 
 #   @pysnooper.snoop('logs/ewallet.log')
     def fetch_ewallet_session_ids_by_session_tokens(self, session_token_labels):
@@ -2484,6 +2530,54 @@ class EWalletSessionManager():
     def action_stop_client_token_cleaner_cron(self, **kwargs):
         log.debug('TODO - UNIMPLEMENTED')
 
+#   @pysnooper.snoop('logs/ewallet.log')
+    def action_verify_client_id_master_account(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('client_id'):
+            return self.error_no_client_id_specified(kwargs)
+        instruction_set_response = {
+            'failed': False,
+            'client_id': kwargs['client_id'],
+        }
+        master = self.fetch_acquired_masters_from_client_token_set(
+            [kwargs['client_id']]
+        )
+        if isinstance(master, dict) and master.get('failed'):
+            instruction_set_response.update({
+                'master': False,
+                'reason': 'Unlinked',
+            })
+            return instruction_set_response
+        master_account = self.fetch_master_account_by_id(master[0])
+        instruction_set_response.update({
+            'master': True,
+            'acquired_master': master_account.fetch_user_email(),
+        })
+        return instruction_set_response
+
+    def action_verify_client_id_status(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('client_id'):
+            return self.error_no_client_id_specified(kwargs)
+        instruction_set_response = {
+            'failed': False,
+            'client_id': kwargs['client_id'],
+        }
+        validity = self.action_verify_client_id_validity(**kwargs)
+        linked = self.action_verify_client_id_linked_stoken(**kwargs)
+        plugged = self.action_verify_client_id_ewallet_session(**kwargs)
+        master = self.action_verify_client_id_master_account(**kwargs)
+        instruction_set_response.update({
+            'valid': validity['valid'],
+            'linked': linked['linked'],
+            'plugged': plugged['plugged'],
+            'master': master['master'],
+            'session_token': linked.get('session_token'),
+            'session': plugged.get('session'),
+            'acquired': master.get('acquired_master'),
+        })
+        return instruction_set_response
+
     def action_execute_system_instruction_set(self, **kwargs):
         log.debug('')
         if not kwargs.get('worker_id'):
@@ -2612,26 +2706,6 @@ class EWalletSessionManager():
                 'details': verify_registered.get('details') or
                     verify_expired.get('details'),
             })
-        return instruction_set_response
-
-    def action_verify_client_id_status(self, **kwargs):
-        log.debug('')
-        if not kwargs.get('client_id'):
-            return self.error_no_client_id_specified(kwargs)
-        instruction_set_response = {
-            'failed': False,
-            'client_id': kwargs['client_id'],
-        }
-        validity = self.action_verify_client_id_validity(**kwargs)
-        linked = self.action_verify_client_id_linked_stoken(**kwargs)
-        plugged = self.action_verify_client_id_ewallet_session(**kwargs)
-        instruction_set_response.update({
-            'valid': validity['valid'],
-            'linked': linked['linked'],
-            'plugged': plugged['plugged'],
-            'session_token': linked.get('session_token'),
-            'session': plugged.get('session'),
-        })
         return instruction_set_response
 
 #   @pysnooper.snoop('logs/ewallet.log')
@@ -4877,6 +4951,22 @@ class EWalletSessionManager():
     [ TODO ]: Fetch warning messages from message file by key codes.
     '''
 
+    def warning_no_acquired_master_accounts_found_by_ctokens(self, *args):
+        instruction_set_response = res_utils.format_warning_response(**{
+            'failed': True, 'details': args,
+            'warning': 'No acquired master accounts found by CTokens.',
+        })
+        self.log_warning(**instruction_set_response)
+        return instruction_set_response
+
+    def warning_no_master_account_found_by_id(self, *args):
+        instruction_set_response = res_utils.format_warning_response(**{
+            'failed': True, 'details': args,
+            'warning': 'No master account found by ID.',
+        })
+        self.log_warning(**instruction_set_response)
+        return instruction_set_response
+
     def warning_ctoken_has_acquired_master_account(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
             'failed': True, 'details': args,
@@ -6014,6 +6104,33 @@ class EWalletSessionManager():
     '''
     [ TODO ]: Fetch error messages from message file by key codes.
     '''
+
+    def error_could_not_fetch_master_account_by_id(self, *args):
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
+            'error': 'Something went wrong. '
+                     'Could not fetch master account by ID.',
+        })
+        self.log_error(**instruction_set_response)
+        return instruction_set_response
+
+    def error_invalid_master_account_id(self, *args):
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
+            'error': 'Invalid master account identifier.',
+        })
+        self.log_error(**instruction_set_response)
+        return instruction_set_response
+
+    def error_could_not_fetch_acquired_masters_from_client_token_set(self, *args):
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
+            'error': 'Something went wrong. '
+                     'Could not fetch acquired master accounts from '
+                     'client token set.',
+        })
+        self.log_error(**instruction_set_response)
+        return instruction_set_response
 
     def error_no_client_action_new_master_target_specified(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
