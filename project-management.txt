@@ -51,8 +51,10 @@
     - x - (EWCC) Perform valid input checks on core subroutine SetResource
     - < - (EWSC- -, EWCC- -, EWAT- -) Implement master accounts
     - x - (EWSC) Implement client action NewMasterAccount
-    - x - (EWSC) Refactor client action CheckCTokenState to include master link
-    - (EWSC) Refactor user action CreateAccount to link to master
+    - . - (EWSC) Refactor client action CheckCTokenState to include master link
+    - . - (EWSC) Refactor user action CreateAccount to check if account is
+                 subordonate of master and link to master account
+    -   - (EWSC) Implement client action AcquireMaster
     - (EWSC) Implement system action TargetCleanupMaster
     - (EWSC) Implement system action FreezeMaster
     - (EWSC) Implement system action UnfreezeMaster
@@ -70,9 +72,11 @@
     - (EWSC- -, EWCC- -, EWAT- -) Implement EWallet Session keep alive signal
     - (EWSC- -, EWCC- -, EWAT- -) Implement issue report
     - (EWCC) Make library importable
-    - (EWSC) Add EWDox support for client ID validity checkers
-    - (EWSC) Add EWDox support for session token validity checkers
+    - (EWSC) Add EWDox support for client action client ID validity checkers
+    - (EWSC) Add EWDox support for client_action session token validity checkers
     - (EWSC) Add EWDox support for user action Forcefully-UnlinkAccount
+    - (EWSC) Add EWDox support for client action AcquireMaster
+    - (EWSC) Add EWDox support for client action ReleaseMaster
     - (EWSC) Add EWDox support for master action AccountLogin
     - (EWSC) Add EWDox support for master action AccountLogout
     - (EWSC) Add EWDox support for master action ViewAccount
@@ -89,6 +93,10 @@
     - (EWAT) Implement support for session token validity checker inspections
     - (EWAT) Implement support for client ID validity checker interactions
     - (EWAT) Implement support for session token validity checker interactions
+    - (EWAT) Implement support for client action AcquireMaster inspection
+    - (EWAT) Implement support for client action AcquireMaster interaction
+    - (EWAT) Implement support for client action ReleaseMaster inspection
+    - (EWAT) Implement support for client action ReleaseMaster interaction
 
     [ NOTE ]: EWCreditClock suit version Chronos introduces the concept of
               Master User Accounts. On user action AcquireMasterAccess, the
@@ -430,6 +438,8 @@
                 - Logged Out
             - CToken States:
                 - Master Linked
+            - Acquired Master States:
+                - Subordonate Of
 
     - User action Account Login
         - User Account States:

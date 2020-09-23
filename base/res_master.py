@@ -64,6 +64,8 @@ class ResMaster(ResUser):
         self.acquired_ctokens = kwargs.get('acquired_ctokens', [])
         return super(ResMaster, self).__init__(master=True, **kwargs)
 
+    # FETCHERS
+
     def fetch_default_master_account_subpool_size_limit(self):
         log.debug('')
         return int(config.master_config['subordonate_pool_size'])
@@ -85,3 +87,56 @@ class ResMaster(ResUser):
             'acquired_ctokens': self.acquired_ctokens,
         }
         return values
+
+    # SETTERS
+
+    def set_subordonate_user_account_to_pool(self, subordonate):
+        log.debug('')
+        try:
+            self.subordonate_pool.append(subordonate)
+            self.update_write_date()
+        except Exception as e:
+            return self.error_could_not_set_subordonate_user_account_to_pool(
+                subordonate, self.subordonate_pool, e
+            )
+        return True
+
+    # GENERAL
+
+    def add_subordonate_to_pool(self, subordonate_account):
+        log.debug('')
+        set_to_pool = self.set_subordonate_user_account_to_pool(
+            subordonate_account
+        )
+        if isinstance(set_to_pool, dict) and set_to_pool.get('failed'):
+            return self.warning_could_not_add_new_subordonate_account(
+                subordonate_account, set_to_pool
+            )
+        return set_to_pool
+
+    # CONTROLLERS
+
+    # WARNINGS
+
+    def warning_could_not_add_new_subordonate_account(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Something went wrong. '
+                       'Could not add new subordonate user account to pool. '
+                       'Details: {}'.format(args),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
+
+    # ERRORS
+
+    def error_could_not_set_subordonate_user_account_to_pool(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Something went wrong. '
+                     'Could not set subordonate user account to pool. '
+                     'Details: {}'.format(args),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
+

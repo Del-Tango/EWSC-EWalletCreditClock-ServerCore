@@ -8,6 +8,7 @@ from sqlalchemy import Table, Column, String, Integer, ForeignKey, Date, DateTim
 from sqlalchemy.orm import relationship, backref
 
 from .res_user import ResUser
+from .res_master import ResMaster
 from .ewallet_login import EWalletLogin, EWalletCreateUser
 from .ewallet_logout import EWalletLogout
 from .res_utils import ResUtils, Base
@@ -77,6 +78,19 @@ class EWallet(Base):
         self.user_account_archive = kwargs.get('user_account_archive') or []
 
     # FETCHERS
+
+    def fetch_master_account_by_id(self, **kwargs):
+        if not kwargs.get('master_id'):
+            return self.error_no_master_account_id_specified(kwargs)
+        try:
+            user_account = list(kwargs['active_session'].query(
+                ResMaster
+            ).filter_by(user_id=kwargs['master_id']))
+        except:
+            return self.error_could_not_fetch_master_account_by_id(kwargs)
+        log.info('Successfully fetched master user account by id.')
+        return self.warning_no_master_account_found_by_id(kwargs) if not \
+            user_account else user_account[0]
 
     def fetch_active_session_master(self, obj=True):
         log.debug('')
@@ -775,6 +789,56 @@ class EWallet(Base):
     def action_receive_transfer_record(self, **kwargs):
         log.debug('TODO - UNIMPLEMENTED')
 
+#   @pysnooper.snoop('logs/ewallet.log')
+    def action_create_new_user_account(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('master_id'):
+            return self.error_no_master_account_id_specified(kwargs)
+        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
+            kwargs, 'action'
+        )
+        master_account = self.fetch_master_account_by_id(
+            master_id=kwargs['master_id'], **sanitized_command_chain
+        )
+        if not master_account or isinstance(master_account, dict) and \
+                master_account.get('failed'):
+            return self.warning_no_master_account_found_by_id(
+                kwargs, master_account
+            )
+        session_create_account = EWalletCreateUser().action_create_new_user(
+            **sanitized_command_chain
+        )
+        if not session_create_account or \
+                isinstance(session_create_account, dict) and \
+                session_create_account.get('failed'):
+            return self.warning_could_not_create_user_account(
+                kwargs, session_create_account
+            )
+        kwargs['active_session'].add(session_create_account)
+        log.info('Successfully created new user account.')
+
+        link_master = master_account.add_subordonate_to_pool(
+            session_create_account
+        )
+        if isinstance(link_master, dict) and link_master.get('failed'):
+            return self.warning_could_not_link_new_user_account_to_master(
+                kwargs, master_account, session_create_account, link_master
+            )
+
+        self.update_user_account_archive(
+            user=session_create_account,
+        )
+        self.update_session_from_user(
+            session_active_user=session_create_account,
+        )
+        kwargs['active_session'].commit()
+        command_chain_response = {
+            'failed': False,
+            'account': kwargs['user_email'],
+            'account_data': session_create_account.fetch_user_values(),
+        }
+        return command_chain_response
+
     def action_create_new_master_account(self, **kwargs):
         log.debug('')
         sanitized_command_chain = res_utils.remove_tags_from_command_chain(
@@ -804,37 +868,6 @@ class EWallet(Base):
             'failed': False,
             'account': kwargs['user_email'],
             'account_data': account_data,
-        }
-        return command_chain_response
-
-#   @pysnooper.snoop('logs/ewallet.log')
-    def action_create_new_user_account(self, **kwargs):
-        log.debug('')
-        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
-            kwargs, 'action'
-        )
-        session_create_account = EWalletCreateUser().action_create_new_user(
-            **sanitized_command_chain
-        )
-        if not session_create_account or \
-                isinstance(session_create_account, dict) and \
-                session_create_account.get('failed'):
-            return self.warning_could_not_create_user_account(
-                kwargs, session_create_account
-            )
-        kwargs['active_session'].add(session_create_account)
-        log.info('Successfully created new user account.')
-        self.update_user_account_archive(
-            user=session_create_account,
-        )
-        self.update_session_from_user(
-            session_active_user=session_create_account,
-        )
-        kwargs['active_session'].commit()
-        command_chain_response = {
-            'failed': False,
-            'account': kwargs['user_email'],
-            'account_data': session_create_account.fetch_user_values(),
         }
         return command_chain_response
 
@@ -3782,6 +3815,25 @@ class EWallet(Base):
     [ TODO ]: Fetch warning messages from message file by key codes.
     '''
 
+    def warning_no_master_account_found_by_id(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'No master user account found by ID.'
+                       'Details: {}'.format(args),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
+
+    def warning_could_not_link_new_user_account_to_master(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Something went wrong. '
+                       'Could not link new user account to master account.'
+                       'Details: {}'.format(args),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
+
     def warning_record_id_not_in_transfer_sheet(self, *args):
         command_chain_response = {
             'failed': True,
@@ -4440,6 +4492,25 @@ class EWallet(Base):
     '''
     [ TODO ]: Fetch error messages from message file by key codes.
     '''
+
+    def error_could_not_fetch_master_account_by_id(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Something went wrong. '
+                     'Could not fetch master user account by ID. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_no_master_account_id_specified(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No master account ID specified. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
 
     def error_could_not_fetch_active_session_master(self, *args):
         command_chain_response = {

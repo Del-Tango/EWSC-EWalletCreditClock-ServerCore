@@ -3270,6 +3270,14 @@ class EWalletSessionManager():
                 or isinstance(instruction_set_validation, dict) \
                 and instruction_set_validation.get('failed'):
             return instruction_set_validation
+        master_account = self.fetch_acquired_masters_from_client_token_set(
+            [kwargs['client_id']]
+        )
+        if isinstance(master_account, dict) and master_account.get('failed'):
+            return self.warning_no_master_account_acquired_by_ctoken(
+                kwargs, instruction_set_validation, master_account
+            )
+        kwargs.update({'master_id': master_account[0]})
         new_account = self.action_execute_user_instruction_set(**kwargs)
         return self.warning_could_not_create_new_user_account(
             kwargs, new_account
@@ -4950,6 +4958,14 @@ class EWalletSessionManager():
     '''
     [ TODO ]: Fetch warning messages from message file by key codes.
     '''
+
+    def warning_no_master_account_acquired_by_ctoken(self, *args):
+        instruction_set_response = res_utils.format_warning_response(**{
+            'failed': True, 'details': args,
+            'warning': 'No master account acquired by CToken.',
+        })
+        self.log_warning(**instruction_set_response)
+        return instruction_set_response
 
     def warning_no_acquired_master_accounts_found_by_ctokens(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
