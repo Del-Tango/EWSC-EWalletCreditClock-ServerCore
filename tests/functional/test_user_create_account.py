@@ -10,13 +10,13 @@ class TestEWalletSessionManagerUserCreateAccount(unittest.TestCase):
     user_name_1 = 'TestEWalletUser1'
     user_email_1 = 'ewallet1@alvearesolutions.ro'
     user_pass_1 = 'abc123!@#Secret'
-    user_name_2 = 'TestEWalletMaster2'
-    user_alias_2 = 'TEWM2'
-    user_email_2 = 'master2@alvearesolutions.ro'
-    user_pass_2 = 'abc123!@#Secret'
-    user_phone_2 = '555 555 555'
-    user_company_2 = 'TestClient INC'
-    user_address_2 = 'Iasi, jud. Iasi, Str. Canta, Nr. 40'
+    user_name_3 = 'TestEWalletMaster3'
+    user_alias_3 = 'TEWM3'
+    user_email_3 = 'master3@alvearesolutions.ro'
+    user_pass_3 = 'abc123!@#Secret'
+    user_phone_3 = '555 555 555'
+    user_company_3 = 'TestClient INC'
+    user_address_3 = 'Iasi, jud. Iasi, Str. Canta, Nr. 40'
     master_key_code = 'EWSC-Master-Key-Code'
 
     @classmethod
@@ -45,22 +45,19 @@ class TestEWalletSessionManagerUserCreateAccount(unittest.TestCase):
         cls.session_token = session_token['session_token']
 
         print('[...]: Client action NewMasterAccount')
-        instruction_set = {
-            'controller': 'client', 'ctype': 'action', 'action': 'new',
-            'new': 'master', 'master': 'account', 'client_id': cls.client_id,
-            'session_token': cls.session_token, 'user_name': cls.user_name_2,
-            'user_pass': cls.user_pass_2, 'user_email': cls.user_email_2,
-            'user_phone': cls.user_phone_2, 'user_alias': cls.user_alias_2,
-            'company': cls.user_company_2, 'address': cls.user_address_2,
-        }
-        new_account = session_manager.session_manager_controller(
-            **instruction_set
+        master = session_manager.session_manager_controller(
+            controller='client', ctype='action', action='new', new='master',
+            master='account', client_id=cls.client_id,
+            session_token=cls.session_token, user_name=cls.user_name_3,
+            user_pass=cls.user_pass_3, user_email=cls.user_email_3,
+            user_phone=cls.user_phone_3, user_alias=cls.user_alias_3,
+            company=cls.user_company_3, address=cls.user_address_3,
         )
 
         print('[...]: Client action AcquireMaster')
         acquire = session_manager.session_manager_controller(
             controller='client', ctype='action', action='acquire',
-            acquire='master', master=cls.user_email_2, key=cls.master_key_code,
+            acquire='master', master=cls.user_email_3, key=cls.master_key_code,
             client_id=client_id['client_id'],
             session_token=session_token['session_token']
         )

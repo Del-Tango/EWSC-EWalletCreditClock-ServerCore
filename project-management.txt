@@ -45,31 +45,34 @@
     - x - (EWSC) Fix user action SupplyCredits
     - x - (EWSC) Fix user action ViewTransferRecord
     - x - (EWSC) Fix bug in user action SupplyCredits journaling
-    - . - (EWSC-x-, EWCC-x-, EWAT- -) Implement Client ID validity checkers
-    - . - (EWSC-x-, EWCC-x-, EWAT- -) Implement Session Token validity checkers
-    - . - (EWSC-x-, EWCC-x-, EWAT- -) Implement forced account removal
     - x - (EWCC) Perform valid input checks on core subroutine SetResource
-    - < - (EWSC- -, EWCC- -, EWAT- -) Implement master accounts
     - x - (EWSC) Implement client action NewMasterAccount
     - x - (EWSC) Refactor client action CheckCTokenState to include master link
     - x - (EWSC) Refactor user action CreateAccount to link to master account
-    - x - (EWSC) Implement client action AcquireMaster
+    - x - (EWSC) Groom functional test suit to add master oriented prerequisits
+    - . - (EWSC-x-, EWCC-x-, EWAT- -) Implement Client ID validity checkers
+    - . - (EWSC-x-, EWCC-x-, EWAT- -) Implement Session Token validity checkers
+    - . - (EWSC-x-, EWCC-x-, EWAT- -) Implement forced account removal
+    - . - (EWSC-x-, EWCC- -, EWAT- -) Implement master accounts
+    - . - (EWSC-x-, EWCC- -, EWAT- -) Implement client action AcquireMaster
+    -   - (EWSC) Groom functional test suit to corect action names and call
+                 session manager destructors
+    - (EWSC) Refactor user action CreateAccount to check if master subpool
+             size limit reached
     - (EWSC) Implement system action TargetCleanupMaster
     - (EWSC) Implement system action FreezeMaster
     - (EWSC) Implement system action UnfreezeMaster
     - (EWSC) Implement system action IncreaseMasterSubPool
     - (EWSC) Implement system action DecreaseMasterSubPool
     - (EWSC) Refactor user actions to impose master oriented restrictions
-    -   - (EWSC) Groom functional test suit to add client action AcquireMaster
-                 prerequisite
-    - (EWSC- -, EWCC- -, EWAT- -) Implement master action AccountLogin
-    - (EWSC- -, EWCC- -, EWAT- -) Implement master action AccountLogout
-    - (EWSC- -, EWCC- -, EWAT- -) Implement master action ViewAccount
-    - (EWSC- -, EWCC- -, EWAT- -) Implement master action EditAccount
-    - (EWSC- -, EWCC- -, EWAT- -) Implement master action UnlinkAccount
-    - (EWSC- -, EWCC- -, EWAT- -) Implement master action InspectCTokens
-    - (EWSC- -, EWCC- -, EWAT- -) Implement master action InspectSubPool
-    - (EWSC- -, EWCC- -, EWAT- -) Implement master action InspectSub
+    - (EWSC) Implement master action AccountLogin
+    - (EWSC) Implement master action AccountLogout
+    - (EWSC) Implement master action ViewAccount
+    - (EWSC) Implement master action EditAccount
+    - (EWSC) Implement master action UnlinkAccount
+    - (EWSC) Implement master action InspectCTokens
+    - (EWSC) Implement master action InspectSubPool
+    - (EWSC) Implement master action InspectSub
     - (EWSC- -, EWCC- -, EWAT- -) Implement EWallet Session keep alive signal
     - (EWSC- -, EWCC- -, EWAT- -) Implement issue report
     - (EWCC) Make library importable
@@ -169,6 +172,7 @@
     - (EWSC) Implement system action StopWorkerCleaner cron
     - (EWSC) Implement system action StopSessionCleaner cron
     - (EWSC) Implement system action StopCTokenCleaner cron
+    - (EWSC, EWCC, EWAT) Implement client action ReleaseMaster
     - (EWSC, EWCC, EWAT) Implement entity record limiter queue mechanism
     - (EWSC, EWCC, EWAT) Send user account password as hash
     - (EWSC, EWCC, EWAT) Implement AddNotes mechanism for journal records
@@ -184,10 +188,14 @@
     - (EWSC, EWCC, EWAT) Implement reports (activity reports)
     - (EWSC, EWCC, EWAT) Add documentation
     - (EWDWC) Introduce Default Web Client as web portal
-    - (EWEX) Add example application for credit oriented license consumption
-    - (EWEX) Add example application for clock oriented license consumption
-    - (EWEX) Add example application for credit oriented transactions
-    - (EWEX) Add example application for clock oriented transactions
+    - (EWEX) Add example application for credit oriented license consumption using EWCC-lib
+    - (EWEX) Add example application for clock oriented license consumption using EWCC-lib
+    - (EWEX) Add example application for credit oriented transactions using EWCC-lib
+    - (EWEX) Add example application for clock oriented transactions using EWCC-lib
+    - (EWEX) Add example application for credit oriented license consumption using EWSC-API
+    - (EWEX) Add example application for clock oriented license consumption using EWSC-API
+    - (EWEX) Add example application for credit oriented transactions using EWSC-API
+    - (EWEX) Add example application for clock oriented transactions using EWSC-API
 
 * v.Tac (2.0.0 - stable) - Planned
     - (EWSC) Complete refactoring
