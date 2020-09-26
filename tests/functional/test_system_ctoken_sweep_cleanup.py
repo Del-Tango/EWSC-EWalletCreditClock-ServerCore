@@ -14,7 +14,7 @@ class TestEWalletSessionManagerSystemCTokenCleanupSweep(unittest.TestCase):
         session_manager = manager.EWalletSessionManager()
 
         # Create first EWallet Session Worker
-        print('[...]: System action New Session Worker')
+        print('[...]: System action NewWorker')
         worker = session_manager.session_manager_controller(
             controller='system', ctype='action', action='new', new='worker'
         )
@@ -26,19 +26,19 @@ class TestEWalletSessionManagerSystemCTokenCleanupSweep(unittest.TestCase):
         # Spawn 3 client ids to create 3 different session tokens with. Mocks 3
 
         # EWallet Server users
-        print('[...]: User action RequestClientID (1)')
+        print('[...]: Client action RequestClientID (1)')
         client_id1 = session_manager.session_manager_controller(
             controller='client', ctype='action', action='request',
             request='client_id', expires_on=past_date
         )
 
-        print('[...]: User action RequestClientID (2)')
+        print('[...]: Client action RequestClientID (2)')
         client_id2 = session_manager.session_manager_controller(
             controller='client', ctype='action', action='request',
             request='client_id', expires_on=past_date
         )
 
-        print('[...]: User action RequestClientID (3)')
+        print('[...]: Client action RequestClientID (3)')
         client_id3 = session_manager.session_manager_controller(
             controller='client', ctype='action', action='request',
             request='client_id', expires_on=past_date
@@ -49,6 +49,13 @@ class TestEWalletSessionManagerSystemCTokenCleanupSweep(unittest.TestCase):
         # Clean Sqlite3 database used for testing environment
         if os.path.isfile('data/ewallet.db'):
             os.remove('data/ewallet.db')
+        try:
+            del cls.session_manager
+        except Exception as e:
+            print(
+                '[ ! ]: Could not cleanup EWallet Session Manager. '
+                'Details: {}'.format(e)
+            )
 
     def test_system_action_sweep_cleanup_client_tokens(self):
         print('\n[ * ]: System action SweepCleanupCTokens')

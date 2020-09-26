@@ -104,6 +104,13 @@ class TestEWalletSessionManageUserActionSwitchTransferSheet(unittest.TestCase):
         # Clean Sqlite3 database used for testing environment
         if os.path.isfile('data/ewallet.db'):
             os.remove('data/ewallet.db')
+        try:
+            del cls.session_manager
+        except Exception as e:
+            print(
+                '[ ! ]: Could not cleanup EWallet Session Manager. '
+                'Details: {}'.format(e)
+            )
 
     def test_user_action_switch_transfer_sheet(self):
         print('\n[ * ]: User action SwitchTransferSheet')

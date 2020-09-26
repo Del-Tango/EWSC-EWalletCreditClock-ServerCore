@@ -12,13 +12,13 @@ class TestEWalletSessionManagerSocketHandler(unittest.TestCase):
         # Create new EWallet Session Manager instance
         session_manager = manager.EWalletSessionManager()
         # Create first EWallet Session Worker
-        print('[...]: System action New Session Worker')
+        print('[...]: System action NewWorker')
         worker = session_manager.session_manager_controller(
             controller='system', ctype='action', action='new', new='worker'
         )
         cls.session_manager = session_manager
         # Spawn new EWallet Session with no active user or session token
-        print('[...]: System action New EWallet Session')
+        print('[...]: System action NewSession')
         session = session_manager.session_manager_controller(
             controller='system', ctype='action', action='new', new='session',
             reference='EWallet Session Test'
@@ -29,6 +29,13 @@ class TestEWalletSessionManagerSocketHandler(unittest.TestCase):
         # Clean Sqlite3 database used for testing environment
         if os.path.isfile('data/ewallet.db'):
             os.remove('data/ewallet.db')
+        try:
+            del cls.session_manager
+        except Exception as e:
+            print(
+                '[ ! ]: Could not cleanup EWallet Session Manager. '
+                'Details: {}'.format(e)
+            )
 
 #   def test_instruction_set_listener(self):
 #       log.debug('')

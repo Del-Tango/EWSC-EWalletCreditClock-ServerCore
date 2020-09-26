@@ -55,10 +55,8 @@
     - . - (EWSC-x-, EWCC-x-, EWAT- -) Implement forced account removal
     - . - (EWSC-x-, EWCC- -, EWAT- -) Implement master accounts
     - . - (EWSC-x-, EWCC- -, EWAT- -) Implement client action AcquireMaster
-    -   - (EWSC) Groom functional test suit to corect action names and call
-                 session manager destructors
-    - (EWSC) Refactor user action CreateAccount to check if master subpool
-             size limit reached
+    - x - (EWSC) Groom functional test suit to corect action names and call session manager destructors
+    -   - (EWSC) Refactor user action CreateAccount to check if master subpool size limit reached
     - (EWSC) Implement system action TargetCleanupMaster
     - (EWSC) Implement system action FreezeMaster
     - (EWSC) Implement system action UnfreezeMaster
@@ -283,9 +281,9 @@
                 - Master Unlinked
                 - SToken Linked
             - SToken States:
-                - Session Plugged
+                - ESession Plugged
 
-    - Client action New Master Account
+    - Client action New Master
         - State Oriented Restrictions:
             - CToken States:
                 - Master Unlinked
@@ -498,11 +496,11 @@
         - User Account States:
             - Logged In
 
-    - User action Add Contact Record
+    - User action Create Contact Record
         - User Account States:
             - Logged In
 
-    - User action TransferCredits
+    - User action Transfer Credits
         - User Account States:
             - Logged In
 

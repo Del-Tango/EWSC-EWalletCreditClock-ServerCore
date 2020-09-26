@@ -37,7 +37,7 @@ class TestEWalletSessionManagerUserAcquireMasterAccount(unittest.TestCase):
         )
 
         # Create new master user account to acquire
-        print('[...]: Client action NewMasterAccount')
+        print('[...]: Client action NewMaster')
         master = session_manager.session_manager_controller(
             controller='client', ctype='action', action='new', new='master',
             master='account', client_id=client_id['client_id'],
@@ -57,9 +57,16 @@ class TestEWalletSessionManagerUserAcquireMasterAccount(unittest.TestCase):
         # Clean Sqlite3 database used for testing environment
         if os.path.isfile('data/ewallet.db'):
             os.remove('data/ewallet.db')
+        try:
+            del cls.session_manager
+        except Exception as e:
+            print(
+                '[ ! ]: Could not cleanup EWallet Session Manager. '
+                'Details: {}'.format(e)
+            )
 
     def test_user_action_acquire_master_account_functionality(self):
-        print('\n[ * ]: User action AcquireMaster')
+        print('\n[ * ]: Client action AcquireMaster')
         instruction_set = {
             'controller': 'client', 'ctype': 'action', 'action': 'acquire',
             'acquire': 'master', 'client_id': self.client_id,

@@ -20,7 +20,7 @@ class TestEWalletSessionManagerSystemActionInterogateWorkers(unittest.TestCase):
 
         cls.session_manager = session_manager
         # Spawn new EWallet Session with no active user or session token
-        print('[...]: System action NewEWalletSession')
+        print('[...]: System action NewSession')
         session = session_manager.session_manager_controller(
             controller='system', ctype='action', action='new', new='session',
             reference='EWSC-System EWallet Session Test'
@@ -31,6 +31,13 @@ class TestEWalletSessionManagerSystemActionInterogateWorkers(unittest.TestCase):
         # Clean Sqlite3 database used for testing environment
         if os.path.isfile('data/ewallet.db'):
             os.remove('data/ewallet.db')
+        try:
+            del cls.session_manager
+        except Exception as e:
+            print(
+                '[ ! ]: Could not cleanup EWallet Session Manager. '
+                'Details: {}'.format(e)
+            )
 
     def test_system_action_interogate_ewallet_workers_functionality(self):
         print('\n[ * ]: System action InterogateEWalletWorkers')

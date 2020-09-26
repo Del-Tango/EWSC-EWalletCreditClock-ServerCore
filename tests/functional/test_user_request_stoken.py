@@ -14,7 +14,7 @@ class TestEWalletUserActionRequestSessionToken(unittest.TestCase):
         session_manager = manager.EWalletSessionManager()
 
         # Request client id for session token request
-        print('[...]: User action RequestClientID')
+        print('[...]: Client action RequestClientID')
         client_id = session_manager.session_manager_controller(
             controller='client', ctype='action', action='request',
             request='client_id'
@@ -29,9 +29,16 @@ class TestEWalletUserActionRequestSessionToken(unittest.TestCase):
         # Clean Sqlite3 database used for testing environment
         if os.path.isfile('data/ewallet.db'):
             os.remove('data/ewallet.db')
+        try:
+            del cls.session_manager
+        except Exception as e:
+            print(
+                '[ ! ]: Could not cleanup EWallet Session Manager. '
+                'Details: {}'.format(e)
+            )
 
     def test_user_request_session_token_functionality(self):
-        print('\n[ * ]: User action RequestSessionToken')
+        print('\n[ * ]: Client action RequestSessionToken')
         instruction_set = {
             'controller': 'client', 'ctype': 'action', 'action': 'request',
             'request': 'session_token', 'client_id': self.client_id

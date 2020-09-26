@@ -20,9 +20,16 @@ class TestEWalletUserActionRequestClientId(unittest.TestCase):
         # Clean Sqlite3 database used for testing environment
         if os.path.isfile('data/ewallet.db'):
             os.remove('data/ewallet.db')
+        try:
+            del cls.session_manager
+        except Exception as e:
+            print(
+                '[ ! ]: Could not cleanup EWallet Session Manager. '
+                'Details: {}'.format(e)
+            )
 
     def test_user_request_client_id_functionality(self):
-        print('[ * ]: User action RequestClientID')
+        print('[ * ]: Client action RequestClientID')
         instruction_set = {
             'controller': 'client', 'ctype': 'action', 'action': 'request',
             'request': 'client_id'

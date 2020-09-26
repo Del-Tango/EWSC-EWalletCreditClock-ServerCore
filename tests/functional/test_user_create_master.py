@@ -22,14 +22,14 @@ class TestEWalletSessionManagerUserCreateMasterAccount(unittest.TestCase):
         session_manager = manager.EWalletSessionManager()
 
         # Generate new Client ID to be able to request a Session Token
-        print('[...]: User action RequestClientID')
+        print('[...]: Client action RequestClientID')
         client_id = session_manager.session_manager_controller(
             controller='client', ctype='action', action='request',
             request='client_id'
         )
 
         # Request a Session Token to be able to operate within a EWallet Session
-        print('[...]: User action RequestSessionToken')
+        print('[...]: Client action RequestSessionToken')
         session_token = session_manager.session_manager_controller(
             controller='client', ctype='action', action='request', request='session_token',
             client_id=client_id['client_id']
@@ -45,9 +45,16 @@ class TestEWalletSessionManagerUserCreateMasterAccount(unittest.TestCase):
         # Clean Sqlite3 database used for testing environment
         if os.path.isfile('data/ewallet.db'):
             os.remove('data/ewallet.db')
+        try:
+            del cls.session_manager
+        except Exception as e:
+            print(
+                '[ ! ]: Could not cleanup EWallet Session Manager. '
+                'Details: {}'.format(e)
+            )
 
     def test_user_action_create_master_account_functionality(self):
-        print('\n[ * ]: Client action NewMasterAccount')
+        print('\n[ * ]: Client action NewMaster')
         instruction_set = {
             'controller': 'client', 'ctype': 'action', 'action': 'new',
             'new': 'master', 'master': 'account', 'client_id': self.client_id,

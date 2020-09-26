@@ -24,6 +24,13 @@ class TestEWalletSessionManagerSystemActionNewSession(unittest.TestCase):
         # Clean Sqlite3 database used for testing environment
         if os.path.isfile('data/ewallet.db'):
             os.remove('data/ewallet.db')
+        try:
+            del cls.session_manager
+        except Exception as e:
+            print(
+                '[ ! ]: Could not cleanup EWallet Session Manager. '
+                'Details: {}'.format(e)
+            )
 
     def test_system_new_session_functionality(self):
         print('\n[ * ]: System action NewSession')

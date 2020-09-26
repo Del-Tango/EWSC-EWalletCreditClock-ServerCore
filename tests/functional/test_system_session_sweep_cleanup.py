@@ -26,39 +26,39 @@ class TestEWalletSessionManagerSystemSessionCleanupSweep(unittest.TestCase):
         # Spawn 3 client ids to create 3 different session tokens with. Mocks 3
 
         # EWallet Server users
-        print('[...]: User action RequestClientID (1)')
+        print('[...]: Client action RequestClientID (1)')
         client_id = session_manager.session_manager_controller(
             controller='client', ctype='action', action='request',
             request='client_id'
         )
 
-        print('[...]: User action RequestSessionToken (1)')
+        print('[...]: Client action RequestSessionToken (1)')
         session_token = session_manager.session_manager_controller(
             controller='client', ctype='action', action='request',
             request='session_token', client_id=client_id['client_id'],
             expiration_date=past_date
         )
 
-        print('[...]: User action RequestClientID (2)')
+        print('[...]: Client action RequestClientID (2)')
         client_id = session_manager.session_manager_controller(
             controller='client', ctype='action', action='request',
             request='client_id'
         )
 
-        print('[...]: User action RequestSessionToken (2)')
+        print('[...]: Client action RequestSessionToken (2)')
         session_token = session_manager.session_manager_controller(
             controller='client', ctype='action', action='request',
             request='session_token', client_id=client_id['client_id'],
             expiration_date=past_date
         )
 
-        print('[...]: User action RequestClientID (3)')
+        print('[...]: Client action RequestClientID (3)')
         client_id = session_manager.session_manager_controller(
             controller='client', ctype='action', action='request',
             request='client_id'
         )
 
-        print('[...]: User action RequestSessionToken (3)')
+        print('[...]: Client action RequestSessionToken (3)')
         session_token = session_manager.session_manager_controller(
             controller='client', ctype='action', action='request',
             request='session_token', client_id=client_id['client_id'],
@@ -70,6 +70,13 @@ class TestEWalletSessionManagerSystemSessionCleanupSweep(unittest.TestCase):
         # Clean Sqlite3 database used for testing environment
         if os.path.isfile('data/ewallet.db'):
             os.remove('data/ewallet.db')
+        try:
+            del cls.session_manager
+        except Exception as e:
+            print(
+                '[ ! ]: Could not cleanup EWallet Session Manager. '
+                'Details: {}'.format(e)
+            )
 
     def test_system_action_sweep_cleanup_ewallet_sessions(self):
         # Create EWallet Session with expiration date 30 days in the past

@@ -21,28 +21,28 @@ class TestEWalletSessionManagerSystemActionStartAllCleanerCrons(unittest.TestCas
         session_manager = manager.EWalletSessionManager()
 
         # Generate new Client ID to be able to request a Session Token
-        print('[...]: User action RequestClientID (1)')
+        print('[...]: Client action RequestClientID (1)')
         client_id = session_manager.session_manager_controller(
             controller='client', ctype='action', action='request',
             request='client_id'
         )
 
         # Request a Session Token to be able to operate within a EWallet Session
-        print('[...]: User action RequestSessionToken (1)')
+        print('[...]: Client action RequestSessionToken (1)')
         session_token = session_manager.session_manager_controller(
             controller='client', ctype='action', action='request',
             request='session_token', client_id=client_id['client_id']
         )
 
         # Generate new Client ID to be able to request a Session Token
-        print('[...]: User action RequestClientID (2)')
+        print('[...]: Client action RequestClientID (2)')
         client_id2 = session_manager.session_manager_controller(
             controller='client', ctype='action', action='request',
             request='client_id'
         )
 
         # Request a Session Token to be able to operate within a EWallet Session
-        print('[...]: User action RequestSessionToken (2)')
+        print('[...]: Client action RequestSessionToken (2)')
         session_token2 = session_manager.session_manager_controller(
             controller='client', ctype='action', action='request',
             request='session_token', client_id=client_id2['client_id']
@@ -56,6 +56,13 @@ class TestEWalletSessionManagerSystemActionStartAllCleanerCrons(unittest.TestCas
         # Clean Sqlite3 database used for testing environment
         if os.path.isfile('data/ewallet.db'):
             os.remove('data/ewallet.db')
+        try:
+            del cls.session_manager
+        except Exception as e:
+            print(
+                '[ ! ]: Could not cleanup EWallet Session Manager. '
+                'Details: {}'.format(e)
+            )
 
     def test_system_action_start_all_cleaner_cros_functionality(self):
         print('\n[ * ]: System action StartAllCleaners')
