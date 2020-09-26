@@ -3300,6 +3300,32 @@ class EWalletSessionManager():
         log.debug('TODO - Kill process')
         return self.unset_socket_handler()
 
+    def handle_client_action_new_account(self, **kwargs):
+        '''
+        [ NOTE   ]: Validates received instruction set, searches for worker and session
+                    and proceeds to create new User Account in said session. Requiers
+                    valid Client ID and Session Token.
+        '''
+        log.debug('')
+        instruction_set_validation = self.validate_instruction_set(kwargs)
+        if not instruction_set_validation \
+                or isinstance(instruction_set_validation, dict) \
+                and instruction_set_validation.get('failed'):
+            return instruction_set_validation
+        master_account = self.fetch_acquired_masters_from_client_token_set(
+            [kwargs['client_id']]
+        )
+        if isinstance(master_account, dict) and master_account.get('failed'):
+            return self.warning_no_master_account_acquired_by_ctoken(
+                kwargs, instruction_set_validation, master_account
+            )
+        kwargs.update({'master_id': master_account[0]})
+        new_account = self.action_execute_user_instruction_set(**kwargs)
+        return self.warning_could_not_create_new_user_account(
+            kwargs, new_account
+        ) if not new_account or isinstance(new_account, dict) and \
+            new_account.get('failed') else new_account
+
     def handle_client_action_acquire_master(self, **kwargs):
         log.debug('')
         instruction_set_validation = self.validate_instruction_set(kwargs)
@@ -3329,32 +3355,6 @@ class EWalletSessionManager():
             'master': kwargs['master'],
         }
         return instruction_set_response
-
-    def handle_client_action_new_account(self, **kwargs):
-        '''
-        [ NOTE   ]: Validates received instruction set, searches for worker and session
-                    and proceeds to create new User Account in said session. Requiers
-                    valid Client ID and Session Token.
-        '''
-        log.debug('')
-        instruction_set_validation = self.validate_instruction_set(kwargs)
-        if not instruction_set_validation \
-                or isinstance(instruction_set_validation, dict) \
-                and instruction_set_validation.get('failed'):
-            return instruction_set_validation
-        master_account = self.fetch_acquired_masters_from_client_token_set(
-            [kwargs['client_id']]
-        )
-        if isinstance(master_account, dict) and master_account.get('failed'):
-            return self.warning_no_master_account_acquired_by_ctoken(
-                kwargs, instruction_set_validation, master_account
-            )
-        kwargs.update({'master_id': master_account[0]})
-        new_account = self.action_execute_user_instruction_set(**kwargs)
-        return self.warning_could_not_create_new_user_account(
-            kwargs, new_account
-        ) if not new_account or isinstance(new_account, dict) and \
-            new_account.get('failed') else new_account
 
     def handle_client_action_new_master_account(self, **kwargs):
         log.debug('')

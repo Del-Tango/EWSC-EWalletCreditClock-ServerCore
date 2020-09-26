@@ -73,6 +73,15 @@ class ResMaster(ResUser):
         log.debug('')
         return self.key_code
 
+    def fetch_subordonate_account_pool(self):
+        log.debug('')
+        return self.subordonate_pool
+
+    def fetch_subbordonate_account_pool_size(self):
+        log.debug('')
+        subpool = self.fetch_subordonate_account_pool()
+        return len(subpool)
+
     def fetch_default_master_account_key_code(self):
         log.debug('')
         return str(config.master_config['master_key_code'])
@@ -134,6 +143,15 @@ class ResMaster(ResUser):
                 client_id, self.acquired_ctokens, e
             )
         return True
+
+    # CHECKERS
+
+#   @pysnooper.snoop('logs/ewallet.log')
+    def check_subordonate_account_pool_size_limit_reached(self):
+        log.debug('')
+        subpool_size = self.fetch_subbordonate_account_pool_size()
+        size_limit = self.fetch_default_master_account_subpool_size_limit()
+        return True if subpool_size >= size_limit else False
 
     # GENERAL
 
