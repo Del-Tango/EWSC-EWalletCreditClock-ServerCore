@@ -56,8 +56,9 @@
     - . - (EWSC-x-, EWCC- -, EWAT- -) Implement master accounts
     - . - (EWSC-x-, EWCC- -, EWAT- -) Implement client action AcquireMaster
     - x - (EWSC) Groom functional test suit to corect action names and call session manager destructors
-    -   - (EWSC) Refactor user action CreateAccount to check if master subpool size limit reached
-    - (EWSC) Implement system action TargetCleanupMaster
+    - x - (EWSC) Refactor user action CreateAccount to check if master subpool size limit reached
+    - x - (EWSC) Implement system action TargetCleanupMaster
+    -   - (EWSC) Implement system action SweepCleanupMaster
     - (EWSC) Implement system action FreezeMaster
     - (EWSC) Implement system action UnfreezeMaster
     - (EWSC) Implement system action IncreaseMasterSubPool
