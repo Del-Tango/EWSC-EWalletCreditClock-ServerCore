@@ -91,8 +91,8 @@ class ResUser(Base):
                     [user_credit_wallet]
             self.user_contact_list_archive = kwargs.get('user_contact_list_archive') or \
                     [user_contact_list]
-        self.to_unlink = False
-        self.to_unlink_timestamp = None
+        self.to_unlink = kwargs.get('to_unlink', False)
+        self.to_unlink_timestamp = kwargs.get('to_unlink_timestamp')
 
     # FETCHERS
 

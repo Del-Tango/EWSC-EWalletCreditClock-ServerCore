@@ -82,6 +82,54 @@ class EWalletSessionManager():
     def fetch_from_ewallet_worker_session(self):
         log.debug('TODO - UNIMPLEMENTED')
 
+    def fetch_master_accounts_marked_for_unlink(self, **kwargs):
+        log.debug('')
+        try:
+            orm_session = self.res_utils.session_factory()
+            master_accounts = list(orm_session.query(
+               ResMaster
+            ).filter_by(to_unlink=True).all())
+        except Exception as e:
+            return self.error_could_not_fetch_master_accounts_marked_for_unlink(
+                kwargs, e
+            )
+        finally:
+            orm_session.close()
+        return self.warning_no_master_accounts_marked_for_unlink_found(kwargs)\
+            if not master_accounts else master_accounts
+
+    def fetch_master_account_unlink_freeze_interval(self):
+        log.debug('')
+        return int(config.master_config['master_unlink_freeze_interval'])
+
+    def filter_unlinked_master_accounts_past_freeze_inteval(self, master_accounts, freeze_interval):
+        log.debug('')
+        if not master_accounts or not isinstance(master_accounts, list):
+            return self.error_no_master_accounts_found(
+                master_accounts, freeze_interval
+            )
+        unlink_overdue, not_to_unlink, unlink_pending = [], [], []
+        for master in master_accounts:
+            to_unlink = master.fetch_user_to_unlink()
+            if not to_unlink:
+                not_to_unlink.append(master)
+                continue
+            unlink_timestamp = master.fetch_user_to_unlink_timestamp()
+            check_days_passed = res_utils.check_days_since_timestamp(
+                unlink_timestamp, freeze_interval
+            )
+            if not check_days_passed:
+                unlink_pending.append(master)
+                continue
+            unlink_overdue.append(master)
+        instruction_set_response = {
+            'failed': False,
+            'unlink_overdue': unlink_overdue,
+            'not_to_unlink': not_to_unlink,
+            'unlink_pending': unlink_pending
+        }
+        return instruction_set_response
+
     def fetch_subordonate_accounts_from_masters(self, master_accounts):
         log.debug('')
         if not master_accounts or not isinstance(master_accounts, list):
@@ -116,6 +164,8 @@ class EWalletSessionManager():
             return self.error_could_not_fetch_master_accounts_by_id_set(
                 master_account_ids, e
             )
+        finally:
+            orm_session.close()
         return self.warning_no_master_accounts_found_by_id_set(master_account_ids) \
             if not master_accounts else master_accounts
 
@@ -147,6 +197,8 @@ class EWalletSessionManager():
             return self.error_could_not_fetch_master_account_by_id(
                 master_account_id, e
             )
+        finally:
+            orm_session.close()
         return self.warning_no_master_account_found_by_id(master_account_id) \
             if not master_account else master_account[0]
 
@@ -165,6 +217,8 @@ class EWalletSessionManager():
                 ewallet_session[0].set_orm_session(orm_session)
         except:
             return self.error_could_not_fetch_ewallet_session_by_id(ewallet_session_id)
+        finally:
+            orm_session.close()
         return self.warning_no_ewallet_session_found_by_id(ewallet_session_id) \
             if not ewallet_session else ewallet_session[0]
 
@@ -1881,6 +1935,53 @@ class EWalletSessionManager():
 
     # CLEANERS
 
+    # TODO
+#   @pysnooper.snoop('logs/ewallet.log')
+    def cleanup_master_user_accounts(self, master_ids):
+        log.debug('TODO - Refactor')
+        orm_session = res_utils.session_factory()
+        accounts_removed, cleanup_failures = [], 0
+        try:
+            user_query = list(
+                orm_session.query(ResMaster).filter(
+                    ResMaster.user_id.in_(master_ids)
+                )
+            )
+            if not user_query:
+                log.info('No master user accounts found by ID set.')
+                return False
+        except Exception as e:
+            return self.error_could_not_fetch_master_accounts_by_identifier_set(
+                master_ids, orm_session, e
+            )
+        accounts_to_unlink = len(user_query)
+        try:
+            for account in user_query:
+                user_id = account.fetch_user_id()
+                log.info('Cleaning up master user account {}.'.format(user_id))
+                try:
+                    orm_session.query(ResMaster)\
+                        .filter_by(user_id=user_id).delete()
+                    orm_session.commit()
+                except Exception as e:
+                    self.warning_could_not_cleanup_user_account(
+                        orm_session, accounts_removed, user_query,
+                        accounts_to_unlink, account, user_id,
+                        cleanup_failures, e
+                    )
+                    cleanup_failures += 1
+                    continue
+                accounts_removed.append(user_id)
+        finally:
+            orm_session.close()
+        instruction_set_response = {
+            'failed': False,
+            'masters': accounts_removed,
+            'cleanup_failures': cleanup_failures,
+            'masters_cleaned': len(accounts_removed),
+        }
+        return instruction_set_response
+
     def cleanup_subordonate_user_accounts(self, user_account_ids, **kwargs):
         log.debug('')
         orm_session = kwargs.get('orm_session') or res_utils.session_factory()
@@ -1939,47 +2040,6 @@ class EWalletSessionManager():
             'cleanup_failures': cleanup_failures,
             'masters_cleaned': 1,
             'subordonates_cleaned': len(accounts_removed),
-        }
-        return instruction_set_response
-
-    # TODO
-    def cleanup_master_user_accounts(self, master_ids):
-        log.debug('TODO - FIX ME && Refactor')
-        orm_session = res_utils.session_factory()
-        accounts_removed, cleanup_failures = [], 0
-        user_query = list(
-            orm_session.query(ResMaster).filter_by(
-                ResMaster.user_id.in_(master_ids)
-            ).all()
-        )
-        if not user_query:
-            log.info('No master user accounts found by ID set.')
-            return False
-        accounts_to_unlink = len(user_query)
-        try:
-            for account in user_query:
-                user_id = account.fetch_user_id()
-                log.info('Cleaning up master user account {}.'.format(user_id))
-                try:
-                    orm_session.query(ResMaster)\
-                        .filter_by(user_id=user_id).delete()
-                    orm_session.commit()
-                except Exception as e:
-                    self.warning_could_not_cleanup_user_account(
-                        orm_session, accounts_removed, user_query,
-                        accounts_to_unlink, account, user_id,
-                        cleanup_failures, e
-                    )
-                    cleanup_failures += 1
-                    continue
-                accounts_removed.append(user_id)
-        finally:
-            orm_session.close()
-        instruction_set_response = {
-            'failed': False,
-            'masters': accounts_removed,
-            'cleanup_failures': cleanup_failures,
-            'masters_cleaned': len(accounts_removed),
         }
         return instruction_set_response
 
@@ -2683,48 +2743,78 @@ class EWalletSessionManager():
     def action_stop_client_token_cleaner_cron(self, **kwargs):
         log.debug('TODO - UNIMPLEMENTED')
 
-    # TODO - Cleanup master accounts marked for unlink
+    def action_sweep_cleanup_master_accounts_by_id(self, master_ids, **kwargs):
+        log.debug('')
+        master_accounts = self.fetch_master_accounts_by_id_set(
+            kwargs['master_ids']
+        )
+        subordonate_accounts = self.fetch_subordonate_accounts_from_masters(
+            master_accounts
+        )
+        subordonate_ids = [
+            account.fetch_user_id() for account in subordonate_accounts
+        ]
+        clean_subordonates = self.cleanup_subordonate_user_accounts(
+            subordonate_ids
+        )
+        clean_master = self.cleanup_master_user_accounts(
+            master_ids
+        )
+        if not clean_master or isinstance(clean_master, dict) and \
+                clean_master.get('failed'):
+            return self.warning_could_not_clean_master_accounts(
+                master_ids, kwargs, master_accounts, subordonate_accounts,
+                clean_subordonates, clean_master,
+            )
+        instruction_set_response = {
+            'failed': False,
+            'masters_cleaned': len(master_ids),
+            'cleanup_failures': clean_master.get('cleanup_failures', 0),
+            'subordonates_cleaned': len(subordonate_ids),
+            'cleanup_failures': 0,
+            'masters': master_ids,
+            'subordonates': subordonate_ids,
+        }
+        return instruction_set_response
+
     def action_sweep_cleanup_master_accounts(self, **kwargs):
         log.debug(
-            'TODO - UNIMPLEMENTED' if not kwargs.get('from_cron') else \
+            '' if not kwargs.get('from_cron') else \
             '- Automated Action: {} -'.format(
                 self.fetch_session_worker_cleaner_cron_default_label()
             )
         )
-        # TODO - Fetch accounts marker for unlink and past freeze interval
-#       master_accounts = self.fetch_master_accounts_by_id_set(
-#           kwargs['master_ids']
-#       )
-#       subordonate_accounts = self.fetch_subordonate_accounts_from_masters(
-#           master_accounts
-#       )
-#       master_ids = [
-#           master.fetch_user_id() for master in master_accounts
-#       ]
-#       subordonate_ids = [
-#           account.fetch_user_id() for account in subordonate_accounts
-#       ]
-#       clean_subordonates = self.cleanup_subordonate_user_accounts(
-#           subordonate_ids
-#       )
-#       clean_master = self.cleanup_master_user_accounts(
-#           master_ids
-#       )
-#       if not clean_master or isinstance(clean_master, dict) and \
-#               clean_master.get('failed'):
-#           return self.warning_could_not_clean_master_accounts(
-#               kwargs, master_accounts, subordonate_accounts,
-#               clean_subordonates, clean_master,
-#           )
-#       instruction_set_response = {
-#           'failed': False,
-#           'masters_cleaned': len(master_ids),
-#           'subordonates_cleaned': len(subordonate_ids),
-#           'cleanup_failures': 0,
-#           'masters': master_ids,
-#           'subordonates': subordonate_ids,
-#       }
-#       return instruction_set_response
+        master_freeze_interval = self.fetch_master_account_unlink_freeze_interval()
+        master_ids = self.fetch_master_accounts_by_id_set(
+            kwargs.get('master_ids')
+        ) if kwargs.get('master_ids') else \
+            self.fetch_master_accounts_marked_for_unlink()
+        if not master_ids or isinstance(master_ids, dict) and \
+                master_ids.get('failed'):
+            return self.warning_no_master_account_ids_found(
+                kwargs, master_freeze_interval, master_ids
+            )
+        cleanup_masters = self.action_sweep_cleanup_master_accounts_by_id(
+            master_ids if kwargs.get('master_ids') else
+            self.filter_unlinked_master_accounts_past_freeze_inteval(
+                master_ids, master_freeze_interval
+            )
+        )
+        if not cleanup_masters or isinstance(cleanup_masters, dict) and \
+                cleanup_masters.get('failed'):
+            return self.warning_could_not_clean_master_accounts(
+                kwargs, master_freeze_interval, master_ids,
+                cleanup_masters
+            )
+        instruction_set_response = {
+            'failed': False,
+            'masters_cleaned': cleanup_masters['masters_cleaned'],
+            'subordonates_cleaned': cleanup_masters['subordonates_cleaned'],
+            'cleanup_failures': cleanup_masters['cleanup_failures'],
+            'masters': cleanup_masters['masters'],
+            'subordonates': cleanup_masters['subordonates'],
+        }
+        return instruction_set_response
 
     def action_cleanup_target_master_account(self, **kwargs):
         log.debug('')
@@ -2751,11 +2841,13 @@ class EWalletSessionManager():
         instruction_set_response = {
             'failed': False,
             'masters_cleaned': clean_master.get('masters_cleaned', 0),
-            'subordonates_cleaned': clean_subordonates('subordonates_cleaned', 0),
+            'subordonates_cleaned': clean_subordonates.get('subordonates_cleaned', 0),
             'cleanup_failures': clean_subordonates.get('cleanup_failures', 0)
                 + clean_master.get('cleanup_failures', 0),
             'masters': clean_master.get('masters', []),
-            'subordonates': clean_subordonates.get('subordonates', [])
+            'subordonates': clean_subordonates.get('subordonates', []),
+            'cleanup_count': clean_master.get('masters_cleaned', 0)
+                + clean_subordonates.get('subordonates_cleaned', 0),
         }
         return instruction_set_response
 
@@ -5274,6 +5366,23 @@ class EWalletSessionManager():
     [ TODO ]: Fetch warning messages from message file by key codes.
     '''
 
+    def warning_no_master_accounts_marked_for_unlink_found(self, *args):
+        instruction_set_response = res_utils.format_warning_response(**{
+            'failed': True, 'details': args,
+            'warning': 'No Master accounts marked for unlink found.',
+        })
+        self.log_warning(**instruction_set_response)
+        return instruction_set_response
+
+    def warning_no_master_account_ids_found(self, *args):
+        instruction_set_response = res_utils.format_warning_response(**{
+            'failed': True, 'details': args,
+            'warning': 'Something went wrong. '
+                       'No Master account ids found.',
+        })
+        self.log_warning(**instruction_set_response)
+        return instruction_set_response
+
     def warning_could_not_clean_master_accounts(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
             'failed': True, 'details': args,
@@ -6497,6 +6606,33 @@ class EWalletSessionManager():
     '''
     [ TODO ]: Fetch error messages from message file by key codes.
     '''
+
+    def error_could_not_fetch_master_accounts_by_identifier_set(self, *args):
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
+            'error': 'Something went wrong. '
+                     'Could not fetch Master accounts by identifier set.',
+        })
+        self.log_error(**instruction_set_response)
+        return instruction_set_response
+
+    def error_no_master_accounts_found(self, *args):
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
+            'error': 'No Master user accounts found.',
+        })
+        self.log_error(**instruction_set_response)
+        return instruction_set_response
+
+    def error_could_not_fetch_master_accounts_marked_for_unlink(self, *args):
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
+            'error': 'Something went wrong. '
+                     'Could not fetch Master accounts marked for unlink.',
+        })
+        self.log_error(**instruction_set_response)
+        return instruction_set_response
+
     def error_could_not_delete_subordonate_user_accounts(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
             'failed': True, 'details': args,

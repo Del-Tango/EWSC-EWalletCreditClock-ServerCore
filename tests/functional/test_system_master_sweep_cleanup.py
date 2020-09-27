@@ -1,9 +1,10 @@
 import os
+import datetime
 import unittest
 from base import ewallet_session_manager as manager
 
 
-class TestEWalletSessionManagerSystemMasterCleanupTarget(unittest.TestCase):
+class TestEWalletSessionManagerSystemMasterSweepCleanup(unittest.TestCase):
     session_manager = None
     client_id = None
     session_token = None
@@ -34,6 +35,9 @@ class TestEWalletSessionManagerSystemMasterCleanupTarget(unittest.TestCase):
             controller='system', ctype='action', action='new', new='worker'
         )
 
+        # Create datetime object 30 hours in the past
+        past_date = datetime.datetime.now() - datetime.timedelta(days=31)
+
         # EWallet Server users
         print('[...]: Client action RequestClientID')
         client_id = session_manager.session_manager_controller(
@@ -44,7 +48,8 @@ class TestEWalletSessionManagerSystemMasterCleanupTarget(unittest.TestCase):
         print('[...]: Client action RequestSessionToken')
         session_token = session_manager.session_manager_controller(
             controller='client', ctype='action', action='request',
-            request='session_token', client_id=client_id['client_id']
+            request='session_token', client_id=client_id['client_id'],
+            expiration_date=past_date
         )
 
         # Create new master user account to acquire
@@ -54,7 +59,8 @@ class TestEWalletSessionManagerSystemMasterCleanupTarget(unittest.TestCase):
             master='account', client_id=client_id['client_id'],
             session_token=session_token['session_token'],
             user_email=cls.user_email_1, user_pass=cls.user_pass_1,
-            user_name=cls.user_name_1,
+            user_name=cls.user_name_1, to_unlink=True,
+            to_unlink_timestamp=past_date,
         )
 
         # Set global values
@@ -77,12 +83,11 @@ class TestEWalletSessionManagerSystemMasterCleanupTarget(unittest.TestCase):
                 'Details: {}'.format(e)
             )
 
-    def test_system_action_cleanup_target_master_account(self):
-        print('\n[ * ]: System action TargetMasterCleanup')
+    def test_system_action_sweep_cleanup_master_accounts(self):
+        print('\n[ * ]: System action SweepCleanupMasters')
         instruction_set = {
-            'controller': 'system', 'ctype': 'action',
-            'action': 'cleanup', 'cleanup': 'masters',
-            'master_id': self.master['account_data']['id']
+            'controller': 'system', 'ctype': 'action', 'action': 'cleanup',
+            'cleanup': 'masters', 'master_id': 1
         }
         clean = self.session_manager.session_manager_controller(
             **instruction_set

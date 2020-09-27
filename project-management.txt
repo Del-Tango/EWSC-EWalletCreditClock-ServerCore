@@ -58,8 +58,8 @@
     - x - (EWSC) Groom functional test suit to corect action names and call session manager destructors
     - x - (EWSC) Refactor user action CreateAccount to check if master subpool size limit reached
     - x - (EWSC) Implement system action TargetCleanupMaster
-    -   - (EWSC) Implement system action SweepCleanupMaster
-    - (EWSC) Implement system action FreezeMaster
+    - x - (EWSC) Implement system action SweepCleanupMaster
+    -   - (EWSC) Implement system action FreezeMaster
     - (EWSC) Implement system action UnfreezeMaster
     - (EWSC) Implement system action IncreaseMasterSubPool
     - (EWSC) Implement system action DecreaseMasterSubPool
@@ -250,7 +250,7 @@
         -
 
     - Functional
-        -
+        -   - Test system action TargetMasterCleanup
 
 ################################################################################
 - EWallet Credit Clock - Client Core
