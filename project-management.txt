@@ -60,6 +60,7 @@
     - x - (EWSC) Implement system action TargetCleanupMaster
     - x - (EWSC) Implement system action SweepCleanupMaster
     - x - (EWSC) Implement system action FreezeMaster
+    - x - (EWSC) Fix user action CreateAccount - subordonate not linked to master
     -   - (EWSC) Implement system action UnfreezeMaster
     - (EWSC) Implement system action IncreaseMasterSubPool
     - (EWSC) Implement system action DecreaseMasterSubPool

@@ -299,32 +299,27 @@ class ResUser(Base):
             'name': self.user_name,
             'create_date': self.user_create_date.strftime('%d-%m-%Y %H:%M:%S'),
             'write_date': self.user_write_date.strftime('%d-%m-%Y %H:%M:%S'),
-#           'user_create_uid': self.user_create_uid,
-#           'user_write_uid': self.user_write_uid,
-            'ewallet': None if not credit_ewallet else \
+            'ewallet': None if not credit_ewallet else
                 credit_ewallet.fetch_credit_ewallet_id(),
-            'contact_list': None if not contact_list else \
+            'contact_list': None if not contact_list else
                 contact_list.fetch_contact_list_id(),
-#           'user_pass_hash': self.user_pass_hash,
             'email': self.user_email,
             'phone': self.user_phone,
             'alias': self.user_alias,
-#           'state_code': self.user_state_code,
-#           'user_pass_hash_archive': {
-#               item.fetch_pass_hash_archive_id(): item.fetch_pass_hash_archive_pass_hash() \
-#               for item in self.user_pass_hash_archive
-#           },
+            'state': self.user_state_code,
             'ewallet_archive': {
-                item.fetch_credit_ewallet_id(): item.fetch_credit_ewallet_reference() \
+                item.fetch_credit_ewallet_id(): item.fetch_credit_ewallet_reference()
                 for item in self.user_credit_wallet_archive
             },
             'contact_list_archive': {
-                item.fetch_contact_list_id(): item.fetch_contact_list_reference() \
+                item.fetch_contact_list_id(): item.fetch_contact_list_reference()
                 for item in self.user_contact_list_archive
             },
             'to_unlink': self.to_unlink,
-            'to_unlink_timestamp': None if not self.to_unlink_timestamp else \
+            'to_unlink_timestamp': None if not self.to_unlink_timestamp else
                 res_utils.format_datetime(self.to_unlink_timestamp),
+            'subordonate_of': None if not self.subordonate_of else
+                self.subordonate_of.fetch_user_id(),
         }
         return values
 

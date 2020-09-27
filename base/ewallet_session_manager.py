@@ -1935,123 +1935,6 @@ class EWalletSessionManager():
 
     # CLEANERS
 
-    def freeze_subordonate_user_accounts(self, user_account_ids, **kwargs):
-        log.debug('')
-        orm_session = kwargs.get('orm_session') or res_utils.session_factory()
-        subordonates_frozen, freeze_failures = [], 0
-        try:
-            user_accounts = list(
-                orm_session.query(ResUser)\
-                    .filter(ResUser.user_id.in_(user_account_ids))
-            )
-            for account in user_accounts:
-                freeze_account = account.freeze_user_account()
-                if not freeze_account or isinstance(freeze_account, dict) and \
-                        freeze_account.get('failed'):
-                    self.warning_could_not_freeze_subordonate_user_account(
-                        user_account_ids, kwargs, orm_session,
-                        subordonates_frozen, freeze_failures, user_accounts,
-                        account, freeze_account
-                    )
-                    freeze_failures += 1
-                    continue
-                subordonates_frozen.append(account.fetch_user_id())
-        except Exception as e:
-            return self.error_could_not_freeze_subordonate_user_accounts(
-                user_account_ids, kwargs, orm_session, e
-            )
-        instruction_set_response = {
-            'failed': False,
-            'subordonates': subordonates_frozen,
-            'subordonates_frozen': len(subordonates_frozen),
-            'frozen_failures': freeze_failures,
-        }
-        return instruction_set_response
-
-    def freeze_master_user_accounts(self, master_ids):
-        log.debug('TODO - Refactor')
-        orm_session = res_utils.session_factory()
-        accounts_frozen, freeze_failures = [], 0
-        try:
-            user_query = list(
-                orm_session.query(ResMaster).filter(
-                    ResMaster.user_id.in_(master_ids)
-                )
-            )
-            if not user_query:
-                log.info('No master user accounts found by ID set.')
-                return False
-        except Exception as e:
-            return self.error_could_not_fetch_master_accounts_by_identifier_set(
-                master_ids, orm_session, e
-            )
-        accounts_to_freeze = len(user_query)
-        try:
-            for account in user_query:
-                user_id = account.fetch_user_id()
-                log.info('Freezing up Master user account {}.'.format(user_id))
-                freeze_account = account.freeze_user_account()
-                if not freeze_account or isinstance(freeze_account, dict) and \
-                    freeze_account.get('failed'):
-                    self.warning_could_not_freeze_user_account(
-                        orm_session, accounts_frozen, user_query,
-                        accounts_to_freeze, account, user_id,
-                        freeze_failures
-                    )
-                    freeze_failures += 1
-                    continue
-                accounts_frozen.append(user_id)
-        finally:
-            orm_session.commit()
-            orm_session.close()
-        instruction_set_response = {
-            'failed': False,
-            'masters': accounts_frozen,
-            'frozen_failures': freeze_failures,
-            'masters_frozen': len(accounts_frozen),
-        }
-        return instruction_set_response
-
-    def freeze_master_account_subordonate_pool(self, master_id):
-        log.debug('')
-        orm_session = res_utils.session_factory()
-        master_account = self.fetch_master_account_by_id(master_id)
-        accounts_frozen = []
-        user_query = list(
-            orm_session.query(ResMaster).filter_by(user_id=master_id)
-        )
-        if not user_query:
-            log.info('No master user account found by ID.')
-            return False
-        try:
-            account = user_query[0]
-            subpool = account.fetch_subordonate_account_pool()
-            sub_ids = [account.fetch_user_id() for account in subpool]
-            subpool_freeze = self.freeze_subordonate_user_accounts(
-                sub_ids, orm_session=orm_session
-            )
-            if not subpool_freeze or isinstance(subpool_freeze, dict) and \
-                    subpool_freeze.get('failed'):
-                return self.error_could_not_freeze_master_account_subpool(
-                    master_id, orm_session, master_account, accounts_frozen,
-                    user_query, account, subpool, sub_ids, subpool_freeze
-                )
-            accounts_frozen += subpool_freeze.get('subordonates_frozen', [])
-        except Exception as e:
-            return self.error_could_not_freeze_master_account_subpool(
-                master_id, orm_session, master_account, accounts_frozen,
-                user_query, e
-            )
-        instruction_set_response = {
-            'failed': False,
-            'masters': [master_id],
-            'subordonates': accounts_frozen,
-            'frozen_failures': subpool_freeze.get('frozen_failures', 0),
-#           'masters_frozen': 0,
-            'subordonates_frozen': len(accounts_frozen),
-        }
-        return instruction_set_response
-
     # TODO
 #   @pysnooper.snoop('logs/ewallet.log')
     def cleanup_master_user_accounts(self, master_ids):
@@ -2582,6 +2465,122 @@ class EWalletSessionManager():
         return True
 
     # GENERAL
+
+    def freeze_subordonate_user_accounts(self, user_account_ids, **kwargs):
+        log.debug('')
+        orm_session = kwargs.get('orm_session') or res_utils.session_factory()
+        subordonates_frozen, freeze_failures = [], 0
+        try:
+            user_accounts = list(
+                orm_session.query(ResUser)\
+                    .filter(ResUser.user_id.in_(user_account_ids))
+            )
+            for account in user_accounts:
+                freeze_account = account.freeze_user_account()
+                if not freeze_account or isinstance(freeze_account, dict) and \
+                        freeze_account.get('failed'):
+                    self.warning_could_not_freeze_subordonate_user_account(
+                        user_account_ids, kwargs, orm_session,
+                        subordonates_frozen, freeze_failures, user_accounts,
+                        account, freeze_account
+                    )
+                    freeze_failures += 1
+                    continue
+                subordonates_frozen.append(account.fetch_user_id())
+        except Exception as e:
+            return self.error_could_not_freeze_subordonate_user_accounts(
+                user_account_ids, kwargs, orm_session, e
+            )
+        instruction_set_response = {
+            'failed': False,
+            'subordonates': subordonates_frozen,
+            'subordonates_frozen': len(subordonates_frozen),
+            'frozen_failures': freeze_failures,
+        }
+        return instruction_set_response
+
+    def freeze_master_user_accounts(self, master_ids):
+        log.debug('TODO - Refactor')
+        orm_session = res_utils.session_factory()
+        accounts_frozen, freeze_failures = [], 0
+        try:
+            user_query = list(
+                orm_session.query(ResMaster).filter(
+                    ResMaster.user_id.in_(master_ids)
+                )
+            )
+            if not user_query:
+                log.info('No master user accounts found by ID set.')
+                return False
+        except Exception as e:
+            return self.error_could_not_fetch_master_accounts_by_identifier_set(
+                master_ids, orm_session, e
+            )
+        accounts_to_freeze = len(user_query)
+        try:
+            for account in user_query:
+                user_id = account.fetch_user_id()
+                log.info('Freezing up Master user account {}.'.format(user_id))
+                freeze_account = account.freeze_user_account()
+                if not freeze_account or isinstance(freeze_account, dict) and \
+                    freeze_account.get('failed'):
+                    self.warning_could_not_freeze_user_account(
+                        orm_session, accounts_frozen, user_query,
+                        accounts_to_freeze, account, user_id,
+                        freeze_failures
+                    )
+                    freeze_failures += 1
+                    continue
+                accounts_frozen.append(user_id)
+        finally:
+            orm_session.commit()
+            orm_session.close()
+        instruction_set_response = {
+            'failed': False,
+            'masters': accounts_frozen,
+            'frozen_failures': freeze_failures,
+            'masters_frozen': len(accounts_frozen),
+        }
+        return instruction_set_response
+
+    def freeze_master_account_subordonate_pool(self, master_id):
+        log.debug('')
+        orm_session = res_utils.session_factory()
+        master_account = self.fetch_master_account_by_id(master_id)
+        accounts_frozen = []
+        user_query = list(
+            orm_session.query(ResMaster).filter_by(user_id=master_id)
+        )
+        if not user_query:
+            log.info('No master user account found by ID.')
+            return False
+        try:
+            account = user_query[0]
+            subpool = account.fetch_subordonate_account_pool()
+            sub_ids = [account.fetch_user_id() for account in subpool]
+            subpool_freeze = self.freeze_subordonate_user_accounts(
+                sub_ids, orm_session=orm_session
+            )
+            if not subpool_freeze or isinstance(subpool_freeze, dict) and \
+                    subpool_freeze.get('failed'):
+                return self.error_could_not_freeze_master_account_subpool(
+                    master_id, orm_session, master_account, accounts_frozen,
+                    user_query, account, subpool, sub_ids, subpool_freeze
+                )
+            accounts_frozen += subpool_freeze.get('subordonates', [])
+        except Exception as e:
+            return self.error_could_not_freeze_master_account_subpool(
+                master_id, orm_session, master_account, accounts_frozen,
+                user_query, e
+            )
+        instruction_set_response = {
+            'failed': False,
+            'masters': [master_id],
+            'subordonates': accounts_frozen,
+            'frozen_failures': subpool_freeze.get('frozen_failures', 0),
+            'subordonates_frozen': len(accounts_frozen),
+        }
+        return instruction_set_response
 
     def log_error(self, **kwargs):
         log.warning(
