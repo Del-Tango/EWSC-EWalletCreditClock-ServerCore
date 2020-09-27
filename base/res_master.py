@@ -69,10 +69,15 @@ class ResMaster(ResUser):
 
     # FETCHERS
 
+    def fetch_subordonate_account_pool_size_limit(self):
+        log.debug('')
+        return self.account_limit
+
     def fetch_key_code(self):
         log.debug('')
         return self.key_code
 
+#   @pysnooper.snoop('logs/ewallet.log')
     def fetch_subordonate_account_pool(self):
         log.debug('')
         return self.subordonate_pool
@@ -110,6 +115,17 @@ class ResMaster(ResUser):
         return values
 
     # SETTERS
+
+    def set_subordonate_account_limit(self, account_limit):
+        log.debug('')
+        try:
+            self.account_limit = account_limit
+            self.update_write_date()
+        except Exception as e:
+            return self.error_could_not_set_master_account_limit(
+                account_limit, self.account_limit, e
+            )
+        return True
 
     def set_subordonate_user_account_to_pool(self, subordonate):
         log.debug('')
@@ -150,10 +166,29 @@ class ResMaster(ResUser):
     def check_subordonate_account_pool_size_limit_reached(self):
         log.debug('')
         subpool_size = self.fetch_subbordonate_account_pool_size()
-        size_limit = self.fetch_default_master_account_subpool_size_limit()
+        size_limit = self.fetch_subordonate_account_pool_size_limit()
         return True if subpool_size >= size_limit else False
 
     # GENERAL
+
+#   @pysnooper.snoop('logs/ewallet.log')
+    def increase_subordonate_account_pool_size_limit(self, increase_by):
+        log.debug('')
+        current_pool_size = self.fetch_subbordonate_account_pool_size()
+        new_pool_size = current_pool_size + increase_by
+        set_subpool_size = self.set_subordonate_account_limit(new_pool_size)
+        if not set_subpool_size or isinstance(set_subpool_size, dict) and \
+                set_subpool_size.get('failed'):
+            return self.warning_could_not_increase_subordonate_account_pool_size_limit(
+                increase_by, current_pool_size, new_pool_size, set_subpool_size
+            )
+        command_chain_response = {
+            'failed': False,
+            'subpool_size': new_pool_size,
+            'increased_by': increase_by,
+            'master_data': self.fetch_user_values(),
+        }
+        return command_chain_response
 
     def add_subordonate_to_pool(self, subordonate_account):
         log.debug('')
@@ -186,6 +221,16 @@ class ResMaster(ResUser):
 
     # WARNINGS
 
+    def warning_could_not_increase_subordonate_account_pool_size_limit(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Something went wrong. '
+                       'Could not increase Subordonate account pool '
+                       'size limit. Details: {}'.format(args),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
+
     def warning_could_not_add_acquired_ctoken_to_pool(self, *args):
         command_chain_response = {
             'failed': True,
@@ -207,6 +252,17 @@ class ResMaster(ResUser):
         return command_chain_response
 
     # ERRORS
+
+    def error_could_not_set_master_account_limit(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Something went wrong. '
+                     'Could not set Master account Subordonate user '
+                     'account pool size limit. '
+                     'Details: {}'.format(args),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
 
     def error_could_not_set_master_account_key_code(self, *args):
         command_chain_response = {

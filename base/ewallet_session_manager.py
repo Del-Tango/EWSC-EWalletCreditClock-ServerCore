@@ -82,6 +82,10 @@ class EWalletSessionManager():
     def fetch_from_ewallet_worker_session(self):
         log.debug('TODO - UNIMPLEMENTED')
 
+    def fetch_default_master_account_subordonate_pool_size_limit(self):
+        log.debug('')
+        return int(config.master_config['subordonate_pool_size'])
+
     def fetch_master_accounts_marked_for_unlink(self, **kwargs):
         log.debug('')
         try:
@@ -93,8 +97,6 @@ class EWalletSessionManager():
             return self.error_could_not_fetch_master_accounts_marked_for_unlink(
                 kwargs, e
             )
-        finally:
-            orm_session.close()
         return self.warning_no_master_accounts_marked_for_unlink_found(kwargs)\
             if not master_accounts else master_accounts
 
@@ -164,8 +166,6 @@ class EWalletSessionManager():
             return self.error_could_not_fetch_master_accounts_by_id_set(
                 master_account_ids, e
             )
-        finally:
-            orm_session.close()
         return self.warning_no_master_accounts_found_by_id_set(master_account_ids) \
             if not master_accounts else master_accounts
 
@@ -197,8 +197,6 @@ class EWalletSessionManager():
             return self.error_could_not_fetch_master_account_by_id(
                 master_account_id, e
             )
-        finally:
-            orm_session.close()
         return self.warning_no_master_account_found_by_id(master_account_id) \
             if not master_account else master_account[0]
 
@@ -217,8 +215,6 @@ class EWalletSessionManager():
                 ewallet_session[0].set_orm_session(orm_session)
         except:
             return self.error_could_not_fetch_ewallet_session_by_id(ewallet_session_id)
-        finally:
-            orm_session.close()
         return self.warning_no_ewallet_session_found_by_id(ewallet_session_id) \
             if not ewallet_session else ewallet_session[0]
 
@@ -2466,6 +2462,31 @@ class EWalletSessionManager():
 
     # GENERAL
 
+    def increase_master_account_subordonate_account_pool_size(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('master_id'):
+            return self.error_no_master_account_id_specified(kwargs)
+        increase_by = kwargs.get('increase_by') or \
+            self.fetch_default_master_account_subordonate_pool_size_limit()
+        master_account = kwargs.get('master_account') or \
+            self.fetch_master_account_by_id(kwargs['master_id'])
+        increase_size = master_account.increase_subordonate_account_pool_size_limit(
+            increase_by
+        )
+        if not increase_size or isinstance(increase_size, dict) and \
+                increase_size.get('failed'):
+            return self.warning_could_not_increase_subordonate_account_pool_size_limit(
+                kwargs, increase_by, master_account, increase_size
+            )
+        instruction_set_response = {
+            'failed': False,
+            'master': kwargs['master_id'],
+            'subpool_size': increase_size.get('subpool_size', 0),
+            'increased_by': increase_size.get('increased_by', 0),
+            'master_data': increase_size.get('master_data', {}),
+        }
+        return instruction_set_response
+
     def unfreeze_subordonate_user_accounts(self, user_account_ids, **kwargs):
         log.debug('')
         orm_session = kwargs.get('orm_session') or res_utils.session_factory()
@@ -2974,6 +2995,33 @@ class EWalletSessionManager():
         log.debug('TODO - UNIMPLEMENTED')
     def action_stop_client_token_cleaner_cron(self, **kwargs):
         log.debug('TODO - UNIMPLEMENTED')
+
+    def action_increase_master_subordonate_account_pool_size(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('master_id'):
+            return self.error_no_master_account_id_specified(kwargs)
+        master_account = self.fetch_master_account_by_id(kwargs['master_id'])
+        if not master_account or isinstance(master_account, dict) and \
+                master_account.get('failed'):
+            return self.error_no_master_user_account_found_by_id(
+                kwargs, master_account
+            )
+        increase_subpool_size = self.increase_master_account_subordonate_account_pool_size(
+            master_account=master_account, **kwargs
+        )
+        if not increase_subpool_size or isinstance(increase_subpool_size, dict) and \
+            increase_subpool_size.get('failed'):
+            return self.warning_could_not_increase_subordonate_account_pool_size_limit(
+                kwargs, master_account, increase_subpool_size
+            )
+        instruction_set_response = {
+            'failed': False,
+            'master': increase_subpool_size.get('master', None),
+            'subpool_size': increase_subpool_size.get('subpool_size', 0),
+            'increased_by': increase_subpool_size.get('increased_by', 0),
+            'master_data': increase_subpool_size.get('master_data', {}),
+        }
+        return instruction_set_response
 
     def action_unfreeze_master_user_account(self, **kwargs):
         log.debug('')
@@ -3908,6 +3956,10 @@ class EWalletSessionManager():
         '''
         log.debug('TODO - Kill process')
         return self.unset_socket_handler()
+
+    def handle_system_action_increase_master_subpool_size(self, **kwargs):
+        log.debug('')
+        return self.action_increase_master_subordonate_account_pool_size(**kwargs)
 
     def handle_system_action_unfreeze_master_account(self, **kwargs):
         log.debug('')
@@ -4982,6 +5034,24 @@ class EWalletSessionManager():
         }
         return handlers[kwargs['transfer']](**kwargs)
 
+    def handle_system_action_increase_master(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('master'):
+            return self.error_no_system_action_increase_master_target_specified(kwargs)
+        handlers = {
+            'subpool': self.handle_system_action_increase_master_subpool_size,
+        }
+        return handlers[kwargs['master']](**kwargs)
+
+    def handle_system_action_increase(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('increase'):
+            return self.error_no_system_action_increase_target_specified(kwargs)
+        handlers = {
+            'master': self.handle_system_action_increase_master,
+        }
+        return handlers[kwargs['increase']](**kwargs)
+
     def handle_system_action_unfreeze(self, **kwargs):
         log.debug('')
         if not kwargs.get('unfreeze'):
@@ -5633,6 +5703,7 @@ class EWalletSessionManager():
             'cleanup': self.handle_system_action_cleanup,
             'freeze': self.handle_system_action_freeze,
             'unfreeze': self.handle_system_action_unfreeze,
+            'increase': self.handle_system_action_increase,
         }
         return handlers[kwargs['action']](**kwargs)
 
@@ -5695,6 +5766,16 @@ class EWalletSessionManager():
     '''
     [ TODO ]: Fetch warning messages from message file by key codes.
     '''
+
+    def warning_could_not_increase_subordonate_account_pool_size_limit(self, *args):
+        instruction_set_response = res_utils.format_warning_response(**{
+            'failed': True, 'details': args,
+            'warning': 'Something went wrong. '
+                       'Could not increase Subordonate user account pool size '
+                       'for Master account.',
+        })
+        self.log_warning(**instruction_set_response)
+        return instruction_set_response
 
     def warning_could_not_unfreeze_subordonate_user_account(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
@@ -6990,6 +7071,22 @@ class EWalletSessionManager():
     '''
     [ TODO ]: Fetch error messages from message file by key codes.
     '''
+
+    def error_no_system_action_increase_target_specified(self, *args):
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
+            'error': 'No system action Increase target specified.',
+        })
+        self.log_error(**instruction_set_response)
+        return instruction_set_response
+
+    def error_no_system_action_increase_master_target_specified(self, *args):
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
+            'error': 'No system action IncreaseMaster target specified.',
+        })
+        self.log_error(**instruction_set_response)
+        return instruction_set_response
 
     def error_could_not_unfreeze_subordonate_user_accounts(self, *args):
         instruction_set_response = res_utils.format_error_response(**{

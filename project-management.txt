@@ -61,8 +61,8 @@
     - x - (EWSC) Implement system action SweepCleanupMaster
     - x - (EWSC) Implement system action FreezeMaster
     - x - (EWSC) Implement system action UnfreezeMaster
-    -   - (EWSC) Implement system action IncreaseMasterSubPool
-    - (EWSC) Implement system action DecreaseMasterSubPool
+    - x - (EWSC) Implement system action IncreaseMasterSubPool
+    -   - (EWSC) Implement system action DecreaseMasterSubPool
     - (EWSC) Refactor user actions to impose master oriented restrictions (key and frozen checks)
     - (EWSC) Implement master action AccountLogin
     - (EWSC) Implement master action AccountLogout
