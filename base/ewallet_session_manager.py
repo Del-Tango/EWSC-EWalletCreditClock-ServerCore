@@ -2466,6 +2466,122 @@ class EWalletSessionManager():
 
     # GENERAL
 
+    def unfreeze_subordonate_user_accounts(self, user_account_ids, **kwargs):
+        log.debug('')
+        orm_session = kwargs.get('orm_session') or res_utils.session_factory()
+        subordonates_activated, activation_failures = [], 0
+        try:
+            user_accounts = list(
+                orm_session.query(ResUser)\
+                    .filter(ResUser.user_id.in_(user_account_ids))
+            )
+            for account in user_accounts:
+                unfreeze_account = account.unfreeze_user_account()
+                if not unfreeze_account or isinstance(unfreeze_account, dict) and \
+                        unfreeze_account.get('failed'):
+                    self.warning_could_not_unfreeze_subordonate_user_account(
+                        user_account_ids, kwargs, orm_session,
+                        subordonates_activated, activation_failures,
+                        user_accounts, account, unfreeze_account
+                    )
+                    activation_failures += 1
+                    continue
+                subordonates_activated.append(account.fetch_user_id())
+        except Exception as e:
+            return self.error_could_not_unfreeze_subordonate_user_accounts(
+                user_account_ids, kwargs, orm_session, e
+            )
+        instruction_set_response = {
+            'failed': False,
+            'subordonates': subordonates_activated,
+            'subordonates_activated': len(subordonates_activated),
+            'activation_failures': activation_failures,
+        }
+        return instruction_set_response
+
+    def unfreeze_master_account_subordonate_pool(self, master_id):
+        log.debug('')
+        orm_session = res_utils.session_factory()
+        master_account = self.fetch_master_account_by_id(master_id)
+        accounts_activated = []
+        user_query = list(
+            orm_session.query(ResMaster).filter_by(user_id=master_id)
+        )
+        if not user_query:
+            log.info('No Master user account found by ID.')
+            return False
+        try:
+            account = user_query[0]
+            subpool = account.fetch_subordonate_account_pool()
+            sub_ids = [account.fetch_user_id() for account in subpool]
+            subpool_unfreeze = self.unfreeze_subordonate_user_accounts(
+                sub_ids, orm_session=orm_session
+            )
+            if not subpool_unfreeze or isinstance(subpool_unfreeze, dict) and \
+                    subpool_unfreeze.get('failed'):
+                return self.error_could_not_unfreeze_master_account_subpool(
+                    master_id, orm_session, master_account, accounts_activated,
+                    user_query, account, subpool, sub_ids, subpool_unfreeze
+                )
+            accounts_activated += subpool_unfreeze.get('subordonates', [])
+        except Exception as e:
+            return self.error_could_not_unfreeze_master_account_subpool(
+                master_id, orm_session, master_account, accounts_activated,
+                user_query, e
+            )
+        instruction_set_response = {
+            'failed': False,
+            'masters': [master_id],
+            'subordonates': accounts_activated,
+            'activation_failures': subpool_unfreeze.get('activation_failures', 0),
+            'subordonates_activated': len(accounts_activated),
+        }
+        return instruction_set_response
+
+    def unfreeze_master_user_accounts(self, master_ids):
+        log.debug('TODO - Refactor')
+        orm_session = res_utils.session_factory()
+        accounts_activated, activation_failures = [], 0
+        try:
+            user_query = list(
+                orm_session.query(ResMaster).filter(
+                    ResMaster.user_id.in_(master_ids)
+                )
+            )
+            if not user_query:
+                log.info('No Master user accounts found by ID set.')
+                return False
+        except Exception as e:
+            return self.error_could_not_fetch_master_accounts_by_identifier_set(
+                master_ids, orm_session, e
+            )
+        accounts_to_unfreeze = len(user_query)
+        try:
+            for account in user_query:
+                user_id = account.fetch_user_id()
+                log.info('Unfreezing Master user account {}.'.format(user_id))
+                unfreeze_account = account.unfreeze_user_account()
+                if not unfreeze_account or isinstance(unfreeze_account, dict) and \
+                    unfreeze_account.get('failed'):
+                    self.warning_could_not_unfreeze_user_account(
+                        orm_session, accounts_activated, user_query,
+                        accounts_to_unfreeze, account, user_id,
+                        activation_failures
+                    )
+                    activation_failures += 1
+                    continue
+                accounts_activated.append(user_id)
+        finally:
+            orm_session.commit()
+            orm_session.close()
+        instruction_set_response = {
+            'failed': False,
+            'masters': accounts_activated,
+            'activation_failures': activation_failures,
+            'masters_activated': len(accounts_activated),
+        }
+        return instruction_set_response
+
     def freeze_subordonate_user_accounts(self, user_account_ids, **kwargs):
         log.debug('')
         orm_session = kwargs.get('orm_session') or res_utils.session_factory()
@@ -2858,6 +2974,41 @@ class EWalletSessionManager():
         log.debug('TODO - UNIMPLEMENTED')
     def action_stop_client_token_cleaner_cron(self, **kwargs):
         log.debug('TODO - UNIMPLEMENTED')
+
+    def action_unfreeze_master_user_account(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('master_id'):
+            return self.error_no_master_account_id_specified(kwargs)
+        master_account = self.fetch_master_account_by_id(kwargs['master_id'])
+        if not master_account or isinstance(master_account, dict) and \
+                master_account.get('failed'):
+            return self.error_no_master_user_account_found_by_id(
+                kwargs, master_account
+            )
+        unfreeze_subordonates = self.unfreeze_master_account_subordonate_pool(
+            kwargs['master_id']
+        )
+        unfreeze_master = self.unfreeze_master_user_accounts(
+            [kwargs['master_id']]
+        )
+        if not unfreeze_master or isinstance(unfreeze_master, dict) and \
+                unfreeze_master.get('failed'):
+            return self.warning_could_not_unfreeze_master_account(
+                kwargs, master_account, unfreeze_subordonates,
+                unfreeze_master,
+            )
+        instruction_set_response = {
+            'failed': False,
+            'masters_activated': unfreeze_master.get('masters_activated', 0),
+            'subordonates_activated': unfreeze_subordonates.get('subordonates_activated', 0),
+            'activation_failures': unfreeze_subordonates.get('activation_failures', 0)
+                + unfreeze_master.get('activation_failures', 0),
+            'masters': unfreeze_master.get('masters', []),
+            'subordonates': unfreeze_subordonates.get('subordonates', []),
+            'activation_count': unfreeze_master.get('masters_activated', 0)
+                + unfreeze_subordonates.get('subordonates_activated', 0),
+        }
+        return instruction_set_response
 
     def action_freeze_master_user_account(self, **kwargs):
         log.debug('')
@@ -3757,6 +3908,10 @@ class EWalletSessionManager():
         '''
         log.debug('TODO - Kill process')
         return self.unset_socket_handler()
+
+    def handle_system_action_unfreeze_master_account(self, **kwargs):
+        log.debug('')
+        return self.action_unfreeze_master_user_account(**kwargs)
 
     def handle_system_action_freeze_master_account(self, **kwargs):
         log.debug('')
@@ -4827,6 +4982,15 @@ class EWalletSessionManager():
         }
         return handlers[kwargs['transfer']](**kwargs)
 
+    def handle_system_action_unfreeze(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('unfreeze'):
+            return self.error_no_system_action_unfreeze_target_specified(kwargs)
+        handlers = {
+            'master': self.handle_system_action_unfreeze_master_account,
+        }
+        return handlers[kwargs['unfreeze']](**kwargs)
+
     def handle_system_action_freeze(self, **kwargs):
         log.debug('')
         if not kwargs.get('freeze'):
@@ -5468,6 +5632,7 @@ class EWalletSessionManager():
             'interogate': self.handle_system_action_interogate,
             'cleanup': self.handle_system_action_cleanup,
             'freeze': self.handle_system_action_freeze,
+            'unfreeze': self.handle_system_action_unfreeze,
         }
         return handlers[kwargs['action']](**kwargs)
 
@@ -5530,6 +5695,33 @@ class EWalletSessionManager():
     '''
     [ TODO ]: Fetch warning messages from message file by key codes.
     '''
+
+    def warning_could_not_unfreeze_subordonate_user_account(self, *args):
+        instruction_set_response = res_utils.format_warning_response(**{
+            'failed': True, 'details': args,
+            'warning': 'Something went wrong. '
+                       'Could not unfreeze Subordonate user account.',
+        })
+        self.log_warning(**instruction_set_response)
+        return instruction_set_response
+
+    def warning_could_not_unfreeze_user_account(self, *args):
+        instruction_set_response = res_utils.format_warning_response(**{
+            'failed': True, 'details': args,
+            'warning': 'Something went wrong. '
+                       'Could not unfreeze user account.',
+        })
+        self.log_warning(**instruction_set_response)
+        return instruction_set_response
+
+    def warning_could_not_unfreeze_master_account(self, *args):
+        instruction_set_response = res_utils.format_warning_response(**{
+            'failed': True, 'details': args,
+            'warning': 'Something went wrong. '
+                       'Could not unfreeze Master user account.',
+        })
+        self.log_warning(**instruction_set_response)
+        return instruction_set_response
 
     def warning_could_not_freeze_user_account(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
@@ -6799,11 +6991,38 @@ class EWalletSessionManager():
     [ TODO ]: Fetch error messages from message file by key codes.
     '''
 
+    def error_could_not_unfreeze_subordonate_user_accounts(self, *args):
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
+            'error': 'Something went wrong. '
+                     'Could not unfreeze Subordonate user accounts.',
+        })
+        self.log_error(**instruction_set_response)
+        return instruction_set_response
+
+    def error_could_not_unfreeze_master_account_subpool(self, *args):
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
+            'error': 'Something went wrong. '
+                     'Could not unfreeze Subordonate user account pool '
+                     'for given Master account.',
+        })
+        self.log_error(**instruction_set_response)
+        return instruction_set_response
+
+    def error_no_system_action_unfreeze_target_specified(self, *args):
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
+            'error': 'No system action Unfreeze target specified.',
+        })
+        self.log_error(**instruction_set_response)
+        return instruction_set_response
+
     def error_could_not_freeze_subordonate_user_accounts(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
             'failed': True, 'details': args,
             'error': 'Something went wrong. '
-                     'Could not freeze subordonate user accounts.',
+                     'Could not freeze Subordonate user accounts.',
         })
         self.log_error(**instruction_set_response)
         return instruction_set_response
@@ -6820,7 +7039,7 @@ class EWalletSessionManager():
     def error_no_system_action_freeze_target_specified(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
             'failed': True, 'details': args,
-            'error': 'No system action freeze target specified.',
+            'error': 'No system action Freeze target specified.',
         })
         self.log_error(**instruction_set_response)
         return instruction_set_response
@@ -6855,7 +7074,7 @@ class EWalletSessionManager():
         instruction_set_response = res_utils.format_error_response(**{
             'failed': True, 'details': args,
             'error': 'Something went wrong. '
-                     'Could not delete subordonate user accounts.',
+                     'Could not delete Subordonate user accounts.',
         })
         self.log_error(**instruction_set_response)
         return instruction_set_response
@@ -6865,7 +7084,7 @@ class EWalletSessionManager():
             'failed': True, 'details': args,
             'error': 'Something went wrong. '
                      'Could not cleanup Master user account '
-                     'subordonate accounts.',
+                     'Subordonate accounts.',
         })
         self.log_error(**instruction_set_response)
         return instruction_set_response
@@ -6934,7 +7153,7 @@ class EWalletSessionManager():
     def error_invalid_acquire_master_action_data_set(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
             'failed': True, 'details': args,
-            'error': 'Invalid acquire master action data set.',
+            'error': 'Invalid AcquireMaster action data set.',
         })
         self.log_error(**instruction_set_response)
         return instruction_set_response
@@ -6942,7 +7161,7 @@ class EWalletSessionManager():
     def error_no_client_action_acquire_target_specified(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
             'failed': True, 'details': args,
-            'error': 'No client action acquire target specified.',
+            'error': 'No client action Acquire target specified.',
         })
         self.log_error(**instruction_set_response)
         return instruction_set_response
@@ -6951,7 +7170,7 @@ class EWalletSessionManager():
         instruction_set_response = res_utils.format_error_response(**{
             'failed': True, 'details': args,
             'error': 'Something went wrong. '
-                     'Could not fetch master account by ID.',
+                     'Could not fetch Master account by ID.',
         })
         self.log_error(**instruction_set_response)
         return instruction_set_response
@@ -6959,7 +7178,7 @@ class EWalletSessionManager():
     def error_invalid_master_account_id(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
             'failed': True, 'details': args,
-            'error': 'Invalid master account identifier.',
+            'error': 'Invalid Master account identifier.',
         })
         self.log_error(**instruction_set_response)
         return instruction_set_response
@@ -6968,8 +7187,8 @@ class EWalletSessionManager():
         instruction_set_response = res_utils.format_error_response(**{
             'failed': True, 'details': args,
             'error': 'Something went wrong. '
-                     'Could not fetch acquired master accounts from '
-                     'client token set.',
+                     'Could not fetch acquired Master accounts from '
+                     'CToken set.',
         })
         self.log_error(**instruction_set_response)
         return instruction_set_response
@@ -6977,7 +7196,7 @@ class EWalletSessionManager():
     def error_no_client_action_new_master_target_specified(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
             'failed': True, 'details': args,
-            'error': 'No system action new master target specified.',
+            'error': 'No system action NewMaster target specified.',
         })
         self.log_error(**instruction_set_response)
         return instruction_set_response
@@ -6985,7 +7204,7 @@ class EWalletSessionManager():
     def error_no_client_action_verify_stoken_target_specified(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
             'failed': True, 'details': args,
-            'error': 'No client action verify SToken target specified.',
+            'error': 'No client action VerifySToken target specified.',
         })
         self.log_error(**instruction_set_response)
         return instruction_set_response

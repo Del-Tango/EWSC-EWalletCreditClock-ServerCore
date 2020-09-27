@@ -60,11 +60,10 @@
     - x - (EWSC) Implement system action TargetCleanupMaster
     - x - (EWSC) Implement system action SweepCleanupMaster
     - x - (EWSC) Implement system action FreezeMaster
-    - x - (EWSC) Fix user action CreateAccount - subordonate not linked to master
-    -   - (EWSC) Implement system action UnfreezeMaster
-    - (EWSC) Implement system action IncreaseMasterSubPool
+    - x - (EWSC) Implement system action UnfreezeMaster
+    -   - (EWSC) Implement system action IncreaseMasterSubPool
     - (EWSC) Implement system action DecreaseMasterSubPool
-    - (EWSC) Refactor user actions to impose master oriented restrictions
+    - (EWSC) Refactor user actions to impose master oriented restrictions (key and frozen checks)
     - (EWSC) Implement master action AccountLogin
     - (EWSC) Implement master action AccountLogout
     - (EWSC) Implement master action ViewAccount
