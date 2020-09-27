@@ -56,6 +56,7 @@ class ResUser(Base):
     user_contact_list_archive = relationship('ContactList')
     to_unlink = Column(Boolean)
     to_unlink_timestamp = Column(DateTime)
+    is_active = Column(Boolean)
 
     __mapper_args__ = {
         'polymorphic_identity': 'res_user',
@@ -93,6 +94,7 @@ class ResUser(Base):
                     [user_contact_list]
         self.to_unlink = kwargs.get('to_unlink', False)
         self.to_unlink_timestamp = kwargs.get('to_unlink_timestamp')
+        self.is_active = kwargs.get('is_active', True)
 
     # FETCHERS
 
@@ -327,6 +329,18 @@ class ResUser(Base):
         return values
 
     # SETTERS
+
+    def set_is_active(self, flag=True):
+        log.debug('')
+        try:
+            self.is_active = flag
+            self.update_write_date()
+        except Exception as e:
+            return self.error_could_not_set_user_is_active_flag(
+                flag, self.is_active, e
+            )
+        log.info('Successfully set user is active flag.')
+        return True
 
     def set_user_email(self, email_address):
         log.debug('')
@@ -664,6 +678,26 @@ class ResUser(Base):
         return transaction_handler
 
     # GENERAL
+
+    def freeze_user_account(self):
+        log.debug('')
+        set_inactive = self.set_is_active(flag=False)
+        if not set_inactive or isinstance(set_inactive, dict) and \
+                set_inactive.get('failed'):
+            return self.error_could_not_freeze_user_account(
+                set_inactive, self.is_active
+            )
+        return True
+
+    def unfreeze_user_account(self):
+        log.debug('')
+        set_active = self.set_is_active(flag=True)
+        if not set_active or isinstance(set_active, dict) and \
+                set_active.get('failed'):
+            return self.error_could_not_freeze_user_account(
+                set_active, self.is_active
+            )
+        return True
 
     def link_journal_records_for_transaction(self, **kwargs):
         log.debug('')
@@ -1510,6 +1544,26 @@ class ResUser(Base):
     '''
     [ TODO ]: Fetch error messages from message file by key codes.
     '''
+
+    def error_could_not_set_user_is_active_flag(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Something went wrong. '
+                     'Could not set user is active flag. '
+                     'Details: {}'.format(args)
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_could_not_freeze_user_account(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Something went wrong. '
+                     'Could not freeze user account. '
+                     'Details: {}'.format(args)
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
 
     def error_no_partner_account_found(self, *args):
         command_chain_response = {

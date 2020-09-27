@@ -1,9 +1,10 @@
 import os
+import datetime
 import unittest
 from base import ewallet_session_manager as manager
 
 
-class TestEWalletSessionManagerSystemActionStartAccountCleanerCron(unittest.TestCase):
+class TestEWalletSessionManagerSystemFreezeMaster(unittest.TestCase):
     session_manager = None
     client_id = None
     session_token = None
@@ -24,37 +25,43 @@ class TestEWalletSessionManagerSystemActionStartAccountCleanerCron(unittest.Test
 
     @classmethod
     def setUpClass(cls):
-        print('[ + ]: Prerequisits:')
+        print('[ + ]: Prerequisites -')
         # Create new EWallet Session Manager instance
         session_manager = manager.EWalletSessionManager()
 
-        # Generate new Client ID to be able to request a Session Token
+        # Create first EWallet Session Worker
+        print('[...]: System action NewWorker')
+        worker = session_manager.session_manager_controller(
+            controller='system', ctype='action', action='new', new='worker'
+        )
+
+        # Create datetime object 30 hours in the past
+        past_date = datetime.datetime.now() - datetime.timedelta(days=31)
+
+        # EWallet Server users
         print('[...]: Client action RequestClientID')
         client_id = session_manager.session_manager_controller(
             controller='client', ctype='action', action='request',
             request='client_id'
         )
 
-        # Request a Session Token to be able to operate within a EWallet Session
         print('[...]: Client action RequestSessionToken')
         session_token = session_manager.session_manager_controller(
             controller='client', ctype='action', action='request',
-            request='session_token', client_id=client_id['client_id']
+            request='session_token', client_id=client_id['client_id'],
+            expiration_date=past_date
         )
 
-        # Set global values
-        cls.session_manager = session_manager
-        cls.client_id = client_id['client_id']
-        cls.session_token = session_token['session_token']
-
+        # Create new master user account to acquire
         print('[...]: Client action NewMaster')
         master = session_manager.session_manager_controller(
             controller='client', ctype='action', action='new', new='master',
-            master='account', client_id=cls.client_id,
-            session_token=cls.session_token, user_name=cls.user_name_3,
-            user_pass=cls.user_pass_3, user_email=cls.user_email_3,
-            user_phone=cls.user_phone_3, user_alias=cls.user_alias_3,
-            company=cls.user_company_3, address=cls.user_address_3,
+            master='account', client_id=client_id['client_id'],
+            session_token=session_token['session_token'],
+            user_name=cls.user_name_3, user_pass=cls.user_pass_3,
+            user_email=cls.user_email_3, user_phone=cls.user_phone_3,
+            user_alias=cls.user_alias_3, company=cls.user_company_3,
+            address=cls.user_address_3,
         )
 
         print('[...]: Client action AcquireMaster')
@@ -65,30 +72,21 @@ class TestEWalletSessionManagerSystemActionStartAccountCleanerCron(unittest.Test
             session_token=session_token['session_token']
         )
 
-        # Create new user account to use as SystemCore account mockup
         print('[...]: User action CreateAccount')
         new_account = session_manager.session_manager_controller(
             controller='client', ctype='action', action='new',
-            new='account', client_id=cls.client_id,
-            session_token=cls.session_token, user_name=cls.user_name_1,
-            user_pass=cls.user_pass_1, user_email=cls.user_email_1
+            new='account', client_id=client_id['client_id'],
+            session_token=session_token['session_token'],
+            user_name=cls.user_name_1, user_pass=cls.user_pass_1,
+            user_email=cls.user_email_1
         )
 
-        # Login to new user account
-        print('[...]: User action AccountLogin')
-        login = session_manager.session_manager_controller(
-            controller='client', ctype='action', action='login',
-            client_id=cls.client_id, session_token=cls.session_token,
-            user_email=cls.user_email_1, user_pass=cls.user_pass_1,
-        )
-
-        # Mark account for unlink
-        print('[...]: User action UnlinkAccount')
-        unlink = session_manager.session_manager_controller(
-            controller='client', ctype='action', action='unlink',
-            unlink='account', client_id=cls.client_id,
-            session_token=cls.session_token,
-        )
+        # Set global values
+        cls.session_manager = session_manager
+        cls.worker = worker
+        cls.client_id = client_id
+        cls.session_token = session_token
+        cls.master = master
 
     @classmethod
     def tearDownClass(cls):
@@ -103,22 +101,26 @@ class TestEWalletSessionManagerSystemActionStartAccountCleanerCron(unittest.Test
                 'Details: {}'.format(e)
             )
 
-    def test_system_action_start_account_cleaner_cron_functionality(self):
-        print('\n[ * ]: System action StartAccountCleaner')
+    def test_system_action_freeze_master_account(self):
+        print('\n[ * ]: System action FreezeMaster')
         instruction_set = {
-            'controller': 'system', 'ctype': 'action', 'action': 'start',
-            'start': 'cleaner', 'clean': 'accounts',
+            'controller': 'system', 'ctype': 'action', 'action': 'freeze',
+            'freeze': 'master', 'master_id': self.master['account_data']['id']
         }
-        start = self.session_manager.session_manager_controller(
+        clean = self.session_manager.session_manager_controller(
             **instruction_set
         )
         print(
-            '[ > ] Instruction Set: ' + str(instruction_set) +
-            '\n[ < ] Response: ' + str(start) + '\n'
+            '[ > ]: Instruction Set: ' + str(instruction_set) +
+            '\n[ < ]: Response: ' + str(clean) + '\n'
         )
-        self.assertTrue(isinstance(start, dict))
-        self.assertEqual(len(start.keys()), 3)
-        self.assertFalse(start.get('failed'))
-        self.assertTrue(isinstance(start.get('cron'), str))
-        self.assertTrue(isinstance(start.get('pool_entry'), dict))
+        self.assertTrue(isinstance(clean, dict))
+        self.assertEqual(len(clean.keys()), 7)
+        self.assertFalse(clean.get('failed'))
+        self.assertTrue(isinstance(clean['masters'], list))
+        self.assertTrue(isinstance(clean['subordonates'], list))
+        self.assertTrue(isinstance(clean['masters_frozen'], int))
+        self.assertTrue(isinstance(clean['subordonates_frozen'], int))
+        self.assertTrue(isinstance(clean['frozen_failures'], int))
+        self.assertTrue(isinstance(clean['frozen_count'], int))
 

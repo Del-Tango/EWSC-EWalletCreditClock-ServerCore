@@ -59,8 +59,8 @@
     - x - (EWSC) Refactor user action CreateAccount to check if master subpool size limit reached
     - x - (EWSC) Implement system action TargetCleanupMaster
     - x - (EWSC) Implement system action SweepCleanupMaster
-    -   - (EWSC) Implement system action FreezeMaster
-    - (EWSC) Implement system action UnfreezeMaster
+    - x - (EWSC) Implement system action FreezeMaster
+    -   - (EWSC) Implement system action UnfreezeMaster
     - (EWSC) Implement system action IncreaseMasterSubPool
     - (EWSC) Implement system action DecreaseMasterSubPool
     - (EWSC) Refactor user actions to impose master oriented restrictions
@@ -250,7 +250,8 @@
         -
 
     - Functional
-        -   - Test system action TargetMasterCleanup
+        - x - Test system action TargetCleanupMaster
+        - x - Test system action SweepCleanupMaster
 
 ################################################################################
 - EWallet Credit Clock - Client Core
@@ -394,11 +395,20 @@
     - System action Increase Master SubPool #
     - System action Decrease Master SubPool #
     - System action Interogate Session Workers
-    - System action Target Cleanup Master #
+    - System action Target Cleanup Master
     - System action Target Cleanup Worker
     - System action Target Cleanup Session
     - System action Target Cleanup CToken
     - System action Target Cleanup SToken
+
+    - System action Sweep Cleanup Masters
+        - State Oriented Restrictions:
+            - Master Account States:
+                - No master ids specified
+                    - Flaged for Unlink
+                    - Past Freeze Interval
+                - Specific master ids
+                    - Exists
 
     - System action Sweep Cleanup CTokens
         - State Oriented Restrictions:

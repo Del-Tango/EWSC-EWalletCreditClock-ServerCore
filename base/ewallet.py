@@ -89,7 +89,8 @@ class EWallet(Base):
             ).filter_by(user_email=kwargs['master']))
         except Exception as e:
             return self.error_could_not_fetch_master_account_by_email(kwargs, e)
-        log.info('Successfully fetched master user account by email.')
+        if user_account:
+            log.info('Successfully fetched master user account by email.')
         return self.warning_no_master_account_found_by_email(kwargs) if not \
             user_account else user_account[0]
 

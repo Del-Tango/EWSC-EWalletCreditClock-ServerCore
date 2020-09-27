@@ -15,6 +15,7 @@ from . import test_system_stoken_target_cleanup
 from . import test_system_ctoken_target_cleanup
 from . import test_system_master_target_cleanup
 from . import test_system_master_sweep_cleanup
+from . import test_system_freeze_master
 
 from . import test_user_request_clientid
 from . import test_user_request_stoken

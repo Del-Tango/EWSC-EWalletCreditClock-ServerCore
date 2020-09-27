@@ -46,8 +46,8 @@ class ResMaster(ResUser):
     subordonate_pool = relationship(
        'ResUser', foreign_keys='ResUser.master_account_id'
     )
-    is_active = Column(Boolean)
     acquired_ctokens = []
+    is_active = Column(Boolean)
 
     __mapper_args__ = {
         'polymorphic_identity': 'res_master',
@@ -63,8 +63,8 @@ class ResMaster(ResUser):
         self.key_code = kwargs.get('key_code') or \
             self.fetch_default_master_account_key_code()
         self.subordonate_pool = kwargs.get('subordonate_pool', [])
-        self.is_active = kwargs.get('is_active', True)
         self.acquired_ctokens = kwargs.get('acquired_ctokens', [])
+        self.is_active = kwargs.get('is_active', True)
         return super(ResMaster, self).__init__(master=True, **kwargs)
 
     # FETCHERS
