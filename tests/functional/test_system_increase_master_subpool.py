@@ -109,20 +109,18 @@ class TestEWalletSessionManagerSystemIncreaseMasterSubpool(unittest.TestCase):
             'master_id': self.master['account_data']['id'],
             'increase_by': 10,
         }
-        clean = self.session_manager.session_manager_controller(
+        increase = self.session_manager.session_manager_controller(
             **instruction_set
         )
         print(
             '[ > ]: Instruction Set: ' + str(instruction_set) +
-            '\n[ < ]: Response: ' + str(clean) + '\n'
+            '\n[ < ]: Response: ' + str(increase) + '\n'
         )
-        self.assertTrue(isinstance(clean, dict))
-        self.assertEqual(len(clean.keys()), 7)
-        self.assertFalse(clean.get('failed'))
-        self.assertTrue(isinstance(clean['masters'], list))
-        self.assertTrue(isinstance(clean['subordonates'], list))
-        self.assertTrue(isinstance(clean['masters_frozen'], int))
-        self.assertTrue(isinstance(clean['subordonates_frozen'], int))
-        self.assertTrue(isinstance(clean['frozen_failures'], int))
-        self.assertTrue(isinstance(clean['frozen_count'], int))
+        self.assertTrue(isinstance(increase, dict))
+        self.assertEqual(len(increase.keys()), 5)
+        self.assertFalse(increase.get('failed'))
+        self.assertTrue(isinstance(increase['master'], int))
+        self.assertTrue(isinstance(increase['subpool_size'], int))
+        self.assertTrue(isinstance(increase['increased_by'], int))
+        self.assertTrue(isinstance(increase['master_data'], dict))
 

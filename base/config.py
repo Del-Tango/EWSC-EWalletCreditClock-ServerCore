@@ -32,8 +32,8 @@ class Config():
             'log_dir': 'logs',
             'log_level': 'DEBUG',
             'log_file': 'ewallet.log',
-            'log_record_format': '[ %(asctime)s ] %(name)s ' \
-                '[ %(levelname)-9s ] - %(thread)d - %(filename)s - %(lineno)d: ' \
+            'log_record_format': '[ %(asctime)s ] %(name)s '
+                '[ %(levelname)-9s ] - %(thread)d - %(filename)s - %(lineno)d: '
                 '%(funcName)s - %(message)s',
             'log_date_format': "%d-$m-%Y %H:%M:%S",
         }
