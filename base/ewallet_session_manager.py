@@ -2462,6 +2462,31 @@ class EWalletSessionManager():
 
     # GENERAL
 
+    def decrease_master_account_subordonate_account_pool_size(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('master_id'):
+            return self.error_no_master_account_id_specified(kwargs)
+        decrease_by = kwargs.get('decrease_by') or \
+            self.fetch_default_master_account_subordonate_pool_size_limit()
+        master_account = kwargs.get('master_account') or \
+            self.fetch_master_account_by_id(kwargs['master_id'])
+        decrease_size = master_account.decrease_subordonate_account_pool_size_limit(
+            decrease_by
+        )
+        if not decrease_size or isinstance(decrease_size, dict) and \
+                decrease_size.get('failed'):
+            return self.warning_could_not_decrease_subordonate_account_pool_size_limit(
+                kwargs, decrease_by, master_account, decrease_size
+            )
+        instruction_set_response = {
+            'failed': False,
+            'master': kwargs['master_id'],
+            'subpool_size': decrease_size.get('subpool_size', 0),
+            'decreased_by': decrease_size.get('decreased_by', 0),
+            'master_data': decrease_size.get('master_data', {}),
+        }
+        return instruction_set_response
+
     def increase_master_account_subordonate_account_pool_size(self, **kwargs):
         log.debug('')
         if not kwargs.get('master_id'):
@@ -2995,6 +3020,35 @@ class EWalletSessionManager():
         log.debug('TODO - UNIMPLEMENTED')
     def action_stop_client_token_cleaner_cron(self, **kwargs):
         log.debug('TODO - UNIMPLEMENTED')
+
+    def action_decrease_master_subordonate_account_pool_size(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('master_id'):
+            return self.error_no_master_account_id_specified(kwargs)
+        master_account = self.fetch_master_account_by_id(kwargs['master_id'])
+        if not master_account or isinstance(master_account, dict) and \
+                master_account.get('failed'):
+            return self.error_no_master_user_account_found_by_id(
+                kwargs, master_account
+            )
+        decrease_subpool_size = self.decrease_master_account_subordonate_account_pool_size(
+            master_account=master_account, **kwargs
+        )
+        if not decrease_subpool_size or isinstance(decrease_subpool_size, dict) and \
+            decrease_subpool_size.get('failed'):
+            return self.warning_could_not_decrease_subordonate_account_pool_size_limit(
+                kwargs, master_account, decrease_subpool_size
+            )
+        instruction_set_response = {
+            'failed': False,
+            'master': decrease_subpool_size.get('master', None),
+            'subpool_size': decrease_subpool_size.get('subpool_size', 0),
+            'decreased_by': decrease_subpool_size.get('decreased_by', 0),
+            'master_data': decrease_subpool_size.get('master_data', {}),
+        }
+        return instruction_set_response
+
+
 
     def action_increase_master_subordonate_account_pool_size(self, **kwargs):
         log.debug('')
@@ -3956,6 +4010,10 @@ class EWalletSessionManager():
         '''
         log.debug('TODO - Kill process')
         return self.unset_socket_handler()
+
+    def handle_system_action_decrease_master_subpool_size(self, **kwargs):
+        log.debug('')
+        return self.action_decrease_master_subordonate_account_pool_size(**kwargs)
 
     def handle_system_action_increase_master_subpool_size(self, **kwargs):
         log.debug('')
@@ -5034,6 +5092,24 @@ class EWalletSessionManager():
         }
         return handlers[kwargs['transfer']](**kwargs)
 
+    def handle_system_action_decrease_master(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('master'):
+            return self.error_no_system_action_decrease_master_target_specified(kwargs)
+        handlers = {
+            'subpool': self.handle_system_action_decrease_master_subpool_size,
+        }
+        return handlers[kwargs['master']](**kwargs)
+
+    def handle_system_action_decrease(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('decrease'):
+            return self.error_no_system_action_decrease_target_specified(kwargs)
+        handlers = {
+            'master': self.handle_system_action_decrease_master,
+        }
+        return handlers[kwargs['decrease']](**kwargs)
+
     def handle_system_action_increase_master(self, **kwargs):
         log.debug('')
         if not kwargs.get('master'):
@@ -5704,6 +5780,7 @@ class EWalletSessionManager():
             'freeze': self.handle_system_action_freeze,
             'unfreeze': self.handle_system_action_unfreeze,
             'increase': self.handle_system_action_increase,
+            'decrease': self.handle_system_action_decrease,
         }
         return handlers[kwargs['action']](**kwargs)
 
@@ -5766,6 +5843,16 @@ class EWalletSessionManager():
     '''
     [ TODO ]: Fetch warning messages from message file by key codes.
     '''
+
+    def warning_could_not_decrease_subordonate_account_pool_size_limit(self, *args):
+        instruction_set_response = res_utils.format_warning_response(**{
+            'failed': True, 'details': args,
+            'warning': 'Something went wrong. '
+                       'Could not decrease Subordonate user account pool size '
+                       'for Master account.',
+        })
+        self.log_warning(**instruction_set_response)
+        return instruction_set_response
 
     def warning_could_not_increase_subordonate_account_pool_size_limit(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
@@ -7071,6 +7158,22 @@ class EWalletSessionManager():
     '''
     [ TODO ]: Fetch error messages from message file by key codes.
     '''
+
+    def error_no_system_action_decrease_master_target_specified(self, *args):
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
+            'error': 'No system action DecreaseMaster target specified.',
+        })
+        self.log_error(**instruction_set_response)
+        return instruction_set_response
+
+    def error_no_system_action_decrease_target_specified(self, *args):
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
+            'error': 'No system action Decrease target specified.',
+        })
+        self.log_error(**instruction_set_response)
+        return instruction_set_response
 
     def error_no_system_action_increase_target_specified(self, *args):
         instruction_set_response = res_utils.format_error_response(**{

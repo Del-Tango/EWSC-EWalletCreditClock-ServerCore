@@ -825,6 +825,38 @@ class EWallet(Base):
     def action_receive_transfer_record(self, **kwargs):
         log.debug('TODO - UNIMPLEMENTED')
 
+    def action_create_new_master_account(self, **kwargs):
+        log.debug('')
+        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
+            kwargs, 'action'
+        )
+        session_create_account = EWalletCreateUser().action_create_new_master(
+            **sanitized_command_chain
+        )
+        if not session_create_account or \
+                isinstance(session_create_account, dict) and \
+                session_create_account.get('failed'):
+            return self.warning_could_not_create_user_account(
+                kwargs, session_create_account
+            )
+        kwargs['active_session'].add(session_create_account)
+        log.info('Successfully created new Master account.')
+        self.update_session_from_master(
+            session_active_master=session_create_account,
+        )
+        kwargs['active_session'].commit()
+        account_data = session_create_account.fetch_user_values()
+        subpool = account_data['subordonate_pool']
+        account_data['subordonate_pool'] = {
+            user.fetch_user_id(): user.fetch_user_name() for user in subpool
+        }
+        command_chain_response = {
+            'failed': False,
+            'account': kwargs['user_email'],
+            'account_data': account_data,
+        }
+        return command_chain_response
+
 #   @pysnooper.snoop('logs/ewallet.log')
     def action_create_new_user_account(self, **kwargs):
         log.debug('')
@@ -934,38 +966,6 @@ class EWallet(Base):
             'failed': False,
             'master': kwargs['master'],
             'master_data': master_account.fetch_user_values()
-        }
-        return command_chain_response
-
-    def action_create_new_master_account(self, **kwargs):
-        log.debug('')
-        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
-            kwargs, 'action'
-        )
-        session_create_account = EWalletCreateUser().action_create_new_master(
-            **sanitized_command_chain
-        )
-        if not session_create_account or \
-                isinstance(session_create_account, dict) and \
-                session_create_account.get('failed'):
-            return self.warning_could_not_create_user_account(
-                kwargs, session_create_account
-            )
-        kwargs['active_session'].add(session_create_account)
-        log.info('Successfully created new master account.')
-        self.update_session_from_master(
-            session_active_master=session_create_account,
-        )
-        kwargs['active_session'].commit()
-        account_data = session_create_account.fetch_user_values()
-        subpool = account_data['subordonate_pool']
-        account_data['subordonate_pool'] = {
-            user.fetch_user_id(): user.fetch_user_name() for user in subpool
-        }
-        command_chain_response = {
-            'failed': False,
-            'account': kwargs['user_email'],
-            'account_data': account_data,
         }
         return command_chain_response
 

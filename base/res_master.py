@@ -91,6 +91,7 @@ class ResMaster(ResUser):
         log.debug('')
         return str(config.master_config['master_key_code'])
 
+#   @pysnooper.snoop('logs/ewallet.log')
     def fetch_default_master_account_subpool_size_limit(self):
         log.debug('')
         return int(config.master_config['subordonate_pool_size'])
@@ -171,10 +172,33 @@ class ResMaster(ResUser):
 
     # GENERAL
 
+    @pysnooper.snoop('logs/ewallet.log')
+    def decrease_subordonate_account_pool_size_limit(self, decrease_by):
+        log.debug('')
+        current_pool_size = self.fetch_subordonate_account_pool_size_limit()
+        new_pool_size = current_pool_size - decrease_by
+        if new_pool_size < 0:
+            return self.warning_cannot_decrease_to_negative_pool_size(
+                decrease_by, current_pool_size, new_pool_size
+            )
+        set_subpool_size = self.set_subordonate_account_limit(new_pool_size)
+        if not set_subpool_size or isinstance(set_subpool_size, dict) and \
+                set_subpool_size.get('failed'):
+            return self.warning_could_not_decrease_subordonate_account_pool_size_limit(
+                decrease_by, current_pool_size, new_pool_size, set_subpool_size
+            )
+        command_chain_response = {
+            'failed': False,
+            'subpool_size': new_pool_size,
+            'decreased_by': decrease_by,
+            'master_data': self.fetch_user_values(),
+        }
+        return command_chain_response
+
 #   @pysnooper.snoop('logs/ewallet.log')
     def increase_subordonate_account_pool_size_limit(self, increase_by):
         log.debug('')
-        current_pool_size = self.fetch_subbordonate_account_pool_size()
+        current_pool_size = self.fetch_subordonate_account_pool_size_limit()
         new_pool_size = current_pool_size + increase_by
         set_subpool_size = self.set_subordonate_account_limit(new_pool_size)
         if not set_subpool_size or isinstance(set_subpool_size, dict) and \
@@ -220,6 +244,26 @@ class ResMaster(ResUser):
     # CONTROLLERS
 
     # WARNINGS
+
+    def warning_cannot_decrease_to_negative_pool_size(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Cannot decrease to a negative pool size, '
+                       'requested number of slots too high. '
+                       'Details: {}'.format(args),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
+
+    def warning_could_not_decrease_subordonate_account_pool_size_limit(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Something went wrong. '
+                       'Could not decrease Subordonate account pool '
+                       'size limit. Details: {}'.format(args),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
 
     def warning_could_not_increase_subordonate_account_pool_size_limit(self, *args):
         command_chain_response = {
