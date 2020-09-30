@@ -546,6 +546,53 @@ class EWallet(Base):
 
     # CHECKERS
 
+    def check_master_user_account_frozen(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('master_id'):
+            return self.error_no_master_account_id_found(
+                kwargs
+            )
+        master_account = self.fetch_master_account_by_id(
+            master_id=kwargs['master_id'],
+            active_session=kwargs['active_session']
+        )
+        if not master_account or isinstance(master_account, dict) and \
+                master_account.get('failed'):
+            return self.warning_could_not_fetch_master_account_by_identifier(
+                kwargs, master_account
+            )
+        check = master_account.check_master_account_frozen()
+        if isinstance(check, dict) and check.get('failed'):
+            return self.warning_could_not_check_master_account_frozen(
+                kwargs, master_account, check
+            )
+        return False if not check else True
+
+#   @pysnooper.snoop('logs/ewallet.log')
+    def check_user_in_master_account_pool(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('master_id') or not kwargs.get('user_email'):
+            return self.error_invalid_data_set_for_master_account_user_pool_check(
+                kwargs
+            )
+        master_account = self.fetch_master_account_by_id(
+            master_id=kwargs['master_id'],
+            active_session=kwargs['active_session']
+        )
+        if not master_account or isinstance(master_account, dict) and \
+                master_account.get('failed'):
+            return self.warning_could_not_fetch_master_account_by_identifier(
+                kwargs, master_account
+            )
+        check = master_account.check_user_in_subpool_by_email(
+            kwargs['user_email']
+        )
+        if isinstance(check, dict) and check.get('failed'):
+            return self.warning_could_not_check_user_belongs_to_master_account_subpool(
+                kwargs, master_account, check
+            )
+        return False if not check else True
+
     def check_master_user_account_key_code(self, **kwargs):
         log.debug('')
         if not kwargs.get('key') or not kwargs.get('master_account'):
@@ -824,6 +871,59 @@ class EWallet(Base):
         log.debug('TODO - UNIMPLEMENTED')
     def action_receive_transfer_record(self, **kwargs):
         log.debug('TODO - UNIMPLEMENTED')
+
+    # TODO
+    def action_login_user_account(self, **kwargs):
+        log.debug('TODO - Refactor')
+        check_master = self.check_user_in_master_account_pool(**kwargs)
+        if not check_master or isinstance(check_master, dict) and \
+                check_master.get('failed'):
+            return self.warning_user_account_not_subordonate_to_acquired_master_account(
+                kwargs, check_master
+            )
+        check_frozen = self.check_master_user_account_frozen(**kwargs)
+        if check_frozen:
+            return self.warning_user_account_frozen(
+                kwargs, check_master, check_frozen
+            )
+        login_record = EWalletLogin()
+        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
+            kwargs, 'action'
+        )
+        session_login = login_record.ewallet_login_controller(
+            action='login',
+            user_archive=self.fetch_active_session_user_account_archive(),
+            **sanitized_command_chain
+        )
+        if not session_login or isinstance(session_login, dict) and \
+                session_login.get('failed'):
+            return self.warning_could_not_login_user_account(kwargs)
+        update_archive = self.update_user_account_archive(user=session_login)
+        update_session = self.action_system_user_update(user=session_login)
+        if not update_session or isinstance(update_session, dict) and \
+                update_session.get('failed'):
+            return self.warning_could_not_update_ewallet_session(
+                kwargs, session_login, update_archive, update_session
+            )
+        kwargs['active_session'].add(login_record)
+        kwargs['active_session'].commit()
+        log.info('User successfully logged in.')
+        session_values = self.fetch_active_session_values()
+        command_chain_response = {
+            'failed': False,
+            'account': session_login.fetch_user_email(),
+            'session_data': {
+                'session_user_account': None if not session_values['user_account'] \
+                    else session_values['user_account'].fetch_user_email(),
+                'session_credit_ewallet': None if not session_values['credit_ewallet'] \
+                    else session_values['credit_ewallet'].fetch_credit_ewallet_id(),
+                'session_contact_list': None if not session_values['contact_list'] \
+                    else session_values['contact_list'].fetch_contact_list_id(),
+                'session_account_archive': None if not session_values['user_account_archive'] \
+                    else session_values['user_account_archive']
+            }
+        }
+        return command_chain_response
 
 #   @pysnooper.snoop('logs/ewallet.log')
     def action_add_master_acquired_ctoken(self, **kwargs):
@@ -1119,48 +1219,6 @@ class EWallet(Base):
                 'session_account_archive': {} if
                     not session_values['user_account_archive']
                     or session_values.get('failed')
-                    else session_values['user_account_archive']
-            }
-        }
-        return command_chain_response
-
-    # TODO
-    def action_login_user_account(self, **kwargs):
-        log.debug('TODO - Refactor')
-        login_record = EWalletLogin()
-        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
-            kwargs, 'action'
-        )
-        session_login = login_record.ewallet_login_controller(
-            action='login',
-            user_archive=self.fetch_active_session_user_account_archive(),
-            **sanitized_command_chain
-        )
-        if not session_login or isinstance(session_login, dict) and \
-                session_login.get('failed'):
-            return self.warning_could_not_login_user_account(kwargs)
-        update_archive = self.update_user_account_archive(user=session_login)
-        update_session = self.action_system_user_update(user=session_login)
-        if not update_session or isinstance(update_session, dict) and \
-                update_session.get('failed'):
-            return self.warning_could_not_update_ewallet_session(
-                kwargs, session_login, update_archive, update_session
-            )
-        kwargs['active_session'].add(login_record)
-        kwargs['active_session'].commit()
-        log.info('User successfully logged in.')
-        session_values = self.fetch_active_session_values()
-        command_chain_response = {
-            'failed': False,
-            'account': session_login.fetch_user_email(),
-            'session_data': {
-                'session_user_account': None if not session_values['user_account'] \
-                    else session_values['user_account'].fetch_user_email(),
-                'session_credit_ewallet': None if not session_values['credit_ewallet'] \
-                    else session_values['credit_ewallet'].fetch_credit_ewallet_id(),
-                'session_contact_list': None if not session_values['contact_list'] \
-                    else session_values['contact_list'].fetch_contact_list_id(),
-                'session_account_archive': None if not session_values['user_account_archive'] \
                     else session_values['user_account_archive']
             }
         }
@@ -3972,6 +4030,56 @@ class EWallet(Base):
     [ TODO ]: Fetch warning messages from message file by key codes.
     '''
 
+    def warning_could_not_check_master_account_frozen(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Something went wrong. '
+                       'Could not check if Master account is in a frozen state.'
+                       'Details: {}'.format(args),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
+
+    def warning_user_account_frozen(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'User account is currently in a frozen state, '
+                       'all user actions locked. Details: {}'.format(args),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
+
+    def warning_could_not_check_user_belongs_to_master_account_subpool(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Something went wrong. '
+                       'Could not check if user account belongs to acquired '
+                       'Master account Subordonate pool. '
+                       'Details: {}'.format(args),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
+
+    def warning_could_not_fetch_master_account_by_identifier(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Something went wrong. '
+                       'Could not fetch Master user account by ID.'
+                       'Details: {}'.format(args),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
+
+    def warning_user_account_not_subordonate_to_acquired_master_account(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Illegal action. '
+                       'User account is not a Subordonate of acquired '
+                       'Master account. Details: {}'.format(args),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
+
     def warning_subordonate_account_pool_size_limit_reached(self, *args):
         command_chain_response = {
             'failed': True,
@@ -4705,6 +4813,25 @@ class EWallet(Base):
     '''
     [ TODO ]: Fetch error messages from message file by key codes.
     '''
+
+    def error_no_master_account_id_found(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No Master user account ID found. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_invalid_data_set_for_master_account_user_pool_check(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Invalid data set, could not verify if user account '
+                     'belongs to acquired Master account Subordonate pool. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
 
     def error_could_not_add_master_acquired_ctoken(self, *args):
         command_chain_response = {

@@ -108,7 +108,8 @@ class EWalletSessionManager():
     def fetch_master_accounts_marked_for_unlink(self, **kwargs):
         log.debug('')
         try:
-            orm_session = self.res_utils.session_factory()
+            orm_session = kwargs.get('active_session') or \
+                self.res_utils.session_factory()
             master_accounts = list(orm_session.query(
                ResMaster
             ).filter_by(to_unlink=True).all())
@@ -172,12 +173,13 @@ class EWalletSessionManager():
             master_accounts, subordonates, masters
         ) if not subordonates else subordonates
 
-    def fetch_master_accounts_by_id_set(self, master_account_ids):
+    def fetch_master_accounts_by_id_set(self, master_account_ids, **kwargs):
         log.debug('')
         if not master_account_ids or not isinstance(master_account_ids, list):
             return self.error_invalid_master_account_id_set(master_account_ids)
         try:
-            orm_session = self.res_utils.session_factory()
+            orm_session = kwargs.get('active_session') or \
+                self.res_utils.session_factory()
             master_accounts = list(orm_session.query(
                ResMaster
             ).filter_by(ResMaster.user_id.in_(master_account_ids)).all())
@@ -203,12 +205,13 @@ class EWalletSessionManager():
         }
 
 #   @pysnooper.snoop('logs/ewallet.log')
-    def fetch_master_account_by_id(self, master_account_id):
+    def fetch_master_account_by_id(self, master_account_id, **kwargs):
         log.debug('')
         if not master_account_id or not isinstance(master_account_id, int):
             return self.error_invalid_master_account_id(master_account_id)
         try:
-            orm_session = self.res_utils.session_factory()
+            orm_session = kwargs.get('active_session') or \
+                self.res_utils.session_factory()
             master_account = list(orm_session.query(
                ResMaster
             ).filter_by(user_id=master_account_id))
@@ -221,12 +224,13 @@ class EWalletSessionManager():
 
     # TODO - Refactor
 #   @pysnooper.snoop()
-    def fetch_ewallet_session_by_id(self, ewallet_session_id):
+    def fetch_ewallet_session_by_id(self, ewallet_session_id, **kwargs):
         log.debug('TODO - Refactor')
         if not ewallet_session_id or not isinstance(ewallet_session_id, int):
             return self.error_invalid_ewallet_session_id(ewallet_session_id)
         try:
-            orm_session = self.res_utils.session_factory()
+            orm_session = kwargs.get('active_session') or \
+                self.res_utils.session_factory()
             ewallet_session = list(orm_session.query(
                 EWallet
             ).filter_by(id=ewallet_session_id))
@@ -242,7 +246,9 @@ class EWalletSessionManager():
         log.debug('TODO - Refactor')
         if not kwargs.get('session_id'):
             return self.error_no_session_id_found(kwargs)
-        ewallet_session = self.fetch_ewallet_session_by_id(kwargs['session_id'])
+        ewallet_session = self.fetch_ewallet_session_by_id(
+            kwargs['session_id'], **kwargs
+        )
         return self.warning_no_ewallet_session_found_by_id(kwargs) if not \
             ewallet_session else ewallet_session
 
@@ -3230,7 +3236,7 @@ class EWalletSessionManager():
     def action_sweep_cleanup_master_accounts_by_id(self, master_ids, **kwargs):
         log.debug('')
         master_accounts = self.fetch_master_accounts_by_id_set(
-            kwargs['master_ids']
+            kwargs['master_ids'], **kwargs
         )
         subordonate_accounts = self.fetch_subordonate_accounts_from_masters(
             master_accounts
@@ -3270,9 +3276,9 @@ class EWalletSessionManager():
         )
         master_freeze_interval = self.fetch_master_account_unlink_freeze_interval()
         master_ids = self.fetch_master_accounts_by_id_set(
-            kwargs.get('master_ids')
+            kwargs.get('master_ids'), **kwargs
         ) if kwargs.get('master_ids') else \
-            self.fetch_master_accounts_marked_for_unlink()
+            self.fetch_master_accounts_marked_for_unlink(**kwargs)
         if not master_ids or isinstance(master_ids, dict) and \
                 master_ids.get('failed'):
             return self.warning_no_master_account_ids_found(
@@ -4029,6 +4035,14 @@ class EWalletSessionManager():
     # ACTION HANDLERS
     '''
     [ NOTE ]: Instruction set validation and sanitizations are performed here.
+
+    [ NOTE ]: First generation instruction set mutations happen here on user
+              actions, fetching the acquired Master ID from CToken and passing
+              it to the EWSession Worker along with the original instruction.
+
+    [ TODO ]: Consider sacrificing atomic action handlers and move generic
+              action handler verifications to Jumptable Handlers to
+              reduce redundancy.
     '''
 
     # TODO
@@ -4039,30 +4053,178 @@ class EWalletSessionManager():
         log.debug('TODO - Kill process')
         return self.unset_socket_handler()
 
-    def handle_system_action_decrease_master_subpool_size(self, **kwargs):
+    def handle_client_action_new_contact_list(self, **kwargs):
         log.debug('')
-        return self.action_decrease_master_subordonate_account_pool_size(**kwargs)
+        instruction_set_validation = self.validate_instruction_set(kwargs)
+        if not instruction_set_validation \
+                or isinstance(instruction_set_validation, dict) \
+                and instruction_set_validation.get('failed'):
+            return instruction_set_validation
+        master_account_id = self.fetch_acquired_masters_from_client_token_set(
+            [kwargs['client_id']]
+        )
+        if isinstance(master_account_id, dict) and master_account_id.get('failed'):
+            return self.warning_no_master_account_acquired_by_ctoken(
+                kwargs, instruction_set_validation, master_account_id
+            )
+        kwargs.update({'master_id': master_account_id[0]})
+        new_contact_list = self.action_execute_user_instruction_set(**kwargs)
+        return self.warning_could_not_create_new_contact_list(
+            kwargs, new_contact_list
+        ) if not new_contact_list or isinstance(new_contact_list, dict) and \
+            new_contact_list.get('failed') else new_contact_list
 
-    def handle_system_action_increase_master_subpool_size(self, **kwargs):
+    def handle_client_action_new_contact_record(self, **kwargs):
         log.debug('')
-        return self.action_increase_master_subordonate_account_pool_size(**kwargs)
+        instruction_set_validation = self.validate_instruction_set(kwargs)
+        if not instruction_set_validation \
+                or isinstance(instruction_set_validation, dict) \
+                and instruction_set_validation.get('failed'):
+            return instruction_set_validation
+        master_account_id = self.fetch_acquired_masters_from_client_token_set(
+            [kwargs['client_id']]
+        )
+        if isinstance(master_account_id, dict) and master_account_id.get('failed'):
+            return self.warning_no_master_account_acquired_by_ctoken(
+                kwargs, instruction_set_validation, master_account_id
+            )
+        kwargs.update({'master_id': master_account_id[0]})
+        new_contact_record = self.action_execute_user_instruction_set(**kwargs)
+        return self.warning_could_not_create_new_contact_record(
+            kwargs, new_contact_record
+        ) if not new_contact_record or isinstance(new_contact_record, dict) and \
+            new_contact_record.get('failed') else new_contact_record
 
-    def handle_system_action_unfreeze_master_account(self, **kwargs):
+    def handle_client_action_convert_clock_to_credits(self, **kwargs):
         log.debug('')
-        return self.action_unfreeze_master_user_account(**kwargs)
+        instruction_set_validation = self.validate_instruction_set(kwargs)
+        if not instruction_set_validation \
+                or isinstance(instruction_set_validation, dict) \
+                and instruction_set_validation.get('failed'):
+            return instruction_set_validation
+        master_account_id = self.fetch_acquired_masters_from_client_token_set(
+            [kwargs['client_id']]
+        )
+        if isinstance(master_account_id, dict) and master_account_id.get('failed'):
+            return self.warning_no_master_account_acquired_by_ctoken(
+                kwargs, instruction_set_validation, master_account_id
+            )
+        kwargs.update({'master_id': master_account_id[0]})
+        convert_clock2credits = self.action_execute_user_instruction_set(**kwargs)
+        return self.warning_could_not_convert_credit_clock_to_credits(
+            kwargs, convert_clock2credits
+        ) if not convert_clock2credits or isinstance(convert_clock2credits, dict) and \
+            convert_clock2credits.get('failed') else convert_clock2credits
 
-    def handle_system_action_freeze_master_account(self, **kwargs):
+    def handle_client_action_convert_credits_to_clock(self, **kwargs):
         log.debug('')
-        return self.action_freeze_master_user_account(**kwargs)
+        instruction_set_validation = self.validate_instruction_set(kwargs)
+        if not instruction_set_validation \
+                or isinstance(instruction_set_validation, dict) \
+                and instruction_set_validation.get('failed'):
+            return instruction_set_validation
+        master_account_id = self.fetch_acquired_masters_from_client_token_set(
+            [kwargs['client_id']]
+        )
+        if isinstance(master_account_id, dict) and master_account_id.get('failed'):
+            return self.warning_no_master_account_acquired_by_ctoken(
+                kwargs, instruction_set_validation, master_account_id
+            )
+        kwargs.update({'master_id': master_account_id[0]})
+        convert_credits2clock = self.action_execute_user_instruction_set(**kwargs)
+        return self.warning_could_not_convert_credits_to_credit_clock(
+            kwargs, convert_credits2clock
+        ) if not convert_credits2clock or isinstance(convert_credits2clock, dict) and \
+            convert_credits2clock.get('failed') else convert_credits2clock
 
-    def handle_system_action_cleanup_target_master_account(self, **kwargs):
+
+    def handle_client_action_pay(self, **kwargs):
         log.debug('')
-        return self.action_cleanup_target_master_account(**kwargs)
+        instruction_set_validation = self.validate_instruction_set(kwargs)
+        if not instruction_set_validation \
+                or isinstance(instruction_set_validation, dict) \
+                and instruction_set_validation.get('failed'):
+            return instruction_set_validation
+        master_account_id = self.fetch_acquired_masters_from_client_token_set(
+            [kwargs['client_id']]
+        )
+        if isinstance(master_account_id, dict) and master_account_id.get('failed'):
+            return self.warning_no_master_account_acquired_by_ctoken(
+                kwargs, instruction_set_validation, master_account_id
+            )
+        kwargs.update({'master_id': master_account_id[0]})
+        pay_credits = self.action_execute_user_instruction_set(**kwargs)
+        return self.warning_could_not_pay_partner_account(
+            kwargs, pay_credits
+        ) if not pay_credits or isinstance(pay_credits, dict) and \
+            pay_credits.get('failed') else pay_credits
 
-    def handle_system_action_sweep_cleanup_master_accounts(self, **kwargs):
+#   @pysnooper.snoop()
+    def handle_client_action_supply_credits(self, **kwargs):
         log.debug('')
-        return self.action_sweep_cleanup_master_accounts(**kwargs)
+        instruction_set_validation = self.validate_instruction_set(kwargs)
+        if not instruction_set_validation \
+                or isinstance(instruction_set_validation, dict) \
+                and instruction_set_validation.get('failed'):
+            return instruction_set_validation
+        master_account_id = self.fetch_acquired_masters_from_client_token_set(
+            [kwargs['client_id']]
+        )
+        if isinstance(master_account_id, dict) and master_account_id.get('failed'):
+            return self.warning_no_master_account_acquired_by_ctoken(
+                kwargs, instruction_set_validation, master_account_id
+            )
+        kwargs.update({'master_id': master_account_id[0]})
+        supply_credits = self.action_execute_user_instruction_set(**kwargs)
+        return self.warning_could_not_supply_user_credit_ewallet(
+            kwargs, supply_credits
+        ) if not supply_credits or isinstance(supply_credits, dict) and \
+            supply_credits.get('failed') else supply_credits
 
+    def handle_client_action_logout(self, **kwargs):
+        log.debug('')
+        instruction_set_validation = self.validate_instruction_set(kwargs)
+        if not instruction_set_validation \
+                or isinstance(instruction_set_validation, dict) \
+                and instruction_set_validation.get('failed'):
+            return instruction_set_validation
+        master_account_id = self.fetch_acquired_masters_from_client_token_set(
+            [kwargs['client_id']]
+        )
+        if isinstance(master_account_id, dict) and master_account_id.get('failed'):
+            return self.warning_no_master_account_acquired_by_ctoken(
+                kwargs, instruction_set_validation, master_account_id
+            )
+        kwargs.update({'master_id': master_account_id[0]})
+        account_logout = self.action_execute_user_instruction_set(**kwargs)
+        return self.warning_could_not_logout_user_account(
+            kwargs, account_logout
+        ) if not account_logout or isinstance(account_logout, dict) and \
+            account_logout.get('failed') else account_logout
+
+#   @pysnooper.snoop()
+    def handle_client_action_login(self, **kwargs):
+        log.debug('')
+        instruction_set_validation = self.validate_instruction_set(kwargs)
+        if not instruction_set_validation \
+                or isinstance(instruction_set_validation, dict) \
+                and instruction_set_validation.get('failed'):
+            return instruction_set_validation
+        master_account_id = self.fetch_acquired_masters_from_client_token_set(
+            [kwargs['client_id']]
+        )
+        if isinstance(master_account_id, dict) and master_account_id.get('failed'):
+            return self.warning_no_master_account_acquired_by_ctoken(
+                kwargs, instruction_set_validation, master_account_id
+            )
+        kwargs.update({'master_id': master_account_id[0]})
+        account_login = self.action_execute_user_instruction_set(**kwargs)
+        return self.warning_could_not_login_user_account(
+            kwargs, account_login
+        ) if not account_login or isinstance(account_login, dict) and \
+            account_login.get('failed') else account_login
+
+#   @pysnooper.snoop('logs/ewallet.log')
     def handle_client_action_new_account(self, **kwargs):
         '''
         [ NOTE   ]: Validates received instruction set, searches for worker and session
@@ -4088,6 +4250,74 @@ class EWalletSessionManager():
             kwargs, new_account
         ) if not new_account or isinstance(new_account, dict) and \
             new_account.get('failed') else new_account
+
+    def handle_system_action_decrease_master_subpool_size(self, **kwargs):
+        log.debug('')
+        orm_session = self.res_utils.session_factory()
+        try:
+            kwargs.update({'active_session': orm_session})
+            return self.action_decrease_master_subordonate_account_pool_size(
+                **kwargs
+            )
+        finally:
+            orm_session.close()
+            log.info('SqlAlchemy ORM session closed.')
+
+    def handle_system_action_increase_master_subpool_size(self, **kwargs):
+        log.debug('')
+        orm_session = self.res_utils.session_factory()
+        try:
+            kwargs.update({'active_session': orm_session})
+            return self.action_increase_master_subordonate_account_pool_size(
+                **kwargs
+            )
+        finally:
+            orm_session.close()
+            log.info('SqlAlchemy ORM session closed.')
+
+    def handle_system_action_unfreeze_master_account(self, **kwargs):
+        log.debug('')
+        orm_session = self.res_utils.session_factory()
+        try:
+            kwargs.update({'active_session': orm_session})
+            return self.action_unfreeze_master_user_account(**kwargs)
+        finally:
+            orm_session.close()
+            log.info('SqlAlchemy ORM session closed.')
+
+    def handle_system_action_freeze_master_account(self, **kwargs):
+        log.debug('')
+        orm_session = self.res_utils.session_factory()
+        try:
+            kwargs.update({'active_session': orm_session})
+            return self.action_freeze_master_user_account(**kwargs)
+        finally:
+            orm_session.close()
+            log.info('SqlAlchemy ORM session closed.')
+
+    def handle_system_action_cleanup_target_master_account(self, **kwargs):
+        log.debug('')
+        orm_session = self.res_utils.session_factory()
+        try:
+            kwargs.update({'active_session': orm_session})
+            return self.action_cleanup_target_master_account(**kwargs)
+        finally:
+            orm_session.close()
+            log.info('SqlAlchemy ORM session closed.')
+
+    def handle_system_action_sweep_cleanup_master_accounts(self, **kwargs):
+        '''
+        [ NOTE ]: First generation instruction set mutation,
+                  SqlAlchemy ORM session inserted.
+        '''
+        log.debug('')
+        orm_session = self.res_utils.session_factory()
+        try:
+            kwargs.update({'active_session': orm_session})
+            return self.action_sweep_cleanup_master_accounts(**kwargs)
+        finally:
+            orm_session.close()
+            log.info('SqlAlchemy ORM session closed.')
 
     def handle_client_action_acquire_master(self, **kwargs):
         log.debug('')
@@ -4321,6 +4551,14 @@ class EWalletSessionManager():
                 or isinstance(instruction_set_validation, dict) \
                 and instruction_set_validation.get('failed'):
             return instruction_set_validation
+        master_account_id = self.fetch_acquired_masters_from_client_token_set(
+            [kwargs['client_id']]
+        )
+        if isinstance(master_account_id, dict) and master_account_id.get('failed'):
+            return self.warning_no_master_account_acquired_by_ctoken(
+                kwargs, instruction_set_validation, master_account_id
+            )
+        kwargs.update({'master_id': master_account_id[0]})
         unlink_invoice_sheet = self.action_execute_user_instruction_set(**kwargs)
         return self.warning_could_not_unlink_invoice_sheet(
             kwargs, unlink_invoice_sheet
@@ -4334,6 +4572,14 @@ class EWalletSessionManager():
                 or isinstance(instruction_set_validation, dict) \
                 and instruction_set_validation.get('failed'):
             return instruction_set_validation
+        master_account_id = self.fetch_acquired_masters_from_client_token_set(
+            [kwargs['client_id']]
+        )
+        if isinstance(master_account_id, dict) and master_account_id.get('failed'):
+            return self.warning_no_master_account_acquired_by_ctoken(
+                kwargs, instruction_set_validation, master_account_id
+            )
+        kwargs.update({'master_id': master_account_id[0]})
         unlink_invoice_record = self.action_execute_user_instruction_set(**kwargs)
         return self.warning_could_not_unlink_invoice_sheet_record(
             kwargs, unlink_invoice_record
@@ -4347,6 +4593,14 @@ class EWalletSessionManager():
                 or isinstance(instruction_set_validation, dict) \
                 and instruction_set_validation.get('failed'):
             return instruction_set_validation
+        master_account_id = self.fetch_acquired_masters_from_client_token_set(
+            [kwargs['client_id']]
+        )
+        if isinstance(master_account_id, dict) and master_account_id.get('failed'):
+            return self.warning_no_master_account_acquired_by_ctoken(
+                kwargs, instruction_set_validation, master_account_id
+            )
+        kwargs.update({'master_id': master_account_id[0]})
         recover_account = self.action_execute_user_instruction_set(**kwargs)
         return self.warning_could_not_recover_user_account(
             kwargs, recover_account
@@ -4360,6 +4614,14 @@ class EWalletSessionManager():
                 or isinstance(instruction_set_validation, dict) \
                 and instruction_set_validation.get('failed'):
             return instruction_set_validation
+        master_account_id = self.fetch_acquired_masters_from_client_token_set(
+            [kwargs['client_id']]
+        )
+        if isinstance(master_account_id, dict) and master_account_id.get('failed'):
+            return self.warning_no_master_account_acquired_by_ctoken(
+                kwargs, instruction_set_validation, master_account_id
+            )
+        kwargs.update({'master_id': master_account_id[0]})
         switch_account = self.action_execute_user_instruction_set(**kwargs)
         return self.warning_could_not_switch_user_account(
             kwargs, switch_account
@@ -4373,6 +4635,14 @@ class EWalletSessionManager():
                 or isinstance(instruction_set_validation, dict) \
                 and instruction_set_validation.get('failed'):
             return instruction_set_validation
+        master_account_id = self.fetch_acquired_masters_from_client_token_set(
+            [kwargs['client_id']]
+        )
+        if isinstance(master_account_id, dict) and master_account_id.get('failed'):
+            return self.warning_no_master_account_acquired_by_ctoken(
+                kwargs, instruction_set_validation, master_account_id
+            )
+        kwargs.update({'master_id': master_account_id[0]})
         unlink_credit_clock = self.action_execute_user_instruction_set(**kwargs)
         return self.warning_could_not_unlink_credit_clock(
             kwargs, unlink_credit_clock
@@ -4386,6 +4656,14 @@ class EWalletSessionManager():
                 or isinstance(instruction_set_validation, dict) \
                 and instruction_set_validation.get('failed'):
             return instruction_set_validation
+        master_account_id = self.fetch_acquired_masters_from_client_token_set(
+            [kwargs['client_id']]
+        )
+        if isinstance(master_account_id, dict) and master_account_id.get('failed'):
+            return self.warning_no_master_account_acquired_by_ctoken(
+                kwargs, instruction_set_validation, master_account_id
+            )
+        kwargs.update({'master_id': master_account_id[0]})
         unlink_credit_ewallet = self.action_execute_user_instruction_set(**kwargs)
         return self.warning_could_not_unlink_credit_ewallet(
             kwargs, unlink_credit_ewallet
@@ -4399,6 +4677,14 @@ class EWalletSessionManager():
                 or isinstance(instruction_set_validation, dict) \
                 and instruction_set_validation.get('failed'):
             return instruction_set_validation
+        master_account_id = self.fetch_acquired_masters_from_client_token_set(
+            [kwargs['client_id']]
+        )
+        if isinstance(master_account_id, dict) and master_account_id.get('failed'):
+            return self.warning_no_master_account_acquired_by_ctoken(
+                kwargs, instruction_set_validation, master_account_id
+            )
+        kwargs.update({'master_id': master_account_id[0]})
         unlink_time_record = self.action_execute_user_instruction_set(**kwargs)
         return self.warning_could_not_unlink_time_record(
             kwargs, unlink_time_record
@@ -4412,6 +4698,14 @@ class EWalletSessionManager():
                 or isinstance(instruction_set_validation, dict) \
                 and instruction_set_validation.get('failed'):
             return instruction_set_validation
+        master_account_id = self.fetch_acquired_masters_from_client_token_set(
+            [kwargs['client_id']]
+        )
+        if isinstance(master_account_id, dict) and master_account_id.get('failed'):
+            return self.warning_no_master_account_acquired_by_ctoken(
+                kwargs, instruction_set_validation, master_account_id
+            )
+        kwargs.update({'master_id': master_account_id[0]})
         unlink_time_sheet = self.action_execute_user_instruction_set(**kwargs)
         return self.warning_could_not_unlink_time_sheet(
             kwargs, unlink_time_sheet
@@ -4425,6 +4719,14 @@ class EWalletSessionManager():
                 or isinstance(instruction_set_validation, dict) \
                 and instruction_set_validation.get('failed'):
             return instruction_set_validation
+        master_account_id = self.fetch_acquired_masters_from_client_token_set(
+            [kwargs['client_id']]
+        )
+        if isinstance(master_account_id, dict) and master_account_id.get('failed'):
+            return self.warning_no_master_account_acquired_by_ctoken(
+                kwargs, instruction_set_validation, master_account_id
+            )
+        kwargs.update({'master_id': master_account_id[0]})
         unlink_transfer_record = self.action_execute_user_instruction_set(**kwargs)
         return self.warning_could_not_unlink_transfer_record(
             kwargs, unlink_transfer_record
@@ -4438,6 +4740,14 @@ class EWalletSessionManager():
                 or isinstance(instruction_set_validation, dict) \
                 and instruction_set_validation.get('failed'):
             return instruction_set_validation
+        master_account_id = self.fetch_acquired_masters_from_client_token_set(
+            [kwargs['client_id']]
+        )
+        if isinstance(master_account_id, dict) and master_account_id.get('failed'):
+            return self.warning_no_master_account_acquired_by_ctoken(
+                kwargs, instruction_set_validation, master_account_id
+            )
+        kwargs.update({'master_id': master_account_id[0]})
         unlink_transfer_sheet = self.action_execute_user_instruction_set(**kwargs)
         return self.warning_could_not_unlink_transfer_sheet(
             kwargs, unlink_transfer_sheet
@@ -4451,6 +4761,14 @@ class EWalletSessionManager():
                 or isinstance(instruction_set_validation, dict) \
                 and instruction_set_validation.get('failed'):
             return instruction_set_validation
+        master_account_id = self.fetch_acquired_masters_from_client_token_set(
+            [kwargs['client_id']]
+        )
+        if isinstance(master_account_id, dict) and master_account_id.get('failed'):
+            return self.warning_no_master_account_acquired_by_ctoken(
+                kwargs, instruction_set_validation, master_account_id
+            )
+        kwargs.update({'master_id': master_account_id[0]})
         unlink_conversion_record = self.action_execute_user_instruction_set(**kwargs)
         return self.warning_could_not_unlink_conversion_sheet_record(
             kwargs, unlink_conversion_record
@@ -4464,6 +4782,14 @@ class EWalletSessionManager():
                 or isinstance(instruction_set_validation, dict) \
                 and instruction_set_validation.get('failed'):
             return instruction_set_validation
+        master_account_id = self.fetch_acquired_masters_from_client_token_set(
+            [kwargs['client_id']]
+        )
+        if isinstance(master_account_id, dict) and master_account_id.get('failed'):
+            return self.warning_no_master_account_acquired_by_ctoken(
+                kwargs, instruction_set_validation, master_account_id
+            )
+        kwargs.update({'master_id': master_account_id[0]})
         unlink_conversion_sheet = self.action_execute_user_instruction_set(**kwargs)
         return self.warning_could_not_unlink_conversion_sheet(
             kwargs, unlink_conversion_sheet
@@ -4477,6 +4803,14 @@ class EWalletSessionManager():
                 or isinstance(instruction_set_validation, dict) \
                 and instruction_set_validation.get('failed'):
             return instruction_set_validation
+        master_account_id = self.fetch_acquired_masters_from_client_token_set(
+            [kwargs['client_id']]
+        )
+        if isinstance(master_account_id, dict) and master_account_id.get('failed'):
+            return self.warning_no_master_account_acquired_by_ctoken(
+                kwargs, instruction_set_validation, master_account_id
+            )
+        kwargs.update({'master_id': master_account_id[0]})
         unlink_contact_record = self.action_execute_user_instruction_set(**kwargs)
         return self.warning_could_not_unlink_contact_record(
             kwargs, unlink_contact_record
@@ -4490,6 +4824,14 @@ class EWalletSessionManager():
                 or isinstance(instruction_set_validation, dict) \
                 and instruction_set_validation.get('failed'):
             return instruction_set_validation
+        master_account_id = self.fetch_acquired_masters_from_client_token_set(
+            [kwargs['client_id']]
+        )
+        if isinstance(master_account_id, dict) and master_account_id.get('failed'):
+            return self.warning_no_master_account_acquired_by_ctoken(
+                kwargs, instruction_set_validation, master_account_id
+            )
+        kwargs.update({'master_id': master_account_id[0]})
         unlink_contact_list = self.action_execute_user_instruction_set(**kwargs)
         return self.warning_could_not_unlink_contact_list(
             kwargs, unlink_contact_list
@@ -4503,6 +4845,14 @@ class EWalletSessionManager():
                 or isinstance(instruction_set_validation, dict) \
                 and instruction_set_validation.get('failed'):
             return instruction_set_validation
+        master_account_id = self.fetch_acquired_masters_from_client_token_set(
+            [kwargs['client_id']]
+        )
+        if isinstance(master_account_id, dict) and master_account_id.get('failed'):
+            return self.warning_no_master_account_acquired_by_ctoken(
+                kwargs, instruction_set_validation, master_account_id
+            )
+        kwargs.update({'master_id': master_account_id[0]})
         unlink_account = self.action_execute_user_instruction_set(**kwargs)
         return self.warning_could_not_unlink_user_account(
             kwargs, unlink_account
@@ -4516,6 +4866,14 @@ class EWalletSessionManager():
                 or isinstance(instruction_set_validation, dict) \
                 and instruction_set_validation.get('failed'):
             return instruction_set_validation
+        master_account_id = self.fetch_acquired_masters_from_client_token_set(
+            [kwargs['client_id']]
+        )
+        if isinstance(master_account_id, dict) and master_account_id.get('failed'):
+            return self.warning_no_master_account_acquired_by_ctoken(
+                kwargs, instruction_set_validation, master_account_id
+            )
+        kwargs.update({'master_id': master_account_id[0]})
         switch_contact_list = self.action_execute_user_instruction_set(**kwargs)
         return self.warning_could_not_switch_contact_list(
             kwargs, switch_contact_list
@@ -4529,6 +4887,14 @@ class EWalletSessionManager():
                 or isinstance(instruction_set_validation, dict) \
                 and instruction_set_validation.get('failed'):
             return instruction_set_validation
+        master_account_id = self.fetch_acquired_masters_from_client_token_set(
+            [kwargs['client_id']]
+        )
+        if isinstance(master_account_id, dict) and master_account_id.get('failed'):
+            return self.warning_no_master_account_acquired_by_ctoken(
+                kwargs, instruction_set_validation, master_account_id
+            )
+        kwargs.update({'master_id': master_account_id[0]})
         switch_time_sheet = self.action_execute_user_instruction_set(**kwargs)
         return self.warning_could_not_switch_time_sheet(
             kwargs, switch_time_sheet
@@ -4542,6 +4908,14 @@ class EWalletSessionManager():
                 or isinstance(instruction_set_validation, dict) \
                 and instruction_set_validation.get('failed'):
             return instruction_set_validation
+        master_account_id = self.fetch_acquired_masters_from_client_token_set(
+            [kwargs['client_id']]
+        )
+        if isinstance(master_account_id, dict) and master_account_id.get('failed'):
+            return self.warning_no_master_account_acquired_by_ctoken(
+                kwargs, instruction_set_validation, master_account_id
+            )
+        kwargs.update({'master_id': master_account_id[0]})
         switch_conversion_sheet = self.action_execute_user_instruction_set(**kwargs)
         return self.warning_could_not_switch_conversion_sheet(
             kwargs, switch_conversion_sheet
@@ -4555,6 +4929,14 @@ class EWalletSessionManager():
                 or isinstance(instruction_set_validation, dict) \
                 and instruction_set_validation.get('failed'):
             return instruction_set_validation
+        master_account_id = self.fetch_acquired_masters_from_client_token_set(
+            [kwargs['client_id']]
+        )
+        if isinstance(master_account_id, dict) and master_account_id.get('failed'):
+            return self.warning_no_master_account_acquired_by_ctoken(
+                kwargs, instruction_set_validation, master_account_id
+            )
+        kwargs.update({'master_id': master_account_id[0]})
         switch_invoice_sheet = self.action_execute_user_instruction_set(**kwargs)
         return self.warning_could_not_switch_invoice_sheet(
             kwargs, switch_invoice_sheet
@@ -4568,6 +4950,14 @@ class EWalletSessionManager():
                 or isinstance(instruction_set_validation, dict) \
                 and instruction_set_validation.get('failed'):
             return instruction_set_validation
+        master_account_id = self.fetch_acquired_masters_from_client_token_set(
+            [kwargs['client_id']]
+        )
+        if isinstance(master_account_id, dict) and master_account_id.get('failed'):
+            return self.warning_no_master_account_acquired_by_ctoken(
+                kwargs, instruction_set_validation, master_account_id
+            )
+        kwargs.update({'master_id': master_account_id[0]})
         switch_transfer_sheet = self.action_execute_user_instruction_set(**kwargs)
         return self.warning_could_not_switch_transfer_sheet(
             kwargs, switch_transfer_sheet
@@ -4602,6 +4992,14 @@ class EWalletSessionManager():
                 or isinstance(instruction_set_validation, dict) \
                 and instruction_set_validation.get('failed'):
             return instruction_set_validation
+        master_account_id = self.fetch_acquired_masters_from_client_token_set(
+            [kwargs['client_id']]
+        )
+        if isinstance(master_account_id, dict) and master_account_id.get('failed'):
+            return self.warning_no_master_account_acquired_by_ctoken(
+                kwargs, instruction_set_validation, master_account_id
+            )
+        kwargs.update({'master_id': master_account_id[0]})
         switch_credit_ewallet = self.action_execute_user_instruction_set(**kwargs)
         return self.warning_could_not_switch_credit_ewallet(
             kwargs, switch_credit_ewallet
@@ -4615,6 +5013,14 @@ class EWalletSessionManager():
                 or isinstance(instruction_set_validation, dict) \
                 and instruction_set_validation.get('failed'):
             return instruction_set_validation
+        master_account_id = self.fetch_acquired_masters_from_client_token_set(
+            [kwargs['client_id']]
+        )
+        if isinstance(master_account_id, dict) and master_account_id.get('failed'):
+            return self.warning_no_master_account_acquired_by_ctoken(
+                kwargs, instruction_set_validation, master_account_id
+            )
+        kwargs.update({'master_id': master_account_id[0]})
         switch_credit_clock = self.action_execute_user_instruction_set(**kwargs)
         return self.warning_could_not_switch_credit_clock(
             kwargs, switch_credit_clock
@@ -4628,6 +5034,14 @@ class EWalletSessionManager():
                 or isinstance(instruction_set_validation, dict) \
                 and instruction_set_validation.get('failed'):
             return instruction_set_validation
+        master_account_id = self.fetch_acquired_masters_from_client_token_set(
+            [kwargs['client_id']]
+        )
+        if isinstance(master_account_id, dict) and master_account_id.get('failed'):
+            return self.warning_no_master_account_acquired_by_ctoken(
+                kwargs, instruction_set_validation, master_account_id
+            )
+        kwargs.update({'master_id': master_account_id[0]})
         new_conversion_sheet = self.action_execute_user_instruction_set(**kwargs)
         return self.warning_could_not_create_new_conversion_sheet(
             kwargs, new_conversion_sheet
@@ -4641,6 +5055,14 @@ class EWalletSessionManager():
                 or isinstance(instruction_set_validation, dict) \
                 and instruction_set_validation.get('failed'):
             return instruction_set_validation
+        master_account_id = self.fetch_acquired_masters_from_client_token_set(
+            [kwargs['client_id']]
+        )
+        if isinstance(master_account_id, dict) and master_account_id.get('failed'):
+            return self.warning_no_master_account_acquired_by_ctoken(
+                kwargs, instruction_set_validation, master_account_id
+            )
+        kwargs.update({'master_id': master_account_id[0]})
         new_time_sheet = self.action_execute_user_instruction_set(**kwargs)
         return self.warning_could_not_create_new_time_sheet(
             kwargs, new_time_sheet
@@ -4654,6 +5076,14 @@ class EWalletSessionManager():
                 or isinstance(instruction_set_validation, dict) \
                 and instruction_set_validation.get('failed'):
             return instruction_set_validation
+        master_account_id = self.fetch_acquired_masters_from_client_token_set(
+            [kwargs['client_id']]
+        )
+        if isinstance(master_account_id, dict) and master_account_id.get('failed'):
+            return self.warning_no_master_account_acquired_by_ctoken(
+                kwargs, instruction_set_validation, master_account_id
+            )
+        kwargs.update({'master_id': master_account_id[0]})
         new_transfer_sheet = self.action_execute_user_instruction_set(**kwargs)
         return self.warning_could_not_create_new_transfer_sheet(
             kwargs, new_transfer_sheet
@@ -4667,6 +5097,14 @@ class EWalletSessionManager():
                 or isinstance(instruction_set_validation, dict) \
                 and instruction_set_validation.get('failed'):
             return instruction_set_validation
+        master_account_id = self.fetch_acquired_masters_from_client_token_set(
+            [kwargs['client_id']]
+        )
+        if isinstance(master_account_id, dict) and master_account_id.get('failed'):
+            return self.warning_no_master_account_acquired_by_ctoken(
+                kwargs, instruction_set_validation, master_account_id
+            )
+        kwargs.update({'master_id': master_account_id[0]})
         new_invoice_sheet = self.action_execute_user_instruction_set(**kwargs)
         return self.warning_could_not_create_new_invoice_sheet(
             kwargs, new_invoice_sheet
@@ -4680,6 +5118,14 @@ class EWalletSessionManager():
                 or isinstance(instruction_set_validation, dict) \
                 and instruction_set_validation.get('failed'):
             return instruction_set_validation
+        master_account_id = self.fetch_acquired_masters_from_client_token_set(
+            [kwargs['client_id']]
+        )
+        if isinstance(master_account_id, dict) and master_account_id.get('failed'):
+            return self.warning_no_master_account_acquired_by_ctoken(
+                kwargs, instruction_set_validation, master_account_id
+            )
+        kwargs.update({'master_id': master_account_id[0]})
         new_clock = self.action_execute_user_instruction_set(**kwargs)
         return self.warning_could_not_create_new_credit_clock(
             kwargs, new_clock
@@ -4693,24 +5139,19 @@ class EWalletSessionManager():
                 or isinstance(instruction_set_validation, dict) \
                 and instruction_set_validation.get('failed'):
             return instruction_set_validation
+        master_account_id = self.fetch_acquired_masters_from_client_token_set(
+            [kwargs['client_id']]
+        )
+        if isinstance(master_account_id, dict) and master_account_id.get('failed'):
+            return self.warning_no_master_account_acquired_by_ctoken(
+                kwargs, instruction_set_validation, master_account_id
+            )
+        kwargs.update({'master_id': master_account_id[0]})
         new_ewallet = self.action_execute_user_instruction_set(**kwargs)
         return self.warning_could_not_create_new_credit_ewallet(
             kwargs, new_ewallet
         ) if not new_ewallet or isinstance(new_ewallet, dict) and \
             new_ewallet.get('failed') else new_ewallet
-
-    def handle_client_action_logout(self, **kwargs):
-        log.debug('')
-        instruction_set_validation = self.validate_instruction_set(kwargs)
-        if not instruction_set_validation \
-                or isinstance(instruction_set_validation, dict) \
-                and instruction_set_validation.get('failed'):
-            return instruction_set_validation
-        account_logout = self.action_execute_user_instruction_set(**kwargs)
-        return self.warning_could_not_logout_user_account(
-            kwargs, account_logout
-        ) if not account_logout or isinstance(account_logout, dict) and \
-            account_logout.get('failed') else account_logout
 
     def handle_client_action_view_logout_records(self, **kwargs):
         log.debug('')
@@ -4719,6 +5160,14 @@ class EWalletSessionManager():
                 or isinstance(instruction_set_validation, dict) \
                 and instruction_set_validation.get('failed'):
             return instruction_set_validation
+        master_account_id = self.fetch_acquired_masters_from_client_token_set(
+            [kwargs['client_id']]
+        )
+        if isinstance(master_account_id, dict) and master_account_id.get('failed'):
+            return self.warning_no_master_account_acquired_by_ctoken(
+                kwargs, instruction_set_validation, master_account_id
+            )
+        kwargs.update({'master_id': master_account_id[0]})
         view_logout_records = self.action_execute_user_instruction_set(**kwargs)
         return self.warning_could_not_view_logout_records(
             kwargs, view_logout_records
@@ -4732,6 +5181,14 @@ class EWalletSessionManager():
                 or isinstance(instruction_set_validation, dict) \
                 and instruction_set_validation.get('failed'):
             return instruction_set_validation
+        master_account_id = self.fetch_acquired_masters_from_client_token_set(
+            [kwargs['client_id']]
+        )
+        if isinstance(master_account_id, dict) and master_account_id.get('failed'):
+            return self.warning_no_master_account_acquired_by_ctoken(
+                kwargs, instruction_set_validation, master_account_id
+            )
+        kwargs.update({'master_id': master_account_id[0]})
         view_login_records = self.action_execute_user_instruction_set(**kwargs)
         return self.warning_could_not_view_login_records(
             kwargs, view_login_records
@@ -4745,6 +5202,14 @@ class EWalletSessionManager():
                 or isinstance(instruction_set_validation, dict) \
                 and instruction_set_validation.get('failed'):
             return instruction_set_validation
+        master_account_id = self.fetch_acquired_masters_from_client_token_set(
+            [kwargs['client_id']]
+        )
+        if isinstance(master_account_id, dict) and master_account_id.get('failed'):
+            return self.warning_no_master_account_acquired_by_ctoken(
+                kwargs, instruction_set_validation, master_account_id
+            )
+        kwargs.update({'master_id': master_account_id[0]})
         view_invoice_record = self.action_execute_user_instruction_set(**kwargs)
         return self.warning_could_not_view_invoice_record(
             kwargs, view_invoice_record
@@ -4758,6 +5223,14 @@ class EWalletSessionManager():
                 or isinstance(instruction_set_validation, dict) \
                 and instruction_set_validation.get('failed'):
             return instruction_set_validation
+        master_account_id = self.fetch_acquired_masters_from_client_token_set(
+            [kwargs['client_id']]
+        )
+        if isinstance(master_account_id, dict) and master_account_id.get('failed'):
+            return self.warning_no_master_account_acquired_by_ctoken(
+                kwargs, instruction_set_validation, master_account_id
+            )
+        kwargs.update({'master_id': master_account_id[0]})
         view_invoice_sheet = self.action_execute_user_instruction_set(**kwargs)
         return self.warning_could_not_view_invoice_sheet(
             kwargs, view_invoice_sheet
@@ -4771,6 +5244,14 @@ class EWalletSessionManager():
                 or isinstance(instruction_set_validation, dict) \
                 and instruction_set_validation.get('failed'):
             return instruction_set_validation
+        master_account_id = self.fetch_acquired_masters_from_client_token_set(
+            [kwargs['client_id']]
+        )
+        if isinstance(master_account_id, dict) and master_account_id.get('failed'):
+            return self.warning_no_master_account_acquired_by_ctoken(
+                kwargs, instruction_set_validation, master_account_id
+            )
+        kwargs.update({'master_id': master_account_id[0]})
         view_clock = self.action_execute_user_instruction_set(**kwargs)
         return self.warning_could_not_view_credit_clock(
             kwargs, view_clock
@@ -4784,6 +5265,14 @@ class EWalletSessionManager():
                 or isinstance(instruction_set_validation, dict) \
                 and instruction_set_validation.get('failed'):
             return instruction_set_validation
+        master_account_id = self.fetch_acquired_masters_from_client_token_set(
+            [kwargs['client_id']]
+        )
+        if isinstance(master_account_id, dict) and master_account_id.get('failed'):
+            return self.warning_no_master_account_acquired_by_ctoken(
+                kwargs, instruction_set_validation, master_account_id
+            )
+        kwargs.update({'master_id': master_account_id[0]})
         view_ewallet = self.action_execute_user_instruction_set(**kwargs)
         return self.warning_could_not_view_credit_ewallet(
             kwargs, view_ewallet
@@ -4797,6 +5286,14 @@ class EWalletSessionManager():
                 or isinstance(instruction_set_validation, dict) \
                 and instruction_set_validation.get('failed'):
             return instruction_set_validation
+        master_account_id = self.fetch_acquired_masters_from_client_token_set(
+            [kwargs['client_id']]
+        )
+        if isinstance(master_account_id, dict) and master_account_id.get('failed'):
+            return self.warning_no_master_account_acquired_by_ctoken(
+                kwargs, instruction_set_validation, master_account_id
+            )
+        kwargs.update({'master_id': master_account_id[0]})
         view_account = self.action_execute_user_instruction_set(**kwargs)
         return self.warning_could_not_view_account(
             kwargs, view_account
@@ -4810,6 +5307,14 @@ class EWalletSessionManager():
                 or isinstance(instruction_set_validation, dict) \
                 and instruction_set_validation.get('failed'):
             return instruction_set_validation
+        master_account_id = self.fetch_acquired_masters_from_client_token_set(
+            [kwargs['client_id']]
+        )
+        if isinstance(master_account_id, dict) and master_account_id.get('failed'):
+            return self.warning_no_master_account_acquired_by_ctoken(
+                kwargs, instruction_set_validation, master_account_id
+            )
+        kwargs.update({'master_id': master_account_id[0]})
         view_conversion_record = self.action_execute_user_instruction_set(**kwargs)
         return self.warning_could_not_view_conversion_record(
             kwargs, view_conversion_record
@@ -4823,6 +5328,14 @@ class EWalletSessionManager():
                 or isinstance(instruction_set_validation, dict) \
                 and instruction_set_validation.get('failed'):
             return instruction_set_validation
+        master_account_id = self.fetch_acquired_masters_from_client_token_set(
+            [kwargs['client_id']]
+        )
+        if isinstance(master_account_id, dict) and master_account_id.get('failed'):
+            return self.warning_no_master_account_acquired_by_ctoken(
+                kwargs, instruction_set_validation, master_account_id
+            )
+        kwargs.update({'master_id': master_account_id[0]})
         view_conversion_sheet = self.action_execute_user_instruction_set(**kwargs)
         return self.warning_could_not_view_conversion_sheet(
             kwargs, view_conversion_sheet
@@ -4836,6 +5349,14 @@ class EWalletSessionManager():
                 or isinstance(instruction_set_validation, dict) \
                 and instruction_set_validation.get('failed'):
             return instruction_set_validation
+        master_account_id = self.fetch_acquired_masters_from_client_token_set(
+            [kwargs['client_id']]
+        )
+        if isinstance(master_account_id, dict) and master_account_id.get('failed'):
+            return self.warning_no_master_account_acquired_by_ctoken(
+                kwargs, instruction_set_validation, master_account_id
+            )
+        kwargs.update({'master_id': master_account_id[0]})
         view_time_record = self.action_execute_user_instruction_set(**kwargs)
         return self.warning_could_not_view_time_record(
             kwargs, view_time_record
@@ -4849,6 +5370,14 @@ class EWalletSessionManager():
                 or isinstance(instruction_set_validation, dict) \
                 and instruction_set_validation.get('failed'):
             return instruction_set_validation
+        master_account_id = self.fetch_acquired_masters_from_client_token_set(
+            [kwargs['client_id']]
+        )
+        if isinstance(master_account_id, dict) and master_account_id.get('failed'):
+            return self.warning_no_master_account_acquired_by_ctoken(
+                kwargs, instruction_set_validation, master_account_id
+            )
+        kwargs.update({'master_id': master_account_id[0]})
         view_time_sheet = self.action_execute_user_instruction_set(**kwargs)
         return self.warning_could_not_view_time_sheet(
             kwargs, view_time_sheet
@@ -4862,6 +5391,14 @@ class EWalletSessionManager():
                 or isinstance(instruction_set_validation, dict) \
                 and instruction_set_validation.get('failed'):
             return instruction_set_validation
+        master_account_id = self.fetch_acquired_masters_from_client_token_set(
+            [kwargs['client_id']]
+        )
+        if isinstance(master_account_id, dict) and master_account_id.get('failed'):
+            return self.warning_no_master_account_acquired_by_ctoken(
+                kwargs, instruction_set_validation, master_account_id
+            )
+        kwargs.update({'master_id': master_account_id[0]})
         view_transfer_record = self.action_execute_user_instruction_set(**kwargs)
         return self.warning_could_not_view_transfer_sheet_record(
             kwargs, view_transfer_record
@@ -4875,6 +5412,14 @@ class EWalletSessionManager():
                 or isinstance(instruction_set_validation, dict) \
                 and instruction_set_validation.get('failed'):
             return instruction_set_validation
+        master_account_id = self.fetch_acquired_masters_from_client_token_set(
+            [kwargs['client_id']]
+        )
+        if isinstance(master_account_id, dict) and master_account_id.get('failed'):
+            return self.warning_no_master_account_acquired_by_ctoken(
+                kwargs, instruction_set_validation, master_account_id
+            )
+        kwargs.update({'master_id': master_account_id[0]})
         view_transfer_sheet = self.action_execute_user_instruction_set(**kwargs)
         return self.warning_could_not_view_transfer_sheet(
             kwargs, view_transfer_sheet
@@ -4888,6 +5433,14 @@ class EWalletSessionManager():
                 or isinstance(instruction_set_validation, dict) \
                 and instruction_set_validation.get('failed'):
             return instruction_set_validation
+        master_account_id = self.fetch_acquired_masters_from_client_token_set(
+            [kwargs['client_id']]
+        )
+        if isinstance(master_account_id, dict) and master_account_id.get('failed'):
+            return self.warning_no_master_account_acquired_by_ctoken(
+                kwargs, instruction_set_validation, master_account_id
+            )
+        kwargs.update({'master_id': master_account_id[0]})
         view_contact_record = self.action_execute_user_instruction_set(**kwargs)
         return self.warning_could_not_view_contact_record(
             kwargs, view_contact_record
@@ -4901,6 +5454,14 @@ class EWalletSessionManager():
                 or isinstance(instruction_set_validation, dict) \
                 and instruction_set_validation.get('failed'):
             return instruction_set_validation
+        master_account_id = self.fetch_acquired_masters_from_client_token_set(
+            [kwargs['client_id']]
+        )
+        if isinstance(master_account_id, dict) and master_account_id.get('failed'):
+            return self.warning_no_master_account_acquired_by_ctoken(
+                kwargs, instruction_set_validation, master_account_id
+            )
+        kwargs.update({'master_id': master_account_id[0]})
         view_contact_list = self.action_execute_user_instruction_set(**kwargs)
         return self.warning_could_not_view_contact_list(
             kwargs, view_contact_list
@@ -4914,6 +5475,14 @@ class EWalletSessionManager():
                 or isinstance(instruction_set_validation, dict) \
                 and instruction_set_validation.get('failed'):
             return instruction_set_validation
+        master_account_id = self.fetch_acquired_masters_from_client_token_set(
+            [kwargs['client_id']]
+        )
+        if isinstance(master_account_id, dict) and master_account_id.get('failed'):
+            return self.warning_no_master_account_acquired_by_ctoken(
+                kwargs, instruction_set_validation, master_account_id
+            )
+        kwargs.update({'master_id': master_account_id[0]})
         stop_timer = self.action_execute_user_instruction_set(**kwargs)
         return self.warning_could_not_stop_credit_clock_timer(
             kwargs, stop_timer
@@ -4927,6 +5496,14 @@ class EWalletSessionManager():
                 or isinstance(instruction_set_validation, dict) \
                 and instruction_set_validation.get('failed'):
             return instruction_set_validation
+        master_account_id = self.fetch_acquired_masters_from_client_token_set(
+            [kwargs['client_id']]
+        )
+        if isinstance(master_account_id, dict) and master_account_id.get('failed'):
+            return self.warning_no_master_account_acquired_by_ctoken(
+                kwargs, instruction_set_validation, master_account_id
+            )
+        kwargs.update({'master_id': master_account_id[0]})
         resume_timer = self.action_execute_user_instruction_set(**kwargs)
         return self.warning_could_not_resume_credit_clock_timer(
             kwargs, resume_timer
@@ -4940,6 +5517,14 @@ class EWalletSessionManager():
                 or isinstance(instruction_set_validation, dict) \
                 and instruction_set_validation.get('failed'):
             return instruction_set_validation
+        master_account_id = self.fetch_acquired_masters_from_client_token_set(
+            [kwargs['client_id']]
+        )
+        if isinstance(master_account_id, dict) and master_account_id.get('failed'):
+            return self.warning_no_master_account_acquired_by_ctoken(
+                kwargs, instruction_set_validation, master_account_id
+            )
+        kwargs.update({'master_id': master_account_id[0]})
         pause_timer = self.action_execute_user_instruction_set(**kwargs)
         return self.warning_could_not_start_credit_clock_timer(
             kwargs, pause_timer
@@ -4953,6 +5538,14 @@ class EWalletSessionManager():
                 or isinstance(instruction_set_validation, dict) \
                 and instruction_set_validation.get('failed'):
             return instruction_set_validation
+        master_account_id = self.fetch_acquired_masters_from_client_token_set(
+            [kwargs['client_id']]
+        )
+        if isinstance(master_account_id, dict) and master_account_id.get('failed'):
+            return self.warning_no_master_account_acquired_by_ctoken(
+                kwargs, instruction_set_validation, master_account_id
+            )
+        kwargs.update({'master_id': master_account_id[0]})
         start_timer = self.action_execute_user_instruction_set(**kwargs)
         return self.warning_could_not_start_credit_clock_timer(
             kwargs, start_timer
@@ -4966,6 +5559,14 @@ class EWalletSessionManager():
                 or isinstance(instruction_set_validation, dict) \
                 and instruction_set_validation.get('failed'):
             return instruction_set_validation
+        master_account_id = self.fetch_acquired_masters_from_client_token_set(
+            [kwargs['client_id']]
+        )
+        if isinstance(master_account_id, dict) and master_account_id.get('failed'):
+            return self.warning_no_master_account_acquired_by_ctoken(
+                kwargs, instruction_set_validation, master_account_id
+            )
+        kwargs.update({'master_id': master_account_id[0]})
         edit_account = self.action_execute_user_instruction_set(**kwargs)
         return self.warning_could_not_edit_user_account(
             kwargs, edit_account
@@ -4979,104 +5580,19 @@ class EWalletSessionManager():
                 or isinstance(instruction_set_validation, dict) \
                 and instruction_set_validation.get('failed'):
             return instruction_set_validation
+        master_account_id = self.fetch_acquired_masters_from_client_token_set(
+            [kwargs['client_id']]
+        )
+        if isinstance(master_account_id, dict) and master_account_id.get('failed'):
+            return self.warning_no_master_account_acquired_by_ctoken(
+                kwargs, instruction_set_validation, master_account_id
+            )
+        kwargs.update({'master_id': master_account_id[0]})
         transfer_credits = self.action_execute_user_instruction_set(**kwargs)
         return self.warning_could_not_transfer_credits_to_partner(
             kwargs, transfer_credits
         ) if not transfer_credits or isinstance(transfer_credits, dict) and \
             transfer_credits.get('failed') else transfer_credits
-
-    def handle_client_action_new_contact_list(self, **kwargs):
-        log.debug('')
-        instruction_set_validation = self.validate_instruction_set(kwargs)
-        if not instruction_set_validation \
-                or isinstance(instruction_set_validation, dict) \
-                and instruction_set_validation.get('failed'):
-            return instruction_set_validation
-        new_contact_list = self.action_execute_user_instruction_set(**kwargs)
-        return self.warning_could_not_create_new_contact_list(
-            kwargs, new_contact_list
-        ) if not new_contact_list or isinstance(new_contact_list, dict) and \
-            new_contact_list.get('failed') else new_contact_list
-
-    def handle_client_action_new_contact_record(self, **kwargs):
-        log.debug('')
-        instruction_set_validation = self.validate_instruction_set(kwargs)
-        if not instruction_set_validation \
-                or isinstance(instruction_set_validation, dict) \
-                and instruction_set_validation.get('failed'):
-            return instruction_set_validation
-        new_contact_record = self.action_execute_user_instruction_set(**kwargs)
-        return self.warning_could_not_create_new_contact_record(
-            kwargs, new_contact_record
-        ) if not new_contact_record or isinstance(new_contact_record, dict) and \
-            new_contact_record.get('failed') else new_contact_record
-
-    def handle_client_action_convert_clock_to_credits(self, **kwargs):
-        log.debug('')
-        instruction_set_validation = self.validate_instruction_set(kwargs)
-        if not instruction_set_validation \
-                or isinstance(instruction_set_validation, dict) \
-                and instruction_set_validation.get('failed'):
-            return instruction_set_validation
-        convert_clock2credits = self.action_execute_user_instruction_set(**kwargs)
-        return self.warning_could_not_convert_credit_clock_to_credits(
-            kwargs, convert_clock2credits
-        ) if not convert_clock2credits or isinstance(convert_clock2credits, dict) and \
-            convert_clock2credits.get('failed') else convert_clock2credits
-
-    def handle_client_action_convert_credits_to_clock(self, **kwargs):
-        log.debug('')
-        instruction_set_validation = self.validate_instruction_set(kwargs)
-        if not instruction_set_validation \
-                or isinstance(instruction_set_validation, dict) \
-                and instruction_set_validation.get('failed'):
-            return instruction_set_validation
-        convert_credits2clock = self.action_execute_user_instruction_set(**kwargs)
-        return self.warning_could_not_convert_credits_to_credit_clock(
-            kwargs, convert_credits2clock
-        ) if not convert_credits2clock or isinstance(convert_credits2clock, dict) and \
-            convert_credits2clock.get('failed') else convert_credits2clock
-
-    def handle_client_action_pay(self, **kwargs):
-        log.debug('')
-        instruction_set_validation = self.validate_instruction_set(kwargs)
-        if not instruction_set_validation \
-                or isinstance(instruction_set_validation, dict) \
-                and instruction_set_validation.get('failed'):
-            return instruction_set_validation
-        pay_credits = self.action_execute_user_instruction_set(**kwargs)
-        return self.warning_could_not_pay_partner_account(
-            kwargs, pay_credits
-        ) if not pay_credits or isinstance(pay_credits, dict) and \
-            pay_credits.get('failed') else pay_credits
-
-#   @pysnooper.snoop()
-    def handle_client_action_supply_credits(self, **kwargs):
-        log.debug('')
-        instruction_set_validation = self.validate_instruction_set(kwargs)
-        if not instruction_set_validation \
-                or isinstance(instruction_set_validation, dict) \
-                and instruction_set_validation.get('failed'):
-            return instruction_set_validation
-        supply_credits = self.action_execute_user_instruction_set(**kwargs)
-        return self.warning_could_not_supply_user_credit_ewallet(
-            kwargs, supply_credits
-        ) if not supply_credits or isinstance(supply_credits, dict) and \
-            supply_credits.get('failed') else supply_credits
-
-#   @pysnooper.snoop()
-    def handle_client_action_login(self, **kwargs):
-        log.debug('')
-        instruction_set_validation = self.validate_instruction_set(kwargs)
-        if not instruction_set_validation \
-                or isinstance(instruction_set_validation, dict) \
-                and instruction_set_validation.get('failed'):
-            return instruction_set_validation
-        account_login = self.action_execute_user_instruction_set(**kwargs)
-        return self.warning_could_not_login_user_account(
-            kwargs, account_login
-        ) if not account_login or isinstance(account_login, dict) and \
-            account_login.get('failed') else account_login
 
     def handle_system_action_new_session(self, **kwargs):
         log.debug('')

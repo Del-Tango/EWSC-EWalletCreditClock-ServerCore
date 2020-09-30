@@ -64,8 +64,8 @@
     - x - (EWSC) Implement system action IncreaseMasterSubPool
     - x - (EWSC) Implement system action DecreaseMasterSubPool
     - x - (EWSC) Fix bug in client action AcquireMaster, master does not reference CTokens
-    -   - (EWSC) Refactor user actions to impose master oriented restrictions (key and frozen checks)
-    - (EWSC) Implement master action AccountLogin
+    - x - (EWSC) Refactor user actions to impose master oriented restrictions (key and frozen checks)
+    -   - (EWSC) Implement master action AccountLogin
     - (EWSC) Implement master action AccountLogout
     - (EWSC) Implement master action ViewAccount
     - (EWSC) Implement master action EditAccount
@@ -244,6 +244,72 @@
 
 
 - (EWSC) - TODO:
+
+    - x - Check CToken Master ID for user actions:
+        - x - User action Create Account
+        - x - User action Account Login
+        - x - User action Account Logout
+        - x - User action Supply Credits
+        - x - User action Pay Credits
+        - x - User action Convert Credits2Clock
+        - x - User action Convert Clock2Credits
+        - x - User action Transfer Credits
+        - x - User action Edit Account
+        - x - User action Start Clock Timer
+        - x - User action Pause Clock Timer
+        - x - User action Resume Clock Timer
+        - x - User action Stop Clock Timer
+        - x - User action View Contact List
+        - x - User action View Contact Record
+        - x - User action View Transfer Sheet
+        - x - User action View Transfer Record
+        - x - User action View Time Sheet
+        - x - User action View Time Record
+        - x - User action View Conversion Sheet
+        - x - User action View Conversion Record
+        - x - User action View Account
+        - x - User action View Credit EWallet
+        - x - User action View Credit Clock
+        - x - User action View Invoice Sheet
+        - x - User action View Invoice Record
+        - x - User action View Login Records
+        - x - User action View Logout Records
+        - x - User action Create Contact List
+        - x - User action Create Contact Record
+        - x - User action Create Credit EWallet
+        - x - User action Create Credit Clock
+        - x - User action Create Transfer Sheet
+        - x - User action Create Invoice Sheet
+        - x - User action Create Conversion Sheet
+        - x - User action Create Time Sheet
+        - x - User action Switch Account
+        - x - User action Switch Credit EWallet
+        - x - User action Switch Credit Clock
+        - x - User action Switch Transfer Sheet
+        - x - User action Switch Invoice Sheet
+        - x - User action Switch Conversion Sheet
+        - x - User action Switch Time Sheet
+        - x - User action Switch Contact List
+        - x - User action Unlink Account
+        - x - User action Forced-Unlink Account
+        - x - User action Unlink Contact List
+        - x - User action Unlink Contact Record
+        - x - User action Unlink Conversion Sheet
+        - x - User action Unlink Conversion Record
+        - x - User action Unlink Transfer Sheet
+        - x - User action Unlink Transfer Record
+        - x - User action Unlink Time Sheet
+        - x - User action Unlink Time Record
+        - x - User action Unlink Invoice Sheet
+        - x - User action Unlink Invoice Record
+        - x - User action Unlink Credit EWallet
+        - x - User action Unlink Credit Clock
+        - x - User action Recover Account
+
+    - x - Check user in master pool for user actions:
+
+        - x - User action Account Login
+
 
 - (EWSC) - TESTS:
 

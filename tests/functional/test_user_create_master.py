@@ -86,4 +86,4 @@ class TestEWalletSessionManagerUserCreateMasterAccount(unittest.TestCase):
         self.assertTrue(isinstance(new_account['account_data']['company'], str))
         self.assertTrue(isinstance(new_account['account_data']['address'], str))
         self.assertTrue(isinstance(new_account['account_data']['subordonate_pool'], dict))
-        self.assertTrue(isinstance(new_account['account_data']['acquired_ctokens'], list))
+        self.assertTrue(isinstance(new_account['account_data']['acquired_ctokens'], int))

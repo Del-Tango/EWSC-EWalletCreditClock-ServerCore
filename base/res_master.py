@@ -69,6 +69,22 @@ class ResMaster(ResUser):
 
     # FETCHERS
 
+    def fetch_is_active_flag(self):
+        log.debug('')
+        return self.is_active
+
+    def fetch_subpool_email_address_set(self):
+        log.debug('')
+        subpool = self.fetch_subordonate_account_pool()
+        if not subpool:
+            return self.warning_master_account_subordonate_pool_empty(
+                subpool
+            )
+        email_set = list(
+            set(account.fetch_user_email() for account in subpool)
+        )
+        return email_set
+
     def fetch_acquired_ctoken_count(self):
         log.debug('')
         return self.acquired_ctokens
@@ -116,6 +132,7 @@ class ResMaster(ResUser):
             'address': self.address,
             'subordonate_pool': self.subordonate_pool,
             'acquired_ctokens': self.acquired_ctokens,
+            'active': self.is_active,
         }
         return values
 
@@ -166,6 +183,21 @@ class ResMaster(ResUser):
         return True
 
     # CHECKERS
+
+    def check_master_account_frozen(self):
+        log.debug('')
+        active = self.fetch_is_active_flag()
+        return False if active else True
+
+    def check_user_in_subpool_by_email(self, user_email):
+        log.debug('')
+        subpool_email_set = self.fetch_subpool_email_address_set()
+        if not subpool_email_set or isinstance(subpool_email_set, dict) and \
+                subpool_email_set.get('failed'):
+            return self.warning_could_not_fetch_subordonate_account_pool_email_set(
+                user_email, subpool_email_set
+            )
+        return True if user_email in subpool_email_set else False
 
 #   @pysnooper.snoop('logs/ewallet.log')
     def check_subordonate_account_pool_size_limit_reached(self):
@@ -250,6 +282,26 @@ class ResMaster(ResUser):
     # CONTROLLERS
 
     # WARNINGS
+
+    def warning_could_not_fetch_subordonate_account_pool_email_set(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Something went wrong. '
+                       'Could not fetch email addresses from Master account '
+                       'Subordonate pool users. '
+                       'Details: {}'.format(args),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
+
+    def warning_master_account_subordonate_pool_empty(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Master account Subordonate pool empty. '
+                       'Details: {}'.format(args),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
 
     def warning_cannot_decrease_to_negative_pool_size(self, *args):
         command_chain_response = {
