@@ -46,7 +46,7 @@ class ResMaster(ResUser):
     subordonate_pool = relationship(
        'ResUser', foreign_keys='ResUser.master_account_id'
     )
-    acquired_ctokens = []
+    acquired_ctokens = Column(Integer)
     is_active = Column(Boolean)
 
     __mapper_args__ = {
@@ -63,11 +63,15 @@ class ResMaster(ResUser):
         self.key_code = kwargs.get('key_code') or \
             self.fetch_default_master_account_key_code()
         self.subordonate_pool = kwargs.get('subordonate_pool', [])
-        self.acquired_ctokens = kwargs.get('acquired_ctokens', [])
+        self.acquired_ctokens = kwargs.get('acquired_ctokens', 0)
         self.is_active = kwargs.get('is_active', True)
         return super(ResMaster, self).__init__(master=True, **kwargs)
 
     # FETCHERS
+
+    def fetch_acquired_ctoken_count(self):
+        log.debug('')
+        return self.acquired_ctokens
 
     def fetch_subordonate_account_pool_size_limit(self):
         log.debug('')
@@ -150,14 +154,14 @@ class ResMaster(ResUser):
             )
         return True
 
-    def set_acquired_ctoken_to_pool(self, client_id):
+    def set_acquired_ctoken_to_pool(self, ctokens):
         log.debug('')
         try:
-            self.acquired_ctokens.append(client_id)
+            self.acquired_ctokens = ctokens
             self.update_write_date()
         except Exception as e:
-            return self.error_could_not_set_master_acquired_ctoken(
-                client_id, self.acquired_ctokens, e
+            return self.error_could_not_set_master_acquired_ctoken_count(
+                ctokens, self.acquired_ctokens, e
             )
         return True
 
@@ -172,7 +176,18 @@ class ResMaster(ResUser):
 
     # GENERAL
 
-    @pysnooper.snoop('logs/ewallet.log')
+#   @pysnooper.snoop('logs/ewallet.log')
+    def add_ctoken_to_acquired(self, client_id):
+        log.debug('')
+        acquired = self.fetch_acquired_ctoken_count() + 1
+        set_to_pool = self.set_acquired_ctoken_to_pool(acquired)
+        if isinstance(set_to_pool, dict) and set_to_pool.get('failed'):
+            return self.warning_could_not_add_acquired_ctoken_to_pool(
+                client_id, acquired, set_to_pool
+            )
+        return set_to_pool
+
+#   @pysnooper.snoop('logs/ewallet.log')
     def decrease_subordonate_account_pool_size_limit(self, decrease_by):
         log.debug('')
         current_pool_size = self.fetch_subordonate_account_pool_size_limit()
@@ -222,15 +237,6 @@ class ResMaster(ResUser):
         if isinstance(set_to_pool, dict) and set_to_pool.get('failed'):
             return self.warning_could_not_add_new_subordonate_account(
                 subordonate_account, set_to_pool
-            )
-        return set_to_pool
-
-    def add_ctoken_to_acquired(self, client_id):
-        log.debug('')
-        set_to_pool = self.set_acquired_ctoken_to_pool(client_id)
-        if isinstance(set_to_pool, dict) and set_to_pool.get('failed'):
-            return self.warning_could_not_add_acquired_ctoken_to_pool(
-                client_id, set_to_pool
             )
         return set_to_pool
 
@@ -296,6 +302,16 @@ class ResMaster(ResUser):
         return command_chain_response
 
     # ERRORS
+
+    def error_could_not_set_master_acquired_ctoken_count(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Something went wrong. '
+                     'Could not set Master account acquired CToken count. '
+                     'Details: {}'.format(args),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
 
     def error_could_not_set_master_account_limit(self, *args):
         command_chain_response = {

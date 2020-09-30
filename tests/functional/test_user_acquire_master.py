@@ -1,5 +1,6 @@
 import os
 import unittest
+import pysnooper
 from base import ewallet_session_manager as manager
 
 
@@ -17,6 +18,7 @@ class TestEWalletSessionManagerUserAcquireMasterAccount(unittest.TestCase):
     user_address_1 = 'Iasi, jud. Iasi, Str. Canta, Nr. 40'
 
     @classmethod
+#   @pysnooper.snoop()
     def setUpClass(cls):
         print('[ + ]: Prerequisites -')
         # Create new EWallet Session Manager instance

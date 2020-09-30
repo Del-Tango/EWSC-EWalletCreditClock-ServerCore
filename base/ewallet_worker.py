@@ -1091,7 +1091,55 @@ class EWalletWorker():
     [ NOTE ]: Command chain responses are formulated here.
     '''
 
-    @pysnooper.snoop('logs/ewallet.log')
+    def action_add_new_system_session(self, **kwargs):
+        # Create new ewallet session
+        ewallet_session = self.create_new_ewallet_session(
+            expiration_date=kwargs.get('expiration_date') or
+                self.fetch_ewallet_session_expiration_date()
+        )
+        if not ewallet_session or isinstance(ewallet_session, dict) and \
+                ewallet_session.get('failed'):
+            return self.warning_could_not_create_new_ewallet_system_session(
+                kwargs, ewallet_session
+            )
+        # Add map entry
+        map_session = self.map_ewallet_session(ewallet_session)
+        # Formulate instruction response
+        response = {
+            'failed': False,
+            'ewallet_session': ewallet_session.fetch_active_session_id(),
+        }
+        # Respond to session manager
+        self.send_instruction_response(response)
+        return response
+
+#   @pysnooper.snoop()
+    def action_add_new_session(self, **kwargs):
+        log.debug('')
+        # Create new ewallet session
+        ewallet_session = self.create_new_ewallet_session(
+            expiration_date=kwargs.get('expiration_date') or
+                self.fetch_ewallet_session_expiration_date()
+        )
+        if not ewallet_session or isinstance(ewallet_session, dict) and \
+                ewallet_session.get('failed'):
+            return self.warning_could_not_create_new_ewallet_session(
+                kwargs, ewallet_session
+            )
+        # Add map entries
+        map_client_session = self.map_client_session(
+            kwargs['client_id'], kwargs['session_token'], ewallet_session
+        )
+        # Formulate instruction response
+        response = {
+            'failed': False,
+            'ewallet_session': ewallet_session.fetch_active_session_id(),
+        }
+        # Respond to session manager
+        self.send_instruction_response(response)
+        return response
+
+#   @pysnooper.snoop('logs/ewallet.log')
     def action_add_master_acquired_ctoken_to_pool(self, **kwargs):
         log.debug('')
         # Fetch ewallet session by token keys
@@ -1511,54 +1559,6 @@ class EWalletWorker():
             response['session_data']['expiration_date'] = res_utils.format_datetime(
                 response['session_data']['expiration_date']
             )
-        self.send_instruction_response(response)
-        return response
-
-    def action_add_new_system_session(self, **kwargs):
-        # Create new ewallet session
-        ewallet_session = self.create_new_ewallet_session(
-            expiration_date=kwargs.get('expiration_date') or
-                self.fetch_ewallet_session_expiration_date()
-        )
-        if not ewallet_session or isinstance(ewallet_session, dict) and \
-                ewallet_session.get('failed'):
-            return self.warning_could_not_create_new_ewallet_system_session(
-                kwargs, ewallet_session
-            )
-        # Add map entry
-        map_session = self.map_ewallet_session(ewallet_session)
-        # Formulate instruction response
-        response = {
-            'failed': False,
-            'ewallet_session': ewallet_session.fetch_active_session_id(),
-        }
-        # Respond to session manager
-        self.send_instruction_response(response)
-        return response
-
-#   @pysnooper.snoop()
-    def action_add_new_session(self, **kwargs):
-        log.debug('')
-        # Create new ewallet session
-        ewallet_session = self.create_new_ewallet_session(
-            expiration_date=kwargs.get('expiration_date') or
-                self.fetch_ewallet_session_expiration_date()
-        )
-        if not ewallet_session or isinstance(ewallet_session, dict) and \
-                ewallet_session.get('failed'):
-            return self.warning_could_not_create_new_ewallet_session(
-                kwargs, ewallet_session
-            )
-        # Add map entries
-        map_client_session = self.map_client_session(
-            kwargs['client_id'], kwargs['session_token'], ewallet_session
-        )
-        # Formulate instruction response
-        response = {
-            'failed': False,
-            'ewallet_session': ewallet_session.fetch_active_session_id(),
-        }
-        # Respond to session manager
         self.send_instruction_response(response)
         return response
 

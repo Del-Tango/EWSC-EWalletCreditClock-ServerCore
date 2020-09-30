@@ -825,6 +825,45 @@ class EWallet(Base):
     def action_receive_transfer_record(self, **kwargs):
         log.debug('TODO - UNIMPLEMENTED')
 
+#   @pysnooper.snoop('logs/ewallet.log')
+    def action_add_master_acquired_ctoken(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('master_id'):
+            return self.error_no_master_account_identifier_specified(kwargs)
+        if not kwargs.get('key'):
+            return self.warning_no_master_key_code_specified(kwargs)
+        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
+            kwargs, 'action'
+        )
+        master_account = self.fetch_master_account(
+            search_by='id', **sanitized_command_chain
+        )
+        if not master_account or isinstance(master_account, dict) and \
+                master_account.get('failed'):
+            return self.warning_no_master_account_found_by_email(
+                kwargs, master_account
+            )
+        check_master_key_code = self.check_master_user_account_key_code(
+            key=kwargs['key'], master_account=master_account
+        )
+        if not check_master_key_code:
+            return self.warning_invalid_master_account_key_code(
+                kwargs, master_account, check_master_key_code
+            )
+        add_ctoken = master_account.add_ctoken_to_acquired(kwargs['client_id'])
+        if not add_ctoken or isinstance(add_ctoken, dict) and \
+                add_ctoken.get('failed'):
+            return self.error_could_not_add_master_acquired_ctoken(
+                kwargs, master_account, check_master_key_code, add_ctoken
+            )
+        command_chain_response = {
+            'failed': False,
+            'client_id': kwargs['client_id'],
+            'master': master_account.fetch_user_email(),
+            'master_id': kwargs['master_id'],
+        }
+        return command_chain_response
+
     def action_create_new_master_account(self, **kwargs):
         log.debug('')
         sanitized_command_chain = res_utils.remove_tags_from_command_chain(
@@ -865,20 +904,21 @@ class EWallet(Base):
         sanitized_command_chain = res_utils.remove_tags_from_command_chain(
             kwargs, 'action'
         )
-        master_account = self.fetch_master_account_by_id(
-            **sanitized_command_chain
-        )
-        if not master_account or isinstance(master_account, dict) and \
-                master_account.get('failed'):
-            return self.warning_no_master_account_found_by_id(
-                kwargs, master_account
+        if kwargs['master_id'] != 'system':
+            master_account = self.fetch_master_account_by_id(
+                **sanitized_command_chain
             )
-        master_subpool_limit_reached = master_account\
-            .check_subordonate_account_pool_size_limit_reached()
-        if master_subpool_limit_reached:
-            return self.warning_subordonate_account_pool_size_limit_reached(
-                kwargs, master_account, master_subpool_limit_reached
-            )
+            if not master_account or isinstance(master_account, dict) and \
+                    master_account.get('failed'):
+                return self.warning_no_master_account_found_by_id(
+                    kwargs, master_account
+                )
+            master_subpool_limit_reached = master_account\
+                .check_subordonate_account_pool_size_limit_reached()
+            if master_subpool_limit_reached:
+                return self.warning_subordonate_account_pool_size_limit_reached(
+                    kwargs, master_account, master_subpool_limit_reached
+                )
         session_create_account = EWalletCreateUser().action_create_new_user(
             **sanitized_command_chain
         )
@@ -890,13 +930,14 @@ class EWallet(Base):
             )
         kwargs['active_session'].add(session_create_account)
         log.info('Successfully created new user account.')
-        link_master = master_account.add_subordonate_to_pool(
-            session_create_account
-        )
-        if isinstance(link_master, dict) and link_master.get('failed'):
-            return self.warning_could_not_link_new_user_account_to_master(
-                kwargs, master_account, session_create_account, link_master
+        if kwargs['master_id'] != 'system':
+            link_master = master_account.add_subordonate_to_pool(
+                session_create_account
             )
+            if isinstance(link_master, dict) and link_master.get('failed'):
+                return self.warning_could_not_link_new_user_account_to_master(
+                    kwargs, master_account, session_create_account, link_master
+                )
         self.update_user_account_archive(
             user=session_create_account,
         )
@@ -908,44 +949,6 @@ class EWallet(Base):
             'failed': False,
             'account': kwargs['user_email'],
             'account_data': session_create_account.fetch_user_values(),
-        }
-        return command_chain_response
-
-    def action_add_master_acquired_ctoken(self, **kwargs):
-        log.debug('')
-        if not kwargs.get('master_id'):
-            return self.error_no_master_account_identifier_specified(kwargs)
-        if not kwargs.get('key'):
-            return self.warning_no_master_key_code_specified(kwargs)
-        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
-            kwargs, 'action'
-        )
-        master_account = self.fetch_master_account(
-            search_by='id', **sanitized_command_chain
-        )
-        if not master_account or isinstance(master_account, dict) and \
-                master_account.get('failed'):
-            return self.warning_no_master_account_found_by_email(
-                kwargs, master_account
-            )
-        check_master_key_code = self.check_master_user_account_key_code(
-            key_code=kwargs['key'], master_account=master_account
-        )
-        if not check_master_key_code:
-            return self.warning_invalid_master_account_key_code(
-                kwargs, master_account, check_master_key_code
-            )
-        add_ctoken = master_account.add_ctoken_to_acquired(kwargs['client_id'])
-        if not add_ctoken or isinstance(add_ctoken, dict) and \
-                add_ctoken.get('failed'):
-            return self.error_could_not_add_master_acquired_ctoken(
-                kwargs, master_account, check_master_key_code, add_ctoken
-            )
-        command_chain_response = {
-            'failed': False,
-            'client_id': kwargs['client_id'],
-            'master': master_account.fetch_user_email(),
-            'master_id': kwargs['master_id'],
         }
         return command_chain_response
 

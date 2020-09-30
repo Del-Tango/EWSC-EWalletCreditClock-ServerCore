@@ -94,7 +94,7 @@ class ResUtils():
         active_session = ewallet_session.fetch_active_session()
         score = ewallet_session.ewallet_controller(
             controller='user', ctype='action', action='create', create='account',
-            active_session=active_session, **system_user_values
+            active_session=active_session, master_id='system', **system_user_values
         )
         return score
 

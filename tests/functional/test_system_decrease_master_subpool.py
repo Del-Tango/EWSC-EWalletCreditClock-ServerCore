@@ -1,6 +1,7 @@
 import os
 import datetime
 import unittest
+import pysnooper
 
 from base import ewallet_session_manager as manager
 
@@ -25,6 +26,7 @@ class TestEWalletSessionManagerSystemDecreaseMasterSubpool(unittest.TestCase):
     master_key_code = 'EWSC-Master-Key-Code'
 
     @classmethod
+#   @pysnooper.snoop()
     def setUpClass(cls):
         print('[ + ]: Prerequisites -')
         # Create new EWallet Session Manager instance

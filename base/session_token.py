@@ -51,6 +51,7 @@ class SessionToken(Token):
             self.worker_id = worker_id
         except Exception as e:
             return self.warning_could_not_set_worker_id(worker_id)
+        return True
 
     def set_ctoken(self, ctoken):
         log.debug('')

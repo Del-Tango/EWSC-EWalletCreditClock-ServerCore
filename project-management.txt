@@ -63,8 +63,8 @@
     - x - (EWSC) Implement system action UnfreezeMaster
     - x - (EWSC) Implement system action IncreaseMasterSubPool
     - x - (EWSC) Implement system action DecreaseMasterSubPool
-    -   - (EWSC) BUG FIX client action AcquireMaster, master does not reference CTokens
-    - (EWSC) Refactor user actions to impose master oriented restrictions (key and frozen checks)
+    - x - (EWSC) Fix bug in client action AcquireMaster, master does not reference CTokens
+    -   - (EWSC) Refactor user actions to impose master oriented restrictions (key and frozen checks)
     - (EWSC) Implement master action AccountLogin
     - (EWSC) Implement master action AccountLogout
     - (EWSC) Implement master action ViewAccount
@@ -394,7 +394,7 @@
     - System action Freeze Master
     - System action Unfreeze Master
     - System action Increase Master SubPool
-    - System action Decrease Master SubPool #
+    - System action Decrease Master SubPool
     - System action Interogate Session Workers
     - System action Target Cleanup Master
     - System action Target Cleanup Worker

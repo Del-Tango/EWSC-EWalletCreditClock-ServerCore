@@ -82,6 +82,25 @@ class EWalletSessionManager():
     def fetch_from_ewallet_worker_session(self):
         log.debug('TODO - UNIMPLEMENTED')
 
+#   @pysnooper.snoop('logs/ewallet.log')
+    def fetch_worker_identifier_by_client_id(self, client_id):
+        log.debug('')
+        client_pool = self.fetch_ctoken_pool()
+        if client_id not in client_pool:
+            return self.error_invalid_client_id(client_id, client_pool)
+        ctoken = client_pool[client_id]
+        if not ctoken:
+            return self.warning_no_ctoken_found(ctoken, client_id,  client_pool)
+        stoken = ctoken.fetch_stoken()
+        if not stoken or isinstance(stoken, dict) and \
+                stoken.get('failed'):
+            return self.warning_no_stoken_found(client_id, client_pool, ctoken, stoken)
+        worker_id = stoken.fetch_worker_id()
+        return self.warning_no_worker_id_found(
+            client_id, client_pool, ctoken, stoken, worker_id
+        ) if not worker_id or isinstance(worker_id, dict) and \
+            worker_id.get('failed') else worker_id
+
     def fetch_default_master_account_subordonate_pool_size_limit(self):
         log.debug('')
         return int(config.master_config['subordonate_pool_size'])
@@ -797,24 +816,6 @@ class EWalletSessionManager():
             worker.get('failed') else worker.get('worker') or \
             list(worker.keys())[0]
         return worker_id
-
-    def fetch_worker_identifier_by_client_id(self, client_id):
-        log.debug('')
-        client_pool = self.fetch_ctoken_pool()
-        if client_id not in client_pool:
-            return self.error_invalid_client_id(client_id, client_pool)
-        ctoken = client_pool[client_id]
-        if not ctoken:
-            return self.warning_no_ctoken_found(ctoken, client_id,  client_pool)
-        stoken = ctoken.fetch_stoken()
-        if not stoken or isinstance(stoken, dict) and \
-                stoken.get('failed'):
-            return self.warning_no_stoken_found(client_id, client_pool, ctoken, stoken)
-        worker_id = stoken.fetch_worker_id()
-        return self.warning_no_worker_id_found(
-            client_id, client_pool, ctoken, stoken, worker_id
-        ) if not worker_id or isinstance(worker_id, dict) and \
-            worker_id.get('failed') else worker_id
 
     def fetch_client_token_by_label(self, client_id):
         log.debug('')
@@ -1650,6 +1651,22 @@ class EWalletSessionManager():
 
     # MAPPERS
 
+    def map_worker_id_to_session_token(self, stoken, worker):
+        log.debug('')
+        if not isinstance(stoken, object) or not isinstance(worker, object):
+            return self.error_invalid_stoken_worker_pair(stoken, worker)
+        try:
+            stoken.set_worker_id(worker.fetch_worker_id())
+        except Exception as e:
+            return self.error_could_not_map_worker_id_to_session_token(
+                stoken, worker, e
+            )
+        return {
+            'failed': False,
+            'stoken': stoken,
+            'worker': worker,
+        }
+
     def map_client_session_tokens(self, ctoken, stoken):
         log.debug('')
         if not isinstance(ctoken, object) or not isinstance(stoken, object):
@@ -1657,15 +1674,17 @@ class EWalletSessionManager():
         try:
             ctoken.set_stoken(stoken)
             stoken.set_ctoken(ctoken)
-        except:
-            return self.error_could_not_map_client_session_tokens(ctoken, stoken)
+        except Exception as e:
+            return self.error_could_not_map_client_session_tokens(
+                ctoken, stoken, e
+            )
         return {
             'failed': False,
             'ctoken': ctoken,
             'stoken': stoken,
         }
 
-    @pysnooper.snoop('logs/ewallet.log')
+#   @pysnooper.snoop('logs/ewallet.log')
     def map_client_id_to_worker(self, client_id, assigned_worker_id):
         log.debug('')
         update_map = self.update_client_worker_map(
@@ -1686,6 +1705,9 @@ class EWalletSessionManager():
             ),
             'client_to_session': self.map_client_id_to_session_token(
                 client_id, session_token, assigned_worker, ewallet_session
+            ),
+            'worker_to_stoken': self.map_worker_id_to_session_token(
+                session_token, assigned_worker
             ),
         }
         return False if False in mappers.values() else True
@@ -3021,6 +3043,66 @@ class EWalletSessionManager():
     def action_stop_client_token_cleaner_cron(self, **kwargs):
         log.debug('TODO - UNIMPLEMENTED')
 
+#   @pysnooper.snoop()
+    def action_request_session_token(self, worker_id, cst_map, **kwargs):
+        log.debug('')
+        # Sanitize instruction set
+        sanitized_instruction_set = res_utils.remove_tags_from_command_chain(
+            kwargs, 'controller', 'ctype', 'action', 'new',
+        )
+        # Update instruction set
+        sanitized_instruction_set.update({
+            'controller': 'system', 'ctype': 'action', 'action': 'add',
+            'add': 'session', 'client_id': cst_map['ctoken'].label,
+            'session_token': cst_map['stoken'].label
+        })
+        # Create new session token mapped ewallet session
+        new_session = self.execute_worker_instruction(
+            worker_id, sanitized_instruction_set
+        )
+        if not new_session or isinstance(new_session, dict) and \
+                new_session.get('failed'):
+            return self.error_could_not_create_new_ewallet_session(
+                kwargs, new_session, worker_id, cst_map,
+            )
+        set_stoken_worker_id = cst_map['stoken'].set_worker_id(worker_id)
+        if not set_stoken_worker_id or isinstance(set_stoken_worker_id, dict) \
+                and set_stoken_worker_id.get('failed'):
+            return self.warning_could_not_map_worker_id_to_session_token(
+                worker_id, cst_map, kwargs, sanitized_instruction_set,
+                new_session, set_stoken_worker_id
+            )
+        return new_session
+
+#   @pysnooper.snoop('logs/ewallet.log')
+    def action_acquire_master_user_account(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('client_id') or not kwargs.get('master_id'):
+            return self.error_invalid_acquire_master_action_data_set(kwargs)
+        ctoken = self.fetch_client_token_by_label(kwargs['client_id'])
+        if isinstance(ctoken, dict) and ctoken.get('failed'):
+            return self.warning_could_not_fetch_client_token(kwargs, ctoken)
+        instruction_set = self.fetch_master_add_ctoken_worker_instruction(**kwargs)
+        add_acquired_ctoken = self.action_execute_user_instruction_set(**instruction_set)
+        if not add_acquired_ctoken or isinstance(add_acquired_ctoken, dict) and \
+                add_acquired_ctoken.get('failed'):
+            return self.warning_could_not_add_acquired_ctoken_to_master_pool(
+                kwargs, ctoken, instruction_set, add_acquired_ctoken
+            )
+        set_master = ctoken.set_master(kwargs['master_id'])
+        if isinstance(set_master, dict) and set_master.get('failed'):
+            return self.error_could_not_set_master_user_account_to_ctoken(
+                kwargs, ctoken, set_master
+            )
+        instruction_set_response = {
+            'failed': False,
+            'client_id': kwargs['client_id'],
+            'master_id': kwargs['master_id'],
+            'ctoken': ctoken,
+            'ctoken_data': ctoken.fetch_token_values(),
+        }
+        return instruction_set_response
+
     def action_decrease_master_subordonate_account_pool_size(self, **kwargs):
         log.debug('')
         if not kwargs.get('master_id'):
@@ -3047,8 +3129,6 @@ class EWalletSessionManager():
             'master_data': decrease_subpool_size.get('master_data', {}),
         }
         return instruction_set_response
-
-
 
     def action_increase_master_subordonate_account_pool_size(self, **kwargs):
         log.debug('')
@@ -3252,34 +3332,6 @@ class EWalletSessionManager():
             'subordonates': clean_subordonates.get('subordonates', []),
             'cleanup_count': clean_master.get('masters_cleaned', 0)
                 + clean_subordonates.get('subordonates_cleaned', 0),
-        }
-        return instruction_set_response
-
-    def action_acquire_master_user_account(self, **kwargs):
-        log.debug('')
-        if not kwargs.get('client_id') or not kwargs.get('master_id'):
-            return self.error_invalid_acquire_master_action_data_set(kwargs)
-        ctoken = self.fetch_client_token_by_label(kwargs['client_id'])
-        if isinstance(ctoken, dict) and ctoken.get('failed'):
-            return self.warning_could_not_fetch_client_token(kwargs, ctoken)
-        instruction_set = self.fetch_master_add_ctoken_worker_instruction(**kwargs)
-        add_acquired_ctoken = self.action_execute_user_instruction_set(**instruction_set)
-        if not add_acquired_ctoken or isinstance(add_acquired_ctoken, dict) and \
-                add_acquired_ctoken.get('failed'):
-            return self.warning_could_not_add_acquired_ctoken_to_master_pool(
-                kwargs, ctoken, instruction_set, add_acquired_ctoken
-            )
-        set_master = ctoken.set_master(kwargs['master_id'])
-        if isinstance(set_master, dict) and set_master.get('failed'):
-            return self.error_could_not_set_master_user_account_to_ctoken(
-                kwargs, ctoken, set_master
-            )
-        instruction_set_response = {
-            'failed': False,
-            'client_id': kwargs['client_id'],
-            'master_id': kwargs['master_id'],
-            'ctoken': ctoken,
-            'ctoken_data': ctoken.fetch_token_values(),
         }
         return instruction_set_response
 
@@ -3930,30 +3982,6 @@ class EWalletSessionManager():
         log.debug('')
         session = self.create_new_ewallet_session(**kwargs)
         return session
-
-#   @pysnooper.snoop()
-    def action_request_session_token(self, worker_id, cst_map, **kwargs):
-        log.debug('')
-        # Sanitize instruction set
-        sanitized_instruction_set = res_utils.remove_tags_from_command_chain(
-            kwargs, 'controller', 'ctype', 'action', 'new',
-        )
-        # Update instruction set
-        sanitized_instruction_set.update({
-            'controller': 'system', 'ctype': 'action', 'action': 'add',
-            'add': 'session', 'client_id': cst_map['ctoken'].label,
-            'session_token': cst_map['stoken'].label
-        })
-        # Create new session token mapped ewallet session
-        new_session = self.execute_worker_instruction(
-            worker_id, sanitized_instruction_set
-        )
-        if not new_session or isinstance(new_session, dict) and \
-                new_session.get('failed'):
-            return self.error_could_not_create_new_ewallet_session(
-                kwargs, new_session, worker_id, cst_map,
-            )
-        return new_session
 
     def action_request_client_id(self, **kwargs):
         log.debug('')
@@ -5844,12 +5872,22 @@ class EWalletSessionManager():
     [ TODO ]: Fetch warning messages from message file by key codes.
     '''
 
+    def warning_could_not_map_worker_id_to_session_token(self, *args):
+        instruction_set_response = res_utils.format_warning_response(**{
+            'failed': True, 'details': args,
+            'warning': 'Something went wrong. '
+                       'Could not map EWSession Worker ID to SToken. '
+                       'Details: {}'.format(args),
+        })
+        self.log_warning(**instruction_set_response)
+        return instruction_set_response
+
     def warning_could_not_decrease_subordonate_account_pool_size_limit(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
             'failed': True, 'details': args,
             'warning': 'Something went wrong. '
                        'Could not decrease Subordonate user account pool size '
-                       'for Master account.',
+                       'for Master account. Details: {}'.format(args),
         })
         self.log_warning(**instruction_set_response)
         return instruction_set_response
@@ -7158,6 +7196,23 @@ class EWalletSessionManager():
     '''
     [ TODO ]: Fetch error messages from message file by key codes.
     '''
+
+    def error_invalid_stoken_worker_pair(self, *args):
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
+            'error': 'Invalid EWSession Worker - SToken pair.',
+        })
+        self.log_error(**instruction_set_response)
+        return instruction_set_response
+
+    def error_could_not_map_worker_id_to_session_token(self, *args):
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
+            'error': 'Something went wrong. '
+                     'Could not map EWSession Worker ID to SToken.',
+        })
+        self.log_error(**instruction_set_response)
+        return instruction_set_response
 
     def error_no_system_action_decrease_master_target_specified(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
