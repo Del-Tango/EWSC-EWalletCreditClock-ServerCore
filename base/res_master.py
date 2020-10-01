@@ -59,6 +59,7 @@ class ResMaster(ResUser):
         self.account_limit = kwargs.get('account_limit') or \
             self.fetch_default_master_account_subpool_size_limit()
         self.company = kwargs.get('company')
+        self.user_pass_hash = kwargs.get('user_pass_hash')
         self.address = kwargs.get('address')
         self.key_code = kwargs.get('key_code') or \
             self.fetch_default_master_account_key_code()

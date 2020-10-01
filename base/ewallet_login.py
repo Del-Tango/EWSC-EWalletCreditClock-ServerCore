@@ -70,6 +70,18 @@ class EWalletLogin(Base):
         ]
         return _user_names
 
+    def fetch_master_by_email(self, user_email=None, active_session=None):
+        if not active_session:
+            return self.error_no_active_session_found(
+                user_email, active_session
+            )
+        user = list(active_session.query(ResMaster).filter(
+            ResMaster.user_email==user_email
+        ))
+        return self.error_no_master_record_found_by_email(
+            user_email, active_session, user
+        ) if not user else user[0]
+
 #   @pysnooper.snoop('logs/ewallet.log')
     def fetch_user_by_email(self, user_email=None, active_session=None):
         '''
@@ -142,6 +154,13 @@ class EWalletLogin(Base):
         }
         return _values
 
+    def check_master_email_exists(self, user_email, active_session):
+        log.debug('')
+        master = self.fetch_master_by_email(
+            user_email, active_session=active_session
+        )
+        return master or False
+
     def check_user_email_exists(self, user_email, active_session):
         log.debug('')
         user = self.fetch_user_by_email(
@@ -175,6 +194,24 @@ class EWalletLogin(Base):
             return True
         return False
 
+    def authenticate_master(self, **kwargs):
+        log.debug('')
+        user_query = self.check_master_email_exists(
+            kwargs['user_email'], kwargs.get('active_session')
+        )
+        if not user_query or isinstance(user_query, dict) and \
+                user_query.get('failed'):
+            return self.warning_master_email_not_found(kwargs)
+        pass_check = self.check_user_pass_hash(
+            kwargs['user_pass'], user_query.fetch_user_pass_hash()
+        )
+        if not pass_check or isinstance(pass_check, dict) and \
+                pass_check.get('failed'):
+            return self.warning_master_password_incorrect(
+                kwargs, user_query, pass_check
+            )
+        return user_query
+
 #   @pysnooper.snoop('logs/ewallet.log')
     def authenticate_user(self, **kwargs):
         log.debug('')
@@ -183,7 +220,7 @@ class EWalletLogin(Base):
         )
         if not user_query or isinstance(user_query, dict) and \
                 user_query.get('failed'):
-            return self.warning_user_name_not_found(kwargs)
+            return self.warning_user_email_not_found(kwargs)
         pass_check = self.check_user_pass_hash(
             kwargs['user_pass'], user_query.fetch_user_pass_hash()
         )
@@ -203,7 +240,10 @@ class EWalletLogin(Base):
                 user_email=kwargs.get('user_email'),
                 user_pass=kwargs.get('user_pass'),
             )
-        authenticated_user = self.authenticate_user(**kwargs)
+        if kwargs.get('controller') == 'master':
+            authenticated_user = self.authenticate_master(**kwargs)
+        else:
+            authenticated_user = self.authenticate_user(**kwargs)
         if not authenticated_user or isinstance(authenticated_user, dict) \
                 and authenticated_user.get('failed'):
             set_login_data = self.set_login_record_data(
@@ -264,6 +304,15 @@ class EWalletLogin(Base):
         return False
 
     # ERRORS
+
+    def error_no_master_record_found_by_email(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No master account record found by email. '
+                     'Details: {}'.format(args)
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
 
     def error_no_user_record_found_by_email(self, *args):
         command_chain_response = {
@@ -340,6 +389,33 @@ class EWalletLogin(Base):
         return False
 
     # WARNINGS
+
+    def warning_master_password_incorrect(self, *args):
+        instruction_set_response = {
+            'failed': True,
+            'warning': 'Master account password incorrect. '
+                       'Details: {}'.format(args)
+        }
+        log.warning(instruction_set_response['warning'])
+        return instruction_set_response
+
+    def warning_master_email_not_found(self, *args):
+        instruction_set_response = {
+            'failed': True,
+            'warning': 'Master account email address not found. '
+                       'Details: {}'.format(args)
+        }
+        log.warning(instruction_set_response['warning'])
+        return instruction_set_response
+
+    def warning_user_email_not_found(self, *args):
+        instruction_set_response = {
+            'failed': True,
+            'warning': 'User account email address not found. '
+                       'Details: {}'.format(args)
+        }
+        log.warning(instruction_set_response['warning'])
+        return instruction_set_response
 
     def warning_user_password_incorrect(self, *args):
         instruction_set_response = {
@@ -595,6 +671,7 @@ class EWalletCreateUser(): #EWalletLogin,
 
     # CREATORS
 
+    @pysnooper.snoop('logs/ewallet.log')
     def create_res_master(self, **kwargs):
         log.debug('')
         if not kwargs.get('active_session'):

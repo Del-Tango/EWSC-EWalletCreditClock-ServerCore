@@ -20,6 +20,8 @@ from . import test_system_unfreeze_master
 from . import test_system_increase_master_subpool
 from . import test_system_decrease_master_subpool
 
+from . import test_master_account_login
+
 from . import test_user_request_clientid
 from . import test_user_request_stoken
 from . import test_user_acquire_master

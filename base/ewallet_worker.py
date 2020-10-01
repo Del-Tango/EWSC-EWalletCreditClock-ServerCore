@@ -1067,9 +1067,12 @@ class EWalletWorker():
 
     def spawn_ewallet_session(self, orm_session, **kwargs):
         log.debug('')
+        now = datetime.datetime.now()
         return EWallet(
-            name=kwargs.get('reference'), session=orm_session,
-            expiration_date=kwargs.get('expiration_date')
+            name=kwargs.get('reference'),
+            session=orm_session,
+            expiration_date=kwargs.get('expiration_date'),
+            create_date=now, write_date=now
         )
 
     # CREATORS
@@ -1090,6 +1093,59 @@ class EWalletWorker():
     '''
     [ NOTE ]: Command chain responses are formulated here.
     '''
+
+    def action_login_master_user_account(self, **kwargs):
+        log.debug('')
+        # Fetch ewallet session by token keys
+        ewallet_session = self.fetch_ewallet_session_by_client_session_tokens(
+            kwargs['client_id'], kwargs['session_token']
+        )
+        if not ewallet_session or isinstance(ewallet_session, dict) and \
+                ewallet_session.get('failed'):
+            return ewallet_session
+        sanitized_instruction_set = res_utils.remove_tags_from_command_chain(
+            kwargs, 'controller', 'ctype', 'action', 'active_session'
+        )
+        # Execute action in session
+        orm_session = ewallet_session.fetch_active_session()
+        account_login = ewallet_session.ewallet_controller(
+            controller='master', ctype='action', action='login',
+            login='account', active_session=orm_session,
+            **sanitized_instruction_set
+        )
+        # Formulate response
+        response = self.warning_could_not_login_master_account(
+            kwargs, ewallet_session, orm_session, account_login
+        ) if not account_login else account_login
+        # Respond to session manager
+        self.send_instruction_response(response)
+        return response
+
+    def action_account_login(self, **kwargs):
+        log.debug('')
+        # Fetch ewallet session by token keys
+        ewallet_session = self.fetch_ewallet_session_by_client_session_tokens(
+            kwargs['client_id'], kwargs['session_token']
+        )
+        if not ewallet_session or isinstance(ewallet_session, dict) and \
+                ewallet_session.get('failed'):
+            return ewallet_session
+        sanitized_instruction_set = res_utils.remove_tags_from_command_chain(
+            kwargs, 'controller', 'ctype', 'action', 'active_session'
+        )
+        # Execute action in session
+        orm_session = ewallet_session.fetch_active_session()
+        account_login = ewallet_session.ewallet_controller(
+            controller='user', ctype='action', action='login',
+            active_session=orm_session, **sanitized_instruction_set
+        )
+        # Formulate response
+        response = self.warning_could_not_login_user_account(
+            kwargs, ewallet_session, orm_session, account_login
+        ) if not account_login else account_login
+        # Respond to session manager
+        self.send_instruction_response(response)
+        return response
 
     def action_add_new_system_session(self, **kwargs):
         # Create new ewallet session
@@ -3285,33 +3341,11 @@ class EWalletWorker():
         self.send_instruction_response(response)
         return response
 
-    def action_account_login(self, **kwargs):
-        log.debug('')
-        # Fetch ewallet session by token keys
-        ewallet_session = self.fetch_ewallet_session_by_client_session_tokens(
-            kwargs['client_id'], kwargs['session_token']
-        )
-        if not ewallet_session or isinstance(ewallet_session, dict) and \
-                ewallet_session.get('failed'):
-            return ewallet_session
-        sanitized_instruction_set = res_utils.remove_tags_from_command_chain(
-            kwargs, 'controller', 'ctype', 'action', 'active_session'
-        )
-        # Execute action in session
-        orm_session = ewallet_session.fetch_active_session()
-        account_login = ewallet_session.ewallet_controller(
-            controller='user', ctype='action', action='login',
-            active_session=orm_session, **sanitized_instruction_set
-        )
-        # Formulate response
-        response = self.warning_could_not_login_user_account(
-            ewallet_session, kwargs
-        ) if not account_login else account_login
-        # Respond to session manager
-        self.send_instruction_response(response)
-        return response
-
     # ACTION HANDLERS
+
+    def handle_master_action_login(self, **kwargs):
+        log.debug('')
+        return self.action_login_master_user_account(**kwargs)
 
     def handle_master_action_add_acquired_ctoken(self, **kwargs):
         log.debug('')
@@ -3629,7 +3663,9 @@ class EWalletWorker():
         log.debug('')
         current_state = self.fetch_session_worker_state_code()
         if current_state == 2:
-            return self.warning_session_worker_ewallet_session_pool_full(current_state)
+            return self.warning_session_worker_ewallet_session_pool_full(
+                current_state
+            )
         session_pool = self.fetch_session_worker_ewallet_session_pool()
         set_state = self.set_session_worker_state_code(
             1 if len(session_pool) >= 1 else 0
@@ -3638,9 +3674,10 @@ class EWalletWorker():
             'failed': False,
             'worker_state': current_state,
         }
-        return self.warning_could_not_perform_session_worker_state_check(session_pool) \
-            if not set_state or isinstance(set_state, dict) and set_state.get('failed') \
-            else instruction_set_response
+        return self.warning_could_not_perform_session_worker_state_check(
+            session_pool
+        ) if not set_state or isinstance(set_state, dict) \
+            and set_state.get('failed') else instruction_set_response
 
     def handle_system_action_search_session(self, **kwargs):
         log.debug('')
@@ -4171,20 +4208,13 @@ class EWalletWorker():
 
     # CONTROLLERS
 
-    # TODO
-    def system_event_controller(self):
-        log.debug('TODO - No events supported.')
-    def client_event_controller(self, **kwargs):
-        log.debug('TODO - No events supported.')
-    def master_event_controller(self, **kwargs):
-        log.debug('TODO - UNIMPLEMENTED')
-
     def master_action_controller(self, **kwargs):
         log.debug('')
         if not kwargs.get('action'):
             return self.error_no_master_session_manager_worker_action_specified(kwargs)
         handlers = {
             'add': self.handle_master_action_add,
+            'login': self.handle_master_action_login,
         }
         return handlers[kwargs['action']](**kwargs)
 
@@ -4222,7 +4252,7 @@ class EWalletWorker():
             )
         handlers = {
             'action': self.master_action_controller,
-            'event': self.master_event_controller,
+#           'event': self.master_event_controller,
         }
         return handlers[kwargs['ctype']](**kwargs)
 
@@ -4235,7 +4265,7 @@ class EWalletWorker():
             )
         handlers = {
             'action': self.client_action_controller,
-            'event': self.client_event_controller,
+#           'event': self.client_event_controller,
         }
         return handlers[kwargs['ctype']](**kwargs)
 
@@ -4260,7 +4290,7 @@ class EWalletWorker():
             return self.error_no_system_session_manager_worker_controller_specified()
         handlers = {
             'action': self.system_action_controller,
-            'event': self.system_event_controller,
+#           'event': self.system_event_controller,
         }
         return handlers[kwargs['ctype']](**kwargs)
 
@@ -6247,6 +6277,12 @@ class EWalletWorker():
 
     # CODE DUMP
 
+#   def system_event_controller(self):
+#       log.debug('TODO - No events supported.')
+#   def client_event_controller(self, **kwargs):
+#       log.debug('TODO - No events supported.')
+#   def master_event_controller(self, **kwargs):
+#       log.debug('TODO - UNIMPLEMENTED')
 
 #           'reference': self.clean_session_worker_reference,
 #           'create_date': self.clean_session_worker_create_date,

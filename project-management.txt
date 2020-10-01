@@ -65,12 +65,9 @@
     - x - (EWSC) Implement system action DecreaseMasterSubPool
     - x - (EWSC) Fix bug in client action AcquireMaster, master does not reference CTokens
     - x - (EWSC) Refactor user actions to impose master oriented restrictions (key and frozen checks)
-    -   - (EWSC) Implement master action AccountLogin
-    - (EWSC) Implement master action AccountLogout
-    - (EWSC) Implement master action ViewAccount
-    - (EWSC) Implement master action EditAccount
-    - (EWSC) Implement master action UnlinkAccount
-    - (EWSC) Implement master action InspectCTokens
+    - x - (EWSC) Implement master action AccountLogin
+    - x - (EWSC) Fix bug in client action CreateMaster, password hash is not set
+    -   - (EWSC) Implement master action InspectCTokens
     - (EWSC) Implement master action InspectSubPool
     - (EWSC) Implement master action InspectSub
     - (EWSC- -, EWCC- -, EWAT- -) Implement EWallet Session keep alive signal
@@ -352,7 +349,7 @@
             - SToken States:
                 - ESession Plugged
 
-    - Client action New Master
+    - Client action Create Master
         - State Oriented Restrictions:
             - CToken States:
                 - Master Unlinked
@@ -444,7 +441,7 @@
 
 - (EWSC) - Master Actions:
 
-    - Master action AccountLogin    #
+    - Master action AccountLogin
     - Master action AccountLogout   #
     - Master action ViewAccount     #
     - Master action EditAccount     #

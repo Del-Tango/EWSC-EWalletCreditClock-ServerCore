@@ -41,24 +41,24 @@ class EWallet(Base):
 
     id = Column(Integer, primary_key=True, nullable=False, autoincrement=True)
     name = Column(String)
-    create_date = Column(Date)
-    write_date = Column(Date)
+    create_date = Column(DateTime)
+    write_date = Column(DateTime)
     expiration_date = Column(DateTime)
     session = None
     contact_list = relationship(
-       'ContactList', back_populates='active_session',
+        'ContactList', back_populates='active_session',
     )
     credit_wallet = relationship(
-       'CreditEWallet', back_populates='active_session',
+        'CreditEWallet', back_populates='active_session',
     )
     active_user = relationship(
-       'ResUser', back_populates='active_session',
+        'ResUser', back_populates='active_session',
     )
     active_master = relationship(
-       'ResMaster', back_populates='active_session',
+        'ResMaster', back_populates='active_session',
     )
     user_account_archive = relationship(
-       'ResUser', secondary='ewallet_session_user',
+        'ResUser', secondary='ewallet_session_user',
     )
 
 #   @pysnooper.snoop()
@@ -66,8 +66,8 @@ class EWallet(Base):
         now = datetime.datetime.now()
         self.name = kwargs.get('reference')
         self.session = kwargs.get('session') or res_utils.session_factory()
-        self.create_date = datetime.datetime.now()
-        self.write_date = datetime.datetime.now()
+        self.create_date = kwargs.get('create_date') or now
+        self.write_date = kwargs.get('write_date') or now
         self.expiration_date = kwargs.get('expiration_date') or \
             now + datetime.timedelta(
                 hours=self.fetch_default_ewallet_session_validity_interval_in_hours()
@@ -136,7 +136,6 @@ class EWallet(Base):
                 'account': self.active_user
             }, e)
 
-
 #   @pysnooper.snoop('logs/ewallet.log')
     def fetch_active_session_user(self, obj=True):
         log.debug('')
@@ -147,9 +146,10 @@ class EWallet(Base):
                 )
             return self.active_user[0] if obj else \
                 self.active_user[0].fetch_user_id()
-        except:
+        except Exception as e:
             return self.error_could_not_fetch_active_session_user({
-                'account': self.active_user
+                'account': self.active_user,
+                'exception': e,
             })
 
     def fetch_active_session_credit_wallet(self, obj=True):
@@ -234,6 +234,7 @@ class EWallet(Base):
         log.debug('')
         user_account_archive = self.fetch_active_session_user_account_archive()
         user_account = self.fetch_active_session_user()
+        master_account = self.fetch_active_session_master()
         values = {
             'id': self.id,
             'name': self.name,
@@ -243,10 +244,12 @@ class EWallet(Base):
             'expiration_date': self.expiration_date,
             'contact_list': self.fetch_active_session_contact_list(),
             'credit_ewallet': self.fetch_active_session_credit_wallet(),
-            'user_account': [] if isinstance(user_account, dict) and \
+            'user_account': [] if isinstance(user_account, dict) and
                 user_account.get('failed') else user_account,
+            'master_account': [] if isinstance(master_account, dict) and
+                master_account.get('failed') else master_account,
             'user_account_archive': {} if not user_account_archive else {
-                item.fetch_user_email(): item.fetch_user_name() for item in \
+                item.fetch_user_email(): item.fetch_user_name() for item in
                 user_account_archive
             }
         }
@@ -402,6 +405,18 @@ class EWallet(Base):
 
     # SETTERS
 
+#   def set_to_master_account_archive(self, account):
+#       log.debug('')
+#       try:
+#           self.master_account_archive.append(account)
+#           self.update_write_date()
+#       except Exception as e:
+#           return self.error_could_not_set_master_account_to_archive(
+#               account, self.master_account_archive, e
+#           )
+#       log.info('Successfully updated ewallet session master account archive.')
+#       return self.master_account_archive
+
     def set_session_active_master(self, active_master):
         log.debug('')
         try:
@@ -548,12 +563,8 @@ class EWallet(Base):
 
     def check_master_user_account_frozen(self, **kwargs):
         log.debug('')
-        if not kwargs.get('master_id'):
-            return self.error_no_master_account_id_found(
-                kwargs
-            )
-        master_account = self.fetch_master_account_by_id(
-            master_id=kwargs['master_id'],
+        master_account = self.fetch_master_account_by_email(
+            master=kwargs['user_email'],
             active_session=kwargs['active_session']
         )
         if not master_account or isinstance(master_account, dict) and \
@@ -724,6 +735,18 @@ class EWallet(Base):
 
     # UPDATERS
 
+#   def update_master_account_archive(self, **kwargs):
+#       log.debug('')
+#       if not kwargs.get('master') or isinstance(kwargs['master'], dict) and \
+#               kwargs['master'].get('failed'):
+#           return self.error_no_master_object_found(kwargs)
+#       set_to_archive = self.set_to_master_account_archive(kwargs['master'])
+#       log.info(
+#           'Successfully updated session master account archive '
+#           'with account {}.'.format(kwargs['user'].fetch_user_name())
+#       )
+#       return set_to_archive
+
     def update_session_from_master(self, **kwargs):
         log.debug('')
         if not kwargs.get('session_active_master'):
@@ -873,6 +896,77 @@ class EWallet(Base):
         log.debug('TODO - UNIMPLEMENTED')
 
     # TODO
+#   @pysnooper.snoop('logs/ewallet.log')
+    def action_master_account_login(self, **kwargs):
+        log.debug('TODO - Refactor')
+        check_frozen = self.check_master_user_account_frozen(**kwargs)
+        if isinstance(check_frozen, dict) and check_frozen.get('failed'):
+            return self.error_could_not_check_if_master_account_frozen(
+                kwargs, check_frozen
+            )
+        if check_frozen:
+            return self.warning_master_account_frozen(
+                kwargs, check_frozen
+            )
+        login_record = EWalletLogin()
+        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
+            kwargs, 'action'
+        )
+        session_login = login_record.ewallet_login_controller(
+            action='login',
+            user_archive=self.fetch_active_session_user_account_archive(),
+            **sanitized_command_chain
+        )
+        if not session_login or isinstance(session_login, dict) and \
+                session_login.get('failed'):
+            return self.warning_could_not_login_user_account(kwargs)
+        update_session = self.action_system_master_update(master=session_login)
+        if not update_session or isinstance(update_session, dict) and \
+                update_session.get('failed'):
+            return self.warning_could_not_update_ewallet_session(
+                kwargs, session_login, update_session
+            )
+        kwargs['active_session'].add(login_record)
+        kwargs['active_session'].commit()
+        log.info('Master successfully logged in.')
+        session_values = self.fetch_active_session_values()
+        command_chain_response = {
+            'failed': False,
+            'account': session_login.fetch_user_email(),
+            'session_data': {
+                'id': session_values['id'],
+                'create_date': res_utils.format_datetime(
+                    session_values['create_date']
+                ),
+                'write_date': res_utils.format_datetime(
+                    session_values['write_date']
+                ),
+                'expiration_date': res_utils.format_datetime(
+                    session_values['expiration_date']
+                ),
+            }
+        }
+        return command_chain_response
+
+    def action_system_master_update(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('master'):
+            return self.error_no_master_specified(kwargs)
+        set_master = self.set_session_active_master(kwargs['master'])
+        self.update_session_from_master(session_active_master=kwargs['master'])
+        return self.active_master[0]
+
+    def action_system_user_update(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('user'):
+            return self.error_no_user_specified()
+        if kwargs['user'] not in self.user_account_archive:
+            return self.warning_user_not_in_session_archive()
+        _set_user = self.set_session_active_user(active_user=kwargs['user'])
+        self.update_session_from_user(session_active_user=kwargs['user'])
+        return self.active_user[0]
+
+    # TODO
     def action_login_user_account(self, **kwargs):
         log.debug('TODO - Refactor')
         check_master = self.check_user_in_master_account_pool(**kwargs)
@@ -913,13 +1007,17 @@ class EWallet(Base):
             'failed': False,
             'account': session_login.fetch_user_email(),
             'session_data': {
-                'session_user_account': None if not session_values['user_account'] \
+                'session_user_account': None
+                    if not session_values['user_account']
                     else session_values['user_account'].fetch_user_email(),
-                'session_credit_ewallet': None if not session_values['credit_ewallet'] \
+                'session_credit_ewallet': None
+                    if not session_values['credit_ewallet']
                     else session_values['credit_ewallet'].fetch_credit_ewallet_id(),
-                'session_contact_list': None if not session_values['contact_list'] \
+                'session_contact_list': None
+                    if not session_values['contact_list']
                     else session_values['contact_list'].fetch_contact_list_id(),
-                'session_account_archive': None if not session_values['user_account_archive'] \
+                'session_account_archive': None
+                    if not session_values['user_account_archive']
                     else session_values['user_account_archive']
             }
         }
@@ -2745,16 +2843,6 @@ class EWallet(Base):
         }
         return command_chain_response
 
-    def action_system_user_update(self, **kwargs):
-        log.debug('')
-        if not kwargs.get('user'):
-            return self.error_no_user_specified()
-        if kwargs['user'] not in self.user_account_archive:
-            return self.warning_user_not_in_session_archive()
-        _set_user = self.set_session_active_user(active_user=kwargs['user'])
-        self.update_session_from_user(session_active_user=kwargs['user'])
-        return self.active_user[0]
-
     def action_system_session_update(self, **kwargs):
         log.debug('')
         kwargs.update({'session_active_user': self.fetch_active_session_user()})
@@ -2805,6 +2893,10 @@ class EWallet(Base):
     '''
     [ NOTES ]: Enviroment checks for proper action execution are performed here.
     '''
+
+    def handle_master_action_account_login(self, **kwargs):
+        log.debug('')
+        return self.action_master_account_login(**kwargs)
 
     def handle_master_action_add_acquired_ctoken(self, **kwargs):
         log.debug('')
@@ -3521,21 +3613,16 @@ class EWallet(Base):
 
     # EVENT HANDLERS
 
-    # TODO
-    def handle_user_event_signal(self, **kwargs):
-        log.debug('TODO - UNIMPLEMENTED')
-    def handle_user_event_notification(self, **kwargs):
-        log.debug('TODO - UNIMPLEMENTED')
-    def handle_user_event_request(self, **kwargs):
-        log.debug('TODO - UNIMPLEMENTED')
-    def handle_system_event_signal(self, **kwargs):
-        log.debug('TODO - UNIMPLEMENTED')
-    def handle_system_event_notification(self, **kwargs):
-        log.debug('TODO - UNIMPLEMENTED')
-    def handle_system_event_request(self, **kwargs):
-        log.debug('TODO - UNIMPLEMENTED')
-
     # JUMPTABLE HANDLERS
+
+    def handle_master_action_login(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('login'):
+            return self.error_no_master_action_login_target_specified(kwargs)
+        handlers = {
+            'account': self.handle_master_action_account_login,
+        }
+        return handlers[kwargs['login']](**kwargs)
 
     def handle_master_action_add_ctoken(self, **kwargs):
         log.debug('')
@@ -3921,6 +4008,7 @@ class EWallet(Base):
             return self.error_no_master_controller_type_specified(kwargs)
         handlers = {
             'add': self.handle_master_action_add,
+            'login': self.handle_master_action_login,
         }
         return handlers[kwargs['action']](**kwargs)
 
@@ -3953,28 +4041,6 @@ class EWallet(Base):
         }
         return handlers[kwargs['action']](**kwargs)
 
-    def ewallet_user_event_controller(self, **kwargs):
-        log.debug('')
-        if not kwargs.get('event'):
-            return self.error_no_user_event_specified()
-        handlers = {
-            'signal': self.handle_user_event_signal,
-            'notification': self.handle_user_event_notification,
-            'request': self.handle_user_event_request,
-        }
-        return handlers[kwargs['event']](**kwargs)
-
-    def ewallet_system_event_controller(self, **kwargs):
-        log.debug('')
-        if not kwargs.get('event'):
-            return self.error_no_system_event_specified()
-        handlers = {
-            'signal': self.handle_system_event_signal,
-            'notification': self.handle_system_event_notification,
-            'request': self.handle_system_event_request,
-        }
-        return handlers[kwargs['event']](**kwargs)
-
     def ewallet_system_action_controller(self, **kwargs):
         log.debug('')
         if not kwargs.get('action'):
@@ -3995,7 +4061,7 @@ class EWallet(Base):
             return self.error_no_system_controller_type_specified()
         handlers = {
             'action': self.ewallet_system_action_controller,
-            'event': self.ewallet_system_event_controller,
+#           'event': self.ewallet_system_event_controller,
         }
         return handlers[kwargs['ctype']](**kwargs)
 
@@ -4005,7 +4071,7 @@ class EWallet(Base):
             return self.error_no_user_controller_type_specified()
         handlers = {
             'action': self.ewallet_user_action_controller,
-            'event': self.ewallet_user_event_controller,
+#           'event': self.ewallet_user_event_controller,
         }
         return handlers[kwargs['ctype']](**kwargs)
 
@@ -4029,6 +4095,26 @@ class EWallet(Base):
     '''
     [ TODO ]: Fetch warning messages from message file by key codes.
     '''
+
+    def warning_could_not_login_user_account(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Something went wrong. '
+                       'Could not login Master user account. '
+                       'Details: {}'.format(args),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
+
+    def warning_master_account_frozen(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Master account is currently in a frozen state, '
+                       'all master and subordonate user actions locked. '
+                       'Details: {}'.format(args),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
 
     def warning_could_not_check_master_account_frozen(self, *args):
         command_chain_response = {
@@ -4813,6 +4899,25 @@ class EWallet(Base):
     '''
     [ TODO ]: Fetch error messages from message file by key codes.
     '''
+
+    def error_could_not_check_if_master_account_frozen(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Something went wrong. '
+                     'Could not check if Master user account is in a '
+                     'frozen state. Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_no_master_action_login_target_specified(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No Master action Login target specified. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
 
     def error_no_master_account_id_found(self, *args):
         command_chain_response = {
@@ -5828,4 +5933,58 @@ class EWallet(Base):
 ################################################################################
 # CODE DUMP
 ################################################################################
+
+#   def error_could_not_set_master_account_to_archive(self, *args):
+#       command_chain_response = {
+#           'failed': True,
+#           'error': 'Something went wrong. '
+#                    'Could not set Master user account to archive. '
+#                    'Details: {}'.format(args),
+#       }
+#       log.error(command_chain_response['error'])
+#       return command_chain_response
+
+#   def error_no_master_object_found(self, *args):
+#       command_chain_response = {
+#           'failed': True,
+#           'error': 'No Master account object found. '
+#                    'Details: {}'.format(args),
+#       }
+#       log.error(command_chain_response['error'])
+#       return command_chain_response
+
+#   def ewallet_user_event_controller(self, **kwargs):
+#       log.debug('')
+#       if not kwargs.get('event'):
+#           return self.error_no_user_event_specified()
+#       handlers = {
+#           'signal': self.handle_user_event_signal,
+#           'notification': self.handle_user_event_notification,
+#           'request': self.handle_user_event_request,
+#       }
+#       return handlers[kwargs['event']](**kwargs)
+
+#   def ewallet_system_event_controller(self, **kwargs):
+#       log.debug('')
+#       if not kwargs.get('event'):
+#           return self.error_no_system_event_specified()
+#       handlers = {
+#           'signal': self.handle_system_event_signal,
+#           'notification': self.handle_system_event_notification,
+#           'request': self.handle_system_event_request,
+#       }
+#       return handlers[kwargs['event']](**kwargs)
+
+#   def handle_system_event_signal(self, **kwargs):
+#       log.debug('TODO - UNIMPLEMENTED')
+#   def handle_system_event_notification(self, **kwargs):
+#       log.debug('TODO - UNIMPLEMENTED')
+#   def handle_system_event_request(self, **kwargs):
+#       log.debug('TODO - UNIMPLEMENTED')
+#   def handle_user_event_signal(self, **kwargs):
+#       log.debug('TODO - UNIMPLEMENTED')
+#   def handle_user_event_notification(self, **kwargs):
+#       log.debug('TODO - UNIMPLEMENTED')
+#   def handle_user_event_request(self, **kwargs):
+#       log.debug('TODO - UNIMPLEMENTED')
 

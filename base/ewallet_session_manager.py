@@ -40,11 +40,12 @@ class EWalletSessionManager():
     primary_session = None
 
     def __init__(self, *args, **kwargs):
+        now = datetime.datetime.now()
         self.config = kwargs.get('config') or config
         self.res_utils = kwargs.get('res_utils') or res_utils
         self.socket_handler = kwargs.get('socket_handler') or None # self.open_ewallet_session_manager_sockets()
-        self.create_date = kwargs.get('create_date') or datetime.datetime.now(),
-        self.write_date = kwargs.get('write_date') or datetime.datetime.now(),
+        self.create_date = kwargs.get('create_date') or now,
+        self.write_date = kwargs.get('write_date') or now,
         self.worker_pool = kwargs.get('worker_pool') or {}
         if not self.worker_pool:
             self.session_manager_controller(
@@ -4004,18 +4005,6 @@ class EWalletSessionManager():
 
     # EVENTS
 
-    # TODO
-    def event_session_timeout(self, **kwargs):
-        log.debug('TODO - UNIMPLEMENTED')
-    def event_worker_timeout(self, **kwargs):
-        log.debug('TODO - UNIMPLEMENTED')
-    def event_client_ack_timeout(self, **kwargs):
-        log.debug('TODO - UNIMPLEMENTED')
-    def event_client_id_expire(self, **kwargs):
-        log.debug('TODO - UNIMPLEMENTED')
-    def event_session_token_expire(self, **kwargs):
-        log.debug('TODO - UNIMPLEMENTED')
-
     # FORMATTERS
 
     def format_worker_pool_entry(self, **kwargs):
@@ -4040,9 +4029,9 @@ class EWalletSessionManager():
               actions, fetching the acquired Master ID from CToken and passing
               it to the EWSession Worker along with the original instruction.
 
-    [ TODO ]: Consider sacrificing atomic action handlers and move generic
-              action handler verifications to Jumptable Handlers to
-              reduce redundancy.
+    [ TODO ]: Consider sacrificing atomic Action Handlers and move generic
+              action handler verifications to Jumptable Handlers for
+              reduced redundancy.
     '''
 
     # TODO
@@ -4052,6 +4041,19 @@ class EWalletSessionManager():
         '''
         log.debug('TODO - Kill process')
         return self.unset_socket_handler()
+
+    def handle_master_action_login(self, **kwargs):
+        log.debug('')
+        instruction_set_validation = self.validate_instruction_set(kwargs)
+        if not instruction_set_validation \
+                or isinstance(instruction_set_validation, dict) \
+                and instruction_set_validation.get('failed'):
+            return instruction_set_validation
+        account_login = self.action_execute_user_instruction_set(**kwargs)
+        return self.warning_could_not_login_master_account(
+            kwargs, account_login
+        ) if not account_login or isinstance(account_login, dict) and \
+            account_login.get('failed') else account_login
 
     def handle_client_action_new_contact_list(self, **kwargs):
         log.debug('')
@@ -5601,31 +5603,6 @@ class EWalletSessionManager():
     # JUMPTABLE HANDLERS
 
     # TODO
-    def handle_system_action_scrape(self, **kwargs):
-        log.debug('TODO - UNIMPLEMENTED')
-    def handle_system_action_search(self, **kwargs):
-        log.debug('TODO - UNIMPLEMENTED')
-    def handle_system_action_view(self, **kwargs):
-        log.debug('TODO - UNIMPLEMENTED')
-    def handle_system_action_request(self, **kwargs):
-        log.debug('TODO - UNIMPLEMENTED')
-    def handle_system_event_session_timeout(self, **kwargs):
-        log.debug('TODO - UNIMPLEMENTED')
-        timeout = self.event_session_timeout()
-    def handle_system_event_worker_timeout(self, **kwargs):
-        log.debug('TODO - UNIMPLEMENTED')
-        timeout = self.event_worker_timeout()
-    def handle_system_event_client_ack_timeout(self, **kwargs):
-        log.debug('TODO - UNIMPLEMENTED')
-        timeout = self.event_client_ack_timeout()
-    def handle_system_event_client_id_expire(self, **kwargs):
-        log.debug('TODO - UNIMPLEMENTED')
-        expire = self.event_client_id_expire()
-    def handle_system_event_session_token_expire(self, **kwargs):
-        log.debug('TODO - UNIMPLEMENTED')
-        expire = self.event_session_token_expire()
-
-    # TODO
     def handle_client_action_transfer(self, **kwargs):
         log.debug('TODO - Add support for client action transfer time')
         if not kwargs.get('transfer'):
@@ -6268,21 +6245,50 @@ class EWalletSessionManager():
     # CONTROLLERS
 
     # TODO
-    def client_session_manager_event_controller(self, **kwargs):
-        log.debug('TODO - UNIMPLEMENTED')
+    def master_session_manager_action_controller(self, **kwargs):
+        log.debug('TODO - 5 actions unimplemented')
+        if not kwargs.get('action'):
+            return self.error_no_master_session_manager_action_specified(kwargs)
+        handlers = {
+            'login': self.handle_master_action_login,
+#           'view': self.handle_master_action_view,
+#           'edit': self.handle_master_action_edit,
+#           'unlink': self.handle_master_action_unlink,
+#           'logout': self.handle_master_action_logout,
+#           'recover': self.handle_master_action_recover,
+        }
+        return handlers[kwargs['action']](**kwargs)
 
-    # TODO
+    def master_session_manager_controller(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('ctype'):
+            return self.error_no_master_session_manager_controller_specified()
+        handlers = {
+            'action': self.master_session_manager_action_controller,
+#           'event': self.master_session_manager_event_controller,
+        }
+        return handlers[kwargs['ctype']](**kwargs)
+
+    def session_manager_controller(self, *args, **kwargs):
+        '''
+        [ NOTE   ]: Main controller for the EWallet Session Manager.
+        '''
+        log.debug('')
+        if not kwargs.get('controller'):
+            return self.error_no_session_manager_controller_specified(kwargs)
+        handlers = {
+            'client': self.client_session_manager_controller,
+            'master': self.master_session_manager_controller,
+            'system': self.system_session_manager_controller,
+        }
+        return handlers[kwargs['controller']](**kwargs)
+
     def client_session_manager_action_controller(self, **kwargs):
-        '''
-        [ NOTE ]: Accessible to regular user api calls.
-        '''
-        log.debug('TODO - Add support for action categories scrape and search.')
+        log.debug('')
         if not kwargs.get('action'):
             return self.error_no_client_session_manager_action_specified(kwargs)
         handlers = {
             'new': self.handle_client_action_new,
-#           'scrape': self.handle_client_action_scrape,
-#           'search': self.handle_client_action_search,
             'view': self.handle_client_action_view,
             'request': self.handle_client_action_request,
             'login': self.handle_client_action_login,
@@ -6314,9 +6320,6 @@ class EWalletSessionManager():
         handlers = {
             'new': self.handle_system_action_new,
             'start': self.handle_system_action_start,
-            'search': self.handle_system_action_search,
-            'view': self.handle_system_action_view,
-            'request': self.handle_system_action_request,
             'open': self.handle_system_action_open,
             'close': self.handle_system_action_close,
             'interogate': self.handle_system_action_interogate,
@@ -6328,31 +6331,13 @@ class EWalletSessionManager():
         }
         return handlers[kwargs['action']](**kwargs)
 
-    def system_session_manager_event_controller(self, **kwargs):
-        '''
-        [ NOTE   ]: System event controller for the EWallet Session Manager, not accessible
-                    to regular user api calls.
-        '''
-        log.debug('')
-        if not kwargs.get('event'):
-            return self.error_no_system_session_manager_event_specified()
-        handlers = {
-            'timeout': self.handle_system_event_timout,
-            'expire': self.handle_system_event_expire,
-        }
-        return handlers[kwargs['event']](**kwargs)
-
     def client_session_manager_controller(self, **kwargs):
-        '''
-        [ NOTE   ]: Main client controller for the EWallet Session Manager, accessible
-                    to regular user api calls.
-        '''
         log.debug('')
         if not kwargs.get('ctype'):
             return self.error_no_client_session_manager_controller_specified()
         handlers = {
             'action': self.client_session_manager_action_controller,
-            'event': self.client_session_manager_event_controller,
+#           'event': self.client_session_manager_event_controller,
         }
         return handlers[kwargs['ctype']](**kwargs)
 
@@ -6366,34 +6351,29 @@ class EWalletSessionManager():
             return self.error_no_system_session_manager_controller_specified()
         handlers = {
             'action': self.system_session_manager_action_controller,
-            'event': self.system_session_manager_event_controller,
+#           'event': self.system_session_manager_event_controller,
         }
         return handlers[kwargs['ctype']](**kwargs)
-
-    def session_manager_controller(self, *args, **kwargs):
-        '''
-        [ NOTE   ]: Main controller for the EWallet Session Manager.
-        '''
-        log.debug('')
-        if not kwargs.get('controller'):
-            return self.error_no_session_manager_controller_specified(kwargs)
-        handlers = {
-            'client': self.client_session_manager_controller,
-            'system': self.system_session_manager_controller,
-        }
-        return handlers[kwargs['controller']](**kwargs)
 
     # WARNINGS
     '''
     [ TODO ]: Fetch warning messages from message file by key codes.
     '''
 
+    def warning_could_not_login_master_account(self, *args):
+        instruction_set_response = res_utils.format_warning_response(**{
+            'failed': True, 'details': args,
+            'warning': 'Something went wrong. '
+                       'Could not login Master user account.',
+        })
+        self.log_warning(**instruction_set_response)
+        return instruction_set_response
+
     def warning_could_not_map_worker_id_to_session_token(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
             'failed': True, 'details': args,
             'warning': 'Something went wrong. '
-                       'Could not map EWSession Worker ID to SToken. '
-                       'Details: {}'.format(args),
+                       'Could not map EWSession Worker ID to SToken.',
         })
         self.log_warning(**instruction_set_response)
         return instruction_set_response
@@ -6403,7 +6383,7 @@ class EWalletSessionManager():
             'failed': True, 'details': args,
             'warning': 'Something went wrong. '
                        'Could not decrease Subordonate user account pool size '
-                       'for Master account. Details: {}'.format(args),
+                       'for Master account.',
         })
         self.log_warning(**instruction_set_response)
         return instruction_set_response
@@ -7712,6 +7692,22 @@ class EWalletSessionManager():
     '''
     [ TODO ]: Fetch error messages from message file by key codes.
     '''
+
+    def error_no_master_session_manager_action_specified(self, *args):
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
+            'error': 'No session manager Master controller action specified.',
+        })
+        self.log_error(**instruction_set_response)
+        return instruction_set_response
+
+    def error_no_master_session_manager_controller_specified(self, *args):
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
+            'error': 'No session manager Master controller specified.',
+        })
+        self.log_error(**instruction_set_response)
+        return instruction_set_response
 
     def error_invalid_stoken_worker_pair(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
@@ -9489,6 +9485,55 @@ class EWalletSessionManager():
         )
 
 # CODE DUMP
+
+#   def system_session_manager_event_controller(self, **kwargs):
+#       '''
+#       [ NOTE   ]: System event controller for the EWallet Session Manager, not accessible
+#                   to regular user api calls.
+#       '''
+#       log.debug('')
+#       if not kwargs.get('event'):
+#           return self.error_no_system_session_manager_event_specified()
+#       handlers = {
+#           'timeout': self.handle_system_event_timout,
+#           'expire': self.handle_system_event_expire,
+#       }
+#       return handlers[kwargs['event']](**kwargs)
+
+#   def handle_system_action_scrape(self, **kwargs):
+#       log.debug('TODO - UNIMPLEMENTED')
+#   def handle_system_action_search(self, **kwargs):
+#       log.debug('TODO - UNIMPLEMENTED')
+#   def handle_system_action_view(self, **kwargs):
+#       log.debug('TODO - UNIMPLEMENTED')
+#   def handle_system_action_request(self, **kwargs):
+#       log.debug('TODO - UNIMPLEMENTED')
+#   def handle_system_event_session_timeout(self, **kwargs):
+#       log.debug('TODO - UNIMPLEMENTED')
+#       timeout = self.event_session_timeout()
+#   def handle_system_event_worker_timeout(self, **kwargs):
+#       log.debug('TODO - UNIMPLEMENTED')
+#       timeout = self.event_worker_timeout()
+#   def handle_system_event_client_ack_timeout(self, **kwargs):
+#       log.debug('TODO - UNIMPLEMENTED')
+#       timeout = self.event_client_ack_timeout()
+#   def handle_system_event_client_id_expire(self, **kwargs):
+#       log.debug('TODO - UNIMPLEMENTED')
+#       expire = self.event_client_id_expire()
+#   def handle_system_event_session_token_expire(self, **kwargs):
+#       log.debug('TODO - UNIMPLEMENTED')
+#       expire = self.event_session_token_expire()
+
+#   def event_session_timeout(self, **kwargs):
+#       log.debug('TODO - UNIMPLEMENTED')
+#   def event_worker_timeout(self, **kwargs):
+#       log.debug('TODO - UNIMPLEMENTED')
+#   def event_client_ack_timeout(self, **kwargs):
+#       log.debug('TODO - UNIMPLEMENTED')
+#   def event_client_id_expire(self, **kwargs):
+#       log.debug('TODO - UNIMPLEMENTED')
+#   def event_session_token_expire(self, **kwargs):
+#       log.debug('TODO - UNIMPLEMENTED')
 
 #   def scrape_ewallet_session_worker(self, session_worker):
 #       log.debug('TODO - DEPRECATED - Remove')
