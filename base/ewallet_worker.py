@@ -1094,6 +1094,35 @@ class EWalletWorker():
     [ NOTE ]: Command chain responses are formulated here.
     '''
 
+    def action_view_master_user_account(self, **kwargs):
+        log.debug('')
+        # Fetch ewallet session by token keys
+        ewallet_session = self.fetch_ewallet_session_by_client_session_tokens(
+            kwargs['client_id'], kwargs['session_token']
+        )
+        if not ewallet_session or isinstance(ewallet_session, dict) and \
+                ewallet_session.get('failed'):
+            return ewallet_session
+        sanitized_instruction_set = res_utils.remove_tags_from_command_chain(
+            kwargs, 'controller', 'ctype', 'action', 'view', 'active_session'
+        )
+        # Execute action in session
+        orm_session = ewallet_session.fetch_active_session()
+        view_account = ewallet_session.ewallet_controller(
+            controller='master', ctype='action', action='view',
+            view='account', active_session=orm_session,
+            **sanitized_instruction_set
+        )
+        # Formulate response
+        response = self.warning_could_not_view_master_account(
+            ewallet_session, kwargs, view_account
+        ) if not view_account or \
+            isinstance(view_account, dict) and \
+            view_account.get('failed') else view_account
+        # Respond to session manager
+        self.send_instruction_response(response)
+        return response
+
     def action_logout_master_user_account(self, **kwargs):
         log.debug('')
         # Fetch ewallet session by token keys
@@ -3372,6 +3401,10 @@ class EWalletWorker():
 
     # ACTION HANDLERS
 
+    def handle_master_action_view_account(self, **kwargs):
+        log.debug('')
+        return self.action_view_master_user_account(**kwargs)
+
     def handle_master_action_logout(self, **kwargs):
         log.debug('')
         return self.action_logout_master_user_account(**kwargs)
@@ -3721,6 +3754,15 @@ class EWalletWorker():
                 if not ewallet_session else ewallet_session
 
     # JUMPTABLE HANDLERS
+
+    def handle_master_action_view(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('view'):
+            return self.error_no_master_action_view_target_specified(kwargs)
+        handlers = {
+            'account': self.handle_master_action_view_account,
+        }
+        return handlers[kwargs['view']](**kwargs)
 
     def handle_master_action_add_ctoken(self, **kwargs):
         log.debug('')
@@ -4249,6 +4291,7 @@ class EWalletWorker():
             'add': self.handle_master_action_add,
             'login': self.handle_master_action_login,
             'logout': self.handle_master_action_logout,
+            'view': self.handle_master_action_view,
         }
         return handlers[kwargs['action']](**kwargs)
 
@@ -4343,6 +4386,16 @@ class EWalletWorker():
     '''
     [ TODO ]: Fetch warning messages from message file by key codes.
     '''
+
+    def warning_could_not_view_master_account(self, *args):
+        instruction_set_response = {
+            'failed': True,
+            'warning': 'Something went wrong. '
+                       'Could not view Master user account. '
+                       'Details: {}'.format(args),
+        }
+        log.warning(instruction_set_response['warning'])
+        return instruction_set_response
 
     def warning_could_not_logout_master_account(self, *args):
         instruction_set_response = {
@@ -5303,6 +5356,15 @@ class EWalletWorker():
     '''
     [ TODO ]: Fetch error messages from message file by key codes.
     '''
+
+    def error_no_master_action_view_target_specified(self, *args):
+        instruction_set_response = {
+            'failed': True,
+            'error': 'No master action View target specified. '
+                     'Details: {}.'.format(args),
+        }
+        log.error(instruction_set_response['error'])
+        return instruction_set_response
 
     def error_no_master_action_add_target_specified(self, *args):
         instruction_set_response = {

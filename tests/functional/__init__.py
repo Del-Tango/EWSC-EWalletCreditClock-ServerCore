@@ -22,6 +22,7 @@ from . import test_system_decrease_master_subpool
 
 from . import test_master_account_login
 from . import test_master_account_logout
+from . import test_master_view_account
 
 from . import test_user_request_clientid
 from . import test_user_request_stoken

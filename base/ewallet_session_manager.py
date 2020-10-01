@@ -4042,6 +4042,22 @@ class EWalletSessionManager():
         log.debug('TODO - Kill process')
         return self.unset_socket_handler()
 
+    def handle_master_action_view_account(self, **kwargs):
+        log.debug('')
+        instruction_set_validation = self.validate_instruction_set(kwargs)
+        if not instruction_set_validation \
+                or isinstance(instruction_set_validation, dict) \
+                and instruction_set_validation.get('failed'):
+            return instruction_set_validation
+        view_account = self.action_execute_user_instruction_set(**kwargs)
+        return self.warning_could_not_view_master_account(
+            kwargs, view_account
+        ) if not view_account or isinstance(view_account, dict) and \
+            view_account.get('failed') else view_account
+
+
+
+
     def handle_master_action_logout(self, **kwargs):
         log.debug('')
         instruction_set_validation = self.validate_instruction_set(kwargs)
@@ -4067,6 +4083,27 @@ class EWalletSessionManager():
             kwargs, account_login
         ) if not account_login or isinstance(account_login, dict) and \
             account_login.get('failed') else account_login
+
+    def handle_client_action_view_account(self, **kwargs):
+        log.debug('')
+        instruction_set_validation = self.validate_instruction_set(kwargs)
+        if not instruction_set_validation \
+                or isinstance(instruction_set_validation, dict) \
+                and instruction_set_validation.get('failed'):
+            return instruction_set_validation
+        master_account_id = self.fetch_acquired_masters_from_client_token_set(
+            [kwargs['client_id']]
+        )
+        if isinstance(master_account_id, dict) and master_account_id.get('failed'):
+            return self.warning_no_master_account_acquired_by_ctoken(
+                kwargs, instruction_set_validation, master_account_id
+            )
+        kwargs.update({'master_id': master_account_id[0]})
+        view_account = self.action_execute_user_instruction_set(**kwargs)
+        return self.warning_could_not_view_account(
+            kwargs, view_account
+        ) if not view_account or isinstance(view_account, dict) and \
+            view_account.get('failed') else view_account
 
     def handle_client_action_logout(self, **kwargs):
         log.debug('')
@@ -5294,27 +5331,6 @@ class EWalletSessionManager():
         ) if not view_ewallet or isinstance(view_ewallet, dict) and \
             view_ewallet.get('failed') else view_ewallet
 
-    def handle_client_action_view_account(self, **kwargs):
-        log.debug('')
-        instruction_set_validation = self.validate_instruction_set(kwargs)
-        if not instruction_set_validation \
-                or isinstance(instruction_set_validation, dict) \
-                and instruction_set_validation.get('failed'):
-            return instruction_set_validation
-        master_account_id = self.fetch_acquired_masters_from_client_token_set(
-            [kwargs['client_id']]
-        )
-        if isinstance(master_account_id, dict) and master_account_id.get('failed'):
-            return self.warning_no_master_account_acquired_by_ctoken(
-                kwargs, instruction_set_validation, master_account_id
-            )
-        kwargs.update({'master_id': master_account_id[0]})
-        view_account = self.action_execute_user_instruction_set(**kwargs)
-        return self.warning_could_not_view_account(
-            kwargs, view_account
-        ) if not view_account or isinstance(view_account, dict) and \
-            view_account.get('failed') else view_account
-
     def handle_client_action_view_conversion_record(self, **kwargs):
         log.debug('')
         instruction_set_validation = self.validate_instruction_set(kwargs)
@@ -5625,6 +5641,18 @@ class EWalletSessionManager():
 #           'time': self.handle_client_action_transfer_time,
         }
         return handlers[kwargs['transfer']](**kwargs)
+
+    # TODO
+    def handle_master_action_view(self, **kwargs):
+        log.debug('TODO - 2 Actions unimplemented')
+        if not kwargs.get('view'):
+            return self.error_no_master_action_view_target_specified(kwargs)
+        handlers = {
+            'account': self.handle_master_action_view_account,
+#           'login': self.handle_master_action_view_login_records,
+#           'logout': self.handle_master_action_view_logout_records,
+        }
+        return handlers[kwargs['view']](**kwargs)
 
     def handle_system_action_decrease_master(self, **kwargs):
         log.debug('')
@@ -6265,7 +6293,7 @@ class EWalletSessionManager():
         handlers = {
             'login': self.handle_master_action_login,
             'logout': self.handle_master_action_logout,
-#           'view': self.handle_master_action_view,
+            'view': self.handle_master_action_view,
 #           'edit': self.handle_master_action_edit,
 #           'unlink': self.handle_master_action_unlink,
 #           'recover': self.handle_master_action_recover,
@@ -6372,6 +6400,15 @@ class EWalletSessionManager():
     '''
     [ TODO ]: Fetch warning messages from message file by key codes.
     '''
+
+    def warning_could_not_view_master_account(self, *args):
+        instruction_set_response = res_utils.format_warning_response(**{
+            'failed': True, 'details': args,
+            'warning': 'Something went wrong. '
+                       'Could not view Master user account.',
+        })
+        self.log_warning(**instruction_set_response)
+        return instruction_set_response
 
     def warning_could_not_logout_master_account(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
@@ -7714,6 +7751,14 @@ class EWalletSessionManager():
     '''
     [ TODO ]: Fetch error messages from message file by key codes.
     '''
+
+    def error_no_master_action_view_target_specified(self, *args):
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
+            'error': 'No Master action View specified.',
+        })
+        self.log_error(**instruction_set_response)
+        return instruction_set_response
 
     def error_no_master_session_manager_action_specified(self, *args):
         instruction_set_response = res_utils.format_error_response(**{

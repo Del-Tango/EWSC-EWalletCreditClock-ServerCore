@@ -901,6 +901,21 @@ class EWallet(Base):
     def action_receive_transfer_record(self, **kwargs):
         log.debug('TODO - UNIMPLEMENTED')
 
+    def action_view_master_account(self, **kwargs):
+        log.debug('')
+        active_master = self.fetch_active_session_master()
+        if not active_master or isinstance(active_master, dict) and \
+                active_master.get('failed'):
+            return self.warning_could_not_fetch_ewallet_session_active_master(
+                kwargs, active_master
+            )
+        command_chain_response = {
+            'failed': False,
+            'account': active_master.fetch_user_email(),
+            'account_data': active_master.fetch_user_values(),
+        }
+        return command_chain_response
+
     def action_system_master_logout(self, **kwargs):
         log.debug('')
         master = kwargs.get('master') or self.fetch_active_session_master()
@@ -2953,6 +2968,10 @@ class EWallet(Base):
     [ NOTES ]: Enviroment checks for proper action execution are performed here.
     '''
 
+    def handle_master_action_view_account(self, **kwargs):
+        log.debug('')
+        return self.action_view_master_account(**kwargs)
+
     def handle_master_action_account_logout(self, **kwargs):
         log.debug('')
         return self.action_master_account_logout(**kwargs)
@@ -3678,6 +3697,15 @@ class EWallet(Base):
 
     # JUMPTABLE HANDLERS
 
+    def handle_master_action_view(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('view'):
+            return self.error_no_master_action_view_target_specified(kwargs)
+        handlers = {
+            'account': self.handle_master_action_view_account,
+        }
+        return handlers[kwargs['view']](**kwargs)
+
     def handle_master_action_logout(self, **kwargs):
         log.debug('')
         if not kwargs.get('logout'):
@@ -4082,6 +4110,7 @@ class EWallet(Base):
             'add': self.handle_master_action_add,
             'login': self.handle_master_action_login,
             'logout': self.handle_master_action_logout,
+            'view': self.handle_master_action_view,
         }
         return handlers[kwargs['action']](**kwargs)
 
@@ -4168,6 +4197,16 @@ class EWallet(Base):
     '''
     [ TODO ]: Fetch warning messages from message file by key codes.
     '''
+
+    def warning_could_not_fetch_ewallet_session_active_master(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Something went wrong. '
+                       'Could not fetch active session Master user account. '
+                       'Details: {}'.format(args),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
 
     def warning_could_not_logout_master_account(self, *args):
         command_chain_response = {
@@ -4982,6 +5021,15 @@ class EWallet(Base):
     '''
     [ TODO ]: Fetch error messages from message file by key codes.
     '''
+
+    def error_no_master_action_view_target_specified(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No master action View target specified. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
 
     def error_no_active_session_master_found(self, *args):
         command_chain_response = {

@@ -297,8 +297,8 @@ class ResUser(Base):
         values = {
             'id': self.user_id,
             'name': self.user_name,
-            'create_date': self.user_create_date.strftime('%d-%m-%Y %H:%M:%S'),
-            'write_date': self.user_write_date.strftime('%d-%m-%Y %H:%M:%S'),
+            'create_date': res_utils.format_datetime(self.user_create_date),
+            'write_date': res_utils.format_datetime(self.user_write_date),
             'ewallet': None if not credit_ewallet else
                 credit_ewallet.fetch_credit_ewallet_id(),
             'contact_list': None if not contact_list else

@@ -122,8 +122,8 @@ class ResMaster(ResUser):
         values = {
             'id': self.user_id,
             'name': self.user_name,
-            'create_date': self.user_create_date.strftime('%d-%m-%Y %H:%M:%S'),
-            'write_date': self.user_write_date.strftime('%d-%m-%Y %H:%M:%S'),
+            'create_date': res_utils.format_datetime(self.user_create_date),
+            'write_date': res_utils.format_datetime(self.user_write_date),
             'email': self.user_email,
             'phone': self.user_phone,
             'alias': self.user_alias,
@@ -131,7 +131,10 @@ class ResMaster(ResUser):
             'account_limit': self.account_limit,
             'company': self.company,
             'address': self.address,
-            'subordonate_pool': self.subordonate_pool,
+            'subordonate_pool': {} if not self.subordonate_pool else {
+                account.fetch_user_id: account.fetch_user_email()
+                for account in self.subordonate_pool
+            },
             'acquired_ctokens': self.acquired_ctokens,
             'active': self.is_active,
         }

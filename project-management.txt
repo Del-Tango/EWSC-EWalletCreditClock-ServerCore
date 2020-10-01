@@ -68,8 +68,8 @@
     - x - (EWSC) Implement master action AccountLogin
     - x - (EWSC) Fix bug in client action CreateMaster, password hash is not set
     - x - (EWSC) Implement master action AccountLogout
-    -   - (EWSC) Implement master action ViewAccount
-    - (EWSC) Implement master action EditAccount
+    - x - (EWSC) Implement master action ViewAccount
+    -   - (EWSC) Implement master action EditAccount
     - (EWSC) Implement master action UnlinkAccount
     - (EWSC) Implement master action InspectCTokens
     - (EWSC) Implement master action InspectSubPool
@@ -351,7 +351,7 @@
                 - Master Unlinked
                 - SToken Linked
             - SToken States:
-                - ESession Plugged
+                - Session Plugged
 
     - Client action Create Master
         - State Oriented Restrictions:
@@ -362,97 +362,106 @@
     - Client action Request Client ID
         - State Oriented Restrictions:
             - User Account States:
-                - Logged In
-                - Logged Out
+                - Logged (In | Out)
 
     - Client action Request Session Token
         - State Oriented Restrictions:
             - User Account States:
-                - Logged In
-                - Logged Out
+                - Logged (In | Out)
             - CToken States:
-                - Master Linked
-                - Master Unlinked
+                - Master (Linked | Unlinked)
 
     - Client action Check CToken Valid
         - State Oriented Restrictions:
             - User Account States:
-                - Logged In
-                - Logged Out
+                - Logged (In | Out)
             - CToken States:
-                - Master Linked
-                - Master Unlinked
+                - Master (Linked | Unlinked)
 
     - Client action Check CToken Linked
         - State Oriented Restrictions:
             - User Account States:
-                - Logged In
-                - Logged Out
+                - Logged (In | Out)
             - CToken States:
-                - Master Linked
-                - Master Unlinked
+                - Master (Linked | Unlinked)
 
     - Client action Check CToken Session
         - State Oriented Restrictions:
             - User Account States:
-                - Logged In
-                - Logged Out
+                - Logged (In | Out)
 
     - Client action Check CToken Status
         - State Oriented Restrictions:
             - User Account States:
-                - Logged In
-                - Logged Out
+                - Logged (In | Out)
             - CToken States:
-                - Master Linked
-                - Master Unlinked
+                - Master (Linked | Unlinked)
 
     - Client action Check SToken Valid
         - State Oriented Restrictions:
             - User Account States:
-                - Logged In
-                - Logged Out
+                - Logged (In | Out)
             - CToken States:
-                - Master Linked
-                - Master Unlinked
+                - Master (Linked | Unlinked)
 
     - Client action Check SToken Linked
         - State Oriented Restrictions:
             - User Account States:
-                - Logged In
-                - Logged Out
+                - Logged (In | Out)
             - CToken States:
-                - Master Linked
-                - Master Unlinked
+                - Master (Linked | Unlinked)
 
     - Client action Check SToken Session
         - State Oriented Restrictions:
             - User Account States:
-                - Logged In
-                - Logged Out
+                - Logged (In | Out)
             - CToken States:
-                - Master Linked
-                - Master Unlinked
+                - Master (Linked | Unlinked)
 
     - Client action Check SToken Status
         - State Oriented Restrictions:
             - User Account States:
-                - Logged In
-                - Logged Out
+                - Logged (In | Out)
             - CToken States:
-                - Master Linked
-                - Master Unlinked
+                - Master (Linked | Unlinked)
 
 - (EWSC) - Master Actions:
 
     - Master action AccountLogin
-    - Master action AccountLogout   #
-    - Master action ViewAccount     #
-    - Master action EditAccount     #
-    - Master action UnlinkAccount   #
-    - Master action InspectCTokens  #
-    - Master action InspectSubPool  #
-    - Master action InspectSub      #
+        - State Oriented Restrictions:
+            - CToken States:
+                - Master (Linked | Unlink)
+                - SToken Linked
+            - SToken States:
+                - Sesion Plugged
+
+    - Master action AccountLogout
+        - State Oriented Restrictions:
+            - Master Account States:
+                - Logged In
+            - CToken States:
+                - Master (Linked | Unlink)
+                - SToken Linked
+            - SToken States:
+                - Sesion Plugged
+
+    - Master action ViewAccount
+        - State Oriented Restrictions:
+            - Master Account States:
+                - Logged In
+            - CToken States:
+                - Master (Linked | Unlink)
+                - SToken Linked
+            - SToken States:
+                - Sesion Plugged
+
+    - Master action ViewLoginRecords    #
+    - Master action ViewLogoutRecords   #
+    - Master action EditAccount         #
+    - Master action UnlinkAccount       #
+    - Master action InspectCTokens      #
+    - Master action InspectSubPool      #
+    - Master action InspectSub          #
 
 - (EWSC) - System Actions:
 
@@ -473,10 +482,9 @@
         - State Oriented Restrictions:
             - Master Account States:
                 - No master ids specified
-                    - Flaged for Unlink
-                    - Past Freeze Interval
+                    - Account (Flaged for Unlink | Past Freeze Interval)
                 - Specific master ids
-                    - Exists
+                    - Account Exists
 
     - System action Sweep Cleanup CTokens
         - State Oriented Restrictions:
@@ -496,32 +504,27 @@
     - System action Sweep Cleanup Sessions
         - State Oriented Restrictions:
             - EWallet Session States:
-                - Expired
-                - Empty
+                - Session (Expired | Empty)
 
     - System action Start Account Cleaner
         - State Oriented Restrictions:
             - Cleaner Thread States:
-                - Active
-                - Inactive
+                - Thread (Active | Inactive)
 
     - System action Start Session Cleaner
         - State Oriented Restrictions:
             - Cleaner Thread States:
-                - Active
-                - Inactive
+                - Thread (Active | Inactive)
 
     - System action Start Worker Cleaner
         - State Oriented Restrictions:
             - Cleaner Thread States:
-                - Active
-                - Inactive
+                - Thread (Active | Inactive)
 
     - System action Start CToken Cleaner
         - State Oriented Restrictions:
             - Cleaner Thread States:
-                - Active
-                - Inactive
+                - Thread (Active | Inactive)
 
     - System action Open Sockets
         - State Oriented Restrictions:
@@ -543,17 +546,19 @@
     - User action Create Account
         - State Oriented Restrictions:
             - User Account States:
-                - Logged In
-                - Logged Out
+                - Logged (In | Out)
             - CToken States:
                 - Master Linked
-            - Acquired Master States:
+                - SToken Linked
+            - SToken States:
+                - Session Plugged
+        - Relationship Oriented Restrictions:
+            - Acquired Master Relationships:
                 - Subordonate Of
 
     - User action Account Login
         - User Account States:
-            - Logged In
-            - Logged Out
+            - Logged (In | Out)
 
     - User action Account Logout
         - User Account States:
