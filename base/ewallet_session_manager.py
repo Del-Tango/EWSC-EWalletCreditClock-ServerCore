@@ -4042,6 +4042,19 @@ class EWalletSessionManager():
         log.debug('TODO - Kill process')
         return self.unset_socket_handler()
 
+    def handle_master_action_logout(self, **kwargs):
+        log.debug('')
+        instruction_set_validation = self.validate_instruction_set(kwargs)
+        if not instruction_set_validation \
+                or isinstance(instruction_set_validation, dict) \
+                and instruction_set_validation.get('failed'):
+            return instruction_set_validation
+        account_logout = self.action_execute_user_instruction_set(**kwargs)
+        return self.warning_could_not_logout_master_account(
+            kwargs, account_logout
+        ) if not account_logout or isinstance(account_logout, dict) and \
+            account_logout.get('failed') else account_logout
+
     def handle_master_action_login(self, **kwargs):
         log.debug('')
         instruction_set_validation = self.validate_instruction_set(kwargs)
@@ -4054,6 +4067,27 @@ class EWalletSessionManager():
             kwargs, account_login
         ) if not account_login or isinstance(account_login, dict) and \
             account_login.get('failed') else account_login
+
+    def handle_client_action_logout(self, **kwargs):
+        log.debug('')
+        instruction_set_validation = self.validate_instruction_set(kwargs)
+        if not instruction_set_validation \
+                or isinstance(instruction_set_validation, dict) \
+                and instruction_set_validation.get('failed'):
+            return instruction_set_validation
+        master_account_id = self.fetch_acquired_masters_from_client_token_set(
+            [kwargs['client_id']]
+        )
+        if isinstance(master_account_id, dict) and master_account_id.get('failed'):
+            return self.warning_no_master_account_acquired_by_ctoken(
+                kwargs, instruction_set_validation, master_account_id
+            )
+        kwargs.update({'master_id': master_account_id[0]})
+        account_logout = self.action_execute_user_instruction_set(**kwargs)
+        return self.warning_could_not_logout_user_account(
+            kwargs, account_logout
+        ) if not account_logout or isinstance(account_logout, dict) and \
+            account_logout.get('failed') else account_logout
 
     def handle_client_action_new_contact_list(self, **kwargs):
         log.debug('')
@@ -4182,27 +4216,6 @@ class EWalletSessionManager():
             kwargs, supply_credits
         ) if not supply_credits or isinstance(supply_credits, dict) and \
             supply_credits.get('failed') else supply_credits
-
-    def handle_client_action_logout(self, **kwargs):
-        log.debug('')
-        instruction_set_validation = self.validate_instruction_set(kwargs)
-        if not instruction_set_validation \
-                or isinstance(instruction_set_validation, dict) \
-                and instruction_set_validation.get('failed'):
-            return instruction_set_validation
-        master_account_id = self.fetch_acquired_masters_from_client_token_set(
-            [kwargs['client_id']]
-        )
-        if isinstance(master_account_id, dict) and master_account_id.get('failed'):
-            return self.warning_no_master_account_acquired_by_ctoken(
-                kwargs, instruction_set_validation, master_account_id
-            )
-        kwargs.update({'master_id': master_account_id[0]})
-        account_logout = self.action_execute_user_instruction_set(**kwargs)
-        return self.warning_could_not_logout_user_account(
-            kwargs, account_logout
-        ) if not account_logout or isinstance(account_logout, dict) and \
-            account_logout.get('failed') else account_logout
 
 #   @pysnooper.snoop()
     def handle_client_action_login(self, **kwargs):
@@ -6246,15 +6259,15 @@ class EWalletSessionManager():
 
     # TODO
     def master_session_manager_action_controller(self, **kwargs):
-        log.debug('TODO - 5 actions unimplemented')
+        log.debug('TODO - 4 actions unimplemented')
         if not kwargs.get('action'):
             return self.error_no_master_session_manager_action_specified(kwargs)
         handlers = {
             'login': self.handle_master_action_login,
+            'logout': self.handle_master_action_logout,
 #           'view': self.handle_master_action_view,
 #           'edit': self.handle_master_action_edit,
 #           'unlink': self.handle_master_action_unlink,
-#           'logout': self.handle_master_action_logout,
 #           'recover': self.handle_master_action_recover,
         }
         return handlers[kwargs['action']](**kwargs)
@@ -6359,6 +6372,15 @@ class EWalletSessionManager():
     '''
     [ TODO ]: Fetch warning messages from message file by key codes.
     '''
+
+    def warning_could_not_logout_master_account(self, *args):
+        instruction_set_response = res_utils.format_warning_response(**{
+            'failed': True, 'details': args,
+            'warning': 'Something went wrong. '
+                       'Could not logout Master user account.',
+        })
+        self.log_warning(**instruction_set_response)
+        return instruction_set_response
 
     def warning_could_not_login_master_account(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{

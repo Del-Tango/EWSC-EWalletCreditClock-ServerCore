@@ -79,6 +79,45 @@ class EWallet(Base):
 
     # FETCHERS
 
+    def fetch_active_session_values(self):
+        log.debug('')
+        user_account_archive = self.fetch_active_session_user_account_archive()
+        user_account = self.fetch_active_session_user()
+        master_account = self.fetch_active_session_master()
+        values = {
+            'id': self.id,
+            'name': self.name,
+            'orm_session': self.session,
+            'create_date': self.create_date,
+            'write_date': self.write_date,
+            'expiration_date': self.expiration_date,
+            'contact_list': self.fetch_active_session_contact_list(),
+            'credit_ewallet': self.fetch_active_session_credit_wallet(),
+            'user_account': [] if isinstance(user_account, dict) and
+                user_account.get('failed') else user_account,
+            'master_account': [] if isinstance(master_account, dict) and
+                master_account.get('failed') else master_account,
+            'user_account_archive': {} if not user_account_archive else {
+                item.fetch_user_email(): item.fetch_user_name() for item in
+                user_account_archive
+            }
+        }
+        return values
+
+    def fetch_active_session_master(self, obj=True):
+        log.debug('')
+        try:
+            if not self.active_master:
+                return self.error_no_session_active_master_found(
+                    self.active_master
+                )
+            return self.active_master[0] if obj else \
+                self.active_master[0].fetch_user_id()
+        except Exception as e:
+            return self.error_could_not_fetch_active_session_master({
+                'account': self.active_user
+            }, e)
+
     def fetch_master_account_by_email(self, **kwargs):
         log.debug('')
         if not kwargs.get('master'):
@@ -121,20 +160,6 @@ class EWallet(Base):
         log.info('Successfully fetched master user account by id.')
         return self.warning_no_master_account_found_by_id(kwargs) if not \
             user_account else user_account[0]
-
-    def fetch_active_session_master(self, obj=True):
-        log.debug('')
-        try:
-            if not self.active_master:
-                return self.error_no_session_active_master_found(
-                    self.active_master
-                )
-            return self.active_master[0] if obj else \
-                self.active_master[0].fetch_user_id()
-        except Exception as e:
-            return self.error_could_not_fetch_active_session_master({
-                'account': self.active_user
-            }, e)
 
 #   @pysnooper.snoop('logs/ewallet.log')
     def fetch_active_session_user(self, obj=True):
@@ -229,31 +254,6 @@ class EWallet(Base):
     def fetch_active_session_expiration_date(self):
         log.debug('')
         return self.expiration_date
-
-    def fetch_active_session_values(self):
-        log.debug('')
-        user_account_archive = self.fetch_active_session_user_account_archive()
-        user_account = self.fetch_active_session_user()
-        master_account = self.fetch_active_session_master()
-        values = {
-            'id': self.id,
-            'name': self.name,
-            'orm_session': self.session,
-            'create_date': self.create_date,
-            'write_date': self.write_date,
-            'expiration_date': self.expiration_date,
-            'contact_list': self.fetch_active_session_contact_list(),
-            'credit_ewallet': self.fetch_active_session_credit_wallet(),
-            'user_account': [] if isinstance(user_account, dict) and
-                user_account.get('failed') else user_account,
-            'master_account': [] if isinstance(master_account, dict) and
-                master_account.get('failed') else master_account,
-            'user_account_archive': {} if not user_account_archive else {
-                item.fetch_user_email(): item.fetch_user_name() for item in
-                user_account_archive
-            }
-        }
-        return values
 
     def fetch_user_account_from_active_session_user_archive(self, **kwargs):
         log.debug('')
@@ -716,6 +716,11 @@ class EWallet(Base):
         self.set_session_user_account_archive([])
         return True
 
+    def clear_session_active_master(self):
+        log.debug('')
+        self.set_session_active_master([])
+        return True
+
     def clear_active_session_user_data(self, data_dct):
         '''
         [ NOTE   ]: Clears all user information from active EWallet session.
@@ -727,6 +732,7 @@ class EWallet(Base):
             'credit_wallet': self.clear_session_credit_wallet,
             'contact_list': self.clear_session_contact_list,
             'user_account_archive': self.clear_session_user_account_archive,
+            'active_master': self.clear_session_active_master,
         }
         for item in data_dct:
             if item in handlers and data_dct[item]:
@@ -895,6 +901,56 @@ class EWallet(Base):
     def action_receive_transfer_record(self, **kwargs):
         log.debug('TODO - UNIMPLEMENTED')
 
+    def action_system_master_logout(self, **kwargs):
+        log.debug('')
+        master = kwargs.get('master') or self.fetch_active_session_master()
+        if not master:
+            return self.error_no_active_session_master_found(kwargs)
+        set_master_state = master.set_user_state(0)
+        clear_master_data = self.clear_active_session_user_data({
+            'active_master': True,
+        })
+        return True
+
+    # TODO
+    def action_master_account_logout(self, **kwargs):
+        log.debug('TODO - Refactor')
+        master = self.fetch_active_session_master()
+        session_logout = self.action_system_master_logout(master=master)
+        if isinstance(session_logout, dict) and \
+                session_logout.get('failed'):
+            kwargs['active_session'].rollback()
+            return self.warning_could_not_logout_master_account(
+                kwargs, master, session_logout
+            )
+        logout_record = EWalletLogout(
+            user_id=master.fetch_user_id(),
+            logout_status=False if not session_logout else True,
+        )
+        kwargs['active_session'].add(logout_record)
+        kwargs['active_session'].commit()
+        session_values = self.fetch_active_session_values()
+        command_chain_response = {
+            'failed': False,
+            'account': master.fetch_user_email(),
+            'session_data': {
+                'id': session_values['id'],
+                'master': None if not session_values.get('master_account')
+                    or not isinstance(session_values['master_account'], object)
+                    else session_values['master_account'].fetch_user_email(),
+                'create_date': res_utils.format_datetime(
+                    session_values['create_date']
+                ),
+                'write_date': res_utils.format_datetime(
+                    session_values['write_date']
+                ),
+                'expiration_date': res_utils.format_datetime(
+                    session_values['expiration_date']
+                ),
+            }
+        }
+        return command_chain_response
+
     # TODO
 #   @pysnooper.snoop('logs/ewallet.log')
     def action_master_account_login(self, **kwargs):
@@ -935,6 +991,9 @@ class EWallet(Base):
             'account': session_login.fetch_user_email(),
             'session_data': {
                 'id': session_values['id'],
+                'master': None if not session_values.get('master_account')
+                    or not isinstance(session_values['master_account'], object)
+                    else session_values['master_account'].fetch_user_email(),
                 'create_date': res_utils.format_datetime(
                     session_values['create_date']
                 ),
@@ -944,6 +1003,52 @@ class EWallet(Base):
                 'expiration_date': res_utils.format_datetime(
                     session_values['expiration_date']
                 ),
+            }
+        }
+        return command_chain_response
+
+#   @pysnooper.snoop('logs/ewallet.log')
+    def action_logout_user_account(self, **kwargs):
+        log.debug('')
+        user = self.fetch_active_session_user()
+        session_logout = self.action_system_user_logout()
+        logout_record = EWalletLogout(
+            user_id=user.fetch_user_id(),
+            logout_status=False if not session_logout else True,
+        )
+        kwargs['active_session'].add(logout_record)
+        if not session_logout:
+            kwargs['active_session'].rollback()
+            return self.warning_could_not_logout_user_account(kwargs)
+        update_next = False if isinstance(session_logout, bool) \
+                else self.action_system_user_update(user=session_logout)
+        try:
+            self.user_account_archive.remove(user)
+        except:
+            kwargs['active_session'].rollback()
+            return self.error_could_not_remove_user_from_account_archive(kwargs)
+        kwargs['active_session'].commit()
+        session_values = self.fetch_active_session_values()
+        command_chain_response = {
+            'failed': False,
+            'account': user.fetch_user_email(),
+            'session_data': {
+                'session_user_account': None if
+                    not isinstance(session_values.get('user_account'), list)
+                    or len(session_values['user_account']) == 0
+                    else session_values['user_account'][0].fetch_user_email(),
+                'session_credit_ewallet': None if
+                    not isinstance(session_values['credit_ewallet'], list)
+                    or len(session_values['credit_ewallet']) == 0
+                    else session_values['credit_ewallet'][0].fetch_credit_ewallet_id(),
+                'session_contact_list': None if
+                    not isinstance(session_values['contact_list'], list)
+                    or len(session_values['contact_list']) == 0
+                    else session_values['contact_list'].fetch_contact_list_id(),
+                'session_account_archive': {} if
+                    not session_values['user_account_archive']
+                    or session_values.get('failed')
+                    else session_values['user_account_archive']
             }
         }
         return command_chain_response
@@ -1273,52 +1378,6 @@ class EWallet(Base):
                 credit_request['transfer_record'].fetch_record_id(),
             'invoice_record': None if not credit_request.get('invoice_record') else \
                 credit_request['invoice_record'].fetch_record_id(),
-        }
-        return command_chain_response
-
-#   @pysnooper.snoop('logs/ewallet.log')
-    def action_logout_user_account(self, **kwargs):
-        log.debug('')
-        user = self.fetch_active_session_user()
-        session_logout = self.action_system_user_logout()
-        logout_record = EWalletLogout(
-            user_id=user.fetch_user_id(),
-            logout_status=False if not session_logout else True,
-        )
-        kwargs['active_session'].add(logout_record)
-        if not session_logout:
-            kwargs['active_session'].rollback()
-            return self.warning_could_not_logout_user_account(kwargs)
-        update_next = False if isinstance(session_logout, bool) \
-                else self.action_system_user_update(user=session_logout)
-        try:
-            self.user_account_archive.remove(user)
-        except:
-            kwargs['active_session'].rollback()
-            return self.error_could_not_remove_user_from_account_archive(kwargs)
-        kwargs['active_session'].commit()
-        session_values = self.fetch_active_session_values()
-        command_chain_response = {
-            'failed': False,
-            'account': user.fetch_user_email(),
-            'session_data': {
-                'session_user_account': None if
-                    not isinstance(session_values.get('user_account'), list)
-                    or len(session_values['user_account']) == 0
-                    else session_values['user_account'][0].fetch_user_email(),
-                'session_credit_ewallet': None if
-                    not isinstance(session_values['credit_ewallet'], list)
-                    or len(session_values['credit_ewallet']) == 0
-                    else session_values['credit_ewallet'][0].fetch_credit_ewallet_id(),
-                'session_contact_list': None if
-                    not isinstance(session_values['contact_list'], list)
-                    or len(session_values['contact_list']) == 0
-                    else session_values['contact_list'].fetch_contact_list_id(),
-                'session_account_archive': {} if
-                    not session_values['user_account_archive']
-                    or session_values.get('failed')
-                    else session_values['user_account_archive']
-            }
         }
         return command_chain_response
 
@@ -2894,6 +2953,10 @@ class EWallet(Base):
     [ NOTES ]: Enviroment checks for proper action execution are performed here.
     '''
 
+    def handle_master_action_account_logout(self, **kwargs):
+        log.debug('')
+        return self.action_master_account_logout(**kwargs)
+
     def handle_master_action_account_login(self, **kwargs):
         log.debug('')
         return self.action_master_account_login(**kwargs)
@@ -3615,6 +3678,15 @@ class EWallet(Base):
 
     # JUMPTABLE HANDLERS
 
+    def handle_master_action_logout(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('logout'):
+            return self.error_no_master_action_logout_target_specified(kwargs)
+        handlers = {
+            'account': self.handle_master_action_account_logout,
+        }
+        return handlers[kwargs['logout']](**kwargs)
+
     def handle_master_action_login(self, **kwargs):
         log.debug('')
         if not kwargs.get('login'):
@@ -4009,6 +4081,7 @@ class EWallet(Base):
         handlers = {
             'add': self.handle_master_action_add,
             'login': self.handle_master_action_login,
+            'logout': self.handle_master_action_logout,
         }
         return handlers[kwargs['action']](**kwargs)
 
@@ -4095,6 +4168,16 @@ class EWallet(Base):
     '''
     [ TODO ]: Fetch warning messages from message file by key codes.
     '''
+
+    def warning_could_not_logout_master_account(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Something went wrong. '
+                       'Could not logout Master user account. '
+                       'Details: {}'.format(args),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
 
     def warning_could_not_login_user_account(self, *args):
         command_chain_response = {
@@ -4899,6 +4982,24 @@ class EWallet(Base):
     '''
     [ TODO ]: Fetch error messages from message file by key codes.
     '''
+
+    def error_no_active_session_master_found(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No active Master account found in ewallet session. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_no_master_action_logout_target_specified(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No master action Logout target specified. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
 
     def error_could_not_check_if_master_account_frozen(self, *args):
         command_chain_response = {

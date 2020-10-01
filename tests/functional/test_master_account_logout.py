@@ -4,7 +4,7 @@ import unittest
 from base import ewallet_session_manager as manager
 
 
-class TestEWalletSessionManagerMasterAccountLogin(unittest.TestCase):
+class TestEWalletSessionManagerMasterAccountLogout(unittest.TestCase):
     session_manager = None
     client_id = None
     session_token = None
@@ -55,6 +55,13 @@ class TestEWalletSessionManagerMasterAccountLogin(unittest.TestCase):
             company=cls.user_company_3, address=cls.user_address_3,
         )
 
+        print('[...]: Master action AccountLogin')
+        login = cls.session_manager.session_manager_controller(
+            controller='master', ctype='action', action='login',
+            client_id= cls.client_id, session_token=cls.session_token,
+            user_email=cls.user_email_3, user_pass=cls.user_pass_3,
+        )
+
     @classmethod
     def tearDownClass(cls):
         # Clean Sqlite3 database used for testing environment
@@ -68,23 +75,22 @@ class TestEWalletSessionManagerMasterAccountLogin(unittest.TestCase):
                 'Details: {}'.format(e)
             )
 
-    def test_master_action_session_login_functionality(self):
-        print('\n[ * ]: Master action AccountLogin')
+    def test_master_action_session_logout_functionality(self):
+        print('\n[ * ]: Master action AccountLogout')
         instruction_set = {
-            'controller': 'master', 'ctype': 'action', 'action': 'login',
+            'controller': 'master', 'ctype': 'action', 'action': 'logout',
             'client_id': self.client_id, 'session_token': self.session_token,
-            'user_email': self.user_email_3, 'user_pass': self.user_pass_3,
         }
-        login = self.session_manager.session_manager_controller(
+        logout = self.session_manager.session_manager_controller(
             **instruction_set
         )
         print(
             '[ > ]: Instruction Set: ' + str(instruction_set) +
-            '\n[ < ]: Response: ' + str(login) + '\n'
+            '\n[ < ]: Response: ' + str(logout) + '\n'
         )
-        self.assertTrue(isinstance(login, dict))
-        self.assertEqual(len(login.keys()), 3)
-        self.assertFalse(login.get('failed'))
-        self.assertTrue(isinstance(login.get('account'), str))
-        self.assertEqual(login.get('account'), self.user_email_3)
-        self.assertTrue(isinstance(login.get('session_data'), dict))
+        self.assertTrue(isinstance(logout, dict))
+        self.assertEqual(len(logout.keys()), 3)
+        self.assertFalse(logout.get('failed'))
+        self.assertTrue(isinstance(logout.get('account'), str))
+        self.assertEqual(logout.get('account'), self.user_email_3)
+        self.assertTrue(isinstance(logout.get('session_data'), dict))

@@ -67,7 +67,11 @@
     - x - (EWSC) Refactor user actions to impose master oriented restrictions (key and frozen checks)
     - x - (EWSC) Implement master action AccountLogin
     - x - (EWSC) Fix bug in client action CreateMaster, password hash is not set
-    -   - (EWSC) Implement master action InspectCTokens
+    - x - (EWSC) Implement master action AccountLogout
+    -   - (EWSC) Implement master action ViewAccount
+    - (EWSC) Implement master action EditAccount
+    - (EWSC) Implement master action UnlinkAccount
+    - (EWSC) Implement master action InspectCTokens
     - (EWSC) Implement master action InspectSubPool
     - (EWSC) Implement master action InspectSub
     - (EWSC- -, EWCC- -, EWAT- -) Implement EWallet Session keep alive signal
