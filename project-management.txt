@@ -72,7 +72,8 @@
     - x - (EWSC) Implement master action EditAccount
     - x - (EWSC) Implement master action UnlinkAccount
     - x - (EWSC) Implement master action RecoverAccount
-    -   - (EWSC) Implement master action InspectCTokens
+    - x - (EWSC) Implement master action InspectCTokens
+    -   - (EWSC) Implement master action InspectCToken
     - (EWSC) Implement master action InspectSubPool
     - (EWSC) Implement master action InspectSub
     - (EWSC) Add system level in error and warning handlers
@@ -478,10 +479,31 @@
             - SToken States:
                 - Sesion Plugged
 
-    - Master action RecoverAccount      #
+    - Master action RecoverAccount
+        - State Oriented Restrictions:
+            - Master Account States:
+                - Logged In
+                - Pending Unlink
+            - CToken States:
+                - Master (Linked | Unlink)
+                - SToken Linked
+            - SToken States:
+                - Sesion Plugged
+
+    - Master action InspectCTokens
+        - State Oriented Restrictions:
+            - Master Account States:
+                - Logged In
+                - Not Pending Unlink
+            - CToken States:
+                - Master (Linked | Unlink)
+                - SToken Linked
+            - SToken States:
+                - Sesion Plugged
+
+    - Master action InspectCToken       #
     - Master action ViewLoginRecords    #
     - Master action ViewLogoutRecords   #
-    - Master action InspectCTokens      #
     - Master action InspectSubPool      #
     - Master action InspectSub          #
 

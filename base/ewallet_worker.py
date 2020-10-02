@@ -1094,6 +1094,31 @@ class EWalletWorker():
     [ NOTE ]: Command chain responses are formulated here.
     '''
 
+    def action_inspect_master_acquired_ctokens(self, **kwargs):
+        log.debug('')
+        # Fetch ewallet session by token keys
+        ewallet_session = self.fetch_ewallet_session_by_client_session_tokens(
+            kwargs['client_id'], kwargs['session_token']
+        )
+        if not ewallet_session or isinstance(ewallet_session, dict) and \
+                ewallet_session.get('failed'):
+            return ewallet_session
+        master = ewallet_session.fetch_active_session_master()
+        master_id = master.fetch_user_id()
+        # Formulate response
+        response = self.warning_could_not_fetch_active_session_master_account_id(
+            ewallet_session, kwargs, master_id
+        ) if not master_id or isinstance(master_id, dict) and \
+            master_id.get('failed') else {
+                'failed': False,
+                'master_id': master_id,
+                'master': master.fetch_user_email(),
+                'master_data': master.fetch_user_values(),
+            }
+        # Respond to session manager
+        self.send_instruction_response(response)
+        return response
+
     def action_recover_master_user_account(self, **kwargs):
         log.debug('')
         # Fetch ewallet session by token keys
@@ -3488,6 +3513,10 @@ class EWalletWorker():
 
     # ACTION HANDLERS
 
+    def handle_master_action_inspect_ctokens(self, **kwargs):
+        log.debug('')
+        return self.action_inspect_master_acquired_ctokens(**kwargs)
+
     def handle_master_action_recover_account(self, **kwargs):
         log.debug('')
         return self.action_recover_master_user_account(**kwargs)
@@ -3853,6 +3882,15 @@ class EWalletWorker():
                 if not ewallet_session else ewallet_session
 
     # JUMPTABLE HANDLERS
+
+    def handle_master_action_inspect(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('inspect'):
+            return self.error_no_master_action_inspect_target_specified(kwargs)
+        handlers = {
+            'ctokens': self.handle_master_action_inspect_ctokens,
+        }
+        return handlers[kwargs['inspect']](**kwargs)
 
     def handle_master_action_recover(self, **kwargs):
         log.debug('')
@@ -4421,6 +4459,7 @@ class EWalletWorker():
             'edit': self.handle_master_action_edit,
             'unlink': self.handle_master_action_unlink,
             'recover': self.handle_master_action_recover,
+            'inspect': self.handle_master_action_inspect,
         }
         return handlers[kwargs['action']](**kwargs)
 
@@ -4515,6 +4554,16 @@ class EWalletWorker():
     '''
     [ TODO ]: Fetch warning messages from message file by key codes.
     '''
+
+    def warning_could_not_fetch_active_session_master_account_id(self, *args):
+        instruction_set_response = {
+            'failed': True,
+            'warning': 'Something went wrong. '
+                       'Could not fetch active session Master user account ID. '
+                       'Details: {}'.format(args),
+        }
+        log.warning(instruction_set_response['warning'])
+        return instruction_set_response
 
     def warning_could_not_recover_master_account(self, *args):
         instruction_set_response = {
@@ -5515,6 +5564,15 @@ class EWalletWorker():
     '''
     [ TODO ]: Fetch error messages from message file by key codes.
     '''
+
+    def error_no_master_action_inspect_target_specified(self, *args):
+        instruction_set_response = {
+            'failed': True,
+            'error': 'No master action Inspect target specified. '
+                     'Details: {}.'.format(args),
+        }
+        log.error(instruction_set_response['error'])
+        return instruction_set_response
 
     def error_no_master_action_recover_target_specified(self, *args):
         instruction_set_response = {
