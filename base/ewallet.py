@@ -868,6 +868,33 @@ class EWallet(Base):
 
     # GENERAL
 
+    def recover_master_account(self, **kwargs):
+        log.debug('')
+        master_account = kwargs.get('master') or \
+            self.fetch_active_session_master()
+        if not master_account or isinstance(master_account, dict) and \
+                master_account.get('failed'):
+            return self.error_no_master_account_found(kwargs, master_account)
+        try:
+            master_account.set_to_unlink(False)
+            master_account.set_to_unlink_timestamp(None)
+        except Exception as e:
+            return self.error_could_not_recover_master_account(
+                kwargs, master_account, e
+            )
+        if master_account.to_unlink:
+            kwargs['active_session'].rollback()
+            return self.warning_could_not_recover_master_account(
+                kwargs, master_account
+            )
+        kwargs['active_session'].commit()
+        master_email = master_account.fetch_user_email()
+        command_chain_response = {
+            'failed': False,
+            'account': master_email,
+        }
+        return command_chain_response
+
 #   @pysnooper.snoop()
     def recover_user_account(self, **kwargs):
         log.debug('')
@@ -876,9 +903,6 @@ class EWallet(Base):
         if not user_account or isinstance(user_account, dict) and \
                 user_account.get('failed'):
             return self.error_no_user_account_found(kwargs)
-        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
-            kwargs, 'user'
-        )
         try:
             user_account.set_to_unlink(False)
             user_account.set_to_unlink_timestamp(None)
@@ -900,6 +924,7 @@ class EWallet(Base):
     [ WATCHOUT ]: Dragons be here.
     '''
 
+    # TODO
     def unlink_master_account(self, **kwargs):
         log.debug('TODO - Refactor')
         if not kwargs.get('master_id'):
@@ -988,6 +1013,46 @@ class EWallet(Base):
         log.debug('TODO - UNIMPLEMENTED')
     def action_receive_transfer_record(self, **kwargs):
         log.debug('TODO - UNIMPLEMENTED')
+
+    def action_recover_master_account(self, **kwargs):
+        log.debug('')
+        master = self.fetch_active_session_master()
+        recover_account = self.recover_master_account(master=master, **kwargs)
+        if not recover_account or isinstance(recover_account, dict) and \
+                recover_account.get('failed'):
+            kwargs['active_session'].rollback()
+            return self.warning_could_not_recover_master_account(kwargs)
+        update = False if not recover_account \
+                or isinstance(recover_account, bool) \
+                or isinstance(recover_account, dict) \
+                and recover_account.get('failed') \
+                else self.action_system_master_update(master=master, **kwargs)
+        if not update or isinstance(update, dict) and update.get('failed'):
+            kwargs['active_session'].rollback()
+            return self.error_could_not_update_ewallet_session_from_master_account(kwargs)
+        kwargs['active_session'].commit()
+        session_values = self.fetch_active_session_values()
+        command_chain_response = {
+            'failed': False,
+            'account': master.fetch_user_email(),
+            'account_data': master.fetch_user_values(),
+            'session_data': {
+                'id': session_values['id'],
+                'master': None if not session_values.get('master_account')
+                    or not isinstance(session_values['master_account'], object)
+                    else session_values['master_account'].fetch_user_email(),
+                'create_date': res_utils.format_datetime(
+                    session_values['create_date']
+                ),
+                'write_date': res_utils.format_datetime(
+                    session_values['write_date']
+                ),
+                'expiration_date': res_utils.format_datetime(
+                    session_values['expiration_date']
+                ),
+            }
+        }
+        return command_chain_response
 
     def action_unlink_master_account(self, **kwargs):
         log.debug('')
@@ -3224,6 +3289,23 @@ class EWallet(Base):
     [ NOTES ]: Enviroment checks for proper action execution are performed here.
     '''
 
+    def handle_master_action_recover_account(self, **kwargs):
+        log.debug('')
+        check_logged_in = self.check_master_logged_in()
+        if not check_logged_in:
+            return self.warning_master_not_logged_in(kwargs, check_logged_in)
+        check_unlinked = self.check_master_account_flag_for_unlink()
+        if not check_unlinked:
+            return self.warning_master_account_not_flagged_for_removal(
+                kwargs, check_logged_in, check_unlinked
+            )
+        check_frozen = self.check_master_account_frozen()
+        if check_frozen:
+            return self.warning_master_account_frozen(
+                kwargs, check_logged_in, check_unlinked, check_frozen
+            )
+        return self.action_recover_master_account(**kwargs)
+
     def handle_master_action_unlink_account(self, **kwargs):
         log.debug('')
         check_logged_in = self.check_master_logged_in()
@@ -4048,6 +4130,15 @@ class EWallet(Base):
 
     # JUMPTABLE HANDLERS
 
+    def handle_master_action_recover(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('recover'):
+            return self.error_no_master_action_recover_target_specified(kwargs)
+        handlers = {
+            'account': self.handle_master_action_recover_account,
+        }
+        return handlers[kwargs['recover']](**kwargs)
+
     def handle_master_action_unlink(self, **kwargs):
         log.debug('')
         if not kwargs.get('unlink'):
@@ -4482,6 +4573,7 @@ class EWallet(Base):
             'view': self.handle_master_action_view,
             'edit': self.handle_master_action_edit,
             'unlink': self.handle_master_action_unlink,
+            'recover': self.handle_master_action_recover,
         }
         return handlers[kwargs['action']](**kwargs)
 
@@ -4569,6 +4661,25 @@ class EWallet(Base):
     [ TODO ]: Fetch warning messages from message file by key codes.
     '''
 
+    def warning_master_account_not_flagged_for_removal(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Master user account is not flagged for deletion. '
+                       'Details: {}'.format(args),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
+
+    def warning_could_not_recover_master_account(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Something went wrong. '
+                       'Could not recover Master user account. '
+                       'Details: {}'.format(args),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
+
     def warning_master_account_pending_deletion(self, *args):
         command_chain_response = {
             'failed': True,
@@ -4596,7 +4707,7 @@ class EWallet(Base):
                        'Details: {}'.format(args),
         }
         log.warning(command_chain_response['warning'])
-        return command_chain_respone
+        return command_chain_response
 
     def warning_no_master_account_values_edited(self, *args):
         command_chain_response = {
@@ -5501,10 +5612,49 @@ class EWallet(Base):
     [ TODO ]: Fetch error messages from message file by key codes.
     '''
 
+    def error_no_master_account_found(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No Master account found. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_could_not_recover_master_account(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Something went wrong. '
+                     'Could not recover Master user account. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_could_not_update_ewallet_session_from_master_account(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Something went wrong. '
+                     'Could not update ewallet session from '
+                     'Master user account. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_no_master_action_recover_target_specified(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No master action Recover target specified. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
     def error_could_not_check_if_master_account_belongs_to_ewallet_session(self, *args):
         command_chain_response = {
             'failed': True,
-            'error': 'Somethign went wrong. '
+            'error': 'Something went wrong. '
                      'Could not check if Master user account '
                      'belongs to ewallet session. '
                      'Details: {}'.format(args),

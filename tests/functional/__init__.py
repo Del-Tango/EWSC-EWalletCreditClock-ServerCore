@@ -25,6 +25,7 @@ from . import test_master_account_logout
 from . import test_master_view_account
 from . import test_master_edit_account
 from . import test_master_unlink_account
+from . import test_master_recover_account
 
 from . import test_user_request_clientid
 from . import test_user_request_stoken

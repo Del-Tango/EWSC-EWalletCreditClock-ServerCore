@@ -4042,6 +4042,19 @@ class EWalletSessionManager():
         log.debug('TODO - Kill process')
         return self.unset_socket_handler()
 
+    def handle_master_action_recover_account(self, **kwargs):
+        log.debug('')
+        instruction_set_validation = self.validate_instruction_set(kwargs)
+        if not instruction_set_validation \
+                or isinstance(instruction_set_validation, dict) \
+                and instruction_set_validation.get('failed'):
+            return instruction_set_validation
+        recover_account = self.action_execute_user_instruction_set(**kwargs)
+        return self.warning_could_not_recover_master_account(
+            kwargs, recover_account
+        ) if not recover_account or isinstance(recover_account, dict) and \
+            recover_account.get('failed') else recover_account
+
     def handle_master_action_unlink_account(self, **kwargs):
         log.debug('')
         instruction_set_validation = self.validate_instruction_set(kwargs)
@@ -5677,6 +5690,15 @@ class EWalletSessionManager():
         }
         return handlers[kwargs['view']](**kwargs)
 
+    def handle_master_action_recover(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('recover'):
+            return self.error_no_master_action_recover_target_specified(kwargs)
+        handlers = {
+            'account': self.handle_master_action_recover_account,
+        }
+        return handlers[kwargs['recover']](**kwargs)
+
     def handle_master_action_unlink(self, **kwargs):
         log.debug('')
         if not kwargs.get('unlink'):
@@ -6326,9 +6348,8 @@ class EWalletSessionManager():
 
     # CONTROLLERS
 
-    # TODO
     def master_session_manager_action_controller(self, **kwargs):
-        log.debug('TODO - 2 actions unimplemented')
+        log.debug('')
         if not kwargs.get('action'):
             return self.error_no_master_session_manager_action_specified(kwargs)
         handlers = {
@@ -6337,7 +6358,7 @@ class EWalletSessionManager():
             'view': self.handle_master_action_view,
             'edit': self.handle_master_action_edit,
             'unlink': self.handle_master_action_unlink,
-#           'recover': self.handle_master_action_recover,
+            'recover': self.handle_master_action_recover,
         }
         return handlers[kwargs['action']](**kwargs)
 
@@ -6441,6 +6462,15 @@ class EWalletSessionManager():
     '''
     [ TODO ]: Fetch warning messages from message file by key codes.
     '''
+
+    def warning_could_not_recover_master_account(self, *args):
+        instruction_set_response = res_utils.format_warning_response(**{
+            'failed': True, 'details': args,
+            'warning': 'Something went wrong. '
+                       'Could not recover Master user account.',
+        })
+        self.log_warning(**instruction_set_response)
+        return instruction_set_response
 
     def warning_could_not_unlink_master_account(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
@@ -7811,10 +7841,18 @@ class EWalletSessionManager():
     [ TODO ]: Fetch error messages from message file by key codes.
     '''
 
+    def error_no_master_action_recover_target_specified(self, *args):
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
+            'error': 'No Master action Recover target specified.',
+        })
+        self.log_error(**instruction_set_response)
+        return instruction_set_response
+
     def error_no_master_action_unlink_target_specified(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
             'failed': True, 'details': args,
-            'error': 'No Master action Unlink specified.',
+            'error': 'No Master action Unlink target specified.',
         })
         self.log_error(**instruction_set_response)
         return instruction_set_response
@@ -7822,7 +7860,7 @@ class EWalletSessionManager():
     def error_no_master_action_edit_target_specified(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
             'failed': True, 'details': args,
-            'error': 'No Master action Edit specified.',
+            'error': 'No Master action Edit target specified.',
         })
         self.log_error(**instruction_set_response)
         return instruction_set_response
@@ -7830,7 +7868,7 @@ class EWalletSessionManager():
     def error_no_master_action_view_target_specified(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
             'failed': True, 'details': args,
-            'error': 'No Master action View specified.',
+            'error': 'No Master action View target specified.',
         })
         self.log_error(**instruction_set_response)
         return instruction_set_response

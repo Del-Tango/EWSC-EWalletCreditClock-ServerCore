@@ -71,8 +71,8 @@
     - x - (EWSC) Implement master action ViewAccount
     - x - (EWSC) Implement master action EditAccount
     - x - (EWSC) Implement master action UnlinkAccount
-    -   - (EWSC) Implement master action RecoverAccount
-    - (EWSC) Implement master action InspectCTokens
+    - x - (EWSC) Implement master action RecoverAccount
+    -   - (EWSC) Implement master action InspectCTokens
     - (EWSC) Implement master action InspectSubPool
     - (EWSC) Implement master action InspectSub
     - (EWSC) Add system level in error and warning handlers

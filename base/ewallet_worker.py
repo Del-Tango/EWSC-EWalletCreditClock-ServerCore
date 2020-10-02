@@ -1094,6 +1094,35 @@ class EWalletWorker():
     [ NOTE ]: Command chain responses are formulated here.
     '''
 
+    def action_recover_master_user_account(self, **kwargs):
+        log.debug('')
+        # Fetch ewallet session by token keys
+        ewallet_session = self.fetch_ewallet_session_by_client_session_tokens(
+            kwargs['client_id'], kwargs['session_token']
+        )
+        if not ewallet_session or isinstance(ewallet_session, dict) and \
+                ewallet_session.get('failed'):
+            return ewallet_session
+        sanitized_instruction_set = res_utils.remove_tags_from_command_chain(
+            kwargs, 'controller', 'ctype', 'action', 'recover', 'active_session'
+        )
+        # Execute action in session
+        orm_session = ewallet_session.fetch_active_session()
+        recover_account = ewallet_session.ewallet_controller(
+            controller='master', ctype='action', action='recover',
+            recover='account', active_session=orm_session,
+            **sanitized_instruction_set
+        )
+        # Formulate response
+        response = self.warning_could_not_recover_master_account(
+            ewallet_session, kwargs, recover_account
+        ) if not recover_account or \
+            isinstance(recover_account, dict) and \
+            recover_account.get('failed') else recover_account
+        # Respond to session manager
+        self.send_instruction_response(response)
+        return response
+
     def action_unlink_master_user_account(self, **kwargs):
         log.debug('')
         # Fetch ewallet session by token keys
@@ -3459,6 +3488,10 @@ class EWalletWorker():
 
     # ACTION HANDLERS
 
+    def handle_master_action_recover_account(self, **kwargs):
+        log.debug('')
+        return self.action_recover_master_user_account(**kwargs)
+
     def handle_master_action_unlink_account(self, **kwargs):
         log.debug('')
         return self.action_unlink_master_user_account(**kwargs)
@@ -3820,6 +3853,15 @@ class EWalletWorker():
                 if not ewallet_session else ewallet_session
 
     # JUMPTABLE HANDLERS
+
+    def handle_master_action_recover(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('recover'):
+            return self.error_no_master_action_recover_target_specified(kwargs)
+        handlers = {
+            'account': self.handle_master_action_recover_account,
+        }
+        return handlers[kwargs['recover']](**kwargs)
 
     def handle_master_action_unlink(self, **kwargs):
         log.debug('')
@@ -4378,6 +4420,7 @@ class EWalletWorker():
             'view': self.handle_master_action_view,
             'edit': self.handle_master_action_edit,
             'unlink': self.handle_master_action_unlink,
+            'recover': self.handle_master_action_recover,
         }
         return handlers[kwargs['action']](**kwargs)
 
@@ -4472,6 +4515,16 @@ class EWalletWorker():
     '''
     [ TODO ]: Fetch warning messages from message file by key codes.
     '''
+
+    def warning_could_not_recover_master_account(self, *args):
+        instruction_set_response = {
+            'failed': True,
+            'warning': 'Something went wrong. '
+                       'Could not recover Master user account. '
+                       'Details: {}'.format(args),
+        }
+        log.warning(instruction_set_response['warning'])
+        return instruction_set_response
 
     def warning_could_not_unlink_master_account(self, *args):
         instruction_set_response = {
@@ -5462,6 +5515,15 @@ class EWalletWorker():
     '''
     [ TODO ]: Fetch error messages from message file by key codes.
     '''
+
+    def error_no_master_action_recover_target_specified(self, *args):
+        instruction_set_response = {
+            'failed': True,
+            'error': 'No master action Recover target specified. '
+                     'Details: {}.'.format(args),
+        }
+        log.error(instruction_set_response['error'])
+        return instruction_set_response
 
     def error_no_master_action_unlink_target_specified(self, *args):
         instruction_set_response = {
