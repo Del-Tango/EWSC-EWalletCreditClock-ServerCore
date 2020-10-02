@@ -757,8 +757,6 @@ class ResUser(Base):
         transaction = transaction_handler.action_init_transaction(
             active_session=active_session, **sanitized_command_chain
         )
-
-
         link = self.link_journal_records_for_transaction(**transaction)
         if not link or isinstance(link, dict) and link.get('failed'):
             self.warning_could_not_link_journal_records_for_credit_request_event(
@@ -1540,6 +1538,26 @@ class ResUser(Base):
     [ TODO ]: Fetch error messages from message file by key codes.
     '''
 
+    def error_no_user_email_check_function_found(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Something went wrong. '
+                     'No email address check function found. '
+                     'Details: {}'.format(args)
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_no_password_check_function_found(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Something went wrong. '
+                     'No password check function found. '
+                     'Details: {}'.format(args)
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
     def error_could_not_set_user_is_active_flag(self, *args):
         command_chain_response = {
             'failed': True,
@@ -2295,16 +2313,8 @@ class ResUser(Base):
         log.error('No user email found.')
         return False
 
-    def error_no_user_email_check_function_found(self):
-        log.error('No user email check function found.')
-        return False
-
     def error_no_password_found(self):
         log.error('No password found.')
-        return False
-
-    def error_no_password_check_function_found(self):
-        log.error('No password check function found.')
         return False
 
     def error_no_password_hash_function_found(self):

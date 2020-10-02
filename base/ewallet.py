@@ -561,6 +561,47 @@ class EWallet(Base):
 
     # CHECKERS
 
+    def check_master_logged_in(self):
+        log.debug('')
+        master_account = self.fetch_active_session_master(obj=True)
+        if not master_account or isinstance(master_account, dict) and \
+                master_account.get('failed'):
+            return False
+        return master_account.check_user_logged_in()
+
+    def check_master_account_flag_for_unlink(self):
+        log.debug('')
+        master_account = self.fetch_active_session_master(obj=True)
+        if not master_account or isinstance(master_account, dict) and \
+                master_account.get('failed'):
+            return False
+        flagged_for_unlink = master_account.fetch_user_to_unlink()
+        if flagged_for_unlink:
+            log.debug(
+                'Master account {} was flagged for unlink on {}.'.format(
+                    master_account.fetch_user_name(),
+                    res_utils.format_datetime(
+                        master_account.fetch_user_to_unlink_timestamp()
+                    )
+                )
+            )
+        return flagged_for_unlink
+
+    def check_master_account_frozen(self):
+        log.debug('')
+        master_account = self.fetch_active_session_master(obj=True)
+        if not master_account or isinstance(master_account, dict) and \
+                master_account.get('failed'):
+            return False
+        frozen = master_account.check_master_account_frozen()
+        if frozen:
+            log.debug(
+                'Master account {} currently frozen.'.format(
+                    master_account.fetch_user_name()
+                )
+            )
+        return frozen
+
     def check_master_user_account_frozen(self, **kwargs):
         log.debug('')
         master_account = self.fetch_master_account_by_email(
@@ -901,31 +942,60 @@ class EWallet(Base):
     def action_receive_transfer_record(self, **kwargs):
         log.debug('TODO - UNIMPLEMENTED')
 
-    def action_view_master_account(self, **kwargs):
+    def action_edit_master_user_pass(self, **kwargs):
         log.debug('')
+        active_master = kwargs.get('master_account') or \
+            self.fetch_active_session_master()
+        if not active_master or isinstance(active_master, dict) and \
+                active_master.get('failed'):
+            return self.warning_could_not_fetch_ewallet_session_active_master(
+                kwargs, active_master
+            )
+        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
+            kwargs, 'ctype', 'action', 'edit'
+        )
+        edit_user_pass = active_master.user_controller(
+            ctype='action', action='edit', edit='user_pass',
+            pass_check_func=self.fetch_user_password_check_function(),
+            pass_hash_func=self.fetch_user_password_hash_function(),
+            **sanitized_command_chain
+        )
+        return self.warning_could_not_edit_master_user_pass(kwargs) if \
+            edit_user_pass.get('failed') else edit_user_pass
+
+    # TODO
+    def action_edit_master_account(self, **kwargs):
+        log.debug('TODO - Refactor')
         active_master = self.fetch_active_session_master()
         if not active_master or isinstance(active_master, dict) and \
                 active_master.get('failed'):
             return self.warning_could_not_fetch_ewallet_session_active_master(
                 kwargs, active_master
             )
-        command_chain_response = {
-            'failed': False,
-            'account': active_master.fetch_user_email(),
-            'account_data': active_master.fetch_user_values(),
+        edit_value_set = {
+            'name': self.handle_master_action_edit_account_user_name(
+                master_account=active_master, **kwargs
+            ),
+            'pass': self.handle_master_action_edit_account_user_pass(
+                master_account=active_master, **kwargs
+            ),
+            'alias': self.handle_master_action_edit_account_user_alias(
+                master_account=active_master, **kwargs
+            ),
+            'email': self.handle_master_action_edit_account_user_email(
+                master_account=active_master, **kwargs
+            ),
+            'phone': self.handle_master_action_edit_account_user_phone(
+                master_account=active_master, **kwargs
+            ),
         }
-        return command_chain_response
-
-    def action_system_master_logout(self, **kwargs):
-        log.debug('')
-        master = kwargs.get('master') or self.fetch_active_session_master()
-        if not master:
-            return self.error_no_active_session_master_found(kwargs)
-        set_master_state = master.set_user_state(0)
-        clear_master_data = self.clear_active_session_user_data({
-            'active_master': True,
-        })
-        return True
+        return self.warning_no_master_account_values_edited(kwargs) \
+            if True not in edit_value_set.values() else {
+                'failed': False,
+                'account': active_master.fetch_user_email(),
+                'edit': edit_value_set,
+                'account_data': active_master.fetch_user_values(),
+            }
 
     # TODO
     def action_master_account_logout(self, **kwargs):
@@ -1021,6 +1091,108 @@ class EWallet(Base):
             }
         }
         return command_chain_response
+
+    def action_edit_master_user_name(self, **kwargs):
+        log.debug('')
+        active_master = kwargs.get('master_account') or \
+            self.fetch_active_session_master()
+        if not active_master or isinstance(active_master, dict) and \
+                active_master.get('failed'):
+            return self.warning_could_not_fetch_ewallet_session_active_master(
+                kwargs, active_master
+            )
+        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
+            kwargs, 'ctype', 'action', 'edit'
+        )
+        edit_user_name = active_master.user_controller(
+            ctype='action', action='edit', edit='user_name',
+            **sanitized_command_chain
+        )
+        return self.warning_could_not_edit_master_user_name(kwargs) if \
+            edit_user_name.get('failed') else edit_user_name
+
+    def action_edit_master_user_alias(self, **kwargs):
+        log.debug('')
+        active_master = kwargs.get('master_account') or \
+            self.fetch_active_session_master()
+        if not active_master or isinstance(active_master, dict) and \
+                active_master.get('failed'):
+            return self.warning_could_not_fetch_ewallet_session_active_master(
+                kwargs, active_master
+            )
+        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
+            kwargs, 'ctype', 'action', 'edit'
+        )
+        edit_user_alias = active_master.user_controller(
+            ctype='action', action='edit', edit='user_alias',
+            **sanitized_command_chain
+        )
+        return self.warning_could_not_edit_master_user_alias(kwargs) if \
+            edit_user_alias.get('failed') else edit_user_alias
+
+    def action_edit_master_user_email(self, **kwargs):
+        log.debug('')
+        active_master = kwargs.get('master_account') or \
+            self.fetch_active_session_master()
+        if not active_master or isinstance(active_master, dict) and \
+                active_master.get('failed'):
+            return self.warning_could_not_fetch_ewallet_session_active_master(
+                kwargs, active_master
+            )
+        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
+            kwargs, 'ctype', 'action', 'edit'
+        )
+        edit_user_email = active_master.user_controller(
+            ctype='action', action='edit', edit='user_email',
+            **sanitized_command_chain
+        )
+        return self.warning_could_not_edit_master_user_email(kwargs) if \
+            edit_user_email.get('failed') else edit_user_email
+
+    def action_edit_master_user_phone(self, **kwargs):
+        log.debug('')
+        active_master = kwargs.get('master_account') or \
+            self.fetch_active_session_master()
+        if not active_master or isinstance(active_master, dict) and \
+                active_master.get('failed'):
+            return self.warning_could_not_fetch_ewallet_session_active_master(
+                kwargs, active_master
+            )
+        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
+            kwargs, 'ctype', 'action', 'edit'
+        )
+        edit_user_phone = active_master.user_controller(
+            ctype='action', action='edit', edit='user_phone',
+            **sanitized_command_chain
+        )
+        return self.warning_could_not_edit_master_user_phone(kwargs) if \
+            edit_user_phone.get('failed') else edit_user_phone
+
+    def action_view_master_account(self, **kwargs):
+        log.debug('')
+        active_master = self.fetch_active_session_master()
+        if not active_master or isinstance(active_master, dict) and \
+                active_master.get('failed'):
+            return self.warning_could_not_fetch_ewallet_session_active_master(
+                kwargs, active_master
+            )
+        command_chain_response = {
+            'failed': False,
+            'account': active_master.fetch_user_email(),
+            'account_data': active_master.fetch_user_values(),
+        }
+        return command_chain_response
+
+    def action_system_master_logout(self, **kwargs):
+        log.debug('')
+        master = kwargs.get('master') or self.fetch_active_session_master()
+        if not master:
+            return self.error_no_active_session_master_found(kwargs)
+        set_master_state = master.set_user_state(0)
+        clear_master_data = self.clear_active_session_user_data({
+            'active_master': True,
+        })
+        return True
 
 #   @pysnooper.snoop('logs/ewallet.log')
     def action_logout_user_account(self, **kwargs):
@@ -2168,7 +2340,7 @@ class EWallet(Base):
         return self.warning_no_user_account_values_edited(kwargs) \
             if True not in edit_value_set.values() else {
                 'failed': False,
-                'account': user.fetch_user_name(),
+                'account': user.fetch_user_email(),
                 'edit': edit_value_set,
                 'account_data': user.fetch_user_values(),
             }
@@ -2968,12 +3140,90 @@ class EWallet(Base):
     [ NOTES ]: Enviroment checks for proper action execution are performed here.
     '''
 
+    def handle_master_action_edit_account_user_name(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('user_name'):
+            return False
+        edit_master_name = self.action_edit_master_user_name(**kwargs)
+        return False if edit_master_name.get('failed') else True
+
+    def handle_master_action_edit_account_user_pass(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('user_pass'):
+            return False
+        edit_master_pass = self.action_edit_master_user_pass(**kwargs)
+        return False if edit_master_pass.get('failed') else True
+
+    def handle_master_action_edit_account_user_alias(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('user_alias'):
+            return False
+        edit_master_alias = self.action_edit_master_user_alias(**kwargs)
+        return False if edit_master_alias.get('failed') else True
+
+    def handle_master_action_edit_account_user_email(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('user_email'):
+            return False
+        edit_master_email = self.action_edit_master_user_email(**kwargs)
+        return False if edit_master_email.get('failed') else True
+
+    def handle_master_action_edit_account_user_phone(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('user_phone'):
+            return False
+        edit_master_phone = self.action_edit_master_user_phone(**kwargs)
+        return False if edit_master_phone.get('failed') else True
+
+    def handle_master_action_edit_account(self, **kwargs):
+        log.debug('')
+        check_logged_in = self.check_master_logged_in()
+        if not check_logged_in:
+            return self.warning_master_not_logged_in(kwargs, check_logged_in)
+        check_unlinked = self.check_master_account_flag_for_unlink()
+        if check_unlinked:
+            return self.warning_master_account_flagged_for_removal(
+                kwargs, check_logged_in, check_unlinked
+            )
+        check_frozen = self.check_master_account_frozen()
+        if check_frozen:
+            return self.warning_master_account_frozen(
+                kwargs, check_logged_in, check_unlinked, check_frozen
+            )
+        return self.action_edit_master_account(**kwargs)
+
     def handle_master_action_view_account(self, **kwargs):
         log.debug('')
+        check_logged_in = self.check_master_logged_in()
+        if not check_logged_in:
+            return self.warning_master_not_logged_in(kwargs, check_logged_in)
+        check_unlinked = self.check_master_account_flag_for_unlink()
+        if check_unlinked:
+            return self.warning_master_account_flagged_for_removal(
+                kwargs, check_logged_in, check_unlinked
+            )
+        check_frozen = self.check_master_account_frozen()
+        if check_frozen:
+            return self.warning_master_account_frozen(
+                kwargs, check_logged_in, check_unlinked, check_frozen
+            )
         return self.action_view_master_account(**kwargs)
 
     def handle_master_action_account_logout(self, **kwargs):
         log.debug('')
+        check_logged_in = self.check_master_logged_in()
+        if not check_logged_in:
+            return self.warning_master_not_logged_in(kwargs, check_logged_in)
+        check_unlinked = self.check_master_account_flag_for_unlink()
+        if check_unlinked:
+            return self.warning_master_account_flagged_for_removal(
+                kwargs, check_logged_in, check_unlinked
+            )
+        check_frozen = self.check_master_account_frozen()
+        if check_frozen:
+            return self.warning_master_account_frozen(
+                kwargs, check_logged_in, check_unlinked, check_frozen
+            )
         return self.action_master_account_logout(**kwargs)
 
     def handle_master_action_account_login(self, **kwargs):
@@ -3697,6 +3947,15 @@ class EWallet(Base):
 
     # JUMPTABLE HANDLERS
 
+    def handle_master_action_edit(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('edit'):
+            return self.error_no_master_action_edit_target_specified(kwargs)
+        handlers = {
+            'account': self.handle_master_action_edit_account,
+        }
+        return handlers[kwargs['edit']](**kwargs)
+
     def handle_master_action_view(self, **kwargs):
         log.debug('')
         if not kwargs.get('view'):
@@ -4111,6 +4370,7 @@ class EWallet(Base):
             'login': self.handle_master_action_login,
             'logout': self.handle_master_action_logout,
             'view': self.handle_master_action_view,
+            'edit': self.handle_master_action_edit,
         }
         return handlers[kwargs['action']](**kwargs)
 
@@ -4197,6 +4457,85 @@ class EWallet(Base):
     '''
     [ TODO ]: Fetch warning messages from message file by key codes.
     '''
+
+    def warning_no_master_account_values_edited(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Something went wrong. '
+                       'No Master account values edited. '
+                       'Details: {}'.format(args),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
+
+    def warning_could_not_edit_master_user_name(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Something went wrong. '
+                       'Could not edit Master account user name. '
+                       'Details: {}'.format(args),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
+
+    def warning_could_not_edit_master_user_pass(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Something went wrong. '
+                       'Could not edit Master account password. '
+                       'Details: {}'.format(args),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
+
+    def warning_could_not_edit_master_user_alias(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Something went wrong. '
+                       'Could not edit Master account alias. '
+                       'Details: {}'.format(args),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
+
+    def warning_could_not_edit_master_user_email(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Something went wrong. '
+                       'Could not edit Master account email address. '
+                       'Details: {}'.format(args),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
+
+    def warning_could_not_edit_master_user_phone(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Something went wrong. '
+                       'Could not edit Master account phone number. '
+                       'Details: {}'.format(args),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
+
+    def warning_master_not_logged_in(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Master user account is not logged in. '
+                       'Details: {}'.format(args),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
+
+    def warning_master_account_flagged_for_removal(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Master user account is currently flagged for removal, '
+                       'all account actions locked. '
+                       'Details: {}'.format(args),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
 
     def warning_could_not_fetch_ewallet_session_active_master(self, *args):
         command_chain_response = {
@@ -5021,6 +5360,15 @@ class EWallet(Base):
     '''
     [ TODO ]: Fetch error messages from message file by key codes.
     '''
+
+    def error_no_master_action_edit_target_specified(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No master action Edit target specified. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
 
     def error_no_master_action_view_target_specified(self, *args):
         command_chain_response = {

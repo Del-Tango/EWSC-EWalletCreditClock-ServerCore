@@ -27,8 +27,8 @@ The EWCreditClock Suit contains:
     * (EWSC)  | Server Core           | Web Service with REST API   | v.Chronos (Beta)
     * (EWCC)  | Python Client Core    | Importable Library          | v.Chronos (Beta)
     * (EWAT)  | API Tutor             | Tutor Script                | v.DeltaT (Alpha)
-    * (EWDWC) | Default Web Client    | Web Application             | TODO
-    * (EWDMC) | Default Mobile Client | Android Application         | TODO
+    * (EWDWC) | Default Web Client    | Web Portal Application      | TODO
+    * (EWDMC) | Default Mobile Client | Android Portal Application  | TODO
     * (EWJCC) | Java Client Core      | Importable Library          | TODO
 
 
@@ -53,7 +53,10 @@ two of which can be accesed through the REST API:
 
     * (System Controller) | Private | Server management actions and events
     * (Master Controller) | Public  | Master user account actions and events
-    * (Client Controller) | Public  | Subordonate user account actions and events
+    * (Client Controller) | Public  | Client application actions and events
+
+    [ NOTE ]: Subordonate user account actions and events are handled by the
+              Client Controller as they are initiated by the client application.
 
 Following a B2B business model, the Master accounts are created by the party
 offering the EWCreditClock service the their clients, along with a certificate
@@ -66,12 +69,13 @@ The Subordonate accounts are the end-user accounts, usually the clients of the
 comercial entity owning a Master account.
 
 System actions and events require no account or session, as they are only used
-behind the REST API for server core administration and automation .
+behind the REST API for server core administration and automation.
 
 
 EWSC Fun Facts! -
 
-    * The entire EWalletCreditClock suit was coded in a custom make IDE using
+
+    * The entire EWalletCreditClock suit was coded in a custom made IDE using
       Vim, Tmux and CLI Git on a Debian based distribution using the GNOME
       desktop environment. (Not kidding, where there's a shell there's a way)
 
@@ -82,15 +86,16 @@ EWSC Fun Facts! -
       and relax doing what he loved to do, now its all mainstream, man. (Hopefully)
 
     * The client can orphan sessions by requesting a new session token with an
-      old client id
+      old client id. (I know, I know, but its a fun fact to me)
 
 
 EWSC Contribuitors -
 
+
     * S:Mx093pk01 - Core Developer and Designer
-    * MG:s093pk02 - Technology Advisor
+    * M:So093pk02 - Technology Advisor
     * G:Ec093pk03 - Quality Assurance
-    * H:Mt093pk04 - Business Advisor
+    * M:Mi093pk04 - Business Advisor
     * U:Si093pk05 - Graphic Design and Artwork
 
 

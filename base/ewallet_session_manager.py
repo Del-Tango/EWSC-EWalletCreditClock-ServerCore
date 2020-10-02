@@ -4042,6 +4042,19 @@ class EWalletSessionManager():
         log.debug('TODO - Kill process')
         return self.unset_socket_handler()
 
+    def handle_master_action_edit_account(self, **kwargs):
+        log.debug('')
+        instruction_set_validation = self.validate_instruction_set(kwargs)
+        if not instruction_set_validation \
+                or isinstance(instruction_set_validation, dict) \
+                and instruction_set_validation.get('failed'):
+            return instruction_set_validation
+        edit_account = self.action_execute_user_instruction_set(**kwargs)
+        return self.warning_could_not_edit_master_account(
+            kwargs, edit_account
+        ) if not edit_account or isinstance(edit_account, dict) and \
+            edit_account.get('failed') else edit_account
+
     def handle_master_action_view_account(self, **kwargs):
         log.debug('')
         instruction_set_validation = self.validate_instruction_set(kwargs)
@@ -4054,9 +4067,6 @@ class EWalletSessionManager():
             kwargs, view_account
         ) if not view_account or isinstance(view_account, dict) and \
             view_account.get('failed') else view_account
-
-
-
 
     def handle_master_action_logout(self, **kwargs):
         log.debug('')
@@ -5654,6 +5664,15 @@ class EWalletSessionManager():
         }
         return handlers[kwargs['view']](**kwargs)
 
+    def handle_master_action_edit(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('edit'):
+            return self.error_no_master_action_edit_target_specified(kwargs)
+        handlers = {
+            'account': self.handle_master_action_edit_account,
+        }
+        return handlers[kwargs['edit']](**kwargs)
+
     def handle_system_action_decrease_master(self, **kwargs):
         log.debug('')
         if not kwargs.get('master'):
@@ -6287,14 +6306,14 @@ class EWalletSessionManager():
 
     # TODO
     def master_session_manager_action_controller(self, **kwargs):
-        log.debug('TODO - 4 actions unimplemented')
+        log.debug('TODO - 2 actions unimplemented')
         if not kwargs.get('action'):
             return self.error_no_master_session_manager_action_specified(kwargs)
         handlers = {
             'login': self.handle_master_action_login,
             'logout': self.handle_master_action_logout,
             'view': self.handle_master_action_view,
-#           'edit': self.handle_master_action_edit,
+            'edit': self.handle_master_action_edit,
 #           'unlink': self.handle_master_action_unlink,
 #           'recover': self.handle_master_action_recover,
         }
@@ -6400,6 +6419,15 @@ class EWalletSessionManager():
     '''
     [ TODO ]: Fetch warning messages from message file by key codes.
     '''
+
+    def warning_could_not_edit_master_account(self, *args):
+        instruction_set_response = res_utils.format_warning_response(**{
+            'failed': True, 'details': args,
+            'warning': 'Something went wrong. '
+                       'Could not edit Master user account.',
+        })
+        self.log_warning(**instruction_set_response)
+        return instruction_set_response
 
     def warning_could_not_view_master_account(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
@@ -7751,6 +7779,14 @@ class EWalletSessionManager():
     '''
     [ TODO ]: Fetch error messages from message file by key codes.
     '''
+
+    def error_no_master_action_edit_target_specified(self, *args):
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
+            'error': 'No Master action Edit specified.',
+        })
+        self.log_error(**instruction_set_response)
+        return instruction_set_response
 
     def error_no_master_action_view_target_specified(self, *args):
         instruction_set_response = res_utils.format_error_response(**{

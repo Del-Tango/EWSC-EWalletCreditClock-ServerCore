@@ -22,9 +22,9 @@
     - x - (EWSC) Impose entity ownership restrictions on all user actions
     - x - (EWSC) Groom session manager endpoint warning handlers
     - x - (EWSC) Groom session manager endpoint error handlers
-    - x - (EWSC, EWCC, EWAT) Add requirements.txt
-    - x - (EWSC) Fix user action Edit Password
-    - x - (EWSC) Fix user action Edit Email
+    - x - (EWSC-x-, EWCC-x-, EWAT-x-) Add requirements.txt
+    - x - (EWSC) Fix bug in user action Edit Password
+    - x - (EWSC) Fix bug in user action Edit Email
     - x - (EWSC) Journal record grooming
     - x - (EWSC) Impose user account to_unlink restrictions on user actions
     - x - (EWCC) Groom client core functional tests
@@ -37,13 +37,13 @@
     - x - (EWSC) Implement system action StartCTokenCleaner
     - x - (EWSC) Implement system action SweepCleanupSTokens
     - x - (EWSC) Implement system action SweepCleanupCTokens
-    - x - (EWSC) Fix system action SweepCleanupWorkers
+    - x - (EWSC) Fix bug in system action SweepCleanupWorkers
     - x - (EWSC) Implement system action TargetCleanupWorker
     - x - (EWSC) Implement system action TargetCleanupSToken
     - x - (EWSC) Implement system action TargetCleanupCToken
     - x - (EWSC) Implement system action StartAllCleaners
-    - x - (EWSC) Fix user action SupplyCredits
-    - x - (EWSC) Fix user action ViewTransferRecord
+    - x - (EWSC) Fix bug in user action SupplyCredits
+    - x - (EWSC) Fix bug in user action ViewTransferRecord
     - x - (EWSC) Fix bug in user action SupplyCredits journaling
     - x - (EWCC) Perform valid input checks on core subroutine SetResource
     - x - (EWSC) Implement client action NewMasterAccount
@@ -69,11 +69,13 @@
     - x - (EWSC) Fix bug in client action CreateMaster, password hash is not set
     - x - (EWSC) Implement master action AccountLogout
     - x - (EWSC) Implement master action ViewAccount
-    -   - (EWSC) Implement master action EditAccount
-    - (EWSC) Implement master action UnlinkAccount
+    - x - (EWSC) Implement master action EditAccount
+    -   - (EWSC) Implement master action UnlinkAccount
+    - (EWSC) Implement master action RecoverAccount
     - (EWSC) Implement master action InspectCTokens
     - (EWSC) Implement master action InspectSubPool
     - (EWSC) Implement master action InspectSub
+    - (EWSC) Add system level in error and warning handlers
     - (EWSC- -, EWCC- -, EWAT- -) Implement EWallet Session keep alive signal
     - (EWSC- -, EWCC- -, EWAT- -) Implement issue report
     - (EWCC) Make library importable
@@ -455,10 +457,20 @@
             - SToken States:
                 - Sesion Plugged
 
+    - Master action EditAccount
+        - State Oriented Restrictions:
+            - Master Account States:
+                - Logged In
+            - CToken States:
+                - Master (Linked | Unlink)
+                - SToken Linked
+            - SToken States:
+                - Sesion Plugged
+
+    - Master action UnlinkAccount       #
+    - Master action RecoverAccount      #
     - Master action ViewLoginRecords    #
     - Master action ViewLogoutRecords   #
-    - Master action EditAccount         #
-    - Master action UnlinkAccount       #
     - Master action InspectCTokens      #
     - Master action InspectSubPool      #
     - Master action InspectSub          #
