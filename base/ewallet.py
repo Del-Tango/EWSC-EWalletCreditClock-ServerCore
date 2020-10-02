@@ -561,6 +561,16 @@ class EWallet(Base):
 
     # CHECKERS
 
+    def check_master_account_belongs_to_ewallet_session(self, account):
+        log.debug('')
+        try:
+            return False if account.fetch_user_id() \
+                != self.fetch_active_session_master(obj=False) else True
+        except Exception as e:
+            self.error_could_not_check_if_master_account_belongs_to_ewallet_session(
+                account, self.active_master, e
+            )
+
     def check_master_logged_in(self):
         log.debug('')
         master_account = self.fetch_active_session_master(obj=True)
@@ -886,6 +896,43 @@ class EWallet(Base):
         return command_chain_response
 
     # UNLINKERS
+    '''
+    [ WATCHOUT ]: Dragons be here.
+    '''
+
+    def unlink_master_account(self, **kwargs):
+        log.debug('TODO - Refactor')
+        if not kwargs.get('master_id'):
+            return self.error_no_master_account_id_found(kwargs)
+        try:
+            master_account = kwargs['active_session'].query(
+                ResMaster
+            ).filter_by(
+                user_id=kwargs['master_id']
+            )
+            master = list(master_account)
+            # Forced user account removal easter egg
+            if kwargs.get('forced_removal'):
+                master_account.delete()
+                kwargs['active_session'].commit()
+                return kwargs['master_id']
+            # If account not marked for removal, mark now
+            if not master[0].to_unlink:
+                master[0].set_to_unlink(True)
+                master[0].set_to_unlink_timestamp(datetime.datetime.now())
+                kwargs['active_session'].commit()
+                return kwargs['master_id']
+            check = res_utils.check_days_since_timestamp(
+                master[0].to_unlink_timestamp, 30
+            )
+            # If 30 days since account marked for removal, remove from db
+            if check:
+                kwargs['active_session'].commit()
+                return kwargs['master_id']
+            return self.warning_master_account_pending_deletion(kwargs)
+        except Exception as e:
+            kwargs['active_session'].rollback()
+            return self.error_could_not_unlink_master_account(kwargs, e)
 
     # TODO
 #   @pysnooper.snoop('logs/ewallet.log')
@@ -941,6 +988,43 @@ class EWallet(Base):
         log.debug('TODO - UNIMPLEMENTED')
     def action_receive_transfer_record(self, **kwargs):
         log.debug('TODO - UNIMPLEMENTED')
+
+    def action_unlink_master_account(self, **kwargs):
+        log.debug('')
+        master_id = kwargs.get('master_id') or \
+            self.fetch_active_session_master(obj=False)
+        if not master_id or isinstance(master_id, dict) and \
+                master_id.get('failed'):
+            return self.error_no_master_account_id_found(kwargs)
+        master_account = self.fetch_master_account(
+            search_by='id', master_id=master_id, **kwargs
+        )
+        if not master_account or isinstance(master_account, dict) and \
+                master_account.get('failed'):
+            return self.warning_could_not_fetch_master_account_by_id(kwargs)
+        check = self.check_master_account_belongs_to_ewallet_session(
+            master_account
+        )
+        if not check:
+            return self.warning_account_does_not_belong_to_ewallet_session(
+                kwargs, master_id, master_account, check
+            )
+        user_email = master_account.fetch_user_email()
+        unlink_account = self.unlink_master_account(
+            master_id=master_id, **kwargs
+        )
+        if not unlink_account or isinstance(unlink_account, dict) and \
+                unlink_account.get('failed'):
+            kwargs['active_session'].rollback()
+            return self.warning_could_not_unlink_master_account(
+                master_id, kwargs
+            )
+        kwargs['active_session'].commit()
+        command_chain_response = {
+            'failed': False,
+            'account': user_email,
+        }
+        return command_chain_response
 
     def action_edit_master_user_pass(self, **kwargs):
         log.debug('')
@@ -3140,6 +3224,23 @@ class EWallet(Base):
     [ NOTES ]: Enviroment checks for proper action execution are performed here.
     '''
 
+    def handle_master_action_unlink_account(self, **kwargs):
+        log.debug('')
+        check_logged_in = self.check_master_logged_in()
+        if not check_logged_in:
+            return self.warning_master_not_logged_in(kwargs, check_logged_in)
+        check_unlinked = self.check_master_account_flag_for_unlink()
+        if check_unlinked:
+            return self.warning_master_account_flagged_for_removal(
+                kwargs, check_logged_in, check_unlinked
+            )
+        check_frozen = self.check_master_account_frozen()
+        if check_frozen:
+            return self.warning_master_account_frozen(
+                kwargs, check_logged_in, check_unlinked, check_frozen
+            )
+        return self.action_unlink_master_account(**kwargs)
+
     def handle_master_action_edit_account_user_name(self, **kwargs):
         log.debug('')
         if not kwargs.get('user_name'):
@@ -3947,6 +4048,15 @@ class EWallet(Base):
 
     # JUMPTABLE HANDLERS
 
+    def handle_master_action_unlink(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('unlink'):
+            return self.error_no_master_action_unlink_target_specified(kwargs)
+        handlers = {
+            'account': self.handle_master_action_unlink_account,
+        }
+        return handlers[kwargs['unlink']](**kwargs)
+
     def handle_master_action_edit(self, **kwargs):
         log.debug('')
         if not kwargs.get('edit'):
@@ -4371,6 +4481,7 @@ class EWallet(Base):
             'logout': self.handle_master_action_logout,
             'view': self.handle_master_action_view,
             'edit': self.handle_master_action_edit,
+            'unlink': self.handle_master_action_unlink,
         }
         return handlers[kwargs['action']](**kwargs)
 
@@ -4457,6 +4568,35 @@ class EWallet(Base):
     '''
     [ TODO ]: Fetch warning messages from message file by key codes.
     '''
+
+    def warning_master_account_pending_deletion(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Master user account pending deletion. '
+                       'Details: {}'.format(args),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
+
+    def warning_could_not_fetch_master_account_by_id(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Something went wrong. '
+                       'Could not fetch Master user account by ID. '
+                       'Details: {}'.format(args),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
+
+    def warning_could_not_unlink_master_account(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Something went wrong. '
+                       'Could not unlink Master user account. '
+                       'Details: {}'.format(args),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_respone
 
     def warning_no_master_account_values_edited(self, *args):
         command_chain_response = {
@@ -5360,6 +5500,45 @@ class EWallet(Base):
     '''
     [ TODO ]: Fetch error messages from message file by key codes.
     '''
+
+    def error_could_not_check_if_master_account_belongs_to_ewallet_session(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Somethign went wrong. '
+                     'Could not check if Master user account '
+                     'belongs to ewallet session. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_no_master_account_id_found(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No Master account ID found. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_could_not_unlink_master_account(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Something went wrong. '
+                     'Could not unlink Master user account. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_no_master_action_unlink_target_specified(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No master action Unlink target specified. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
 
     def error_no_master_action_edit_target_specified(self, *args):
         command_chain_response = {

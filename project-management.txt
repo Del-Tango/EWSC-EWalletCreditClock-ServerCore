@@ -70,8 +70,8 @@
     - x - (EWSC) Implement master action AccountLogout
     - x - (EWSC) Implement master action ViewAccount
     - x - (EWSC) Implement master action EditAccount
-    -   - (EWSC) Implement master action UnlinkAccount
-    - (EWSC) Implement master action RecoverAccount
+    - x - (EWSC) Implement master action UnlinkAccount
+    -   - (EWSC) Implement master action RecoverAccount
     - (EWSC) Implement master action InspectCTokens
     - (EWSC) Implement master action InspectSubPool
     - (EWSC) Implement master action InspectSub
@@ -467,7 +467,17 @@
             - SToken States:
                 - Sesion Plugged
 
-    - Master action UnlinkAccount       #
+    - Master action UnlinkAccount
+        - State Oriented Restrictions:
+            - Master Account States:
+                - Logged In
+                - Not Pending Unlink
+            - CToken States:
+                - Master (Linked | Unlink)
+                - SToken Linked
+            - SToken States:
+                - Sesion Plugged
+
     - Master action RecoverAccount      #
     - Master action ViewLoginRecords    #
     - Master action ViewLogoutRecords   #

@@ -4042,6 +4042,19 @@ class EWalletSessionManager():
         log.debug('TODO - Kill process')
         return self.unset_socket_handler()
 
+    def handle_master_action_unlink_account(self, **kwargs):
+        log.debug('')
+        instruction_set_validation = self.validate_instruction_set(kwargs)
+        if not instruction_set_validation \
+                or isinstance(instruction_set_validation, dict) \
+                and instruction_set_validation.get('failed'):
+            return instruction_set_validation
+        unlink_account = self.action_execute_user_instruction_set(**kwargs)
+        return self.warning_could_not_unlink_master_account(
+            kwargs, unlink_account
+        ) if not unlink_account or isinstance(unlink_account, dict) and \
+            unlink_account.get('failed') else unlink_account
+
     def handle_master_action_edit_account(self, **kwargs):
         log.debug('')
         instruction_set_validation = self.validate_instruction_set(kwargs)
@@ -5664,6 +5677,15 @@ class EWalletSessionManager():
         }
         return handlers[kwargs['view']](**kwargs)
 
+    def handle_master_action_unlink(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('unlink'):
+            return self.error_no_master_action_unlink_target_specified(kwargs)
+        handlers = {
+            'account': self.handle_master_action_unlink_account,
+        }
+        return handlers[kwargs['unlink']](**kwargs)
+
     def handle_master_action_edit(self, **kwargs):
         log.debug('')
         if not kwargs.get('edit'):
@@ -6314,7 +6336,7 @@ class EWalletSessionManager():
             'logout': self.handle_master_action_logout,
             'view': self.handle_master_action_view,
             'edit': self.handle_master_action_edit,
-#           'unlink': self.handle_master_action_unlink,
+            'unlink': self.handle_master_action_unlink,
 #           'recover': self.handle_master_action_recover,
         }
         return handlers[kwargs['action']](**kwargs)
@@ -6419,6 +6441,15 @@ class EWalletSessionManager():
     '''
     [ TODO ]: Fetch warning messages from message file by key codes.
     '''
+
+    def warning_could_not_unlink_master_account(self, *args):
+        instruction_set_response = res_utils.format_warning_response(**{
+            'failed': True, 'details': args,
+            'warning': 'Something went wrong. '
+                       'Could not unlink Master user account.',
+        })
+        self.log_warning(**instruction_set_response)
+        return instruction_set_response
 
     def warning_could_not_edit_master_account(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
@@ -7779,6 +7810,14 @@ class EWalletSessionManager():
     '''
     [ TODO ]: Fetch error messages from message file by key codes.
     '''
+
+    def error_no_master_action_unlink_target_specified(self, *args):
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
+            'error': 'No Master action Unlink specified.',
+        })
+        self.log_error(**instruction_set_response)
+        return instruction_set_response
 
     def error_no_master_action_edit_target_specified(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
