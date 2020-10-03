@@ -75,6 +75,7 @@
     - x - (EWSC) Implement master action InspectCTokens
     - x - (EWSC) Implement master action InspectCToken
     -   - (EWSC) Implement master action InspectSubPool
+    - (EWSC) Groom function test suit to add acquired master accounts
     - (EWSC) Implement master action InspectSub
     - (EWSC) Add system level in error and warning handlers
     - (EWSC- -, EWCC- -, EWAT- -) Implement EWallet Session keep alive signal

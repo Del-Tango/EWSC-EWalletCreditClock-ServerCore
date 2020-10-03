@@ -98,7 +98,9 @@ class TestEWalletSessionManagerMasterInspectCtokens(unittest.TestCase):
             '\n[ < ]: Response: ' + str(inspect) + '\n'
         )
         self.assertTrue(isinstance(inspect, dict))
-        self.assertEqual(len(inspect.keys()), 2)
+        self.assertEqual(len(inspect.keys()), 4)
         self.assertFalse(inspect.get('failed'))
         self.assertTrue(isinstance(inspect.get('account'), str))
         self.assertEqual(inspect.get('account'), self.user_email_3)
+        self.assertTrue(isinstance(inspect.get('account_data'), dict))
+        self.assertTrue(isinstance(inspect.get('ctokens'), list))

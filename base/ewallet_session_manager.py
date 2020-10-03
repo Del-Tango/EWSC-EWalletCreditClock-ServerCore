@@ -83,6 +83,45 @@ class EWalletSessionManager():
     def fetch_from_ewallet_worker_session(self):
         log.debug('TODO - UNIMPLEMENTED')
 
+    @pysnooper.snoop('logs/ewallet.log')
+    def fetch_master_account_by_email(self, master_account_email, **kwargs):
+        log.debug('')
+        if not master_account_email or not isinstance(master_account_email, str):
+            return self.error_invalid_master_account_email(
+                master_account_email, kwargs
+            )
+        try:
+            orm_session = kwargs.get('active_session') or \
+                self.res_utils.session_factory()
+            master_account = list(orm_session.query(
+               ResMaster
+            ).filter_by(user_email=master_account_email))
+        except Exception as e:
+            return self.error_could_not_fetch_master_account_by_email_address(
+                master_account_email, e
+            )
+        return self.warning_no_master_account_found_by_email(
+            master_account_email
+        ) if not master_account else master_account[0]
+
+#   @pysnooper.snoop('logs/ewallet.log')
+    def fetch_master_account_by_id(self, master_account_id, **kwargs):
+        log.debug('')
+        if not master_account_id or not isinstance(master_account_id, int):
+            return self.error_invalid_master_account_id(master_account_id)
+        try:
+            orm_session = kwargs.get('active_session') or \
+                self.res_utils.session_factory()
+            master_account = list(orm_session.query(
+               ResMaster
+            ).filter_by(user_id=master_account_id))
+        except Exception as e:
+            return self.error_could_not_fetch_master_account_by_id(
+                master_account_id, e
+            )
+        return self.warning_no_master_account_found_by_id(master_account_id) \
+            if not master_account else master_account[0]
+
     def fetch_master_account_acquired_ctokens(self, master_id, **kwargs):
         log.debug('')
         ctoken_pool = self.fetch_ctoken_pool()
@@ -217,24 +256,6 @@ class EWalletSessionManager():
             'master_id': kwargs.get('master_id'),
             'key': kwargs.get('key'),
         }
-
-#   @pysnooper.snoop('logs/ewallet.log')
-    def fetch_master_account_by_id(self, master_account_id, **kwargs):
-        log.debug('')
-        if not master_account_id or not isinstance(master_account_id, int):
-            return self.error_invalid_master_account_id(master_account_id)
-        try:
-            orm_session = kwargs.get('active_session') or \
-                self.res_utils.session_factory()
-            master_account = list(orm_session.query(
-               ResMaster
-            ).filter_by(user_id=master_account_id))
-        except Exception as e:
-            return self.error_could_not_fetch_master_account_by_id(
-                master_account_id, e
-            )
-        return self.warning_no_master_account_found_by_id(master_account_id) \
-            if not master_account else master_account[0]
 
     # TODO - Refactor
 #   @pysnooper.snoop()
@@ -4110,6 +4131,29 @@ class EWalletSessionManager():
         log.debug('TODO - Kill process')
         return self.unset_socket_handler()
 
+    def handle_master_action_login(self, **kwargs):
+        log.debug('')
+        instruction_set_validation = self.validate_instruction_set(kwargs)
+        if not instruction_set_validation \
+                or isinstance(instruction_set_validation, dict) \
+                and instruction_set_validation.get('failed'):
+            return instruction_set_validation
+        master_account = self.fetch_master_account_by_email(
+            kwargs.get('user_email'), **kwargs
+        )
+        if not master_account or isinstance(master_account, dict) and \
+                master_account.get('failed'):
+            return self.warning_could_not_fetch_master_account_by_email(
+                kwargs, instruction_set_validation, master_account
+            )
+        account_login = self.action_execute_user_instruction_set(
+            master_id=master_account.fetch_user_id(), **kwargs
+        )
+        return self.warning_could_not_login_master_account(
+            kwargs, account_login
+        ) if not account_login or isinstance(account_login, dict) and \
+            account_login.get('failed') else account_login
+
     def handle_master_action_inspect_ctoken(self, **kwargs):
         log.debug('')
         instruction_set_validation = self.validate_instruction_set(kwargs)
@@ -4122,7 +4166,6 @@ class EWalletSessionManager():
             kwargs, inspect_ctoken
         ) if not inspect_ctoken or isinstance(inspect_ctoken, dict) and \
             inspect_ctoken.get('failed') else inspect_ctoken
-
 
     def handle_master_action_inspect_ctokens(self, **kwargs):
         log.debug('')
@@ -4201,19 +4244,6 @@ class EWalletSessionManager():
             kwargs, account_logout
         ) if not account_logout or isinstance(account_logout, dict) and \
             account_logout.get('failed') else account_logout
-
-    def handle_master_action_login(self, **kwargs):
-        log.debug('')
-        instruction_set_validation = self.validate_instruction_set(kwargs)
-        if not instruction_set_validation \
-                or isinstance(instruction_set_validation, dict) \
-                and instruction_set_validation.get('failed'):
-            return instruction_set_validation
-        account_login = self.action_execute_user_instruction_set(**kwargs)
-        return self.warning_could_not_login_master_account(
-            kwargs, account_login
-        ) if not account_login or isinstance(account_login, dict) and \
-            account_login.get('failed') else account_login
 
     def handle_client_action_view_account(self, **kwargs):
         log.debug('')
@@ -6569,6 +6599,15 @@ class EWalletSessionManager():
     [ TODO ]: Fetch warning messages from message file by key codes.
     '''
 
+    def warning_could_not_fetch_master_account_by_email(self, *args):
+        instruction_set_response = res_utils.format_warning_response(**{
+            'failed': True, 'details': args,
+            'warning': 'Something went wrong. '
+                       'Could not fetch Master user account by email address.',
+        })
+        self.log_warning(**instruction_set_response)
+        return instruction_set_response
+
     def warning_ctoken_has_not_acquired_current_master_account(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
             'failed': True, 'details': args,
@@ -7981,6 +8020,23 @@ class EWalletSessionManager():
     '''
     [ TODO ]: Fetch error messages from message file by key codes.
     '''
+
+    def error_invalid_master_account_email(self, *args):
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
+            'error': 'Invalid Master user account by email address.',
+        })
+        self.log_error(**instruction_set_response)
+        return instruction_set_response
+
+    def error_could_not_fetch_master_account_by_email_address(self, *args):
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
+            'error': 'Something went wrong. '
+                     'Could not fetch Master user account by email address.',
+        })
+        self.log_error(**instruction_set_response)
+        return instruction_set_response
 
     def error_no_ctoken_found(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
