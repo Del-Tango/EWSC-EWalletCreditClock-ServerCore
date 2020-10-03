@@ -2521,6 +2521,31 @@ class EWalletSessionManager():
 
     # GENERAL
 
+    def write_issue_report_to_disk(self, issue_report):
+        log.debug('')
+        formatted_content = '================================================================================\n'\
+            '(EWSC) - ISSUE REPORT - {}\n'\
+            '================================================================================\n\n'\
+            'Issue: {}\n\n'\
+            'IP Address: {}\n\n'\
+            'Email: {}\n\n'\
+            'Timestamp: {}\n\n'\
+            'Details: {}\n\n'\
+            'Client Log Scrape:\n\n{}\n'.format(
+                issue_report['issue_id'], issue_report['name'],
+                issue_report['remote_address'], issue_report['user_email'],
+                issue_report['timestamp'], issue_report['details'],
+                issue_report['log_content']
+            )
+        write_to_file = res_utils.write_to_file(
+            issue_report['report_file'], formatted_content
+        )
+        return {
+            'failed': False,
+            'issue_id': issue_report['issue_id'],
+            'file_path': issue_report['report_file'],
+        }
+
     def decrease_master_account_subordonate_account_pool_size(self, **kwargs):
         log.debug('')
         if not kwargs.get('master_id'):
@@ -3079,6 +3104,31 @@ class EWalletSessionManager():
         log.debug('TODO - UNIMPLEMENTED')
     def action_stop_client_token_cleaner_cron(self, **kwargs):
         log.debug('TODO - UNIMPLEMENTED')
+
+    def action_report_issue(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('issue'):
+            return self.error_no_issue_to_report_found(kwargs)
+        formatted_issue = self.format_issue_report_data(**kwargs)
+        if not formatted_issue or isinstance(formatted_issue, dict) and \
+                formatted_issue.get('failed'):
+            return self.error_could_not_format_issue_report(
+                kwargs, formatted_issue
+            )
+        write_to_disk = self.write_issue_report_to_disk(formatted_issue)
+        if not write_to_disk or isinstance(write_to_disk, dict) and \
+                write_to_disk.get('failed'):
+            return self.warning_could_not_write_issue_report_to_disk(
+                kwargs, formatted_issue, write_to_disk
+            )
+        instruction_set_response = {
+            'failed': False,
+            'issue': write_to_disk['issue_id'],
+            'timestamp': formatted_issue['timestamp'],
+            'source': formatted_issue['remote_address'],
+            'contact': formatted_issue['user_email'],
+        }
+        return instruction_set_response
 
     def action_ctoken_keep_alive(self, **kwargs):
         log.debug('')
@@ -4156,6 +4206,29 @@ class EWalletSessionManager():
 
     # FORMATTERS
 
+#   @pysnooper.snoop()
+    def format_issue_report_data(self, **kwargs):
+        log.debug('')
+        report_file_data = res_utils.new_issue_report_file(**kwargs)
+        if not report_file_data or isinstance(report_file_data, dict) and \
+                report_file_data.get('failed'):
+            return self.error_could_not_create_new_issue_report_file(
+                kwargs, report_file_data
+            )
+        formatted_issue_report = {
+            'name': kwargs['issue'].get('name'),
+            'details': kwargs['issue'].get('details'),
+            'remote_address': kwargs.get('remote_addr'),
+            'user_email': kwargs['issue'].get('email'),
+            'log_content': res_utils.decode_message_base64(
+                kwargs['issue'].get('log')
+            ),
+            'report_file': report_file_data['file_path'],
+            'issue_id': report_file_data['issue_id'],
+            'timestamp': res_utils.format_datetime(datetime.datetime.now()),
+        }
+        return formatted_issue_report
+
     def format_worker_pool_entry(self, **kwargs):
         log.debug('')
         if not kwargs.get('values') or not isinstance(kwargs['values'], dict):
@@ -4190,6 +4263,14 @@ class EWalletSessionManager():
         '''
         log.debug('TODO - Kill process')
         return self.unset_socket_handler()
+
+    def handle_client_action_report_issue(self, **kwargs):
+        log.debug('')
+        issue_report = self.action_report_issue(**kwargs)
+        return self.warning_could_not_report_issue(
+            kwargs, issue_report
+        ) if not issue_report or isinstance(issue_report, dict) and \
+            issue_report.get('failed') else issue_report
 
     def handle_client_action_ctoken_keep_alive(self, **kwargs):
         log.debug('')
@@ -5941,6 +6022,15 @@ class EWalletSessionManager():
         }
         return handlers[kwargs['transfer']](**kwargs)
 
+    def handle_client_action_report(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('report'):
+            return self.error_no_client_action_report_target_specified(kwargs)
+        handlers = {
+            'issue': self.handle_client_action_report_issue,
+        }
+        return handlers[kwargs['report']](**kwargs)
+
     def handle_client_action_alive(self, **kwargs):
         log.debug('')
         if not kwargs.get('alive'):
@@ -6696,6 +6786,7 @@ class EWalletSessionManager():
             'verify': self.handle_client_action_verify,
             'acquire': self.handle_client_action_acquire,
             'alive': self.handle_client_action_alive,
+            'report': self.handle_client_action_report,
         }
         return handlers[kwargs['action']](**kwargs)
 
@@ -6748,6 +6839,24 @@ class EWalletSessionManager():
     '''
     [ TODO ]: Fetch warning messages from message file by key codes.
     '''
+
+    def warning_could_not_write_issue_report_to_disk(self, *args):
+        instruction_set_response = res_utils.format_warning_response(**{
+            'failed': True, 'details': args,
+            'warning': 'Something went wrong. '
+                       'Could not write IssueReport to disk.',
+        })
+        self.log_warning(**instruction_set_response)
+        return instruction_set_response
+
+    def warning_could_not_report_issue(self, *args):
+        instruction_set_response = res_utils.format_warning_response(**{
+            'failed': True, 'details': args,
+            'warning': 'Something went wrong. '
+                       'Could not report issue.',
+        })
+        self.log_warning(**instruction_set_response)
+        return instruction_set_response
 
     def warning_could_not_fetch_client_token(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
@@ -8278,6 +8387,40 @@ class EWalletSessionManager():
     '''
     [ TODO ]: Fetch error messages from message file by key codes.
     '''
+
+    def error_could_not_format_issue_report(self, *args):
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
+            'error': 'Something went wrong. '
+                     'Could not format new IssueReport data set.',
+        })
+        self.log_error(**instruction_set_response)
+        return instruction_set_response
+
+    def error_could_not_create_new_issue_report_file(self, *args):
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
+            'error': 'Something went wrong. '
+                     'Could not create new IssueReport file.',
+        })
+        self.log_error(**instruction_set_response)
+        return instruction_set_response
+
+    def error_no_issue_to_report_found(self, *args):
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
+            'error': 'No issue found to report.',
+        })
+        self.log_error(**instruction_set_response)
+        return instruction_set_response
+
+    def error_no_client_action_report_target_specified(self, *args):
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
+            'error': 'No client action Report target specified.',
+        })
+        self.log_error(**instruction_set_response)
+        return instruction_set_response
 
     def error_could_not_fetch_stoken_linked_session_by_id(self, *args):
         instruction_set_response = res_utils.format_error_response(**{

@@ -58,11 +58,25 @@ def handle_ewallet_session_manager_instruction_set_post_requests():
     elif isinstance(instruction_set, dict) and \
             instruction_set.get('controller') == 'system':
         return error_illegal_system_portal()
+    if request.environ.get('HTTP_X_FORWARDED_FOR') is None:
+        instruction_set.update({
+            'remote_addr': request.environ['REMOTE_ADDR']
+        })
+    else:
+        instruction_set.update({
+            'remote_addr': request.environ['HTTP_X_FORWARDED_FOR']
+        })
+    log.info(
+        'Incomming request from remote address - {} -'.format(
+            instruction_set['remote_addr']
+        )
+    )
     return jsonify(
         ewallet_session_manager.session_manager_controller(
             **instruction_set
         )
     )
+
 
 # ERRORS
 

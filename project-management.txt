@@ -80,8 +80,8 @@
     - . - (EWSC-x-, EWCC- -, EWAT- -) Implement client action AcquireMaster
     - . - (EWSC-x-, EWCC- -, EWAT- -) Implement client action STokenKeepAlive
     - . - (EWSC-x-, EWCC- -, EWAT- -) Implement client action CTokenKeepAlive
-    -   - (EWSC- -, EWCC- -, EWAT- -) Implement client action IssueReport
-    - (EWCC) Make library importable
+    - . - (EWSC-x-, EWCC- -, EWAT- -) Implement client action IssueReport
+    -   - (EWCC) Make library importable
     - (EWSC) Add system level in error and warning handlers
     - (EWSC) Add EWDox support for client action client ID validity checkers
     - (EWSC) Add EWDox support for client_action session token validity checkers
@@ -447,6 +447,13 @@
                 - SToken (Linked | Unlinked)
 
     - Client action IssueReport
+        - State Oriented Restrictions:
+            - User Account States:
+                - Logged (In | Out)
+            - CToken States:
+                - Master (Linked | Unlinked)
+                - SToken (Linked | Unlinked)
+
     - Client action ReleaseMaster     #
 
 

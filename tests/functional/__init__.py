@@ -46,6 +46,7 @@ from . import test_user_check_stoken_session
 from . import test_user_check_stoken_status
 from . import test_user_stoken_keep_alive
 from . import test_user_ctoken_keep_alive
+from . import test_user_issue_report
 
 from . import test_user_create_account
 from . import test_user_create_master

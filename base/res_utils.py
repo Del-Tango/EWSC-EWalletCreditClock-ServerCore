@@ -5,6 +5,8 @@ import time
 import random
 import pysnooper
 import hashlib
+import base64
+import os
 
 from pytz import timezone
 from sqlalchemy import create_engine
@@ -91,6 +93,69 @@ class ResUtils():
 
     # GENERAL
 
+#   @pysnooper.snoop()
+    def write_to_file(self, file_path, file_content, mode='a'):
+        log.debug('')
+        with open(file_path, mode) as f:
+            f.write(file_content)
+            f.close()
+        return True
+
+#   @pysnooper.snoop()
+    def new_issue_report_file(self, **kwargs):
+        timestamp = str(kwargs.get('timestamp') or time.time())
+        report_dir = config.system_config['reports_dir'] \
+            + config.system_config['issues_dir']
+        address = str(kwargs.get('remote_addr') or '0.0.0.0')
+        email = kwargs.get('user_email') or 'SCore@system.ro'
+        suffix = 'issue'
+        report_file_name = address + ':' + timestamp
+        issue_id = self.encode_message_base64(report_file_name)
+        report_file_path = report_dir + report_file_name + '.' + suffix
+        if os.path.exists(report_file_path):
+            count = 1
+            while True:
+                report_file_name = '(' + str(count) + ')' + report_file_name
+                if os.path.exists(report_dir + report_file_name + '.' + suffix):
+                    count += 1
+                    continue
+                issue_id = self.encode_message_base64(report_file_name)
+                report_file_path = report_dir + report_file_name + '.' + suffix
+                break
+        try:
+            report_file = open(report_file_path, 'w')
+            report_file.write('')
+            report_file.close()
+        except Exception as e:
+            return self.error_could_not_create_issue_report_file(
+                kwargs, timestamp, report_dir, address, email, suffix,
+                report_file_name, report_file_path, e
+            )
+        return {
+            'failed': False,
+            'file_name': report_file_name,
+            'file_dir': report_dir,
+            'file_path': config.system_config['server_directory']
+                + report_file_path,
+            'issue_id': issue_id,
+        }
+
+    def encode_message_base64(self, message):
+        if not isinstance(message, str):
+            return self.error_invalid_message(message)
+        message_bytes = message.encode('ascii')
+        base64_bytes = base64.b64encode(message_bytes)
+        base64_message = base64_bytes.decode('ascii')
+        return base64_message
+
+    def decode_message_base64(self, base64_message):
+        if not isinstance(base64_message, str):
+            return self.error_invalid_message(base64_message)
+        base64_bytes = base64_message.encode('ascii')
+        message_bytes = base64.b64decode(base64_bytes)
+        message = message_bytes.decode('ascii')
+        return message
+
     def hash_password(self, password):
         return str(hashlib.sha256(password.encode()).hexdigest())
 
@@ -132,12 +197,29 @@ class ResUtils():
 
     # ERRORS
 
+    def error_could_not_create_issue_report_file(self, *args):
+        response = {
+            'failed': True,
+            'error': 'Something went wrong. '
+                     'Could not create new IssueReport file. '
+                     'Details: {}'.format(args)
+        }
+        return response
+
+    def error_invalid_message(self, *args):
+        response = {
+            'failed': True,
+            'error': 'Invalid message. '
+                     'Details: {}'.format(args)
+        }
+        return response
+
     def error_no_time_unit_specified(self, *args):
         response = {
             'failed': True,
-            'error': 'No time unit specified.'
+            'error': 'No time unit specified. '
+                     'Details: {}'.format(args)
         }
-        log.error(response['error'])
         return response
 
     def error_no_minutes_specified(self, *args):
@@ -145,7 +227,6 @@ class ResUtils():
             'failed': True,
             'error': 'No minutes specified.'
         }
-        log.error(response['error'])
         return response
 
 res_utils = ResUtils()
@@ -158,7 +239,7 @@ def log_init():
     log = logging.getLogger(log_config['log_name'])
     log.setLevel(logging.DEBUG)
     file_handler = logging.FileHandler(
-        log_config['log_dir'] + '/' + log_config['log_file'], 'a'
+        log_config['log_dir'] + log_config['log_file'], 'a'
     )
     formatter = logging.Formatter(
         log_config['log_record_format'],

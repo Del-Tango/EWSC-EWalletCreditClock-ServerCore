@@ -9,11 +9,15 @@ class Config():
 
     def __init__(self, **kwargs):
         self.sys_boot_date = datetime.datetime.now()
+        base_directory = os.path.dirname(os.path.realpath(__file__))
         self.system_config = {
             'run_mode': 'prepay',
-            'server_directory': os.path.dirname(os.path.realpath(__file__)),
+            'base_directory': str(base_directory) + '/',
+            'server_directory': str(os.path.split(base_directory)[0]) + '/',
+            'reports_dir': 'reports/',
+            'issues_dir': 'issue_reports/',
             'conf_file': 'ewallet.conf',
-            'conf_dir': 'conf',
+            'conf_dir': 'conf/',
             'socket_handler_address': '127.0.0.1',
             'esm_instruction_port': 8080,
             'esm_response_port': 8081,
@@ -29,7 +33,7 @@ class Config():
         }
         self.log_config = {
             'log_name': 'EWallet',
-            'log_dir': 'logs',
+            'log_dir': 'logs/',
             'log_level': 'DEBUG',
             'log_file': 'ewallet.log',
             'log_record_format': '[ %(asctime)s ] %(name)s '
