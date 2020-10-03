@@ -3063,6 +3063,41 @@ class EWalletSessionManager():
     def action_stop_client_token_cleaner_cron(self, **kwargs):
         log.debug('TODO - UNIMPLEMENTED')
 
+    def action_inspect_master_acquired_ctoken(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('ctoken'):
+            return self.error_no_ctoken_found(kwargs)
+        # Fetch Master account data from EWallet Session
+        sanitized_instruction_set = res_utils.remove_tags_from_command_chain(
+            kwargs, 'inspect'
+        )
+        active_master = self.action_execute_user_instruction_set(
+            inspect='ctokens', **sanitized_instruction_set
+        )
+        if not active_master or isinstance(active_master, dict) and \
+                active_master.get('failed'):
+            return self.warning_could_not_fetch_ewallet_session_active_master_id(
+                kwargs, active_master
+            )
+        ctoken = self.fetch_client_token_by_label(kwargs['ctoken'])
+        if not ctoken or isinstance(ctoken, dict) and \
+                ctoken.get('failed'):
+            return self.warning_could_not_fetch_client_token(
+                kwargs, active_master, ctoken
+            )
+        check = ctoken.check_has_master(active_master['master_id'])
+        if not check:
+            return self.warning_ctoken_has_not_acquired_current_master_account(
+                kwargs, active_master, ctoken, check
+            )
+        instruction_set_response = {
+            'failed': False,
+            'account': active_master['master'],
+            'ctoken': kwargs['ctoken'],
+            'ctoken_data': ctoken.fetch_token_values(),
+        }
+        return instruction_set_response
+
     def action_inspect_master_acquired_ctokens(self, **kwargs):
         log.debug('')
         # Fetch Master account data from EWallet Session
@@ -4074,6 +4109,20 @@ class EWalletSessionManager():
         '''
         log.debug('TODO - Kill process')
         return self.unset_socket_handler()
+
+    def handle_master_action_inspect_ctoken(self, **kwargs):
+        log.debug('')
+        instruction_set_validation = self.validate_instruction_set(kwargs)
+        if not instruction_set_validation \
+                or isinstance(instruction_set_validation, dict) \
+                and instruction_set_validation.get('failed'):
+            return instruction_set_validation
+        inspect_ctoken = self.action_inspect_master_acquired_ctoken(**kwargs)
+        return self.warning_could_not_inspect_ctoken(
+            kwargs, inspect_ctoken
+        ) if not inspect_ctoken or isinstance(inspect_ctoken, dict) and \
+            inspect_ctoken.get('failed') else inspect_ctoken
+
 
     def handle_master_action_inspect_ctokens(self, **kwargs):
         log.debug('')
@@ -5742,6 +5791,7 @@ class EWalletSessionManager():
             return self.error_no_master_action_inspect_target_specified(kwargs)
         handlers = {
             'ctokens': self.handle_master_action_inspect_ctokens,
+            'ctoken': self.handle_master_action_inspect_ctoken,
         }
         return handlers[kwargs['inspect']](**kwargs)
 
@@ -6518,6 +6568,23 @@ class EWalletSessionManager():
     '''
     [ TODO ]: Fetch warning messages from message file by key codes.
     '''
+
+    def warning_ctoken_has_not_acquired_current_master_account(self, *args):
+        instruction_set_response = res_utils.format_warning_response(**{
+            'failed': True, 'details': args,
+            'warning': 'CToken has not acquired active Master user account.',
+        })
+        self.log_warning(**instruction_set_response)
+        return instruction_set_response
+
+    def warning_could_not_inspect_ctoken(self, *args):
+        instruction_set_response = res_utils.format_warning_response(**{
+            'failed': True, 'details': args,
+            'warning': 'Something went wrong. '
+                       'Could not inspect acquired CToken.',
+        })
+        self.log_warning(**instruction_set_response)
+        return instruction_set_response
 
     def warning_could_not_fetch_ewallet_session_active_master_id(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
@@ -7914,6 +7981,14 @@ class EWalletSessionManager():
     '''
     [ TODO ]: Fetch error messages from message file by key codes.
     '''
+
+    def error_no_ctoken_found(self, *args):
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
+            'error': 'No CToken found.',
+        })
+        self.log_error(**instruction_set_response)
+        return instruction_set_response
 
     def error_no_acquired_ctokens_found_for_master_account(self, *args):
         instruction_set_response = res_utils.format_error_response(**{

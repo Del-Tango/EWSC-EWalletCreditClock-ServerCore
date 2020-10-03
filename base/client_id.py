@@ -39,7 +39,7 @@ class ClientID(Token):
         log.debug('')
         res = super(ClientID, self).fetch_token_values()
         values = {
-            'stoken': self.stoken,
+            'stoken': self.stoken.fetch_label(),
             'acquired_master': self.acquired_master,
         }
         values.update(res)
@@ -65,6 +65,13 @@ class ClientID(Token):
         if not stoken:
             return False
         return True if stoken.fetch_label() == stoken_label else False
+
+    def check_has_master(self, master_id):
+        log.debug('')
+        acquired_master_id = self.fetch_master()
+        if not master_id:
+            return False
+        return True if acquired_master_id == master_id else False
 
     # SETTERS
 

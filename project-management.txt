@@ -73,8 +73,8 @@
     - x - (EWSC) Implement master action UnlinkAccount
     - x - (EWSC) Implement master action RecoverAccount
     - x - (EWSC) Implement master action InspectCTokens
-    -   - (EWSC) Implement master action InspectCToken
-    - (EWSC) Implement master action InspectSubPool
+    - x - (EWSC) Implement master action InspectCToken
+    -   - (EWSC) Implement master action InspectSubPool
     - (EWSC) Implement master action InspectSub
     - (EWSC) Add system level in error and warning handlers
     - (EWSC- -, EWCC- -, EWAT- -) Implement EWallet Session keep alive signal
@@ -501,11 +501,24 @@
             - SToken States:
                 - Sesion Plugged
 
-    - Master action InspectCToken       #
-    - Master action ViewLoginRecords    #
-    - Master action ViewLogoutRecords   #
+    - Master action InspectCToken
+        - State Oriented Restrictions:
+            - Master Account States:
+                - Logged In
+                - Not Pending Unlink
+            - CToken States:
+                - Master (Linked | Unlink)
+                - SToken Linked
+            - SToken States:
+                - Sesion Plugged
+        - Relationship Oriented Restrictions:
+            - CToken Relationships:
+                - Master Acquired
+
     - Master action InspectSubPool      #
     - Master action InspectSub          #
+    - Master action ViewLoginRecords    #
+    - Master action ViewLogoutRecords   #
 
 - (EWSC) - System Actions:
 

@@ -37,15 +37,15 @@ class Token():
     def fetch_token_values(self):
         log.debug('')
         return {
-            'create_date': self.create_date or \
+            'create_date': res_utils.format_datetime(self.create_date) or \
                 self.error_no_token_create_date_found(),
-            'write_date': self.write_date or \
+            'write_date': res_utils.format_datetime(self.write_date) or \
                 self.error_no_token_write_date_found(),
             'label': self.label or \
                 self.error_no_token_label_found(),
             'active': self.active,
             'unlink': self.unlink_flag,
-            'valid_to': self.valid_to or \
+            'valid_to': res_utils.format_datetime(self.valid_to) or \
                 self.error_no_valid_to_date_found(),
         }
 
