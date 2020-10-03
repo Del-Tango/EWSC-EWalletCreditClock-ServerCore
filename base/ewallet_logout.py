@@ -16,9 +16,11 @@ class EWalletLogout(Base):
 
     logout_id = Column(Integer, primary_key=True)
     user_id = Column(Integer, ForeignKey('res_user.user_id'))
+    master_id = Column(Integer, ForeignKey('res_master.user_id'))
     logout_date = Column(DateTime, default=datetime.datetime.now())
     logout_status = Column(Boolean, server_default=u'false')
 
     def __init__(self, *args, **kwargs):
-        self.user_id = kwargs.get('user_id') or None
+        self.user_id = kwargs.get('user_id')
+        self.master_id = kwargs.get('master_id')
         self.logout_status = kwargs.get('logout_status') or False

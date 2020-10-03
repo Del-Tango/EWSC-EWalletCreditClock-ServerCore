@@ -1067,6 +1067,32 @@ class EWallet(Base):
     def action_receive_transfer_record(self, **kwargs):
         log.debug('TODO - UNIMPLEMENTED')
 
+    def action_view_master_logout_records(self, **kwargs):
+        log.debug('')
+        active_master = self.fetch_active_session_master()
+        if not active_master or isinstance(active_master, dict) and \
+                active_master.get('failed'):
+            return self.error_could_not_fetch_active_session_master(
+                kwargs, active_master
+            )
+        try:
+            logout_records = list(kwargs['active_session'].query(
+                EWalletLogout
+            ).filter_by(master_id=active_master.fetch_user_id()))
+        except:
+            return self.warning_could_not_view_logout_records(
+                active_master.fetch_user_name(), kwargs
+            )
+        command_chain_response = {
+            'failed': False,
+            'account': active_master.fetch_user_email(),
+            'logout_records': {
+                item.logout_id: res_utils.format_datetime(item.logout_date) \
+                for item in logout_records
+            },
+        }
+        return command_chain_response
+
     def action_view_master_login_records(self, **kwargs):
         log.debug('')
         active_master = self.fetch_active_session_master()
@@ -3418,6 +3444,23 @@ class EWallet(Base):
     [ NOTES ]: Enviroment checks for proper action execution are performed here.
     '''
 
+    def handle_master_action_view_logout_records(self, **kwargs):
+        log.debug('')
+        check_logged_in = self.check_master_logged_in()
+        if not check_logged_in:
+            return self.warning_master_not_logged_in(kwargs, check_logged_in)
+        check_unlinked = self.check_master_account_flag_for_unlink()
+        if check_unlinked:
+            return self.warning_master_account_flagged_for_removal(
+                kwargs, check_logged_in, check_unlinked
+            )
+        check_frozen = self.check_master_account_frozen()
+        if check_frozen:
+            return self.warning_master_account_frozen(
+                kwargs, check_logged_in, check_unlinked, check_frozen
+            )
+        return self.action_view_master_logout_records(**kwargs)
+
     def handle_master_action_view_login_records(self, **kwargs):
         log.debug('')
         check_logged_in = self.check_master_logged_in()
@@ -4317,7 +4360,7 @@ class EWallet(Base):
         handlers = {
             'account': self.handle_master_action_view_account,
             'login': self.handle_master_action_view_login_records,
-#           'logout': self.handle_master_action_view_logout_records,
+            'logout': self.handle_master_action_view_logout_records,
         }
         return handlers[kwargs['view']](**kwargs)
 

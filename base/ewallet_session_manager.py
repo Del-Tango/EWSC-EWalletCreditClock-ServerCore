@@ -4131,6 +4131,19 @@ class EWalletSessionManager():
         log.debug('TODO - Kill process')
         return self.unset_socket_handler()
 
+    def handle_master_action_view_logout_records(self, **kwargs):
+        log.debug('')
+        instruction_set_validation = self.validate_instruction_set(kwargs)
+        if not instruction_set_validation \
+                or isinstance(instruction_set_validation, dict) \
+                and instruction_set_validation.get('failed'):
+            return instruction_set_validation
+        view_logout = self.action_execute_user_instruction_set(**kwargs)
+        return self.warning_could_not_view_master_account_logout_records(
+            kwargs, view_logout
+        ) if not view_logout or isinstance(view_logout, dict) and \
+            view_logout.get('failed') else view_logout
+
     def handle_master_action_view_login_records(self, **kwargs):
         log.debug('')
         instruction_set_validation = self.validate_instruction_set(kwargs)
@@ -5842,15 +5855,14 @@ class EWalletSessionManager():
         }
         return handlers[kwargs['transfer']](**kwargs)
 
-    # TODO
     def handle_master_action_view(self, **kwargs):
-        log.debug('TODO - 2 Actions unimplemented')
+        log.debug('')
         if not kwargs.get('view'):
             return self.error_no_master_action_view_target_specified(kwargs)
         handlers = {
             'account': self.handle_master_action_view_account,
             'login': self.handle_master_action_view_login_records,
-#           'logout': self.handle_master_action_view_logout_records,
+            'logout': self.handle_master_action_view_logout_records,
         }
         return handlers[kwargs['view']](**kwargs)
 
@@ -6639,6 +6651,15 @@ class EWalletSessionManager():
     '''
     [ TODO ]: Fetch warning messages from message file by key codes.
     '''
+
+    def warning_could_not_view_master_account_logout_records(self, *args):
+        instruction_set_response = res_utils.format_warning_response(**{
+            'failed': True, 'details': args,
+            'warning': 'Something went wrong. '
+                       'Could not view Master account logout records.',
+        })
+        self.log_warning(**instruction_set_response)
+        return instruction_set_response
 
     def warning_could_not_view_master_account_login_records(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{

@@ -77,11 +77,11 @@
     - x - (EWSC) Implement master action InspectSubPool
     - x - (EWSC) Implement master action InspectSub
     - x - (EWSC) Implement master action ViewLoginRecords
-    -   - (EWSC) Implement master action ViewLogoutRecords
-    - (EWSC) Add system level in error and warning handlers
-    - (EWSC- -, EWCC- -, EWAT- -) Implement EWallet Session keep alive signal
+    - x - (EWSC) Implement master action ViewLogoutRecords
+    -   - (EWSC- -, EWCC- -, EWAT- -) Implement EWallet Session keep alive signal
     - (EWSC- -, EWCC- -, EWAT- -) Implement issue report
     - (EWCC) Make library importable
+    - (EWSC) Add system level in error and warning handlers
     - (EWSC) Add EWDox support for client action client ID validity checkers
     - (EWSC) Add EWDox support for client_action session token validity checkers
     - (EWSC) Add EWDox support for user action Forcefully-UnlinkAccount
@@ -547,7 +547,16 @@
             - SToken States:
                 - Sesion Plugged
 
-    - Master action ViewLogoutRecords   #
+    - Master action ViewLogoutRecords
+        - State Oriented Restrictions:
+            - Master Account States:
+                - Logged In
+                - Not Pending Unlink
+            - CToken States:
+                - Master (Linked | Unlink)
+                - SToken Linked
+            - SToken States:
+                - Sesion Plugged
 
 - (EWSC) - System Actions:
 

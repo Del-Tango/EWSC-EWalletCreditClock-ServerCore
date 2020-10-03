@@ -1,5 +1,5 @@
+# SYSTEM TESTS
 from . import test_ewallet_socket_handler
-
 from . import test_system_session_sweep_cleanup
 from . import test_system_session_target_cleanup
 from . import test_system_worker_cleanup
@@ -19,7 +19,7 @@ from . import test_system_freeze_master
 from . import test_system_unfreeze_master
 from . import test_system_increase_master_subpool
 from . import test_system_decrease_master_subpool
-
+# MASTER TESTS
 from . import test_master_account_login
 from . import test_master_account_logout
 from . import test_master_view_account
@@ -31,11 +31,11 @@ from . import test_master_inspect_ctoken
 from . import test_master_inspect_subpool
 from . import test_master_inspect_subordonate
 from . import test_master_view_login
-
+from . import test_master_view_logout
+# CLIENT TESTS
 from . import test_user_request_clientid
 from . import test_user_request_stoken
 from . import test_user_acquire_master
-
 from . import test_user_check_ctoken_valid
 from . import test_user_check_ctoken_linked
 from . import test_user_check_ctoken_session
