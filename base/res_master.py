@@ -74,6 +74,15 @@ class ResMaster(ResUser):
         log.debug('')
         return self.is_active
 
+    def fetch_subordonate_from_pool_by_id(self, sub_id, **kwargs):
+        log.debug('')
+        subpool = kwargs.get('subpool') or \
+            self.fetch_subordonate_account_pool()
+        for account in subpool:
+            if account.fetch_user_id() == sub_id:
+                return account
+        return self.warning_could_not_fetch_subordonate_by_id(sub_id, kwargs)
+
     def fetch_subpool_email_address_set(self):
         log.debug('')
         subpool = self.fetch_subordonate_account_pool()
@@ -99,9 +108,10 @@ class ResMaster(ResUser):
         return self.key_code
 
 #   @pysnooper.snoop('logs/ewallet.log')
-    def fetch_subordonate_account_pool(self):
+    def fetch_subordonate_account_pool(self, obj=True):
         log.debug('')
-        return self.subordonate_pool
+        return self.subordonate_pool if obj else \
+            [account.user_id for account in self.subordonate_pool]
 
     def fetch_subbordonate_account_pool_size(self):
         log.debug('')
@@ -212,6 +222,25 @@ class ResMaster(ResUser):
 
     # GENERAL
 
+    def inspect_subordonate(self, sub_id, **kwargs):
+        log.debug('')
+        subpool = self.fetch_subordonate_account_pool(obj=False)
+        if not subpool:
+            return self.warning_subordonate_pool_empty(subpool)
+        if sub_id not in subpool:
+            return self.warning_not_a_subordonate_account_id(sub_id, kwargs)
+        try:
+            subordonate = self.fetch_subordonate_from_pool_by_id(sub_id)
+        except Exception as e:
+            return self.error_could_not_fetch_subordonate_from_pool_by_id(
+                sub_id, kwargs, subpool, e
+            )
+        command_chain_response = {
+            'failed': False,
+            'subordonate': subordonate.fetch_user_values(),
+        }
+        return command_chain_response
+
     def inspect_subpool(self):
         log.debug('')
         subpool = self.fetch_subordonate_account_pool()
@@ -307,6 +336,24 @@ class ResMaster(ResUser):
 
     # WARNINGS
 
+    def warning_not_a_subordonate_account_id(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Invalid Subordonate account by ID. '
+                       'Details: {}'.format(args),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
+
+    def warning_could_not_fetch_subordonate_by_id(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Could not fetch Subordonate account by ID. '
+                       'Details: {}'.format(args),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
+
     def warning_subordonate_pool_empty(self, *args):
         command_chain_response = {
             'failed': True,
@@ -387,6 +434,16 @@ class ResMaster(ResUser):
         return command_chain_response
 
     # ERRORS
+
+    def error_could_not_fetch_subordonate_from_pool_by_id(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Something went wrong. '
+                     'Could not fetch Subordonate account from pool by ID. '
+                     'Details: {}'.format(args),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
 
     def error_could_not_format_subordonate_pool(self, *args):
         command_chain_response = {

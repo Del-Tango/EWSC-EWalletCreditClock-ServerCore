@@ -869,6 +869,34 @@ class EWallet(Base):
 
     # GENERAL
 
+    def inspect_master_subordonate(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('subordonate'):
+            return self.error_no_subordonate_account_id_specified(kwargs)
+        master_account = kwargs.get('master') or \
+            self.fetch_active_session_master()
+        if not master_account or isinstance(master_account, dict) and \
+                master_account.get('failed'):
+            return self.error_no_master_account_found(kwargs, master_account)
+        try:
+            subordonate = master_account.inspect_subordonate(
+                kwargs['subordonate'], **kwargs
+            )
+        except Exception as e:
+            return self.error_could_not_inspect_master_account_subordonate(
+                kwargs, master_account, e
+            )
+        if not subordonate or isinstance(subordonate, dict) and \
+                subordonate.get('failed'):
+            return self.warning_could_not_inspect_master_subordonate_account(
+                kwargs, master_account, subordonate
+            )
+        command_chain_response = {
+            'failed': False,
+            'subordonate': subordonate['subordonate'],
+        }
+        return command_chain_response
+
     def inspect_master_subpool(self, **kwargs):
         log.debug('')
         master_account = kwargs.get('master') or \
@@ -879,7 +907,7 @@ class EWallet(Base):
         try:
             subpool = master_account.inspect_subpool()
         except Exception as e:
-            return self.error_could_not_inspect_master_account(
+            return self.error_could_not_inspect_master_account_subpool(
                 kwargs, master_account, e
             )
         if not subpool or isinstance(subpool, dict) and \
@@ -892,7 +920,6 @@ class EWallet(Base):
             'subpool': subpool['subpool'],
         }
         return command_chain_response
-
 
     def recover_master_account(self, **kwargs):
         log.debug('')
@@ -1040,6 +1067,28 @@ class EWallet(Base):
     def action_receive_transfer_record(self, **kwargs):
         log.debug('TODO - UNIMPLEMENTED')
 
+    def action_inspect_master_subordonate(self, **kwargs):
+        log.debug('')
+        master = self.fetch_active_session_master()
+        if not master or isinstance(master, dict) and \
+                master.get('failed'):
+            return self.error_could_not_fetch_active_session_master(
+                kwargs, master
+            )
+        inspect_sub = self.inspect_master_subordonate(master=master, **kwargs)
+        if not inspect_sub or isinstance(inspect_sub, dict) and \
+                inspect_sub.get('failed'):
+            return self.warning_could_not_inspect_master_subordonate_account(
+                kwargs, master, inspect_sub
+            )
+        session_values = self.fetch_active_session_values()
+        command_chain_response = {
+            'failed': False,
+            'account': master.fetch_user_email(),
+            'subordonate': inspect_sub['subordonate'],
+        }
+        return command_chain_response
+
     def action_inspect_master_subpool(self, **kwargs):
         log.debug('')
         master = self.fetch_active_session_master()
@@ -1051,7 +1100,9 @@ class EWallet(Base):
         inspect_subpool = self.inspect_master_subpool(master=master, **kwargs)
         if not inspect_subpool or isinstance(inspect_subpool, dict) and \
                 inspect_subpool.get('failed'):
-            kwargs['active_session'].rollback()
+            return self.warning_could_not_inspect_master_account_subpool(
+                kwargs, master, inspect_subpool
+            )
         session_values = self.fetch_active_session_values()
         command_chain_response = {
             'failed': False,
@@ -3341,8 +3392,25 @@ class EWallet(Base):
     [ NOTES ]: Enviroment checks for proper action execution are performed here.
     '''
 
+    def handle_master_action_inspect_subordonate(self, **kwargs):
+        log.debug('')
+        check_logged_in = self.check_master_logged_in()
+        if not check_logged_in:
+            return self.warning_master_not_logged_in(kwargs, check_logged_in)
+        check_unlinked = self.check_master_account_flag_for_unlink()
+        if check_unlinked:
+            return self.warning_master_account_flagged_for_removal(
+                kwargs, check_logged_in, check_unlinked
+            )
+        check_frozen = self.check_master_account_frozen()
+        if check_frozen:
+            return self.warning_master_account_frozen(
+                kwargs, check_logged_in, check_unlinked, check_frozen
+            )
+        return self.action_inspect_master_subordonate(**kwargs)
+
     def handle_master_action_inspect_subpool(self, **kwargs):
-        log.debug('TODO - FIX ME')
+        log.debug('')
         check_logged_in = self.check_master_logged_in()
         if not check_logged_in:
             return self.warning_master_not_logged_in(kwargs, check_logged_in)
@@ -4205,6 +4273,7 @@ class EWallet(Base):
             return self.error_no_master_action_inspect_target_specified(kwargs)
         handlers = {
             'subpool': self.handle_master_action_inspect_subpool,
+            'subordonate': self.handle_master_action_inspect_subordonate,
         }
         return handlers[kwargs['inspect']](**kwargs)
 
@@ -4739,6 +4808,16 @@ class EWallet(Base):
     '''
     [ TODO ]: Fetch warning messages from message file by key codes.
     '''
+
+    def warning_could_not_inspect_master_subordonate_account(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Something went wrong. '
+                       'Could not inspect Master user account Subordonate. '
+                       'Details: {}'.format(args),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
 
     def warning_could_not_inspect_master_account_subpool(self, *args):
         command_chain_response = {
@@ -5700,6 +5779,35 @@ class EWallet(Base):
     '''
     [ TODO ]: Fetch error messages from message file by key codes.
     '''
+
+    def error_no_subordonate_account_id_specified(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No Subordonate user account ID specified. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_could_not_inspect_master_account_subordonate(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Something went wrong. '
+                     'Could not inspect Master user account Subordonate. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_could_not_inspect_master_account_subpool(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Something went wrong. '
+                     'Could not inspect Master user account Subordonate pool. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
 
     def error_no_master_action_inspect_target_specified(self, *args):
         command_chain_response = {

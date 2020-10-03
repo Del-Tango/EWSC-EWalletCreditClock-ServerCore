@@ -4131,6 +4131,19 @@ class EWalletSessionManager():
         log.debug('TODO - Kill process')
         return self.unset_socket_handler()
 
+    def handle_master_action_inspect_subordonate(self, **kwargs):
+        log.debug('')
+        instruction_set_validation = self.validate_instruction_set(kwargs)
+        if not instruction_set_validation \
+                or isinstance(instruction_set_validation, dict) \
+                and instruction_set_validation.get('failed'):
+            return instruction_set_validation
+        inspect_sub = self.action_execute_user_instruction_set(**kwargs)
+        return self.warning_could_not_inspect_subordonate_account(
+            kwargs, inspect_sub
+        ) if not inspect_sub or isinstance(inspect_sub, dict) and \
+            inspect_sub.get('failed') else inspect_sub
+
     def handle_master_action_inspect_subpool(self, **kwargs):
         log.debug('')
         instruction_set_validation = self.validate_instruction_set(kwargs)
@@ -5836,7 +5849,7 @@ class EWalletSessionManager():
             'ctokens': self.handle_master_action_inspect_ctokens,
             'ctoken': self.handle_master_action_inspect_ctoken,
             'subpool': self.handle_master_action_inspect_subpool,
-#           'subordonate': self.handle_master_action_inspect_subordonate,
+            'subordonate': self.handle_master_action_inspect_subordonate,
         }
         return handlers[kwargs['inspect']](**kwargs)
 
@@ -6613,6 +6626,15 @@ class EWalletSessionManager():
     '''
     [ TODO ]: Fetch warning messages from message file by key codes.
     '''
+
+    def warning_could_not_inspect_subordonate_account(self, *args):
+        instruction_set_response = res_utils.format_warning_response(**{
+            'failed': True, 'details': args,
+            'warning': 'Something went wrong. '
+                       'Could not inspect Master subordonate account.',
+        })
+        self.log_warning(**instruction_set_response)
+        return instruction_set_response
 
     def warning_could_not_inspect_subpool(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{

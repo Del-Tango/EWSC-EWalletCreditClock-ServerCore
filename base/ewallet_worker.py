@@ -1094,6 +1094,35 @@ class EWalletWorker():
     [ NOTE ]: Command chain responses are formulated here.
     '''
 
+    def action_inspect_master_subordonate(self, **kwargs):
+        log.debug('')
+        # Fetch ewallet session by token keys
+        ewallet_session = self.fetch_ewallet_session_by_client_session_tokens(
+            kwargs['client_id'], kwargs['session_token']
+        )
+        if not ewallet_session or isinstance(ewallet_session, dict) and \
+                ewallet_session.get('failed'):
+            return ewallet_session
+        sanitized_instruction_set = res_utils.remove_tags_from_command_chain(
+            kwargs, 'controller', 'ctype', 'action', 'inspect', 'active_session'
+        )
+        # Execute action in session
+        orm_session = ewallet_session.fetch_active_session()
+        inspect = ewallet_session.ewallet_controller(
+            controller='master', ctype='action', action='inspect',
+            inspect='subordonate', active_session=orm_session,
+            **sanitized_instruction_set
+        )
+        # Formulate response
+        response = self.warning_could_not_inspect_master_subordonate(
+            ewallet_session, kwargs, inspect
+        ) if not inspect or \
+            isinstance(inspect, dict) and \
+            inspect.get('failed') else inspect
+        # Respond to session manager
+        self.send_instruction_response(response)
+        return response
+
     def action_inspect_master_subordonate_pool(self, **kwargs):
         log.debug('')
         # Fetch ewallet session by token keys
@@ -1114,7 +1143,7 @@ class EWalletWorker():
             **sanitized_instruction_set
         )
         # Formulate response
-        response = self.warning_could_not_inspect_master_account(
+        response = self.warning_could_not_inspect_master_subordonate_pool(
             ewallet_session, kwargs, inspect
         ) if not inspect or \
             isinstance(inspect, dict) and \
@@ -3542,6 +3571,10 @@ class EWalletWorker():
 
     # ACTION HANDLERS
 
+    def handle_master_action_inspect_subordonate(self, **kwargs):
+        log.debug('')
+        return self.action_inspect_master_subordonate(**kwargs)
+
     def handle_master_action_inspect_subpool(self, **kwargs):
         log.debug('')
         return self.action_inspect_master_subordonate_pool(**kwargs)
@@ -3923,6 +3956,7 @@ class EWalletWorker():
         handlers = {
             'ctokens': self.handle_master_action_inspect_ctokens,
             'subpool': self.handle_master_action_inspect_subpool,
+            'subordonate': self.handle_master_action_inspect_subordonate,
         }
         return handlers[kwargs['inspect']](**kwargs)
 
@@ -4589,7 +4623,7 @@ class EWalletWorker():
     [ TODO ]: Fetch warning messages from message file by key codes.
     '''
 
-    def warning_could_not_inspect_master_account(self, *args):
+    def warning_could_not_inspect_master_subordonate_pool(self, *args):
         instruction_set_response = {
             'failed': True,
             'warning': 'Something went wrong. '
@@ -4599,7 +4633,16 @@ class EWalletWorker():
         log.warning(instruction_set_response['warning'])
         return instruction_set_response
 
-    def warning_could_not_fetch_active_session_master_account_id(self, *args):
+    def warning_could_not_inspect_master_subordonate(self, *args):
+        instruction_set_response = {
+            'failed': True,
+            'warning': 'Something went wrong. '
+                       'Could not inspect Subordonate user account. '
+                       'Details: {}'.format(args),
+        }
+        log.warning(instruction_set_response['warning'])
+        return instruction_set_response
+
         instruction_set_response = {
             'failed': True,
             'warning': 'Something went wrong. '

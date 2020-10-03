@@ -4,7 +4,7 @@ import unittest
 from base import ewallet_session_manager as manager
 
 
-class TestEWalletSessionManagerMasterInspectSubPool(unittest.TestCase):
+class TestEWalletSessionManagerMasterInspectSubordonate(unittest.TestCase):
     session_manager = None
     client_id = None
     session_token = None
@@ -105,13 +105,13 @@ class TestEWalletSessionManagerMasterInspectSubPool(unittest.TestCase):
                 '[ ! ]: Could not cleanup EWallet Session Manager. '
                 'Details: {}'.format(e)
             )
-
-    def test_master_action_inspect_subpool_functionality(self):
-        print('\n[ * ]: Master action InspectSubPool')
+    def test_master_action_inspect_subordonate_functionality(self):
+        print('\n[ * ]: Master action InspectSubordonate')
         instruction_set = {
             'controller': 'master', 'ctype': 'action', 'action': 'inspect',
-            'inspect': 'subpool', 'client_id': self.client_id,
-            'session_token': self.session_token,
+            'inspect': 'subordonate',
+            'subordonate': self.subordonate['account_data']['id'],
+            'client_id': self.client_id, 'session_token': self.session_token,
         }
         inspect = self.session_manager.session_manager_controller(
             **instruction_set
@@ -124,5 +124,5 @@ class TestEWalletSessionManagerMasterInspectSubPool(unittest.TestCase):
         self.assertEqual(len(inspect.keys()), 3)
         self.assertFalse(inspect.get('failed'))
         self.assertTrue(isinstance(inspect.get('account'), str))
-        self.assertTrue(isinstance(inspect.get('subpool'), dict))
+        self.assertTrue(isinstance(inspect.get('subordonate'), dict))
 

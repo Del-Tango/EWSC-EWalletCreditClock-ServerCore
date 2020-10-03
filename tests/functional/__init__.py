@@ -29,6 +29,7 @@ from . import test_master_recover_account
 from . import test_master_inspect_ctokens
 from . import test_master_inspect_ctoken
 from . import test_master_inspect_subpool
+from . import test_master_inspect_subordonate
 
 from . import test_user_request_clientid
 from . import test_user_request_stoken
