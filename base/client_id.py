@@ -35,6 +35,10 @@ class ClientID(Token):
 
     # FETCHERS
 
+    def fetch_validity_interval(self):
+        log.debug('')
+        return int(config.client_config['client_id_validity'])
+
     def fetch_token_values(self, **kwargs):
         log.debug('')
         res = super(ClientID, self).fetch_token_values()
@@ -109,15 +113,24 @@ class ClientID(Token):
 
     # GENERAL
 
+    def keep_alive(self, *args, **kwargs):
+        log.debug('')
+        ctoken_validity_interval = self.fetch_validity_interval()
+        future_date = res_utils.fetch_future_expiration_date(
+            unit='minutes', minutes=ctoken_validity_interval
+        )
+        sanitized_instruction_set = res_utils.remove_tags_from_command_chain(
+            kwargs, 'valid_to'
+        )
+        return super(ClientID, self).keep_alive(
+            valid_to=future_date, *args, **sanitized_instruction_set
+        )
+
     def inspect(self, *args, **kwargs):
         log.debug('')
         return super(ClientID, self).inspect(
             stoken=self.session_token, *args, **kwargs
         )
-
-    def keep_alive(self, *args, **kwargs):
-        log.debug('')
-        return super(ClientID, self).keep_alive(*args, **kwargs)
 
     def deactivate(self, *args, **kwargs):
         log.debug('')

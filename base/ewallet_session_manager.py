@@ -3080,6 +3080,27 @@ class EWalletSessionManager():
     def action_stop_client_token_cleaner_cron(self, **kwargs):
         log.debug('TODO - UNIMPLEMENTED')
 
+    def action_ctoken_keep_alive(self, **kwargs):
+        log.debug('')
+        ctoken = self.fetch_client_token_by_label(kwargs['client_id'])
+        if not ctoken or isinstance(ctoken, dict) and \
+                ctoken.get('failed'):
+            return self.warning_could_not_fetch_client_token(kwargs, ctoken)
+        ctoken_keep_alive = ctoken.keep_alive(**kwargs)
+        if not ctoken_keep_alive or isinstance(ctoken_keep_alive, dict) and \
+                ctoken_keep_alive.get('failed'):
+            return self.warning_could_not_keep_alive_client_token(
+                kwargs, ctoken, ctoken_keep_alive
+            )
+        instruction_set_response = {
+            'failed': False,
+            'ctoken': kwargs['client_id'],
+            'extended': self.fetch_default_client_id_validity_interval_in_minutes(),
+            'time_unit': 'minutes',
+            'ctoken_data': ctoken.fetch_token_values(),
+        }
+        return instruction_set_response
+
 #   @pysnooper.snoop('logs/ewallet.log')
     def action_stoken_keep_alive(self, **kwargs):
         log.debug('')
@@ -4169,6 +4190,19 @@ class EWalletSessionManager():
         '''
         log.debug('TODO - Kill process')
         return self.unset_socket_handler()
+
+    def handle_client_action_ctoken_keep_alive(self, **kwargs):
+        log.debug('')
+        instruction_set_validation = self.validate_instruction_set(kwargs)
+        if not instruction_set_validation \
+                or isinstance(instruction_set_validation, dict) \
+                and instruction_set_validation.get('failed'):
+            return instruction_set_validation
+        ctoken_keep_alive = self.action_ctoken_keep_alive(**kwargs)
+        return self.warning_could_not_pushback_ctoken_expiration_datetime(
+            kwargs, ctoken_keep_alive
+        ) if not ctoken_keep_alive or isinstance(ctoken_keep_alive, dict) and \
+            ctoken_keep_alive.get('failed') else ctoken_keep_alive
 
     def handle_client_action_stoken_keep_alive(self, **kwargs):
         log.debug('')
@@ -5913,7 +5947,7 @@ class EWalletSessionManager():
             return self.error_no_client_action_alive_target_specified(kwargs)
         handlers = {
             'stoken': self.handle_client_action_stoken_keep_alive,
-#           'ctoken': self.handle_client_action_ctoken_keep_alive,
+            'ctoken': self.handle_client_action_ctoken_keep_alive,
         }
         return handlers[kwargs['alive']](**kwargs)
 
@@ -6714,6 +6748,33 @@ class EWalletSessionManager():
     '''
     [ TODO ]: Fetch warning messages from message file by key codes.
     '''
+
+    def warning_could_not_fetch_client_token(self, *args):
+        instruction_set_response = res_utils.format_warning_response(**{
+            'failed': True, 'details': args,
+            'warning': 'Something went wrong. '
+                       'Could not fetch CToken.',
+        })
+        self.log_warning(**instruction_set_response)
+        return instruction_set_response
+
+    def warning_could_not_keep_alive_client_token(self, *args):
+        instruction_set_response = res_utils.format_warning_response(**{
+            'failed': True, 'details': args,
+            'warning': 'Something went wrong. '
+                       'Could not process CToken keep alive signal.',
+        })
+        self.log_warning(**instruction_set_response)
+        return instruction_set_response
+
+    def warning_could_not_pushback_ctoken_expiration_datetime(self, *args):
+        instruction_set_response = res_utils.format_warning_response(**{
+            'failed': True, 'details': args,
+            'warning': 'Something went wrong. '
+                       'Could not push back CToken expiration datetime.',
+        })
+        self.log_warning(**instruction_set_response)
+        return instruction_set_response
 
     def warning_could_not_fetch_stoken_linked_ewallet_session(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{

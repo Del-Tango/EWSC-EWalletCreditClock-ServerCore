@@ -197,7 +197,7 @@ class EWalletLogin(Base):
         )
         return user or False
 
-    @pysnooper.snoop('logs/ewallet.log')
+#   @pysnooper.snoop('logs/ewallet.log')
     def check_user_pass_hash(self, user_pass, known_hash):
         '''
         [ NOTE   ]: Checks if user password and known sha256 hash match.

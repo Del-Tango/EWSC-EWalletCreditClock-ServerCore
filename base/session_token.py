@@ -32,6 +32,16 @@ class SessionToken(Token):
 
     # FETCHERS
 
+    def fetch_token_values(self):
+        log.debug('')
+        res = super(SessionToken, self).fetch_token_values()
+        values = {
+            'ctoken': self.ctoken.fetch_label(),
+            'worker_id': self.worker_id,
+        }
+        values.update(res)
+        return values
+
     def fetch_create_date(self):
         log.debug('')
         return self.create_date
