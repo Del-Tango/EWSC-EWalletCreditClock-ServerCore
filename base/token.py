@@ -61,6 +61,28 @@ class Token():
             )
         return True
 
+    def set_valid_to(self, timestamp):
+        log.debug('')
+        try:
+            self.valid_to = timestamp
+            self.update_write_date()
+        except Exception as e:
+            return self.error_could_not_set_token_expiration_date(
+                timestamp, self.valid_to, e
+            )
+        return True
+
+    def set_active_flag(self, flag):
+        log.debug('')
+        try:
+            self.active = flag
+            self.update_write_date()
+        except Exception as e:
+            return self.error_could_not_set_token_active_flag(
+                flag, self.active, e
+            )
+        return True
+
     # UPDATERS
 
     def update_write_date(self):
@@ -86,10 +108,11 @@ class Token():
         log.debug('')
         return self.unlink_flag
 
+#   @pysnooper.snoop('logs/ewallet.log')
     def keep_alive(self, *args, **kwargs):
         log.debug('')
-        self.valid_to = kwargs.get('valid_to')
-        self.active = True
+        self.set_valid_to(kwargs.get('valid_to'))
+        self.set_active_flag(True)
         return True
 
     def inspect(self, *args, **kwargs):
@@ -119,6 +142,26 @@ class Token():
         return True
 
     # ERRORS
+
+    def error_could_not_set_token_active_flag(self, *args):
+        response = {
+            'failed': True,
+            'error': 'Something went wrong. '
+                     'Could not set Token active flag. '
+                     'Details: {}'.format(args)
+        }
+        log.error(response['error'])
+        return response
+
+    def error_could_not_set_token_expiration_date(self, *args):
+        response = {
+            'failed': True,
+            'error': 'Something went wrong. '
+                     'Could not set Token expiration date. '
+                     'Details: {}'.format(args)
+        }
+        log.error(response['error'])
+        return response
 
     def error_no_token_create_date_found(self):
         log.error('No token create date found.')

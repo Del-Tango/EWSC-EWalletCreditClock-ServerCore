@@ -5740,6 +5740,15 @@ class EWalletWorker():
     [ TODO ]: Fetch error messages from message file by key codes.
     '''
 
+    def error_no_client_action_keep_alive_target_specified(self, *args):
+        instruction_set_response = {
+            'failed': True,
+            'error': 'No client action KeepAlive target specified. '
+                     'Details: {}.'.format(args),
+        }
+        log.error(instruction_set_response['error'])
+        return instruction_set_response
+
     def error_no_master_action_inspect_target_specified(self, *args):
         instruction_set_response = {
             'failed': True,

@@ -50,11 +50,6 @@
     - x - (EWSC) Refactor client action CheckCTokenState to include master link
     - x - (EWSC) Refactor user action CreateAccount to link to master account
     - x - (EWSC) Groom functional test suit to add master oriented prerequisits
-    - . - (EWSC-x-, EWCC-x-, EWAT- -) Implement Client ID validity checkers
-    - . - (EWSC-x-, EWCC-x-, EWAT- -) Implement Session Token validity checkers
-    - . - (EWSC-x-, EWCC-x-, EWAT- -) Implement forced account removal
-    - . - (EWSC-x-, EWCC- -, EWAT- -) Implement master accounts
-    - . - (EWSC-x-, EWCC- -, EWAT- -) Implement client action AcquireMaster
     - x - (EWSC) Groom functional test suit to corect action names and call session manager destructors
     - x - (EWSC) Refactor user action CreateAccount to check if master subpool size limit reached
     - x - (EWSC) Implement system action TargetCleanupMaster
@@ -78,12 +73,20 @@
     - x - (EWSC) Implement master action InspectSub
     - x - (EWSC) Implement master action ViewLoginRecords
     - x - (EWSC) Implement master action ViewLogoutRecords
-    -   - (EWSC- -, EWCC- -, EWAT- -) Implement EWallet Session keep alive signal
+    - . - (EWSC-x-, EWCC-x-, EWAT- -) Implement Client ID validity checkers
+    - . - (EWSC-x-, EWCC-x-, EWAT- -) Implement Session Token validity checkers
+    - . - (EWSC-x-, EWCC-x-, EWAT- -) Implement forced account removal
+    - . - (EWSC-x-, EWCC- -, EWAT- -) Implement master accounts
+    - . - (EWSC-x-, EWCC- -, EWAT- -) Implement client action AcquireMaster
+    - . - (EWSC-x-, EWCC- -, EWAT- -) Implement client action STokenKeepAlive
+    -   - (EWSC- -, EWCC- -, EWAT- -) Implement client action CTokenKeepAlive
     - (EWSC- -, EWCC- -, EWAT- -) Implement issue report
     - (EWCC) Make library importable
     - (EWSC) Add system level in error and warning handlers
     - (EWSC) Add EWDox support for client action client ID validity checkers
     - (EWSC) Add EWDox support for client_action session token validity checkers
+    - (EWSC) Add EWDox support for client_action STokenKeepAlive
+    - (EWSC) Add EWDox support for client_action CTokenKeepAlive
     - (EWSC) Add EWDox support for user action Forcefully-UnlinkAccount
     - (EWSC) Add EWDox support for client action AcquireMaster
     - (EWSC) Add EWDox support for client action ReleaseMaster
@@ -99,6 +102,10 @@
     - (EWAT) Implement support for client action AcquireMaster interaction
     - (EWAT) Implement support for client action ReleaseMaster inspection
     - (EWAT) Implement support for client action ReleaseMaster interaction
+    - (EWAT) Implement support for client action CToken inspection
+    - (EWAT) Implement support for client action CToken interaction
+    - (EWAT) Implement support for client action SToken inspection
+    - (EWAT) Implement support for client action SToken interaction
 
     [ NOTE ]: EWCreditClock suit version Chronos introduces the concept of
               Master User Accounts. On user action AcquireMasterAccess, the
@@ -342,8 +349,6 @@
 
 - (EWSC) - Client Actions:
 
-    - Client action Release Master
-
     - Client action Acquire Master
         - State Oriented Restrictions:
             - CToken States:
@@ -423,6 +428,19 @@
                 - Logged (In | Out)
             - CToken States:
                 - Master (Linked | Unlinked)
+
+    - Client action STokenKeepAlive
+        - State Oriented Restrictions:
+            - User Account States:
+                - Logged (In | Out)
+            - CToken States:
+                - Master (Linked | Unlinked)
+            - SToken States:
+                - CToken (Linked | Unlinked)
+
+    - Client action ReleaseMaster     #
+    - Client action CTokenKeepAlive   #
+
 
 - (EWSC) - Master Actions:
 

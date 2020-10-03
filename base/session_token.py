@@ -16,7 +16,10 @@ class SessionToken(Token):
     worker_id = int()
 
     def __init__(self, *args, **kwargs):
+        now = datetime.datetime.now()
         self.ctoken = kwargs.get('client_token')
+        self.create_date = now
+        self.write_date = now
         self.worker_id = kwargs.get('worker_id') or int()
         self.label = kwargs.get('session_token') or str()
         self.active = kwargs.get('active') or True
@@ -28,6 +31,14 @@ class SessionToken(Token):
         )
 
     # FETCHERS
+
+    def fetch_create_date(self):
+        log.debug('')
+        return self.create_date
+
+    def fetch_write_date(self):
+        log.debug('')
+        return self.write_date
 
     def fetch_label(self):
         log.debug('')
@@ -41,6 +52,10 @@ class SessionToken(Token):
         log.debug('')
         return self.worker_id
 
+    def fetch_validity_interval(self):
+        log.debug('')
+        return int(config.client_config['session_token_validity'])
+
     # SETTERS
 
     def set_worker_id(self, worker_id):
@@ -49,6 +64,7 @@ class SessionToken(Token):
             return self.error_invalid_worker_id(worker_id)
         try:
             self.worker_id = worker_id
+            self.update_write_date()
         except Exception as e:
             return self.warning_could_not_set_worker_id(worker_id)
         return True
@@ -59,6 +75,7 @@ class SessionToken(Token):
             return self.error_invalid_client_token(ctoken)
         try:
             self.ctoken = ctoken
+            self.update_write_date()
         except Exception as e:
             return self.warning_could_not_set_client_token(ctoken, e)
         return True
@@ -67,7 +84,17 @@ class SessionToken(Token):
 
     def keep_alive(self, *args, **kwargs):
         log.debug('')
-        return super(SessionToken, self).keep_alive(*args, **kwargs)
+        now = datetime.datetime.now()
+        stoken_validity_interval = self.fetch_validity_interval()
+        future_date = res_utils.fetch_future_expiration_date(
+            unit='minutes', minutes=stoken_validity_interval
+        )
+        sanitized_instruction_set = res_utils.remove_tags_from_command_chain(
+            kwargs, 'valid_to'
+        )
+        return super(SessionToken, self).keep_alive(
+            valid_to=future_date, *args, **sanitized_instruction_set
+        )
 
     def deactivate(self, *args, **kwargs):
         log.debug('')

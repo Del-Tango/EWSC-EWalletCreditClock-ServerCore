@@ -384,10 +384,6 @@ class EWalletSessionManager():
                 if not session_token:
                     continue
                 session_tokens.append(session_token)
-#           session_tokens = list(filter(None, list(dict.fromkeys([
-#               client_token_set[ctoken].fetch_session_token()
-#               for ctoken in client_token_set
-#           ]))))
         except Exception as e:
             return self.error_could_not_fetch_stokens_from_client_token_set(
                 client_token_set, session_tokens, e
@@ -900,7 +896,7 @@ class EWalletSessionManager():
         if not self.config:
             return self.error_no_config_handler_found(self.config)
         session_token_validity = int(
-            self.config.client_config['client_id_validity']
+            self.config.client_config['session_token_validity']
         )
         return session_token_validity
 
@@ -3084,6 +3080,49 @@ class EWalletSessionManager():
     def action_stop_client_token_cleaner_cron(self, **kwargs):
         log.debug('TODO - UNIMPLEMENTED')
 
+#   @pysnooper.snoop('logs/ewallet.log')
+    def action_stoken_keep_alive(self, **kwargs):
+        log.debug('')
+        stoken = self.fetch_session_token_by_label(kwargs['session_token'])
+        if not stoken or isinstance(stoken, dict) and \
+                stoken.get('failed'):
+            return self.warning_could_not_fetch_session_token(kwargs, stoken)
+        stoken_keep_alive = stoken.keep_alive(**kwargs)
+        if not stoken_keep_alive or isinstance(stoken_keep_alive, dict) and \
+                stoken_keep_alive.get('failed'):
+            return self.warning_could_not_keep_alive_session_token(
+                kwargs, stoken, stoken_keep_alive
+            )
+        instruction_set_response = {
+            'failed': False,
+            'stoken': kwargs['session_token'],
+            'extended': self.fetch_default_session_token_validity_interval_in_minutes(),
+            'time_unit': 'minutes',
+            'stoken_data': stoken.fetch_token_values(),
+        }
+        session_token_map = self.fetch_ewallet_session_ids_by_session_tokens(
+            [kwargs['session_token']]
+        )
+        if not session_token_map or isinstance(session_token_map, dict) and \
+                session_token_map.get('failed'):
+            return instruction_set_response
+        try:
+            session_id = list(session_token_map.values())[0][0]
+            session = self.fetch_ewallet_session_by_id(session_id, **kwargs)
+        except Exception as e:
+            return self.error_could_not_fetch_stoken_linked_session_by_id(
+                kwargs, stoken, stoken_keep_alive, session_token_map, e
+            )
+        session_keep_alive = session.keep_alive(**kwargs)
+        if not session_keep_alive or isinstance(session_keep_alive, dict) and \
+                session_keep_alive.get('failed'):
+            kwargs['active_session'].rollback()
+            return self.warning_could_not_keep_alive_ewallet_session(
+                kwargs, stoken, stoken_keep_alive, session,
+                session_keep_alive
+            )
+        return instruction_set_response
+
     def action_inspect_master_acquired_ctoken(self, **kwargs):
         log.debug('')
         if not kwargs.get('ctoken'):
@@ -4130,6 +4169,19 @@ class EWalletSessionManager():
         '''
         log.debug('TODO - Kill process')
         return self.unset_socket_handler()
+
+    def handle_client_action_stoken_keep_alive(self, **kwargs):
+        log.debug('')
+        instruction_set_validation = self.validate_instruction_set(kwargs)
+        if not instruction_set_validation \
+                or isinstance(instruction_set_validation, dict) \
+                and instruction_set_validation.get('failed'):
+            return instruction_set_validation
+        stoken_keep_alive = self.action_stoken_keep_alive(**kwargs)
+        return self.warning_could_not_pushback_stoken_expiration_datetime(
+            kwargs, stoken_keep_alive
+        ) if not stoken_keep_alive or isinstance(stoken_keep_alive, dict) and \
+            stoken_keep_alive.get('failed') else stoken_keep_alive
 
     def handle_master_action_view_logout_records(self, **kwargs):
         log.debug('')
@@ -5855,6 +5907,16 @@ class EWalletSessionManager():
         }
         return handlers[kwargs['transfer']](**kwargs)
 
+    def handle_client_action_alive(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('alive'):
+            return self.error_no_client_action_alive_target_specified(kwargs)
+        handlers = {
+            'stoken': self.handle_client_action_stoken_keep_alive,
+#           'ctoken': self.handle_client_action_ctoken_keep_alive,
+        }
+        return handlers[kwargs['alive']](**kwargs)
+
     def handle_master_action_view(self, **kwargs):
         log.debug('')
         if not kwargs.get('view'):
@@ -6599,6 +6661,7 @@ class EWalletSessionManager():
             'recover': self.handle_client_action_recover,
             'verify': self.handle_client_action_verify,
             'acquire': self.handle_client_action_acquire,
+            'alive': self.handle_client_action_alive,
         }
         return handlers[kwargs['action']](**kwargs)
 
@@ -6651,6 +6714,51 @@ class EWalletSessionManager():
     '''
     [ TODO ]: Fetch warning messages from message file by key codes.
     '''
+
+    def warning_could_not_fetch_stoken_linked_ewallet_session(self, *args):
+        instruction_set_response = res_utils.format_warning_response(**{
+            'failed': True, 'details': args,
+            'warning': 'Something went wrong. '
+                       'Could not fetch SToken linked EWallet Session.',
+        })
+        self.log_warning(**instruction_set_response)
+        return instruction_set_response
+
+    def warning_could_not_keep_alive_ewallet_session(self, *args):
+        instruction_set_response = res_utils.format_warning_response(**{
+            'failed': True, 'details': args,
+            'warning': 'Something went wrong. '
+                       'Could not keep EWallet Session alive.',
+        })
+        self.log_warning(**instruction_set_response)
+        return instruction_set_response
+
+    def warning_could_not_fetch_session_token(self, *args):
+        instruction_set_response = res_utils.format_warning_response(**{
+            'failed': True, 'details': args,
+            'warning': 'Something went wrong. '
+                       'Could not fetch SToken.',
+        })
+        self.log_warning(**instruction_set_response)
+        return instruction_set_response
+
+    def warning_could_not_keep_alive_session_token(self, *args):
+        instruction_set_response = res_utils.format_warning_response(**{
+            'failed': True, 'details': args,
+            'warning': 'Something went wrong. '
+                       'Could not process SToken keep alive signal.',
+        })
+        self.log_warning(**instruction_set_response)
+        return instruction_set_response
+
+    def warning_could_not_pushback_stoken_expiration_datetime(self, *args):
+        instruction_set_response = res_utils.format_warning_response(**{
+            'failed': True, 'details': args,
+            'warning': 'Something went wrong. '
+                       'Could not push back SToken expiration datetime.',
+        })
+        self.log_warning(**instruction_set_response)
+        return instruction_set_response
 
     def warning_could_not_view_master_account_logout_records(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
@@ -8109,6 +8217,23 @@ class EWalletSessionManager():
     '''
     [ TODO ]: Fetch error messages from message file by key codes.
     '''
+
+    def error_could_not_fetch_stoken_linked_session_by_id(self, *args):
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
+            'error': 'Something went wrong. '
+                     'Could not fetch SToken linked EWallet Session by ID.',
+        })
+        self.log_error(**instruction_set_response)
+        return instruction_set_response
+
+    def error_no_client_action_alive_target_specified(self, *args):
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args,
+            'error': 'No client action KeepAlive target specified.',
+        })
+        self.log_error(**instruction_set_response)
+        return instruction_set_response
 
     def error_invalid_master_account_email(self, *args):
         instruction_set_response = res_utils.format_error_response(**{

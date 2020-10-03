@@ -29,6 +29,21 @@ class ResUtils():
         now_eet = now_utc.astimezone(timezone('EET'))
         return now_eet.timetuple()
 
+    def fetch_future_expiration_date_by_minutes(self, **kwargs):
+        if not kwargs.get('minutes'):
+            return self.error_no_minutes_specified(kwargs)
+        now = datetime.datetime.now()
+        future_date = now + datetime.timedelta(minutes=kwargs['minutes'])
+        return future_date
+
+    def fetch_future_expiration_date(self, **kwargs):
+        if not kwargs.get('unit'):
+            return self.error_no_time_unit_specified(kwargs)
+        handlers = {
+            'minutes': self.fetch_future_expiration_date_by_minutes,
+        }
+        return handlers[kwargs['unit']](**kwargs)
+
     # CHECKERS
 
     def check_days_since_timestamp(self, timestamp, day_count):
@@ -115,6 +130,23 @@ class ResUtils():
         letters_and_digits = string.ascii_letters + string.digits
         return ''.join((random.choice(letters_and_digits) for i in range(string_length)))
 
+    # ERRORS
+
+    def error_no_time_unit_specified(self, *args):
+        response = {
+            'failed': True,
+            'error': 'No time unit specified.'
+        }
+        log.error(response['error'])
+        return response
+
+    def error_no_minutes_specified(self, *args):
+        response = {
+            'failed': True,
+            'error': 'No minutes specified.'
+        }
+        log.error(response['error'])
+        return response
 
 res_utils = ResUtils()
 

@@ -869,6 +869,18 @@ class EWallet(Base):
 
     # GENERAL
 
+    def keep_alive(self, **kwargs):
+        log.debug('')
+        session_validity_interval = self.fetch_default_ewallet_session_validity_interval_in_minutes()
+        future_date = res_utils.fetch_future_expiration_date(
+            unit='minutes', minutes=session_validity_interval
+        )
+        set_date = self.set_session_expiration_date(future_date)
+        if not set_date or isinstance(set_date, dict) and \
+                set_date.get('failed'):
+            return set_date
+        return True
+
     def inspect_master_subordonate(self, **kwargs):
         log.debug('')
         if not kwargs.get('subordonate'):
