@@ -1067,6 +1067,32 @@ class EWallet(Base):
     def action_receive_transfer_record(self, **kwargs):
         log.debug('TODO - UNIMPLEMENTED')
 
+    def action_view_master_login_records(self, **kwargs):
+        log.debug('')
+        active_master = self.fetch_active_session_master()
+        if not active_master or isinstance(active_master, dict) and \
+                active_master.get('failed'):
+            return self.error_could_not_fetch_active_session_master(
+                kwargs, active_master
+            )
+        try:
+            login_records = list(kwargs['active_session'].query(
+                EWalletLogin
+            ).filter_by(master_id=active_master.fetch_user_id()))
+        except:
+            return self.warning_could_not_view_login_records(
+                active_master.fetch_user_name(), kwargs
+            )
+        command_chain_response = {
+            'failed': False,
+            'account': active_master.fetch_user_email(),
+            'login_records': {
+                item.login_id: res_utils.format_datetime(item.login_date) \
+                for item in login_records
+            },
+        }
+        return command_chain_response
+
     def action_inspect_master_subordonate(self, **kwargs):
         log.debug('')
         master = self.fetch_active_session_master()
@@ -1318,7 +1344,7 @@ class EWallet(Base):
                 kwargs, master, session_logout
             )
         logout_record = EWalletLogout(
-            user_id=master.fetch_user_id(),
+            master_id=master.fetch_user_id(),
             logout_status=False if not session_logout else True,
         )
         kwargs['active_session'].add(logout_record)
@@ -3392,6 +3418,23 @@ class EWallet(Base):
     [ NOTES ]: Enviroment checks for proper action execution are performed here.
     '''
 
+    def handle_master_action_view_login_records(self, **kwargs):
+        log.debug('')
+        check_logged_in = self.check_master_logged_in()
+        if not check_logged_in:
+            return self.warning_master_not_logged_in(kwargs, check_logged_in)
+        check_unlinked = self.check_master_account_flag_for_unlink()
+        if check_unlinked:
+            return self.warning_master_account_flagged_for_removal(
+                kwargs, check_logged_in, check_unlinked
+            )
+        check_frozen = self.check_master_account_frozen()
+        if check_frozen:
+            return self.warning_master_account_frozen(
+                kwargs, check_logged_in, check_unlinked, check_frozen
+            )
+        return self.action_view_master_login_records(**kwargs)
+
     def handle_master_action_inspect_subordonate(self, **kwargs):
         log.debug('')
         check_logged_in = self.check_master_logged_in()
@@ -4267,6 +4310,17 @@ class EWallet(Base):
 
     # JUMPTABLE HANDLERS
 
+    def handle_master_action_view(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('view'):
+            return self.error_no_master_action_view_target_specified(kwargs)
+        handlers = {
+            'account': self.handle_master_action_view_account,
+            'login': self.handle_master_action_view_login_records,
+#           'logout': self.handle_master_action_view_logout_records,
+        }
+        return handlers[kwargs['view']](**kwargs)
+
     def handle_master_action_inspect(self, **kwargs):
         log.debug('')
         if not kwargs.get('inspect'):
@@ -4303,15 +4357,6 @@ class EWallet(Base):
             'account': self.handle_master_action_edit_account,
         }
         return handlers[kwargs['edit']](**kwargs)
-
-    def handle_master_action_view(self, **kwargs):
-        log.debug('')
-        if not kwargs.get('view'):
-            return self.error_no_master_action_view_target_specified(kwargs)
-        handlers = {
-            'account': self.handle_master_action_view_account,
-        }
-        return handlers[kwargs['view']](**kwargs)
 
     def handle_master_action_logout(self, **kwargs):
         log.debug('')

@@ -29,11 +29,13 @@ class EWalletLogin(Base):
 
     login_id = Column(Integer, primary_key=True)
     user_id = Column(Integer, ForeignKey('res_user.user_id'))
+    master_id = Column(Integer, ForeignKey('res_master.user_id'))
     login_date = Column(DateTime, default=datetime.datetime.now())
     login_status = Column(Boolean, server_default=u'false')
 
     def __init__(self, *args, **kwargs):
         self.user_id = kwargs.get('user_id') or None
+        self.master_id = kwargs.get('master_id') or None
         self.login_status = kwargs.get('login_status') or False
 
     # FETCHERS
@@ -117,6 +119,20 @@ class EWalletLogin(Base):
 
     # SETTERS
 
+    def set_master_id(self, master_id):
+        log.debug('')
+        if not master_id:
+            return self.error_no_master_id_found(master_id)
+        self.master_id = master_id
+        return True
+
+    def set_master_login_record_data(self, **kwargs):
+        values = {
+            'user_id': self.set_master_id(kwargs.get('master_id')),
+            'login_status': self.set_login_status(kwargs.get('login_status')),
+        }
+        return values
+
     def set_user_id(self, user_id):
         '''
         [ NOTE   ]: Sets user account record id to EWallet Login Record.
@@ -148,11 +164,11 @@ class EWalletLogin(Base):
         [ RETURN ]: {'user_id': (True | False), 'login_status': (True | False)}
         '''
         log.debug('')
-        _values = {
+        values = {
             'user_id': self.set_user_id(kwargs.get('user_id')),
             'login_status': self.set_login_status(kwargs.get('login_status')),
         }
-        return _values
+        return values
 
     def check_master_email_exists(self, user_email, active_session):
         log.debug('')
@@ -233,6 +249,7 @@ class EWalletLogin(Base):
 
     # ACTIONS
 
+#   @pysnooper.snoop('logs/ewallet.log')
     def action_login(self, **kwargs):
         log.debug('')
         if not kwargs.get('user_email') or not kwargs.get('user_pass'):
@@ -250,10 +267,16 @@ class EWalletLogin(Base):
                 login_status=False,
             )
             return self.error_invalid_login_credentials()
-        set_login_data = self.set_login_record_data(
-            user_id=authenticated_user.user_id,
-            login_status=True,
-        )
+        if kwargs.get('controller') == 'master':
+            set_login_data = self.set_master_login_record_data(
+                master_id=authenticated_user.user_id,
+                login_status=True,
+            )
+        else:
+            set_login_data = self.set_login_record_data(
+                user_id=authenticated_user.user_id,
+                login_status=True,
+            )
         set_user_state = authenticated_user.set_user_state(1)
         return authenticated_user
 
@@ -304,6 +327,15 @@ class EWalletLogin(Base):
         return False
 
     # ERRORS
+
+    def error_no_master_id_found(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No master account ID found. '
+                     'Details: {}'.format(args)
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
 
     def error_no_master_record_found_by_email(self, *args):
         command_chain_response = {

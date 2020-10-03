@@ -4131,6 +4131,19 @@ class EWalletSessionManager():
         log.debug('TODO - Kill process')
         return self.unset_socket_handler()
 
+    def handle_master_action_view_login_records(self, **kwargs):
+        log.debug('')
+        instruction_set_validation = self.validate_instruction_set(kwargs)
+        if not instruction_set_validation \
+                or isinstance(instruction_set_validation, dict) \
+                and instruction_set_validation.get('failed'):
+            return instruction_set_validation
+        view_login = self.action_execute_user_instruction_set(**kwargs)
+        return self.warning_could_not_view_master_account_login_records(
+            kwargs, view_login
+        ) if not view_login or isinstance(view_login, dict) and \
+            view_login.get('failed') else view_login
+
     def handle_master_action_inspect_subordonate(self, **kwargs):
         log.debug('')
         instruction_set_validation = self.validate_instruction_set(kwargs)
@@ -5836,7 +5849,7 @@ class EWalletSessionManager():
             return self.error_no_master_action_view_target_specified(kwargs)
         handlers = {
             'account': self.handle_master_action_view_account,
-#           'login': self.handle_master_action_view_login_records,
+            'login': self.handle_master_action_view_login_records,
 #           'logout': self.handle_master_action_view_logout_records,
         }
         return handlers[kwargs['view']](**kwargs)
@@ -6626,6 +6639,15 @@ class EWalletSessionManager():
     '''
     [ TODO ]: Fetch warning messages from message file by key codes.
     '''
+
+    def warning_could_not_view_master_account_login_records(self, *args):
+        instruction_set_response = res_utils.format_warning_response(**{
+            'failed': True, 'details': args,
+            'warning': 'Something went wrong. '
+                       'Could not view Master account login records.',
+        })
+        self.log_warning(**instruction_set_response)
+        return instruction_set_response
 
     def warning_could_not_inspect_subordonate_account(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
