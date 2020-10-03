@@ -212,6 +212,26 @@ class ResMaster(ResUser):
 
     # GENERAL
 
+    def inspect_subpool(self):
+        log.debug('')
+        subpool = self.fetch_subordonate_account_pool()
+        if not subpool:
+            return self.warning_subordonate_pool_empty(subpool)
+        try:
+            subpool_map = {
+                account.fetch_user_id(): account.fetch_user_email()
+                for account in subpool
+            }
+        except Exception as e:
+            return self.error_could_not_format_subordonate_pool(
+                subpool
+            )
+        command_chain_response = {
+            'failed': False,
+            'subpool': subpool_map,
+        }
+        return command_chain_response
+
 #   @pysnooper.snoop('logs/ewallet.log')
     def add_ctoken_to_acquired(self, client_id):
         log.debug('')
@@ -287,6 +307,15 @@ class ResMaster(ResUser):
 
     # WARNINGS
 
+    def warning_subordonate_pool_empty(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Master account Subordonate pool empty. '
+                       'Details: {}'.format(args),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
+
     def warning_could_not_fetch_subordonate_account_pool_email_set(self, *args):
         command_chain_response = {
             'failed': True,
@@ -358,6 +387,16 @@ class ResMaster(ResUser):
         return command_chain_response
 
     # ERRORS
+
+    def error_could_not_format_subordonate_pool(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Something went wrong. '
+                     'Could not format Subordonate account pool values. '
+                     'Details: {}'.format(args),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
 
     def error_could_not_set_master_acquired_ctoken_count(self, *args):
         command_chain_response = {

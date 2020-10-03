@@ -83,7 +83,7 @@ class EWalletSessionManager():
     def fetch_from_ewallet_worker_session(self):
         log.debug('TODO - UNIMPLEMENTED')
 
-    @pysnooper.snoop('logs/ewallet.log')
+#   @pysnooper.snoop('logs/ewallet.log')
     def fetch_master_account_by_email(self, master_account_email, **kwargs):
         log.debug('')
         if not master_account_email or not isinstance(master_account_email, str):
@@ -4131,6 +4131,19 @@ class EWalletSessionManager():
         log.debug('TODO - Kill process')
         return self.unset_socket_handler()
 
+    def handle_master_action_inspect_subpool(self, **kwargs):
+        log.debug('')
+        instruction_set_validation = self.validate_instruction_set(kwargs)
+        if not instruction_set_validation \
+                or isinstance(instruction_set_validation, dict) \
+                and instruction_set_validation.get('failed'):
+            return instruction_set_validation
+        inspect_subpool = self.action_execute_user_instruction_set(**kwargs)
+        return self.warning_could_not_inspect_subpool(
+            kwargs, inspect_subpool
+        ) if not inspect_subpool or isinstance(inspect_subpool, dict) and \
+            inspect_subpool.get('failed') else inspect_subpool
+
     def handle_master_action_login(self, **kwargs):
         log.debug('')
         instruction_set_validation = self.validate_instruction_set(kwargs)
@@ -5822,6 +5835,8 @@ class EWalletSessionManager():
         handlers = {
             'ctokens': self.handle_master_action_inspect_ctokens,
             'ctoken': self.handle_master_action_inspect_ctoken,
+            'subpool': self.handle_master_action_inspect_subpool,
+#           'subordonate': self.handle_master_action_inspect_subordonate,
         }
         return handlers[kwargs['inspect']](**kwargs)
 
@@ -6598,6 +6613,15 @@ class EWalletSessionManager():
     '''
     [ TODO ]: Fetch warning messages from message file by key codes.
     '''
+
+    def warning_could_not_inspect_subpool(self, *args):
+        instruction_set_response = res_utils.format_warning_response(**{
+            'failed': True, 'details': args,
+            'warning': 'Something went wrong. '
+                       'Could not inspect Master subordonate account pool.',
+        })
+        self.log_warning(**instruction_set_response)
+        return instruction_set_response
 
     def warning_could_not_fetch_master_account_by_email(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{

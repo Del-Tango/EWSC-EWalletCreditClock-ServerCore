@@ -74,9 +74,10 @@
     - x - (EWSC) Implement master action RecoverAccount
     - x - (EWSC) Implement master action InspectCTokens
     - x - (EWSC) Implement master action InspectCToken
-    -   - (EWSC) Implement master action InspectSubPool
-    - (EWSC) Groom function test suit to add acquired master accounts
-    - (EWSC) Implement master action InspectSub
+    - x - (EWSC) Implement master action InspectSubPool
+    -   - (EWSC) Implement master action InspectSub
+    - (EWSC) Implement master action ViewLoginRecords
+    - (EWSC) Implement master action ViewLogoutRecords
     - (EWSC) Add system level in error and warning handlers
     - (EWSC- -, EWCC- -, EWAT- -) Implement EWallet Session keep alive signal
     - (EWSC- -, EWCC- -, EWAT- -) Implement issue report
@@ -86,14 +87,6 @@
     - (EWSC) Add EWDox support for user action Forcefully-UnlinkAccount
     - (EWSC) Add EWDox support for client action AcquireMaster
     - (EWSC) Add EWDox support for client action ReleaseMaster
-    - (EWSC) Add EWDox support for master action AccountLogin
-    - (EWSC) Add EWDox support for master action AccountLogout
-    - (EWSC) Add EWDox support for master action ViewAccount
-    - (EWSC) Add EWDox support for master action EditAccount
-    - (EWSC) Add EWDox support for master action UnlinkAccount
-    - (EWSC) Add EWDox support for master action InspectCTokens
-    - (EWSC) Add EWDox support for master action InspectSubPool
-    - (EWSC) Add EWDox support for master action InspectSub
     - (EWSC) Groom EWDox to comply with new error and warning handlers
     - (EWAT) Groom tutor functional test suit
     - (EWAT) Groom tutor instruction set inspections
