@@ -81,9 +81,16 @@
     - . - (EWSC-x-, EWCC- -, EWAT- -) Implement client action STokenKeepAlive
     - . - (EWSC-x-, EWCC- -, EWAT- -) Implement client action CTokenKeepAlive
     - . - (EWSC-x-, EWCC- -, EWAT- -) Implement client action IssueReport
-    -   - (EWSC) Add system level in error and warning handlers
-    - (EWSC) Add EWDox support for client action client ID validity checkers
-    - (EWSC) Add EWDox support for client_action session token validity checkers
+    - . - (EWSC-x- ,EWCC- -, EWAT- -) Implement client action ReleaseMaster
+    - x - (EWSC) Add entity level in error and warning handlers
+    - (EWSC) Add EWDox support for client_action CheckCTokenValid
+    - (EWSC) Add EWDox support for client_action CheckCTokenLinked
+    - (EWSC) Add EWDox support for client_action CheckCTokenSession
+    - (EWSC) Add EWDox support for client_action CheckCTokenStatus
+    - (EWSC) Add EWDox support for client_action CheckSTokenValid
+    - (EWSC) Add EWDox support for client_action CheckSTokenLinked
+    - (EWSC) Add EWDox support for client_action CheckSTokenSession
+    - (EWSC) Add EWDox support for client_action CheckSTokenStatus
     - (EWSC) Add EWDox support for client_action STokenKeepAlive
     - (EWSC) Add EWDox support for client_action CTokenKeepAlive
     - (EWSC) Add EWDox support for user action Forcefully-UnlinkAccount
@@ -177,7 +184,9 @@
     - (EWSC) Implement system action StopWorkerCleaner cron
     - (EWSC) Implement system action StopSessionCleaner cron
     - (EWSC) Implement system action StopCTokenCleaner cron
-    - (EWSC, EWCC, EWAT) Implement client action ReleaseMaster
+    - (EWSC) Implement clock timer session termination upon clock depletion
+    - (EWSC) Refactor client action IssueReport to add server side logs
+    - (EWSC) Refactor EWServer to have only one config object passed
     - (EWSC, EWCC, EWAT) Implement entity record limiter queue mechanism
     - (EWSC, EWCC, EWAT) Send user account password as hash
     - (EWSC, EWCC, EWAT) Implement AddNotes mechanism for journal records
@@ -454,7 +463,15 @@
                 - Master (Linked | Unlinked)
                 - SToken (Linked | Unlinked)
 
-    - Client action ReleaseMaster     #
+    - Client action ReleaseMaster
+        - State Oriented Restrictions:
+            - User Account States:
+                - Logged (In | Out)
+            - CToken States:
+                - Master Linked
+                - SToken Linked
+            - SToken States:
+                - Session Plugged
 
 
 - (EWSC) - Master Actions:

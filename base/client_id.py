@@ -94,7 +94,7 @@ class ClientID(Token):
 
     def set_master(self, master_id):
         log.debug('')
-        if not isinstance(master_id, int):
+        if not isinstance(master_id, int) and master_id != None:
             return self.error_invalid_master_id(master_id)
         try:
             self.acquired_master = master_id

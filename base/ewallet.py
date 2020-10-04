@@ -869,6 +869,21 @@ class EWallet(Base):
 
     # GENERAL
 
+#   @pysnooper.snoop('logs/ewallet.log')
+    def assure_all_user_accounts_logged_out(self, **kwargs):
+        log.debug('')
+        failures = 0
+        while self.active_user:
+            logout = self.action_logout_user_account(**kwargs)
+            if not logout or isinstance(logout, dict) and logout.get('failed'):
+                self.warning_could_not_logout_user_account(
+                    kwargs, logout, failures
+                )
+                failures += 1
+            if failures > 3:
+                return self.error_logout_failure_limit_exceeded(kwargs)
+        return True
+
     def keep_alive(self, **kwargs):
         log.debug('')
         session_validity_interval = self.fetch_default_ewallet_session_validity_interval_in_minutes()
@@ -1078,6 +1093,68 @@ class EWallet(Base):
         log.debug('TODO - UNIMPLEMENTED')
     def action_receive_transfer_record(self, **kwargs):
         log.debug('TODO - UNIMPLEMENTED')
+
+    def action_cleanup_ewallet_session(self, **kwargs):
+        log.debug('')
+        logout_accounts = self.assure_all_user_accounts_logged_out(**kwargs)
+        cleanup = self.clear_active_session_user_data({
+            'active_user': True,
+            'credit_wallet': True,
+            'contact_list': True,
+            'user_account_archive': True,
+        })
+        orm_session = self.fetch_active_session()
+        try:
+            orm_session.commit()
+        except Exception as e:
+            orm_session.rollback()
+            return self.error_could_not_cleanup_ewallet_session(
+                kwargs, cleanup, orm_session, e
+            )
+        instruction_set_response = {
+            'failed': False,
+            'ewallet_session': self.fetch_active_session_id(),
+            'cleanup': cleanup,
+        }
+        return instruction_set_response
+
+    def action_remove_master_acquired_ctoken(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('master_id'):
+            return self.error_no_master_account_identifier_specified(kwargs)
+        if not kwargs.get('key'):
+            return self.warning_no_master_key_code_specified(kwargs)
+        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
+            kwargs, 'action'
+        )
+        master_account = self.fetch_master_account(
+            search_by='id', **sanitized_command_chain
+        )
+        if not master_account or isinstance(master_account, dict) and \
+                master_account.get('failed'):
+            return self.warning_no_master_account_found_by_id(
+                kwargs, master_account
+            )
+        check_master_key_code = self.check_master_user_account_key_code(
+            key=kwargs['key'], master_account=master_account
+        )
+        if not check_master_key_code:
+            return self.warning_invalid_master_account_key_code(
+                kwargs, master_account, check_master_key_code
+            )
+        remove_ctoken = master_account.remove_ctoken_from_acquired(kwargs['client_id'])
+        if not remove_ctoken or isinstance(remove_ctoken, dict) and \
+                remove_ctoken.get('failed'):
+            return self.error_could_not_remove_master_acquired_ctoken(
+                kwargs, master_account, check_master_key_code, remove_ctoken
+            )
+        command_chain_response = {
+            'failed': False,
+            'client_id': kwargs['client_id'],
+            'master': master_account.fetch_user_email(),
+            'master_id': kwargs['master_id'],
+        }
+        return command_chain_response
 
     def action_view_master_logout_records(self, **kwargs):
         log.debug('')
@@ -1646,7 +1723,7 @@ class EWallet(Base):
         )
         if not master_account or isinstance(master_account, dict) and \
                 master_account.get('failed'):
-            return self.warning_no_master_account_found_by_email(
+            return self.warning_no_master_account_found_by_id(
                 kwargs, master_account
             )
         check_master_key_code = self.check_master_user_account_key_code(
@@ -2694,29 +2771,6 @@ class EWallet(Base):
         }
         return command_chain_response
 
-    def action_cleanup_ewallet_session(self, **kwargs):
-        log.debug('')
-        cleanup = self.clear_active_session_user_data({
-            'active_user': True,
-            'credit_wallet': True,
-            'contact_list': True,
-            'user_account_archive': True,
-        })
-        orm_session = self.fetch_active_session()
-        try:
-            orm_session.commit()
-        except Exception as e:
-            orm_session.rollback()
-            return self.error_could_not_cleanup_ewallet_session(
-                kwargs, cleanup, orm_session, e
-            )
-        instruction_set_response = {
-            'failed': False,
-            'ewallet_session': self.fetch_active_session_id(),
-            'cleanup': cleanup,
-        }
-        return instruction_set_response
-
     def action_interogate_ewallet_session_expired(self, **kwargs):
         log.debug('')
         expired = self.check_if_active_ewallet_session_expired()
@@ -3455,6 +3509,10 @@ class EWallet(Base):
     '''
     [ NOTES ]: Enviroment checks for proper action execution are performed here.
     '''
+
+    def handle_master_action_remove_acquired_ctoken(self, **kwargs):
+        log.debug('')
+        return self.action_remove_master_acquired_ctoken(**kwargs)
 
     def handle_master_action_view_logout_records(self, **kwargs):
         log.debug('')
@@ -4365,6 +4423,24 @@ class EWallet(Base):
 
     # JUMPTABLE HANDLERS
 
+    def handle_master_action_remove_ctoken(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('ctoken'):
+            return self.error_no_master_action_remove_ctoken_target_specified(kwargs)
+        handlers = {
+            'acquired': self.handle_master_action_remove_acquired_ctoken,
+        }
+        return handlers[kwargs['ctoken']](**kwargs)
+
+    def handle_master_action_remove(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('remove'):
+            return self.error_no_master_action_remove_target_specified(kwargs)
+        handlers = {
+            'ctoken': self.handle_master_action_remove_ctoken,
+        }
+        return handlers[kwargs['remove']](**kwargs)
+
     def handle_master_action_view(self, **kwargs):
         log.debug('')
         if not kwargs.get('view'):
@@ -4822,6 +4898,7 @@ class EWallet(Base):
             'unlink': self.handle_master_action_unlink,
             'recover': self.handle_master_action_recover,
             'inspect': self.handle_master_action_inspect,
+            'remove': self.handle_master_action_remove,
         }
         return handlers[kwargs['action']](**kwargs)
 
@@ -5975,6 +6052,45 @@ class EWallet(Base):
     '''
     [ TODO ]: Fetch error messages from message file by key codes.
     '''
+
+    def error_logout_failure_limit_exceeded(self, *args):
+        command_chain_response = {
+            'failed': True, 'level': 'ewallet-session',
+            'error': 'Somethign went wrong. '
+                     'Too many user account logout failures, '
+                     'terminated by failsafe. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_could_not_remove_master_acquired_ctoken(self, *args):
+        command_chain_response = {
+            'failed': True, 'level': 'ewallet-session',
+            'error': 'Somethign went wrong. '
+                     'Could not remove Master account acquired CToken. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_no_master_action_remove_ctoken_target_specified(self, *args):
+        command_chain_response = {
+            'failed': True, 'level': 'ewallet-session',
+            'error': 'No Master action RemoveCToken target specified. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_no_master_action_remove_target_specified(self, *args):
+        command_chain_response = {
+            'failed': True, 'level': 'ewallet-session',
+            'error': 'No Master action Remove target specified. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
 
     def error_no_subordonate_account_id_specified(self, *args):
         command_chain_response = {

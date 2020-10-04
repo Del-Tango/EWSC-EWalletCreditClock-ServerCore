@@ -185,7 +185,7 @@ class ResMaster(ResUser):
             )
         return True
 
-    def set_acquired_ctoken_to_pool(self, ctokens):
+    def set_acquired_ctoken_pool_size(self, ctokens):
         log.debug('')
         try:
             self.acquired_ctokens = ctokens
@@ -221,6 +221,16 @@ class ResMaster(ResUser):
         return True if subpool_size >= size_limit else False
 
     # GENERAL
+
+    def remove_ctoken_from_acquired(self, client_id):
+        log.debug('')
+        acquired = self.fetch_acquired_ctoken_count() - 1
+        unset_from_pool = self.set_acquired_ctoken_pool_size(acquired)
+        if isinstance(unset_from_pool, dict) and unset_from_pool.get('failed'):
+            return self.warning_could_not_remove_acquired_ctoken_from_pool(
+                client_id, acquired, unset_from_pool
+            )
+        return unset_from_pool
 
     def inspect_subordonate(self, sub_id, **kwargs):
         log.debug('')
@@ -265,7 +275,7 @@ class ResMaster(ResUser):
     def add_ctoken_to_acquired(self, client_id):
         log.debug('')
         acquired = self.fetch_acquired_ctoken_count() + 1
-        set_to_pool = self.set_acquired_ctoken_to_pool(acquired)
+        set_to_pool = self.set_acquired_ctoken_pool_size(acquired)
         if isinstance(set_to_pool, dict) and set_to_pool.get('failed'):
             return self.warning_could_not_add_acquired_ctoken_to_pool(
                 client_id, acquired, set_to_pool
@@ -335,6 +345,16 @@ class ResMaster(ResUser):
     # CONTROLLERS
 
     # WARNINGS
+
+    def warning_could_not_remove_acquired_ctoken_from_pool(self, *args):
+        command_chain_response = {
+            'failed': True, 'level': 'res-master',
+            'warning': 'Something went wrong. '
+                       'Could not remove acquired CToken from pool. '
+                       'Details: {}'.format(args),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
 
     def warning_not_a_subordonate_account_id(self, *args):
         command_chain_response = {

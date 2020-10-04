@@ -1094,6 +1094,64 @@ class EWalletWorker():
     [ NOTE ]: Command chain responses are formulated here.
     '''
 
+    def action_clear_ewallet_session_values(self, **kwargs):
+        log.debug('')
+        # Fetch ewallet session by token keys
+        ewallet_session = self.fetch_ewallet_session_by_client_session_tokens(
+            kwargs['client_id'], kwargs['session_token']
+        )
+        if not ewallet_session or isinstance(ewallet_session, dict) and \
+                ewallet_session.get('failed'):
+            return ewallet_session
+        sanitized_instruction_set = res_utils.remove_tags_from_command_chain(
+            kwargs, 'controller', 'ctype', 'action', 'cleanup', 'clear',
+            'active_session'
+        )
+        # Execute action in session
+        orm_session = ewallet_session.fetch_active_session()
+        clear_session = ewallet_session.ewallet_controller(
+            controller='system', ctype='action', action='cleanup',
+            cleanup='session',active_session=orm_session,
+            **sanitized_instruction_set
+        )
+        # Formulate response
+        response = self.warning_could_not_clear_ewallet_session_values(
+             clear_session, ewallet_session, kwargs
+        ) if not clear_session or isinstance(clear_session, dict) and \
+            clear_session.get('failed') else clear_session
+        # Respond to session manager
+        self.send_instruction_response(response)
+        return response
+
+    def action_remove_master_acquired_ctoken_from_pool(self, **kwargs):
+        log.debug('')
+        # Fetch ewallet session by token keys
+        ewallet_session = self.fetch_ewallet_session_by_client_session_tokens(
+            kwargs['client_id'], kwargs['session_token']
+        )
+        if not ewallet_session or isinstance(ewallet_session, dict) and \
+                ewallet_session.get('failed'):
+            return ewallet_session
+        sanitized_instruction_set = res_utils.remove_tags_from_command_chain(
+            kwargs, 'controller', 'ctype', 'action', 'remove', 'ctoken',
+            'active_session'
+        )
+        # Execute action in session
+        orm_session = ewallet_session.fetch_active_session()
+        remove_ctoken = ewallet_session.ewallet_controller(
+            controller='master', ctype='action', action='remove',
+            remove='ctoken', ctoken='acquired', active_session=orm_session,
+            **sanitized_instruction_set
+        )
+        # Formulate response
+        response = self.warning_could_not_remove_master_acquired_ctoken_from_pool(
+             remove_ctoken, ewallet_session, kwargs
+        ) if not remove_ctoken or isinstance(remove_ctoken, dict) and \
+            remove_ctoken.get('failed') else remove_ctoken
+        # Respond to session manager
+        self.send_instruction_response(response)
+        return response
+
     def action_view_master_logout_records(self, **kwargs):
         log.debug('')
         # Fetch ewallet session by token keys
@@ -1115,7 +1173,7 @@ class EWalletWorker():
         )
         # Formulate response
         response = self.warning_could_not_view_master_account_logout_records(
-            ewallet_session, kwargs, view_login
+            ewallet_session, kwargs, view_logout
         ) if not view_logout or \
             isinstance(view_logout, dict) and \
             view_logout.get('failed') else view_logout
@@ -3629,6 +3687,16 @@ class EWalletWorker():
 
     # ACTION HANDLERS
 
+    def handle_system_action_clear_ewallet_session(self, **kwargs):
+        log.debug('')
+        action = self.action_clear_ewallet_session_values(**kwargs)
+        self.update_session_worker_state()
+        return action
+
+    def handle_master_action_remove_acquired_ctoken(self, **kwargs):
+        log.debug('')
+        return self.action_remove_master_acquired_ctoken_from_pool(**kwargs)
+
     def handle_master_action_view_logout_records(self, **kwargs):
         log.debug('')
         return self.action_view_master_logout_records(**kwargs)
@@ -4014,6 +4082,33 @@ class EWalletWorker():
                 if not ewallet_session else ewallet_session
 
     # JUMPTABLE HANDLERS
+
+    def handle_system_action_clear(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('clear'):
+            return self.error_no_system_action_clear_target_specified(kwargs)
+        handlers = {
+            'session': self.handle_system_action_clear_ewallet_session,
+        }
+        return handlers[kwargs['clear']](**kwargs)
+
+    def handle_master_action_remove_ctoken(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('ctoken'):
+            return self.error_no_master_action_remove_ctoken_target_specified(kwargs)
+        handlers = {
+            'acquired': self.handle_master_action_remove_acquired_ctoken,
+        }
+        return handlers[kwargs['ctoken']](**kwargs)
+
+    def handle_master_action_remove(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('remove'):
+            return self.error_no_master_action_remove_target_specified(kwargs)
+        handlers = {
+            'ctoken': self.handle_master_action_remove_ctoken,
+        }
+        return handlers[kwargs['remove']](**kwargs)
 
     def handle_master_action_view(self, **kwargs):
         log.debug('')
@@ -4596,6 +4691,7 @@ class EWalletWorker():
             'unlink': self.handle_master_action_unlink,
             'recover': self.handle_master_action_recover,
             'inspect': self.handle_master_action_inspect,
+            'remove': self.handle_master_action_remove,
         }
         return handlers[kwargs['action']](**kwargs)
 
@@ -4662,6 +4758,7 @@ class EWalletWorker():
             'interogate': self.handle_system_action_interogate,
             'remove': self.handle_system_action_remove,
             'cleanup': self.handle_system_action_cleanup,
+            'clear': self.handle_system_action_clear,
         }
         return handlers[kwargs['action']](**kwargs)
 
@@ -4690,6 +4787,26 @@ class EWalletWorker():
     '''
     [ TODO ]: Fetch warning messages from message file by key codes.
     '''
+
+    def warning_could_not_clear_ewallet_session_values(self, *args):
+        instruction_set_response = {
+            'failed': True, 'level': 'session-worker',
+            'warning': 'Something went wrong. '
+                       'Could not clear EWallet Session values. '
+                       'Details: {}'.format(args),
+        }
+        log.warning(instruction_set_response['warning'])
+        return instruction_set_response
+
+    def warning_could_not_remove_master_acquired_ctoken_from_pool(self, *args):
+        instruction_set_response = {
+            'failed': True, 'level': 'session-worker',
+            'warning': 'Something went wrong. '
+                       'Could not remove Master account acquired '
+                       'CToken from pool. Details: {}'.format(args),
+        }
+        log.warning(instruction_set_response['warning'])
+        return instruction_set_response
 
     def warning_could_not_view_master_account_logout_records(self, *args):
         instruction_set_response = {
@@ -5844,6 +5961,33 @@ class EWalletWorker():
     '''
     [ TODO ]: Fetch error messages from message file by key codes.
     '''
+
+    def error_no_system_action_clear_target_specified(self, *args):
+        instruction_set_response = {
+            'failed': True, 'level': 'session-worker',
+            'error': 'No system action Clear target specified. '
+                     'Details: {}.'.format(args),
+        }
+        log.error(instruction_set_response['error'])
+        return instruction_set_response
+
+    def error_no_master_action_remove_target_specified(self, *args):
+        instruction_set_response = {
+            'failed': True, 'level': 'session-worker',
+            'error': 'No master action Remove target specified. '
+                     'Details: {}.'.format(args),
+        }
+        log.error(instruction_set_response['error'])
+        return instruction_set_response
+
+    def error_no_master_action_remove_ctoken_target_specified(self, *args):
+        instruction_set_response = {
+            'failed': True, 'level': 'session-worker',
+            'error': 'No master action RemoveCToken target specified. '
+                     'Details: {}.'.format(args),
+        }
+        log.error(instruction_set_response['error'])
+        return instruction_set_response
 
     def error_no_client_action_keep_alive_target_specified(self, *args):
         instruction_set_response = {

@@ -83,6 +83,31 @@ class EWalletSessionManager():
     def fetch_from_ewallet_worker_session(self):
         log.debug('TODO - UNIMPLEMENTED')
 
+    def fetch_system_clear_session_worker_instruction(self, **kwargs):
+        log.debug('')
+        return {
+            'controller': 'system',
+            'ctype': 'action',
+            'action': 'clear',
+            'clear': 'session',
+            'client_id': kwargs.get('client_id', ''),
+            'session_token': kwargs.get('session_token', ''),
+        }
+
+    def fetch_master_remove_ctoken_worker_instruction(self, **kwargs):
+        log.debug('')
+        return {
+            'controller': 'master',
+            'ctype': 'action',
+            'action': 'remove',
+            'remove': 'ctoken',
+            'ctoken': 'acquired',
+            'client_id': kwargs.get('client_id', ''),
+            'session_token': kwargs.get('session_token', ''),
+            'master_id': kwargs.get('master_id'),
+            'key': kwargs.get('key'),
+        }
+
 #   @pysnooper.snoop('logs/ewallet.log')
     def fetch_master_account_by_email(self, master_account_email, **kwargs):
         log.debug('')
@@ -3105,6 +3130,52 @@ class EWalletSessionManager():
     def action_stop_client_token_cleaner_cron(self, **kwargs):
         log.debug('TODO - UNIMPLEMENTED')
 
+    def action_release_master_user_account(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('client_id'):
+            return self.error_invalid_release_master_action_data_set(kwargs)
+        ctoken = self.fetch_client_token_by_label(kwargs['client_id'])
+        if isinstance(ctoken, dict) and ctoken.get('failed'):
+            return self.warning_could_not_fetch_client_token(kwargs, ctoken)
+        kwargs.update({'master_id': ctoken.fetch_master()})
+        instruction_set = self.fetch_master_remove_ctoken_worker_instruction(**kwargs)
+        remove_ctoken = self.action_execute_user_instruction_set(**instruction_set)
+        if not remove_ctoken or isinstance(remove_ctoken, dict) and \
+                remove_ctoken.get('failed'):
+            return self.warning_could_not_remove_released_ctoken_from_master_pool(
+                kwargs, ctoken, instruction_set, remove_ctoken
+            )
+        unset_master = ctoken.set_master(None)
+        if isinstance(unset_master, dict) and unset_master.get('failed'):
+            return self.error_could_not_unset_master_user_account_from_ctoken(
+                kwargs, ctoken, unset_master
+            )
+        worker_id = self.fetch_worker_identifier_by_client_id(kwargs['client_id'])
+        if not worker_id or isinstance(worker_id, dict) and \
+                worker_id.get('failed'):
+            return worker_id
+        instruction_set = self.fetch_system_clear_session_worker_instruction(**kwargs)
+        clear_session = self.action_execute_system_instruction_set(
+            worker_id=worker_id, **instruction_set
+        )
+        if not clear_session or isinstance(clear_session, dict) and \
+                clear_session.get('failed'):
+            self.warning_could_not_clear_ewallet_session(
+                kwargs, ctoken, remove_ctoken, unset_master, worker_id,
+                instruction_set, clear_session
+            )
+        master = self.fetch_master_account_by_id(kwargs['master_id'], **kwargs)
+        instruction_set_response = {
+            'failed': False,
+            'client_id': kwargs['client_id'],
+            'released': str(kwargs['master_id']) if not master or
+                isinstance(master, dict) and master.get('failed')
+                else master.fetch_user_email(),
+            'ctoken': ctoken,
+            'ctoken_data': ctoken.fetch_token_values(),
+        }
+        return instruction_set_response
+
     def action_report_issue(self, **kwargs):
         log.debug('')
         if not kwargs.get('issue'):
@@ -4263,6 +4334,36 @@ class EWalletSessionManager():
         '''
         log.debug('TODO - Kill process')
         return self.unset_socket_handler()
+
+#   @pysnooper.snoop('logs/ewallet.log')
+    def handle_client_action_release_master(self, **kwargs):
+        log.debug('')
+        instruction_set_validation = self.validate_instruction_set(kwargs)
+        if not instruction_set_validation \
+                or isinstance(instruction_set_validation, dict) \
+                and instruction_set_validation.get('failed'):
+            return instruction_set_validation
+        check_acquired = self.check_ctoken_acquired_master_account(
+            kwargs['client_id']
+        )
+        if not check_acquired or isinstance(check_acquired, dict) and \
+                check_acquired.get('failed'):
+            return self.warning_ctoken_has_no_acquired_master_account(
+                kwargs, check_acquired
+            )
+        release_account = self.action_release_master_user_account(**kwargs)
+        if not release_account or isinstance(release_account, dict) and \
+                release_account.get('failed'):
+            return self.warning_could_not_release_master_user_account(
+                kwargs, instruction_set_validation, release_account
+            )
+        instruction_set_response = {
+            'failed': False,
+            'client_id': kwargs['client_id'],
+            'released': release_account['released'],
+            'ctoken_data': release_account['ctoken_data'],
+        }
+        return instruction_set_response
 
     def handle_client_action_report_issue(self, **kwargs):
         log.debug('')
@@ -6022,6 +6123,15 @@ class EWalletSessionManager():
         }
         return handlers[kwargs['transfer']](**kwargs)
 
+    def handle_client_action_release(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('release'):
+            return self.error_no_client_action_release_target_specified(kwargs)
+        handlers = {
+            'master': self.handle_client_action_release_master,
+        }
+        return handlers[kwargs['release']](**kwargs)
+
     def handle_client_action_report(self, **kwargs):
         log.debug('')
         if not kwargs.get('report'):
@@ -6787,6 +6897,7 @@ class EWalletSessionManager():
             'acquire': self.handle_client_action_acquire,
             'alive': self.handle_client_action_alive,
             'report': self.handle_client_action_report,
+            'release': self.handle_client_action_release,
         }
         return handlers[kwargs['action']](**kwargs)
 
@@ -6839,6 +6950,33 @@ class EWalletSessionManager():
     '''
     [ TODO ]: Fetch warning messages from message file by key codes.
     '''
+
+    def warning_could_not_clear_ewallet_session(self, *args):
+        instruction_set_response = res_utils.format_warning_response(**{
+            'failed': True, 'details': args, 'level': 'session-manager',
+            'warning': 'Something went wrong. '
+                       'Could not clean EWallet session.',
+        })
+        self.log_warning(**instruction_set_response)
+        return instruction_set_response
+
+    def warning_could_not_remove_released_ctoken_from_master_pool(self, *args):
+        instruction_set_response = res_utils.format_warning_response(**{
+            'failed': True, 'details': args, 'level': 'session-manager',
+            'warning': 'Something went wrong. '
+                       'Could not remove released CToken from '
+                       'Master account Subordonate pool.',
+        })
+        self.log_warning(**instruction_set_response)
+        return instruction_set_response
+
+    def warning_ctoken_has_no_acquired_master_account(self, *args):
+        instruction_set_response = res_utils.format_warning_response(**{
+            'failed': True, 'details': args, 'level': 'session-manager',
+            'warning': 'CToken has no acquired Master user account.',
+        })
+        self.log_warning(**instruction_set_response)
+        return instruction_set_response
 
     def warning_could_not_write_issue_report_to_disk(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
@@ -8387,6 +8525,31 @@ class EWalletSessionManager():
     '''
     [ TODO ]: Fetch error messages from message file by key codes.
     '''
+
+    def error_invalid_release_master_action_data_set(self, *args):
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args, 'level': 'session-manager',
+            'error': 'Invalid ReleaseMaster action data set.',
+        })
+        self.log_error(**instruction_set_response)
+        return instruction_set_response
+
+    def error_could_not_unset_master_user_account_from_ctoken(self, *args):
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args, 'level': 'session-manager',
+            'error': 'Something went wrong. '
+                     'Could not unset linked Master user account from CToken.',
+        })
+        self.log_error(**instruction_set_response)
+        return instruction_set_response
+
+    def error_no_client_action_release_target_specified(self, *args):
+        instruction_set_response = res_utils.format_error_response(**{
+            'failed': True, 'details': args, 'level': 'session-manager',
+            'error': 'No client action Release target specified.',
+        })
+        self.log_error(**instruction_set_response)
+        return instruction_set_response
 
     def error_could_not_format_issue_report(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
