@@ -108,8 +108,8 @@
     - x - (EWSC) Add EWDox support for master action InspectSubordonate
     - x - (EWSC) Add EWDox support for master action ViewLoginRecords
     - x - (EWSC) Add EWDox support for master action ViewLogoutRecords
-    -   - (EWSC) Groom EWDox to comply with new error and warning handlers
-    - (EWCC) Make library importable
+    - x - (EWSC) Groom EWDox to comply with new error and warning handlers
+    -   - (EWCC) Make library importable
     - (EWAT) Groom tutor functional test suit
     - (EWAT) Groom tutor instruction set inspections
     - (EWAT) Groom tutor interactive actions

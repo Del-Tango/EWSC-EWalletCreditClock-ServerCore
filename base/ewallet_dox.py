@@ -64,6 +64,8 @@ def display_user_action_recover_account_instruction_set_example(**kwargs):
         'response_nok': {
             'failed': '<flag type-bool value-true>',
             'error': '<error-message type-str>',
+            'level': '<entity-level type-str>',
+            'details': '<data-set type-set>',
             'warning': '<warning-message type-str>'
         },
     }
@@ -101,6 +103,8 @@ def display_user_action_pause_clock_timer_instruction_set_example(**kwargs):
         'response_nok': {
             'failed': '<flag type-bool value-true>',
             'error': '<error-message type-str>',
+            'level': '<entity-level type-str>',
+            'details': '<data-set type-set>',
             'warning': '<warning-message type-str>'
         },
     }
@@ -139,6 +143,8 @@ def display_user_action_resume_clock_timer_instruction_set_example(**kwargs):
         'response_nok': {
             'failed': '<flag type-bool value-true>',
             'error': '<error-message type-str>',
+            'level': '<entity-level type-str>',
+            'details': '<data-set type-set>',
             'warning': '<warning-message type-str>'
         },
     }
@@ -172,6 +178,8 @@ def display_user_action_start_clock_timer_instruction_set_example(**kwargs):
         'response_nok': {
             'failed': '<flag type-bool value-true>',
             'error': '<error-message type-str>',
+            'level': '<entity-level type-str>',
+            'details': '<data-set type-set>',
             'warning': '<warning-message type-str>'
         },
     }
@@ -223,6 +231,8 @@ def display_user_action_stop_clock_timer_instruction_set_example(**kwargs):
         'response_nok': {
             'failed': '<flag type-bool value-true>',
             'error': '<error-message type-str>',
+            'level': '<entity-level type-str>',
+            'details': '<data-set type-set>',
             'warning': '<warning-message type-str>'
         },
     }
@@ -261,6 +271,8 @@ def display_user_action_account_login_instruction_set_example(**kwargs):
         'response_nok': {
             'failed': '<flag type-bool value-true>',
             'error': '<error-message type-str>',
+            'level': '<entity-level type-str>',
+            'details': '<data-set type-set>',
             'warning': '<warning-message type-str>'
         },
     }
@@ -298,6 +310,8 @@ def display_user_action_account_logout_instruction_set_example(**kwargs):
         'response_nok': {
             'failed': '<flag type-bool value-true>',
             'error': '<error-message type-str>',
+            'level': '<entity-level type-str>',
+            'details': '<data-set type-set>',
             'warning': '<warning-message type-str>'
         },
     }
@@ -335,6 +349,8 @@ def display_user_action_add_contact_list_record_instruction_set_example(**kwargs
         'response_nok': {
             'failed': '<flag type-bool value-true>',
             'error': '<error-message type-str>',
+            'level': '<entity-level type-str>',
+            'details': '<data-set type-set>',
             'warning': '<warning-message type-str>'
         },
     }
@@ -372,6 +388,8 @@ def display_user_action_convert_clock_to_credits_instruction_set_example(**kwarg
         'response_nok': {
             'failed': '<flag type-bool value-true>',
             'error': '<error-message type-str>',
+            'level': '<entity-level type-str>',
+            'details': '<data-set type-set>',
             'warning': '<warning-message type-str>'
         },
     }
@@ -407,6 +425,8 @@ def display_user_action_convert_credits_to_clock_instruction_set_example(**kwarg
         'response_nok': {
             'failed': '<flag type-bool value-true>',
             'error': '<error-message type-str>',
+            'level': '<entity-level type-str>',
+            'details': '<data-set type-set>',
             'warning': '<warning-message type-str>'
         },
     }
@@ -457,6 +477,8 @@ def display_user_action_create_new_account_instruction_set_example(**kwargs):
         'response_nok': {
             'failed': '<flag type-bool value-true>',
             'error': '<error-message type-str>',
+            'level': '<entity-level type-str>',
+            'details': '<data-set type-set>',
             'warning': '<warning-message type-str>'
         },
     }
@@ -498,6 +520,8 @@ def display_user_action_create_contact_list_instruction_set_example(**kwargs):
         'response_nok': {
             'failed': '<flag type-bool value-true>',
             'error': '<error-message type-str>',
+            'level': '<entity-level type-str>',
+            'details': '<data-set type-set>',
             'warning': '<warning-message type-str>'
         },
     }
@@ -539,6 +563,8 @@ def display_user_action_create_conversion_sheet_instruction_set_example(**kwargs
         'response_nok': {
             'failed': '<flag type-bool value-true>',
             'error': '<error-message type-str>',
+            'level': '<entity-level type-str>',
+            'details': '<data-set type-set>',
             'warning': '<warning-message type-str>'
         },
     }
@@ -588,6 +614,8 @@ def display_user_action_create_credit_clock_instruction_set_example(**kwargs):
             'failed': '<flag type-bool value-true>',
             'error': '<error-message type-str>',
             'warning': '<warning-message type-str>'
+            'level': '<entity-level type-str>',
+            'details': '<data-set type-set>',
         },
     }
     return instruction_set_response
@@ -639,6 +667,8 @@ def display_user_action_create_credit_ewallet_instruction_set_example(**kwargs):
             'failed': '<flag type-bool value-true>',
             'error': '<error-message type-str>',
             'warning': '<warning-message type-str>'
+            'level': '<entity-level type-str>',
+            'details': '<data-set type-set>',
         },
     }
     return instruction_set_response
@@ -680,6 +710,8 @@ def display_user_action_create_invoice_sheet_instruction_set_example(**kwargs):
             'failed': '<flag type-bool value-true>',
             'error': '<error-message type-str>',
             'warning': '<warning-message type-str>'
+            'level': '<entity-level type-str>',
+            'details': '<data-set type-set>',
         },
     }
     return instruction_set_response
@@ -721,6 +753,8 @@ def display_user_action_create_time_sheet_instruction_set_example(**kwargs):
             'failed': '<flag type-bool value-true>',
             'error': '<error-message type-str>',
             'warning': '<warning-message type-str>'
+            'level': '<entity-level type-str>',
+            'details': '<data-set type-set>',
         },
     }
     return instruction_set_response
@@ -762,6 +796,8 @@ def display_user_action_create_transfer_sheet_instruction_set_example(**kwargs):
             'failed': '<flag type-bool value-true>',
             'error': '<error-message type-str>',
             'warning': '<warning-message type-str>'
+            'level': '<entity-level type-str>',
+            'details': '<data-set type-set>',
         },
     }
     return instruction_set_response
@@ -823,6 +859,8 @@ def display_user_action_edit_account_instruction_set_example(**kwargs):
             'failed': '<flag type-bool value-true>',
             'error': '<error-message type-str>',
             'warning': '<warning-message type-str>'
+            'level': '<entity-level type-str>',
+            'details': '<data-set type-set>',
         },
     }
     return instruction_set_response
@@ -859,6 +897,8 @@ def display_user_action_pay_credits_instruction_set_example(**kwargs):
             'failed': '<flag type-bool value-true>',
             'error': '<error-message type-str>',
             'warning': '<warning-message type-str>'
+            'level': '<entity-level type-str>',
+            'details': '<data-set type-set>',
         },
     }
     return instruction_set_response
@@ -882,6 +922,8 @@ def display_user_action_request_client_id_instruction_set_example(**kwargs):
             'failed': '<flag type-bool value-true>',
             'error': '<error-message type-str>',
             'warning': '<warning-message type-str>'
+            'level': '<entity-level type-str>',
+            'details': '<data-set type-set>',
         },
     }
     return instruction_set_response
@@ -908,6 +950,8 @@ def display_user_action_request_session_token_instruction_set_example(**kwargs):
             'failed': '<flag type-bool value-true>',
             'error': '<error-message type-str>',
             'warning': '<warning-message type-str>'
+            'level': '<entity-level type-str>',
+            'details': '<data-set type-set>',
         },
     }
     return instruction_set_response
@@ -945,6 +989,8 @@ def display_user_action_supply_credits_instruction_set_example(**kwargs):
             'failed': '<flag type-bool value-true>',
             'error': '<error-message type-str>',
             'warning': '<warning-message type-str>'
+            'level': '<entity-level type-str>',
+            'details': '<data-set type-set>',
         },
     }
     return instruction_set_response
@@ -986,6 +1032,8 @@ def display_user_action_switch_active_session_user_instruction_set_example(**kwa
             'failed': '<flag type-bool value-true>',
             'error': '<error-message type-str>',
             'warning': '<warning-message type-str>'
+            'level': '<entity-level type-str>',
+            'details': '<data-set type-set>',
         },
     }
     return instruction_set_response
@@ -1029,6 +1077,8 @@ def display_user_action_switch_contact_list_instruction_set_example(**kwargs):
             'failed': '<flag type-bool value-true>',
             'error': '<error-message type-str>',
             'warning': '<warning-message type-str>'
+            'level': '<entity-level type-str>',
+            'details': '<data-set type-set>',
         },
     }
     return instruction_set_response
@@ -1072,6 +1122,8 @@ def display_user_action_switch_conversion_sheet_instruction_set_example(**kwargs
             'failed': '<flag type-bool value-true>',
             'error': '<error-message type-str>',
             'warning': '<warning-message type-str>'
+            'level': '<entity-level type-str>',
+            'details': '<data-set type-set>',
         },
     }
     return instruction_set_response
@@ -1122,6 +1174,8 @@ def display_user_action_switch_credit_clock_instruction_set_example(**kwargs):
             'failed': '<flag type-bool value-true>',
             'error': '<error-message type-str>',
             'warning': '<warning-message type-str>'
+            'level': '<entity-level type-str>',
+            'details': '<data-set type-set>',
         },
     }
     return instruction_set_response
@@ -1175,6 +1229,8 @@ def display_user_action_switch_credit_ewallet_instruction_set_example(**kwargs):
             'failed': '<flag type-bool value-true>',
             'error': '<error-message type-str>',
             'warning': '<warning-message type-str>'
+            'level': '<entity-level type-str>',
+            'details': '<data-set type-set>',
         },
     }
     return instruction_set_response
@@ -1218,6 +1274,8 @@ def display_user_action_switch_invoice_sheet_instruction_set_example(**kwargs):
             'failed': '<flag type-bool value-true>',
             'error': '<error-message type-str>',
             'warning': '<warning-message type-str>'
+            'level': '<entity-level type-str>',
+            'details': '<data-set type-set>',
         },
     }
     return instruction_set_response
@@ -1261,6 +1319,8 @@ def display_user_action_switch_time_sheet_instruction_set_example(**kwargs):
             'failed': '<flag type-bool value-true>',
             'error': '<error-message type-str>',
             'warning': '<warning-message type-str>'
+            'level': '<entity-level type-str>',
+            'details': '<data-set type-set>',
         },
     }
     return instruction_set_response
@@ -1304,6 +1364,8 @@ def display_user_action_switch_transfer_sheet_instruction_set_example(**kwargs):
             'failed': '<flag type-bool value-true>',
             'error': '<error-message type-str>',
             'warning': '<warning-message type-str>'
+            'level': '<entity-level type-str>',
+            'details': '<data-set type-set>',
         },
     }
     return instruction_set_response
@@ -1341,6 +1403,8 @@ def display_user_action_transfer_credits_instruction_set_example(**kwargs):
             'failed': '<flag type-bool value-true>',
             'error': '<error-message type-str>',
             'warning': '<warning-message type-str>'
+            'level': '<entity-level type-str>',
+            'details': '<data-set type-set>',
         },
     }
     return instruction_set_response
@@ -1371,6 +1435,7 @@ def display_user_action_unlink_account_instruction_set_example(**kwargs):
         'response_nok': {
             'failed': '<flag type-bool value-true>',
             'level': '<entity-level type-str>',
+            'details': '<data-set type-set>',
             'error': '<error-message type-str>',
             'warning': '<warning-message type-str>'
         },
@@ -1406,6 +1471,8 @@ def display_user_action_unlink_contact_list_instruction_set_example(**kwargs):
             'failed': '<flag type-bool value-true>',
             'error': '<error-message type-str>',
             'warning': '<warning-message type-str>'
+            'level': '<entity-level type-str>',
+            'details': '<data-set type-set>',
         },
     }
     return instruction_set_response
@@ -1440,6 +1507,8 @@ def display_user_action_unlink_contact_record_instruction_set_example(**kwargs):
             'failed': '<flag type-bool value-true>',
             'error': '<error-message type-str>',
             'warning': '<warning-message type-str>'
+            'level': '<entity-level type-str>',
+            'details': '<data-set type-set>',
         },
     }
     return instruction_set_response
@@ -1474,6 +1543,8 @@ def display_user_action_unlink_conversion_record_instruction_set_example(**kwarg
             'failed': '<flag type-bool value-true>',
             'error': '<error-message type-str>',
             'warning': '<warning-message type-str>'
+            'level': '<entity-level type-str>',
+            'details': '<data-set type-set>',
         },
     }
     return instruction_set_response
@@ -1507,6 +1578,8 @@ def display_user_action_unlink_conversion_sheet_instruction_set_example(**kwargs
             'failed': '<flag type-bool value-true>',
             'error': '<error-message type-str>',
             'warning': '<warning-message type-str>'
+            'level': '<entity-level type-str>',
+            'details': '<data-set type-set>',
         },
     }
     return instruction_set_response
@@ -1540,6 +1613,8 @@ def display_user_action_unlink_credit_clock_instruction_set_example(**kwargs):
             'failed': '<flag type-bool value-true>',
             'error': '<error-message type-str>',
             'warning': '<warning-message type-str>'
+            'level': '<entity-level type-str>',
+            'details': '<data-set type-set>',
         },
     }
     return instruction_set_response
@@ -1573,6 +1648,8 @@ def display_user_action_unlink_credit_ewallet_instruction_set_example(**kwargs):
             'failed': '<flag type-bool value-true>',
             'error': '<error-message type-str>',
             'warning': '<warning-message type-str>'
+            'level': '<entity-level type-str>',
+            'details': '<data-set type-set>',
         },
     }
     return instruction_set_response
@@ -1607,6 +1684,8 @@ def display_user_action_unlink_invoice_record_instruction_set_example(**kwargs):
             'failed': '<flag type-bool value-true>',
             'error': '<error-message type-str>',
             'warning': '<warning-message type-str>'
+            'level': '<entity-level type-str>',
+            'details': '<data-set type-set>',
         },
     }
     return instruction_set_response
@@ -1640,6 +1719,8 @@ def display_user_action_unlink_invoice_sheet_instruction_set_example(**kwargs):
             'failed': '<flag type-bool value-true>',
             'error': '<error-message type-str>',
             'warning': '<warning-message type-str>'
+            'level': '<entity-level type-str>',
+            'details': '<data-set type-set>',
         },
     }
     return instruction_set_response
@@ -1675,6 +1756,8 @@ def display_user_action_unlink_time_record_instruction_set_example(**kwargs):
             'failed': '<flag type-bool value-true>',
             'error': '<error-message type-str>',
             'warning': '<warning-message type-str>'
+            'level': '<entity-level type-str>',
+            'details': '<data-set type-set>',
         },
     }
     return instruction_set_response
@@ -1708,6 +1791,8 @@ def display_user_action_unlink_time_sheet_instruction_set_example(**kwargs):
             'failed': '<flag type-bool value-true>',
             'error': '<error-message type-str>',
             'warning': '<warning-message type-str>'
+            'level': '<entity-level type-str>',
+            'details': '<data-set type-set>',
         },
     }
     return instruction_set_response
@@ -1742,6 +1827,8 @@ def display_user_action_unlink_transfer_record_instruction_set_example(**kwargs)
             'failed': '<flag type-bool value-true>',
             'error': '<error-message type-str>',
             'warning': '<warning-message type-str>'
+            'level': '<entity-level type-str>',
+            'details': '<data-set type-set>',
         },
     }
     return instruction_set_response
@@ -1775,6 +1862,8 @@ def display_user_action_unlink_transfer_sheet_instruction_set_example(**kwargs):
             'failed': '<flag type-bool value-true>',
             'error': '<error-message type-str>',
             'warning': '<warning-message type-str>'
+            'level': '<entity-level type-str>',
+            'details': '<data-set type-set>',
         },
     }
     return instruction_set_response
@@ -1826,6 +1915,8 @@ def display_user_action_view_account_instruction_set_example(**kwargs):
             'failed': '<flag type-bool value-true>',
             'error': '<error-message type-str>',
             'warning': '<warning-message type-str>'
+            'level': '<entity-level type-str>',
+            'details': '<data-set type-set>',
         },
     }
     return instruction_set_response
@@ -1867,6 +1958,8 @@ def display_user_action_view_contact_list_instruction_set_example(**kwargs):
             'failed': '<flag type-bool value-true>',
             'error': '<error-message type-str>',
             'warning': '<warning-message type-str>'
+            'level': '<entity-level type-str>',
+            'details': '<data-set type-set>',
         },
     }
     return instruction_set_response
@@ -1912,6 +2005,8 @@ def display_user_action_view_contact_record_instruction_set_example(**kwargs):
             'failed': '<flag type-bool value-true>',
             'error': '<error-message type-str>',
             'warning': '<warning-message type-str>'
+            'level': '<entity-level type-str>',
+            'details': '<data-set type-set>',
         },
     }
     return instruction_set_response
@@ -1957,6 +2052,8 @@ def display_user_action_view_conversion_record_instruction_set_example(**kwargs)
             'failed': '<flag type-bool value-true>',
             'error': '<error-message type-str>',
             'warning': '<warning-message type-str>'
+            'level': '<entity-level type-str>',
+            'details': '<data-set type-set>',
         },
     }
     return instruction_set_response
@@ -2000,6 +2097,8 @@ def display_user_action_view_conversion_sheet_instruction_set_example(**kwargs):
             'failed': '<flag type-bool value-true>',
             'error': '<error-message type-str>',
             'warning': '<warning-message type-str>'
+            'level': '<entity-level type-str>',
+            'details': '<data-set type-set>',
         },
     }
     return instruction_set_response
@@ -2048,6 +2147,8 @@ def display_user_action_view_credit_clock_instruction_set_example(**kwargs):
             'failed': '<flag type-bool value-true>',
             'error': '<error-message type-str>',
             'warning': '<warning-message type-str>'
+            'level': '<entity-level type-str>',
+            'details': '<data-set type-set>',
         },
     }
     return instruction_set_response
@@ -2099,6 +2200,8 @@ def display_user_action_view_credit_ewallet_instruction_set_example(**kwargs):
             'failed': '<flag type-bool value-true>',
             'error': '<error-message type-str>',
             'warning': '<warning-message type-str>'
+            'level': '<entity-level type-str>',
+            'details': '<data-set type-set>',
         },
     }
     return instruction_set_response
@@ -2145,6 +2248,8 @@ def display_user_action_view_invoice_record_instruction_set_example(**kwargs):
             'failed': '<flag type-bool value-true>',
             'error': '<error-message type-str>',
             'warning': '<warning-message type-str>'
+            'level': '<entity-level type-str>',
+            'details': '<data-set type-set>',
         },
     }
     return instruction_set_response
@@ -2187,6 +2292,8 @@ def display_user_action_view_invoice_sheet_instruction_set_example(**kwargs):
             'failed': '<flag type-bool value-true>',
             'error': '<error-message type-str>',
             'warning': '<warning-message type-str>'
+            'level': '<entity-level type-str>',
+            'details': '<data-set type-set>',
         },
     }
     return instruction_set_response
@@ -2220,6 +2327,8 @@ def display_user_action_view_login_records_instruction_set_example(**kwargs):
             'failed': '<flag type-bool value-true>',
             'error': '<error-message type-str>',
             'warning': '<warning-message type-str>'
+            'level': '<entity-level type-str>',
+            'details': '<data-set type-set>',
         },
     }
     return instruction_set_response
@@ -2254,6 +2363,8 @@ def display_user_action_view_logout_records_instruction_set_example(**kwargs):
             'failed': '<flag type-bool value-true>',
             'error': '<error-message type-str>',
             'warning': '<warning-message type-str>'
+            'level': '<entity-level type-str>',
+            'details': '<data-set type-set>',
         },
     }
     return instruction_set_response
@@ -2303,6 +2414,8 @@ def display_user_action_view_time_record_instruction_set_example(**kwargs):
             'failed': '<flag type-bool value-true>',
             'error': '<error-message type-str>',
             'warning': '<warning-message type-str>'
+            'level': '<entity-level type-str>',
+            'details': '<data-set type-set>',
         },
     }
     return instruction_set_response
@@ -2344,6 +2457,8 @@ def display_user_action_view_time_sheet_instruction_set_example(**kwargs):
             'failed': '<flag type-bool value-true>',
             'error': '<error-message type-str>',
             'warning': '<warning-message type-str>'
+            'level': '<entity-level type-str>',
+            'details': '<data-set type-set>',
         },
     }
     return instruction_set_response
@@ -2391,6 +2506,8 @@ def display_user_action_view_transfer_record_instruction_set_example(**kwargs):
             'failed': '<flag type-bool value-true>',
             'error': '<error-message type-str>',
             'warning': '<warning-message type-str>'
+            'level': '<entity-level type-str>',
+            'details': '<data-set type-set>',
         },
     }
     return instruction_set_response
@@ -2432,6 +2549,8 @@ def display_user_action_view_transfer_sheet_instruction_set_example(**kwargs):
             'failed': '<flag type-bool value-true>',
             'error': '<error-message type-str>',
             'warning': '<warning-message type-str>'
+            'level': '<entity-level type-str>',
+            'details': '<data-set type-set>',
         },
     }
     return instruction_set_response
@@ -3518,6 +3637,7 @@ available_user_actions = {
 
 # DISPLAY
 
+
 #@pysnooper.snoop('logs/ewallet.log')
 def display_ewallet_session_manager_instruction_set_options():
     log.debug('')
@@ -3531,12 +3651,14 @@ def display_ewallet_session_manager_instruction_set_options():
         }
     }
 
+
 def display_ewallet_session_manager_instruction_set_actions(**kwargs):
     log.debug('')
     if not kwargs or not kwargs.get('action') or kwargs.get('action') not in \
             available_user_actions.keys():
         return error_invalid_ewallet_instruction_set_action(kwargs)
     return available_user_actions[kwargs['action']](**kwargs)
+
 
 # TODO - Document EWallet Session Manger User Events
 def display_ewallet_session_manager_instruction_set_events(**kwargs):
@@ -3545,6 +3667,7 @@ def display_ewallet_session_manager_instruction_set_events(**kwargs):
         'failed': True, 'level': 'ewallet-dox',
         'warning': 'EWallet user events not yet supported.'
     }
+
 
 def display_ewallet_session_manager_instruction_set_option(**kwargs):
     log.debug('')
