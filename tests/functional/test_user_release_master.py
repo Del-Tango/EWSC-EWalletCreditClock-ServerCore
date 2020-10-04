@@ -42,7 +42,7 @@ class TestEWalletSessionManagerUserReleaseMasterAccount(unittest.TestCase):
         )
 
         # Create new master user account to acquire
-        print('[...]: Client action NewMaster')
+        print('[...]: Client action CreateMaster')
         master = session_manager.session_manager_controller(
             controller='client', ctype='action', action='new', new='master',
             master='account', client_id=client_id['client_id'],
@@ -100,8 +100,8 @@ class TestEWalletSessionManagerUserReleaseMasterAccount(unittest.TestCase):
         instruction_set = {
             'controller': 'client', 'ctype': 'action', 'action': 'release',
             'release': 'master', 'client_id': self.client_id,
-            'session_token': self.session_token, 'master': self.user_email_1,
-            'key': self.master_key_code,
+            'session_token': self.session_token,
+            'master': self.user_email_1, 'key': self.master_key_code,
         }
         release_master = self.session_manager.session_manager_controller(
             **instruction_set

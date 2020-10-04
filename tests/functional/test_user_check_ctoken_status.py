@@ -70,8 +70,8 @@ class TestEWalletUserActionCheckCTokenStatus(unittest.TestCase):
                 'Details: {}'.format(e)
             )
 
-    def test_user_check_ctoken_session_functionality(self):
-        print('\n[ * ]: Client action CheckCTokenSession')
+    def test_user_check_ctoken_status_functionality(self):
+        print('\n[ * ]: Client action CheckCTokenStatus')
         instruction_set = {
             'controller': 'client', 'ctype': 'action', 'action': 'verify',
             'verify': 'ctoken', 'ctoken': 'status',

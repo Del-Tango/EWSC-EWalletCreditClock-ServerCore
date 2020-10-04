@@ -6951,6 +6951,15 @@ class EWalletSessionManager():
     [ TODO ]: Fetch warning messages from message file by key codes.
     '''
 
+    def warning_could_not_release_master_user_account(self, *args):
+        instruction_set_response = res_utils.format_warning_response(**{
+            'failed': True, 'details': args, 'level': 'session-manager',
+            'warning': 'Something went wrong. '
+                       'Could not release Master user account.',
+        })
+        self.log_warning(**instruction_set_response)
+        return instruction_set_response
+
     def warning_could_not_clear_ewallet_session(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
             'failed': True, 'details': args, 'level': 'session-manager',

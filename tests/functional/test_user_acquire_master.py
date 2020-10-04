@@ -39,7 +39,7 @@ class TestEWalletSessionManagerUserAcquireMasterAccount(unittest.TestCase):
         )
 
         # Create new master user account to acquire
-        print('[...]: Client action NewMaster')
+        print('[...]: Client action CreateMaster')
         master = session_manager.session_manager_controller(
             controller='client', ctype='action', action='new', new='master',
             master='account', client_id=client_id['client_id'],

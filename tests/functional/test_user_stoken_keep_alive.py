@@ -48,7 +48,7 @@ class TestEWalletSessionManagerUserSTokenKeepAlive(unittest.TestCase):
         cls.client_id = client_id['client_id']
         cls.session_token = session_token['session_token']
 
-        print('[...]: Client action NewMaster')
+        print('[...]: Client action CreateMaster')
         master = session_manager.session_manager_controller(
             controller='client', ctype='action', action='new', new='master',
             master='account', client_id=cls.client_id,

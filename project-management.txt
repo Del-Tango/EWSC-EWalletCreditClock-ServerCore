@@ -83,20 +83,32 @@
     - . - (EWSC-x-, EWCC- -, EWAT- -) Implement client action IssueReport
     - . - (EWSC-x- ,EWCC- -, EWAT- -) Implement client action ReleaseMaster
     - x - (EWSC) Add entity level in error and warning handlers
-    - (EWSC) Add EWDox support for client_action CheckCTokenValid
-    - (EWSC) Add EWDox support for client_action CheckCTokenLinked
-    - (EWSC) Add EWDox support for client_action CheckCTokenSession
-    - (EWSC) Add EWDox support for client_action CheckCTokenStatus
-    - (EWSC) Add EWDox support for client_action CheckSTokenValid
-    - (EWSC) Add EWDox support for client_action CheckSTokenLinked
-    - (EWSC) Add EWDox support for client_action CheckSTokenSession
-    - (EWSC) Add EWDox support for client_action CheckSTokenStatus
-    - (EWSC) Add EWDox support for client_action STokenKeepAlive
-    - (EWSC) Add EWDox support for client_action CTokenKeepAlive
-    - (EWSC) Add EWDox support for user action Forcefully-UnlinkAccount
-    - (EWSC) Add EWDox support for client action AcquireMaster
-    - (EWSC) Add EWDox support for client action ReleaseMaster
-    - (EWSC) Groom EWDox to comply with new error and warning handlers
+    - x - (EWSC) Add EWDox support for client_action CheckCTokenValid
+    - x - (EWSC) Add EWDox support for client_action CheckCTokenLinked
+    - x - (EWSC) Add EWDox support for client_action CheckCTokenSession
+    - x - (EWSC) Add EWDox support for client_action CheckCTokenState
+    - x - (EWSC) Add EWDox support for client_action CheckSTokenValid
+    - x - (EWSC) Add EWDox support for client_action CheckSTokenLinked
+    - x - (EWSC) Add EWDox support for client_action CheckSTokenSession
+    - x - (EWSC) Add EWDox support for client_action CheckSTokenState
+    - x - (EWSC) Add EWDox support for client_action STokenKeepAlive
+    - x - (EWSC) Add EWDox support for client_action CTokenKeepAlive
+    - x - (EWSC) Add EWDox support for user action Forcefully-UnlinkAccount
+    - x - (EWSC) Add EWDox support for client action AcquireMaster
+    - x - (EWSC) Add EWDox support for client action ReleaseMaster
+    - x - (EWSC) Add EWDox support for master action AccountLogin
+    - x - (EWSC) Add EWDox support for master action AccountLogout
+    - x - (EWSC) Add EWDox support for master action ViewAccount
+    - x - (EWSC) Add EWDox support for master action EditAccount
+    - x - (EWSC) Add EWDox support for master action UnlinkAccount
+    - x - (EWSC) Add EWDox support for master action RecoverAccount
+    - x - (EWSC) Add EWDox support for master action InspectCTokens
+    - x - (EWSC) Add EWDox support for master action InspectCToken
+    - x - (EWSC) Add EWDox support for master action InspectSubPool
+    - x - (EWSC) Add EWDox support for master action InspectSubordonate
+    - x - (EWSC) Add EWDox support for master action ViewLoginRecords
+    - x - (EWSC) Add EWDox support for master action ViewLogoutRecords
+    -   - (EWSC) Groom EWDox to comply with new error and warning handlers
     - (EWCC) Make library importable
     - (EWAT) Groom tutor functional test suit
     - (EWAT) Groom tutor instruction set inspections
@@ -188,6 +200,7 @@
     - (EWSC) Refactor client action IssueReport to add server side logs
     - (EWSC) Refactor EWServer to have only one config object passed
     - (EWSC, EWCC, EWAT) Implement entity record limiter queue mechanism
+    - (EWSC, EWCC, EWAT) Refactor master action Edit to include master key code
     - (EWSC, EWCC, EWAT) Send user account password as hash
     - (EWSC, EWCC, EWAT) Implement AddNotes mechanism for journal records
     - (EWSC, EWCC, EWAT) Add SSL certificates for CToken - Master Accounts link

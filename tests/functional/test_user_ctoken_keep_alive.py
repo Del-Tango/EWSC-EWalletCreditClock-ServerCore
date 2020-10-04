@@ -48,7 +48,7 @@ class TestEWalletSessionManagerUserCTokenKeepAlive(unittest.TestCase):
         cls.client_id = client_id['client_id']
         cls.session_token = session_token['session_token']
 
-        print('[...]: Client action NewMaster')
+        print('[...]: Client action CreateMaster')
         master = session_manager.session_manager_controller(
             controller='client', ctype='action', action='new', new='master',
             master='account', client_id=cls.client_id,
@@ -96,8 +96,8 @@ class TestEWalletSessionManagerUserCTokenKeepAlive(unittest.TestCase):
                 'Details: {}'.format(e)
             )
 
-    def test_user_action_stoken_keep_alive_functionality(self):
-        print('\n[ * ]: User action STokenKeepAlive')
+    def test_user_action_ctoken_keep_alive_functionality(self):
+        print('\n[ * ]: User action CTokenKeepAlive')
         instruction_set = {
             'controller': 'client', 'ctype': 'action', 'action': 'alive',
             'alive': 'ctoken', 'client_id': self.client_id,

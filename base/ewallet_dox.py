@@ -1362,6 +1362,7 @@ def display_user_action_unlink_account_instruction_set_example(**kwargs):
             'unlink': 'account',
             'client_id': '<client-id type-str>',
             'session_token': '<session-token type-str>',
+            'forced_removal': '<forced-flag optional-true type-bool>',
         },
         'response_ok': {
             'failed': '<flag type-bool value-false>',
@@ -1369,6 +1370,7 @@ def display_user_action_unlink_account_instruction_set_example(**kwargs):
         },
         'response_nok': {
             'failed': '<flag type-bool value-true>',
+            'level': '<entity-level type-str>',
             'error': '<error-message type-str>',
             'warning': '<warning-message type-str>'
         },
@@ -2434,7 +2436,1024 @@ def display_user_action_view_transfer_sheet_instruction_set_example(**kwargs):
     }
     return instruction_set_response
 
+def display_user_action_check_ctoken_valid_instruction_set_example(**kwargs):
+    log.debug('')
+    instruction_set_response = {
+        'failed': False,
+        'action': 'CheckCTokenValid',
+        'prerequisits': [
+            'RequestClientID',
+        ],
+        'instruction_set': {
+            'controller': 'client',
+            'ctype': 'action',
+            'action': 'verify',
+            'verify': 'ctoken',
+            'ctoken': 'validity',
+            'client_id': '<client-id type-str>',
+        },
+        'response_ok': {
+            'failed': '<flag type-bool value-false>',
+            'client_id': '<client-id type-str>',
+            'valid': '<validity-flag type-bool>',
+            'registered': '<registration-flag type-bool>',
+            'expired': '<expiration-flag type-bool>',
+        },
+        'response_nok': {
+            'failed': '<flag type-bool value-true>',
+            'error': '<error-message type-str>',
+            'level': '<entity-level type-str>',
+            'details': '<data-set type-set>',
+            'warning': '<warning-message type-str>'
+        },
+    }
+    return instruction_set_response
+
+def display_user_action_check_ctoken_linked_instruction_set_example(**kwargs):
+    log.debug('')
+    instruction_set_response = {
+        'failed': False,
+        'action': 'CheckCTokenLinked',
+        'prerequisits': [
+            'RequestClientID',
+        ],
+        'instruction_set': {
+            'controller': 'client',
+            'ctype': 'action',
+            'action': 'verify',
+            'verify': 'ctoken',
+            'ctoken': 'linked',
+            'client_id': '<client-id type-str>',
+        },
+        'response_ok': {
+            'failed': '<flag type-bool value-false>',
+            'client_id': '<client-id type-str>',
+            'session_token': '<session-token type-str>',
+            'linked': '<association-flag type-bool>',
+        },
+        'response_nok': {
+            'failed': '<flag type-bool value-true>',
+            'error': '<error-message type-str>',
+            'level': '<entity-level type-str>',
+            'details': '<data-set type-set>',
+            'warning': '<warning-message type-str>'
+        },
+    }
+    return instruction_set_response
+
+def display_user_action_check_ctoken_session_instruction_set_example(**kwargs):
+    log.debug('')
+    instruction_set_response = {
+        'failed': False,
+        'action': 'CheckCTokenSession',
+        'prerequisits': [
+            'RequestClientID',
+        ],
+        'instruction_set': {
+            'controller': 'client',
+            'ctype': 'action',
+            'action': 'verify',
+            'verify': 'ctoken',
+            'ctoken': 'session',
+            'client_id': '<client-id type-str>',
+        },
+        'response_ok': {
+            'failed': '<flag type-bool value-false>',
+            'client_id': '<client-id type-str>',
+            'plugged': '<connection-flag type-bool>',
+            'session': '<session-id type-int>',
+        },
+        'response_nok': {
+            'failed': '<flag type-bool value-true>',
+            'error': '<error-message type-str>',
+            'level': '<entity-level type-str>',
+            'details': '<data-set type-set>',
+            'warning': '<warning-message type-str>'
+        },
+    }
+    return instruction_set_response
+
+def display_user_action_check_ctoken_status_instruction_set_example(**kwargs):
+    log.debug('')
+    instruction_set_response = {
+        'failed': False,
+        'action': 'CheckCTokenState',
+        'prerequisits': [
+            'RequestClientID',
+        ],
+        'instruction_set': {
+            'controller': 'client',
+            'ctype': 'action',
+            'action': 'verify',
+            'verify': 'ctoken',
+            'ctoken': 'status',
+            'client_id': '<client-id type-str>',
+        },
+        'response_ok': {
+            'failed': '<flag type-bool value-false>',
+            'client_id': '<client-id type-str>',
+            'session_token': '<session-token type-str>',
+            'valid': '<validity-flag type-bool>',
+            'linked': '<association-flag type-bool>',
+            'plugged': '<connection-flag type-bool>',
+            'master': '<acquired-flag type-bool>',
+            'session': '<session-id type-int>',
+            'acquired': '<master-email type-str>',
+        },
+        'response_nok': {
+            'failed': '<flag type-bool value-true>',
+            'error': '<error-message type-str>',
+            'level': '<entity-level type-str>',
+            'details': '<data-set type-set>',
+            'warning': '<warning-message type-str>'
+        },
+    }
+    return instruction_set_response
+
+def display_user_action_check_stoken_valid_instruction_set_example(**kwargs):
+    log.debug('')
+    instruction_set_response = {
+        'failed': False,
+        'action': 'CheckSTokenValid',
+        'prerequisits': [
+            'RequestClientID',
+            'RequestSessionToken',
+        ],
+        'instruction_set': {
+            'controller': 'client',
+            'ctype': 'action',
+            'action': 'verify',
+            'verify': 'stoken',
+            'stoken': 'validity',
+            'session_token': '<session-token type-str>',
+        },
+        'response_ok': {
+            'failed': '<flag type-bool value-false>',
+            'session_token': '<session-token type-str>',
+            'valid': '<validity-flag type-bool>',
+            'registered': '<registration-flag type-bool>',
+            'expired': '<expiration-flag type-bool>',
+        },
+        'response_nok': {
+            'failed': '<flag type-bool value-true>',
+            'error': '<error-message type-str>',
+            'level': '<entity-level type-str>',
+            'details': '<data-set type-set>',
+            'warning': '<warning-message type-str>'
+        },
+    }
+    return instruction_set_response
+
+def display_user_action_check_stoken_linked_instruction_set_example(**kwargs):
+    log.debug('')
+    instruction_set_response = {
+        'failed': False,
+        'action': 'CheckSTokenLinked',
+        'prerequisits': [
+            'RequestClientID',
+            'RequestSessionToken',
+        ],
+        'instruction_set': {
+            'controller': 'client',
+            'ctype': 'action',
+            'action': 'verify',
+            'verify': 'stoken',
+            'stoken': 'linked',
+            'session_token': '<session-token type-str>',
+        },
+        'response_ok': {
+            'failed': '<flag type-bool value-false>',
+            'client_id': '<client-id type-str>',
+            'session_token': '<session-token type-str>',
+            'linked': '<association-flag type-bool>',
+        },
+        'response_nok': {
+            'failed': '<flag type-bool value-true>',
+            'error': '<error-message type-str>',
+            'level': '<entity-level type-str>',
+            'details': '<data-set type-set>',
+            'warning': '<warning-message type-str>'
+        },
+    }
+    return instruction_set_response
+
+def display_user_action_check_stoken_session_instruction_set_example(**kwargs):
+    log.debug('')
+    instruction_set_response = {
+        'failed': False,
+        'action': 'CheckSTokenSession',
+        'prerequisits': [
+            'RequestClientID',
+            'RequestSessionToken',
+        ],
+        'instruction_set': {
+            'controller': 'client',
+            'ctype': 'action',
+            'action': 'verify',
+            'verify': 'stoken',
+            'stoken': 'session',
+            'session_token': '<session-token type-str>',
+        },
+        'response_ok': {
+            'failed': '<flag type-bool value-false>',
+            'session_token': '<session-token type-str>',
+            'session': '<session-id type-int>',
+            'plugged': '<connection-flag type-bool>',
+        },
+        'response_nok': {
+            'failed': '<flag type-bool value-true>',
+            'error': '<error-message type-str>',
+            'level': '<entity-level type-str>',
+            'details': '<data-set type-set>',
+            'warning': '<warning-message type-str>'
+        },
+    }
+    return instruction_set_response
+
+def display_user_action_check_stoken_status_instruction_set_example(**kwargs):
+    log.debug('')
+    instruction_set_response = {
+        'failed': False,
+        'action': 'CheckSTokenState',
+        'prerequisits': [
+            'RequestClientID',
+            'RequestSessionToken',
+        ],
+        'instruction_set': {
+            'controller': 'client',
+            'ctype': 'action',
+            'action': 'verify',
+            'verify': 'stoken',
+            'stoken': 'status',
+            'session_token': '<session-token type-str>',
+        },
+        'response_ok': {
+            'failed': '<flag type-bool value-false>',
+            'client_id': '<client-id type-str>',
+            'session_token': '<session-token type-str>',
+            'session': '<session-id type-int>',
+            'valid': '<validity-flag type-bool>',
+            'linked': '<association-flag type-bool>',
+            'plugged': '<connection-flag type-bool>',
+            'session': '<session-id type-int>',
+        },
+        'response_nok': {
+            'failed': '<flag type-bool value-true>',
+            'error': '<error-message type-str>',
+            'level': '<entity-level type-str>',
+            'details': '<data-set type-set>',
+            'warning': '<warning-message type-str>'
+        },
+    }
+    return instruction_set_response
+
+def display_user_action_ctoken_keep_alive_instruction_set_example(**kwargs):
+    log.debug('')
+    instruction_set_response = {
+        'failed': False,
+        'action': 'CTokenKeepAlive',
+        'prerequisits': [
+            'RequestClientID',
+            'RequestSessionToken',
+            'CreateMaster',
+            'AcquireMaster',
+            'CreateAccount',
+            'AccountLogin',
+        ],
+        'instruction_set': {
+            'controller': 'client',
+            'ctype': 'action',
+            'action': 'alive',
+            'alive': 'ctoken',
+            'client_id': '<client-token type-str>',
+            'session_token': '<session-token type-str>',
+        },
+        'response_ok': {
+            'failed': '<flag type-bool value-false>',
+            'ctoken': '<client-token-label type-str>',
+            'extended': '<time-unit_count type-int>',
+            'time_unit': '<time-unit-label type-str>',
+            'ctoken_data': {
+                'stoken': '<linked-stoken-label type-str>',
+                'acquired_master': '<linked-master-id type-int>',
+                'create_date': '<datetime-string type-str>',
+                'write_date': '<datetime-string type-str>',
+                'label': '<client-id type-str>',
+                'active': '<active-flag type-bool>',
+                'unlink': '<unlink-flag type-bool>',
+                'valid_to': '<datetime-string type-str>',
+            }
+        },
+        'response_nok': {
+            'failed': '<flag type-bool value-true>',
+            'error': '<error-message type-str>',
+            'level': '<entity-level type-str>',
+            'details': '<data-set type-set>',
+            'warning': '<warning-message type-str>'
+        },
+    }
+    return instruction_set_response
+
+def display_user_action_stoken_keep_alive_instruction_set_example(**kwargs):
+    log.debug('')
+    instruction_set_response = {
+        'failed': False,
+        'action': 'STokenKeepAlive',
+        'prerequisits': [
+            'RequestClientID',
+            'RequestSessionToken',
+            'CreateMaster',
+            'AcquireMaster',
+            'CreateAccount',
+            'AccountLogin',
+        ],
+        'instruction_set': {
+            'controller': 'client',
+            'ctype': 'action',
+            'action': 'alive',
+            'alive': 'stoken',
+            'client_id': '<client-token type-str>',
+            'session_token': '<session-token type-str>',
+        },
+        'response_ok': {
+            'failed': '<flag type-bool value-false>',
+            'stoken': '<session-token-label type-str>',
+            'extended': '<time-unit_count type-int>',
+            'time_unit': '<time-unit-label type-str>',
+            'stoken_data': {
+                'ctoken': '<linked-ctoken-label type-str>',
+                'worker_id': '<linked-worker-id type-int>',
+                'create_date': '<datetime-string type-str>',
+                'write_date': '<datetime-string type-str>',
+                'label': '<client-id type-str>',
+                'active': '<active-flag type-bool>',
+                'unlink': '<unlink-flag type-bool>',
+                'valid_to': '<datetime-string type-str>',
+            }
+        },
+        'response_nok': {
+            'failed': '<flag type-bool value-true>',
+            'error': '<error-message type-str>',
+            'level': '<entity-level type-str>',
+            'details': '<data-set type-set>',
+            'warning': '<warning-message type-str>'
+        },
+    }
+    return instruction_set_response
+
+def display_user_action_acquire_master_instruction_set_example(**kwargs):
+    log.debug('')
+    instruction_set_response = {
+        'failed': False,
+        'action': 'AcquireMaster',
+        'prerequisits': [
+            'RequestClientID',
+            'RequestSessionToken',
+            'CreateMaster',
+        ],
+        'instruction_set': {
+            'controller': 'client',
+            'ctype': 'action',
+            'action': 'acquire',
+            'acquire': 'master',
+            'master': '<master-email type-str>',
+            'key': '<master-pass-key type-str>',
+            'client_id': '<session-token type-str>',
+            'session_token': '<session-token type-str>',
+        },
+        'response_ok': {
+            'failed': '<flag type-bool value-false>',
+            'client_id': '<client-token-label type-str>',
+            'master': '<master-email type-str>',
+        },
+        'response_nok': {
+            'failed': '<flag type-bool value-true>',
+            'error': '<error-message type-str>',
+            'level': '<entity-level type-str>',
+            'details': '<data-set type-set>',
+            'warning': '<warning-message type-str>'
+        },
+    }
+    return instruction_set_response
+
+def display_user_action_release_master_instruction_set_example(**kwargs):
+    log.debug('')
+    instruction_set_response = {
+        'failed': False,
+        'action': 'ReleaseMaster',
+        'prerequisits': [
+            'RequestClientID',
+            'RequestSessionToken',
+            'CreateMaster',
+            'AcquireMaster',
+        ],
+        'instruction_set': {
+            'controller': 'client',
+            'ctype': 'action',
+            'action': 'acquire',
+            'acquire': 'master',
+            'master': '<master-email type-str>',
+            'key': '<master-pass-key type-str>',
+            'client_id': '<client-token type-str>',
+            'session_token': '<session-token type-str>',
+        },
+        'response_ok': {
+            'failed': '<flag type-bool value-false>',
+            'client_id': '<client-token-label type-str>',
+            'released': '<master-email type-str>',
+            'ctoken_data': {
+                'stoken': '<linked-stoken-label type-(str, None)>',
+                'acquired_master': '<master-id type-(int, None)>',
+                'create_date': '<datetime-string type-str>',
+                'write_date': '<datetime-string type-str>',
+                'label': '<client-id type-str>',
+                'active': '<active-flag type-bool>',
+                'unlink': '<unlink-flag type-bool>',
+                'valid_to': '<datetime-string type-str>',
+            }
+        },
+        'response_nok': {
+            'failed': '<flag type-bool value-true>',
+            'error': '<error-message type-str>',
+            'level': '<entity-level type-str>',
+            'details': '<data-set type-set>',
+            'warning': '<warning-message type-str>'
+        },
+    }
+    return instruction_set_response
+
+def display_master_action_account_login_instruction_set_example(**kwargs):
+    log.debug('')
+    instruction_set_response = {
+        'failed': False,
+        'action': 'MasterAccountLogin',
+        'prerequisits': [
+            'RequestClientID',
+            'RequestSessionToken',
+            'CreateMaster',
+        ],
+        'instruction_set': {
+            'controller': 'master',
+            'ctype': 'action',
+            'action': 'login',
+            'user_email': '<email-address type-str>',
+            'user_pass': '<password type-str>',
+            'client_id': '<client-token type-str>',
+            'session_token': '<session-token type-str>',
+        },
+        'response_ok': {
+            'failed': '<flag type-bool value-false>',
+            'account': '<master-email type-str>',
+            'session_data': {
+                'id': '<session-id type-int>',
+                'master': '<master-email type-str>',
+                'create_date': '<datetime-string type-str>',
+                'write_date': '<datetime-string type-str>',
+                'expiration_date': '<datetime-string type-str>',
+            }
+        },
+        'response_nok': {
+            'failed': '<flag type-bool value-true>',
+            'error': '<error-message type-str>',
+            'level': '<entity-level type-str>',
+            'details': '<data-set type-set>',
+            'warning': '<warning-message type-str>'
+        },
+    }
+    return instruction_set_response
+
+def display_master_action_account_logout_instruction_set_example(**kwargs):
+    log.debug('')
+    instruction_set_response = {
+        'failed': False,
+        'action': 'MasterAccountLogout',
+        'prerequisits': [
+            'RequestClientID',
+            'RequestSessionToken',
+            'CreateMaster',
+            'MasterAccountLogin',
+        ],
+        'instruction_set': {
+            'controller': 'master',
+            'ctype': 'action',
+            'action': 'logout',
+            'user_email': '<email-address type-str>',
+            'user_pass': '<password type-str>',
+            'client_id': '<client-token type-str>',
+            'session_token': '<session-token type-str>',
+        },
+        'response_ok': {
+            'failed': '<flag type-bool value-false>',
+            'account': '<master-email type-str>',
+            'session_data': {
+                'id': '<session-id type-int>',
+                'master': '<master-email type-(str | None)>',
+                'create_date': '<datetime-string type-str>',
+                'write_date': '<datetime-string type-str>',
+                'expiration_date': '<datetime-string type-str>',
+            }
+        },
+        'response_nok': {
+            'failed': '<flag type-bool value-true>',
+            'error': '<error-message type-str>',
+            'level': '<entity-level type-str>',
+            'details': '<data-set type-set>',
+            'warning': '<warning-message type-str>'
+        },
+    }
+    return instruction_set_response
+
+def display_master_action_view_account_instruction_set_example(**kwargs):
+    log.debug('')
+    instruction_set_response = {
+        'failed': False,
+        'action': 'MasterViewAccount',
+        'prerequisits': [
+            'RequestClientID',
+            'RequestSessionToken',
+            'CreateMaster',
+            'MasterAccountLogin',
+        ],
+        'instruction_set': {
+            'controller': 'master',
+            'ctype': 'action',
+            'action': 'view',
+            'view': 'account',
+            'client_id': '<client-token type-str>',
+            'session_token': '<session-token type-str>',
+        },
+        'response_ok': {
+            'failed': '<flag type-bool value-false>',
+            'account': '<master-email type-str>',
+            'account_data': {
+                'id': '<master-id type-int>',
+                'name': '<master-user-name type-str>',
+                'create_date': '<datetime-string type-str>',
+                'write_date': '<datetime-string type-str>',
+                'email': '<master-email type-str>',
+                'phone': '<master-phone type-str>',
+                'alias': '<master-alias type-str>',
+                'key_code': '<master-pass-key type-str>',
+                'account_limit': '<subordonate-count type-int>',
+                'company': '<master-company type-str>',
+                'address': '<master-address type-str>',
+                'subordonate_pool': {
+                    '<account-id type-int>': '<account-email type-str>'
+                },
+                'acquired_ctokens': '<ctoken-count type-int>',
+                'active': '<active-flag type-bool>',
+            }
+        },
+        'response_nok': {
+            'failed': '<flag type-bool value-true>',
+            'error': '<error-message type-str>',
+            'level': '<entity-level type-str>',
+            'details': '<data-set type-set>',
+            'warning': '<warning-message type-str>'
+        },
+    }
+    return instruction_set_response
+
+def display_master_action_edit_account_instruction_set_example(**kwargs):
+    log.debug('')
+    instruction_set_response = {
+        'failed': False,
+        'action': 'MasterEditAccount',
+        'prerequisits': [
+            'RequestClientID',
+            'RequestSessionToken',
+            'CreateMaster',
+            'MasterAccountLogin',
+        ],
+        'instruction_set': {
+            'controller': 'master',
+            'ctype': 'action',
+            'action': 'edit',
+            'edit': 'account',
+            'user_name': '<new-name optional-true type-str>',
+            'user_phone': '<new-phone optional-true type-str>',
+            'user_email': '<new-email optional-true type-str>',
+            'user_alias': '<new-alias optional-true type-str>',
+            'user_pass': '<new-password optional-true type-str>',
+            'client_id': '<client-token type-str>',
+            'session_token': '<session-token type-str>',
+        },
+        'response_ok': {
+            'failed': '<flag type-bool value-false>',
+            'account': '<master-email type-str>',
+            'edit': {
+                'name': '<modifier-flag type-bool>',
+                'pass': '<modifier-flag type-bool>',
+                'alias': '<modifier-flag type-bool>',
+                'email': '<modifier-flag type-bool>',
+                'phone': '<modifier-flag type-bool>',
+            },
+            'account_data': {
+                'id': '<master-id type-int>',
+                'name': '<master-user-name type-str>',
+                'create_date': '<datetime-string type-str>',
+                'write_date': '<datetime-string type-str>',
+                'email': '<master-email type-str>',
+                'phone': '<master-phone type-str>',
+                'alias': '<master-alias type-str>',
+                'key_code': '<master-pass-key type-str>',
+                'account_limit': '<subordonate-count type-int>',
+                'company': '<master-company type-str>',
+                'address': '<master-address type-str>',
+                'subordonate_pool': {
+                    '<account-id type-int>': '<account-email type-str>'
+                },
+                'acquired_ctokens': '<ctoken-count type-int>',
+                'active': '<active-flag type-bool>',
+            }
+        },
+        'response_nok': {
+            'failed': '<flag type-bool value-true>',
+            'error': '<error-message type-str>',
+            'level': '<entity-level type-str>',
+            'details': '<data-set type-set>',
+            'warning': '<warning-message type-str>'
+        },
+    }
+    return instruction_set_response
+
+def display_master_action_unlink_account_instruction_set_example(**kwargs):
+    log.debug('')
+    instruction_set_response = {
+        'failed': False,
+        'action': 'MasterUnlinkAccount',
+        'prerequisits': [
+            'RequestClientID',
+            'RequestSessionToken',
+            'CreateMaster',
+            'MasterAccountLogin',
+        ],
+        'instruction_set': {
+            'controller': 'master',
+            'ctype': 'action',
+            'action': 'unlink',
+            'unlink': 'account',
+            'client_id': '<client-token type-str>',
+            'session_token': '<session-token type-str>',
+        },
+        'response_ok': {
+            'failed': '<flag type-bool value-false>',
+            'account': '<master-email type-str>',
+        },
+        'response_nok': {
+            'failed': '<flag type-bool value-true>',
+            'error': '<error-message type-str>',
+            'level': '<entity-level type-str>',
+            'details': '<data-set type-set>',
+            'warning': '<warning-message type-str>'
+        },
+    }
+    return instruction_set_response
+
+def display_master_action_recover_account_instruction_set_example(**kwargs):
+    log.debug('')
+    instruction_set_response = {
+        'failed': False,
+        'action': 'MasterRecoverAccount',
+        'prerequisits': [
+            'RequestClientID',
+            'RequestSessionToken',
+            'CreateMaster',
+            'MasterAccountLogin',
+            'MasterUnlinkAccount',
+        ],
+        'instruction_set': {
+            'controller': 'master',
+            'ctype': 'action',
+            'action': 'recover',
+            'recover': 'account',
+            'client_id': '<client-token type-str>',
+            'session_token': '<session-token type-str>',
+        },
+        'response_ok': {
+            'failed': '<flag type-bool value-false>',
+            'account': '<master-email type-str>',
+            'account_data': {
+                'id': '<master-id type-int>',
+                'name': '<master-user-name type-str>',
+                'create_date': '<datetime-string type-str>',
+                'write_date': '<datetime-string type-str>',
+                'email': '<master-email type-str>',
+                'phone': '<master-phone type-str>',
+                'alias': '<master-alias type-str>',
+                'key_code': '<master-pass-key type-str>',
+                'account_limit': '<subordonate-count type-int>',
+                'company': '<master-company type-str>',
+                'address': '<master-address type-str>',
+                'subordonate_pool': {
+                    '<account-id type-int>': '<account-email type-str>'
+                },
+                'acquired_ctokens': '<ctoken-count type-int>',
+                'active': '<active-flag type-bool>',
+            },
+        },
+        'response_nok': {
+            'failed': '<flag type-bool value-true>',
+            'error': '<error-message type-str>',
+            'level': '<entity-level type-str>',
+            'details': '<data-set type-set>',
+            'warning': '<warning-message type-str>'
+        },
+    }
+    return instruction_set_response
+
+def display_master_action_inspect_ctokens_instruction_set_example(**kwargs):
+    log.debug('')
+    instruction_set_response = {
+        'failed': False,
+        'action': 'MasterInspectCTokens',
+        'prerequisits': [
+            'RequestClientID',
+            'RequestSessionToken',
+            'CreateMaster',
+            'MasterAccountLogin',
+            'AcquireMaster',
+        ],
+        'instruction_set': {
+            'controller': 'master',
+            'ctype': 'action',
+            'action': 'inspect',
+            'inspect': 'ctokens',
+            'client_id': '<client-token type-str>',
+            'session_token': '<session-token type-str>',
+        },
+        'response_ok': {
+            'failed': '<flag type-bool value-false>',
+            'account': '<master-email type-str>',
+            'account_data': {
+                'id': '<master-id type-int>',
+                'name': '<master-user-name type-str>',
+                'create_date': '<datetime-string type-str>',
+                'write_date': '<datetime-string type-str>',
+                'email': '<master-email type-str>',
+                'phone': '<master-phone type-str>',
+                'alias': '<master-alias type-str>',
+                'key_code': '<master-pass-key type-str>',
+                'account_limit': '<subordonate-count type-int>',
+                'company': '<master-company type-str>',
+                'address': '<master-address type-str>',
+                'subordonate_pool': {
+                    '<account-id type-int>': '<account-email type-str>'
+                },
+                'acquired_ctokens': '<ctoken-count type-int>',
+                'active': '<active-flag type-bool>',
+            },
+            'ctokens': ['<ctoken-label type-str>', '...']
+        },
+        'response_nok': {
+            'failed': '<flag type-bool value-true>',
+            'error': '<error-message type-str>',
+            'level': '<entity-level type-str>',
+            'details': '<data-set type-set>',
+            'warning': '<warning-message type-str>'
+        },
+    }
+    return instruction_set_response
+
+def display_master_action_inspect_ctoken_instruction_set_example(**kwargs):
+    log.debug('')
+    instruction_set_response = {
+        'failed': False,
+        'action': 'MasterInspectCToken',
+        'prerequisits': [
+            'RequestClientID',
+            'RequestSessionToken',
+            'CreateMaster',
+            'MasterAccountLogin',
+            'AcquireMaster',
+        ],
+        'instruction_set': {
+            'controller': 'master',
+            'ctype': 'action',
+            'action': 'inspect',
+            'inspect': 'ctoken',
+            'ctoken': '<ctoken-label type-str>',
+            'client_id': '<client-token type-str>',
+            'session_token': '<session-token type-str>',
+        },
+        'response_ok': {
+            'failed': '<flag type-bool value-false>',
+            'account': '<master-email type-str>',
+            'ctoken': '<ctoken-label type-str>',
+            'ctoken_data': {
+                'stoken': '<linked-stoken-label type-(str | None)>',
+                'acquired_master': '<master-id type-(int | None)>',
+                'create_date': '<datetime-string type-str>',
+                'write_date': '<datetime-string type-str>',
+                'label': '<ctoken-label type-str>',
+                'unlink': '<unlink-flag type-bool>',
+                'valid_to': '<datetime-string type-str>',
+                'active': '<active-flag type-bool>',
+            },
+        },
+        'response_nok': {
+            'failed': '<flag type-bool value-true>',
+            'error': '<error-message type-str>',
+            'level': '<entity-level type-str>',
+            'details': '<data-set type-set>',
+            'warning': '<warning-message type-str>'
+        },
+    }
+    return instruction_set_response
+
+def display_master_action_inspect_subpool_instruction_set_example(**kwargs):
+    log.debug('')
+    instruction_set_response = {
+        'failed': False,
+        'action': 'MasterInspectSubPool',
+        'prerequisits': [
+            'RequestClientID',
+            'RequestSessionToken',
+            'CreateMaster',
+            'MasterAccountLogin',
+            'AcquireMaster',
+            'CreateAccount',
+        ],
+        'instruction_set': {
+            'controller': 'master',
+            'ctype': 'action',
+            'action': 'inspect',
+            'inspect': 'subpool',
+            'client_id': '<client-token type-str>',
+            'session_token': '<session-token type-str>',
+        },
+        'response_ok': {
+            'failed': '<flag type-bool value-false>',
+            'account': '<master-email type-str>',
+            'subpool': {
+                '<account-id type-int>': '<account-email type-str>'
+            },
+        },
+        'response_nok': {
+            'failed': '<flag type-bool value-true>',
+            'error': '<error-message type-str>',
+            'level': '<entity-level type-str>',
+            'details': '<data-set type-set>',
+            'warning': '<warning-message type-str>'
+        },
+    }
+    return instruction_set_response
+
+def display_master_action_inspect_subordonate_instruction_set_example(**kwargs):
+    log.debug('')
+    instruction_set_response = {
+        'failed': False,
+        'action': 'MasterInspectSubordonate',
+        'prerequisits': [
+            'RequestClientID',
+            'RequestSessionToken',
+            'CreateMaster',
+            'MasterAccountLogin',
+            'AcquireMaster',
+            'CreateAccount',
+        ],
+        'instruction_set': {
+            'controller': 'master',
+            'ctype': 'action',
+            'action': 'inspect',
+            'inspect': 'subordonate',
+            'subordonate': '<account-id type-int>',
+            'client_id': '<client-token type-str>',
+            'session_token': '<session-token type-str>',
+        },
+        'response_ok': {
+            'failed': '<flag type-bool value-false>',
+            'account': '<master-email type-str>',
+            'subordonate': {
+                'id': '<account-id type-int>',
+                'name': '<account-user-name type-str>',
+                'create_date': '<datetime-string type-str>',
+                'write_date': '<datetime-string type-str>',
+                'ewallet': '<ewallet-id type-int>',
+                'contact_list': '<list-id type-int>',
+                'email': '<account-user-email type-str>',
+                'phone': '<account-user-phone type-str>',
+                'alias': '<account-user-alias type-str>',
+                'state': '<login-state type-int values-(0, 1)>',
+                'ewallet_archive': {
+                    '<ewallet-id type-int>': '<ewallet-reference type-str>'
+                },
+                'contact_list_archive': {
+                    '<list-id type-int>': '<list-reference type-str>'
+                },
+                'to_unlink': '<unlink-flag type-bool>',
+                'to_unlink_timestamp': '<datetime-string type-(str | None)>',
+                'subordonate_of': '<master-id type-int>',
+            }
+        },
+        'response_nok': {
+            'failed': '<flag type-bool value-true>',
+            'error': '<error-message type-str>',
+            'level': '<entity-level type-str>',
+            'details': '<data-set type-set>',
+            'warning': '<warning-message type-str>'
+        },
+    }
+    return instruction_set_response
+
+def display_master_action_view_login_records_instruction_set_example(**kwargs):
+    log.debug('')
+    instruction_set_response = {
+        'failed': False,
+        'action': 'MasterViewLogin',
+        'prerequisits': [
+            'RequestClientID',
+            'RequestSessionToken',
+            'CreateMaster',
+            'MasterAccountLogin',
+        ],
+        'instruction_set': {
+            'controller': 'master',
+            'ctype': 'action',
+            'action': 'view',
+            'view': 'login',
+            'client_id': '<client-token type-str>',
+            'session_token': '<session-token type-str>',
+        },
+        'response_ok': {
+            'failed': '<flag type-bool value-false>',
+            'account': '<master-email type-str>',
+            'login_records': {
+                '<record-id type-int>': '<datetime-string type-str>'
+            }
+        },
+        'response_nok': {
+            'failed': '<flag type-bool value-true>',
+            'error': '<error-message type-str>',
+            'level': '<entity-level type-str>',
+            'details': '<data-set type-set>',
+            'warning': '<warning-message type-str>'
+        },
+    }
+    return instruction_set_response
+
+def display_master_action_view_logout_records_instruction_set_example(**kwargs):
+    log.debug('')
+    instruction_set_response = {
+        'failed': False,
+        'action': 'MasterViewLogout',
+        'prerequisits': [
+            'RequestClientID',
+            'RequestSessionToken',
+            'CreateMaster',
+            'MasterAccountLogin',
+            'MasterAccountLogout',
+        ],
+        'instruction_set': {
+            'controller': 'master',
+            'ctype': 'action',
+            'action': 'view',
+            'view': 'logout',
+            'client_id': '<client-token type-str>',
+            'session_token': '<session-token type-str>',
+        },
+        'response_ok': {
+            'failed': '<flag type-bool value-false>',
+            'account': '<master-email type-str>',
+            'logout_records': {
+                '<record-id type-int>': '<datetime-string type-str>'
+            }
+        },
+        'response_nok': {
+            'failed': '<flag type-bool value-true>',
+            'error': '<error-message type-str>',
+            'level': '<entity-level type-str>',
+            'details': '<data-set type-set>',
+            'warning': '<warning-message type-str>'
+        },
+    }
+    return instruction_set_response
+
 available_user_actions = {
+    'CheckCTokenValid': display_user_action_check_ctoken_valid_instruction_set_example,
+    'CheckCTokenLinked': display_user_action_check_ctoken_linked_instruction_set_example,
+    'ChechCTokenSession': display_user_action_check_ctoken_session_instruction_set_example,
+    'CheckCTokenState': display_user_action_check_ctoken_status_instruction_set_example,
+    'CheckSTokenValid': display_user_action_check_stoken_valid_instruction_set_example,
+    'CheckSTokenLinked': display_user_action_check_stoken_linked_instruction_set_example,
+    'ChechSTokenSession': display_user_action_check_stoken_session_instruction_set_example,
+    'CheckSTokenState': display_user_action_check_stoken_status_instruction_set_example,
+    'CTokenKeepAlive': display_user_action_ctoken_keep_alive_instruction_set_example,
+    'STokenKeepAlive': display_user_action_stoken_keep_alive_instruction_set_example,
+    'AcquireMaster': display_user_action_acquire_master_instruction_set_example,
+    'ReleaseMaster': display_user_action_release_master_instruction_set_example,
+    'MasterAccountLogin': display_master_action_account_login_instruction_set_example,
+    'MasterAccountLogout': display_master_action_account_logout_instruction_set_example,
+    'MasterViewAccount': display_master_action_view_account_instruction_set_example,
+    'MasterEditAccount': display_master_action_edit_account_instruction_set_example,
+    'MasterUnlinkAccount': display_master_action_unlink_account_instruction_set_example,
+    'MasterRecoverAccount': display_master_action_recover_account_instruction_set_example,
+    'MasterInspectCTokens': display_master_action_inspect_ctokens_instruction_set_example,
+    'MasterInspectCToken': display_master_action_inspect_ctoken_instruction_set_example,
+    'MasterInspectSubPool': display_master_action_inspect_subpool_instruction_set_example,
+    'MasterInspectSubordonate': display_master_action_inspect_subordonate_instruction_set_example,
+    'MasterViewLogin': display_master_action_view_login_records_instruction_set_example,
+    'MasterViewLogout': display_master_action_view_logout_records_instruction_set_example,
     'PauseClockTimer': display_user_action_pause_clock_timer_instruction_set_example,
     'ResumeClockTimer': display_user_action_resume_clock_timer_instruction_set_example,
     'StartClockTimer': display_user_action_start_clock_timer_instruction_set_example,
@@ -2523,7 +3542,7 @@ def display_ewallet_session_manager_instruction_set_actions(**kwargs):
 def display_ewallet_session_manager_instruction_set_events(**kwargs):
     log.debug('TODO')
     return {
-        'failed': True,
+        'failed': True, 'level': 'ewallet-dox',
         'warning': 'EWallet user events not yet supported.'
     }
 
@@ -2542,8 +3561,8 @@ def display_ewallet_session_manager_instruction_set_option(**kwargs):
 
 def error_invalid_ewallet_instruction_set_event(instruction_set):
     instruction_set_response = {
-        'failed': True,
-        'error': 'Invalid EWallet instruction set event. Details: {}'\
+        'failed': True, 'level': 'ewallet-dox',
+        'error': 'Invalid EWallet instruction set event. Details: {}'
                  .format(instruction_set)
     }
     log.error(instruction_set_response['error'])
@@ -2551,8 +3570,8 @@ def error_invalid_ewallet_instruction_set_event(instruction_set):
 
 def error_invalid_ewallet_instruction_set_action(instruction_set):
     instruction_set_response = {
-        'failed': True,
-        'error': 'Invalid EWallet instruction set action. Details: {}'\
+        'failed': True, 'level': 'ewallet-dox',
+        'error': 'Invalid EWallet instruction set action. Details: {}'
                  .format(instruction_set)
     }
     log.error(instruction_set_response['error'])
@@ -2560,8 +3579,8 @@ def error_invalid_ewallet_instruction_set_action(instruction_set):
 
 def error_invalid_ewallet_instruction_set_option(instruction_set):
     instruction_set_response = {
-        'failed': True,
-        'error': 'Invalid EWallet instruction set option. Details: {}'\
+        'failed': True, 'level': 'ewallet-dox',
+        'error': 'Invalid EWallet instruction set option. Details: {}'
                  .format(instruction_set)
     }
     log.error(instruction_set_response['error'])
