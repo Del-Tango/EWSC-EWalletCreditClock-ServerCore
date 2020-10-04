@@ -60,6 +60,7 @@ class ResUtils():
         instruction_set_response = {
             'failed': kwargs.get('failed'),
             'error': kwargs.get('error'),
+            'level': kwargs.get('level'),
             'details': ''.join(map(str, [
                 item for item in filter(
                     lambda ch: ch not in "\\(\')\"", str(kwargs.get('details'))
@@ -72,6 +73,7 @@ class ResUtils():
         instruction_set_response = {
             'failed': kwargs.get('failed'),
             'warning': kwargs.get('warning'),
+            'level': kwargs.get('level'),
             'details': ''.join(map(str, [
                 item for item in filter(
                     lambda ch: ch not in "\\(\')\"", str(kwargs.get('details'))

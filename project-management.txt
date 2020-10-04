@@ -81,8 +81,7 @@
     - . - (EWSC-x-, EWCC- -, EWAT- -) Implement client action STokenKeepAlive
     - . - (EWSC-x-, EWCC- -, EWAT- -) Implement client action CTokenKeepAlive
     - . - (EWSC-x-, EWCC- -, EWAT- -) Implement client action IssueReport
-    -   - (EWCC) Make library importable
-    - (EWSC) Add system level in error and warning handlers
+    -   - (EWSC) Add system level in error and warning handlers
     - (EWSC) Add EWDox support for client action client ID validity checkers
     - (EWSC) Add EWDox support for client_action session token validity checkers
     - (EWSC) Add EWDox support for client_action STokenKeepAlive
@@ -91,6 +90,7 @@
     - (EWSC) Add EWDox support for client action AcquireMaster
     - (EWSC) Add EWDox support for client action ReleaseMaster
     - (EWSC) Groom EWDox to comply with new error and warning handlers
+    - (EWCC) Make library importable
     - (EWAT) Groom tutor functional test suit
     - (EWAT) Groom tutor instruction set inspections
     - (EWAT) Groom tutor interactive actions

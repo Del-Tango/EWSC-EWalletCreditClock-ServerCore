@@ -4912,6 +4912,7 @@ class EWallet(Base):
     def warning_could_not_inspect_master_subordonate_account(self, *args):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'warning': 'Something went wrong. '
                        'Could not inspect Master user account Subordonate. '
                        'Details: {}'.format(args),
@@ -4922,6 +4923,7 @@ class EWallet(Base):
     def warning_could_not_inspect_master_account_subpool(self, *args):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'warning': 'Something went wrong. '
                        'Could not inspect Master user account Subordonate pool. '
                        'Details: {}'.format(args),
@@ -4932,6 +4934,7 @@ class EWallet(Base):
     def warning_master_account_not_flagged_for_removal(self, *args):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'warning': 'Master user account is not flagged for deletion. '
                        'Details: {}'.format(args),
         }
@@ -4941,6 +4944,7 @@ class EWallet(Base):
     def warning_could_not_recover_master_account(self, *args):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'warning': 'Something went wrong. '
                        'Could not recover Master user account. '
                        'Details: {}'.format(args),
@@ -4951,6 +4955,7 @@ class EWallet(Base):
     def warning_master_account_pending_deletion(self, *args):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'warning': 'Master user account pending deletion. '
                        'Details: {}'.format(args),
         }
@@ -4960,6 +4965,7 @@ class EWallet(Base):
     def warning_could_not_fetch_master_account_by_id(self, *args):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'warning': 'Something went wrong. '
                        'Could not fetch Master user account by ID. '
                        'Details: {}'.format(args),
@@ -4970,6 +4976,7 @@ class EWallet(Base):
     def warning_could_not_unlink_master_account(self, *args):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'warning': 'Something went wrong. '
                        'Could not unlink Master user account. '
                        'Details: {}'.format(args),
@@ -4980,6 +4987,7 @@ class EWallet(Base):
     def warning_no_master_account_values_edited(self, *args):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'warning': 'Something went wrong. '
                        'No Master account values edited. '
                        'Details: {}'.format(args),
@@ -4990,6 +4998,7 @@ class EWallet(Base):
     def warning_could_not_edit_master_user_name(self, *args):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'warning': 'Something went wrong. '
                        'Could not edit Master account user name. '
                        'Details: {}'.format(args),
@@ -5000,6 +5009,7 @@ class EWallet(Base):
     def warning_could_not_edit_master_user_pass(self, *args):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'warning': 'Something went wrong. '
                        'Could not edit Master account password. '
                        'Details: {}'.format(args),
@@ -5010,6 +5020,7 @@ class EWallet(Base):
     def warning_could_not_edit_master_user_alias(self, *args):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'warning': 'Something went wrong. '
                        'Could not edit Master account alias. '
                        'Details: {}'.format(args),
@@ -5020,6 +5031,7 @@ class EWallet(Base):
     def warning_could_not_edit_master_user_email(self, *args):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'warning': 'Something went wrong. '
                        'Could not edit Master account email address. '
                        'Details: {}'.format(args),
@@ -5030,6 +5042,7 @@ class EWallet(Base):
     def warning_could_not_edit_master_user_phone(self, *args):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'warning': 'Something went wrong. '
                        'Could not edit Master account phone number. '
                        'Details: {}'.format(args),
@@ -5040,6 +5053,7 @@ class EWallet(Base):
     def warning_master_not_logged_in(self, *args):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'warning': 'Master user account is not logged in. '
                        'Details: {}'.format(args),
         }
@@ -5049,6 +5063,7 @@ class EWallet(Base):
     def warning_master_account_flagged_for_removal(self, *args):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'warning': 'Master user account is currently flagged for removal, '
                        'all account actions locked. '
                        'Details: {}'.format(args),
@@ -5059,6 +5074,7 @@ class EWallet(Base):
     def warning_could_not_fetch_ewallet_session_active_master(self, *args):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'warning': 'Something went wrong. '
                        'Could not fetch active session Master user account. '
                        'Details: {}'.format(args),
@@ -5069,6 +5085,7 @@ class EWallet(Base):
     def warning_could_not_logout_master_account(self, *args):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'warning': 'Something went wrong. '
                        'Could not logout Master user account. '
                        'Details: {}'.format(args),
@@ -5079,6 +5096,7 @@ class EWallet(Base):
     def warning_could_not_login_user_account(self, *args):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'warning': 'Something went wrong. '
                        'Could not login Master user account. '
                        'Details: {}'.format(args),
@@ -5089,6 +5107,7 @@ class EWallet(Base):
     def warning_master_account_frozen(self, *args):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'warning': 'Master account is currently in a frozen state, '
                        'all master and subordonate user actions locked. '
                        'Details: {}'.format(args),
@@ -5099,6 +5118,7 @@ class EWallet(Base):
     def warning_could_not_check_master_account_frozen(self, *args):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'warning': 'Something went wrong. '
                        'Could not check if Master account is in a frozen state.'
                        'Details: {}'.format(args),
@@ -5109,6 +5129,7 @@ class EWallet(Base):
     def warning_user_account_frozen(self, *args):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'warning': 'User account is currently in a frozen state, '
                        'all user actions locked. Details: {}'.format(args),
         }
@@ -5118,6 +5139,7 @@ class EWallet(Base):
     def warning_could_not_check_user_belongs_to_master_account_subpool(self, *args):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'warning': 'Something went wrong. '
                        'Could not check if user account belongs to acquired '
                        'Master account Subordonate pool. '
@@ -5129,6 +5151,7 @@ class EWallet(Base):
     def warning_could_not_fetch_master_account_by_identifier(self, *args):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'warning': 'Something went wrong. '
                        'Could not fetch Master user account by ID.'
                        'Details: {}'.format(args),
@@ -5139,6 +5162,7 @@ class EWallet(Base):
     def warning_user_account_not_subordonate_to_acquired_master_account(self, *args):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'warning': 'Illegal action. '
                        'User account is not a Subordonate of acquired '
                        'Master account. Details: {}'.format(args),
@@ -5149,6 +5173,7 @@ class EWallet(Base):
     def warning_subordonate_account_pool_size_limit_reached(self, *args):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'warning': 'Illegal action. '
                        'Subordonate account pool size limit reached. '
                        'Details: {}'.format(args),
@@ -5159,6 +5184,7 @@ class EWallet(Base):
     def warning_could_not_fetch_credit_ewallet(self, *args):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'warning': 'Something went wrong. '
                        'Could not fetch credit ewallet. '
                        'Details: {}'.format(args),
@@ -5169,6 +5195,7 @@ class EWallet(Base):
     def warning_no_master_key_code_specified(self, *args):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'warning': 'No master key code specified. '
                        'Details: {}'.format(args),
         }
@@ -5178,6 +5205,7 @@ class EWallet(Base):
     def warning_invalid_master_account_key_code(self, *args):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'warning': 'Invalid master account key code. '
                        'Details: {}'.format(args),
         }
@@ -5187,6 +5215,7 @@ class EWallet(Base):
     def warning_no_master_account_found_by_email(self, *args):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'warning': 'No master user account found by email address. '
                        'Details: {}'.format(args),
         }
@@ -5196,6 +5225,7 @@ class EWallet(Base):
     def warning_invalid_search_by_parameter_for_master_account(self, *args):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'warning': 'Invalid search by parameter for master account query. '
                        'Details: {}'.format(args),
         }
@@ -5205,6 +5235,7 @@ class EWallet(Base):
     def warning_no_master_account_found_by_id(self, *args):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'warning': 'No master user account found by ID.'
                        'Details: {}'.format(args),
         }
@@ -5214,6 +5245,7 @@ class EWallet(Base):
     def warning_could_not_link_new_user_account_to_master(self, *args):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'warning': 'Something went wrong. '
                        'Could not link new user account to master account.'
                        'Details: {}'.format(args),
@@ -5224,6 +5256,7 @@ class EWallet(Base):
     def warning_record_id_not_in_transfer_sheet(self, *args):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'warning': 'Transfer record ID not found in active transfer sheet. '
                        'Details: {}'.format(args),
         }
@@ -5233,6 +5266,7 @@ class EWallet(Base):
     def warning_could_not_update_ewallet_session(self, *args):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'warning': 'Could not update ewallet session. '
                        'Details: {}'.format(args),
         }
@@ -5242,6 +5276,7 @@ class EWallet(Base):
     def warning_user_account_flaged_for_removal(self, *args):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'warning': 'User account marked for removal. '
                        'Details: {}'.format(args),
         }
@@ -5251,6 +5286,7 @@ class EWallet(Base):
     def warning_no_user_account_found(self, *args):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'warning': 'Something went wrong. '
                        'No user account found. '
                        'Details: {}'.format(args),
@@ -5261,6 +5297,7 @@ class EWallet(Base):
     def warning_could_not_create_user_account(self, *args):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'warning': 'Something went wrong. '
                        'Could not create new user account. '
                        'Details: {}'.format(args),
@@ -5271,6 +5308,7 @@ class EWallet(Base):
     def warning_could_not_edit_account_user_pass(self, *args):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'warning': 'Something went wrong. '
                        'Could not edit account user account password. '
                        'Details: {}'.format(args)
@@ -5281,6 +5319,7 @@ class EWallet(Base):
     def warning_could_not_unlink_invoice_sheet(self, *args):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'warning': 'Something went wrong. '
                        'Could not unlink invoice sheet. '
                        'Details: {}'.format(args),
@@ -5291,6 +5330,7 @@ class EWallet(Base):
     def warning_could_not_unlink_invoice_sheet_record(self, *args):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'warning': 'Something went wrong. '
                        'Could not unlink invoice sheet record. '
                        'Details: {}'.format(args),
@@ -5301,6 +5341,7 @@ class EWallet(Base):
     def warning_could_not_unlink_credit_clock(self, *args):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'warning': 'Something went wrong. '
                        'Could not unlink credit clock. '
                        'Details: {}'.format(args),
@@ -5311,6 +5352,7 @@ class EWallet(Base):
     def warning_could_not_unlink_credit_ewallet(self, *args):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'warning': 'Something went wrong. '
                        'Could not unlink credit ewallet. '
                        'Details: {}'.format(args),
@@ -5321,6 +5363,7 @@ class EWallet(Base):
     def warning_could_not_unlink_time_sheet(self, *args):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'warning': 'Something went wrong. '
                        'Could not unlink time sheet. '
                        'Details: {}'.format(args),
@@ -5331,6 +5374,7 @@ class EWallet(Base):
     def warning_could_not_unlink_transfer_sheet(self, *args):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'warning': 'Something went wrong. '
                        'Could not unlink transfer sheet. '
                        'Details : {}'.format(args),
@@ -5341,6 +5385,7 @@ class EWallet(Base):
     def warning_could_not_unlink_transfer_sheet_record(self, *args):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'warning': 'Something went wrong. '
                        'Could not unlink transfer sheet record. '
                        'Details: {}'.format(args),
@@ -5351,6 +5396,7 @@ class EWallet(Base):
     def warning_could_not_unlink_conversion_sheet_record(self, *args):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'warning': 'Something went wrong. '
                        'Could not unlink conversion sheet record. '
                        'Details: {}'.format(args),
@@ -5361,6 +5407,7 @@ class EWallet(Base):
     def warning_could_not_unlink_conversion_sheet(self, *args):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'warning': 'Something went wrong. '
                        'Could not unlink conversion sheet. '
                        'Details: {}'.format(args),
@@ -5371,6 +5418,7 @@ class EWallet(Base):
     def warning_could_not_unlink_contact_list_record(self, *args):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'warning': 'Something went wrong. '
                        'Could not unlink contact list record. '
                        'Details: {}'.format(args),
@@ -5381,6 +5429,7 @@ class EWallet(Base):
     def warning_account_does_not_belong_to_ewallet_session(self, *args):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'warning': 'User account does not belong to ewallet session. '
                        'Details: {}'.format(args),
         }
@@ -5390,6 +5439,7 @@ class EWallet(Base):
     def warning_could_not_unlink_contact_list(self, *args):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'warning': 'Something went wrong. '
                        'Could not unlink contact list. '
                        'Details: {}'.format(args),
@@ -5400,6 +5450,7 @@ class EWallet(Base):
     def warning_could_not_switch_contact_list(self, *args):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'warning': 'Something went wrong. '
                        'Could not switch contact list. '
                        'Details: {}'.format(args),
@@ -5410,6 +5461,7 @@ class EWallet(Base):
     def warning_could_not_switch_time_sheet(self, *args):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'warning': 'Something went wrong. '
                        'Could not switch time sheet. '
                        'Details: {}'.format(args),
@@ -5420,6 +5472,7 @@ class EWallet(Base):
     def warning_could_not_switch_conversion_sheet(self, *args):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'warning': 'Something went wrong. '
                        'Could not switch conversion sheet. '
                        'Details: {}'.format(args),
@@ -5430,6 +5483,7 @@ class EWallet(Base):
     def warning_could_not_switch_invoice_sheet(self, *args):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'warning': 'Something went wrong. '
                        'Could not switch invoice sheet. '
                        'Details: {}'.format(args),
@@ -5440,6 +5494,7 @@ class EWallet(Base):
     def warning_could_not_switch_transfer_sheet(self, *args):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'warning': 'Something went wrong. '
                        'Could not switch transfer sheet. '
                        'Details: {}'.format(args),
@@ -5450,6 +5505,7 @@ class EWallet(Base):
     def warning_could_not_switch_credit_clock(self, *args):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'warning': 'Something went wrong. '
                        'Could not switch credit clock. '
                        'Details: {}'.format(args),
@@ -5460,6 +5516,7 @@ class EWallet(Base):
     def warning_could_not_switch_credit_ewallet(self, *args):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'warning': 'Something went wrong. '
                        'Could not switch credit ewallet. '
                        'Command chain details : {}'.format(args),
@@ -5470,6 +5527,7 @@ class EWallet(Base):
     def warning_account_not_logged_in(self, *args):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'warning': 'Account not logged in. '
                        'Details: {}'.format(args),
         }
@@ -5479,6 +5537,7 @@ class EWallet(Base):
     def warning_could_not_fetch_invoice_sheet_record(self, *args):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'warning': 'Something went wrong. '
                        'Could not fetch invoice sheet record. '
                        'Details: {}'.format(args),
@@ -5489,6 +5548,7 @@ class EWallet(Base):
     def warning_could_not_fetch_conversion_record(self, *args):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'warning': 'Something went wrong. '
                        'Could not fetch conversion sheet record. '
                        'Details: {}'.format(args),
@@ -5499,6 +5559,7 @@ class EWallet(Base):
     def warning_could_not_fetch_time_sheet_record(self, *args):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'warning': 'Something went wrong. '
                        'Could not fetch time sheet record. '
                        'Details: {}'.format(args),
@@ -5509,6 +5570,7 @@ class EWallet(Base):
     def warning_could_not_fetch_transfer_sheet_record(self, *args):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'warning': 'Something went wrong. '
                        'Could not fetch transfer sheet record. '
                        'Details: {}'.format(args),
@@ -5519,6 +5581,7 @@ class EWallet(Base):
     def warning_user_not_logged_in(self, *args):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'warning': 'Illegal account state, user not logged in. '
                        'Details: {}'.format(args)
         }
@@ -5528,6 +5591,7 @@ class EWallet(Base):
     def warning_invalid_user_action_recover_target(self, *args):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'warning': 'Invalid user action recover target specified. '
                        'Details : {}'.format(args)
         }
@@ -5537,6 +5601,7 @@ class EWallet(Base):
     def warning_could_not_recover_user_account(self, *args):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'warning': 'Something went wrong. Could not recover user account. '
                        'Details : {}'.format(args)
         }
@@ -5546,6 +5611,7 @@ class EWallet(Base):
     def warning_user_account_pending_deletion(self, command_chain):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'warning': 'User account pending deletion. '
                        'Command chain details : {}'.format(command_chain)
         }
@@ -5555,6 +5621,7 @@ class EWallet(Base):
     def warning_could_not_fetch_user_account_by_id(self, command_chain):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'warning': 'Something went wrong. Could not fetch user account by id. '\
                        'Command chain details : {}'.format(command_chain),
         }
@@ -5564,6 +5631,7 @@ class EWallet(Base):
     def warning_user_account_not_found_in_database(self, command_chain):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'warning': 'User account not found in EWallet database. '\
                        'Command chain details : {}'.format(command_chain),
         }
@@ -5573,6 +5641,7 @@ class EWallet(Base):
     def warning_could_not_fetch_invoice_sheet(self, command_chain):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'warning': 'Something went wrong. Could not fetch credit wallet invoice sheet. '\
                        'Command chain details : {}'.format(command_chain),
         }
@@ -5582,6 +5651,7 @@ class EWallet(Base):
     def warning_could_not_fetch_ewallet_session_active_user(self, command_chain):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'warning': 'Something went wrong. Could not fetch ewallet session active user. '\
                        'Command chain details : {}'.format(command_chain),
         }
@@ -5591,6 +5661,7 @@ class EWallet(Base):
     def warning_could_not_fetch_active_session_credit_ewallet(self, command_chain):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'warning': 'Something went wrong. Could not fetch active session credit ewallet. '\
                        'Command chain details : {}'.format(command_chain),
         }
@@ -5600,6 +5671,7 @@ class EWallet(Base):
     def warning_could_not_fetch_conversion_sheet(self, command_chain):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'warning': 'Something went wrong. Could not fetch credit clock conversion sheet. '\
                        'Command chain details : {}'.format(command_chain),
         }
@@ -5609,6 +5681,7 @@ class EWallet(Base):
     def warning_could_not_fetch_time_sheet(self, command_chain):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'warning': 'Something went wrong. Could not fetch time sheet '\
                        'Command chain details : {}'.format(command_chain),
         }
@@ -5618,6 +5691,7 @@ class EWallet(Base):
     def warning_could_not_fetch_transfer_sheet(self, command_chain):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'warning': 'something went wrong. could not fetch credit wallet transfer sheet. '\
                        'command chain details : {}'.format(command_chain),
         }
@@ -5627,6 +5701,7 @@ class EWallet(Base):
     def warning_could_not_fetch_contact_record(self, command_chain):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'warning': 'Something went wrong. Could not fetch contact record. '\
                        'Command chain details : {}'.format(command_chain),
         }
@@ -5636,6 +5711,7 @@ class EWallet(Base):
     def warning_could_not_create_contact_record(self, user_name, command_chain):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'warning': 'Something went wrong. Could not create new contact record '\
                        'for {}. Command chain details : {}'.format(
                             user_name, command_chain
@@ -5647,6 +5723,7 @@ class EWallet(Base):
     def warning_could_not_fetch_credit_clock(self, command_chain):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'warning': 'Something went wrong. Could not fetch credit clock. '\
                        'Command chain response : {}'.format(command_chain),
         }
@@ -5656,6 +5733,7 @@ class EWallet(Base):
     def warning_no_user_account_found_by_id(self, command_chain):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'warning': 'No user account found by id. Command chain details : {}'\
                        .format(command_chain),
         }
@@ -5665,6 +5743,7 @@ class EWallet(Base):
     def warning_could_not_logout_user_account(self, command_chain):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'warning': 'Something went wrong. Could not logout user account from ewallet session. '\
                        'Command chain details : {}'.format(command_chain),
         }
@@ -5674,6 +5753,7 @@ class EWallet(Base):
     def warning_could_not_find_user_action_switch_target_account(self, command_chain):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'warning': 'Something went wrong. Could not find account for user '\
                        'action switch active session user account. '\
                        'Command chain details : {}'.format(command_chain),
@@ -5684,6 +5764,7 @@ class EWallet(Base):
     def warning_could_not_fetch_user_account_from_session_archive(self, command_chain):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'warning': 'Something went wrong. Could not fetch user account from active session user archive. '\
                        'Command chain details : {}'.format(command_chain),
         }
@@ -5693,6 +5774,7 @@ class EWallet(Base):
     def warning_could_not_fetch_user_account_from_session_archive(self, command_chain):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'warning': 'Something went wrong. Could not fetch user account from ewallet session archive. '\
                        'Command chain details : {}'.format(command_chain),
         }
@@ -5702,6 +5784,7 @@ class EWallet(Base):
     def warning_could_not_login_user_account(self, command_chain):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'warning': 'Something went wrong. Could not login user account. '\
                        'Command chain details : {}'.format(command_chain),
         }
@@ -5711,6 +5794,7 @@ class EWallet(Base):
     def warning_could_not_view_logout_records(self, user_name, command_chain):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'warning': 'Something went wrong. Could not view account logout records for user {}. '\
                        'Command chain details : {}'.format(user_name, command_chain),
         }
@@ -5720,6 +5804,7 @@ class EWallet(Base):
     def warning_could_not_view_login_records(self, user_name, command_chain):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'warning': 'Something went wrong. Could not view login records for user {}. '\
                        'Command chain details : {}'.format(user_name, command_chain),
         }
@@ -5729,6 +5814,7 @@ class EWallet(Base):
     def warning_could_not_unlink_user_account(self, user_name, command_chain):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'warning': 'Something went wrong. Could not unlink user account {}. '\
                        'Command chain details : {}'.format(user_name, command_chain),
         }
@@ -5738,6 +5824,7 @@ class EWallet(Base):
     def warning_could_not_unlink_time_sheet_record(self, user_name, command_chain):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'warning': 'Something went wrong. Could not unlink time sheet record for user {}. '\
                        'Command chain details : {}'.format(user_name, command_chain),
         }
@@ -5747,6 +5834,7 @@ class EWallet(Base):
     def warning_could_not_create_conversion_sheet(self, command_chain):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'warning': 'Something went wrong. Could not create new conversion sheet. '\
                        'Command chain details : {}'.format(command_chain),
         }
@@ -5756,6 +5844,7 @@ class EWallet(Base):
     def warning_could_not_create_invoice_sheet(self, command_chain):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'warning': 'Something went wrong. Could not create new invoice sheet. '\
                        'Command chain details : {}'.format(command_chain),
         }
@@ -5765,6 +5854,7 @@ class EWallet(Base):
     def warning_could_not_create_credit_clock(self, user_name, command_chain):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'warning': 'Something went wrong. Could not create new credit clock for user {}. '\
                        'Command set details : {}'.format(user_name, command_chain)
         }
@@ -5774,6 +5864,7 @@ class EWallet(Base):
     def warning_could_not_create_credit_wallet(self, user_name, command_chain):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'warning': 'Something went wrong. Could not create new credit wallet for user {}. '\
                      'Command chain details : {}'.format(user_name, command_chain)
         }
@@ -5783,6 +5874,7 @@ class EWallet(Base):
     def warning_could_not_edit_account_user_name(self, command_chain):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'warning': 'Something went wrong. Could not edit account user name. Command chain details : {}'\
                        .format(command_chain)
         }
@@ -5792,6 +5884,7 @@ class EWallet(Base):
     def warning_could_not_edit_account_user_alias(self, command_chain):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'warning': 'Something went wrong. Could not edit account user alias. Command chain details : {}'\
                        .format(command_chain)
         }
@@ -5801,6 +5894,7 @@ class EWallet(Base):
     def warning_could_not_edit_account_user_email(self, command_chain):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'warning': 'Something went wrong. Could not edit account user email. Command chain details : {}'\
                        .format(command_chain)
         }
@@ -5810,6 +5904,7 @@ class EWallet(Base):
     def warning_could_not_edit_account_user_phone(self, command_chain):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'warning': 'Something went wrong. Could not edit account user phone. Command chain details : {}'\
                        .format(command_chain)
         }
@@ -5819,6 +5914,7 @@ class EWallet(Base):
     def warning_no_user_account_values_edited(self, command_chain):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'warning': 'Something went wrong. No user account values edited. Command chain details : {}'\
                        .format(command_chain)
         }
@@ -5883,6 +5979,7 @@ class EWallet(Base):
     def error_no_subordonate_account_id_specified(self, *args):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'error': 'No Subordonate user account ID specified. '
                      'Details: {}'.format(args),
         }
@@ -5892,6 +5989,7 @@ class EWallet(Base):
     def error_could_not_inspect_master_account_subordonate(self, *args):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'error': 'Something went wrong. '
                      'Could not inspect Master user account Subordonate. '
                      'Details: {}'.format(args),
@@ -5902,6 +6000,7 @@ class EWallet(Base):
     def error_could_not_inspect_master_account_subpool(self, *args):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'error': 'Something went wrong. '
                      'Could not inspect Master user account Subordonate pool. '
                      'Details: {}'.format(args),
@@ -5912,6 +6011,7 @@ class EWallet(Base):
     def error_no_master_action_inspect_target_specified(self, *args):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'error': 'No master action Inspect target specified. '
                      'Details: {}'.format(args),
         }
@@ -5921,6 +6021,7 @@ class EWallet(Base):
     def error_no_master_account_found(self, *args):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'error': 'No Master account found. '
                      'Details: {}'.format(args),
         }
@@ -5930,6 +6031,7 @@ class EWallet(Base):
     def error_could_not_recover_master_account(self, *args):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'error': 'Something went wrong. '
                      'Could not recover Master user account. '
                      'Details: {}'.format(args),
@@ -5940,6 +6042,7 @@ class EWallet(Base):
     def error_could_not_update_ewallet_session_from_master_account(self, *args):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'error': 'Something went wrong. '
                      'Could not update ewallet session from '
                      'Master user account. '
@@ -5951,6 +6054,7 @@ class EWallet(Base):
     def error_no_master_action_recover_target_specified(self, *args):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'error': 'No master action Recover target specified. '
                      'Details: {}'.format(args),
         }
@@ -5960,6 +6064,7 @@ class EWallet(Base):
     def error_could_not_check_if_master_account_belongs_to_ewallet_session(self, *args):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'error': 'Something went wrong. '
                      'Could not check if Master user account '
                      'belongs to ewallet session. '
@@ -5971,6 +6076,7 @@ class EWallet(Base):
     def error_no_master_account_id_found(self, *args):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'error': 'No Master account ID found. '
                      'Details: {}'.format(args),
         }
@@ -5980,6 +6086,7 @@ class EWallet(Base):
     def error_could_not_unlink_master_account(self, *args):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'error': 'Something went wrong. '
                      'Could not unlink Master user account. '
                      'Details: {}'.format(args),
@@ -5990,6 +6097,7 @@ class EWallet(Base):
     def error_no_master_action_unlink_target_specified(self, *args):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'error': 'No master action Unlink target specified. '
                      'Details: {}'.format(args),
         }
@@ -5999,6 +6107,7 @@ class EWallet(Base):
     def error_no_master_action_edit_target_specified(self, *args):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'error': 'No master action Edit target specified. '
                      'Details: {}'.format(args),
         }
@@ -6008,6 +6117,7 @@ class EWallet(Base):
     def error_no_master_action_view_target_specified(self, *args):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'error': 'No master action View target specified. '
                      'Details: {}'.format(args),
         }
@@ -6017,6 +6127,7 @@ class EWallet(Base):
     def error_no_active_session_master_found(self, *args):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'error': 'No active Master account found in ewallet session. '
                      'Details: {}'.format(args),
         }
@@ -6026,6 +6137,7 @@ class EWallet(Base):
     def error_no_master_action_logout_target_specified(self, *args):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'error': 'No master action Logout target specified. '
                      'Details: {}'.format(args),
         }
@@ -6035,6 +6147,7 @@ class EWallet(Base):
     def error_could_not_check_if_master_account_frozen(self, *args):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'error': 'Something went wrong. '
                      'Could not check if Master user account is in a '
                      'frozen state. Details: {}'.format(args),
@@ -6045,6 +6158,7 @@ class EWallet(Base):
     def error_no_master_action_login_target_specified(self, *args):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'error': 'No Master action Login target specified. '
                      'Details: {}'.format(args),
         }
@@ -6054,6 +6168,7 @@ class EWallet(Base):
     def error_no_master_account_id_found(self, *args):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'error': 'No Master user account ID found. '
                      'Details: {}'.format(args),
         }
@@ -6063,6 +6178,7 @@ class EWallet(Base):
     def error_invalid_data_set_for_master_account_user_pool_check(self, *args):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'error': 'Invalid data set, could not verify if user account '
                      'belongs to acquired Master account Subordonate pool. '
                      'Details: {}'.format(args),
@@ -6073,6 +6189,7 @@ class EWallet(Base):
     def error_could_not_add_master_acquired_ctoken(self, *args):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'error': 'Something went wrong. '
                      'Could not add master acquired CToken to pool. '
                      'Details: {}'.format(args),
@@ -6083,6 +6200,7 @@ class EWallet(Base):
     def error_invalid_data_set_for_master_key_code_check(self, *args):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'error': 'Invalid data set for master account '
                      'key code verification. '
                      'Details: {}'.format(args),
@@ -6093,6 +6211,7 @@ class EWallet(Base):
     def error_no_master_action_add_target_specified(self, *args):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'error': 'No master action Add target specified. '
                      'Details: {}'.format(args),
         }
@@ -6102,6 +6221,7 @@ class EWallet(Base):
     def error_no_master_action_add_ctoken_target_specified(self, *args):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'error': 'No master action AddCToken target specified. '
                      'Details: {}'.format(args),
         }
@@ -6111,6 +6231,7 @@ class EWallet(Base):
     def error_no_master_controller_type_specified(self, *args):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'error': 'No master controller type specified. '
                      'Details: {}'.format(args),
         }
@@ -6120,6 +6241,7 @@ class EWallet(Base):
     def error_no_master_account_email_specified(self, *args):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'error': 'No master account email address specified. '
                      'Details: {}'.format(args),
         }
@@ -6129,6 +6251,7 @@ class EWallet(Base):
     def error_could_not_fetch_master_account_by_email(self, *args):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'error': 'Something went wrong. '
                      'Could not fetch master user account by email address. '
                      'Details: {}'.format(args),
@@ -6139,6 +6262,7 @@ class EWallet(Base):
     def error_no_master_account_search_by_specified(self, *args):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'error': 'No master account search by parameter specified. '
                      'Details: {}'.format(args),
         }
@@ -6148,6 +6272,7 @@ class EWallet(Base):
     def error_no_master_account_identifier_specified(self, *args):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'error': 'No master account identifier specified. '
                      'Details: {}'.format(args),
         }
@@ -6157,6 +6282,7 @@ class EWallet(Base):
     def error_no_client_action_search_target_specified(self, *args):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'error': 'No client action search target specified. '
                      'Details: {}'.format(args),
         }
@@ -6166,6 +6292,7 @@ class EWallet(Base):
     def error_could_not_fetch_master_account_by_id(self, *args):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'error': 'Something went wrong. '
                      'Could not fetch master user account by ID. '
                      'Details: {}'.format(args),
@@ -6176,6 +6303,7 @@ class EWallet(Base):
     def error_no_master_account_id_specified(self, *args):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'error': 'No master account ID specified. '
                      'Details: {}'.format(args),
         }
@@ -6185,6 +6313,7 @@ class EWallet(Base):
     def error_could_not_fetch_active_session_master(self, *args):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'error': 'Something went wrong. '
                      'Could not fetch active session master account. '
                      'Details: {}'.format(args),
@@ -6195,6 +6324,7 @@ class EWallet(Base):
     def error_could_not_set_active_session_master(self, *args):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'error': 'Something went wrong. '
                      'Could not set active session master account. '
                      'Details: {}'.format(args),
@@ -6205,6 +6335,7 @@ class EWallet(Base):
     def error_no_session_active_master_found(self, *args):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'error': 'No active session master user account found. '
                      'Details: {}'.format(args),
         }
@@ -6214,6 +6345,7 @@ class EWallet(Base):
     def error_no_session_contact_list_found(self, *args):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'error': 'No active session contact list found. '
                      'Details: {}'.format(args),
         }
@@ -6223,6 +6355,7 @@ class EWallet(Base):
     def error_could_not_check_if_ewallet_session_empty(self, *args):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'error': 'Something went wrong. '
                      'Could not check if ewallet session is empty. '
                      'Details: {}'.format(args),
@@ -6233,6 +6366,7 @@ class EWallet(Base):
     def error_could_not_unlink_user_account(self, *args):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'error': 'Something went wrong. '
                      'Could not unlink user account. '
                      'Details: {}'.format(args),
@@ -6243,6 +6377,7 @@ class EWallet(Base):
     def error_no_user_action_pay_target_specified(self, *args):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'error': 'No user action pay target specified. '
                      'Details: {}'.format(args)
         }
@@ -6252,6 +6387,7 @@ class EWallet(Base):
     def error_pay_type_transfer_failure(self, *args):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'error': 'Credit payment failure. '
                      'Details: {}'.format(args)
         }
@@ -6261,6 +6397,7 @@ class EWallet(Base):
     def error_no_active_session_found(self, *args):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'error': 'No active SqlAlchemy ORM session found. '
                      'Details: {}'.format(args)
         }
@@ -6270,6 +6407,7 @@ class EWallet(Base):
     def error_no_user_email_found(self, *args):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'error': 'No user email found. '
                      'Details: {}'.format(args),
         }
@@ -6279,6 +6417,7 @@ class EWallet(Base):
     def error_could_not_fetch_user_by_email(self, *args):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'error': 'Something went wrong. '
                      'Could not fetch user account by email address. '
                      'Details: {}'.format(args),
@@ -6289,6 +6428,7 @@ class EWallet(Base):
     def error_could_not_fetch_partner_account(self, *args):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'error': 'Something went wrong. '
                      'Could not fetch partner account. '
                      'Details: {}'.format(*args),
@@ -6299,6 +6439,7 @@ class EWallet(Base):
     def error_no_session_active_user_found(self, *args):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'error': 'No active session user found. '
                      'Details: {}'.format(args)
         }
@@ -6308,6 +6449,7 @@ class EWallet(Base):
     def error_could_not_cleanup_ewallet_session(self, *args):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'error': 'Something went wrong. '
                      'Could not cleanup ewallet session. '
                      'Details: {}'.format(args)
@@ -6318,6 +6460,7 @@ class EWallet(Base):
     def error_no_system_action_cleanup_target_specified(self, *args):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'error': 'No system action cleanup target specified. '
                      'Details: {}'.format(args)
         }
@@ -6327,6 +6470,7 @@ class EWallet(Base):
     def error_no_system_action_interogate_ewallet_session_target_specified(self, *args):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'error': 'No system action interogate ewallet session target specified. '
                      'Details: {}'.format(args)
         }
@@ -6336,6 +6480,7 @@ class EWallet(Base):
     def error_could_not_check_if_ewallet_session_expired(self, *args):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'error': 'Something went wrong. '
                      'Could not check if EWallet session expired. '
                      'Details: {}'.format(args)
@@ -6346,6 +6491,7 @@ class EWallet(Base):
     def error_could_not_set_session_expiration_date(self, *args):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'error': 'Something went wrong. '
                      'Could not set EWallet session expiration date. '
                      'Details: {}'.format(args)
@@ -6356,6 +6502,7 @@ class EWallet(Base):
     def error_could_not_set_session_name(self, *args):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'error': 'Something went wrong. '
                      'Could not set EWallet session reference. '
                      'Details: {}'.format(args)
@@ -6366,6 +6513,7 @@ class EWallet(Base):
     def error_could_not_set_user_account_to_archive(self, *args):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'error': 'Something went wrong. '
                      'Could not set user account to session account archive. '
                      'Details: {}'.format(args)
@@ -6376,6 +6524,7 @@ class EWallet(Base):
     def error_could_not_set_user_account_archive(self, *args):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'error': 'Something went wrong. '
                      'Could not set active session user account archive. '
                      'Details: {}'.format(args)
@@ -6386,6 +6535,7 @@ class EWallet(Base):
     def error_could_not_set_session_credit_ewallet(self, *args):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'error': 'Something went wrong. '
                      'Could not set active session credit ewallet. '
                      'Details: {}'.format(args)
@@ -6396,6 +6546,7 @@ class EWallet(Base):
     def error_could_not_set_session_contact_list(self, *args):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'error': 'Something went wrong. '
                      'Could not set active session contact list. '
                      'Details: {}'.format(args)
@@ -6406,6 +6557,7 @@ class EWallet(Base):
     def error_could_not_set_active_session_user(self, *args):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'error': 'Something went wrong. '
                      'Could not set active session user. '
                      'Details: {}'.format(args)
@@ -6416,6 +6568,7 @@ class EWallet(Base):
     def error_could_not_set_write_date(self, *args):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'error': 'Something went wrong. '
                      'Could not set EWallet session write date. '
                      'Details: {}'.format(args)
@@ -6426,6 +6579,7 @@ class EWallet(Base):
     def error_could_not_set_orm_session(self, *args):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'error': 'Something went wrong. '
                      'Could not set ORM session. '
                      'Details: {}'.format(args)
@@ -6436,6 +6590,7 @@ class EWallet(Base):
     def error_could_not_recover_user_account(self, *args):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'error': 'Something went wrong. '
                      'Could not recover user account. '
                      'Details: {}'.format(args)
@@ -6446,6 +6601,7 @@ class EWallet(Base):
     def error_no_user_action_recover_target_specified(self, *args):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'error': 'No user action recover target specified. '
                      'Details: {}'.format(args),
         }
@@ -6455,6 +6611,7 @@ class EWallet(Base):
     def error_no_user_account_found(self, *args):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'error': 'No user account found. '
                      'Details: {}'.format(args),
         }
@@ -6464,6 +6621,7 @@ class EWallet(Base):
     def error_could_not_pause_credit_clock_timer(self, command_chain):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'error': 'Something went wrong. '
                      'Could not pause credit clock timer. '
                      'Details: {}'.format(command_chain),
@@ -6474,6 +6632,7 @@ class EWallet(Base):
     def error_could_not_stop_credit_clock_timer(self, command_chain):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'error': 'Something went wrong. '
                      'Could not stop credit clock timer. '
                      'Details: {}'.format(command_chain),
@@ -6484,6 +6643,7 @@ class EWallet(Base):
     def error_no_credit_wallet_found(self, command_chain):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'error': 'No credit ewallet found. '
                      'Command chain details: {}'.format(command_chain)
         }
@@ -6493,6 +6653,7 @@ class EWallet(Base):
     def error_supply_type_transfer_failure(self, command_chain):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'error': 'Supply type transfer failure. Details : {}'\
                      .format(command_chain)
         }
@@ -6502,6 +6663,7 @@ class EWallet(Base):
     def error_no_invoice_record_id_specified(self, command_chain):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'error': 'No invoice record id specified. Command chain details : {}'\
                      .format(command_chain),
         }
@@ -6511,6 +6673,7 @@ class EWallet(Base):
     def error_could_not_convert_credits_to_minutes(self, command_chain):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'error': 'Something went wrong. Could not convert credits to minutes. '\
                      'Command chain details : {}'.format(command_chain),
         }
@@ -6520,6 +6683,7 @@ class EWallet(Base):
     def error_no_conversion_record_id_found(self, command_chain):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'error': 'No conversion record id found. '\
                      'Command chain details : {}'.format(command_chain),
         }
@@ -6529,6 +6693,7 @@ class EWallet(Base):
     def error_no_time_record_id_found(self, command_chain):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'error': 'No time sheet record id found. '\
                      'Command chain details : {}'.format(command_chain),
         }
@@ -6538,6 +6703,7 @@ class EWallet(Base):
     def error_could_not_fetch_credit_ewallet(self, command_chain):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'error': 'Something went wrong. Could not fetch credit ewallet. '\
                      'Command chain details : {}'.format(command_chain),
         }
@@ -6547,6 +6713,7 @@ class EWallet(Base):
     def error_no_transfer_sheet_record_id_found(self, command_chain):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'error': 'No transfer sheet record id found. Command chain details : {}'\
                      .format(command_chain),
         }
@@ -6556,6 +6723,7 @@ class EWallet(Base):
     def error_no_session_credit_wallet_found(self, command_chain):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'error': 'No session credit wallet found. Command chain details : {}'\
                      .format(command_chain),
         }
@@ -6565,6 +6733,7 @@ class EWallet(Base):
     def error_transfer_type_transfer_failure(self, command_chain):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'error': 'Something went wrong. Transfer type transaction failure. '\
                      'Command chain details : {}'.format(command_chain),
         }
@@ -6574,6 +6743,7 @@ class EWallet(Base):
     def error_no_user_action_transfer_credits_target_specified(self, command_chain):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'error': 'No user action transfer credits target specified. '\
                      'Command chain details : {}'.format(command_chain),
         }
@@ -6583,6 +6753,7 @@ class EWallet(Base):
     def error_no_contact_record_id_found(self, command_chain):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'error': 'No contact record id found. Command chain details : {}'\
                      .format(command_chain),
         }
@@ -6601,6 +6772,7 @@ class EWallet(Base):
     def error_no_active_session_contact_list_found(self, user_name, command_chain):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'error': 'No active session contact list found for user {}. '\
                      'Command chain details : {}'.format(user_name, command_chain),
         }
@@ -6610,6 +6782,7 @@ class EWallet(Base):
     def error_could_not_fetch_partner_account_for_transfer_type_supply(self, command_chain):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'error': 'Something went wrong. Could not fetch partner account '\
                      'for transfer type supply. Command chain details : {}'\
                      .format(command_chain)
@@ -6620,6 +6793,7 @@ class EWallet(Base):
     def error_could_not_resume_credit_clock_timer(self, command_chain):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'error': 'Something went wrong. Could not resume credit clock timer. '\
                      'Command chain details : {}'.format(command_chain)
         }
@@ -6629,6 +6803,7 @@ class EWallet(Base):
     def error_could_not_start_credit_clock_timer(self, command_chain):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'error': 'Something went wrong. Could not start credit clock timer. '\
                      'Command chain details : {}'.format(command_chain)
         }
@@ -6638,6 +6813,7 @@ class EWallet(Base):
     def error_no_system_action_interogate_target_specified(self, command_chain):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'error': 'No system action interogate target specified. '\
                      'Command chain details : {}'.format(command_chain),
         }
@@ -6647,7 +6823,9 @@ class EWallet(Base):
     def error_could_not_remove_user_from_account_archive(self, command_chain):
         command_chain_response = {
             'failed': True,
-            'error': 'Something went wrong. Could not remove user account from active session account archive. '\
+            'level': 'ewallet-session',
+            'error': 'Something went wrong. '
+                     'Could not remove user account from active session account archive. '
                      'Command chain details : {}'.format(command_chain),
         }
         log.error(command_chain_response['error'])
@@ -6656,6 +6834,7 @@ class EWallet(Base):
     def error_user_account_does_not_belong_to_active_session_archive(self, command_chain):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'error': 'User account does not belong to active session {} user account archive. '\
                      'Command chain details : {}'.format(self, command_chain),
         }
@@ -6665,6 +6844,7 @@ class EWallet(Base):
     def error_could_not_update_ewallet_session_from_user_account(self, command_chain):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'error': 'Something went wrong. Could not update ewallet session from user account. '\
                      'Command chain details : {}'.format(command_chain),
         }
@@ -6674,6 +6854,7 @@ class EWallet(Base):
     def error_active_session_account_archive_empty(self, command_chain):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'error': 'Active session user account archive is empty. '\
                      'Command chain response : {}'.format(command_chain),
         }
@@ -6683,6 +6864,7 @@ class EWallet(Base):
     def error_could_not_fetch_user_account_by_id(self, command_chain):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'error': 'Could not fetch user account by id, no database records found. '\
                      'Command chain details : {}'.format(command_chain),
         }
@@ -6692,6 +6874,7 @@ class EWallet(Base):
     def error_no_user_account_id_found(self, command_chain):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'error': 'No user account id found. Command chain details : {}'\
                      .format(command_chain),
         }
@@ -6701,6 +6884,7 @@ class EWallet(Base):
     def error_no_user_action_switch_active_account_id_specified(self, command_chain):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'error': 'No user action switch active account id specified. '\
                      'Command chain details : {}'.format(command_chain),
         }
@@ -6710,6 +6894,7 @@ class EWallet(Base):
     def error_no_user_object_found(self, command_chain):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'error': 'No user object found. Command chain details : {}'\
                      .format(command_chain),
         }
@@ -6719,6 +6904,7 @@ class EWallet(Base):
     def error_no_user_action_view_target_specified(self, command_chain):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'error': 'No user action view target specified. '\
                      'Command chain details : {}'.format(command_chain),
         }
@@ -6728,7 +6914,9 @@ class EWallet(Base):
     def error_could_not_fetch_active_session_user(self, command_chain):
         command_chain_response = {
             'failed': True,
-            'error': 'Something went wrong. Could not fetch active session user. '\
+            'level': 'ewallet-session',
+            'error': 'Something went wrong. '
+                     'Could not fetch active session user. '\
                      'Command chain details : {}'.format(command_chain),
         }
         log.error(command_chain_response['error'])
@@ -6737,6 +6925,7 @@ class EWallet(Base):
     def error_no_user_account_id_found(self, command_chain):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'error': 'No user account id found. Command chain details : {}'\
                      .format(command_chain),
         }
@@ -6746,6 +6935,7 @@ class EWallet(Base):
     def error_could_not_fetch_active_session_credit_ewallet(self, command_chain):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'error': 'Could not fetch active session credit ewallet. Command chain details : {}'\
                      .format(command_chain),
         }
@@ -6755,6 +6945,7 @@ class EWallet(Base):
     def error_could_not_fetch_active_session_contact_list(self, command_chain):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'error': 'Could not fetch active session contact list. Command chain details : {}'\
                      .format(command_chain),
         }
@@ -6764,6 +6955,7 @@ class EWallet(Base):
     def error_no_unlink_target_specified(self, command_chain):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'error': 'No unlink target specified. Command chain details : {}'\
                      .format(command_chain),
         }
@@ -6773,6 +6965,7 @@ class EWallet(Base):
     def error_could_not_fetch_active_session_credit_ewallet(self, command_chain):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'error': 'Could not fetch active session credit wallet. Command chain details : {}'\
                      .format(command_chain),
         }
@@ -6782,6 +6975,7 @@ class EWallet(Base):
     def error_no_user_action_switch_contact_list_id_specified(self, command_chain):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'error': 'No user action switch contact list id specified. Command chain details : {}'\
                      .format(command_chain),
         }
@@ -6791,6 +6985,7 @@ class EWallet(Base):
     def error_no_user_action_switch_time_sheet_id_specified(self, command_chain):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'error': 'No user action switch time sheet id specified. Command chain details :"{}'\
                      .format(command_chain),
         }
@@ -6800,6 +6995,7 @@ class EWallet(Base):
     def error_no_user_action_switch_conversion_sheet_id_specified(self, command_chain):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'error': 'No user action switch conversion sheet id specified. Command chain details : {}'\
                      .format(command_chain),
         }
@@ -6809,6 +7005,7 @@ class EWallet(Base):
     def error_no_user_action_switch_invoice_sheet_id_specified(self, command_chain):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'error': 'No user action switch invoice sheet id specified. Command chain details : {}'\
                      .format(command_chain),
         }
@@ -6818,6 +7015,7 @@ class EWallet(Base):
     def error_no_user_action_switch_transfer_sheet_id_specified(self, command_chain):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'error': 'No user action switch transfer sheet id specified. Command chain details : {}'\
                      .format(command_chain),
         }
@@ -6827,6 +7025,7 @@ class EWallet(Base):
     def error_no_user_action_switch_credit_clock_id_specified(self, command_chain):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'error': 'No user action switch credit clock id specified. Command chain details : {}'\
                      .format(command_chain),
         }
@@ -6836,6 +7035,7 @@ class EWallet(Base):
     def error_no_user_action_switch_target_specified(self, command_chain):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'error': 'No user action switch target specified. Command chain details : {}'\
                      .format(command_chain),
         }
@@ -6845,6 +7045,7 @@ class EWallet(Base):
     def error_no_user_action_switch_credit_ewallet_id_specified(self, command_chain):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'error': 'No user action switch credit ewallet id specified. Command chain details : {}'\
                      .format(command_chain),
         }
@@ -6854,6 +7055,7 @@ class EWallet(Base):
     def error_could_not_fetch_active_session_credit_wallet(self, command_chain):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'error': 'Could not fetch active session credit ewallet. Command chain details : {}'\
                      .format(command_chain),
         }
@@ -6863,6 +7065,7 @@ class EWallet(Base):
     def error_no_user_action_edit_target_specified(self, command_chain):
         command_chain_response = {
             'failed': True,
+            'level': 'ewallet-session',
             'error': 'No user action edit target specified. Command chain details : {}'\
                      .foramt(command_chain)
         }

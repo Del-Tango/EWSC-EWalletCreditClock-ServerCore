@@ -6842,7 +6842,7 @@ class EWalletSessionManager():
 
     def warning_could_not_write_issue_report_to_disk(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'warning': 'Something went wrong. '
                        'Could not write IssueReport to disk.',
         })
@@ -6851,7 +6851,7 @@ class EWalletSessionManager():
 
     def warning_could_not_report_issue(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'warning': 'Something went wrong. '
                        'Could not report issue.',
         })
@@ -6860,7 +6860,7 @@ class EWalletSessionManager():
 
     def warning_could_not_fetch_client_token(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'warning': 'Something went wrong. '
                        'Could not fetch CToken.',
         })
@@ -6869,7 +6869,7 @@ class EWalletSessionManager():
 
     def warning_could_not_keep_alive_client_token(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'warning': 'Something went wrong. '
                        'Could not process CToken keep alive signal.',
         })
@@ -6878,7 +6878,7 @@ class EWalletSessionManager():
 
     def warning_could_not_pushback_ctoken_expiration_datetime(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'warning': 'Something went wrong. '
                        'Could not push back CToken expiration datetime.',
         })
@@ -6887,7 +6887,7 @@ class EWalletSessionManager():
 
     def warning_could_not_fetch_stoken_linked_ewallet_session(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'warning': 'Something went wrong. '
                        'Could not fetch SToken linked EWallet Session.',
         })
@@ -6896,7 +6896,7 @@ class EWalletSessionManager():
 
     def warning_could_not_keep_alive_ewallet_session(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'warning': 'Something went wrong. '
                        'Could not keep EWallet Session alive.',
         })
@@ -6905,7 +6905,7 @@ class EWalletSessionManager():
 
     def warning_could_not_fetch_session_token(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'warning': 'Something went wrong. '
                        'Could not fetch SToken.',
         })
@@ -6914,7 +6914,7 @@ class EWalletSessionManager():
 
     def warning_could_not_keep_alive_session_token(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'warning': 'Something went wrong. '
                        'Could not process SToken keep alive signal.',
         })
@@ -6923,7 +6923,7 @@ class EWalletSessionManager():
 
     def warning_could_not_pushback_stoken_expiration_datetime(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'warning': 'Something went wrong. '
                        'Could not push back SToken expiration datetime.',
         })
@@ -6932,7 +6932,7 @@ class EWalletSessionManager():
 
     def warning_could_not_view_master_account_logout_records(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'warning': 'Something went wrong. '
                        'Could not view Master account logout records.',
         })
@@ -6941,7 +6941,7 @@ class EWalletSessionManager():
 
     def warning_could_not_view_master_account_login_records(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'warning': 'Something went wrong. '
                        'Could not view Master account login records.',
         })
@@ -6950,7 +6950,7 @@ class EWalletSessionManager():
 
     def warning_could_not_inspect_subordonate_account(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'warning': 'Something went wrong. '
                        'Could not inspect Master subordonate account.',
         })
@@ -6959,7 +6959,7 @@ class EWalletSessionManager():
 
     def warning_could_not_inspect_subpool(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'warning': 'Something went wrong. '
                        'Could not inspect Master subordonate account pool.',
         })
@@ -6968,7 +6968,7 @@ class EWalletSessionManager():
 
     def warning_could_not_fetch_master_account_by_email(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'warning': 'Something went wrong. '
                        'Could not fetch Master user account by email address.',
         })
@@ -6977,7 +6977,7 @@ class EWalletSessionManager():
 
     def warning_ctoken_has_not_acquired_current_master_account(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'warning': 'CToken has not acquired active Master user account.',
         })
         self.log_warning(**instruction_set_response)
@@ -6985,7 +6985,7 @@ class EWalletSessionManager():
 
     def warning_could_not_inspect_ctoken(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'warning': 'Something went wrong. '
                        'Could not inspect acquired CToken.',
         })
@@ -6994,7 +6994,7 @@ class EWalletSessionManager():
 
     def warning_could_not_fetch_ewallet_session_active_master_id(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'warning': 'Something went wrong. '
                        'Could not fetch ewallet session active Master ID.',
         })
@@ -7003,7 +7003,7 @@ class EWalletSessionManager():
 
     def warning_could_not_inspect_ctokens(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'warning': 'Something went wrong. '
                        'Could not inspect acquired CTokens.',
         })
@@ -7012,7 +7012,7 @@ class EWalletSessionManager():
 
     def warning_could_not_recover_master_account(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'warning': 'Something went wrong. '
                        'Could not recover Master user account.',
         })
@@ -7021,7 +7021,7 @@ class EWalletSessionManager():
 
     def warning_could_not_unlink_master_account(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'warning': 'Something went wrong. '
                        'Could not unlink Master user account.',
         })
@@ -7030,7 +7030,7 @@ class EWalletSessionManager():
 
     def warning_could_not_edit_master_account(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'warning': 'Something went wrong. '
                        'Could not edit Master user account.',
         })
@@ -7039,7 +7039,7 @@ class EWalletSessionManager():
 
     def warning_could_not_view_master_account(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'warning': 'Something went wrong. '
                        'Could not view Master user account.',
         })
@@ -7048,7 +7048,7 @@ class EWalletSessionManager():
 
     def warning_could_not_logout_master_account(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'warning': 'Something went wrong. '
                        'Could not logout Master user account.',
         })
@@ -7057,7 +7057,7 @@ class EWalletSessionManager():
 
     def warning_could_not_login_master_account(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'warning': 'Something went wrong. '
                        'Could not login Master user account.',
         })
@@ -7066,7 +7066,7 @@ class EWalletSessionManager():
 
     def warning_could_not_map_worker_id_to_session_token(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'warning': 'Something went wrong. '
                        'Could not map EWSession Worker ID to SToken.',
         })
@@ -7075,7 +7075,7 @@ class EWalletSessionManager():
 
     def warning_could_not_decrease_subordonate_account_pool_size_limit(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'warning': 'Something went wrong. '
                        'Could not decrease Subordonate user account pool size '
                        'for Master account.',
@@ -7085,7 +7085,7 @@ class EWalletSessionManager():
 
     def warning_could_not_increase_subordonate_account_pool_size_limit(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'warning': 'Something went wrong. '
                        'Could not increase Subordonate user account pool size '
                        'for Master account.',
@@ -7095,7 +7095,7 @@ class EWalletSessionManager():
 
     def warning_could_not_unfreeze_subordonate_user_account(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'warning': 'Something went wrong. '
                        'Could not unfreeze Subordonate user account.',
         })
@@ -7104,7 +7104,7 @@ class EWalletSessionManager():
 
     def warning_could_not_unfreeze_user_account(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'warning': 'Something went wrong. '
                        'Could not unfreeze user account.',
         })
@@ -7113,7 +7113,7 @@ class EWalletSessionManager():
 
     def warning_could_not_unfreeze_master_account(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'warning': 'Something went wrong. '
                        'Could not unfreeze Master user account.',
         })
@@ -7122,7 +7122,7 @@ class EWalletSessionManager():
 
     def warning_could_not_freeze_user_account(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'warning': 'Something went wrong. '
                        'Could not freeze user account.',
         })
@@ -7131,7 +7131,7 @@ class EWalletSessionManager():
 
     def warning_could_not_freeze_subordonate_user_account(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'warning': 'Something went wrong. '
                        'Could not freeze subordonate user account.',
         })
@@ -7140,7 +7140,7 @@ class EWalletSessionManager():
 
     def warning_could_not_freeze_master_account(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'warning': 'Something went wrong. '
                        'Could not freeze Master user account.',
         })
@@ -7149,7 +7149,7 @@ class EWalletSessionManager():
 
     def warning_no_master_accounts_marked_for_unlink_found(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'warning': 'No Master accounts marked for unlink found.',
         })
         self.log_warning(**instruction_set_response)
@@ -7157,7 +7157,7 @@ class EWalletSessionManager():
 
     def warning_no_master_account_ids_found(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'warning': 'Something went wrong. '
                        'No Master account ids found.',
         })
@@ -7166,7 +7166,7 @@ class EWalletSessionManager():
 
     def warning_could_not_clean_master_accounts(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'warning': 'Something went wrong. '
                        'Could not clean Master user accounts.',
         })
@@ -7175,7 +7175,7 @@ class EWalletSessionManager():
 
     def warning_no_subordonate_accounts_found_for_masters(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'warning': 'No Subordonate user accounts found associated '
                        'with given Master account set.',
         })
@@ -7184,7 +7184,7 @@ class EWalletSessionManager():
 
     def warning_no_master_accounts_found_by_id_set(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'warning': 'No Master accounts found by identifier set.',
         })
         self.log_warning(**instruction_set_response)
@@ -7192,7 +7192,7 @@ class EWalletSessionManager():
 
     def warning_could_not_clean_master_account(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'warning': 'Something went wrong. '
                        'Could not cleanup master user accounts.',
         })
@@ -7201,7 +7201,7 @@ class EWalletSessionManager():
 
     def warning_could_not_add_acquired_ctoken_to_master_pool(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'warning': 'Something went wrong. '
                        'Could not add acquired CToken to Master account pool.',
         })
@@ -7210,7 +7210,7 @@ class EWalletSessionManager():
 
     def warning_master_user_account_search_failure(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'warning': 'Something went wrong. '
                        'Master user account search has failed.',
         })
@@ -7219,7 +7219,7 @@ class EWalletSessionManager():
 
     def warning_could_not_acquire_master_user_account(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'warning': 'Something went wrong. '
                        'Could not acquire master user account.',
         })
@@ -7228,7 +7228,7 @@ class EWalletSessionManager():
 
     def warning_no_master_account_acquired_by_ctoken(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'warning': 'No master account acquired by CToken.',
         })
         self.log_warning(**instruction_set_response)
@@ -7236,7 +7236,7 @@ class EWalletSessionManager():
 
     def warning_no_acquired_master_accounts_found_by_ctokens(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'warning': 'No acquired master accounts found by CTokens.',
         })
         self.log_warning(**instruction_set_response)
@@ -7244,7 +7244,7 @@ class EWalletSessionManager():
 
     def warning_no_master_account_found_by_id(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'warning': 'No master account found by ID.',
         })
         self.log_warning(**instruction_set_response)
@@ -7252,7 +7252,7 @@ class EWalletSessionManager():
 
     def warning_ctoken_has_acquired_master_account(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'warning': 'CToken already has a Master account acquired.',
         })
         self.log_warning(**instruction_set_response)
@@ -7260,7 +7260,7 @@ class EWalletSessionManager():
 
     def warning_could_not_create_new_master_account(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'warning': 'Something went wrong. '
                        'Could not create new Master user account.',
         })
@@ -7269,7 +7269,7 @@ class EWalletSessionManager():
 
     def warning_could_not_fetch_stoken_linked_ctoken(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'warning': 'Something went wrong. '
                        'Could not fetch SToken linked CToken.',
         })
@@ -7278,7 +7278,7 @@ class EWalletSessionManager():
 
     def warning_could_not_fetch_session_token(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'warning': 'Something went wrong. '
                        'Could not fetch SToken.',
         })
@@ -7287,7 +7287,7 @@ class EWalletSessionManager():
 
     def warning_could_not_fetch_ctoken_linked_stoken(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'warning': 'Something went wrong. '
                        'Could not fetch CToken linked SToken.',
         })
@@ -7296,7 +7296,7 @@ class EWalletSessionManager():
 
     def warning_could_not_fetch_client_token(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'warning': 'Something went wrong. '
                        'Could not fetch CToken.',
         })
@@ -7305,7 +7305,7 @@ class EWalletSessionManager():
 
     def warning_could_not_verify_ctoken_in_pool(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'warning': 'Something went wrong. '
                        'Could not verify if CToken belongs to pool.',
         })
@@ -7314,7 +7314,7 @@ class EWalletSessionManager():
 
     def warning_could_not_cleanup_ewallet_sessions(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'warning': 'Something went wrong. '
                        'Could not cleanup ewallet sessions.',
         })
@@ -7323,7 +7323,7 @@ class EWalletSessionManager():
 
     def warning_could_not_sort_worker_pool_by_state_code(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'warning': 'Something went wrong. '
                        'Could not sort session worker pool by state code.',
         })
@@ -7332,7 +7332,7 @@ class EWalletSessionManager():
 
     def warning_could_not_clean_client_token(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'warning': 'Something went wrong. '
                        'Could not cleanup client token.',
         })
@@ -7341,7 +7341,7 @@ class EWalletSessionManager():
 
     def warning_could_not_clean_session_tokens(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'warning': 'Something went wrong. '
                        'Could not cleanup session tokens.',
         })
@@ -7350,7 +7350,7 @@ class EWalletSessionManager():
 
     def warning_could_not_fetch_session_worker_pool_entry_by_id(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'warning': 'Could not fetch ewallet session worker '
                        'pool entry by ID.',
         })
@@ -7359,7 +7359,7 @@ class EWalletSessionManager():
 
     def warning_could_not_clean_worker_sessions(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'warning': 'Something went wrong. '
                        'Could not cleanup worker ewallet sessions.',
         })
@@ -7368,7 +7368,7 @@ class EWalletSessionManager():
 
     def warning_no_ewallet_sessions_found_by_stokens(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'warning': 'No ewallet session found by session tokens.',
         })
         self.log_warning(**instruction_set_response)
@@ -7376,7 +7376,7 @@ class EWalletSessionManager():
 
     def warning_no_empty_ewallet_sessions_found(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'warning': 'No empty ewallet sessions found.',
         })
         self.log_warning(**instruction_set_response)
@@ -7384,7 +7384,7 @@ class EWalletSessionManager():
 
     def warning_could_not_fetch_empty_ewallet_sessions_from_worker(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'warning': 'Something went wrong. '
                        'Could not fetch empty ewallet sessions from worker.',
         })
@@ -7393,7 +7393,7 @@ class EWalletSessionManager():
 
     def warning_no_session_tokens_to_remove(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'warning': 'No session tokens staged for removal.',
         })
         self.log_warning(**instruction_set_response)
@@ -7401,7 +7401,7 @@ class EWalletSessionManager():
 
     def warning_invalid_client_token_label(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'warning': 'Invalid client token label.',
         })
         self.log_warning(**instruction_set_response)
@@ -7409,7 +7409,7 @@ class EWalletSessionManager():
 
     def warning_could_not_sweep_cleanup_session_tokens(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'warning': 'Something went wrong. '
                        'Could not sweep cleanup session tokens.',
         })
@@ -7418,7 +7418,7 @@ class EWalletSessionManager():
 
     def warning_could_not_clean_session_token(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'warning': 'Something went wrong. '
                        'Could not cleanup session token.',
         })
@@ -7427,7 +7427,7 @@ class EWalletSessionManager():
 
     def warning_no_session_tokens_cleaned(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'warning': 'No session tokens cleaned.',
         })
         self.log_warning(**instruction_set_response)
@@ -7435,7 +7435,7 @@ class EWalletSessionManager():
 
     def warning_could_not_cleanup_ctoken_linked_stokens(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'warning': 'Something went wrong. '
                        'Could not cleanup session tokens '
                        'found associated with client token set.',
@@ -7445,7 +7445,7 @@ class EWalletSessionManager():
 
     def warning_could_not_sweep_cleanup_client_tokens(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'warning': 'Something went wrong. '
                        'Could not sweep cleanup client tokens.',
         })
@@ -7454,7 +7454,7 @@ class EWalletSessionManager():
 
     def warning_no_client_tokens_to_remove(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'warning': 'No client tokens staged for removal.',
         })
         self.log_warning(**instruction_set_response)
@@ -7462,7 +7462,7 @@ class EWalletSessionManager():
 
     def warning_could_not_clean_client_token(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'warning': 'Something went wrong. '
                        'Could not clean client token',
         })
@@ -7471,7 +7471,7 @@ class EWalletSessionManager():
 
     def warning_no_client_tokens_cleaned(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'warning': 'Something went wrong. '
                        'No client tokens cleanead.',
         })
@@ -7480,7 +7480,7 @@ class EWalletSessionManager():
 
     def warning_invalid_session_worker_state_code(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'warning': 'Invalid session worker state code.',
         })
         self.log_warning(**instruction_set_response)
@@ -7488,7 +7488,7 @@ class EWalletSessionManager():
 
     def warning_session_worker_interogation_failure(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'warning': 'Something went wrong. '
                        'Could not interogate EWallet session worker.',
         })
@@ -7497,7 +7497,7 @@ class EWalletSessionManager():
 
     def warning_could_not_set_cron_state_flag(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'warning': 'Something went wrong. '
                        'Could not set cron state flag.',
         })
@@ -7506,7 +7506,7 @@ class EWalletSessionManager():
 
     def warning_could_not_cleanup_user_account(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'warning': 'Something went wrong. '
                        'Could not cleanup user account.',
         })
@@ -7515,7 +7515,7 @@ class EWalletSessionManager():
 
     def warning_could_not_fetch_cron_pool_entry_by_label(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'warning': 'Something went wrong. '
                        'Could not fetch cron pool entry by label.',
         })
@@ -7524,7 +7524,7 @@ class EWalletSessionManager():
 
     def warning_could_not_view_time_record(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'warning': 'Something went wrong. '
                        'Could not view time record.',
         })
@@ -7533,7 +7533,7 @@ class EWalletSessionManager():
 
     def warning_could_not_view_invoice_record(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'warning': 'Something went wrong. '
                        'Could not view invoice record.',
         })
@@ -7542,7 +7542,7 @@ class EWalletSessionManager():
 
     def warning_could_not_logout_user_account(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'warning': 'Something went wrong. '
                        'Could not logout user account.',
         })
@@ -7551,7 +7551,7 @@ class EWalletSessionManager():
 
     def warning_could_not_interogate_session_workers(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'warning': 'Something went wrong. '
                        'Could not interogate session workers.',
         })
@@ -7560,7 +7560,7 @@ class EWalletSessionManager():
 
     def warning_could_not_fetch_session_worker_pool(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'warning': 'Something went wrong. '
                        'Could not fetch session worker pool.',
         })
@@ -7569,7 +7569,7 @@ class EWalletSessionManager():
 
     def warning_could_not_interogate_ewallet_session(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'warning': 'Something went wrong. '
                        'Could not interogate ewallet session.',
         })
@@ -7578,7 +7578,7 @@ class EWalletSessionManager():
 
     def warning_could_not_create_new_ewallet_session(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'warning': 'Something went wrong. '
                        'Could not create new ewallet session.',
         })
@@ -7587,7 +7587,7 @@ class EWalletSessionManager():
 
     def warning_no_session_workers_cleaned(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'warning': 'No ewallet session workers cleaned.',
         })
         self.log_warning(**instruction_set_response)
@@ -7595,7 +7595,7 @@ class EWalletSessionManager():
 
     def warning_could_not_clean_session_worker(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'warning': 'Something went wrong. '
                        'Could not clean ewallet session worker.',
         })
@@ -7604,7 +7604,7 @@ class EWalletSessionManager():
 
     def warning_could_not_fetch_vacant_session_workers(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'warning': 'Something went wrong. '
                        'Could not fetch vacant ewallet session workers.',
         })
@@ -7613,7 +7613,7 @@ class EWalletSessionManager():
 
     def warning_could_not_cleanup_vacant_ewallet_session_workers(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'warning': 'Something went wrong. '
                        'Could not cleanup vacant ewallet session workers.',
         })
@@ -7622,7 +7622,7 @@ class EWalletSessionManager():
 
     def warning_no_vacant_session_workers_found(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'warning': 'No vacant session workers found.',
         })
         self.log_warning(**instruction_set_response)
@@ -7630,7 +7630,7 @@ class EWalletSessionManager():
 
     def warning_could_not_cleanup_target_ewallet_session(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'warning': 'Something went wrong. '
                        'Could not cleanup target ewallet session.',
         })
@@ -7639,7 +7639,7 @@ class EWalletSessionManager():
 
     def warning_could_not_fetch_assigned_session_worker_id(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'warning': 'Something went wrong. '
                        'Could not fetch assigned worker id for ewallet session.',
         })
@@ -7648,7 +7648,7 @@ class EWalletSessionManager():
 
     def warning_no_worker_found_assigned_to_session(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'warning': 'No worker found assigned to ewallet session.',
         })
         self.log_warning(**instruction_set_response)
@@ -7656,7 +7656,7 @@ class EWalletSessionManager():
 
     def warning_could_not_sweep_cleanup_ewallet_sessions(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'warning': 'Something went wrong. '
                        'Could not sweep clean ewallet sessions.',
         })
@@ -7665,7 +7665,7 @@ class EWalletSessionManager():
 
     def warning_could_not_clean_expired_worker_sessions(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'warning': 'Something went wrong. '
                        'Could not clean expired worker sessions.',
         })
@@ -7674,7 +7674,7 @@ class EWalletSessionManager():
 
     def warning_could_not_fetch_workers_with_expired_sessions(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'warning': 'Something went wrong. '
                        'Could not fetch workers with expired sessions.',
         })
@@ -7683,7 +7683,7 @@ class EWalletSessionManager():
 
     def warning_could_not_interogate_worker_session_pool(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'warning': 'Something went wrong. '
                        'Could not interogate worker session pool.',
         })
@@ -7692,7 +7692,7 @@ class EWalletSessionManager():
 
     def warning_could_not_fetch_expired_ewallet_sessions_from_worker(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'warning': 'Something went wrong. '
                        'Could not fetch expired ewallet sessions from worker.',
         })
@@ -7701,7 +7701,7 @@ class EWalletSessionManager():
 
     def warning_session_manager_socket_handler_not_set(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'warning': 'EWallet Session Manager socket handler not set.',
         })
         self.log_warning(**instruction_set_response)
@@ -7709,7 +7709,7 @@ class EWalletSessionManager():
 
     def warning_could_not_unlink_invoice_sheet(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'warning': 'Something went wrong. '
                        'Could not unlink invoice sheet.',
         })
@@ -7718,7 +7718,7 @@ class EWalletSessionManager():
 
     def warning_could_not_unlink_invoice_sheet_record(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'warning': 'Something went wrong. '
                        'Could not unlink invoice record.',
         })
@@ -7727,7 +7727,7 @@ class EWalletSessionManager():
 
     def warning_could_not_recover_user_account(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'warning': 'Something went wrong. '
                        'Could not recover user account.',
         })
@@ -7736,7 +7736,7 @@ class EWalletSessionManager():
 
     def warning_could_not_switch_user_account(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'warning': 'Something went wrong. '
                        'Could not switch user account.',
         })
@@ -7745,7 +7745,7 @@ class EWalletSessionManager():
 
     def warning_could_not_unlink_credit_clock(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'warning': 'Something went wrong. '
                        'Could not unlink credit clock.',
         })
@@ -7754,7 +7754,7 @@ class EWalletSessionManager():
 
     def warning_could_not_unlink_credit_ewallet(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'warning': 'Something went wrong. '
                        'Could not unlink credit ewallet.',
         })
@@ -7763,7 +7763,7 @@ class EWalletSessionManager():
 
     def warning_could_not_unlink_time_sheet(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'warning': 'Something went wrong. '
                        'Could not unlink time sheet.',
         })
@@ -7772,7 +7772,7 @@ class EWalletSessionManager():
 
     def warning_could_not_unlink_time_record(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'warning': 'Something went wrong. '
                        'Could not unlink time record.',
         })
@@ -7781,7 +7781,7 @@ class EWalletSessionManager():
 
     def warning_could_not_unlink_transfer_record(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'warning': 'Something went wrong. '
                        'Could not unlink transfer record.',
         })
@@ -7790,7 +7790,7 @@ class EWalletSessionManager():
 
     def warning_could_not_unlink_transfer_sheet(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'warning': 'Something went wrong. '
                        'Could not unlink transfer sheet.',
         })
@@ -7799,7 +7799,7 @@ class EWalletSessionManager():
 
     def warning_could_not_unlink_conversion_sheet_record(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'warning': 'Something went wrong. '
                        'Could not unlink conversion record.',
         })
@@ -7808,7 +7808,7 @@ class EWalletSessionManager():
 
     def warning_could_not_unlink_conversion_sheet(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'warning': 'Something went wrong. '
                        'Could not unlink conversion sheet.',
         })
@@ -7817,7 +7817,7 @@ class EWalletSessionManager():
 
     def warning_could_not_unlink_contact_record(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'warning': 'Something went wrong. '
                        'Could not unlink contact record.',
         })
@@ -7826,7 +7826,7 @@ class EWalletSessionManager():
 
     def warning_could_not_unlink_contact_list(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'warning': 'Something went wrong. '
                        'Could not unlink contact list.',
         })
@@ -7835,7 +7835,7 @@ class EWalletSessionManager():
 
     def warning_could_not_unlink_user_account(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'warning': 'Something went wrong. '
                        'Could not unlink user account.',
         })
@@ -7844,7 +7844,7 @@ class EWalletSessionManager():
 
     def warning_could_not_switch_contact_list(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'warning': 'Something went wrong. '
                        'Could not switch contact list.',
         })
@@ -7853,7 +7853,7 @@ class EWalletSessionManager():
 
     def warning_could_not_switch_time_sheet(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'warning': 'Something went wrong. '
                        'Could not switch time sheet.',
         })
@@ -7862,7 +7862,7 @@ class EWalletSessionManager():
 
     def warning_could_not_switch_conversion_sheet(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'warning': 'Something went wrong. '
                        'Could not switch conversion sheet.',
         })
@@ -7871,7 +7871,7 @@ class EWalletSessionManager():
 
     def warning_could_not_switch_invoice_sheet(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'warning': 'Something went wrong. '
                        'Could not switch invoice sheet.',
         })
@@ -7880,7 +7880,7 @@ class EWalletSessionManager():
 
     def warning_could_not_switch_transfer_sheet(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'warning': 'Something went wrong. '
                        'Could not switch transfer sheet.',
         })
@@ -7889,7 +7889,7 @@ class EWalletSessionManager():
 
     def warning_could_not_switch_credit_clock(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'warning': 'Something went wrong. '
                        'Could not switch credit clock.',
         })
@@ -7898,7 +7898,7 @@ class EWalletSessionManager():
 
     def warning_could_not_switch_credit_ewallet(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'warning': 'Something went wrong. '
                        'Could not switch credit ewallet.',
         })
@@ -7907,7 +7907,7 @@ class EWalletSessionManager():
 
     def warning_could_not_create_new_conversion_sheet(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'warning': 'Something went wrong. '
                        'Could not create new conversion sheet.',
         })
@@ -7916,7 +7916,7 @@ class EWalletSessionManager():
 
     def warning_could_not_create_new_time_sheet(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'warning': 'Something went wrong. '
                        'Could not create new time sheet.',
         })
@@ -7925,7 +7925,7 @@ class EWalletSessionManager():
 
     def warning_could_not_create_new_invoice_sheet(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'warning': 'Something went wrong. '
                        'Could not create new invoice sheet.',
         })
@@ -7934,7 +7934,7 @@ class EWalletSessionManager():
 
     def warning_could_not_create_new_transfer_sheet(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'warning': 'Something went wrong. '
                        'Could not create new transfer sheet.',
         })
@@ -7943,7 +7943,7 @@ class EWalletSessionManager():
 
     def warning_could_not_create_new_credit_ewallet(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'warning': 'Something went wrong. '
                        'Could not create new credit ewallet.',
         })
@@ -7952,7 +7952,7 @@ class EWalletSessionManager():
 
     def warning_could_not_create_new_credit_clock(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'warning': 'Something went wrong. '
                        'Could not create new credit clock.',
         })
@@ -7961,7 +7961,7 @@ class EWalletSessionManager():
 
     def warning_could_not_view_login_records(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'warning': 'Something went wrong. '
                        'Could not view login records.',
         })
@@ -7970,7 +7970,7 @@ class EWalletSessionManager():
 
     def warning_could_not_view_logout_records(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'warning': 'Something went wrong. '
                        'Could not view logout records.',
         })
@@ -7979,7 +7979,7 @@ class EWalletSessionManager():
 
     def warning_could_not_view_invoice_sheet_record(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'warning': 'Something went wrong. '
                        'Could not view invoice record.',
         })
@@ -7988,7 +7988,7 @@ class EWalletSessionManager():
 
     def warning_could_not_view_invoice_sheet(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'warning': 'Something went wrong. '
                        'Could not view invoice sheet.',
         })
@@ -7997,7 +7997,7 @@ class EWalletSessionManager():
 
     def warning_could_not_view_credit_clock(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'warning': 'Something went wrong. '
                        'Could not view credit clock.',
         })
@@ -8006,7 +8006,7 @@ class EWalletSessionManager():
 
     def warning_could_not_view_credit_ewallet(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'warning': 'Something went wrong. '
                        'Could not view credit ewallet.',
         })
@@ -8015,7 +8015,7 @@ class EWalletSessionManager():
 
     def warning_could_not_view_account(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'warning': 'Something went wrong. '
                        'Could not view user account.',
         })
@@ -8024,7 +8024,7 @@ class EWalletSessionManager():
 
     def warning_could_not_view_conversion_record(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'warning': 'Something went wrong. '
                        'Could not view conversion record.',
         })
@@ -8033,7 +8033,7 @@ class EWalletSessionManager():
 
     def warning_could_not_view_conversion_sheet(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'warning': 'Something went wrong. '
                        'Could not view conversion sheet.',
         })
@@ -8042,7 +8042,7 @@ class EWalletSessionManager():
 
     def warning_could_not_view_time_sheet_record(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'warning': 'Something went wrong. '
                        'Could not view time record.',
         })
@@ -8051,7 +8051,7 @@ class EWalletSessionManager():
 
     def warning_could_not_view_time_sheet(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'warning': 'Something went wrong. '
                        'Could not view time sheet.',
         })
@@ -8060,7 +8060,7 @@ class EWalletSessionManager():
 
     def warning_could_not_view_transfer_sheet_record(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'warning': 'Something went wrong. '
                        'Could not view transfer sheet.',
         })
@@ -8069,7 +8069,7 @@ class EWalletSessionManager():
 
     def warning_could_not_view_transfer_sheet(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'warning': 'Something went wrong. '
                        'Could not view transfer sheet.',
         })
@@ -8078,7 +8078,7 @@ class EWalletSessionManager():
 
     def warning_could_not_view_contact_record(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'warning': 'Something went wrong. '
                        'Could not view contact record.',
         })
@@ -8087,7 +8087,7 @@ class EWalletSessionManager():
 
     def warning_could_not_view_contact_list(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'warning': 'Something went wrong. '
                        'Could not view active contact list.',
         })
@@ -8096,7 +8096,7 @@ class EWalletSessionManager():
 
     def warning_could_not_stop_credit_clock_timer(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'warning': 'Something went wrong. '
                        'Could not stop credit clock timer.',
         })
@@ -8105,7 +8105,7 @@ class EWalletSessionManager():
 
     def warning_could_not_resume_credit_clock_timer(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'warning': 'Something went wrong. '
                        'Could not resume credit clock timer.',
         })
@@ -8114,7 +8114,7 @@ class EWalletSessionManager():
 
     def warning_could_not_start_credit_clock_timer(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'warning': 'Something went wrong. '
                        'Could not start credit clock timer.',
         })
@@ -8123,7 +8123,7 @@ class EWalletSessionManager():
 
     def warning_could_not_edit_user_account(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'warning': 'Something went wrong. '
                        'Could not edit user account.',
         })
@@ -8132,7 +8132,7 @@ class EWalletSessionManager():
 
     def warning_could_not_transfer_credits_to_partner(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'warning': 'Something went wrong. '
                        'Could not transfer credits to partner.',
         })
@@ -8141,7 +8141,7 @@ class EWalletSessionManager():
 
     def warning_could_not_create_new_contact_list(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'warning': 'Something went wrong. '
                        'Could not create new contact list.',
         })
@@ -8150,7 +8150,7 @@ class EWalletSessionManager():
 
     def warning_could_not_create_new_contact_record(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'warning': 'Something went wrong. '
                        'Could not create new contact record.',
         })
@@ -8159,7 +8159,7 @@ class EWalletSessionManager():
 
     def warning_could_not_convert_credit_clock_to_credits(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'warning': 'Something went wrong. '
                        'Could not convert credit clock time to credits.',
         })
@@ -8168,7 +8168,7 @@ class EWalletSessionManager():
 
     def warning_could_not_convert_credits_to_credit_clock(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'warning': 'Something went wrong. '
                        'Could not convert ewallet credits to credit clock.',
         })
@@ -8177,7 +8177,7 @@ class EWalletSessionManager():
 
     def warning_could_not_pay_partner_account(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'warning': 'Something went wrong. '
                        'Could not pay partner account.',
         })
@@ -8186,7 +8186,7 @@ class EWalletSessionManager():
 
     def warning_could_not_supply_user_credit_ewallet(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'warning': 'Something went wrong. '
                        'Could not supply user credit ewallet.',
         })
@@ -8195,7 +8195,7 @@ class EWalletSessionManager():
 
     def warning_could_not_login_user_account(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'warning': 'Something went wrong. '
                        'Could not login user account.',
         })
@@ -8204,7 +8204,7 @@ class EWalletSessionManager():
 
     def warning_could_not_create_new_user_account(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'warning': 'Something went wrong. '
                        'Could not create new user account.',
         })
@@ -8213,7 +8213,7 @@ class EWalletSessionManager():
 
     def warning_could_not_request_session_token(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'warning': 'Something went wrong. '
                        'Could not request ewallet session token.',
         })
@@ -8222,7 +8222,7 @@ class EWalletSessionManager():
 
     def warning_worker_not_found_in_pool_by_id(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'warning': 'Something went wrong. '
                        'EWallet session worker not found in pool by id.',
         })
@@ -8231,7 +8231,7 @@ class EWalletSessionManager():
 
     def warning_could_not_fetch_worker_id(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'warning': 'Something went wrong. '
                        'Could not fetch session worker id.',
         })
@@ -8240,7 +8240,7 @@ class EWalletSessionManager():
 
     def warning_no_ctoken_found(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'warning': 'No client token found.',
         })
         self.log_warning(**instruction_set_response)
@@ -8248,7 +8248,7 @@ class EWalletSessionManager():
 
     def warning_no_stoken_found(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'warning': 'No session token found.',
         })
         self.log_warning(**instruction_set_response)
@@ -8256,7 +8256,7 @@ class EWalletSessionManager():
 
     def warning_no_worker_id_found(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'warning': 'No ewallet session worker id found.',
         })
         self.log_warning(**instruction_set_response)
@@ -8264,7 +8264,7 @@ class EWalletSessionManager():
 
     def warning_no_available_session_worker_found(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'warning': 'No available session worker found in pool.',
         })
         self.log_warning(**instruction_set_response)
@@ -8272,7 +8272,7 @@ class EWalletSessionManager():
 
     def warning_multiple_session_tokens_found_by_label(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'warning': 'Multiple session tokens found. Fetching first.',
         })
         self.log_warning(**instruction_set_response)
@@ -8280,7 +8280,7 @@ class EWalletSessionManager():
 
     def warning_multiple_client_tokens_found_by_label(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'warning': 'Multiple client tokens found. Fetching first.',
         })
         self.log_warning(**instruction_set_response)
@@ -8288,7 +8288,7 @@ class EWalletSessionManager():
 
     def warning_could_not_pause_credit_clock_timer(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'warning': 'Something went wrong. '
                        'Could not pause credit clock timer.',
         })
@@ -8297,7 +8297,7 @@ class EWalletSessionManager():
 
     def warning_no_expired_ewallet_sessions_found(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'warning': 'Something went wrong. '
                        'No expired ewallet sessions found.',
         })
@@ -8306,7 +8306,7 @@ class EWalletSessionManager():
 
     def warning_could_not_fetch_expired_ewallet_sessions(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'warning': 'Something went wrong. '
                        'Could not fetch expired ewallet sessions.',
         })
@@ -8315,7 +8315,7 @@ class EWalletSessionManager():
 
     def warning_could_not_clean_ewallet_session(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'warning': 'Something went wrong. '
                        'Could not clean ewallet session.',
         })
@@ -8324,7 +8324,7 @@ class EWalletSessionManager():
 
     def warning_could_not_cleanup_ewallet_session_worker(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'warning': 'Something went wrong. '
                        'Could not cleanup ewallet session worker.',
         })
@@ -8333,7 +8333,7 @@ class EWalletSessionManager():
 
     def warning_could_not_fulfill_client_id_request(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'warning': 'Something went wrong. '
                        'Could not honour client ID request.',
         })
@@ -8342,7 +8342,7 @@ class EWalletSessionManager():
 
     def warning_could_not_interogate_ewallet_session_workers(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'warning': 'Something went wrong. '
                        'Could not interogate ewallet session workers.',
         })
@@ -8351,7 +8351,7 @@ class EWalletSessionManager():
 
     def warning_ewallet_session_manager_worker_pool_empty(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'warning': 'Ewallet session manager worker pool empty.',
         })
         self.log_warning(**instruction_set_response)
@@ -8359,7 +8359,7 @@ class EWalletSessionManager():
 
     def warning_no_ewallet_session_found_by_id(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'warning': 'No ewallet session found by id.',
         })
         self.log_warning(**instruction_set_response)
@@ -8367,7 +8367,7 @@ class EWalletSessionManager():
 
     def warning_ewallet_session_worker_assignment_failure(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'warning': 'Something went wrong. '
                        'Could not assign ewallet session to worker.',
         })
@@ -8376,7 +8376,7 @@ class EWalletSessionManager():
 
     def warning_could_not_fetch_ewallet_session(self, *args):
         instruction_set_response = res_utils.format_warning_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'warning': 'Something went wrong. '
                        'Could not fetch ewallet session.',
         })
@@ -8390,7 +8390,7 @@ class EWalletSessionManager():
 
     def error_could_not_format_issue_report(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'Something went wrong. '
                      'Could not format new IssueReport data set.',
         })
@@ -8399,7 +8399,7 @@ class EWalletSessionManager():
 
     def error_could_not_create_new_issue_report_file(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'Something went wrong. '
                      'Could not create new IssueReport file.',
         })
@@ -8408,7 +8408,7 @@ class EWalletSessionManager():
 
     def error_no_issue_to_report_found(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'No issue found to report.',
         })
         self.log_error(**instruction_set_response)
@@ -8416,7 +8416,7 @@ class EWalletSessionManager():
 
     def error_no_client_action_report_target_specified(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'No client action Report target specified.',
         })
         self.log_error(**instruction_set_response)
@@ -8424,7 +8424,7 @@ class EWalletSessionManager():
 
     def error_could_not_fetch_stoken_linked_session_by_id(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'Something went wrong. '
                      'Could not fetch SToken linked EWallet Session by ID.',
         })
@@ -8433,7 +8433,7 @@ class EWalletSessionManager():
 
     def error_no_client_action_alive_target_specified(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'No client action KeepAlive target specified.',
         })
         self.log_error(**instruction_set_response)
@@ -8441,7 +8441,7 @@ class EWalletSessionManager():
 
     def error_invalid_master_account_email(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'Invalid Master user account by email address.',
         })
         self.log_error(**instruction_set_response)
@@ -8449,7 +8449,7 @@ class EWalletSessionManager():
 
     def error_could_not_fetch_master_account_by_email_address(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'Something went wrong. '
                      'Could not fetch Master user account by email address.',
         })
@@ -8458,7 +8458,7 @@ class EWalletSessionManager():
 
     def error_no_ctoken_found(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'No CToken found.',
         })
         self.log_error(**instruction_set_response)
@@ -8466,7 +8466,7 @@ class EWalletSessionManager():
 
     def error_no_acquired_ctokens_found_for_master_account(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'No acquired CTokens found for Master user account.',
         })
         self.log_error(**instruction_set_response)
@@ -8474,7 +8474,7 @@ class EWalletSessionManager():
 
     def error_ctoken_pool_empty(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'Session manager CToken pool empty.',
         })
         self.log_error(**instruction_set_response)
@@ -8482,7 +8482,7 @@ class EWalletSessionManager():
 
     def error_no_master_action_inspect_target_specified(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'No Master action Inspect target specified.',
         })
         self.log_error(**instruction_set_response)
@@ -8490,7 +8490,7 @@ class EWalletSessionManager():
 
     def error_no_master_action_recover_target_specified(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'No Master action Recover target specified.',
         })
         self.log_error(**instruction_set_response)
@@ -8498,7 +8498,7 @@ class EWalletSessionManager():
 
     def error_no_master_action_unlink_target_specified(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'No Master action Unlink target specified.',
         })
         self.log_error(**instruction_set_response)
@@ -8506,7 +8506,7 @@ class EWalletSessionManager():
 
     def error_no_master_action_edit_target_specified(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'No Master action Edit target specified.',
         })
         self.log_error(**instruction_set_response)
@@ -8514,7 +8514,7 @@ class EWalletSessionManager():
 
     def error_no_master_action_view_target_specified(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'No Master action View target specified.',
         })
         self.log_error(**instruction_set_response)
@@ -8522,7 +8522,7 @@ class EWalletSessionManager():
 
     def error_no_master_session_manager_action_specified(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'No session manager Master controller action specified.',
         })
         self.log_error(**instruction_set_response)
@@ -8530,7 +8530,7 @@ class EWalletSessionManager():
 
     def error_no_master_session_manager_controller_specified(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'No session manager Master controller specified.',
         })
         self.log_error(**instruction_set_response)
@@ -8538,7 +8538,7 @@ class EWalletSessionManager():
 
     def error_invalid_stoken_worker_pair(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'Invalid EWSession Worker - SToken pair.',
         })
         self.log_error(**instruction_set_response)
@@ -8546,7 +8546,7 @@ class EWalletSessionManager():
 
     def error_could_not_map_worker_id_to_session_token(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'Something went wrong. '
                      'Could not map EWSession Worker ID to SToken.',
         })
@@ -8555,7 +8555,7 @@ class EWalletSessionManager():
 
     def error_no_system_action_decrease_master_target_specified(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'No system action DecreaseMaster target specified.',
         })
         self.log_error(**instruction_set_response)
@@ -8563,7 +8563,7 @@ class EWalletSessionManager():
 
     def error_no_system_action_decrease_target_specified(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'No system action Decrease target specified.',
         })
         self.log_error(**instruction_set_response)
@@ -8571,7 +8571,7 @@ class EWalletSessionManager():
 
     def error_no_system_action_increase_target_specified(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'No system action Increase target specified.',
         })
         self.log_error(**instruction_set_response)
@@ -8579,7 +8579,7 @@ class EWalletSessionManager():
 
     def error_no_system_action_increase_master_target_specified(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'No system action IncreaseMaster target specified.',
         })
         self.log_error(**instruction_set_response)
@@ -8587,7 +8587,7 @@ class EWalletSessionManager():
 
     def error_could_not_unfreeze_subordonate_user_accounts(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'Something went wrong. '
                      'Could not unfreeze Subordonate user accounts.',
         })
@@ -8596,7 +8596,7 @@ class EWalletSessionManager():
 
     def error_could_not_unfreeze_master_account_subpool(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'Something went wrong. '
                      'Could not unfreeze Subordonate user account pool '
                      'for given Master account.',
@@ -8606,7 +8606,7 @@ class EWalletSessionManager():
 
     def error_no_system_action_unfreeze_target_specified(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'No system action Unfreeze target specified.',
         })
         self.log_error(**instruction_set_response)
@@ -8614,7 +8614,7 @@ class EWalletSessionManager():
 
     def error_could_not_freeze_subordonate_user_accounts(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'Something went wrong. '
                      'Could not freeze Subordonate user accounts.',
         })
@@ -8623,7 +8623,7 @@ class EWalletSessionManager():
 
     def error_could_not_freeze_master_account_subpool(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'Something went wrong. '
                      'Could not freeze Master account subordonate pool.',
         })
@@ -8632,7 +8632,7 @@ class EWalletSessionManager():
 
     def error_no_system_action_freeze_target_specified(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'No system action Freeze target specified.',
         })
         self.log_error(**instruction_set_response)
@@ -8640,7 +8640,7 @@ class EWalletSessionManager():
 
     def error_could_not_fetch_master_accounts_by_identifier_set(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'Something went wrong. '
                      'Could not fetch Master accounts by identifier set.',
         })
@@ -8649,7 +8649,7 @@ class EWalletSessionManager():
 
     def error_no_master_accounts_found(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'No Master user accounts found.',
         })
         self.log_error(**instruction_set_response)
@@ -8657,7 +8657,7 @@ class EWalletSessionManager():
 
     def error_could_not_fetch_master_accounts_marked_for_unlink(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'Something went wrong. '
                      'Could not fetch Master accounts marked for unlink.',
         })
@@ -8666,7 +8666,7 @@ class EWalletSessionManager():
 
     def error_could_not_delete_subordonate_user_accounts(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'Something went wrong. '
                      'Could not delete Subordonate user accounts.',
         })
@@ -8675,7 +8675,7 @@ class EWalletSessionManager():
 
     def error_could_not_cleanup_master_account_subpool(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'Something went wrong. '
                      'Could not cleanup Master user account '
                      'Subordonate accounts.',
@@ -8685,7 +8685,7 @@ class EWalletSessionManager():
 
     def error_could_not_fetch_subordonate_accounts_for_masters(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'Something went wrong. '
                      'Could not fetch Subordonate user accounts for '
                      'given Master account set.',
@@ -8695,7 +8695,7 @@ class EWalletSessionManager():
 
     def error_invalid_master_account_set(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'Invalid Master account set.',
         })
         self.log_error(**instruction_set_response)
@@ -8703,7 +8703,7 @@ class EWalletSessionManager():
 
     def error_invalid_master_account_id_set(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'Invalid Master account identifier set.',
         })
         self.log_error(**instruction_set_response)
@@ -8711,7 +8711,7 @@ class EWalletSessionManager():
 
     def error_could_not_fetch_master_accounts_by_id_set(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'Something went wrong. '
                      'Could not fetch Master accounts by '
                      'given identifier set.',
@@ -8721,7 +8721,7 @@ class EWalletSessionManager():
 
     def error_no_master_account_id_specified(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'No Master user account identifier specified.',
         })
         self.log_error(**instruction_set_response)
@@ -8729,7 +8729,7 @@ class EWalletSessionManager():
 
     def error_no_master_user_account_found_by_id(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'No Master user account found by ID.',
         })
         self.log_error(**instruction_set_response)
@@ -8737,7 +8737,7 @@ class EWalletSessionManager():
 
     def error_could_not_set_master_user_account_to_ctoken(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'Something went wrong. '
                      'Could not set master user account to CToken.',
         })
@@ -8746,7 +8746,7 @@ class EWalletSessionManager():
 
     def error_invalid_acquire_master_action_data_set(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'Invalid AcquireMaster action data set.',
         })
         self.log_error(**instruction_set_response)
@@ -8754,7 +8754,7 @@ class EWalletSessionManager():
 
     def error_no_client_action_acquire_target_specified(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'No client action Acquire target specified.',
         })
         self.log_error(**instruction_set_response)
@@ -8762,7 +8762,7 @@ class EWalletSessionManager():
 
     def error_could_not_fetch_master_account_by_id(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'Something went wrong. '
                      'Could not fetch Master account by ID.',
         })
@@ -8771,7 +8771,7 @@ class EWalletSessionManager():
 
     def error_invalid_master_account_id(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'Invalid Master account identifier.',
         })
         self.log_error(**instruction_set_response)
@@ -8779,7 +8779,7 @@ class EWalletSessionManager():
 
     def error_could_not_fetch_acquired_masters_from_client_token_set(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'Something went wrong. '
                      'Could not fetch acquired Master accounts from '
                      'CToken set.',
@@ -8789,7 +8789,7 @@ class EWalletSessionManager():
 
     def error_no_client_action_new_master_target_specified(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'No system action NewMaster target specified.',
         })
         self.log_error(**instruction_set_response)
@@ -8797,7 +8797,7 @@ class EWalletSessionManager():
 
     def error_no_client_action_verify_stoken_target_specified(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'No client action VerifySToken target specified.',
         })
         self.log_error(**instruction_set_response)
@@ -8805,7 +8805,7 @@ class EWalletSessionManager():
 
     def error_invalid_stoken_pool(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'Invalid SToken pool found.',
         })
         self.log_error(**instruction_set_response)
@@ -8813,7 +8813,7 @@ class EWalletSessionManager():
 
     def error_invalid_ctoken_pool(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'Invalid CToken pool found.',
         })
         self.log_error(**instruction_set_response)
@@ -8821,7 +8821,7 @@ class EWalletSessionManager():
 
     def error_no_client_action_verify_ctoken_target_specified(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'No client action verify CToken target specified.',
         })
         self.log_error(**instruction_set_response)
@@ -8829,7 +8829,7 @@ class EWalletSessionManager():
 
     def error_no_client_action_verify_target_specified(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'No client action verify target specified.',
         })
         self.log_error(**instruction_set_response)
@@ -8837,7 +8837,7 @@ class EWalletSessionManager():
 
     def error_client_token_not_found_in_pool(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'Client token not found in pool.',
         })
         self.log_error(**instruction_set_response)
@@ -8845,7 +8845,7 @@ class EWalletSessionManager():
 
     def error_no_client_id_specified(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'No client ID specified.',
         })
         self.log_error(**instruction_set_response)
@@ -8853,7 +8853,7 @@ class EWalletSessionManager():
 
     def error_session_token_not_found_in_pool(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'Specified session token not found in pool.',
         })
         self.log_error(**instruction_set_response)
@@ -8861,7 +8861,7 @@ class EWalletSessionManager():
 
     def error_no_session_token_specified(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'No session token specified.',
         })
         self.log_error(**instruction_set_response)
@@ -8869,7 +8869,7 @@ class EWalletSessionManager():
 
     def error_no_session_worker_id_specified(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'No ewallet session worker ID specified.',
         })
         self.log_error(**instruction_set_response)
@@ -8877,7 +8877,7 @@ class EWalletSessionManager():
 
     def error_could_not_cleanup_session_tokens(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'Something went wrong. '
                      'Could not cleanup session tokens.',
         })
@@ -8886,7 +8886,7 @@ class EWalletSessionManager():
 
     def error_could_not_remove_session_token_from_pool(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'Something went wrong. '
                      'Could not remove session token from SToken pool.',
         })
@@ -8895,7 +8895,7 @@ class EWalletSessionManager():
 
     def error_stoken_label_not_found_in_stoken_pool(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'Session token label not found in SToken pool.',
         })
         self.log_error(**instruction_set_response)
@@ -8903,7 +8903,7 @@ class EWalletSessionManager():
 
     def error_could_not_remove_session_token_from_pool(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'Something went wrong. '
                      'Could not remove session token from pool.',
         })
@@ -8912,7 +8912,7 @@ class EWalletSessionManager():
 
     def error_could_not_fetch_stokens_from_client_token_set(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'Something went wrong. '
                      'Could not fetch session tokens linked to '
                      'client token set items.',
@@ -8922,7 +8922,7 @@ class EWalletSessionManager():
 
     def error_could_not_setup_client_token_cleaner_cron(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'Something went wrong. '
                      'Could not setup client token cleaner cron.',
         })
@@ -8931,7 +8931,7 @@ class EWalletSessionManager():
 
     def error_could_not_cleanup_client_tokens(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'Something went wrong. '
                      'Could not cleanup client tokens.',
         })
@@ -8940,7 +8940,7 @@ class EWalletSessionManager():
 
     def error_could_not_fetch_client_token(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'Something went wrong. '
                      'Could not fetch client token.',
         })
@@ -8949,7 +8949,7 @@ class EWalletSessionManager():
 
     def error_could_not_remove_client_token_from_pool(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'Something went wrong. '
                      'Could not remove client token from pool.',
         })
@@ -8958,7 +8958,7 @@ class EWalletSessionManager():
 
     def error_client_id_not_found_in_ctoken_pool(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'Client  ID not found in CToken pool.',
         })
         self.log_error(**instruction_set_response)
@@ -8966,7 +8966,7 @@ class EWalletSessionManager():
 
     def error_could_not_setup_ewallet_session_cleaner_cron(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'Something went wrong. '
                      'Could not setup ewallet session cleaner cron.',
         })
@@ -8975,7 +8975,7 @@ class EWalletSessionManager():
 
     def error_could_not_setup_session_worker_cleaner_cron(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'Something went wrong. '
                      'Could not setup session worker cleaner cron.',
         })
@@ -8984,7 +8984,7 @@ class EWalletSessionManager():
 
     def error_could_not_fetch_cron_pool(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'Something went wrong. '
                      'Could not fetch session manager cron pool.',
         })
@@ -8993,7 +8993,7 @@ class EWalletSessionManager():
 
     def error_could_not_set_cleaner_thread(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'Something went wrong. '
                      'Could not set cleaner thread.',
         })
@@ -9002,7 +9002,7 @@ class EWalletSessionManager():
 
     def error_could_not_fetch_cleaner_thread(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'Something went wrong. '
                      'Could not fetch cleaner thread.',
         })
@@ -9011,7 +9011,7 @@ class EWalletSessionManager():
 
     def error_no_cleaner_thread_found(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'No cleaner thread found.',
         })
         self.log_error(**instruction_set_response)
@@ -9019,7 +9019,7 @@ class EWalletSessionManager():
 
     def error_could_not_fetch_cron_pool(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'Something went wrong. '
                      'Could not fetch session manager cron pool.',
         })
@@ -9028,7 +9028,7 @@ class EWalletSessionManager():
 
     def error_cold_not_set_cleaner_cron_state(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'Something went wrong. '
                      'Could not set cleaner cron state.',
         })
@@ -9037,7 +9037,7 @@ class EWalletSessionManager():
 
     def error_could_not_fetch_cleaner_cron_state(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'Something went wrong. '
                      'Could not fetch cleaner cron state.',
         })
@@ -9046,7 +9046,7 @@ class EWalletSessionManager():
 
     def error_could_not_fetch_cleaner_cron_command_interface(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'Something went wrong. '
                      'Could not fetch cleaner cron command interface.',
         })
@@ -9055,7 +9055,7 @@ class EWalletSessionManager():
 
     def error_could_not_fetch_cleaner_cron_lock(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'Something went wrong. '
                      'Could not fetch account cleaner cron lock.',
         })
@@ -9064,7 +9064,7 @@ class EWalletSessionManager():
 
     def error_could_no_set_cron_job_pool_entry(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'Something went wrong. '
                      'Could not setup cron job pool entry.',
         })
@@ -9073,7 +9073,7 @@ class EWalletSessionManager():
 
     def error_could_not_setup_account_cleaner_cron(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'Something went wrong. '
                      'Could not setup user account cleaner cron.',
         })
@@ -9082,7 +9082,7 @@ class EWalletSessionManager():
 
     def error_could_not_init_user_account_cleaner_cron(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'Something went wrong. '
                      'Could not initialise user account cleaner cron.',
         })
@@ -9091,7 +9091,7 @@ class EWalletSessionManager():
 
     def error_no_system_cleaner_cron_target_specified(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'No system CleanerCron orientation target specified.',
         })
         self.log_error(**instruction_set_response)
@@ -9099,7 +9099,7 @@ class EWalletSessionManager():
 
     def error_could_not_remove_session_worker_from_pool(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'Something went wrong. '
                      'Could not remove session worker from pool.',
         })
@@ -9108,7 +9108,7 @@ class EWalletSessionManager():
 
     def error_no_ewallet_session_id_found(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'No ewallet session id found.',
         })
         self.log_error(**instruction_set_response)
@@ -9116,7 +9116,7 @@ class EWalletSessionManager():
 
     def error_could_not_clean_session_worker(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'Something went wrong. '
                      'Could not clean session worker.',
         })
@@ -9125,7 +9125,7 @@ class EWalletSessionManager():
 
     def error_could_not_check_if_session_worker_vacant(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'Something went wrong. '
                      'Could not check if session worker is vacant.',
         })
@@ -9134,7 +9134,7 @@ class EWalletSessionManager():
 
     def error_no_action_cleanup_ewallet_session_id_found(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'No ewallet session id found for action cleanup.',
         })
         self.log_error(**instruction_set_response)
@@ -9142,7 +9142,7 @@ class EWalletSessionManager():
 
     def error_could_not_check_if_ewallet_session_is_assigned_to_worker(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'Something went wrong. '
                      'Could not check if ewallet session is assigned to worker.',
         })
@@ -9151,7 +9151,7 @@ class EWalletSessionManager():
 
     def error_no_ewallet_session_worker_map_found(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'No ewallet session worker map found.',
         })
         self.log_error(**instruction_set_response)
@@ -9159,7 +9159,7 @@ class EWalletSessionManager():
 
     def error_no_worker_id_found(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'No session worker id found.',
         })
         self.log_error(**instruction_set_response)
@@ -9167,7 +9167,7 @@ class EWalletSessionManager():
 
     def error_could_not_fetch_session_worker_pool(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'Something went wrong. '
                      'Could not fetch session worker pool.',
         })
@@ -9176,7 +9176,7 @@ class EWalletSessionManager():
 
     def error_could_not_set_write_date(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'Something went wrong. '
                      'Could not set ewallet session manager write date.',
         })
@@ -9185,7 +9185,7 @@ class EWalletSessionManager():
 
     def error_no_client_action_switch_contact_target_specified(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'No client action switch contact target specified.',
         })
         self.log_error(**instruction_set_response)
@@ -9193,7 +9193,7 @@ class EWalletSessionManager():
 
     def error_no_client_action_switch_transfer_target_specified(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'No client action switch transfer target specified.',
         })
         self.log_error(**instruction_set_response)
@@ -9201,7 +9201,7 @@ class EWalletSessionManager():
 
     def error_no_client_action_switch_invoice_target_specified(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'No client action switch invoice target specified.',
         })
         self.log_error(**instruction_set_response)
@@ -9209,7 +9209,7 @@ class EWalletSessionManager():
 
     def error_no_client_action_switch_conversion_target_specified(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'No client action switch conversion target specified.',
         })
         self.log_error(**instruction_set_response)
@@ -9217,7 +9217,7 @@ class EWalletSessionManager():
 
     def error_no_client_action_switch_time_target_specified(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'No client action switch time target specified.',
         })
         self.log_error(**instruction_set_response)
@@ -9225,7 +9225,7 @@ class EWalletSessionManager():
 
     def error_could_not_fetch_session_token_by_label(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'Something went wrong. '
                      'Could not fetch session token map.',
         })
@@ -9234,7 +9234,7 @@ class EWalletSessionManager():
 
     def error_could_not_fetch_client_session_token_map(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'Something went wrong. '
                      'Could not fetch client session token map.',
         })
@@ -9243,7 +9243,7 @@ class EWalletSessionManager():
 
     def error_could_not_create_client_session_token_map(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'Something went wrong. '
                      'Could not create client session token map.',
         })
@@ -9252,7 +9252,7 @@ class EWalletSessionManager():
 
     def error_invalid_values_for_worker_pool_entry(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'Invalid values for worker pool entry.',
         })
         self.log_error(**instruction_set_response)
@@ -9260,7 +9260,7 @@ class EWalletSessionManager():
 
     def error_could_not_create_new_ewallet_session(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'Something went wrong. '
                      'Could not create new ewallet session.',
         })
@@ -9269,7 +9269,7 @@ class EWalletSessionManager():
 
     def error_invalid_client_session_token_pair(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'Invalid client session token pair.',
         })
         self.log_error(**instruction_set_response)
@@ -9277,7 +9277,7 @@ class EWalletSessionManager():
 
     def error_could_not_map_client_session_tokens(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'Something went wrong. '
                      'Could not create client session token map.',
         })
@@ -9286,7 +9286,7 @@ class EWalletSessionManager():
 
     def error_invalid_session_worker_instruction_response(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'Software error. '
                      'Invalid session worker instruction response.',
         })
@@ -9295,7 +9295,7 @@ class EWalletSessionManager():
 
     def error_could_not_fetch_worker_id_by_client_id(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'Something went wrong. '
                      'Could not fetch session worker ID by given client ID.',
         })
@@ -9304,7 +9304,7 @@ class EWalletSessionManager():
 
     def error_invalid_worker_id(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'Invalid worker id.',
         })
         self.log_error(**instruction_set_response)
@@ -9312,7 +9312,7 @@ class EWalletSessionManager():
 
     def error_invalid_client_id(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'Invalid client id.',
         })
         self.log_error(**instruction_set_response)
@@ -9320,7 +9320,7 @@ class EWalletSessionManager():
 
     def error_invalid_client_token(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'Invalid client token.',
         })
         self.log_error(**instruction_set_response)
@@ -9328,7 +9328,7 @@ class EWalletSessionManager():
 
     def error_could_not_fetch_worker_pool_entry_by_id(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'Something went wrong. '
                      'Could not fetch worker pool entry by worker id.',
         })
@@ -9337,7 +9337,7 @@ class EWalletSessionManager():
 
     def error_could_not_set_worker_to_pool(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'Something went wrong. '
                      'Could not set worker to session manager worker pool.',
         })
@@ -9346,7 +9346,7 @@ class EWalletSessionManager():
 
     def error_could_not_set_worker_pool(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'Something went wrong. '
                      'Could not set worker pool.',
         })
@@ -9355,7 +9355,7 @@ class EWalletSessionManager():
 
     def error_worker_pool_empty(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'Session manager worker pool empty.',
         })
         self.log_error(**instruction_set_response)
@@ -9363,7 +9363,7 @@ class EWalletSessionManager():
 
     def error_could_not_generate_session_worker_identifier(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'Something went wrong. '
                      'Could not generate ewallet session worker identifier.',
         })
@@ -9372,7 +9372,7 @@ class EWalletSessionManager():
 
     def error_could_not_generate_id_for_entity_set(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'Something went wrong. '
                      'Could not generate unique identifier for entity set.',
         })
@@ -9381,7 +9381,7 @@ class EWalletSessionManager():
 
     def error_could_not_fetch_client_token_by_label(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'Something went wrong. '
                      'Could not fetch client token by label.',
         })
@@ -9390,7 +9390,7 @@ class EWalletSessionManager():
 
     def error_could_not_set_stoken_pool(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'Something went wrong. '
                      'Could not set session token to pool.',
         })
@@ -9399,7 +9399,7 @@ class EWalletSessionManager():
 
     def error_invalid_client_id(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'Invalid client id.',
         })
         self.log_error(**instruction_set_response)
@@ -9407,7 +9407,7 @@ class EWalletSessionManager():
 
     def error_could_not_fetch_session_token_from_label(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'Something went wrong. '
                      'Could not fetch session token from label.',
         })
@@ -9416,7 +9416,7 @@ class EWalletSessionManager():
 
     def error_could_not_perform_session_token_validity_check(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'Something went wrong. '
                      'Could not perform session token validity check.',
         })
@@ -9425,7 +9425,7 @@ class EWalletSessionManager():
 
     def error_could_not_perform_session_token_unlink_check(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'Something went wrong. '
                      'Could not perform session token unlink check.',
         })
@@ -9434,7 +9434,7 @@ class EWalletSessionManager():
 
     def error_could_not_perform_session_token_expiration_check(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'Something went wrong. '
                      'Could not perform session token validity check.',
         })
@@ -9443,7 +9443,7 @@ class EWalletSessionManager():
 
     def error_could_not_perform_client_token_validity_check(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'Something went wrong. '
                      'Could not perform client token validity check.',
         })
@@ -9452,7 +9452,7 @@ class EWalletSessionManager():
 
     def error_could_not_perform_client_token_unlink_check(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'Something went wrong. '
                      'Could not perform client token unlink check.',
         })
@@ -9461,7 +9461,7 @@ class EWalletSessionManager():
 
     def error_could_not_perform_client_token_expiration_check(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'Something went wrong. '
                      'Could not perform client token expiration check.',
         })
@@ -9470,7 +9470,7 @@ class EWalletSessionManager():
 
     def error_could_not_fetch_client_token_from_label(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'Something went wrong. '
                      'Could not fetch client token from pool by client ID.',
         })
@@ -9479,7 +9479,7 @@ class EWalletSessionManager():
 
     def error_no_config_handler_found(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'No configuration handler found.',
         })
         self.log_error(**instruction_set_response)
@@ -9487,7 +9487,7 @@ class EWalletSessionManager():
 
     def error_no_client_id_found(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'No client id found.',
         })
         self.log_error(**instruction_set_response)
@@ -9495,7 +9495,7 @@ class EWalletSessionManager():
 
     def error_no_ewallet_session_found(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'No ewallet session found.',
         })
         self.log_error(**instruction_set_response)
@@ -9503,7 +9503,7 @@ class EWalletSessionManager():
 
     def error_no_session_manager_worker_found(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'No ewallet session manager worker found.',
         })
         self.log_error(**instruction_set_response)
@@ -9511,7 +9511,7 @@ class EWalletSessionManager():
 
     def error_no_mapped_session_worker_found_for_client_id(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'No mapped session worker found for client ID.',
         })
         self.log_error(**instruction_set_response)
@@ -9519,7 +9519,7 @@ class EWalletSessionManager():
 
     def error_invalid_instruction_set_required_data(self, instruction_set, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'Invalid ewallet session manager instruction set data.',
         })
         self.log_error(**instruction_set_response)
@@ -9527,7 +9527,7 @@ class EWalletSessionManager():
 
     def error_no_session_manager_controller_specified(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'Invalid ewallet controller.',
         })
         self.log_error(**instruction_set_response)
@@ -9535,7 +9535,7 @@ class EWalletSessionManager():
 
     def error_could_not_scrape_ewallet_session(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'Could not scrape ewallet session.',
         })
         self.log_error(**instruction_set_response)
@@ -9543,7 +9543,7 @@ class EWalletSessionManager():
 
     def error_no_ewallet_sessions_found(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'No ewallet sessions found.',
         })
         self.log_error(**instruction_set_response)
@@ -9551,7 +9551,7 @@ class EWalletSessionManager():
 
     def error_could_not_fetch_session_worker_for_ewallet_session(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'Something went wrong. '
                      'Could not fetch session worker.',
         })
@@ -9560,7 +9560,7 @@ class EWalletSessionManager():
 
     def error_could_not_remove_ewallet_session_worker_from_pool(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'Something went wrong. '
                      'Could not remove ewallet session worker '
                      'from session worker pool.',
@@ -9570,7 +9570,7 @@ class EWalletSessionManager():
 
     def error_could_not_scrape_ewallet_session_worker(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'Something went wrong. '
                      'Could not scrape ewallet session worker.',
         })
@@ -9579,7 +9579,7 @@ class EWalletSessionManager():
 
     def error_no_vacant_session_workers_found(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'No vacant session workers found.',
         })
         self.log_error(**instruction_set_response)
@@ -9587,7 +9587,7 @@ class EWalletSessionManager():
 
     def error_no_system_action_cleanup_target_specified(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'No system action cleanup target specified.',
         })
         self.log_error(**instruction_set_response)
@@ -9595,7 +9595,7 @@ class EWalletSessionManager():
 
     def error_could_not_set_client_pool(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'Something went wrong. '
                      'Could not set client id to pool.',
         })
@@ -9604,7 +9604,7 @@ class EWalletSessionManager():
 
     def error_could_not_spawn_new_ewallet_session(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'Something went wrong. '
                      'Could not spawn new ewallet session.',
         })
@@ -9613,7 +9613,7 @@ class EWalletSessionManager():
 
     def error_could_not_assign_worker_to_new_ewallet_session(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'Something went wrong. '
                      'Could not assign session worker for new ewallet session.',
         })
@@ -9622,7 +9622,7 @@ class EWalletSessionManager():
 
     def error_ewallet_session_manager_worker_pool_empty(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'EWallet session manager worker pool empty.',
         })
         self.log_error(**instruction_set_response)
@@ -9630,7 +9630,7 @@ class EWalletSessionManager():
 
     def error_could_not_fetch_ewallet_session_manager_worker_pool(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'Something went wrong. '
                      'Could not fetch ewallet session manager worker pool.',
         })
@@ -9639,7 +9639,7 @@ class EWalletSessionManager():
 
     def error_invalid_ewallet_session_id(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'Invalid ewallet session ID.',
         })
         self.log_error(**instruction_set_response)
@@ -9647,7 +9647,7 @@ class EWalletSessionManager():
 
     def error_could_not_fetch_ewallet_session_by_id(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'Something went wrong. '
                      'Could not fetch ewallet session by ID.',
         })
@@ -9656,7 +9656,7 @@ class EWalletSessionManager():
 
     def error_no_session_id_found(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'No ewallet session ID found.',
         })
         self.log_error(**instruction_set_response)
@@ -9665,7 +9665,7 @@ class EWalletSessionManager():
 
     def error_no_system_action_interogate_target_specified(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'No system action interogate target specified.',
         })
         self.log_error(**instruction_set_response)
@@ -9673,7 +9673,7 @@ class EWalletSessionManager():
 
     def error_no_client_action_unlink_time_target_specified(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'No client action unlink time target specified.',
         })
         self.log_error(**instruction_set_response)
@@ -9681,7 +9681,7 @@ class EWalletSessionManager():
 
     def error_no_client_action_unlink_conversion_target_specified(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'No client action unlink conversion target specified.',
         })
         self.log_error(**instruction_set_response)
@@ -9689,7 +9689,7 @@ class EWalletSessionManager():
 
     def error_no_client_action_unlink_invoice_target_specified(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'No client action unlink invoice target specified.',
         })
         self.log_error(**instruction_set_response)
@@ -9697,7 +9697,7 @@ class EWalletSessionManager():
 
     def error_no_client_action_unlink_target_specified(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'No client action unlink target specified.',
         })
         self.log_error(**instruction_set_response)
@@ -9705,7 +9705,7 @@ class EWalletSessionManager():
 
     def error_no_client_action_unlink_transfer_target_specified(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'No client action unlink transfer target specified.',
         })
         self.log_error(**instruction_set_response)
@@ -9713,7 +9713,7 @@ class EWalletSessionManager():
 
     def error_no_client_action_switch_target_specified(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'No client action switch target specified.',
         })
         self.log_error(**instruction_set_response)
@@ -9721,7 +9721,7 @@ class EWalletSessionManager():
 
     def error_no_client_action_switch_credit_target_specified(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'No client action switch credit target specified.',
         })
         self.log_error(**instruction_set_response)
@@ -9729,7 +9729,7 @@ class EWalletSessionManager():
 
     def error_no_client_action_new_time_target_specified(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'No client action new time target specified.',
         })
         self.log_error(**instruction_set_response)
@@ -9737,7 +9737,7 @@ class EWalletSessionManager():
 
     def error_no_client_action_new_conversion_target_specified(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'No client action new conversion target specified.',
         })
         self.log_error(**instruction_set_response)
@@ -9745,7 +9745,7 @@ class EWalletSessionManager():
 
     def error_no_client_action_new_invoice_target_specified(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'No client action new invoice target specified.',
         })
         self.log_error(**instruction_set_response)
@@ -9753,7 +9753,7 @@ class EWalletSessionManager():
 
     def error_no_client_action_new_transfer_target_specified(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'No client action new transfer target specified.',
         })
         self.log_error(**instruction_set_response)
@@ -9761,7 +9761,7 @@ class EWalletSessionManager():
 
     def error_no_client_action_new_credit_target_specified(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'No client action new credit target specified.',
         })
         self.log_error(**instruction_set_response)
@@ -9769,7 +9769,7 @@ class EWalletSessionManager():
 
     def error_no_client_action_view_invoice_target_specified(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'No client action view invoice target specified.',
         })
         self.log_error(**instruction_set_response)
@@ -9777,7 +9777,7 @@ class EWalletSessionManager():
 
     def error_no_client_action_view_credit_target_specified(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'No client action view credit target specified.',
         })
         self.log_error(**instruction_set_response)
@@ -9785,7 +9785,7 @@ class EWalletSessionManager():
 
     def error_no_client_action_edit_target_specified(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'No client action edit target specified.',
         })
         self.log_error(**instruction_set_response)
@@ -9793,7 +9793,7 @@ class EWalletSessionManager():
 
     def error_no_client_action_view_conversion_target_specified(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'No client action view conversion target specified.',
         })
         self.log_error(**instruction_set_response)
@@ -9801,7 +9801,7 @@ class EWalletSessionManager():
 
     def error_no_client_action_view_transfer_target_specified(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'No client action view transfer target specified.',
         })
         self.log_error(**instruction_set_response)
@@ -9809,7 +9809,7 @@ class EWalletSessionManager():
 
     def error_no_conversion_credit_clock_time_specified(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'No credit clock time specified for conversion.',
         })
         self.log_error(**instruction_set_response)
@@ -9817,7 +9817,7 @@ class EWalletSessionManager():
 
     def error_no_client_action_transfer_target_specified(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'No client action transfer target specified.',
         })
         self.log_error(**instruction_set_response)
@@ -9825,7 +9825,7 @@ class EWalletSessionManager():
 
     def error_no_client_action_new_contact_target_specified(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'No client action new contact target specified.',
         })
         self.log_error(**instruction_set_response)
@@ -9833,7 +9833,7 @@ class EWalletSessionManager():
 
     def error_no_client_action_view_contact_target_specified(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'No client action View Contact target specified.',
         })
         self.log_error(**instruction_set_response)
@@ -9841,7 +9841,7 @@ class EWalletSessionManager():
 
     def error_no_client_action_view_target_specified(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'No client action View target specified.',
         })
         self.log_error(**instruction_set_response)
@@ -9849,7 +9849,7 @@ class EWalletSessionManager():
 
     def error_no_client_action_start_target_specified(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'No client action start target specified.',
         })
         self.log_error(**instruction_set_response)
@@ -9857,7 +9857,7 @@ class EWalletSessionManager():
 
     def error_no_conversion_credit_count_specified(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'No conversion credit count specified.',
         })
         self.log_error(**instruction_set_response)
@@ -9865,7 +9865,7 @@ class EWalletSessionManager():
 
     def error_no_client_action_convert_target_specified(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'No client action convert target specified.',
         })
         self.log_error(**instruction_set_response)
@@ -9873,7 +9873,7 @@ class EWalletSessionManager():
 
     def error_no_client_action_supply_target_specified(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'No client action supply target specified.',
         })
         self.log_error(**instruction_set_response)
@@ -9881,7 +9881,7 @@ class EWalletSessionManager():
 
     def error_could_not_set_client_pool(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'Something went wrong. '
                      'Could not set client ID to session manager client pool.',
         })
@@ -9890,7 +9890,7 @@ class EWalletSessionManager():
 
     def error_invalid_session_token(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'Invalid session token.',
         })
         self.log_error(**instruction_set_response)
@@ -9898,7 +9898,7 @@ class EWalletSessionManager():
 
     def error_no_client_action_new_target_specified(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'No client action new target specified.',
         })
         self.log_error(**instruction_set_response)
@@ -9906,7 +9906,7 @@ class EWalletSessionManager():
 
     def error_no_worker_found_assigned_to_session(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'No worker assigned to ewallet session.',
         })
         self.log_error(**instruction_set_response)
@@ -9914,7 +9914,7 @@ class EWalletSessionManager():
 
     def error_could_not_update_client_worker_map(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'Something went wrong. '
                      'Could not update session manager client/worker map.',
         })
@@ -9923,7 +9923,7 @@ class EWalletSessionManager():
 
     def error_could_not_assign_worker_to_new_ewallet_sesion(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'Something went wrong. '
                      'Could not assign worker to new ewallet session.',
         })
@@ -9932,7 +9932,7 @@ class EWalletSessionManager():
 
     def error_could_not_generate_ewallet_session_token(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'Something went wrong. '
                      'Could not generate session token for new ewallet session.',
         })
@@ -9941,7 +9941,7 @@ class EWalletSessionManager():
 
     def error_could_not_map_client_id_to_session_token(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'Something went wrong. '
                      'Could not map client ID to ewallet session token.',
         })
@@ -9950,7 +9950,7 @@ class EWalletSessionManager():
 
     def error_could_not_fetch_socket_handler(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'Something went wrong. '
                      'Could not fetch socket handler.',
         })
@@ -9959,7 +9959,7 @@ class EWalletSessionManager():
 
     def error_could_not_fetch_socket_handler_required_values(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'Could not fetch required values for ewallet socket handler.',
         })
         self.log_error(**instruction_set_response)
@@ -9967,7 +9967,7 @@ class EWalletSessionManager():
 
     def error_could_not_spawn_socket_handler(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'Could not spawn new ewallet socket handler.',
         })
         self.log_error(**instruction_set_response)
@@ -9975,7 +9975,7 @@ class EWalletSessionManager():
 
     def error_could_not_unset_socket_handler(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'Something went wrong. '
                      'Could not unset socket handler.',
         })
@@ -9984,7 +9984,7 @@ class EWalletSessionManager():
 
     def error_could_not_set_socket_handler(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'Something went wrong. '
                      'Could not set socket handler.',
         })
@@ -9993,7 +9993,7 @@ class EWalletSessionManager():
 
     def error_no_system_action_start_target_specified(self, *args, **kwargs):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'No system action start target specified.',
         })
         self.log_error(**instruction_set_response)
@@ -10001,7 +10001,7 @@ class EWalletSessionManager():
 
     def error_no_command_chain_reply_socket_handler_thread_found(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'No command chain reply socket handler thread found '
                      'in thread map.',
         })
@@ -10010,7 +10010,7 @@ class EWalletSessionManager():
 
     def error_could_not_set_reply_thread_to_socket_handler_map(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'Something went wrong. '
                      'Could not set reply thread to socket handler thread map.',
         })
@@ -10019,7 +10019,7 @@ class EWalletSessionManager():
 
     def error_could_not_set_listener_thread_to_socket_handler_map(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'Something went wrong. '
                      'Could not set instruction '
                      'listener socket handler thread to map.',
@@ -10029,7 +10029,7 @@ class EWalletSessionManager():
 
     def error_no_socket_handler_thread_map_found(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'No socket handler thread map found.',
         })
         self.log_error(**instruction_set_response)
@@ -10037,7 +10037,7 @@ class EWalletSessionManager():
 
     def error_no_instruction_set_socket_handler_thread_found(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'No instruction set listening socket handler '
                      'thread found in thread map.',
         })
@@ -10046,7 +10046,7 @@ class EWalletSessionManager():
 
     def error_no_instruction_set_listener_socket_handler_found(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'No instruction set listener socket handler found '
                      'for session manager.',
         })
@@ -10055,7 +10055,7 @@ class EWalletSessionManager():
 
     def error_no_command_chain_reply_socket_handler_found(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'No command chain reply socket handler found '
                      'for session manager.',
         })
@@ -10064,7 +10064,7 @@ class EWalletSessionManager():
 
     def error_invalid_listener_socket_handler(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'Invalid listener socket handler.',
         })
         self.log_error(**instruction_set_response)
@@ -10072,7 +10072,7 @@ class EWalletSessionManager():
 
     def error_invalid_reply_socket_handler(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'Invalid reply socket handler.',
         })
         self.log_error(**instruction_set_response)
@@ -10080,7 +10080,7 @@ class EWalletSessionManager():
 
     def error_invalid_socket_port(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'Invalid socket port.',
         })
         self.log_error(**instruction_set_response)
@@ -10088,7 +10088,7 @@ class EWalletSessionManager():
 
     def error_no_worker_pool_found(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'No worker pool found.',
         })
         self.log_error(**instruction_set_response)
@@ -10096,7 +10096,7 @@ class EWalletSessionManager():
 
     def error_no_client_pool_found(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'No client pool found.',
         })
         self.log_error(**instruction_set_response)
@@ -10104,7 +10104,7 @@ class EWalletSessionManager():
 
     def error_invalid_worker_pool(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'Invalid worker pool.',
         })
         self.log_error(**instruction_set_response)
@@ -10112,7 +10112,7 @@ class EWalletSessionManager():
 
     def error_client_worker_map_not_found(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'No client worker map found.',
         })
         self.log_error(**instruction_set_response)
@@ -10120,7 +10120,7 @@ class EWalletSessionManager():
 
     def error_invalid_client_pool(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'Invalid client pool.',
         })
         self.log_error(**instruction_set_response)
@@ -10128,7 +10128,7 @@ class EWalletSessionManager():
 
     def error_invalid_client_worker_map(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'Invalid client worker map.',
         })
         self.log_error(**instruction_set_response)
@@ -10136,7 +10136,7 @@ class EWalletSessionManager():
 
     def error_could_not_update_worker_pool(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'Something went wrong. '
                      'Could not update worker pool with new worker.',
         })
@@ -10145,7 +10145,7 @@ class EWalletSessionManager():
 
     def error_could_not_update_client_pool(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'Something went wrong. '
                      'Could not update client pool with new client.',
         })
@@ -10154,7 +10154,7 @@ class EWalletSessionManager():
 
     def error_could_not_update_client_worker_session_map(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'Something went wrong. '
                      'Could not update client/worker/session map with values.',
         })
@@ -10163,7 +10163,7 @@ class EWalletSessionManager():
 
     def error_could_not_set_client_worker_map(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'Something went wrong. '
                      'Could not set client/worker map.',
         })
@@ -10172,7 +10172,7 @@ class EWalletSessionManager():
 
     def error_no_system_action_open_target_specified(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'No system action open target specified.',
         })
         self.log_error(**instruction_set_response)
@@ -10180,7 +10180,7 @@ class EWalletSessionManager():
 
     def error_no_system_action_close_target_specified(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'No system action close target specified.',
         })
         self.log_error(**instruction_set_response)
@@ -10188,7 +10188,7 @@ class EWalletSessionManager():
 
     def error_no_system_action_new_specified(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'No system action new specified.',
         })
         self.log_error(**instruction_set_response)
@@ -10196,7 +10196,7 @@ class EWalletSessionManager():
 
     def error_no_client_request_specified(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'No client request specified.',
         })
         self.log_error(**instruction_set_response)
@@ -10204,7 +10204,7 @@ class EWalletSessionManager():
 
     def error_no_system_event_client_timeout_target_specified(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'No system event client timeout target specified.',
         })
         self.log_error(**instruction_set_response)
@@ -10212,7 +10212,7 @@ class EWalletSessionManager():
 
     def error_no_system_event_expire_specified(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'No system event expire specified.',
         })
         self.log_error(**instruction_set_response)
@@ -10220,7 +10220,7 @@ class EWalletSessionManager():
 
     def error_no_system_event_timeout_specified(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'No system event timeout specified.',
         })
         self.log_error(**instruction_set_response)
@@ -10228,7 +10228,7 @@ class EWalletSessionManager():
 
     def error_no_system_session_manager_event_specified(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'No system session manager event specified.',
         })
         self.log_error(**instruction_set_response)
@@ -10236,7 +10236,7 @@ class EWalletSessionManager():
 
     def error_no_client_session_manager_action_specified(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'No client session manager action specified.',
         })
         self.log_error(**instruction_set_response)
@@ -10244,7 +10244,7 @@ class EWalletSessionManager():
 
     def error_no_system_session_manager_action_specified(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'No system session manager action specified.',
         })
         self.log_error(**instruction_set_response)
@@ -10252,7 +10252,7 @@ class EWalletSessionManager():
 
     def error_no_client_session_manager_controller_specified(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'No client session manager controller specified.',
         })
         self.log_error(**instruction_set_response)
@@ -10260,7 +10260,7 @@ class EWalletSessionManager():
 
     def error_no_system_session_manager_controller_specified(self, *args):
         instruction_set_response = res_utils.format_error_response(**{
-            'failed': True, 'details': args,
+            'failed': True, 'details': args, 'level': 'session-manager',
             'error': 'No system session manager controller specified.',
         })
         self.log_error(**instruction_set_response)
