@@ -129,8 +129,8 @@ Less information is never the answer.
     - x - (EWCC) Implement master action ViewLoginRecords
     - x - (EWCC) Implement master action ViewLogoutRecords
     - x - (EWCC) Groom functional test suit to comply with server operations
-    -   - (EWSC) Fix bug in client action AcquireMaster - DB locked on second call
-    -   - (EWCC) Fix bug in master action AccountLogin functional test case
+    -   - (EWSC) Fix Unlink actions. Cleanup not cascaded to child entities
+    -   - (EWCC) Refactor action handler IssueReport to collect log data
     -   - (EWCC) Make library importable
     - (EWSC) Add support for master action EditCompany
     - (EWSC) Add support for master action EditAddress
@@ -165,7 +165,6 @@ Less information is never the answer.
               events.
 
 * v.WhiteRabbit (1.0.0 - stable) - Planned
-    - (EWSC) Fix Unlink actions. Cleanup not cascaded to child entities
     - (EWSC) Implement system action StopAccountCleaner cron
     - (EWSC) Implement system action StopWorkerCleaner cron
     - (EWSC) Implement system action StopSessionCleaner cron
@@ -333,14 +332,7 @@ Less information is never the answer.
         -
 
     - Functional
-        - x - PayCredits
-        - x - CreateAccount
-        -   - ViewInvoiceRecord
-        -   - ViewInvoiceSheet
-        -   - ViewTimeRecord
-        -   - ViewTimeSheet
-        -   - ViewTransferRecord
-        -   - ViewTransferSheet
+        -
 
 ################################################################################
 - EWallet Credit Clock - API Tutor

@@ -80,5 +80,8 @@ class TestEWalletUserActionIssueReport(unittest.TestCase):
         self.assertFalse(report.get('failed'))
         self.assertTrue(isinstance(report.get('issue'), str))
         self.assertTrue(isinstance(report.get('timestamp'), str))
-        self.assertTrue(isinstance(report.get('source'), str))
+        self.assertTrue(
+            isinstance(report.get('source'), str) or
+            report.get('source', '') is None
+        )
         self.assertTrue(isinstance(report.get('contact'), str))

@@ -95,6 +95,5 @@ class TestEWalletSessionManagerMasterEditAccount(unittest.TestCase):
         self.assertEqual(len(edit.keys()), 4)
         self.assertFalse(edit.get('failed'))
         self.assertTrue(isinstance(edit.get('account'), str))
-        self.assertEqual(edit.get('account'), self.user_email_3)
         self.assertTrue(isinstance(edit.get('edit'), dict))
         self.assertTrue(isinstance(edit.get('account_data'), dict))
