@@ -1,6 +1,7 @@
 ################################################################################
 - EWallet Credit Clock - Virtual Payment System
 ################################################################################
+Less information is never the answer.
 
 * v.DeltaT (alpha/POC - bleeding edge) - Released
     - x - EWallet Credit Clock - Virtual Payment System - initial suit version.
@@ -22,7 +23,6 @@
     - x - (EWSC) Impose entity ownership restrictions on all user actions
     - x - (EWSC) Groom session manager endpoint warning handlers
     - x - (EWSC) Groom session manager endpoint error handlers
-    - x - (EWSC-x-, EWCC-x-, EWAT-x-) Add requirements.txt
     - x - (EWSC) Fix bug in user action Edit Password
     - x - (EWSC) Fix bug in user action Edit Email
     - x - (EWSC) Journal record grooming
@@ -73,15 +73,6 @@
     - x - (EWSC) Implement master action InspectSub
     - x - (EWSC) Implement master action ViewLoginRecords
     - x - (EWSC) Implement master action ViewLogoutRecords
-    - . - (EWSC-x-, EWCC-x-, EWAT- -) Implement Client ID validity checkers
-    - . - (EWSC-x-, EWCC-x-, EWAT- -) Implement Session Token validity checkers
-    - . - (EWSC-x-, EWCC-x-, EWAT- -) Implement forced account removal
-    - . - (EWSC-x-, EWCC- -, EWAT- -) Implement master accounts
-    - . - (EWSC-x-, EWCC- -, EWAT- -) Implement client action AcquireMaster
-    - . - (EWSC-x-, EWCC- -, EWAT- -) Implement client action STokenKeepAlive
-    - . - (EWSC-x-, EWCC- -, EWAT- -) Implement client action CTokenKeepAlive
-    - . - (EWSC-x-, EWCC- -, EWAT- -) Implement client action IssueReport
-    - . - (EWSC-x- ,EWCC- -, EWAT- -) Implement client action ReleaseMaster
     - x - (EWSC) Add entity level in error and warning handlers
     - x - (EWSC) Add EWDox support for client_action CheckCTokenValid
     - x - (EWSC) Add EWDox support for client_action CheckCTokenLinked
@@ -109,7 +100,42 @@
     - x - (EWSC) Add EWDox support for master action ViewLoginRecords
     - x - (EWSC) Add EWDox support for master action ViewLogoutRecords
     - x - (EWSC) Groom EWDox to comply with new error and warning handlers
+    - x - (EWSC-x-, EWCC-x-, EWAT-x-) Add requirements.txt
+    - . - (EWSC-x-, EWCC-x-, EWAT- -) Implement Client ID validity checkers
+    - . - (EWSC-x-, EWCC-x-, EWAT- -) Implement Session Token validity checkers
+    - . - (EWSC-x-, EWCC-x-, EWAT- -) Implement forced account removal
+    - . - (EWSC-x-, EWCC-x-, EWAT- -) Implement master accounts
+    - . - (EWSC-x-, EWCC-x-, EWAT- -) Implement client action AcquireMaster
+    - . - (EWSC-x-, EWCC-x-, EWAT- -) Implement client action STokenKeepAlive
+    - . - (EWSC-x-, EWCC-x-, EWAT- -) Implement client action CTokenKeepAlive
+    - . - (EWSC-x-, EWCC-x-, EWAT- -) Implement client action IssueReport
+    - . - (EWSC-x- ,EWCC-x-, EWAT- -) Implement client action ReleaseMaster
+    - x - (EWSC) Implement client action CreateMaster
+    - x - (EWCC) Implement client action AcquireMaster
+    - x - (EWCC) Implement client action STokenKeepAlive
+    - x - (EWCC) Implement client action CTokenKeepAlive
+    - x - (EWCC) Implement client action IssueReport
+    - x - (EWCC) Implement client action ReleaseMaster
+    - x - (EWCC) Implement master action AccountLogin
+    - x - (EWCC) Implement master action AccountLogout
+    - x - (EWCC) Implement master action ViewAccount
+    - x - (EWCC) Implement master action EditAccount
+    - x - (EWCC) Implement master action UnlinkAccount
+    - x - (EWCC) Implement master action RecoverAccount
+    - x - (EWCC) Implement master action InspectCTokens
+    - x - (EWCC) Implement master action InspectCToken
+    - x - (EWCC) Implement master action InspectSubPool
+    - x - (EWCC) Implement master action InspectSubordonate
+    - x - (EWCC) Implement master action ViewLoginRecords
+    - x - (EWCC) Implement master action ViewLogoutRecords
+    - x - (EWCC) Groom functional test suit to comply with server operations
+    -   - (EWSC) Fix bug in client action AcquireMaster - DB locked on second call
+    -   - (EWCC) Fix bug in master action AccountLogin functional test case
     -   - (EWCC) Make library importable
+    - (EWSC) Add support for master action EditCompany
+    - (EWSC) Add support for master action EditAddress
+    - (EWSC) Add support for master action EditKey
+    - (EWSC) Groom EWDox json instruction set
     - (EWAT) Groom tutor functional test suit
     - (EWAT) Groom tutor instruction set inspections
     - (EWAT) Groom tutor interactive actions
@@ -127,71 +153,19 @@
     - (EWAT) Implement support for client action SToken interaction
 
     [ NOTE ]: EWCreditClock suit version Chronos introduces the concept of
-              Master User Accounts. On user action AcquireMasterAccess, the
+              Master User Accounts. On client action AcquireMaster, the
               CToken is linked to the Master Account and reported as acquired.
 
     [ NOTE ]: The Master Account class ResMaster inherits from subordonate
               account class ResUser.
 
-    [ NOTE ]: The introduction of Master User Accounts comes with the following
-              implications:
-
-        * System actions SweepCleanupCToken and TargetCleanupCToken require
-          refactoring to release any acquired Master accounts.
-
-        * All subordonate account actions need refactoring to honour imposed
-          Master oriented restrictions.
-
-        * CToken requires refactoring to adjust to linked Master Account.
-
-        * All EWSC and EWCC functional tests require refactoring to acquire
-          default Master account (S:CoreMaster).
-
-        * EWSessionManager setup procedure requires refactoring to create
-          S:CoreMaster account.
-
-        * The following client actions are required:
-            . NewMasterAccount {
-                controller: client,
-                ctype: action,
-                action: new,
-                new: master,
-                master: account,
-                client_id: <ctoken-label>,
-                session_token: <stoken-label>,
-                user_email: <email-address>,
-                user_pass: <password>,
-            }
-            . AcquireMaster {
-                controller: client,
-                ctype: action,
-                action: acquire,
-                acquire: master,
-                client_id: <ctoken-label>,
-                session_token: <stoken-label>,
-                master: <email-address>,
-                key: <master-key-code>,
-            }
-            . ReleaseMaster
-
-        * The following system actions are required:
-            . TargetCleanupMaster
-            . FreezeMaster
-            . UnfreezeMaster
-            . IncreaseMasterSubPool
-            . DecreaseMasterSubPool
-
-        * The following master actions are required:
-            . AccountLogin
-            . AccountLogout
-            . ViewAccount
-            . EditAccount
-            . UnlinkAccount
-            . InspectCTokens
-            . InspectSubPool
-            . InspectSub
+    [ NOTE ]: EWSC actions and events were built to be atomic as a security
+              precaution to reduce the possibility of having a series of
+              actions and/or events influence the outcome of other actions and/or
+              events.
 
 * v.WhiteRabbit (1.0.0 - stable) - Planned
+    - (EWSC) Fix Unlink actions. Cleanup not cascaded to child entities
     - (EWSC) Implement system action StopAccountCleaner cron
     - (EWSC) Implement system action StopWorkerCleaner cron
     - (EWSC) Implement system action StopSessionCleaner cron
@@ -359,7 +333,14 @@
         -
 
     - Functional
-        -
+        - x - PayCredits
+        - x - CreateAccount
+        -   - ViewInvoiceRecord
+        -   - ViewInvoiceSheet
+        -   - ViewTimeRecord
+        -   - ViewTimeSheet
+        -   - ViewTransferRecord
+        -   - ViewTransferSheet
 
 ################################################################################
 - EWallet Credit Clock - API Tutor

@@ -142,7 +142,7 @@ class ResMaster(ResUser):
             'company': self.company,
             'address': self.address,
             'subordonate_pool': {} if not self.subordonate_pool else {
-                account.fetch_user_id: account.fetch_user_email()
+                account.fetch_user_id(): account.fetch_user_email()
                 for account in self.subordonate_pool
             },
             'acquired_ctokens': self.acquired_ctokens,
@@ -152,17 +152,7 @@ class ResMaster(ResUser):
 
     # SETTERS
 
-    def set_subordonate_account_limit(self, account_limit):
-        log.debug('')
-        try:
-            self.account_limit = account_limit
-            self.update_write_date()
-        except Exception as e:
-            return self.error_could_not_set_master_account_limit(
-                account_limit, self.account_limit, e
-            )
-        return True
-
+    @pysnooper.snoop('logs/ewallet.log')
     def set_subordonate_user_account_to_pool(self, subordonate):
         log.debug('')
         try:
@@ -171,6 +161,17 @@ class ResMaster(ResUser):
         except Exception as e:
             return self.error_could_not_set_subordonate_user_account_to_pool(
                 subordonate, self.subordonate_pool, e
+            )
+        return True
+
+    def set_subordonate_account_limit(self, account_limit):
+        log.debug('')
+        try:
+            self.account_limit = account_limit
+            self.update_write_date()
+        except Exception as e:
+            return self.error_could_not_set_master_account_limit(
+                account_limit, self.account_limit, e
             )
         return True
 
@@ -198,11 +199,7 @@ class ResMaster(ResUser):
 
     # CHECKERS
 
-    def check_master_account_frozen(self):
-        log.debug('')
-        active = self.fetch_is_active_flag()
-        return False if active else True
-
+#   @pysnooper.snoop('logs/ewallet.log')
     def check_user_in_subpool_by_email(self, user_email):
         log.debug('')
         subpool_email_set = self.fetch_subpool_email_address_set()
@@ -213,6 +210,16 @@ class ResMaster(ResUser):
             )
         return True if user_email in subpool_email_set else False
 
+    def check_ctokens_acquired(self):
+        log.debug('')
+        aquired_ctoken_count = self.fetch_acquired_ctoken_count()
+        return False if not aquired_ctoken_count else True
+
+    def check_master_account_frozen(self):
+        log.debug('')
+        active = self.fetch_is_active_flag()
+        return False if active else True
+
 #   @pysnooper.snoop('logs/ewallet.log')
     def check_subordonate_account_pool_size_limit_reached(self):
         log.debug('')
@@ -221,6 +228,30 @@ class ResMaster(ResUser):
         return True if subpool_size >= size_limit else False
 
     # GENERAL
+
+#   @pysnooper.snoop('logs/ewallet.log')
+    def inspect_subpool(self):
+        log.debug('')
+        command_chain_response = {
+            'failed': False,
+            'subpool': {},
+        }
+        subpool = self.fetch_subordonate_account_pool()
+        if not subpool or isinstance(subpool, dict) and \
+                subpool.get('failed'):
+            self.warning_subordonate_pool_empty(subpool)
+            return command_chain_response
+        try:
+            subpool_map = {
+                account.fetch_user_id(): account.fetch_user_email()
+                for account in subpool
+            }
+        except Exception as e:
+            return self.error_could_not_format_subordonate_pool(
+                subpool, e
+            )
+        command_chain_response['subpool'] = subpool_map
+        return command_chain_response
 
     def remove_ctoken_from_acquired(self, client_id):
         log.debug('')
@@ -248,26 +279,6 @@ class ResMaster(ResUser):
         command_chain_response = {
             'failed': False,
             'subordonate': subordonate.fetch_user_values(),
-        }
-        return command_chain_response
-
-    def inspect_subpool(self):
-        log.debug('')
-        subpool = self.fetch_subordonate_account_pool()
-        if not subpool:
-            return self.warning_subordonate_pool_empty(subpool)
-        try:
-            subpool_map = {
-                account.fetch_user_id(): account.fetch_user_email()
-                for account in subpool
-            }
-        except Exception as e:
-            return self.error_could_not_format_subordonate_pool(
-                subpool
-            )
-        command_chain_response = {
-            'failed': False,
-            'subpool': subpool_map,
         }
         return command_chain_response
 
@@ -324,15 +335,19 @@ class ResMaster(ResUser):
         }
         return command_chain_response
 
-    def add_subordonate_to_pool(self, subordonate_account):
+    def add_subordonate_to_pool(self, subordonate_account, **kwargs):
         log.debug('')
+        orm_session = kwargs.get('active_session')
         set_to_pool = self.set_subordonate_user_account_to_pool(
             subordonate_account
         )
         if isinstance(set_to_pool, dict) and set_to_pool.get('failed'):
+            if orm_session:
+                orm_session.rollback()
             return self.warning_could_not_add_new_subordonate_account(
                 subordonate_account, set_to_pool
             )
+        orm_session.commit()
         return set_to_pool
 
     # VALIDATORS

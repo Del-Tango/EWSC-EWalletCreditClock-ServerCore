@@ -249,26 +249,30 @@ class EWalletTransactionHandler():
         sanitized_command_chain = res_utils.remove_tags_from_command_chain(
             kwargs, 'action'
         )
-        share_transfer_record = journal_records[
-            'transfer_sheets'
-        ][
-            'target'
-        ].credit_transfer_sheet_controller(
-            action='add', transfer_type='incoming', **sanitized_command_chain
-        )
-        share_invoice_record = journal_records[
-            'invoice_sheets'
-        ][
-            'target'
-        ].credit_invoice_sheet_controller(
-            action='add', seller=kwargs['source_user_account'],
-            transfer_record=share_transfer_record, **sanitized_command_chain
-        )
-        if not share_transfer_record or not share_invoice_record:
+        try:
+            share_transfer_record = journal_records[
+                'transfer_sheets'
+            ][
+                'target'
+            ].credit_transfer_sheet_controller(
+                action='add', transfer_type='incoming', **sanitized_command_chain
+            )
+            share_invoice_record = journal_records[
+                'invoice_sheets'
+            ][
+                'target'
+            ].credit_invoice_sheet_controller(
+                action='add', seller=kwargs['source_user_account'],
+                transfer_record=share_transfer_record, **sanitized_command_chain
+            )
+            if not share_transfer_record or not share_invoice_record:
+                return self.warning_credit_transaction_record_share_failure(
+                    kwargs, journal_records, share_transfer_record,
+                    share_invoice_record, sanitized_command_chain
+                )
+        except Exception as e:
             return self.warning_credit_transaction_record_share_failure(
-                share_transfer_record=share_transfer_record,
-                share_invoice_record=share_invoice_record,
-                command_chain=sanitized_command_chain
+                kwargs, journal_records, e
             )
         return {
             'transfer_record': share_transfer_record,
@@ -554,13 +558,14 @@ class EWalletTransactionHandler():
 
     # WARNINGS
 
-    def warning_credit_transaction_record_share_failure(self, **kwargs):
+    def warning_credit_transaction_record_share_failure(self, *args):
         command_chain_response = {
             'failed': True,
+            'level': 'transaction-handlers',
             'warning': 'Credit transaction failure. '
-                       'Details: {}'.format(kwargs)
+                       'Details: {}'.format(args)
         }
-        log.warning(command_chain_response['warnings'])
+        log.warning(command_chain_response['warning'])
         return command_chain_response
 
     # ERRORS

@@ -990,8 +990,12 @@ class EWalletWorker():
     def ensure_worker_locked(self, lock):
         log.debug('')
         if not lock.value:
+            count = 0
             while not lock.value:
+                if count >= 600:
+                    return self.error_worker_lock_timeout(lock, count)
                 time.sleep(0.1)
+                count += 1
                 continue
         self.debug_worker_locked(lock.value)
         return True
@@ -999,8 +1003,12 @@ class EWalletWorker():
     def ensure_worker_unlocked(self, lock):
         log.debug('')
         if lock.value:
+            count = 0
             while lock.value:
+                if count >= 600:
+                    return self.error_worker_lock_timeout(lock, count)
                 time.sleep(0.1)
+                count += 1
                 continue
         self.debug_worker_unlocked(lock.value)
         return True
@@ -1077,7 +1085,7 @@ class EWalletWorker():
 
     # CREATORS
 
-#   @pysnooper.snoop()
+    @pysnooper.snoop('logs/ewallet.log')
     def create_new_ewallet_session(self, **kwargs):
         log.debug('')
         availability_check = self.check_session_worker_available()
@@ -1085,14 +1093,72 @@ class EWalletWorker():
             return self.error_session_worker_full(kwargs)
         orm_session = res_utils.session_factory()
         ewallet_session = self.spawn_ewallet_session(orm_session, **kwargs)
-        orm_session.add(ewallet_session)
-        orm_session.commit()
+        try:
+            orm_session.add(ewallet_session)
+            orm_session.commit()
+        except Exception as e:
+            return self.error_could_not_create_new_ewallet_session(
+                kwargs, availability_check, orm_session, ewallet_session, e
+            )
         return ewallet_session
 
     # ACTIONS
     '''
     [ NOTE ]: Command chain responses are formulated here.
     '''
+
+    def action_acquire_master_account(self, **kwargs):
+        log.debug('')
+        # Fetch ewallet session by token keys
+        ewallet_session = self.fetch_ewallet_session_by_client_session_tokens(
+            kwargs['client_id'], kwargs['session_token']
+        )
+        if not ewallet_session or isinstance(ewallet_session, dict) and \
+                ewallet_session.get('failed'):
+            return ewallet_session
+        sanitized_instruction_set = res_utils.remove_tags_from_command_chain(
+            kwargs, 'controller', 'ctype', 'action', 'acquire',
+            'active_session'
+        )
+        # Execute action in session
+        orm_session = ewallet_session.fetch_active_session()
+        master_account = ewallet_session.ewallet_controller(
+            controller='user', ctype='action', action='search', search='master',
+            search_by='email', active_session=orm_session, **sanitized_instruction_set
+        )
+        # Formulate response
+        response = self.warning_could_not_fetch_master_account_by_email(
+             master_account, ewallet_session, kwargs
+        ) if not master_account or isinstance(master_account, dict) and \
+            master_account.get('failed') else master_account
+        # Respond to session manager
+        self.send_instruction_response(response)
+        return response
+
+    def action_inspect_master_acquired_ctokens(self, **kwargs):
+        log.debug('')
+        # Fetch ewallet session by token keys
+        ewallet_session = self.fetch_ewallet_session_by_client_session_tokens(
+            kwargs['client_id'], kwargs['session_token']
+        )
+        if not ewallet_session or isinstance(ewallet_session, dict) and \
+                ewallet_session.get('failed'):
+            return ewallet_session
+        master = ewallet_session.fetch_active_session_master()
+        master_id = master.fetch_user_id()
+        # Formulate response
+        response = self.warning_could_not_fetch_active_session_master_account_id(
+            ewallet_session, kwargs, master_id
+        ) if not master_id or isinstance(master_id, dict) and \
+            master_id.get('failed') else {
+                'failed': False,
+                'master_id': master_id,
+                'master': master.fetch_user_email(),
+                'master_data': master.fetch_user_values(),
+            }
+        # Respond to session manager
+        self.send_instruction_response(response)
+        return response
 
     def action_clear_ewallet_session_values(self, **kwargs):
         log.debug('')
@@ -1264,31 +1330,6 @@ class EWalletWorker():
         ) if not inspect or \
             isinstance(inspect, dict) and \
             inspect.get('failed') else inspect
-        # Respond to session manager
-        self.send_instruction_response(response)
-        return response
-
-    def action_inspect_master_acquired_ctokens(self, **kwargs):
-        log.debug('')
-        # Fetch ewallet session by token keys
-        ewallet_session = self.fetch_ewallet_session_by_client_session_tokens(
-            kwargs['client_id'], kwargs['session_token']
-        )
-        if not ewallet_session or isinstance(ewallet_session, dict) and \
-                ewallet_session.get('failed'):
-            return ewallet_session
-        master = ewallet_session.fetch_active_session_master()
-        master_id = master.fetch_user_id()
-        # Formulate response
-        response = self.warning_could_not_fetch_active_session_master_account_id(
-            ewallet_session, kwargs, master_id
-        ) if not master_id or isinstance(master_id, dict) and \
-            master_id.get('failed') else {
-                'failed': False,
-                'master_id': master_id,
-                'master': master.fetch_user_email(),
-                'master_data': master.fetch_user_values(),
-            }
         # Respond to session manager
         self.send_instruction_response(response)
         return response
@@ -1565,34 +1606,6 @@ class EWalletWorker():
              add_ctoken, ewallet_session, kwargs
         ) if not add_ctoken or isinstance(add_ctoken, dict) and \
             add_ctoken.get('failed') else add_ctoken
-        # Respond to session manager
-        self.send_instruction_response(response)
-        return response
-
-    def action_acquire_master_account(self, **kwargs):
-        log.debug('')
-        # Fetch ewallet session by token keys
-        ewallet_session = self.fetch_ewallet_session_by_client_session_tokens(
-            kwargs['client_id'], kwargs['session_token']
-        )
-        if not ewallet_session or isinstance(ewallet_session, dict) and \
-                ewallet_session.get('failed'):
-            return ewallet_session
-        sanitized_instruction_set = res_utils.remove_tags_from_command_chain(
-            kwargs, 'controller', 'ctype', 'action', 'acquire',
-            'active_session'
-        )
-        # Execute action in session
-        orm_session = ewallet_session.fetch_active_session()
-        master_account = ewallet_session.ewallet_controller(
-            controller='user', ctype='action', action='search', search='master',
-            search_by='email', active_session=orm_session, **sanitized_instruction_set
-        )
-        # Formulate response
-        response = self.warning_could_not_fetch_master_account_by_email(
-             master_account, ewallet_session, kwargs
-        ) if not master_account or isinstance(master_account, dict) and \
-            master_account.get('failed') else master_account
         # Respond to session manager
         self.send_instruction_response(response)
         return response
@@ -4655,7 +4668,9 @@ class EWalletWorker():
         while True:
             if not self.lock.value:
                 self.debug_waiting_for_lock_from_session_manager(self.lock.value)
-                self.ensure_worker_locked(self.lock)
+                ensure = self.ensure_worker_locked(self.lock)
+                if isinstance(ensure, dict) and ensure.get('failed'):
+                    continue
             self.debug_fetching_instruction(self.lock.value)
             instruction = self.receive_instruction_set()
             self.debug_validating_instruction(self.lock.value, instruction)
@@ -5961,6 +5976,25 @@ class EWalletWorker():
     '''
     [ TODO ]: Fetch error messages from message file by key codes.
     '''
+
+    def error_could_not_create_new_ewallet_session(self, *args):
+        instruction_set_response = {
+            'failed': True, 'level': 'session-worker',
+            'error': 'Something went wrong. '
+                     'Could not create new EWallet Session. '
+                     'Details: {}.'.format(args),
+        }
+        log.error(instruction_set_response['error'])
+        return instruction_set_response
+
+    def error_worker_lock_timeout(self, *args):
+        instruction_set_response = {
+            'failed': True, 'level': 'session-worker',
+            'error': 'Session Worker lock timed out. '
+                     'Details: {}.'.format(args),
+        }
+        log.error(instruction_set_response['error'])
+        return instruction_set_response
 
     def error_no_system_action_clear_target_specified(self, *args):
         instruction_set_response = {

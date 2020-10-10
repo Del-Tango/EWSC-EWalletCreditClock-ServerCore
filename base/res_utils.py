@@ -238,6 +238,7 @@ res_utils = ResUtils()
 '''
 def log_init():
     log_config = config.log_config
+    logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
     log = logging.getLogger(log_config['log_name'])
     log.setLevel(logging.DEBUG)
     file_handler = logging.FileHandler(

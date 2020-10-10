@@ -472,7 +472,7 @@ class CreditEWallet(Base):
 
     def set_credits(self, **kwargs):
         log.debug('')
-        if not kwargs.get('credits'):
+        if not isinstance(kwargs.get('credits'), int):
             return self.error_no_credits_found(kwargs)
         try:
             self.credits = kwargs['credits']
@@ -1525,6 +1525,15 @@ class CreditEWallet(Base):
     '''
     [ TODO ]: Fetch error messages from message file by key codes.
     '''
+
+    def error_no_invoice_list_id_specified(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No invoice sheet ID specified. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
 
     def error_could_not_unlink_invoice_sheet(self, *args):
         command_chain_response = {

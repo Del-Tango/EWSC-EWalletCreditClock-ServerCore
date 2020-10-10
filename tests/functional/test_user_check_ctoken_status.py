@@ -85,8 +85,8 @@ class TestEWalletUserActionCheckCTokenStatus(unittest.TestCase):
             '\n[ < ]: Response: ' + str(check) + '\n'
         )
         self.assertTrue(isinstance(check, dict))
-        self.assertEqual(len(check.keys()), 9)
         self.assertFalse(check.get('failed'))
+        self.assertEqual(len(check.keys()), 9)
         self.assertTrue(isinstance(check.get('client_id'), str))
         self.assertTrue(check.get('valid'))
         self.assertTrue(check.get('linked'))

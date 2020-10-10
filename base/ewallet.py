@@ -156,9 +156,10 @@ class EWallet(Base):
             user_account = list(kwargs['active_session'].query(
                 ResMaster
             ).filter_by(user_id=kwargs['master_id']))
-        except:
+        except Exception as e:
             return self.error_could_not_fetch_master_account_by_id(kwargs)
-        log.info('Successfully fetched master user account by id.')
+        if user_account:
+            log.info('Successfully fetched master user account by id.')
         return self.warning_no_master_account_found_by_id(kwargs) if not \
             user_account else user_account[0]
 
@@ -1094,6 +1095,146 @@ class EWallet(Base):
     def action_receive_transfer_record(self, **kwargs):
         log.debug('TODO - UNIMPLEMENTED')
 
+#   @pysnooper.snoop('logs/ewallet.log')
+    def action_create_new_user_account(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('master_id'):
+            return self.error_no_master_account_id_specified(kwargs)
+        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
+            kwargs, 'action'
+        )
+        if kwargs['master_id'] != 'system':
+            master_account = self.fetch_master_account_by_id(
+                **sanitized_command_chain
+            )
+            if not master_account or isinstance(master_account, dict) and \
+                    master_account.get('failed'):
+                return self.warning_no_master_account_found_by_id(
+                    kwargs, master_account
+                )
+            if kwargs['master_id'] != 'system':
+                master_subpool_limit_reached = master_account\
+                    .check_subordonate_account_pool_size_limit_reached()
+                if master_subpool_limit_reached:
+                    return self.warning_subordonate_account_pool_size_limit_reached(
+                        kwargs, master_account, master_subpool_limit_reached
+                    )
+            kwargs['active_session'].add(master_account)
+        session_create_account = EWalletCreateUser().action_create_new_user(
+            **sanitized_command_chain
+        )
+        if not session_create_account or \
+                isinstance(session_create_account, dict) and \
+                session_create_account.get('failed'):
+            kwargs['active_session'].rollback()
+            return self.warning_could_not_create_user_account(
+                kwargs, session_create_account
+            )
+        kwargs['active_session'].add(session_create_account)
+        log.info('Successfully created new user account.')
+        if kwargs['master_id'] != 'system':
+            link_master = master_account.add_subordonate_to_pool(
+                session_create_account, **kwargs
+            )
+            if isinstance(link_master, dict) and link_master.get('failed'):
+                kwargs['active_session'].rollback()
+                return self.warning_could_not_link_new_user_account_to_master(
+                    kwargs, master_account, session_create_account, link_master
+                )
+            session_create_account.set_master_account_id(kwargs['master_id'])
+        self.update_user_account_archive(
+            user=session_create_account,
+        )
+        self.update_session_from_user(
+            session_active_user=session_create_account,
+        )
+        kwargs['active_session'].commit()
+        command_chain_response = {
+            'failed': False,
+            'account': kwargs['user_email'],
+            'account_data': session_create_account.fetch_user_values(),
+        }
+        return command_chain_response
+
+#   @pysnooper.snoop('logs/ewallet.log')
+    def action_create_new_transfer_type_pay(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('pay'):
+            return self.error_no_user_action_pay_target_specified(kwargs)
+        active_session = kwargs.get('active_session') or \
+            self.fetch_active_session()
+        partner_account = kwargs.get('partner_account') or \
+            self.fetch_user(identifier='email', email=kwargs['pay'])
+        if not partner_account:
+            return self.error_could_not_fetch_partner_account(
+                kwargs, active_session, partner_account
+            )
+        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
+            kwargs, 'ctype', 'action', 'ttype', 'partner_account', 'pay'
+        )
+        credits_before = self.fetch_credit_wallet_credits()
+        current_account = self.fetch_active_session_user()
+        action_pay = current_account.user_controller(
+            ctype='action', action='transfer', ttype='payment',
+            pay=partner_account, **sanitized_command_chain
+        )
+        credits_after = self.fetch_credit_wallet_credits()
+        if str(credits_after) != str(credits_before - int(kwargs.get('credits'))) or \
+                not action_pay or isinstance(action_pay, dict) and \
+                action_pay.get('failed'):
+            active_session.rollback()
+            return self.error_pay_type_transfer_failure(
+                kwargs, active_session, partner_account, credits_before,
+                current_account, action_pay, credits_after
+            )
+        active_session.commit()
+        command_chain_response = {
+            'failed': False,
+            'paid': kwargs['pay'],
+            'ewallet_credits': action_pay['ewallet_credits'],
+            'spent_credits': int(kwargs['credits']),
+            'invoice_record': action_pay['invoice_record'].fetch_record_id(),
+            'transfer_record': action_pay['transfer_record'].fetch_record_id(),
+        }
+        return command_chain_response
+
+    def action_edit_account_user_email(self, **kwargs):
+        log.debug('')
+        active_user = self.fetch_active_session_user()
+        if not active_user or isinstance(active_user, dict) and \
+                active_user.get('failed'):
+            return self.warning_could_not_fetch_ewallet_session_active_user(kwargs)
+        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
+            kwargs, 'ctype', 'action', 'edit'
+        )
+        edit_user_email = active_user.user_controller(
+            ctype='action', action='edit', edit='user_email',
+            email_check_func=self.fetch_email_check_func(),
+            **sanitized_command_chain
+        )
+        return self.warning_could_not_edit_account_user_email(kwargs) if \
+            edit_user_email.get('failed') else edit_user_email
+
+    def action_edit_master_user_email(self, **kwargs):
+        log.debug('')
+        active_master = kwargs.get('master_account') or \
+            self.fetch_active_session_master()
+        if not active_master or isinstance(active_master, dict) and \
+                active_master.get('failed'):
+            return self.warning_could_not_fetch_ewallet_session_active_master(
+                kwargs, active_master
+            )
+        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
+            kwargs, 'ctype', 'action', 'edit'
+        )
+        edit_user_email = active_master.user_controller(
+            ctype='action', action='edit', edit='user_email',
+            email_check_func=self.fetch_email_check_func(),
+            **sanitized_command_chain
+        )
+        return self.warning_could_not_edit_master_user_email(kwargs) if \
+            edit_user_email.get('failed') else edit_user_email
+
     def action_cleanup_ewallet_session(self, **kwargs):
         log.debug('')
         logout_accounts = self.assure_all_user_accounts_logged_out(**kwargs)
@@ -1580,25 +1721,6 @@ class EWallet(Base):
         return self.warning_could_not_edit_master_user_alias(kwargs) if \
             edit_user_alias.get('failed') else edit_user_alias
 
-    def action_edit_master_user_email(self, **kwargs):
-        log.debug('')
-        active_master = kwargs.get('master_account') or \
-            self.fetch_active_session_master()
-        if not active_master or isinstance(active_master, dict) and \
-                active_master.get('failed'):
-            return self.warning_could_not_fetch_ewallet_session_active_master(
-                kwargs, active_master
-            )
-        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
-            kwargs, 'ctype', 'action', 'edit'
-        )
-        edit_user_email = active_master.user_controller(
-            ctype='action', action='edit', edit='user_email',
-            **sanitized_command_chain
-        )
-        return self.warning_could_not_edit_master_user_email(kwargs) if \
-            edit_user_email.get('failed') else edit_user_email
-
     def action_edit_master_user_phone(self, **kwargs):
         log.debug('')
         active_master = kwargs.get('master_account') or \
@@ -1747,6 +1869,7 @@ class EWallet(Base):
         }
         return command_chain_response
 
+#   @pysnooper.snoop('logs/ewallet.log')
     def action_create_new_master_account(self, **kwargs):
         log.debug('')
         sanitized_command_chain = res_utils.remove_tags_from_command_chain(
@@ -1769,69 +1892,10 @@ class EWallet(Base):
         kwargs['active_session'].commit()
         account_data = session_create_account.fetch_user_values()
         subpool = account_data['subordonate_pool']
-        account_data['subordonate_pool'] = {
-            user.fetch_user_id(): user.fetch_user_name() for user in subpool
-        }
         command_chain_response = {
             'failed': False,
             'account': kwargs['user_email'],
             'account_data': account_data,
-        }
-        return command_chain_response
-
-#   @pysnooper.snoop('logs/ewallet.log')
-    def action_create_new_user_account(self, **kwargs):
-        log.debug('')
-        if not kwargs.get('master_id'):
-            return self.error_no_master_account_id_specified(kwargs)
-        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
-            kwargs, 'action'
-        )
-        if kwargs['master_id'] != 'system':
-            master_account = self.fetch_master_account_by_id(
-                **sanitized_command_chain
-            )
-            if not master_account or isinstance(master_account, dict) and \
-                    master_account.get('failed'):
-                return self.warning_no_master_account_found_by_id(
-                    kwargs, master_account
-                )
-            master_subpool_limit_reached = master_account\
-                .check_subordonate_account_pool_size_limit_reached()
-            if master_subpool_limit_reached:
-                return self.warning_subordonate_account_pool_size_limit_reached(
-                    kwargs, master_account, master_subpool_limit_reached
-                )
-        session_create_account = EWalletCreateUser().action_create_new_user(
-            **sanitized_command_chain
-        )
-        if not session_create_account or \
-                isinstance(session_create_account, dict) and \
-                session_create_account.get('failed'):
-            return self.warning_could_not_create_user_account(
-                kwargs, session_create_account
-            )
-        kwargs['active_session'].add(session_create_account)
-        log.info('Successfully created new user account.')
-        if kwargs['master_id'] != 'system':
-            link_master = master_account.add_subordonate_to_pool(
-                session_create_account
-            )
-            if isinstance(link_master, dict) and link_master.get('failed'):
-                return self.warning_could_not_link_new_user_account_to_master(
-                    kwargs, master_account, session_create_account, link_master
-                )
-        self.update_user_account_archive(
-            user=session_create_account,
-        )
-        self.update_session_from_user(
-            session_active_user=session_create_account,
-        )
-        kwargs['active_session'].commit()
-        command_chain_response = {
-            'failed': False,
-            'account': kwargs['user_email'],
-            'account_data': session_create_account.fetch_user_values(),
         }
         return command_chain_response
 
@@ -1939,7 +2003,12 @@ class EWallet(Base):
             partner_account=self.fetch_active_session_user(),
             active_session=active_session, **sanitized_command_chain
         )
-
+        if not credit_request or isinstance(credit_request, dict) and \
+                credit_request.get('failed'):
+            return self.warning_could_not_honour_credit_request(
+                kwargs, active_session, partner_account, credits_before,
+                credit_request
+            )
         credits_after = self.fetch_credit_wallet_credits()
         if not credits_after or isinstance(credits_after, dict) and \
                 credits_after.get('failed'):
@@ -1974,65 +2043,6 @@ class EWallet(Base):
             'empty': empty,
         }
         return command_chain_response
-
-#   @pysnooper.snoop('logs/ewallet.log')
-    def action_create_new_transfer_type_pay(self, **kwargs):
-        log.debug('')
-        if not kwargs.get('pay'):
-            return self.error_no_user_action_pay_target_specified(kwargs)
-        active_session = kwargs.get('active_session') or \
-            self.fetch_active_session()
-        partner_account = kwargs.get('partner_account') or \
-            self.fetch_user(identifier='email', email=kwargs['pay'])
-        if not partner_account:
-            return self.error_could_not_fetch_partner_account(
-                kwargs, active_session, partner_account
-            )
-        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
-            kwargs, 'ctype', 'action', 'ttype', 'partner_account', 'pay'
-        )
-        credits_before = self.fetch_credit_wallet_credits()
-        current_account = self.fetch_active_session_user()
-        action_pay = current_account.user_controller(
-            ctype='action', action='transfer', ttype='payment',
-            pay=partner_account, **sanitized_command_chain
-        )
-        credits_after = self.fetch_credit_wallet_credits()
-        if str(credits_after) != str(credits_before - int(kwargs.get('credits'))) or \
-                not action_pay or isinstance(action_pay, dict) and \
-                action_pay.get('failed'):
-            active_session.rollback()
-            return self.error_pay_type_transfer_failure(
-                kwargs, active_session, partner_account, credits_before,
-                current_account, action_pay, credits_after
-            )
-        active_session.commit()
-        command_chain_response = {
-            'failed': False,
-            'paid': kwargs['pay'],
-            'ewallet_credits': action_pay['ewallet_credits'],
-            'spent_credits': int(kwargs['credits']),
-            'invoice_record': action_pay['invoice_record'].fetch_record_id(),
-            'transfer_record': action_pay['transfer_record'].fetch_record_id(),
-        }
-        return command_chain_response
-
-    def action_edit_account_user_email(self, **kwargs):
-        log.debug('')
-        active_user = self.fetch_active_session_user()
-        if not active_user or isinstance(active_user, dict) and \
-                active_user.get('failed'):
-            return self.warning_could_not_fetch_ewallet_session_active_user(kwargs)
-        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
-            kwargs, 'ctype', 'action', 'edit'
-        )
-        edit_user_email = active_user.user_controller(
-            ctype='action', action='edit', edit='user_email',
-            email_check_func=self.fetch_email_check_func(),
-            **sanitized_command_chain
-        )
-        return self.warning_could_not_edit_account_user_email(kwargs) if \
-            edit_user_email.get('failed') else edit_user_email
 
 #   @pysnooper.snoop('logs/ewallet.log')
     def action_edit_account_user_pass(self, **kwargs):
@@ -3179,7 +3189,9 @@ class EWallet(Base):
         time_sheet = credit_clock.fetch_credit_clock_time_sheet()
         if not time_sheet or isinstance(time_sheet, dict) and \
                 time_sheet.get('failed'):
-            return self.warning_could_not_fetch_time_sheet(kwargs)
+            return self.warning_could_not_fetch_time_sheet(
+                kwargs, credit_wallet, credit_clock, time_sheet
+            )
         command_chain_response = {
             'failed': False,
             'time_sheet': time_sheet.fetch_time_sheet_id(),
@@ -4986,6 +4998,27 @@ class EWallet(Base):
     [ TODO ]: Fetch warning messages from message file by key codes.
     '''
 
+    def warning_could_not_fetch_time_sheet(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'level': 'ewallet-session',
+            'warning': 'Something went wrong. Could not fetch time sheet '\
+                       'Details: {}'.format(args),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
+
+    def warning_could_not_honour_credit_request(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'level': 'ewallet-session',
+            'warning': 'Something went wrong. '
+                       'Could not honour credit request. '
+                       'Details: {}'.format(args),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
+
     def warning_could_not_inspect_master_subordonate_account(self, *args):
         command_chain_response = {
             'failed': True,
@@ -5755,16 +5788,6 @@ class EWallet(Base):
         log.warning(command_chain_response['warning'])
         return command_chain_response
 
-    def warning_could_not_fetch_time_sheet(self, command_chain):
-        command_chain_response = {
-            'failed': True,
-            'level': 'ewallet-session',
-            'warning': 'Something went wrong. Could not fetch time sheet '\
-                       'Command chain details : {}'.format(command_chain),
-        }
-        log.warning(command_chain_response['warning'])
-        return command_chain_response
-
     def warning_could_not_fetch_transfer_sheet(self, command_chain):
         command_chain_response = {
             'failed': True,
@@ -6000,20 +6023,6 @@ class EWallet(Base):
 
     def warning_user_not_in_session_archive(self):
         log.error('User account not found in session user archive.')
-        return False
-
-    def warning_could_not_fetch_conversion_sheet(self):
-        log.warning(
-                'Something went wrong. '
-                'Could not fetch credit clock conversion sheet.'
-                )
-        return False
-
-    def warning_could_not_fetch_time_sheet(self):
-        log.warning(
-                'Something went wrong. '
-                'Could not fetch credit clock time sheet.'
-                )
         return False
 
     def warning_could_not_fetch_credit_wallet_transfer_sheet(self):

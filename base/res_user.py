@@ -95,6 +95,10 @@ class ResUser(Base):
         self.to_unlink = kwargs.get('to_unlink', False)
         self.to_unlink_timestamp = kwargs.get('to_unlink_timestamp')
         self.is_active = kwargs.get('is_active', True)
+        try:
+            self.master_account_id = kwargs.get('master_id')
+        except Exception as e:
+            log.warning(e)
 
     # FETCHERS
 
@@ -324,6 +328,19 @@ class ResUser(Base):
         return values
 
     # SETTERS
+
+    def set_master_account_id(self, master_id):
+        log.debug('')
+        try:
+            self.master_account_id = master_id
+            self.update_write_date()
+        except Exception as e:
+            return self.error_could_not_set_user_master_account_id(
+                master_id, self.master_asccount_id, e
+            )
+        log.info('Successfully set user master account ID.')
+        return True
+
 
     def set_is_active(self, flag=True):
         log.debug('')
@@ -767,7 +784,7 @@ class ResUser(Base):
 
     # ACTIONS
 
-#   @pysnooper.snoop('logs/ewallet.log')
+    @pysnooper.snoop('logs/ewallet.log')
     def action_pay_partner_account(self, **kwargs):
         log.debug('')
         if not kwargs.get('pay'):
@@ -1537,6 +1554,16 @@ class ResUser(Base):
     '''
     [ TODO ]: Fetch error messages from message file by key codes.
     '''
+
+    def error_could_not_set_user_master_account_id(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Something went wrong. '
+                     'Could not set Master account ID. '
+                     'Details: {}'.format(args)
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
 
     def error_no_user_email_check_function_found(self, *args):
         command_chain_response = {

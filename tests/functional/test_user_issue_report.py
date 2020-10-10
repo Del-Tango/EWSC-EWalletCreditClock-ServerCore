@@ -66,8 +66,7 @@ class TestEWalletUserActionIssueReport(unittest.TestCase):
         instruction_set = {
             'controller': 'client', 'ctype': 'action', 'action': 'report',
             'report': 'issue', 'session_token': self.session_token,
-            'remote_addr': '255.255.255.255', 'client_id': self.client_id,
-            'issue': issue
+            'client_id': self.client_id, 'issue': issue
         }
         report = self.session_manager.session_manager_controller(
             **instruction_set
