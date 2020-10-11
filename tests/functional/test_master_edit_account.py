@@ -1,6 +1,8 @@
 import os
 import datetime
 import unittest
+# import pysnooper
+
 from base import ewallet_session_manager as manager
 
 
@@ -21,6 +23,7 @@ class TestEWalletSessionManagerMasterEditAccount(unittest.TestCase):
     master_key_code = 'EWSC-Master-Key-Code'
 
     @classmethod
+#   @pysnooper.snoop()
     def setUpClass(cls):
         print('[ + ]: Prerequisites -')
         # Create new EWallet Session Manager instance
@@ -63,6 +66,7 @@ class TestEWalletSessionManagerMasterEditAccount(unittest.TestCase):
         )
 
     @classmethod
+#   @pysnooper.snoop()
     def tearDownClass(cls):
         # Clean Sqlite3 database used for testing environment
         if os.path.isfile('data/ewallet.db'):
@@ -82,7 +86,8 @@ class TestEWalletSessionManagerMasterEditAccount(unittest.TestCase):
             'edit': 'account', 'client_id': self.client_id,
             'session_token': self.session_token, 'user_name': 'Edited',
             'user_phone': 'Edited', 'user_email': 'Edited',
-            'user_pass': 'Editedsdas@!@R2312e.', 'user_alias': 'Edited'
+            'user_pass': 'Editedsdas@!@R2312e.', 'user_alias': 'Edited',
+            'company': 'Edited', 'address': 'Edited', 'key': 'Edited',
         }
         edit = self.session_manager.session_manager_controller(
             **instruction_set

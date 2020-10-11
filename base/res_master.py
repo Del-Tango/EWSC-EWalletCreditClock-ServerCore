@@ -153,7 +153,40 @@ class ResMaster(ResUser):
 
     # SETTERS
 
-    @pysnooper.snoop('logs/ewallet.log')
+    def set_account_company(self, company_name):
+        log.debug('')
+        try:
+            self.company = company_name
+            self.update_write_date()
+        except Exception as e:
+            return self.error_could_not_set_master_account_company(
+                company_name, self.company, e
+            )
+        return True
+
+    def set_account_address(self, address):
+        log.debug('')
+        try:
+            self.address = address
+            self.update_write_date()
+        except Exception as e:
+            return self.error_could_not_set_master_account_address(
+                address, self.address, e
+            )
+        return True
+
+    def set_account_key_code(self, key_code):
+        log.debug('')
+        try:
+            self.key_code = key_code
+            self.update_write_date()
+        except Exception as e:
+            return self.error_could_not_set_master_account_key_code(
+                key_code, self.key_code, e
+            )
+        return True
+
+#   @pysnooper.snoop('logs/ewallet.log')
     def set_subordonate_user_account_to_pool(self, subordonate):
         log.debug('')
         try:
@@ -173,17 +206,6 @@ class ResMaster(ResUser):
         except Exception as e:
             return self.error_could_not_set_master_account_limit(
                 account_limit, self.account_limit, e
-            )
-        return True
-
-    def set_account_key_code(self, key_code):
-        log.debug('')
-        try:
-            self.key_code = key_code
-            self.update_write_date()
-        except Exception as e:
-            return self.error_could_not_set_master_account_key_code(
-                key_code, self.key_code, e
             )
         return True
 
@@ -470,6 +492,26 @@ class ResMaster(ResUser):
         return command_chain_response
 
     # ERRORS
+
+    def error_could_not_set_master_account_address(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Something went wrong. '
+                     'Could not set Master account address. '
+                     'Details: {}'.format(args),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
+
+    def error_could_not_set_master_account_company(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Something went wrong. '
+                     'Could not set Master account company. '
+                     'Details: {}'.format(args),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
 
     def error_could_not_fetch_subordonate_from_pool_by_id(self, *args):
         command_chain_response = {
