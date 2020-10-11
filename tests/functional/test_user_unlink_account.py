@@ -110,6 +110,7 @@ class TestEWalletSessionManageUserActionUnlinkAccount(unittest.TestCase):
             'controller': 'client', 'ctype': 'action', 'action': 'unlink',
             'unlink': 'account', 'client_id': self.client_id,
             'session_token': self.session_token,
+            'forced_removal': True,
         }
         unlink = self.session_manager.session_manager_controller(
             **instruction_set

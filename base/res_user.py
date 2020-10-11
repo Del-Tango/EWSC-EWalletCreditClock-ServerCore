@@ -35,13 +35,15 @@ class ResUser(Base):
     user_state_code = Column(Integer)
     active_session_id = Column(Integer, ForeignKey('ewallet.id'))
     active_session = relationship(
-       'EWallet', back_populates='active_user'
+        'EWallet', back_populates='active_user'
     )
     user_contact_list = relationship(
-       'ContactList', back_populates='client',
+        'ContactList', back_populates='client',
+        cascade='delete, merge, save-update'
     )
     user_credit_wallet = relationship(
-       'CreditEWallet', back_populates='client',
+        'CreditEWallet', back_populates='client',
+        cascade='delete, merge, save-update'
     )
     user_session_archive = relationship(
         'EWallet', secondary='ewallet_session_user'
@@ -51,9 +53,15 @@ class ResUser(Base):
         'ResMaster', back_populates='subordonate_pool',
         foreign_keys='ResUser.master_account_id'
     )
-    user_pass_hash_archive = relationship('ResUserPassHashArchive')
-    user_credit_wallet_archive = relationship('CreditEWallet')
-    user_contact_list_archive = relationship('ContactList')
+    user_pass_hash_archive = relationship(
+        'ResUserPassHashArchive', cascade='delete, merge, save-update'
+    )
+    user_credit_wallet_archive = relationship(
+        'CreditEWallet', cascade='delete, merge, save-update'
+    )
+    user_contact_list_archive = relationship(
+        'ContactList', cascade='delete, merge, save-update'
+    )
     to_unlink = Column(Boolean)
     to_unlink_timestamp = Column(DateTime)
     is_active = Column(Boolean)

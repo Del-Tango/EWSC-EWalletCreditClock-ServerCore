@@ -44,7 +44,8 @@ class ResMaster(ResUser):
     company = Column(String)
     address = Column(String)
     subordonate_pool = relationship(
-       'ResUser', foreign_keys='ResUser.master_account_id'
+        'ResUser', foreign_keys='ResUser.master_account_id',
+        cascade='delete, merge, save-update'
     )
     acquired_ctokens = Column(Integer)
     is_active = Column(Boolean)

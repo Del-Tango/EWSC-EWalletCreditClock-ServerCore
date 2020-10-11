@@ -1005,6 +1005,95 @@ class EWallet(Base):
     [ WATCHOUT ]: Dragons be here.
     '''
 
+
+    def unlink_master_account_login_records(self, master_id, **kwargs):
+        log.debug('')
+        try:
+            login_records = kwargs['active_session'].query(
+                EWalletLogin
+            ).filter_by(
+                master_id=master_id
+            )
+            if len(list(login_records)) >= 1:
+                login_records.delete()
+                kwargs['active_session'].commit()
+        except Exception as e:
+            kwargs['active_session'].rollback()
+            return self.error_could_not_unlink_master_account_login_records(
+                master_id, kwargs, e
+            )
+        return master_id
+
+    def unlink_master_account_logout_records(self, user_id, **kwargs):
+        log.debug('')
+        try:
+            logout_records = kwargs['active_session'].query(
+                EWalletLogout
+            ).filter_by(
+                master_id=master_id
+            )
+            if len(list(logout_records)) >= 1:
+                logout_records.delete()
+                kwargs['active_session'].commit()
+
+        except Exception as e:
+            kwargs['active_session'].rollback()
+            return self.error_could_not_unlink_master_account_logout_records(
+                master_id, kwargs, e
+            )
+        return master_id
+
+    def unlink_user_account_login_records(self, user_id, **kwargs):
+        log.debug('')
+        try:
+            login_records = kwargs['active_session'].query(
+                EWalletLogin
+            ).filter_by(
+                user_id=user_id
+            )
+            if len(list(login_records)) >= 1:
+                login_records.delete()
+                kwargs['active_session'].commit()
+        except Exception as e:
+            kwargs['active_session'].rollback()
+            return self.error_could_not_unlink_user_account_login_records(
+                user_id, kwargs, e
+            )
+        return user_id
+
+    def unlink_user_account_logout_records(self, user_id, **kwargs):
+        log.debug('')
+        try:
+            logout_records = kwargs['active_session'].query(
+                EWalletLogout
+            ).filter_by(
+                user_id=user_id
+            )
+            if len(list(logout_records)) >= 1:
+                logout_records.delete()
+                kwargs['active_session'].commit()
+
+        except Exception as e:
+            kwargs['active_session'].rollback()
+            return self.error_could_not_unlink_user_account_logout_records(
+                user_id, kwargs, e
+            )
+        return user_id
+
+    def unlink_master_account_records(self, master_id, **kwargs):
+        log.debug('')
+        return {
+            'login': self.unlink_master_account_login_records(master_id, **kwargs),
+            'logout': self.unlink_master_account_logout_records(master_id, **kwargs),
+        }
+
+    def unlink_user_account_records(self, user_id, **kwargs):
+        log.debug('')
+        return {
+            'login': self.unlink_user_account_login_records(user_id, **kwargs),
+            'logout': self.unlink_user_account_logout_records(user_id, **kwargs),
+        }
+
     # TODO
     def unlink_master_account(self, **kwargs):
         log.debug('TODO - Refactor')
@@ -1020,6 +1109,9 @@ class EWallet(Base):
             # Forced user account removal easter egg
             if kwargs.get('forced_removal'):
                 master_account.delete()
+                self.unlink_master_account_records(
+                    kwargs['master_id'], active_session=kwargs['active_session']
+                )
                 kwargs['active_session'].commit()
                 return kwargs['master_id']
             # If account not marked for removal, mark now
@@ -1033,6 +1125,10 @@ class EWallet(Base):
             )
             # If 30 days since account marked for removal, remove from db
             if check:
+                user_account.delete()
+                self.unlink_user_account_records(
+                    kwargs['user_id'], active_session=kwargs['active_session']
+                )
                 kwargs['active_session'].commit()
                 return kwargs['master_id']
             return self.warning_master_account_pending_deletion(kwargs)
@@ -1056,6 +1152,9 @@ class EWallet(Base):
             # Forced user account removal easter egg
             if kwargs.get('forced_removal'):
                 user_account.delete()
+                self.unlink_user_account_records(
+                    kwargs['user_id'], active_session=kwargs['active_session']
+                )
                 kwargs['active_session'].commit()
                 return kwargs['user_id']
             # If account not marked for removal, mark now
@@ -1069,6 +1168,10 @@ class EWallet(Base):
             )
             # If 30 days since account marked for removal, remove from db
             if check:
+                user_account.delete()
+                self.unlink_user_account_records(
+                    kwargs['user_id'], active_session=kwargs['active_session']
+                )
                 kwargs['active_session'].commit()
                 return kwargs['user_id']
             return self.warning_user_account_pending_deletion(kwargs)
@@ -1094,6 +1197,36 @@ class EWallet(Base):
         log.debug('TODO - UNIMPLEMENTED')
     def action_receive_transfer_record(self, **kwargs):
         log.debug('TODO - UNIMPLEMENTED')
+
+#   @pysnooper.snoop('logs/ewallet.log')
+    def action_unlink_user_account(self, **kwargs):
+        log.debug('')
+        user_id = kwargs.get('user_id') or \
+            self.fetch_active_session_user(obj=False)
+        if not user_id or isinstance(user_id, dict) and \
+                user_id.get('failed'):
+            return self.error_no_user_account_id_found(kwargs)
+        user_account = self.fetch_user_by_id(account_id=user_id, **kwargs)
+        if not user_account or isinstance(user_account, dict) and \
+                user_account.get('failed'):
+            return self.warning_could_not_fetch_user_account_by_id(kwargs)
+        check = self.check_user_account_belongs_to_ewallet_session(user_account)
+        if not check:
+            return self.warning_account_does_not_belong_to_ewallet_session(
+                kwargs, user_id, user_account, check
+            )
+        user_email = user_account.fetch_user_email()
+        unlink_account = self.unlink_user_account(user_id=user_id, **kwargs)
+        if not unlink_account or isinstance(unlink_account, dict) and \
+                unlink_account.get('failed'):
+            kwargs['active_session'].rollback()
+            return self.warning_could_not_unlink_user_account(user_id, kwargs)
+        kwargs['active_session'].commit()
+        command_chain_response = {
+            'failed': False,
+            'account': user_email,
+        }
+        return command_chain_response
 
 #   @pysnooper.snoop('logs/ewallet.log')
     def action_create_new_user_account(self, **kwargs):
@@ -2337,36 +2470,6 @@ class EWallet(Base):
         command_chain_response = {
             'failed': False,
             'contact_list': kwargs['list_id'],
-        }
-        return command_chain_response
-
-#   @pysnooper.snoop('logs/ewallet.log')
-    def action_unlink_user_account(self, **kwargs):
-        log.debug('')
-        user_id = kwargs.get('user_id') or \
-            self.fetch_active_session_user(obj=False)
-        if not user_id or isinstance(user_id, dict) and \
-                user_id.get('failed'):
-            return self.error_no_user_account_id_found(kwargs)
-        user_account = self.fetch_user_by_id(account_id=user_id, **kwargs)
-        if not user_account or isinstance(user_account, dict) and \
-                user_account.get('failed'):
-            return self.warning_could_not_fetch_user_account_by_id(kwargs)
-        check = self.check_user_account_belongs_to_ewallet_session(user_account)
-        if not check:
-            return self.warning_account_does_not_belong_to_ewallet_session(
-                kwargs, user_id, user_account, check
-            )
-        user_email = user_account.fetch_user_email()
-        unlink_account = self.unlink_user_account(user_id=user_id, **kwargs)
-        if not unlink_account or isinstance(unlink_account, dict) and \
-                unlink_account.get('failed'):
-            kwargs['active_session'].rollback()
-            return self.warning_could_not_unlink_user_account(user_id, kwargs)
-        kwargs['active_session'].commit()
-        command_chain_response = {
-            'failed': False,
-            'account': user_email,
         }
         return command_chain_response
 
@@ -6062,10 +6165,30 @@ class EWallet(Base):
     [ TODO ]: Fetch error messages from message file by key codes.
     '''
 
+    def error_could_not_unlink_user_account_logout_records(self, *args):
+        command_chain_response = {
+            'failed': True, 'level': 'ewallet-session',
+            'error': 'Something went wrong. '
+                     'Could not unlink user account logout records. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_could_not_unlink_user_account_login_records(self, *args):
+        command_chain_response = {
+            'failed': True, 'level': 'ewallet-session',
+            'error': 'Something went wrong. '
+                     'Could not unlink user account login records. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
     def error_logout_failure_limit_exceeded(self, *args):
         command_chain_response = {
             'failed': True, 'level': 'ewallet-session',
-            'error': 'Somethign went wrong. '
+            'error': 'Something went wrong. '
                      'Too many user account logout failures, '
                      'terminated by failsafe. '
                      'Details: {}'.format(args),

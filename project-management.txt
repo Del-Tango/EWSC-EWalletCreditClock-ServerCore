@@ -129,12 +129,12 @@ Less information is never the answer.
     - x - (EWCC) Implement master action ViewLoginRecords
     - x - (EWCC) Implement master action ViewLogoutRecords
     - x - (EWCC) Groom functional test suit to comply with server operations
-    -   - (EWSC) Fix Unlink actions. Cleanup not cascaded to child entities
+    - x - (EWSC) Fix Unlink actions. Cleanup not cascaded to child entities
     -   - (EWCC) Refactor action handler IssueReport to collect log data
+    -   - (EWSC) Add support for master action EditCompany
+    -   - (EWSC) Add support for master action EditAddress
+    -   - (EWSC) Add support for master action EditKey
     -   - (EWCC) Make library importable
-    - (EWSC) Add support for master action EditCompany
-    - (EWSC) Add support for master action EditAddress
-    - (EWSC) Add support for master action EditKey
     - (EWSC) Groom EWDox json instruction set
     - (EWAT) Groom tutor functional test suit
     - (EWAT) Groom tutor instruction set inspections
