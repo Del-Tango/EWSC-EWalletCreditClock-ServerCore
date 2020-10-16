@@ -13,6 +13,7 @@ def display_user_action_recover_account_instruction_set_example(**kwargs):
     log.debug('')
     instruction_set_response = {
         'failed': False,
+        'action': 'RecoverAccount',
         'prerequisits': [
             'RequestClientID',
             'RequestSessionToken',
@@ -76,6 +77,7 @@ def display_user_action_pause_clock_timer_instruction_set_example(**kwargs):
     log.debug('')
     instruction_set_response = {
         'failed': False,
+        'action': 'PauseClockTimer',
         'prerequisits': [
             'RequestClientID',
             'RequestSessionToken',
@@ -116,6 +118,7 @@ def display_user_action_resume_clock_timer_instruction_set_example(**kwargs):
     log.debug('')
     instruction_set_response = {
         'failed': False,
+        'action': 'ResumeClockTimer',
         'prerequisits': [
             'RequestClientID',
             'RequestSessionToken',
@@ -157,6 +160,7 @@ def display_user_action_start_clock_timer_instruction_set_example(**kwargs):
     log.debug('')
     instruction_set_response = {
         'failed': False,
+        'action': 'StartClockTimer',
         'prerequisits': [
             'RequestClientID',
             'RequestSessionToken',
@@ -193,6 +197,7 @@ def display_user_action_stop_clock_timer_instruction_set_example(**kwargs):
     log.debug('')
     instruction_set_response = {
         'failed': False,
+        'action': 'StopClockTimer',
         'prerequisits': [
             'RequestClientID',
             'RequestSessionToken',
@@ -247,6 +252,7 @@ def display_user_action_account_login_instruction_set_example(**kwargs):
     log.debug('')
     instruction_set_response = {
         'failed': False,
+        'action': 'AccountLogin',
         'prerequisits': [
             'RequestClientID',
             'RequestSessionToken',
@@ -288,6 +294,7 @@ def display_user_action_account_logout_instruction_set_example(**kwargs):
     log.debug('')
     instruction_set_response = {
         'failed': False,
+        'action': 'AccountLogout',
         'prerequisits': [
             'RequestClientID',
             'RequestSessionToken',
@@ -328,6 +335,7 @@ def display_user_action_add_contact_list_record_instruction_set_example(**kwargs
     log.debug('')
     instruction_set_response = {
         'failed': False,
+        'action': 'AddContactList',
         'prerequisits': [
             'RequestClientID',
             'RequestSessionToken',
@@ -369,6 +377,7 @@ def display_user_action_convert_clock_to_credits_instruction_set_example(**kwarg
     log.debug('')
     instruction_set_response = {
         'failed': False,
+        'action': 'ConvertClockToCredits',
         'prerequisits': [
             'RequestClientID',
             'RequestSessionToken',
@@ -409,6 +418,7 @@ def display_user_action_convert_credits_to_clock_instruction_set_example(**kwarg
     log.debug('')
     instruction_set_response = {
         'failed': False,
+        'action': 'ConvertCreditsToClock',
         'prerequisits': [
             'RequestClientID',
             'RequestSessionToken',
@@ -447,6 +457,7 @@ def display_user_action_create_new_account_instruction_set_example(**kwargs):
     log.debug('')
     instruction_set_response = {
         'failed': False,
+        'action': 'CreateAccount',
         'prerequisits': [
             'RequestClientID',
             'RequestSessionToken',
@@ -501,6 +512,7 @@ def display_user_action_create_contact_list_instruction_set_example(**kwargs):
     log.debug('')
     instruction_set_response = {
         'failed': False,
+        'action': 'CreateContactList',
         'prerequisits': [
             'RequestClientID',
             'RequestSessionToken',
@@ -545,6 +557,7 @@ def display_user_action_create_conversion_sheet_instruction_set_example(**kwargs
     log.debug('')
     instruction_set_response = {
         'failed': False,
+        'action': 'CreateConversionSheet',
         'prerequisits': [
             'RequestClientID',
             'RequestSessionToken',
@@ -589,6 +602,7 @@ def display_user_action_create_credit_clock_instruction_set_example(**kwargs):
     log.debug('')
     instruction_set_response = {
         'failed': False,
+        'action': 'CreateCreditClock',
         'prerequisits': [
             'RequestClientID',
             'RequestSessionToken',
@@ -640,6 +654,7 @@ def display_user_action_create_credit_ewallet_instruction_set_example(**kwargs):
     log.debug('')
     instruction_set_response = {
         'failed': False,
+        'action': 'CreateCreditEWallet',
         'prerequisits': [
             'RequestClientID',
             'RequestSessionToken',
@@ -694,6 +709,7 @@ def display_user_action_create_invoice_sheet_instruction_set_example(**kwargs):
     log.debug('')
     instruction_set_response = {
         'failed': False,
+        'action': 'CreateInvoiceSheet',
         'prerequisits': [
             'RequestClientID',
             'RequestSessionToken',
@@ -738,6 +754,7 @@ def display_user_action_create_time_sheet_instruction_set_example(**kwargs):
     log.debug('')
     instruction_set_response = {
         'failed': False,
+        'action': 'CreateTimeSheet',
         'prerequisits': [
             'RequestClientID',
             'RequestSessionToken',
@@ -782,6 +799,7 @@ def display_user_action_create_transfer_sheet_instruction_set_example(**kwargs):
     log.debug('')
     instruction_set_response = {
         'failed': False,
+        'action': 'CreateTransferSheet',
         'prerequisits': [
             'RequestClientID',
             'RequestSessionToken',
@@ -826,6 +844,7 @@ def display_user_action_edit_account_instruction_set_example(**kwargs):
     log.debug('')
     instruction_set_response = {
         'failed': False,
+        'action': 'EditAccount',
         'prerequisits': [
             'RequestClientID',
             'RequestSessionToken',
@@ -890,6 +909,7 @@ def display_user_action_pay_credits_instruction_set_example(**kwargs):
     log.debug('')
     instruction_set_response = {
         'failed': False,
+        'action': 'PayCredits',
         'prerequisits': [
             'RequestClientID',
             'RequestSessionToken',
@@ -929,6 +949,7 @@ def display_user_action_request_client_id_instruction_set_example(**kwargs):
     log.debug('')
     instruction_set_response = {
         'failed': False,
+        'action': 'RequestClientID',
         'prerequisits': [],
         'instruction_set': {
             'controller': 'client',
@@ -954,6 +975,7 @@ def display_user_action_request_session_token_instruction_set_example(**kwargs):
     log.debug('')
     instruction_set_response = {
         'failed': False,
+        'action': 'RequestSessionToken',
         'prerequisits': [
             'RequestClientID',
         ],
@@ -982,6 +1004,7 @@ def display_user_action_supply_credits_instruction_set_example(**kwargs):
     log.debug('')
     instruction_set_response = {
         'failed': False,
+        'action': 'SupplyCredits',
         'prerequisits': [
             'RequestClientID',
             'RequestSessionToken',
@@ -1022,6 +1045,7 @@ def display_user_action_switch_active_session_user_instruction_set_example(**kwa
     log.debug('')
     instruction_set_response = {
         'failed': False,
+        'action': 'SwitchAccount',
         'prerequisits': [
             'RequestClientID',
             'RequestSessionToken',
@@ -1066,6 +1090,7 @@ def display_user_action_switch_contact_list_instruction_set_example(**kwargs):
     log.debug('')
     instruction_set_response = {
         'failed': False,
+        'action': 'SwitchContactList',
         'prerequisits': [
             'RequestClientID',
             'RequestSessionToken',
@@ -1112,6 +1137,7 @@ def display_user_action_switch_conversion_sheet_instruction_set_example(**kwargs
     log.debug('')
     instruction_set_response = {
         'failed': False,
+        'action': 'SwitchConversionSheet',
         'prerequisits': [
             'RequestClientID',
             'RequestSessionToken',
@@ -1158,6 +1184,7 @@ def display_user_action_switch_credit_clock_instruction_set_example(**kwargs):
     log.debug('')
     instruction_set_response = {
         'failed': False,
+        'action': 'SwitchCreditClock',
         'prerequisits': [
             'RequestClientID',
             'RequestSessionToken',
@@ -1211,6 +1238,7 @@ def display_user_action_switch_credit_ewallet_instruction_set_example(**kwargs):
     log.debug('')
     instruction_set_response = {
         'failed': False,
+        'action': 'SwitchCreditEWallet',
         'prerequisits': [
             'RequestClientID',
             'RequestSessionToken',
@@ -1267,6 +1295,7 @@ def display_user_action_switch_invoice_sheet_instruction_set_example(**kwargs):
     log.debug('')
     instruction_set_response = {
         'failed': False,
+        'action': 'SwitchInvoiceSheet',
         'prerequisits': [
             'RequestClientID',
             'RequestSessionToken',
@@ -1313,6 +1342,7 @@ def display_user_action_switch_time_sheet_instruction_set_example(**kwargs):
     log.debug('')
     instruction_set_response = {
         'failed': False,
+        'action': 'SwitchTimeSheet',
         'prerequisits': [
             'RequestClientID',
             'RequestSessionToken',
@@ -1359,6 +1389,7 @@ def display_user_action_switch_transfer_sheet_instruction_set_example(**kwargs):
     log.debug('')
     instruction_set_response = {
         'failed': False,
+        'action': 'SwitchTransferSheet',
         'prerequisits': [
             'RequestClientID',
             'RequestSessionToken',
@@ -1405,6 +1436,7 @@ def display_user_action_transfer_credits_instruction_set_example(**kwargs):
     log.debug('')
     instruction_set_response = {
         'failed': False,
+        'action': 'TransferCredits',
         'prerequisits': [
             'RequestClientID',
             'RequestSessionToken',
@@ -1445,6 +1477,7 @@ def display_user_action_unlink_account_instruction_set_example(**kwargs):
     log.debug('')
     instruction_set_response = {
         'failed': False,
+        'action': 'UnlinkAccount',
         'prerequisits': [
             'RequestClientID',
             'RequestSessionToken',
@@ -1479,6 +1512,7 @@ def display_user_action_unlink_contact_list_instruction_set_example(**kwargs):
     log.debug('')
     instruction_set_response = {
         'failed': False,
+        'action': 'UnlinkContactList',
         'prerequisits': [
             'RequestClientID',
             'RequestSessionToken',
@@ -1515,6 +1549,7 @@ def display_user_action_unlink_contact_record_instruction_set_example(**kwargs):
     log.debug('')
     instruction_set_response = {
         'failed': False,
+        'action': 'UnlinkContactRecord',
         'prerequisits': [
             'RequestClientID',
             'RequestSessionToken',
@@ -1552,6 +1587,7 @@ def display_user_action_unlink_conversion_record_instruction_set_example(**kwarg
     log.debug('')
     instruction_set_response = {
         'failed': False,
+        'action': 'UnlinkConversionRecord',
         'prerequisits': [
             'RequestClientID',
             'RequestSessionToken',
@@ -1589,6 +1625,7 @@ def display_user_action_unlink_conversion_sheet_instruction_set_example(**kwargs
     log.debug('')
     instruction_set_response = {
         'failed': False,
+        'action': 'UnlinkConversionSheet',
         'prerequisits': [
             'RequestClientID',
             'RequestSessionToken',
@@ -1625,6 +1662,7 @@ def display_user_action_unlink_credit_clock_instruction_set_example(**kwargs):
     log.debug('')
     instruction_set_response = {
         'failed': False,
+        'action': 'UnlinkCreditClock',
         'prerequisits': [
             'RequestClientID',
             'RequestSessionToken',
@@ -1661,6 +1699,7 @@ def display_user_action_unlink_credit_ewallet_instruction_set_example(**kwargs):
     log.debug('')
     instruction_set_response = {
         'failed': False,
+        'action': 'UnlinkCreditEWallet',
         'prerequisits': [
             'RequestClientID',
             'RequestSessionToken',
@@ -1697,6 +1736,7 @@ def display_user_action_unlink_invoice_record_instruction_set_example(**kwargs):
     log.debug('')
     instruction_set_response = {
         'failed': False,
+        'action': 'UnlinkInvoiceRecord',
         'prerequisits': [
             'RequestClientID',
             'RequestSessionToken',
@@ -1734,6 +1774,7 @@ def display_user_action_unlink_invoice_sheet_instruction_set_example(**kwargs):
     log.debug('')
     instruction_set_response = {
         'failed': False,
+        'action': 'UnlinkInvoiceSheet',
         'prerequisits': [
             'RequestClientID',
             'RequestSessionToken',
@@ -1770,6 +1811,7 @@ def display_user_action_unlink_time_record_instruction_set_example(**kwargs):
     log.debug('')
     instruction_set_response = {
         'failed': False,
+        'action': 'UnlinkTimeRecord',
         'prerequisits': [
             'RequestClientID',
             'RequestSessionToken',
@@ -1808,6 +1850,7 @@ def display_user_action_unlink_time_sheet_instruction_set_example(**kwargs):
     log.debug('')
     instruction_set_response = {
         'failed': False,
+        'action': 'UnlinkTimeSheet',
         'prerequisits': [
             'RequestClientID',
             'RequestSessionToken',
@@ -1844,6 +1887,7 @@ def display_user_action_unlink_transfer_record_instruction_set_example(**kwargs)
     log.debug('')
     instruction_set_response = {
         'failed': False,
+        'action': 'UnlinkTransferRecord',
         'prerequisits': [
             'RequestClientID',
             'RequestSessionToken',
@@ -1881,6 +1925,7 @@ def display_user_action_unlink_transfer_sheet_instruction_set_example(**kwargs):
     log.debug('')
     instruction_set_response = {
         'failed': False,
+        'action': 'UnlinkTransferSheet',
         'prerequisits': [
             'RequestClientID',
             'RequestSessionToken',
@@ -1917,6 +1962,7 @@ def display_user_action_view_account_instruction_set_example(**kwargs):
     log.debug('')
     instruction_set_response = {
         'failed': False,
+        'action': 'ViewAccount',
         'prerequisits': [
             'RequestClientID',
             'RequestSessionToken',
@@ -1971,6 +2017,7 @@ def display_user_action_view_contact_list_instruction_set_example(**kwargs):
     log.debug('')
     instruction_set_response = {
         'failed': False,
+        'action': 'ViewContactList',
         'prerequisits': [
             'RequestClientID',
             'RequestSessionToken',
@@ -2015,6 +2062,7 @@ def display_user_action_view_contact_record_instruction_set_example(**kwargs):
     log.debug('')
     instruction_set_response = {
         'failed': False,
+        'action': 'ViewContactRecord',
         'prerequisits': [
             'RequestClientID',
             'RequestSessionToken',
@@ -2063,6 +2111,7 @@ def display_user_action_view_conversion_record_instruction_set_example(**kwargs)
     log.debug('')
     instruction_set_response = {
         'failed': False,
+        'action': 'ViewConversionRecord',
         'prerequisits': [
             'RequestClientID',
             'RequestSessionToken',
@@ -2111,6 +2160,7 @@ def display_user_action_view_conversion_sheet_instruction_set_example(**kwargs):
     log.debug('')
     instruction_set_response = {
         'failed': False,
+        'action': 'ViewConversionSheet',
         'prerequisits': [
             'RequestClientID',
             'RequestSessionToken',
@@ -2157,6 +2207,7 @@ def display_user_action_view_credit_clock_instruction_set_example(**kwargs):
     log.debug('')
     instruction_set_response = {
         'failed': False,
+        'action': 'ViewCreditClock',
         'prerequisits': [
             'RequestClientID',
             'RequestSessionToken',
@@ -2208,6 +2259,7 @@ def display_user_action_view_credit_ewallet_instruction_set_example(**kwargs):
     log.debug('')
     instruction_set_response = {
         'failed': False,
+        'action': 'ViewCreditEWallet',
         'prerequisits': [
             'RequestClientID',
             'RequestSessionToken',
@@ -2262,6 +2314,7 @@ def display_user_action_view_invoice_record_instruction_set_example(**kwargs):
     log.debug('')
     instruction_set_response = {
         'failed': False,
+        'action': 'ViewInvoiceRecord',
         'prerequisits': [
             'RequestClientID',
             'RequestSessionToken',
@@ -2311,6 +2364,7 @@ def display_user_action_view_invoice_sheet_instruction_set_example(**kwargs):
     log.debug('')
     instruction_set_response = {
         'failed': False,
+        'action': 'ViewInvoiceSheet',
         'prerequisits': [
             'RequestClientID',
             'RequestSessionToken',
@@ -2355,6 +2409,7 @@ def display_user_action_view_login_records_instruction_set_example(**kwargs):
     log.debug('')
     instruction_set_response = {
         'failed': False,
+        'action': 'ViewLoginRecords',
         'prerequisits': [
             'RequestClientID',
             'RequestSessionToken',
@@ -2391,6 +2446,7 @@ def display_user_action_view_logout_records_instruction_set_example(**kwargs):
     log.debug('')
     instruction_set_response = {
         'failed': False,
+        'action': 'ViewLogoutRecords',
         'prerequisits': [
             'RequestClientID',
             'RequestSessionToken',
@@ -2428,6 +2484,7 @@ def display_user_action_view_time_record_instruction_set_example(**kwargs):
     log.debug('')
     instruction_set_response = {
         'failed': False,
+        'action': 'ViewTimeRecord',
         'prerequisits': [
             'RequestClientID',
             'RequestSessionToken',
@@ -2480,6 +2537,7 @@ def display_user_action_view_time_sheet_instruction_set_example(**kwargs):
     log.debug('')
     instruction_set_response = {
         'failed': False,
+        'action': 'ViewTimeSheet',
         'prerequisits': [
             'RequestClientID',
             'RequestSessionToken',
@@ -2524,6 +2582,7 @@ def display_user_action_view_transfer_record_instruction_set_example(**kwargs):
     log.debug('')
     instruction_set_response = {
         'failed': False,
+        'action': 'ViewTransferRecord',
         'prerequisits': [
             'RequestClientID',
             'RequestSessionToken',
@@ -2574,6 +2633,7 @@ def display_user_action_view_transfer_sheet_instruction_set_example(**kwargs):
     log.debug('')
     instruction_set_response = {
         'failed': False,
+        'action': 'ViewTransferSheet',
         'prerequisits': [
             'RequestClientID',
             'RequestSessionToken',
@@ -3606,7 +3666,42 @@ def display_master_action_view_logout_records_instruction_set_example(**kwargs):
     }
     return instruction_set_response
 
+def display_user_action_issue_report_instruction_set_example(**kwargs):
+    log.debug('')
+    instruction_set_response = {
+        'failed': False,
+        'action': 'IssueReport',
+        'prerequisits': [
+            'RequestClientID',
+            'RequestSessionToken',
+        ],
+        'instruction_set': {
+            'controller': 'client',
+            'ctype': 'action',
+            'action': 'report',
+            'report': 'issue',
+            'client_id': '<client-token type-str>',
+            'session_token': '<session-token type-str>',
+        },
+        'response_ok': {
+            'failed': '<flag type-bool value-false>',
+            'contact': '<contact-email type-str>',
+            'issue': '<issue-hash-id type-str>',
+            'source': '<source-ip-addr type-str>',
+            'timestamp': '<datetime-string type-str>',
+        },
+        'response_nok': {
+            'failed': '<flag type-bool value-true>',
+            'error': '<error-message type-str>',
+            'level': '<entity-level type-str>',
+            'details': '<data-set type-set>',
+            'warning': '<warning-message type-str>'
+        },
+    }
+    return instruction_set_response
+
 available_user_actions = {
+    'IssueReport': display_user_action_issue_report_instruction_set_example,
     'CheckCTokenValid': display_user_action_check_ctoken_valid_instruction_set_example,
     'CheckCTokenLinked': display_user_action_check_ctoken_linked_instruction_set_example,
     'ChechCTokenSession': display_user_action_check_ctoken_session_instruction_set_example,
@@ -3641,7 +3736,7 @@ available_user_actions = {
     'AddContactListRecord': display_user_action_add_contact_list_record_instruction_set_example,
     'ConvertClockToCredits': display_user_action_convert_clock_to_credits_instruction_set_example,
     'ConvertCreditsToClock': display_user_action_convert_credits_to_clock_instruction_set_example,
-    'CreateNewAccount': display_user_action_create_new_account_instruction_set_example,
+    'CreateAccount': display_user_action_create_new_account_instruction_set_example,
     'CreateContactList': display_user_action_create_contact_list_instruction_set_example,
     'CreateConversionSheet': display_user_action_create_conversion_sheet_instruction_set_example,
     'CreateCreditClock': display_user_action_create_credit_clock_instruction_set_example,
@@ -3654,7 +3749,7 @@ available_user_actions = {
     'RequestClientID': display_user_action_request_client_id_instruction_set_example,
     'RequestSessionToken': display_user_action_request_session_token_instruction_set_example,
     'SupplyCredits': display_user_action_supply_credits_instruction_set_example,
-    'SwitchSessionUser': display_user_action_switch_active_session_user_instruction_set_example,
+    'SwitchAccount': display_user_action_switch_active_session_user_instruction_set_example,
     'SwitchContactList': display_user_action_switch_contact_list_instruction_set_example,
     'SwitchConversionSheet': display_user_action_switch_conversion_sheet_instruction_set_example,
     'SwitchCreditClock': display_user_action_switch_credit_clock_instruction_set_example,

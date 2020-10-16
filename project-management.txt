@@ -6,7 +6,7 @@ Less information is never the answer.
 * v.DeltaT (alpha/POC - bleeding edge) - Released
     - x - EWallet Credit Clock - Virtual Payment System - initial suit version.
 
-* v.Chronos (beta/MVP - bleeding edge) - Under development
+* v.Chronos (beta/MVP - bleeding edge) - Released
     - x - (EWSC) Refactor client id to token object
     - x - (EWSC) Refactor session token to token object
     - x - (EWSC) Separater workers on different processes
@@ -84,6 +84,7 @@ Less information is never the answer.
     - x - (EWSC) Add EWDox support for client_action CheckSTokenState
     - x - (EWSC) Add EWDox support for client_action STokenKeepAlive
     - x - (EWSC) Add EWDox support for client_action CTokenKeepAlive
+    - x - (EWSC) Add EWDox support for client action IssueReport
     - x - (EWSC) Add EWDox support for user action Forcefully-UnlinkAccount
     - x - (EWSC) Add EWDox support for client action AcquireMaster
     - x - (EWSC) Add EWDox support for client action ReleaseMaster
@@ -101,15 +102,15 @@ Less information is never the answer.
     - x - (EWSC) Add EWDox support for master action ViewLogoutRecords
     - x - (EWSC) Groom EWDox to comply with new error and warning handlers
     - x - (EWSC-x-, EWCC-x-, EWAT-x-) Add requirements.txt
-    - . - (EWSC-x-, EWCC-x-, EWAT- -) Implement Client ID validity checkers
-    - . - (EWSC-x-, EWCC-x-, EWAT- -) Implement Session Token validity checkers
-    - . - (EWSC-x-, EWCC-x-, EWAT- -) Implement forced account removal
-    - . - (EWSC-x-, EWCC-x-, EWAT- -) Implement master accounts
-    - . - (EWSC-x-, EWCC-x-, EWAT- -) Implement client action AcquireMaster
-    - . - (EWSC-x-, EWCC-x-, EWAT- -) Implement client action STokenKeepAlive
-    - . - (EWSC-x-, EWCC-x-, EWAT- -) Implement client action CTokenKeepAlive
-    - . - (EWSC-x-, EWCC-x-, EWAT- -) Implement client action IssueReport
-    - . - (EWSC-x- ,EWCC-x-, EWAT- -) Implement client action ReleaseMaster
+    - x - (EWSC-x-, EWCC-x-, EWAT-x-) Implement Client ID validity checkers
+    - x - (EWSC-x-, EWCC-x-, EWAT-x-) Implement Session Token validity checkers
+    - x - (EWSC-x-, EWCC-x-, EWAT-x-) Implement forced account removal
+    - x - (EWSC-x-, EWCC-x-, EWAT-x-) Implement master accounts
+    - x - (EWSC-x-, EWCC-x-, EWAT-x-) Implement client action AcquireMaster
+    - x - (EWSC-x-, EWCC-x-, EWAT-x-) Implement client action STokenKeepAlive
+    - x - (EWSC-x-, EWCC-x-, EWAT-x-) Implement client action CTokenKeepAlive
+    - x - (EWSC-x-, EWCC-x-, EWAT-x-) Implement client action IssueReport
+    - x - (EWSC-x- ,EWCC-x-, EWAT-x-) Implement client action ReleaseMaster
     - x - (EWSC) Implement client action CreateMaster
     - x - (EWCC) Implement client action AcquireMaster
     - x - (EWCC) Implement client action STokenKeepAlive
@@ -138,21 +139,34 @@ Less information is never the answer.
     - x - (EWCC) Refactor test suit
     - x - (EWCC) Grooming session for log messages
     - x - (EWSC) Groom EWDox json instruction sets and OK responses
-    -   - (EWAT) Groom tutor functional test suit
-    - (EWAT) Groom tutor instruction set inspections
-    - (EWAT) Groom tutor interactive actions
-    - (EWAT) Implement support for client ID validity checker inspections
-    - (EWAT) Implement support for session token validity checker inspections
-    - (EWAT) Implement support for client ID validity checker interactions
-    - (EWAT) Implement support for session token validity checker interactions
-    - (EWAT) Implement support for client action AcquireMaster inspection
-    - (EWAT) Implement support for client action AcquireMaster interaction
-    - (EWAT) Implement support for client action ReleaseMaster inspection
-    - (EWAT) Implement support for client action ReleaseMaster interaction
-    - (EWAT) Implement support for client action CToken inspection
-    - (EWAT) Implement support for client action CToken interaction
-    - (EWAT) Implement support for client action SToken inspection
-    - (EWAT) Implement support for client action SToken interaction
+    - x - (EWAT) Refactor API tutor interactive actions. Make use of ewcc-lib.vChronos
+    - x - (EWSC) Groom EWDox inspection response. Add action labels
+    - x - (EWAT) Implement support for client action AcquireMaster interaction
+    - x - (EWAT) Implement support for client action CTokenKeepAlive interaction
+    - x - (EWAT) Implement support for client action STokenKeepAlive interaction
+    - x - (EWAT) Implement support for client action ReleaseMaster interaction
+    - x - (EWAT) Implement support for client action IssueReport interaction
+    - x - (EWAT) Implement support for client action CreateMaster interaction
+    - x - (EWAT) Implement support for master action MasterAccountLogin interaction
+    - x - (EWAT) Implement support for master action MasterAccountLogout interaction
+    - x - (EWAT) Implement support for master action MasterViewAccount interaction
+    - x - (EWAT) Implement support for master action MasterEditAccount interaction
+    - x - (EWAT) Implement support for master action MasterUnlinkAccount interaction
+    - x - (EWAT) Implement support for master action MasterRecoverAccount interaction
+    - x - (EWAT) Implement support for master action InspectCTokens interaction
+    - x - (EWAT) Implement support for master action InspectCToken interaction
+    - x - (EWAT) Implement support for master action InspectSubpool interaction
+    - x - (EWAT) Implement support for master action InspectSubordonate interaction
+    - x - (EWAT) Implement support for master action MasterViewLogin interaction
+    - x - (EWAT) Implement support for master action MasterViewLogout interaction
+    - x - (EWAT) Implement support for client action CheckCTokenValid interaction
+    - x - (EWAT) Implement support for client action CheckCTokenLinked interaction
+    - x - (EWAT) Implement support for client action CheckCTokenSession interaction
+    - x - (EWAT) Implement support for client action CheckCTokenStatus interaction
+    - x - (EWAT) Implement support for client action CheckSTokenValid  interaction
+    - x - (EWAT) Implement support for client action CheckSTokenLinked interaction
+    - x - (EWAT) Implement support for client action CheckSTokenSession interaction
+    - x - (EWAT) Implement support for client action CheckSTokenStatus interaction
 
     [ NOTE ]: EWCreditClock suit version Chronos introduces the concept of
               Master User Accounts. On client action AcquireMaster, the
@@ -161,12 +175,7 @@ Less information is never the answer.
     [ NOTE ]: The Master Account class ResMaster inherits from subordonate
               account class ResUser.
 
-    [ NOTE ]: EWSC actions and events were built to be atomic as a security
-              precaution to reduce the possibility of having a series of
-              actions and/or events influence the outcome of other actions and/or
-              events.
-
-* v.WhiteRabbit (1.0.0 - stable) - Planned
+* v.WhiteRabbit (1.0.0 - stable) - Under development
     - (EWSC) Implement system action StopAccountCleaner cron
     - (EWSC) Implement system action StopWorkerCleaner cron
     - (EWSC) Implement system action StopSessionCleaner cron
