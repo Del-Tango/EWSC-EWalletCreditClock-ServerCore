@@ -133,8 +133,11 @@ Less information is never the answer.
     - x - (EWSC) Add support for master action EditCompany
     - x - (EWSC) Add support for master action EditAddress
     - x - (EWSC) Add support for master action EditKey
-    -   - (EWCC) Make library importable
-    - (EWSC) Groom EWDox json instruction set
+    - x - (EWCC) Make library importable. Turn relative import paths to absolute ones.
+    - x - (EWCC) Pass config and log objects from ewcc down
+    - x - (EWCC) Refactor test suit
+    - x - (EWCC) Grooming session for log messages
+    -   - (EWSC) Groom EWDox json instruction set
     - (EWAT) Groom tutor functional test suit
     - (EWAT) Groom tutor instruction set inspections
     - (EWAT) Groom tutor interactive actions

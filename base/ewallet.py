@@ -1024,7 +1024,7 @@ class EWallet(Base):
             )
         return master_id
 
-    def unlink_master_account_logout_records(self, user_id, **kwargs):
+    def unlink_master_account_logout_records(self, master_id, **kwargs):
         log.debug('')
         try:
             logout_records = kwargs['active_session'].query(
@@ -1125,9 +1125,9 @@ class EWallet(Base):
             )
             # If 30 days since account marked for removal, remove from db
             if check:
-                user_account.delete()
+                master_account.delete()
                 self.unlink_user_account_records(
-                    kwargs['user_id'], active_session=kwargs['active_session']
+                    kwargs['master_id'], active_session=kwargs['active_session']
                 )
                 kwargs['active_session'].commit()
                 return kwargs['master_id']

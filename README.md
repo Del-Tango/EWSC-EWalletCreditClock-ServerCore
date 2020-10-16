@@ -42,7 +42,7 @@ and supports transactions with both credits and time (by converting the paid
 for credits to time, obviously).
 
 This makes it an ideal choice for it beeing used as both a credit wallet in the
-sky as well as a professional software licencing option.
+sky as well as a professional software licensing option.
 
 
 EWSC Controllers -
@@ -59,7 +59,7 @@ two of which can be accesed through the REST API:
               Client Controller as they are initiated by the client application.
 
 Following a B2B business model, the Master accounts are created by the party
-offering the EWCreditClock service the their clients, along with a certificate
+offering the EWCreditClock service to their clients, along with a certificate
 used for authentication in all their software products.
 
 Master accounts can only hold a set number of Subordonate accounts, details of
