@@ -1,696 +1,1320 @@
 [ + ]: Prerequisites -
-[...]: User action Request Client ID
-[...]: User action Request Session Token
-[...]: User action Create Account
-[...]: User action Account Login
-[...]: User action Supply EWallet Credits
-[...]: User action Convert Credits To Clock
-[...]: User action Start Clock Timer
+[...]: Client action RequestClientID
+[...]: Client action RequestSessionToken 
+[...]: Client action NewMaster
+[...]: Client action AcquireMaster
+[...]: User action CreateAccount (1)
+[...]: User action CreateAccount (2)
+[...]: User action AccountLogin (2)
+[...]: User action SupplyCredits
+[...]: User action ConvertCreditsToClock
+[...]: User action StartClockTimer
 
-[ * ]: User action Pause Clock Timer
-[ > ]: Instruction Set: {'controller': 'client', 'ctype': 'action', 'action': 'pause', 'pause': 'clock_timer', 'client_id': 'ewsm-uid:YrL0Hr0fBiipaGn4cXxk:1594520278.2127166', 'session_token': 'ewsm-st:hfqTZySVpND5Nif8QPr7:1594520279.233791'}
-[ < ]: Response: {'failed': False, 'clock': 2, 'pending_time': 0.0, 'start_timestamp': '12-07-2020 05:18:01', 'pause_timestamp': '12-07-2020 05:18:02', 'pending_count': 1}
-
-[ + ]: Prerequisites -
-[...]: User action Request Client ID
-[...]: User action Request Session Token
-[...]: User action Create New Account
-[...]: User action Account Login
-[...]: User action Supply EWallet Credits
-[...]: User action Convert Credits To Clock
-[...]: User action Start Clock Timer
-[...]: User action Pause Clock Timer
-
-[ * ]: User action Resume Clock Timer
-[ > ]: Instruction Set: {'controller': 'client', 'ctype': 'action', 'action': 'resume', 'resume': 'clock_timer', 'client_id': 'ewsm-uid:90bGo8njZldNZWBPh9IT:1594520282.2935867', 'session_token': 'ewsm-st:XTYNFskHZVWDe0iuc3Dd:1594520284.5347142'}
-[ < ]: Response: {'failed': False, 'clock': 2, 'pending_time': 0.0, 'pause_timestamp': '12-07-2020 05:18:07', 'resume_timestamp': '12-07-2020 05:18:07', 'pending_count': 1}
+[ * ]: User action PauseClockTimer
+[ > ]: Instruction Set: {'controller': 'client', 'ctype': 'action', 'action': 'pause', 'pause': 'clock_timer', 'client_id': 'ewsm-uid:eYDquIm6wvgZhrAbU7k3:1602853481.2334604', 'session_token': 'ewsm-st:t60qmnIo7tgfy0UE9WmJ:1602853481.238022'}
+[ < ]: Response: {'failed': False, 'clock': 3, 'pending_time': 0.0, 'start_timestamp': '16-10-2020 16:04:45', 'pause_timestamp': '16-10-2020 16:04:46', 'pending_count': 1}
 
 [ + ]: Prerequisites -
-[...]: User action Request Client ID
-[...]: User action Request Session Token
-[...]: User action Create New Account
-[...]: User action Account Login
-[...]: User action Supply EWallet Credits
-[...]: User action Convert Credits To Clock
+[...]: Client action RequestClientID
+[...]: Client action RequestSessionToken
+[...]: Client action NewMaster
+[...]: Client action AcquireMaster
+[...]: User action CreateAccount (1)
+[...]: User action CreateAccount (2)
+[...]: User action AccountLogin (2)
+[...]: User action SupplyCredits
+[...]: User action ConvertCreditsToClock
+[...]: User action StartClockTimer
+[...]: User action PauseClockTimer
 
-[ * ]: User action Start Clock Timer
-[ > ]: Instruction Set: {'controller': 'client', 'ctype': 'action', 'action': 'start', 'start': 'clock_timer', 'client_id': 'ewsm-uid:GI7nLdByPCc8xb34aFzo:1594520287.8125575', 'session_token': 'ewsm-st:B9RQRmOyveTyHdq2ZFfx:1594520289.8778865'}
-[ < ]: Response: {'failed': False, 'clock': 2, 'start_timestamp': '12-07-2020 05:18:12'}
+[ * ]: User action ResumeClockTimer
+[ > ]: Instruction Set: {'controller': 'client', 'ctype': 'action', 'action': 'resume', 'resume': 'clock_timer', 'client_id': 'ewsm-uid:gpCsgqZzn51eMjgP8I9H:1602853489.3672903', 'session_token': 'ewsm-st:ve2tOgkppMjeZLzqz0jo:1602853489.372155'}
+[ < ]: Response: {'failed': False, 'clock': 3, 'pending_time': 0.0, 'pause_timestamp': '16-10-2020 16:04:54', 'resume_timestamp': '16-10-2020 16:04:54', 'pending_count': 1}
 
 [ + ]: Prerequisites -
-[...]: User action Request Client ID
-[...]: User action Request Session Token
-[...]: User action Create New Account
-[...]: User action Account Login
-[...]: User action Supply EWallet Credits
-[...]: User action Convert Credits To Clock
-[...]: User action Start Clock Timer
-[...]: User action Pause Clock Timer
-[...]: User action Resume Clock Timer
+[...]: Client action RequestClientID
+[...]: Client action RequestSessionToken
+[...]: Client action NewMaster
+[...]: Client action AcquireMaster
+[...]: User action CreateAccount (1)
+[...]: User action CreateAccount (2)
+[...]: User action AccountLogin (2)
+[...]: User action SupplyCredits
+[...]: User action ConvertCreditsToClock
 
-[ * ]: User action Stop Clock Timer
-[ > ]: Instruction Set: {'controller': 'client', 'ctype': 'action', 'action': 'stop', 'stop': 'clock_timer', 'client_id': 'ewsm-uid:GrrmsbQ5BFZwvu9NxBjm:1594520292.6619334', 'session_token': 'ewsm-st:5EfB3X0kzlW5vs9vWgMM:1594520294.5704026'}
-[ < ]: Response: {'failed': False, 'clock': 2, 'pending_count': 1, 'pending_time': 0.0, 'start_timestamp': '12-07-2020 05:18:16', 'stop_timestamp': '12-07-2020 05:18:17', 'minutes_spent': 0.01, 'time_record': 1, 'record_data': {'id': 1, 'time_sheet': 2, 'reference': 'Time Sheet Record', 'create_date': '12-07-2020 05:18:16', 'write_date': '12-07-2020 05:18:17', 'time_start': '12-07-2020 05:18:16', 'time_stop': '12-07-2020 05:18:17', 'time_spent': 0.01, 'time_pending': 0.0, 'pending_count': 1}}
+[ * ]: User action StartClockTimer
+[ > ]: Instruction Set: {'controller': 'client', 'ctype': 'action', 'action': 'start', 'start': 'clock_timer', 'client_id': 'ewsm-uid:toIafS17Z74pWl9pfm0K:1602853498.6523802', 'session_token': 'ewsm-st:c9VQSVJy2oSUMQJk8co2:1602853498.6566095'}
+[ < ]: Response: {'failed': False, 'clock': 3, 'start_timestamp': '16-10-2020 16:05:04'}
+
+[ + ]: Prerequisites -
+[...]: Client action RequestClientID
+[...]: Client action RequestSessionToken
+[...]: Client action NewMaster
+[...]: Client action AcquireMaster
+[...]: User action CreateAccount (1)
+[...]: User action CreateAccount (1)
+[...]: User action AccountLogin (2)
+[...]: User action SupplyCredits
+[...]: User action ConvertCreditsToClock
+[...]: User action StartClockTimer
+[...]: User action PauseClockTimer
+[...]: User action ResumeClockTimer
+
+[ * ]: User action StopClockTimer
+[ > ]: Instruction Set: {'controller': 'client', 'ctype': 'action', 'action': 'stop', 'stop': 'clock_timer', 'client_id': 'ewsm-uid:4kDDRXSicEJJR6Hap72V:1602853507.6704764', 'session_token': 'ewsm-st:Dw7JxmQNo8KDqkU40Bo7:1602853507.6746821'}
+[ < ]: Response: {'failed': False, 'clock': 3, 'pending_count': 1, 'pending_time': 0.0, 'start_timestamp': '16-10-2020 16:05:12', 'stop_timestamp': '16-10-2020 16:05:13', 'minutes_spent': 0.02, 'time_record': 1, 'record_data': {'id': 1, 'time_sheet': 3, 'reference': 'TimeRecord', 'create_date': '16-10-2020 16:05:12', 'write_date': '16-10-2020 16:05:13', 'time_start': '16-10-2020 16:05:12', 'time_stop': '16-10-2020 16:05:13', 'time_spent': 0.02, 'time_pending': 0.0, 'pending_count': 1}}
+
+[ + ]: Prerequisites -
+[...]: Client action RequestClientID
+[...]: Client action RequestSessionToken
+[...]: Client action CreateMaster
+
+[ * ]: Master action AccountLogin
+[ > ]: Instruction Set: {'controller': 'master', 'ctype': 'action', 'action': 'login', 'client_id': 'ewsm-uid:4rCPyxgZ3Q6bJ5Lk6UJr:1602853517.2069516', 'session_token': 'ewsm-st:8NVxa8Ne6cx7d4cAc5FH:1602853517.211176', 'user_email': 'master3@alvearesolutions.ro', 'user_pass': 'abc123!@#Secret'}
+[ < ]: Response: {'failed': False, 'account': 'master3@alvearesolutions.ro', 'session_data': {'id': 2, 'master': 'master3@alvearesolutions.ro', 'create_date': '16-10-2020 16:05:17', 'write_date': '16-10-2020 16:05:18', 'expiration_date': '16-10-2020 16:35:17'}}
+
+[ + ]: Prerequisites -
+[...]: Client action RequestClientID
+[...]: Client action RequestSessionToken
+[...]: Client action CreateMaster
+[...]: Master action AccountLogin
+
+[ * ]: Master action AccountLogout
+[ > ]: Instruction Set: {'controller': 'master', 'ctype': 'action', 'action': 'logout', 'client_id': 'ewsm-uid:jHDR8Wia0mSEPHcyVvwL:1602853522.0635154', 'session_token': 'ewsm-st:4b6o17XQEB17XBU7x83C:1602853522.0676115'}
+[ < ]: Response: {'failed': False, 'account': 'master3@alvearesolutions.ro', 'session_data': {'id': 2, 'master': None, 'create_date': '16-10-2020 16:05:22', 'write_date': '16-10-2020 16:05:23', 'expiration_date': '16-10-2020 16:35:22'}}
+
+[ + ]: Prerequisites -
+[...]: Client action RequestClientID
+[...]: Client action RequestSessionToken
+[...]: Client action CreateMaster
+[...]: Master action AccountLogin
+
+[ * ]: Master action EditAccount
+[ > ]: Instruction Set: {'controller': 'master', 'ctype': 'action', 'action': 'edit', 'edit': 'account', 'client_id': 'ewsm-uid:5F8O5X6e8rgvroEPerNf:1602853527.9345198', 'session_token': 'ewsm-st:R6NGCr7z4bwNCoYYDY0f:1602853527.9430408', 'user_name': 'Edited', 'user_phone': 'Edited', 'user_email': 'Edited', 'user_pass': 'Editedsdas@!@R2312e.', 'user_alias': 'Edited', 'company': 'Edited', 'address': 'Edited', 'key': 'Edited'}
+[ < ]: Response: {'failed': False, 'account': 'Edited', 'edit': {'name': True, 'pass': True, 'alias': True, 'email': True, 'phone': True, 'company': True, 'address': True, 'key': True}, 'account_data': {'id': 1, 'name': 'Edited', 'create_date': '16-10-2020 16:05:28', 'write_date': '16-10-2020 16:05:29', 'email': 'Edited', 'phone': 'Edited', 'alias': 'Edited', 'key_code': 'Edited', 'account_limit': 10, 'company': 'Edited', 'address': 'Edited', 'subordonate_pool': {}, 'acquired_ctokens': 0, 'active': True}}
+
+[ + ]: Prerequisites -
+[...]: Client action RequestClientID
+[...]: Client action RequestSessionToken
+[...]: Client action CreateMaster
+[...]: Master action AccountLogin
+[...]: Client action AcquireMaster
+
+[ * ]: Master action InspectCTokens
+[ > ]: Instruction Set: {'controller': 'master', 'ctype': 'action', 'action': 'inspect', 'inspect': 'ctoken', 'ctoken': 'ewsm-uid:fGjsM4lFZoJ9x6wqpdA9:1602853532.8333442', 'client_id': 'ewsm-uid:fGjsM4lFZoJ9x6wqpdA9:1602853532.8333442', 'session_token': 'ewsm-st:jLK67B2CbBqrcblUdoj4:1602853532.8374155'}
+[ < ]: Response: {'failed': False, 'account': 'master3@alvearesolutions.ro', 'ctoken': 'ewsm-uid:fGjsM4lFZoJ9x6wqpdA9:1602853532.8333442', 'ctoken_data': {'stoken': 'ewsm-st:jLK67B2CbBqrcblUdoj4:1602853532.8374155', 'acquired_master': 1, 'create_date': '16-10-2020 16:05:32', 'write_date': '16-10-2020 16:05:34', 'label': 'ewsm-uid:fGjsM4lFZoJ9x6wqpdA9:1602853532.8333442', 'active': True, 'unlink': False, 'valid_to': '16-10-2020 16:35:32'}}
+
+[ + ]: Prerequisites -
+[...]: Client action RequestClientID
+[...]: Client action RequestSessionToken
+[...]: Client action CreateMaster
+[...]: Master action AccountLogin
+[...]: Client action AcquireMaster
+
+[ * ]: Master action InspectCTokens
+[ > ]: Instruction Set: {'controller': 'master', 'ctype': 'action', 'action': 'inspect', 'inspect': 'ctokens', 'client_id': 'ewsm-uid:xtvFmhndcyhT5VuCfjuZ:1602853537.969139', 'session_token': 'ewsm-st:JTYADPd7wZGchBMyyY48:1602853537.9732974'}
+[ < ]: Response: {'failed': False, 'account': 'master3@alvearesolutions.ro', 'account_data': {'id': 1, 'name': 'TestEWalletMaster3', 'create_date': '16-10-2020 16:05:38', 'write_date': '16-10-2020 16:05:39', 'email': 'master3@alvearesolutions.ro', 'phone': '555 555 555', 'alias': 'TEWM3', 'key_code': 'EWSC-Master-Key-Code', 'account_limit': 10, 'company': 'TestClient INC', 'address': 'Iasi, jud. Iasi, Str. Canta, Nr. 40', 'subordonate_pool': {}, 'acquired_ctokens': 1, 'active': True}, 'ctokens': ['ewsm-uid:xtvFmhndcyhT5VuCfjuZ:1602853537.969139']}
+
+[ + ]: Prerequisites -
+[...]: Client action RequestClientID
+[...]: Client action RequestSessionToken
+[...]: Client action CreateMaster
+[...]: Master action AccountLogin
+[...]: Client action AcquireMaster
+[...]: User action CreateAccount
+[...]: User action AccountLogin
+
+[ * ]: Master action InspectSubordonate
+[ > ]: Instruction Set: {'controller': 'master', 'ctype': 'action', 'action': 'inspect', 'inspect': 'subordonate', 'subordonate': 2, 'client_id': 'ewsm-uid:jYRmGzfd3vPDxAkYax28:1602853542.8060613', 'session_token': 'ewsm-st:pweCqphqGfiQL9Tt2b9U:1602853542.8139472'}
+[ < ]: Response: {'failed': False, 'account': 'master3@alvearesolutions.ro', 'subordonate': {'id': 2, 'name': 'TestEWalletUser2', 'create_date': '16-10-2020 16:05:44', 'write_date': '16-10-2020 16:05:45', 'ewallet': 2, 'contact_list': 2, 'email': 'ewallet2@alvearesolutions.ro', 'phone': None, 'alias': None, 'state': 1, 'ewallet_archive': {2: 'Credit EWallet'}, 'contact_list_archive': {2: 'Contact List'}, 'to_unlink': False, 'to_unlink_timestamp': None, 'subordonate_of': 1}}
+
+[ + ]: Prerequisites -
+[...]: Client action RequestClientID
+[...]: Client action RequestSessionToken
+[...]: Client action CreateMaster
+[...]: Master action AccountLogin
+[...]: Client action AcquireMaster
+[...]: User action CreateAccount
+[...]: User action AccountLogin
+
+[ * ]: Master action InspectSubPool
+[ > ]: Instruction Set: {'controller': 'master', 'ctype': 'action', 'action': 'inspect', 'inspect': 'subpool', 'client_id': 'ewsm-uid:i1b4KMc8JR1Gv9f1EKLy:1602853550.4666798', 'session_token': 'ewsm-st:HfHC9B9w1v1wsoFs5S6B:1602853550.4709275'}
+[ < ]: Response: {'failed': False, 'account': 'master3@alvearesolutions.ro', 'subpool': {2: 'ewallet2@alvearesolutions.ro'}}
+
+[ + ]: Prerequisites -
+[...]: Client action RequestClientID
+[...]: Client action RequestSessionToken
+[...]: Client action CreateMaster
+[...]: Master action AccountLogin
+[...]: Master action UnlinkAccount
+
+[ * ]: Master action RecoverAccount
+[ > ]: Instruction Set: {'controller': 'master', 'ctype': 'action', 'action': 'recover', 'recover': 'account', 'client_id': 'ewsm-uid:Xp6SCCTnYgYK3vEUsn7A:1602853559.1334503', 'session_token': 'ewsm-st:P8bDHM4OekEiRxlZaRf8:1602853559.1376376'}
+[ < ]: Response: {'failed': False, 'account': 'master3@alvearesolutions.ro', 'account_data': {'id': 1, 'name': 'TestEWalletMaster3', 'create_date': '16-10-2020 16:05:59', 'write_date': '16-10-2020 16:06:00', 'email': 'master3@alvearesolutions.ro', 'phone': '555 555 555', 'alias': 'TEWM3', 'key_code': 'EWSC-Master-Key-Code', 'account_limit': 10, 'company': 'TestClient INC', 'address': 'Iasi, jud. Iasi, Str. Canta, Nr. 40', 'subordonate_pool': {}, 'acquired_ctokens': 0, 'active': True}, 'session_data': {'id': 2, 'master': 'master3@alvearesolutions.ro', 'create_date': '16-10-2020 16:05:59', 'write_date': '16-10-2020 16:06:00', 'expiration_date': '16-10-2020 16:35:59'}}
+
+[ + ]: Prerequisites -
+[...]: Client action RequestClientID
+[...]: Client action RequestSessionToken
+[...]: Client action CreateMaster
+[...]: Master action AccountLogin
+
+[ * ]: Master action UnlinkAccount
+[ > ]: Instruction Set: {'controller': 'master', 'ctype': 'action', 'action': 'unlink', 'unlink': 'account', 'client_id': 'ewsm-uid:d53TuZKq64RRVexspm3E:1602853564.6580064', 'session_token': 'ewsm-st:XYzQr7vdzqzDSJzEq94u:1602853564.6627543'}
+[ < ]: Response: {'failed': False, 'account': 'master3@alvearesolutions.ro'}
+
+[ + ]: Prerequisites -
+[...]: Client action RequestClientID
+[...]: Client action RequestSessionToken
+[...]: Client action CreateMaster
+[...]: Master action AccountLogin
+
+[ * ]: Master action ViewAccount
+[ > ]: Instruction Set: {'controller': 'master', 'ctype': 'action', 'action': 'view', 'view': 'account', 'client_id': 'ewsm-uid:MFaFVmsMGvvHIHf6ftJD:1602853570.2909386', 'session_token': 'ewsm-st:PSHzLT8DdrdaDPKyl7PT:1602853570.2974381'}
+[ < ]: Response: {'failed': False, 'account': 'master3@alvearesolutions.ro', 'account_data': {'id': 1, 'name': 'TestEWalletMaster3', 'create_date': '16-10-2020 16:06:10', 'write_date': '16-10-2020 16:06:11', 'email': 'master3@alvearesolutions.ro', 'phone': '555 555 555', 'alias': 'TEWM3', 'key_code': 'EWSC-Master-Key-Code', 'account_limit': 10, 'company': 'TestClient INC', 'address': 'Iasi, jud. Iasi, Str. Canta, Nr. 40', 'subordonate_pool': {}, 'acquired_ctokens': 0, 'active': True}}
+
+[ + ]: Prerequisites -
+[...]: Client action RequestClientID
+[...]: Client action RequestSessionToken
+[...]: Client action CreateMaster
+[...]: Master action AccountLogin
+
+[ * ]: Master action ViewLoginRecords
+[ > ]: Instruction Set: {'controller': 'master', 'ctype': 'action', 'action': 'view', 'view': 'login', 'client_id': 'ewsm-uid:rCiTUf3L2Nv4Kv0A5Vx5:1602853575.5562496', 'session_token': 'ewsm-st:t4bfAV36YJBNrGa9D9N7:1602853575.5639524'}
+[ < ]: Response: {'failed': False, 'account': 'master3@alvearesolutions.ro', 'login_records': {1: '16-10-2020 16:04:38'}}
+
+[ + ]: Prerequisites -
+[...]: Client action RequestClientID
+[...]: Client action RequestSessionToken
+[...]: Client action CreateMaster
+[...]: Master action AccountLogin
+[...]: Master action AccountLogout
+[...]: Master action AccountLogin
+
+[ * ]: Master action ViewLogoutRecords
+[ > ]: Instruction Set: {'controller': 'master', 'ctype': 'action', 'action': 'view', 'view': 'logout', 'client_id': 'ewsm-uid:FLY11aIm6AsPfe92lyM4:1602853580.3172803', 'session_token': 'ewsm-st:zO07TCQas3drW8eNGwB7:1602853580.3218486'}
+[ < ]: Response: {'failed': False, 'account': 'master3@alvearesolutions.ro', 'logout_records': {1: '16-10-2020 16:04:38'}}
+
+[ + ]: Prerequisites -
+[...]: System action NewWorker
+[...]: Client action RequestClientID (1)
+[...]: Client action RequestClientID (2)
+[...]: Client action RequestClientID (3)
+
+[ * ]: System action SweepCleanupCTokens
+[ > ]: Instruction Set: {'controller': 'system', 'ctype': 'action', 'action': 'cleanup', 'cleanup': 'ctokens'}
+[ < ]: Response: {'failed': False, 'ctokens_cleaned': 3, 'cleanup_failures': 0, 'ctokens': ['ewsm-uid:YGj0dArOB86GuZISqt15:1602853585.7507377', 'ewsm-uid:Fze4TdYa9gfnNB8vDFFT:1602853585.7543073', 'ewsm-uid:aHdGyXRMvOXAUjsGBTAL:1602853585.7566645'], 'stokens_cleaned': 0, 'stokens': [], 'sessions_cleaned': [], 'worker_count': 0, 'workers': [], 'sessions': []}
+
+[ + ]: Prerequisites -
+[...]: System action NewWorker
+[...]: Client action RequestClientID (1)
+[...]: Client action RequestClientID (2)
+[...]: Client action RequestClientID (3)
+
+[ * ]: System action SweepCleanupCTokens
+[ > ]: Instruction Set: {'controller': 'system', 'ctype': 'action', 'action': 'cleanup', 'cleanup': 'ctokens', 'client_id': 'ewsm-uid:UShiCpdtyKgQqgr9zy4i:1602853589.5781162'}
+[ < ]: Response: {'failed': False, 'sessions_cleaned': 0, 'cleanup_failures': 0, 'worker_count': 0, 'workers': [], 'sessions': [], 'stokens_cleaned': 0, 'stokens': [], 'ctokens_cleaned': 1, 'ctokens': ['ewsm-uid:UShiCpdtyKgQqgr9zy4i:1602853589.5781162']}
+
+[ + ]: Prerequisites -
+[...]: System action NewWorker
+[...]: Client action RequestClientID
+[...]: Client action RequestSessionToken
+[...]: Client action NewMaster
+[...]: Client action AcquireMaster
+[...]: User action CreateAccount
+
+[ * ]: System action DecreaseMasterSubpool
+[ > ]: Instruction Set: {'controller': 'system', 'ctype': 'action', 'action': 'decrease', 'decrease': 'master', 'master': 'subpool', 'master_id': 1, 'decrease_by': 3}
+[ < ]: Response: {'failed': False, 'master': 1, 'subpool_size': 7, 'decreased_by': 3, 'master_data': {'id': 1, 'name': 'TestEWalletMaster3', 'create_date': '16-10-2020 16:06:35', 'write_date': '16-10-2020 16:06:38', 'email': 'master3@alvearesolutions.ro', 'phone': '555 555 555', 'alias': 'TEWM3', 'key_code': 'EWSC-Master-Key-Code', 'account_limit': 7, 'company': 'TestClient INC', 'address': 'Iasi, jud. Iasi, Str. Canta, Nr. 40', 'subordonate_pool': {2: 'ewallet1@alvearesolutions.ro'}, 'acquired_ctokens': 1, 'active': True}}
+
+[ + ]: Prerequisites -
+[...]: System action NewWorker
+[...]: Client action RequestClientID
+[...]: Client action RequestSessionToken
+[...]: Client action NewMaster
+[...]: Client action AcquireMaster
+[...]: User action CreateAccount
+
+[ * ]: System action FreezeMaster
+[ > ]: Instruction Set: {'controller': 'system', 'ctype': 'action', 'action': 'freeze', 'freeze': 'master', 'master_id': 1}
+[ < ]: Response: {'failed': False, 'masters_frozen': 1, 'subordonates_frozen': 1, 'frozen_failures': 0, 'masters': [1], 'subordonates': [2], 'frozen_count': 2}
+
+[ + ]: Prerequisites -
+[...]: System action NewWorker
+[...]: Client action RequestClientID
+[...]: Client action RequestSessionToken
+[...]: Client action NewMaster
+[...]: Client action AcquireMaster
+[...]: User action CreateAccount
+
+[ * ]: System action IncreaseMasterSubpool
+[ > ]: Instruction Set: {'controller': 'system', 'ctype': 'action', 'action': 'increase', 'increase': 'master', 'master': 'subpool', 'master_id': 1, 'increase_by': 10}
+[ < ]: Response: {'failed': False, 'master': 1, 'subpool_size': 20, 'increased_by': 10, 'master_data': {'id': 1, 'name': 'TestEWalletMaster3', 'create_date': '16-10-2020 16:06:51', 'write_date': '16-10-2020 16:06:52', 'email': 'master3@alvearesolutions.ro', 'phone': '555 555 555', 'alias': 'TEWM3', 'key_code': 'EWSC-Master-Key-Code', 'account_limit': 20, 'company': 'TestClient INC', 'address': 'Iasi, jud. Iasi, Str. Canta, Nr. 40', 'subordonate_pool': {2: 'ewallet1@alvearesolutions.ro'}, 'acquired_ctokens': 1, 'active': True}}
 
 [ + ]: Prerequisits:
-[...]: System action New Session Worker
-[...]: System action New Session
+[...]: System action NewWorker
+[...]: System action NewSession
 
-[ * ]: System action Interogate EWallet Session
-[ > ] Instruction Set: {'controller': 'system', 'ctype': 'action', 'action': 'interogate', 'interogate': 'session', 'session_id': 1}
-[ < ] Response: {'failed': False, 'ewallet_session': 1, 'session_data': {'id': 1, 'name': None, 'orm_session': <sqlalchemy.orm.session.Session object at 0xb693f8b0>, 'create_date': datetime.date(2020, 7, 12), 'write_date': datetime.date(2020, 7, 12), 'expiration_date': datetime.datetime(2020, 7, 13, 5, 18, 19, 423519), 'contact_list': False, 'credit_ewallet': False, 'user_account': False, 'user_account_archive': {}}}
+[ * ]: System action InterogateEWalletSession
+[ > ] Instruction Set: {'controller': 'system', 'ctype': 'action', 'action': 'interogate', 'interogate': 'session', 'session_id': 2}
+[ < ] Response: {'failed': False, 'ewallet_session': 2, 'session_data': {'id': 2, 'name': None, 'orm_session': '<sqlalchemy.orm.session.Session object at 0xb54f9490>', 'create_date': '16-10-2020 16:06:56', 'write_date': '16-10-2020 16:06:56', 'expiration_date': '16-10-2020 16:36:56', 'contact_list': {'failed': True, 'level': 'ewallet-session', 'error': "No active session contact list found. Details: ({'contact_list': []},)"}, 'credit_ewallet': {'failed': True, 'level': 'ewallet-session', 'error': "No session credit wallet found. Command chain details : {'credit_wallet': []}"}, 'user_account': [], 'master_account': [], 'user_account_archive': {}}, 'worker': 1}
 
 [ + ]: Prerequisites -
-[...]: System action New Session Worker
-[...]: System action New EWallet Session
+[...]: System action NewWorker
+[...]: System action NewSession
 
-[ * ]: System action Interogate EWallet Workers
+[ * ]: System action InterogateEWalletWorkers
 [ > ]: Instruction Set: {'controller': 'system', 'ctype': 'action', 'action': 'interogate', 'interogate': 'workers'}
-[ < ]: Response: {'failed': False, 'workers': {<base.ewallet_worker.EWalletWorker object at 0xb69166d0>: {'create_date': datetime.datetime(2020, 7, 12, 5, 18, 19, 553850), 'state_code': 1, 'state_label': 'vacant', 'state_timestamp': datetime.datetime(2020, 7, 12, 5, 18, 19, 553850), 'session_pool': {1: 2}, 'token_session_map': {'ewsm-uid:YrL0Hr0fBiipaGn4cXxk:1594520278.2127166': {'token': 'ewsm-st:hfqTZySVpND5Nif8QPr7:1594520279.233791', 'session': <base.ewallet.EWallet object at 0xb6a99e38>}, 'ewsm-uid:90bGo8njZldNZWBPh9IT:1594520282.2935867': {'token': 'ewsm-st:XTYNFskHZVWDe0iuc3Dd:1594520284.5347142', 'session': <base.ewallet.EWallet object at 0xb698c850>}, 'ewsm-uid:GI7nLdByPCc8xb34aFzo:1594520287.8125575': {'token': 'ewsm-st:B9RQRmOyveTyHdq2ZFfx:1594520289.8778865', 'session': <base.ewallet.EWallet object at 0xb6929760>}, 'ewsm-uid:GrrmsbQ5BFZwvu9NxBjm:1594520292.6619334': {'token': 'ewsm-st:5EfB3X0kzlW5vs9vWgMM:1594520294.5704026', 'session': <base.ewallet.EWallet object at 0xb69297c0>}}}}}
+[ < ]: Response: {'failed': False, 'workers': {1: {'failed': False, 'worker': 1, 'worker_data': {'id': 1, 'reference': '', 'create_date': '16-10-2020 16:06:56', 'state_code': 0, 'state_label': 'vacant', 'state_timestamp': '16-10-2020 16:06:56', 'session_pool': {2: '<base.ewallet.EWallet object at 0xb5433cb8>'}, 'token_session_map': {}, 'ctoken_pool': [], 'stoken_pool': [], 'instruction_set_recv': '<multiprocessing.queues.Queue object at 0xb54335b0>', 'instruction_set_resp': '<multiprocessing.queues.Queue object at 0xb5433778>', 'sigterm': 'terminate_worker', 'lock': '<Synchronized wrapper for c_long(1)>'}}, 2: {'failed': False, 'worker': 2, 'worker_data': {'id': 2, 'reference': '', 'create_date': '16-10-2020 16:07:00', 'state_code': 0, 'state_label': 'vacant', 'state_timestamp': '16-10-2020 16:07:00', 'session_pool': {}, 'token_session_map': {}, 'ctoken_pool': [], 'stoken_pool': [], 'instruction_set_recv': '<multiprocessing.queues.Queue object at 0xb5443058>', 'instruction_set_resp': '<multiprocessing.queues.Queue object at 0xb5443268>', 'sigterm': 'terminate_worker', 'lock': '<Synchronized wrapper for c_long(1)>'}}}}
 
 [ + ]: Prerequisites -
-[...]: System action New Session Worker
+[...]: System action NewWorker
+[...]: Client action RequestClientID
+[...]: Client action RequestSessionToken
+[...]: Client action NewMaster
 
-[ * ]: System action New EWallet Session
+[ * ]: System action SweepCleanupMasters
+[ > ]: Instruction Set: {'controller': 'system', 'ctype': 'action', 'action': 'cleanup', 'cleanup': 'masters', 'master_id': 1}
+[ < ]: Response: {'failed': False, 'masters_cleaned': 1, 'subordonates_cleaned': 0, 'cleanup_failures': 0, 'masters': [1], 'subordonates': [], 'cleanup_count': 1}
+
+[ + ]: Prerequisites -
+[...]: System action NewWorker
+[...]: Client action RequestClientID
+[...]: Client action RequestSessionToken
+[...]: Client action NewMaster
+
+[ * ]: System action TargetMasterCleanup
+[ > ]: Instruction Set: {'controller': 'system', 'ctype': 'action', 'action': 'cleanup', 'cleanup': 'masters', 'master_id': 1}
+[ < ]: Response: {'failed': False, 'masters_cleaned': 1, 'subordonates_cleaned': 0, 'cleanup_failures': 0, 'masters': [1], 'subordonates': [], 'cleanup_count': 1}
+
+[ + ]: Prerequisites -
+[...]: System action NewWorker
+
+[ * ]: System action NewSession
 [ > ]: Instruction Set: {'controller': 'system', 'ctype': 'action', 'action': 'new', 'new': 'session', 'reference': 'EWallet Session Test'}
-[ < ]: Response: {'failed': False, 'ewallet_session': <base.ewallet.EWallet object at 0xb693f658>, 'session_data': {'id': 1, 'name': None, 'orm_session': <sqlalchemy.orm.session.Session object at 0xb693f3e8>, 'create_date': datetime.date(2020, 7, 12), 'write_date': datetime.date(2020, 7, 12), 'expiration_date': datetime.datetime(2020, 7, 13, 5, 18, 23, 368705), 'contact_list': False, 'credit_ewallet': False, 'user_account': False, 'user_account_archive': {}}}
+[ < ]: Response: {'failed': False, 'worker': 1, 'ewallet_session': 2}
 
-[ * ]: System action New Session Worker
+[ * ]: System action NewWorker
 [ > ]: Instruction Set: {'controller': 'system', 'ctype': 'action', 'action': 'new', 'new': 'worker'}
-[ < ]: Response: {'failed': False, 'worker': <base.ewallet_worker.EWalletWorker object at 0xb693f5e0>}
+[ < ]: Response: {'failed': False, 'worker': 2, 'worker_data': {2: {'process': <Process name='Process-38' pid=19097 parent=18963 started daemon>, 'instruction': <multiprocessing.queues.Queue object at 0xb5463b80>, 'response': <multiprocessing.queues.Queue object at 0xb5463bb0>, 'lock': <Synchronized wrapper for c_long(0)>}}}
 
 [ + ]: Prerequisites -
 [...]: System action New Session Worker
-[...]: User action Request Client ID
-[...]: User action Request Session Token
+[...]: Client action RequestClientID (1)
+[...]: Client action RequestSessionToken (1)
+[...]: Client action RequestClientID (2)
+[...]: Client action RequestSessionToken (2)
+[...]: Client action RequestClientID (3)
+[...]: Client action RequestSessionToken (3)
 
-[ * ]: System action Sweep Cleanup Ewallet Sessions
+[ * ]: System action SweepCleanupSessions
 [ > ]: Instruction Set: {'controller': 'system', 'ctype': 'action', 'action': 'cleanup', 'cleanup': 'sessions'}
-[ < ]: Response: {'failed': False, 'sessions_cleaned': 2}
+[ < ]: Response: {'failed': False, 'sessions_cleaned': 3, 'cleanup_failures': 0, 'orphaned_stokens': ['ewsm-st:NjXWnH29cnztw1GtL87j:1602853645.4456336', 'ewsm-st:y3edVj38OmpgzaZ3a8L8:1602853645.762616', 'ewsm-st:tGgy4UzPA4Z313lVITNl:1602853646.2828078'], 'stoken_count': 3, 'stokens_cleaned': ['ewsm-st:NjXWnH29cnztw1GtL87j:1602853645.4456336', 'ewsm-st:y3edVj38OmpgzaZ3a8L8:1602853645.762616', 'ewsm-st:tGgy4UzPA4Z313lVITNl:1602853646.2828078'], 'worker_count': 1, 'workers': [1]}
 
 [ + ]: Prerequisites -
-[...]: System action New Session Worker
-[...]: User action Request Client ID
-[...]: User action Request Session Token
+[...]: System action NewWorker
+[...]: Client action RequestClientID (1)
+[...]: Client action RequestSessionToken (1)
+[...]: Client action RequestClientID (2)
+[...]: Client action RequestSessionToken (2)
+[...]: Client action RequestClientID (3)
+[...]: Client action RequestSessionToken (3)
 
-[ * ]: System action Cleanup Target Ewallet Session
+[ * ]: System action TargetSessionCleanup
 [ > ]: Instruction Set: {'controller': 'system', 'ctype': 'action', 'action': 'cleanup', 'cleanup': 'sessions', 'session_id': 3}
-[ < ]: Response: {'failed': False, 'sessions_cleaned': 1}
+[ < ]: Response: {'failed': False, 'sessions_cleaned': 1, 'cleanup_failures': 0, 'worker_count': 1, 'workers': [1], 'sessions': [3], 'stokens_cleaned': 1, 'stokens': ['ewsm-st:oybDwdWpTPxT1r2DgAgt:1602853651.932164']}
+
+[ + ]: Prerequisits:
+[...]: Client action RequestClientID
+[...]: Client action RequestSessionToken
+[...]: Client action NewMaster
+[...]: Client action AcquireMaster
+[...]: User action CreateAccount
+[...]: User action AccountLogin
+[...]: User action UnlinkAccount
+
+[ * ]: System action StartAccountCleaner
+[ > ] Instruction Set: {'controller': 'system', 'ctype': 'action', 'action': 'start', 'start': 'cleaner', 'clean': 'accounts'}
+[ < ] Response: {'failed': False, 'cron': 'AccountCleaner', 'pool_entry': {'active': True}}
+
+[ + ]: Prerequisits:
+[...]: Client action RequestClientID (1)
+[...]: Client action RequestSessionToken (1)
+[...]: Client action RequestClientID (2)
+[...]: Client action RequestSessionToken (2)
+
+[ * ]: System action StartAllCleaners
+[ > ] Instruction Set: {'controller': 'system', 'ctype': 'action', 'action': 'start', 'start': 'cleaner', 'clean': 'all'}
+[ < ] Response: {'failed': False, 'cleaners': {'accounts': {'failed': False, 'cron': 'AccountCleaner', 'pool_entry': {'active': True}}, 'workers': {'failed': False, 'cron': 'WorkerCleaner', 'pool_entry': {'active': True}}, 'sessions': {'failed': False, 'cron': 'SessionCleaner', 'pool_entry': {'active': True}}, 'ctokens': {'failed': False, 'cron': 'CTokenCleaner', 'pool_entry': {'active': True}}}}
+
+[ + ]: Prerequisits:
+[...]: Client action RequestClientID (1)
+[...]: Client action RequestSessionToken (1)
+[...]: Client action RequestClientID (2)
+[...]: Client action RequestSessionToken (2)
+
+[ * ]: System action StartCTokenCleaner
+[ > ] Instruction Set: {'controller': 'system', 'ctype': 'action', 'action': 'start', 'start': 'cleaner', 'clean': 'ctokens'}
+[ < ] Response: {'failed': False, 'cron': 'CTokenCleaner', 'pool_entry': {'active': True}}
+
+[ + ]: Prerequisits:
+[...]: Client action RequestClientID
+[...]: Client action RequestSessionToken
+
+[ * ]: System action StartSessionCleaner
+[ > ] Instruction Set: {'controller': 'system', 'ctype': 'action', 'action': 'start', 'start': 'cleaner', 'clean': 'sessions'}
+[ < ] Response: {'failed': False, 'cron': 'SessionCleaner', 'pool_entry': {'active': True}}
+
+[ + ]: Prerequisits:
+[...]: Client action RequestClientID
+[...]: Client action RequestSessionToken
+
+[ * ]: System action StartWorkerCleaner
+[ > ] Instruction Set: {'controller': 'system', 'ctype': 'action', 'action': 'start', 'start': 'cleaner', 'clean': 'workers'}
+[ < ] Response: {'failed': False, 'cron': 'WorkerCleaner', 'pool_entry': {'active': True}}
 
 [ + ]: Prerequisites -
-[...]: System action New Session Worker
+[...]: System action NewWorker
+[...]: Client action RequestClientID (1)
+[...]: Client action RequestSessionToken (1)
+[...]: Client action RequestClientID (2)
+[...]: Client action RequestSessionToken (2)
+[...]: Client action RequestClientID (3)
+[...]: Client action RequestSessionToken (3)
 
-[ * ]: System action Cleanup Session Workers
+[ * ]: System action SweepCleanupSTokens
+[ > ]: Instruction Set: {'controller': 'system', 'ctype': 'action', 'action': 'cleanup', 'cleanup': 'stokens'}
+[ < ]: Response: {'failed': False, 'stokens_cleaned': 3, 'cleanup_failures': 0, 'stokens': ['ewsm-st:bnqtdWj9CMBcxCFpEsBi:1602853683.542384', 'ewsm-st:inEe6h8xHI0QNlnvuzps:1602853683.8669467', 'ewsm-st:o3OonZtwuuQJsTURpioz:1602853684.389629'], 'sessions_cleaned': 3, 'sessions': [2, 3, 4], 'worker_count': 1, 'workers': [1]}
+
+[ + ]: Prerequisites -
+[...]: System action NewWorker
+[...]: Client action RequestClientID (1)
+[...]: Client action RequestSessionToken (1)
+[...]: Client action RequestClientID (2)
+[...]: Client action RequestSessionToken (2)
+[...]: Client action RequestClientID (3)
+[...]: Client action RequestSessionToken (3)
+
+[ * ]: System action SweepCleanupSTokens
+[ > ]: Instruction Set: {'controller': 'system', 'ctype': 'action', 'action': 'cleanup', 'cleanup': 'stokens', 'session_token': 'ewsm-st:sNHaL3cZHcrmLYu6r42t:1602853690.6095164'}
+[ < ]: Response: {'failed': False, 'sessions_cleaned': 1, 'cleanup_failures': 0, 'worker_count': 1, 'workers': [1], 'sessions': [4], 'stokens_cleaned': 1, 'stokens': ['ewsm-st:sNHaL3cZHcrmLYu6r42t:1602853690.6095164']}
+
+[ + ]: Prerequisites -
+[...]: System action NewWorker
+[...]: Client action RequestClientID
+[...]: Client action RequestSessionToken
+[...]: Client action NewMaster
+[...]: Client action AcquireMaster
+[...]: User action CreateAccount
+[...]: System action FreezeMaster
+
+[ * ]: System action UnfreezeMaster
+[ > ]: Instruction Set: {'controller': 'system', 'ctype': 'action', 'action': 'unfreeze', 'unfreeze': 'master', 'master_id': 1}
+[ < ]: Response: {'failed': False, 'masters_activated': 1, 'subordonates_activated': 1, 'activation_failures': 0, 'masters': [1], 'subordonates': [2], 'activation_count': 2}
+
+[ + ]: Prerequisites -
+[...]: System action NewWorker (1)
+[...]: System action NewWorker (2)
+[...]: System action NewWorker (3)
+[...]: System action NewWorker (4)
+
+[ * ]: System action SweepCleanupWorkers
 [ > ]: Instruction Set: {'controller': 'system', 'ctype': 'action', 'action': 'cleanup', 'cleanup': 'workers'}
-[ < ]: Response: {'failed': False, 'workers_cleaned': 3, 'worker_reserved': <base.ewallet_worker.EWalletWorker object at 0xb693fe38>, 'worker_pool': [<base.ewallet_worker.EWalletWorker object at 0xb693fe38>]}
+[ < ]: Response: {'failed': False, 'workers_cleaned': 4, 'cleanup_failures': 0, 'workers': [2, 3, 4, 5], 'orphaned_stokens': [], 'worker_reserved': 1, 'worker_pool': {1: {'process': <Process name='Process-54' pid=19151 parent=18963 started daemon>, 'instruction': <multiprocessing.queues.Queue object at 0xb4a1bbb0>, 'response': <multiprocessing.queues.Queue object at 0xb4a1ba48>, 'lock': <Synchronized wrapper for c_long(0)>}}}
 
 [ + ]: Prerequisites -
-[...]: User action Request Client ID
-[...]: User action Request Session Token
-[...]: User action Create New Account
+[...]: System action NewWorker (1)
+[...]: System action NewWorker (2)
+[...]: System action NewWorker (3)
+[...]: System action NewWorker (4)
 
-[ * ]: User action Account Login
-[ > ]: Instruction Set: {'controller': 'client', 'ctype': 'action', 'action': 'login', 'client_id': 'ewsm-uid:FBTN3YfVdY2xENuo0Fir:1594520309.5701115', 'session_token': 'ewsm-st:CXbmLJhCD7YhmrO0wNeO:1594520312.3566804', 'user_name': 'TestEWalletUser1', 'user_pass': 'abc123!@#Secret'}
-[ < ]: Response: {'failed': False, 'account': 'ewallet1@alvearesolutions.ro', 'session_data': {'session_user_account': 'ewallet1@alvearesolutions.ro', 'session_credit_ewallet': 1, 'session_contact_list': 1, 'session_account_archive': {'ewallet1@alvearesolutions.ro': 'TestEWalletUser1'}}}
-
-[ + ]: Prerequisites -
-[...]: User action Request Client ID
-[...]: User action Request Session Token
-[...]: User action Create New Account
-[...]: User action Account Login
-
-[ * ]: User action Account Logout
-[ > ]: Instruction Set: {'controller': 'client', 'ctype': 'action', 'action': 'logout', 'client_id': 'ewsm-uid:t2DdUmmToykzDprqB5g0:1594520313.367564', 'session_token': 'ewsm-st:BalpIcJvfHy1rDfc82Oy:1594520315.27325'}
-[ < ]: Response: {'failed': False, 'account': 'ewallet2@alvearesolutions.ro', 'session_data': {'session_user_account': 'ewallet1@alvearesolutions.ro', 'session_credit_ewallet': 1, 'session_contact_list': 1, 'session_account_archive': {'ewallet1@alvearesolutions.ro': 'TestEWalletUser1'}}}
+[ * ]: System action TargetCleanupWorker
+[ > ]: Instruction Set: {'controller': 'system', 'ctype': 'action', 'action': 'cleanup', 'cleanup': 'workers', 'worker_id': 2}
+[ < ]: Response: {'failed': False, 'worker_pool': {1: {'process': <Process name='Process-59' pid=19167 parent=18963 started daemon>, 'instruction': <multiprocessing.queues.Queue object at 0xb4a27d48>, 'response': <multiprocessing.queues.Queue object at 0xb4a27c70>, 'lock': <Synchronized wrapper for c_long(0)>}, 3: {'process': <Process name='Process-61' pid=19170 parent=18963 started daemon>, 'instruction': <multiprocessing.queues.Queue object at 0xb4a2e310>, 'response': <multiprocessing.queues.Queue object at 0xb4a2e4d8>, 'lock': <Synchronized wrapper for c_long(0)>}, 4: {'process': <Process name='Process-62' pid=19171 parent=18963 started daemon>, 'instruction': <multiprocessing.queues.Queue object at 0xb4a2e7a8>, 'response': <multiprocessing.queues.Queue object at 0xb4a2e970>, 'lock': <Synchronized wrapper for c_long(0)>}, 5: {'process': <Process name='Process-63' pid=19172 parent=18963 started daemon>, 'instruction': <multiprocessing.queues.Queue object at 0xb4a2ec40>, 'response': <multiprocessing.queues.Queue object at 0xb4a2ee08>, 'lock': <Synchronized wrapper for c_long(0)>}}, 'workers_cleaned': 1, 'cleanup_failures': 0, 'workers': [2], 'stokens_cleaned': 0, 'stokens': []}
 
 [ + ]: Prerequisites -
-[...]: User action Request Client ID
-[...]: User action Request Session Token
-[...]: User action Create New Account
-[...]: User action Account Login
+[...]: Client action RequestClientID
+[...]: Client action RequestSessionToken
+[...]: Client action NewMaster
+[...]: Client action AcquireMaster
+[...]: User action CreateAccount
 
-[ * ]: User action Add Contact List Record
-[ > ]: Instruction Set: {'controller': 'client', 'ctype': 'action', 'action': 'new', 'new': 'contact', 'contact': 'record', 'client_id': 'ewsm-uid:gnc5gd0DcDTAF43nVaN7:1594520317.4431868', 'session_token': 'ewsm-st:mjHggkzfuqVYW9bPPmZO:1594520319.775782', 'contact_list': 2, 'user_name': 'Test User Name', 'user_email': 'ewallet1@alvearesolutions.ro', 'user_phone': '123454321', 'user_reference': 'Test Mockup', 'notes': 'Notes added by functional test'}
-[ < ]: Response: {'failed': False, 'contact_record': 1, 'contact_list': 2}
+[ * ]: User action AccountLogin
+[ > ]: Instruction Set: {'controller': 'client', 'ctype': 'action', 'action': 'login', 'client_id': 'ewsm-uid:xDXDNQF63Kc0bVbxBFoN:1602853715.1996272', 'session_token': 'ewsm-st:X4rpVbLMmOc5Bz4Vnc5i:1602853715.2069323', 'user_email': 'ewallet1@alvearesolutions.ro', 'user_pass': 'abc123!@#Secret'}
+[ < ]: Response: {'failed': False, 'account': 'ewallet1@alvearesolutions.ro', 'session_data': {'session_user_account': 'ewallet1@alvearesolutions.ro', 'session_credit_ewallet': 2, 'session_contact_list': 2, 'session_account_archive': {'ewallet1@alvearesolutions.ro': 'TestEWalletUser1'}}}
 
 [ + ]: Prerequisites -
-[...]: User action Request Client ID
-[...]: User action Request Session Token
-[...]: User action Create New Account
-[...]: User action Account Login
-[...]: User action Supply EWallet Credits
-[...]: User action Convert Credits To Clock
+[...]: Client action RequestClientID
+[...]: Client action RequestSessionToken
+[...]: Client action NewMaster
+[...]: Client action AcquireMaster
+[...]: User action CreateAccount (1)
+[...]: User action CreateAccount (2)
+[...]: User action AccountLogin (2)
 
-[ * ]: User action Convert Clock To Credits
-[ > ]: Instruction Set: {'controller': 'client', 'ctype': 'action', 'action': 'convert', 'convert': 'clock2credits', 'client_id': 'ewsm-uid:gEuUjKhTrnEATTMH0W7G:1594520321.7399163', 'session_token': 'ewsm-st:T28tGudSVW4s5VJdYfTR:1594520324.1320853', 'minutes': 10}
-[ < ]: Response: {'failed': False, 'conversion_record': 2, 'ewallet_credits': 90, 'credit_clock': 10.0, 'converted_minutes': 10}
+[ * ]: User action AccountLogout
+[ > ]: Instruction Set: {'controller': 'client', 'ctype': 'action', 'action': 'logout', 'client_id': 'ewsm-uid:oog66TQU3X2Wl5Av9cux:1602853721.9369054', 'session_token': 'ewsm-st:0DZSOqBTk33YRKYAigHE:1602853721.9452748'}
+[ < ]: Response: {'failed': False, 'account': 'ewallet2@alvearesolutions.ro', 'session_data': {'session_user_account': None, 'session_credit_ewallet': None, 'session_contact_list': None, 'session_account_archive': {'ewallet1@alvearesolutions.ro': 'TestEWalletUser1'}}}
+
+[ + ]: Prerequisites -
+[...]: Client action RequestClientID
+[...]: Client action RequestSessionToken
+[...]: Client action CreateMaster
+
+[ * ]: Client action AcquireMaster
+[ > ]: Instruction Set: {'controller': 'client', 'ctype': 'action', 'action': 'acquire', 'acquire': 'master', 'client_id': 'ewsm-uid:LIH7tKdnLpCsE8rVOSLT:1602853731.4997716', 'session_token': 'ewsm-st:FI0fkDts62PkSzvtU9Z4:1602853731.5043752', 'master': 'master1@alvearesolutions.ro', 'key': 'EWSC-Master-Key-Code'}
+[ < ]: Response: {'failed': False, 'client_id': 'ewsm-uid:LIH7tKdnLpCsE8rVOSLT:1602853731.4997716', 'master': 'master1@alvearesolutions.ro'}
+
+[ + ]: Prerequisites -
+[...]: Client action RequestClientID
+[...]: Client action RequestSessionToken
+[...]: Client action NewMaster
+[...]: Client action AcquireMaster
+[...]: User action CreateAccount (1)
+[...]: User action CreateAccount (2)
+[...]: User action AccountLogin (2)
+
+[ * ]: User action CreateContactRecord
+[ > ]: Instruction Set: {'controller': 'client', 'ctype': 'action', 'action': 'new', 'new': 'contact', 'contact': 'record', 'client_id': 'ewsm-uid:FVcOPsBYk2JsSHCSYWCg:1602853738.6843312', 'session_token': 'ewsm-st:BgM6Z9BmxaFAeqBNkLZm:1602853738.6919281', 'contact_list': 2, 'user_name': 'Test User Name', 'user_email': 'ewallet1@alvearesolutions.ro', 'user_phone': '123454321', 'user_reference': 'Test Mockup', 'notes': 'Notes added by functional test'}
+[ < ]: Response: {'failed': False, 'contact_record': 1, 'contact_list': 3}
+
+[ + ]: Prerequisites -
+[...]: Client action RequestClientID
+[...]: Client action RequestSessionToken
+
+[ * ]: Client action CheckCTokenLinked
+[ > ]: Instruction Set: {'controller': 'client', 'ctype': 'action', 'action': 'verify', 'verify': 'ctoken', 'ctoken': 'linked', 'client_id': 'ewsm-uid:BmC8eNNOygVIsK9o82cO:1602853746.0608716'}
+[ < ]: Response: {'failed': False, 'client_id': 'ewsm-uid:BmC8eNNOygVIsK9o82cO:1602853746.0608716', 'linked': True, 'session_token': 'ewsm-st:HBS3cKBgMZZL2KNuUiug:1602853746.0669494'}
+
+[ + ]: Prerequisites -
+[...]: User action RequestClientID
+[...]: User action RequestSessionToken
+
+[ * ]: Client action CheckCTokenSession
+[ > ]: Instruction Set: {'controller': 'client', 'ctype': 'action', 'action': 'verify', 'verify': 'ctoken', 'ctoken': 'session', 'client_id': 'ewsm-uid:AZdhgrbhrnL70KIJLG6l:1602853749.5558064'}
+[ < ]: Response: {'failed': False, 'client_id': 'ewsm-uid:AZdhgrbhrnL70KIJLG6l:1602853749.5558064', 'plugged': True, 'session': 2}
+
+[ + ]: Prerequisites -
+[...]: Client action RequestClientID
+[...]: Client action RequestSessionToken
+[...]: Client action NewMaster
+[...]: Client action AcquireMaster
+
+[ * ]: Client action CheckCTokenStatus
+[ > ]: Instruction Set: {'controller': 'client', 'ctype': 'action', 'action': 'verify', 'verify': 'ctoken', 'ctoken': 'status', 'client_id': 'ewsm-uid:mWh930p1f4VMOy0W3vh6:1602853753.4597416'}
+[ < ]: Response: {'failed': False, 'client_id': 'ewsm-uid:mWh930p1f4VMOy0W3vh6:1602853753.4597416', 'valid': True, 'linked': True, 'plugged': True, 'master': True, 'session_token': 'ewsm-st:9XTwYgiPw0EP9B8L7nDZ:1602853753.466467', 'session': 2, 'acquired': 'master1@alvearesolutions.ro'}
+
+[ + ]: Prerequisites -
+[...]: Client action RequestClientID
+
+[ * ]: Client action CheckCTokenValid
+[ > ]: Instruction Set: {'controller': 'client', 'ctype': 'action', 'action': 'verify', 'verify': 'ctoken', 'ctoken': 'validity', 'client_id': 'ewsm-uid:d4mmP5j1CkCU5xv8meVT:1602853759.1706243'}
+[ < ]: Response: {'failed': False, 'client_id': 'ewsm-uid:d4mmP5j1CkCU5xv8meVT:1602853759.1706243', 'valid': True, 'registered': True, 'expired': False}
+
+[ + ]: Prerequisites -
+[...]: Client action RequestClientID
+[...]: Client action RequestSessionToken
+
+[ * ]: Client action CheckSTokenLinked
+[ > ]: Instruction Set: {'controller': 'client', 'ctype': 'action', 'action': 'verify', 'verify': 'stoken', 'stoken': 'linked', 'session_token': 'ewsm-st:6URKeUO9p8ojyJvULLxN:1602853761.9865248'}
+[ < ]: Response: {'failed': False, 'session_token': 'ewsm-st:6URKeUO9p8ojyJvULLxN:1602853761.9865248', 'linked': True, 'client_id': 'ewsm-uid:hpEFk8LnnRzyTwwjipk0:1602853761.9814594'}
+
+[ + ]: Prerequisites -
+[...]: Client action RequestClientID
+[...]: Client action RequestSessionToken
+
+[ * ]: Client action CheckSTokenSession
+[ > ]: Instruction Set: {'controller': 'client', 'ctype': 'action', 'action': 'verify', 'verify': 'stoken', 'stoken': 'session', 'session_token': 'ewsm-st:HuUVkbQN7K6u4J1DFc10:1602853769.0515726'}
+[ < ]: Response: {'failed': False, 'session_token': 'ewsm-st:HuUVkbQN7K6u4J1DFc10:1602853769.0515726', 'plugged': True, 'session': 2}
+
+[ + ]: Prerequisites -
+[...]: Client action RequestClientID
+[...]: Client action RequestSessionToken
+
+[ * ]: Client action CheckSTokenSession
+[ > ]: Instruction Set: {'controller': 'client', 'ctype': 'action', 'action': 'verify', 'verify': 'stoken', 'stoken': 'status', 'session_token': 'ewsm-st:lIFLhySy4RBeOjXRddXB:1602853775.4396956'}
+[ < ]: Response: {'failed': False, 'session_token': 'ewsm-st:lIFLhySy4RBeOjXRddXB:1602853775.4396956', 'valid': True, 'linked': True, 'plugged': True, 'client_id': 'ewsm-uid:uazfnEKVXGnT7Gn2bPD8:1602853775.4349303', 'session': 2}
+
+[ + ]: Prerequisites -
+[...]: Client action RequestClientID
+[...]: Client action RequestSessionToken
+
+[ * ]: Client action CheckSTokenValidity
+[ > ]: Instruction Set: {'controller': 'client', 'ctype': 'action', 'action': 'verify', 'verify': 'stoken', 'stoken': 'validity', 'session_token': 'ewsm-st:INAT1jhPHQrxaNNVB9y2:1602853779.0602524'}
+[ < ]: Response: {'failed': False, 'session_token': 'ewsm-st:INAT1jhPHQrxaNNVB9y2:1602853779.0602524', 'valid': True, 'registered': True, 'expired': False}
+
+[ + ]: Prerequisites -
+[...]: Client action RequestClientID
+[...]: Client action RequestSessionToken
+[...]: Client action NewMaster
+[...]: Client action AcquireMaster
+[...]: User action CreateAccount (1)
+[...]: User action CreateAccount (2)
+[...]: User action AccountLogin (2)
+[...]: User action SupplyCredits
+[...]: User action ConvertCreditsToClock
+
+[ * ]: User action ConvertClockToCredits
+[ > ]: Instruction Set: {'controller': 'client', 'ctype': 'action', 'action': 'convert', 'convert': 'clock2credits', 'client_id': 'ewsm-uid:pG2DaYIp0Hz1PifmSNPb:1602853782.7343092', 'session_token': 'ewsm-st:8lDDUMVYRxkFjl6nGozA:1602853782.7436063', 'minutes': 10}
+[ < ]: Response: {'failed': False, 'conversion_record': 2, 'ewallet_credits': 90, 'credit_clock': 10.0, 'converted_minutes': 10.0}
 
 [ + ]: Prerequisistes -
-[...]: User action Request Client ID
-[...]: User action Request Session Token
-[...]: User action Create New Account
-[...]: User action Account Login
-[...]: User action Supply EWallet Credits
+[...]: Client action RequestClientID
+[...]: Client action RequestSessionToken
+[...]: Client action NewMaster
+[...]: Client action AcquireMaster
+[...]: User action CreateAccount (1)
+[...]: User action CreateAccount (2)
+[...]: User action AccountLogin (2)
+[...]: User action SupplyCredits
 
-[ * ]: User Action Convert Credits To Clock
-[ > ]: Instruction Set: {'controller': 'client', 'ctype': 'action', 'action': 'convert', 'convert': 'credits2clock', 'client_id': 'ewsm-uid:Pq9opsZwZis97l1L6GXc:1594520327.95652', 'session_token': 'ewsm-st:mlNQzcJJRRkv5mxXRpGc:1594520332.0498056', 'credits': 20, 'notes': 'EWallet user action Convert Credits To Clock notes added by functional test suit.'}
+[ * ]: User Action ConvertCreditsToClock
+[ > ]: Instruction Set: {'controller': 'client', 'ctype': 'action', 'action': 'convert', 'convert': 'credits2clock', 'client_id': 'ewsm-uid:CKdyegXfhNeKGmF5Qrii:1602853793.1665459', 'session_token': 'ewsm-st:HCf3cK7rdUIyknVyxjsb:1602853793.173359', 'credits': 20, 'notes': 'EWallet user action ConvertCreditsToClock notes added by EWSC functional test suit.'}
 [ < ]: Response: {'failed': False, 'conversion_record': 1, 'ewallet_credits': 80, 'credit_clock': 20.0, 'converted_credits': 20}
 
 [ + ]: Prerequisites -
-[...]: User action Request Client ID
-[...]: User action Request Session Token
+[...]: Client action RequestClientID
+[...]: Client action RequestSessionToken
+[...]: Client action NewMaster
+[...]: Client action AcquireMaster
 
-[ * ]: User action Create New Account
-[ > ]: Instruction Set: {'controller': 'client', 'ctype': 'action', 'action': 'new', 'new': 'account', 'client_id': 'ewsm-uid:mwNdYm0i9lrqEnUwvpJI:1594520335.7857122', 'session_token': 'ewsm-st:s2sVwwTkC36r9btI3Jhe:1594520339.3567944', 'user_name': 'TestEWalletUser1', 'user_pass': 'abc123!@#Secret', 'user_email': 'ewallet1@alvearesolutions.ro'}
-[ < ]: Response: {'failed': False, 'account': 'ewallet1@alvearesolutions.ro', 'account_data': {'id': 1, 'name': 'TestEWalletUser1', 'create_date': '12-07-2020 05:18:59', 'write_date': '12-07-2020 05:18:59', 'ewallet': 1, 'contact_list': 1, 'email': 'ewallet1@alvearesolutions.ro', 'phone': None, 'alias': None, 'state_code': 0, 'state_name': 'LoggedOut', 'ewallet_archive': {1: 'Credit EWallet'}, 'contact_list_archive': {1: 'Contact List'}}}
-
-[ + ]: Prerequisites -
-[...]: User action Request Client ID
-[...]: User action Request Session Token
-[...]: User action Create New Account
-[...]: User action Account Login
-
-[ * ]: User action Create Contact List
-[ > ]: Instruction Set: {'controller': 'client', 'ctype': 'action', 'action': 'new', 'new': 'contact', 'contact': 'list', 'client_id': 'ewsm-uid:dErkN6CfGyHm8jLgNq8C:1594520340.5758245', 'session_token': 'ewsm-st:qEIdh4IEgIUutdtvW4mH:1594520343.7717023'}
-[ < ]: Response: {'failed': False, 'contact_list': 3, 'list_data': {'id': 3, 'user': 2, 'reference': 'Contact List', 'create_date': '12-07-2020 05:19:06', 'write_date': '12-07-2020 05:19:06', 'records': {}}}
+[ * ]: User action CreateAccount
+[ > ]: Instruction Set: {'controller': 'client', 'ctype': 'action', 'action': 'new', 'new': 'account', 'client_id': 'ewsm-uid:Jy5tfJHmCF5GqvEm9Kpi:1602853801.2565317', 'session_token': 'ewsm-st:eSb0XivgJyQpeAb1S7T8:1602853801.261458', 'user_name': 'TestEWalletUser1', 'user_pass': 'abc123!@#Secret', 'user_email': 'ewallet1@alvearesolutions.ro'}
+[ < ]: Response: {'failed': False, 'account': 'ewallet1@alvearesolutions.ro', 'account_data': {'id': 2, 'name': 'TestEWalletUser1', 'create_date': '16-10-2020 16:10:02', 'write_date': '16-10-2020 16:10:03', 'ewallet': 2, 'contact_list': 2, 'email': 'ewallet1@alvearesolutions.ro', 'phone': None, 'alias': None, 'state': 0, 'ewallet_archive': {2: 'Credit EWallet'}, 'contact_list_archive': {2: 'Contact List'}, 'to_unlink': False, 'to_unlink_timestamp': None, 'subordonate_of': 1}}
 
 [ + ]: Prerequisites -
-[...]: User action Request Client ID
-[...]: User action Request Session Token
-[...]: User action Create New Account
-[...]: User action Account Login
+[...]: Client action RequestClientID
+[...]: Client action RequestSessionToken
+[...]: Client action NewMaster
+[...]: Client action AcquireMaster
+[...]: User action CreateAccount (1)
+[...]: User action CreateAccount (2)
+[...]: User action AccountLogin (2)
 
-[ * ]: User action Create Conversion Sheet
-[ > ]: Instruction Set: {'controller': 'client', 'ctype': 'action', 'action': 'new', 'new': 'conversion', 'conversion': 'list', 'client_id': 'ewsm-uid:cUanJG79vqP8RmR86f7O:1594520346.8102336', 'session_token': 'ewsm-st:a0JRcEbJd248aEFRG0o9:1594520349.1579287'}
-[ < ]: Response: {'failed': False, 'conversion_sheet': 3, 'sheet_data': {'id': 3, 'clock': 2, 'reference': 'Conversion Sheet', 'create_date': '12-07-2020 05:19:11', 'write_date': '12-07-2020 05:19:11', 'records': {}}}
-
-[ + ]: Prerequisites -
-[...]: User action Request Client ID
-[...]: User action Request Session Token
-[...]: User action Create New Account
-[...]: User action Account Login
-
-[ * ]: User action Create Credit Clock
-[ > ]: Instruction Set: {'controller': 'client', 'ctype': 'action', 'action': 'new', 'new': 'credit', 'credit': 'clock', 'client_id': 'ewsm-uid:MRLsV1e0AXFibJ1jl0gS:1594520351.4682689', 'session_token': 'ewsm-st:l09XrJicL7E5gzrYFW2d:1594520353.744707'}
-[ < ]: Response: {'failed': False, 'clock': 3, 'clock_data': {'id': 3, 'ewallet': 2, 'reference': 'Credit Clock', 'create_date': '12-07-2020 05:19:15', 'write_date': '12-07-2020 05:19:15', 'credit_clock': 0.0, 'clock_state': 'inactive', 'time_sheet': 3, 'time_sheet_archive': {3: 'Time Sheet'}, 'conversion_sheet': 3, 'conversion_sheet_archive': {3: 'Conversion Sheet'}}}
+[ * ]: User action CreateContactList
+[ > ]: Instruction Set: {'controller': 'client', 'ctype': 'action', 'action': 'new', 'new': 'contact', 'contact': 'list', 'client_id': 'ewsm-uid:EFL4ZxXWsvebu7zdyEk6:1602853806.8608394', 'session_token': 'ewsm-st:hQmi0TS2G4f0uoy1un0m:1602853806.8679821'}
+[ < ]: Response: {'failed': False, 'contact_list': 4, 'list_data': {'id': 4, 'user': 3, 'reference': 'Contact List', 'create_date': '16-10-2020 16:10:13', 'write_date': '16-10-2020 16:10:13', 'records': {}}}
 
 [ + ]: Prerequisites -
-[...]: User action Request Client ID
-[...]: User action Request Session Token
-[...]: User action Create New Account
-[...]: User action Account Login
+[...]: Client action RequestClientID
+[...]: Client action RequestSessionToken
+[...]: Client action NewMaster
+[...]: Client action AcquireMaster
+[...]: User action CreateAccount (1)
+[...]: User action CreateAccount (2)
+[...]: User action AccountLogin (2)
 
-[ * ]: User action Create Credit EWallet
-[ > ]: Instruction Set: {'controller': 'client', 'ctype': 'action', 'action': 'new', 'new': 'credit', 'credit': 'ewallet', 'client_id': 'ewsm-uid:iZhQoNzoJljP9CQLBGKz:1594520356.0601997', 'session_token': 'ewsm-st:SySamYxgMfQ3kRu2212a:1594520358.2762747'}
-[ < ]: Response: {'failed': False, 'ewallet': 3, 'ewallet_data': {'id': 3, 'user': 2, 'reference': 'Credit EWallet', 'create_date': '12-07-2020 05:19:20', 'write_date': '12-07-2020 05:19:20', 'credits': 0, 'clock': 3, 'clock_archive': {3: 'Credit Clock'}, 'transfer_sheet': 3, 'transfer_sheet_archive': {3: 'Transfer Sheet'}, 'invoice_sheet': 3, 'invoice_sheet_archive': {3: 'Invoice Sheet'}}}
-
-[ + ]: Prerequisites -
-[...]: User action Request Client ID
-[...]: User action Request Session Token
-[...]: User action Create New Account
-[...]: User action Account Login
-
-[ * ]: User action Create Invoice Sheet
-[ > ]: Instruction Set: {'controller': 'client', 'ctype': 'action', 'action': 'new', 'new': 'invoice', 'invoice': 'list', 'client_id': 'ewsm-uid:dpwJ7LPv5BESbtuKqxFh:1594520360.7730052', 'session_token': 'ewsm-st:2sO1rFbHjTINZQ8h3gtc:1594520363.5351388'}
-[ < ]: Response: {'failed': False, 'invoice_sheet': 3, 'sheet_data': {'id': 3, 'ewallet': 2, 'reference': 'Invoice Sheet', 'create_date': '12-07-2020 05:19:26', 'write_date': '12-07-2020 05:19:26', 'records': {}}}
+[ * ]: User action CreateConversionSheet
+[ > ]: Instruction Set: {'controller': 'client', 'ctype': 'action', 'action': 'new', 'new': 'conversion', 'conversion': 'list', 'client_id': 'ewsm-uid:WYAew2TiuAXQD4lo1nG4:1602853818.8657799', 'session_token': 'ewsm-st:7dGfOOjOUQMWflwS12fF:1602853818.870367'}
+[ < ]: Response: {'failed': False, 'conversion_sheet': 4, 'sheet_data': {'id': 4, 'clock': 3, 'reference': 'ConversionSheet', 'create_date': '16-10-2020 16:10:23', 'write_date': '16-10-2020 16:10:23', 'records': {}}}
 
 [ + ]: Prerequisites -
-[...]: User action Request Client ID
-[...]: User action Request Session Token
-[...]: User action Create New Account
-[...]: User action Account Login
+[...]: Client action RequestClientID
+[...]: Client action RequestSessionToken
+[...]: Client action NewMaster
+[...]: Client action AcquireMaster
+[...]: User action CreateAccount (1)
+[...]: User action CreateAccount (2)
+[...]: User action AccountLogin (2)
 
-[ * ]: User action Create Time Sheet
-[ > ]: Instruction Set: {'controller': 'client', 'ctype': 'action', 'action': 'new', 'new': 'time', 'time': 'list', 'client_id': 'ewsm-uid:OJMurMJGDoIfmVUgFf9r:1594520366.3297675', 'session_token': 'ewsm-st:XLfxZunxgAUIt6pKJl6M:1594520368.75237'}
-[ < ]: Response: {'failed': False, 'time_sheet': 3, 'sheet_data': {'id': 3, 'clock': 2, 'reference': 'Time Sheet', 'create_date': '12-07-2020 05:19:30', 'write_date': '12-07-2020 05:19:30', 'records': {}}}
+[ * ]: User action CreateCreditClock
+[ > ]: Instruction Set: {'controller': 'client', 'ctype': 'action', 'action': 'new', 'new': 'credit', 'credit': 'clock', 'client_id': 'ewsm-uid:RE5l1t0DTqWV3S7GWkso:1602853826.8276725', 'session_token': 'ewsm-st:c6mhRRFUmVdVU6a8xliG:1602853826.8340802'}
+[ < ]: Response: {'failed': False, 'clock': 4, 'clock_data': {'id': 4, 'ewallet': 3, 'reference': 'Credit Clock', 'create_date': '16-10-2020 16:10:30', 'write_date': '16-10-2020 16:10:30', 'credit_clock': 0.0, 'clock_state': 'inactive', 'time_sheet': 4, 'time_sheet_archive': {4: 'TimeSheet'}, 'conversion_sheet': 4, 'conversion_sheet_archive': {4: 'ConversionSheet'}}}
 
-[ + ]: Prerequisites -
-[...]: User action Request Client ID
-[...]: User action Request Session Token
-[...]: User action Create New Account
-[...]: User action Account Login
+[ + ]: Prerequisites - 
+[...]: Client action RequestClientID
+[...]: Client action RequestSessionToken
+[...]: Client action NewMaster
+[...]: Client action AcquireMaster
+[...]: User action CreateAccount (1)
+[...]: User action CreateAccount (2)
+[...]: User action AccountLogin
 
-[ * ]: User action Create Transfer Sheet
-[ > ]: Instruction Set: {'controller': 'client', 'ctype': 'action', 'action': 'new', 'new': 'transfer', 'transfer': 'list', 'client_id': 'ewsm-uid:RugshzqgRi9JuqxGaeIt:1594520370.9929948', 'session_token': 'ewsm-st:njDt5VlftfnZBAqnYtMa:1594520374.2339847'}
-[ < ]: Response: {'failed': False, 'transfer_sheet': 3, 'sheet_data': {'id': 3, 'ewallet': 2, 'reference': 'Transfer Sheet', 'create_date': '12-07-2020 05:19:36', 'write_date': '12-07-2020 05:19:36', 'records': {}}}
-
-[ + ]: Prerequisites -
-[...]: User action Request Client ID
-[...]: User action Request Session Token
-[...]: User action Create New Account
-[...]: User action Account Login
-
-[ * ]: User action Edit Account
-[ > ]: Instruction Set: {'controller': 'client', 'ctype': 'action', 'action': 'edit', 'edit': 'account', 'client_id': 'ewsm-uid:i8C7Unx7DRB8vSI98xgT:1594520376.3599312', 'session_token': 'ewsm-st:fFQA6UEU7EqmpscMQ4Ud:1594520378.2902505', 'user_name': 'Edited', 'user_phone': 'Edited', 'user_email': 'Edited', 'user_pass': 'Edited', 'user_alias': 'Edited'}
-[ < ]: Response: {'failed': False, 'account': 'Edited', 'edit': {'name': True, 'pass': False, 'alias': True, 'email': False, 'phone': True}, 'account_data': {'id': 2, 'name': 'Edited', 'create_date': '12-07-2020 05:19:38', 'write_date': '12-07-2020 05:19:40', 'ewallet': 2, 'contact_list': 2, 'email': 'ewallet2@alvearesolutions.ro', 'phone': 'Edited', 'alias': 'Edited', 'state_code': 1, 'state_name': 'LoggedIn', 'ewallet_archive': {2: 'Credit EWallet'}, 'contact_list_archive': {2: 'Contact List'}}}
+[ * ]: User action CreateCreditEWallet
+[ > ]: Instruction Set: {'controller': 'client', 'ctype': 'action', 'action': 'new', 'new': 'credit', 'credit': 'ewallet', 'client_id': 'ewsm-uid:ye0C9nruNN024NHJzSvv:1602853835.2035644', 'session_token': 'ewsm-st:QW54RCDkyvpIeuuuXK9R:1602853835.2083454'}
+[ < ]: Response: {'failed': False, 'ewallet': 4, 'ewallet_data': {'id': 4, 'user': 3, 'reference': 'Credit EWallet', 'create_date': '16-10-2020 16:10:40', 'write_date': '16-10-2020 16:10:40', 'credits': 0, 'clock': 4, 'clock_archive': {4: 'Credit Clock'}, 'transfer_sheet': 4, 'transfer_sheet_archive': {4: 'Transfer Sheet'}, 'invoice_sheet': 4, 'invoice_sheet_archive': {4: 'Invoice Sheet'}}}
 
 [ + ]: Prerequisites -
-[...]: User action Request Client ID
-[...]: User action Request Session Token
-[...]: User action Create New Account
-[...]: User action Account Login
-[...]: User action Supply EWallet Credits
+[...]: Client action RequestClientID
+[...]: Client action RequestSessionToken
+[...]: Client action NewMaster
+[...]: Client action AcquireMaster
+[...]: User action CreateAccount (1)
+[...]: User action CreateAccount (2)
+[...]: User action AccountLogin (2)
 
-[ * ]: User action Pay Credits
-[ > ]: Instruction Set: {'controller': 'client', 'ctype': 'action', 'action': 'pay', 'pay': 'ewallet1@alvearesolutions.ro', 'credits': 10, 'client_id': 'ewsm-uid:vB4vIp2gJpRWiSH01y4x:1594520380.0942068', 'session_token': 'ewsm-st:aP985uysMH8MeklqVcTp:1594520382.1964824'}
-[ < ]: Response: {'failed': False, 'payed': 'ewallet1@alvearesolutions.ro', 'ewallet_credits': 90, 'spent_credits': 10, 'invoice_record': 2, 'transfer_record': 3}
+[ * ]: User action CreateInvoiceSheet
+[ > ]: Instruction Set: {'controller': 'client', 'ctype': 'action', 'action': 'new', 'new': 'invoice', 'invoice': 'list', 'client_id': 'ewsm-uid:r703dmcxffmgBHKdLcVQ:1602853844.4393592', 'session_token': 'ewsm-st:0f8l0VGFBqcwGe0rGByr:1602853844.4441328'}
+[ < ]: Response: {'failed': False, 'invoice_sheet': 4, 'sheet_data': {'id': 4, 'ewallet': 3, 'reference': 'InvoiceSheet', 'create_date': '16-10-2020 16:10:48', 'write_date': '16-10-2020 16:10:48', 'records': {}}}
 
-[ * ]: User action Request Client ID
+[ + ]: Prerequisites -
+[...]: Client action RequestClientID
+[...]: Client action RequestSessionToken
+
+[ * ]: Client action NewMaster
+[ > ]: Instruction Set: {'controller': 'client', 'ctype': 'action', 'action': 'new', 'new': 'master', 'master': 'account', 'client_id': 'ewsm-uid:D4JEG67GAtgbhX6Sc4wl:1602853853.5527866', 'session_token': 'ewsm-st:wuz8B4lLnE2rhc8D4my7:1602853853.558134', 'user_name': 'TestEWalletMaster1', 'user_pass': 'abc123!@#Secret', 'user_email': 'master1@alvearesolutions.ro', 'user_phone': '555 555 555', 'user_alias': 'TEWM1', 'company': 'TestClient INC', 'address': 'Iasi, jud. Iasi, Str. Canta, Nr. 40'}
+[ < ]: Response: {'failed': False, 'account': 'master1@alvearesolutions.ro', 'account_data': {'id': 1, 'name': 'TestEWalletMaster1', 'create_date': '16-10-2020 16:10:54', 'write_date': '16-10-2020 16:10:54', 'email': 'master1@alvearesolutions.ro', 'phone': '555 555 555', 'alias': 'TEWM1', 'key_code': 'EWSC-Master-Key-Code', 'account_limit': 10, 'company': 'TestClient INC', 'address': 'Iasi, jud. Iasi, Str. Canta, Nr. 40', 'subordonate_pool': {}, 'acquired_ctokens': 0, 'active': True}}
+
+[ + ]: Prerequisites -
+[...]: Client action RequestClientID
+[...]: Client action RequestSessionToken
+[...]: Client action NewMaster
+[...]: Client action AcquireMaster
+[...]: User action CreateAccount (1)
+[...]: User action CreateAccount (2)
+[...]: User action AccountLogin (2)
+
+[ * ]: User action CreateTimeSheet
+[ > ]: Instruction Set: {'controller': 'client', 'ctype': 'action', 'action': 'new', 'new': 'time', 'time': 'list', 'client_id': 'ewsm-uid:R33vDfPF88YGoagHQKPM:1602853857.7145743', 'session_token': 'ewsm-st:MRUrhjMbZ2i3apo5Z35X:1602853857.7211123'}
+[ < ]: Response: {'failed': False, 'time_sheet': 4, 'sheet_data': {'id': 4, 'clock': 3, 'reference': 'TimeSheet', 'create_date': '16-10-2020 16:11:01', 'write_date': '16-10-2020 16:11:01', 'records': {}}}
+
+[ + ]: Prerequisites -
+[...]: Client action RequestClientID
+[...]: Client action RequestSessionToken
+[...]: Client action NewMaster
+[...]: Client action AcquireMaster
+[...]: User action CreateAccount (1)
+[...]: User action CreateAccount (2)
+[...]: User action AccountLogin (2)
+
+[ * ]: User action CreateTransferSheet
+[ > ]: Instruction Set: {'controller': 'client', 'ctype': 'action', 'action': 'new', 'new': 'transfer', 'transfer': 'list', 'client_id': 'ewsm-uid:sgRlkQPKXDPp6qUqKa5b:1602853868.535819', 'session_token': 'ewsm-st:ofWCua21sWpDrjSe4ilU:1602853868.540651'}
+[ < ]: Response: {'failed': False, 'transfer_sheet': 4, 'sheet_data': {'id': 4, 'ewallet': 3, 'reference': 'TransferSheet', 'create_date': '16-10-2020 16:11:12', 'write_date': '16-10-2020 16:11:12', 'records': {}}}
+
+[ + ]: Prerequisites -
+[...]: Client action RequestClientID
+[...]: Client action RequestSessionToken
+[...]: Client action CreateMaster
+[...]: Client action AcquireMaster
+[...]: User action CreateAccount (2)
+[...]: User action AccountLogin (2)
+
+[ * ]: User action CTokenKeepAlive
+[ > ]: Instruction Set: {'controller': 'client', 'ctype': 'action', 'action': 'alive', 'alive': 'ctoken', 'client_id': 'ewsm-uid:44Iib3Hfm5lHzN31GJ9n:1602853877.46075', 'session_token': 'ewsm-st:CIiwwsbDwqhcvMqii6ck:1602853877.465504'}
+[ < ]: Response: {'failed': False, 'ctoken': 'ewsm-uid:44Iib3Hfm5lHzN31GJ9n:1602853877.46075', 'extended': 30, 'time_unit': 'minutes', 'ctoken_data': {'stoken': 'ewsm-st:CIiwwsbDwqhcvMqii6ck:1602853877.465504', 'acquired_master': 1, 'create_date': '16-10-2020 16:11:17', 'write_date': '16-10-2020 16:11:21', 'label': 'ewsm-uid:44Iib3Hfm5lHzN31GJ9n:1602853877.46075', 'active': True, 'unlink': False, 'valid_to': '16-10-2020 16:41:21'}}
+
+[ + ]: Prerequisites -
+[...]: Client action RequestClientID
+[...]: Client action RequestSessionToken
+[...]: Client action NewMaster
+[...]: Client action AcquireMaster
+[...]: User action CreateAccount (1)
+[...]: User action CreateAccount (2)
+[...]: User action AccountLogin (2)
+
+[ * ]: User action EditAccount
+[ > ]: Instruction Set: {'controller': 'client', 'ctype': 'action', 'action': 'edit', 'edit': 'account', 'client_id': 'ewsm-uid:aqlxg3AARFTFs6QvZubP:1602853885.1444206', 'session_token': 'ewsm-st:eN6UBjubXir3Lwn9wvrw:1602853885.1512153', 'user_name': 'Edited', 'user_phone': 'Edited', 'user_email': 'Edited', 'user_pass': 'Editedsdas@!@R2312e.', 'user_alias': 'Edited'}
+[ < ]: Response: {'failed': False, 'account': 'Edited', 'edit': {'name': True, 'pass': True, 'alias': True, 'email': True, 'phone': True}, 'account_data': {'id': 3, 'name': 'Edited', 'create_date': '16-10-2020 16:11:27', 'write_date': '16-10-2020 16:11:29', 'ewallet': 3, 'contact_list': 3, 'email': 'Edited', 'phone': 'Edited', 'alias': 'Edited', 'state': 1, 'ewallet_archive': {3: 'Credit EWallet'}, 'contact_list_archive': {3: 'Contact List'}, 'to_unlink': False, 'to_unlink_timestamp': None, 'subordonate_of': 1}}
+
+[ + ]: Prerequisites -
+[...]: Client action RequestClientID
+[...]: Client action RequestSessionToken
+
+[ * ]: Client action IssueReport
+[ > ]: Instruction Set: {'controller': 'client', 'ctype': 'action', 'action': 'report', 'report': 'issue', 'session_token': 'ewsm-st:zM3bGNjeOrhb2VP4vZDn:1602853892.8440819', 'client_id': 'ewsm-uid:yohuTnAhJuyDF3PjcUdb:1602853892.8393219', 'issue': {'name': 'TestIssue', 'log': 'WyBFUlJPUiBdOiBXVEYsIEkgZGlkIG5vdCBleHBlY3QgdGhhdCB0byBoYXBwZW4uLi4=', 'email': 'test.client@email.com', 'details': ['Error-Type1', 42, None, {'failed': True, 'warning': 'Test warning message'}]}}
+[ < ]: Response: {'failed': False, 'issue': 'MC4wLjAuMDoxNjAyODUzODkzLjI1Nzc1MjQ=', 'timestamp': '16-10-2020 16:11:33', 'source': None, 'contact': 'test.client@email.com'}
+
+[ + ]: Prerequisites -
+[...]: Client action RequestClientID
+[...]: Client action RequestSessionToken
+[...]: Client action NewMaster
+[...]: Client action AcquireMaster
+[...]: User action CreateAccount (1)
+[...]: User action CreateAccount (2)
+[...]: User action AccountLogin (2)
+[...]: User action SupplyCredits
+
+[ * ]: User action PayCredits
+[ > ]: Instruction Set: {'controller': 'client', 'ctype': 'action', 'action': 'pay', 'pay': 'ewallet1@alvearesolutions.ro', 'credits': 10, 'client_id': 'ewsm-uid:wfYqN5McGJCTBmqCInpm:1602853896.6099796', 'session_token': 'ewsm-st:hDpGatXJUWWK0YrkqaDB:1602853896.6156542'}
+[ < ]: Response: {'failed': False, 'paid': 'ewallet1@alvearesolutions.ro', 'ewallet_credits': 90, 'spent_credits': 10, 'invoice_record': 3, 'transfer_record': 3}
+
+[ + ]: Prerequisites -
+[...]: Client action RequestClientID
+[...]: Client action RequestSessionToken
+[...]: Client action NewMaster
+[...]: Client action AcquireMaster
+[...]: User action CreateAccount (1)
+[...]: User action CreateAccount (2)
+[...]: User action AccountLogin (2)
+[...]: User action UnlinkAccount
+
+[ * ]: User action RecoverAccount
+[ > ]: Instruction Set: {'controller': 'client', 'ctype': 'action', 'action': 'recover', 'recover': 'account', 'client_id': 'ewsm-uid:ETsJq3QervVFA69QQPKP:1602853906.3771906', 'session_token': 'ewsm-st:CUD0Rb7f4K60BzeoNTY4:1602853906.3819878'}
+[ < ]: Response: {'failed': False, 'account': 'ewallet2@alvearesolutions.ro', 'account_data': {'id': 3, 'name': 'TestEWalletUser2', 'create_date': '16-10-2020 16:11:49', 'write_date': '16-10-2020 16:11:51', 'ewallet': 3, 'contact_list': 3, 'email': 'ewallet2@alvearesolutions.ro', 'phone': None, 'alias': None, 'state': 1, 'ewallet_archive': {3: 'Credit EWallet'}, 'contact_list_archive': {3: 'Contact List'}, 'to_unlink': False, 'to_unlink_timestamp': None, 'subordonate_of': 1}, 'session_data': {'session_user_account': 'ewallet2@alvearesolutions.ro', 'session_credit_ewallet': 3, 'session_contact_list': 3, 'session_account_archive': {'ewallet1@alvearesolutions.ro': 'TestEWalletUser1', 'ewallet2@alvearesolutions.ro': 'TestEWalletUser2'}}}
+
+[ + ]: Prerequisites -
+[...]: Client action RequestClientID
+[...]: Client action RequestSessionToken
+[...]: Client action CreateMaster
+[...]: Client action AcquireMaster
+[...]: User action CreateAccount
+[...]: User action AccountLogin
+
+[ * ]: Client action ReleaseMaster
+[ > ]: Instruction Set: {'controller': 'client', 'ctype': 'action', 'action': 'release', 'release': 'master', 'client_id': 'ewsm-uid:tA4DhkC7dKp80clx08Du:1602853919.9131975', 'session_token': 'ewsm-st:HBcm83Ha8hFzNKlrToIQ:1602853919.9681423', 'master': 'ewallet1@alvearesolutions.ro', 'key': 'EWSC-Master-Key-Code'}
+[ < ]: Response: {'failed': False, 'client_id': 'ewsm-uid:tA4DhkC7dKp80clx08Du:1602853919.9131975', 'released': 'master3@alvearesolutions.ro', 'ctoken_data': {'stoken': 'ewsm-st:HBcm83Ha8hFzNKlrToIQ:1602853919.9681423', 'acquired_master': None, 'create_date': '16-10-2020 16:11:59', 'write_date': '16-10-2020 16:12:04', 'label': 'ewsm-uid:tA4DhkC7dKp80clx08Du:1602853919.9131975', 'active': True, 'unlink': False, 'valid_to': '16-10-2020 16:41:59'}}
+
+[ * ]: Client action RequestClientID
 [ > ]: Instruction Set: {'controller': 'client', 'ctype': 'action', 'action': 'request', 'request': 'client_id'}
-[ < ]: Response: {'failed': False, 'client_id': 'ewsm-uid:9kMrYr892B59LlXPco1l:1594520385.237549'}
+[ < ]: Response: {'failed': False, 'client_id': 'ewsm-uid:W34dr1fvUBBde1wXU20t:1602853928.6376731'}
 
 [ + ]: Prerequisites -
-[...]: User action Request Client ID
+[...]: Client action RequestClientID
 
-[ * ]: User action Request Session Token
-[ > ]: Instruction Set: {'controller': 'client', 'ctype': 'action', 'action': 'request', 'request': 'session_token', 'client_id': 'ewsm-uid:JVpT4BRNjJ4zr1A61Zkc:1594520385.2512605'}
-[ < ]: Response: {'failed': False, 'session_token': 'ewsm-st:mFA8Sf9CxQZWVfSxqCHZ:1594520388.6643867'}
+[ * ]: Client action RequestSessionToken
+[ > ]: Instruction Set: {'controller': 'client', 'ctype': 'action', 'action': 'request', 'request': 'session_token', 'client_id': 'ewsm-uid:gXQCHxcV7YMwFtPSVmpI:1602853932.0200627'}
+[ < ]: Response: {'failed': False, 'session_token': 'ewsm-st:IhUbTr8JU0E4IPK3ovLd:1602853932.0251207'}
 
 [ + ]: Prerequisites -
-[...]: User action Request Client ID
-[...]: User action Request Session Token
-[...]: User action Create New Account
-[...]: User action Account Login
+[...]: Client action RequestClientID
+[...]: Client action RequestSessionToken
+[...]: Client action CreateMaster
+[...]: Client action AcquireMaster
+[...]: User action CreateAccount (2)
+[...]: User action AccountLogin (2)
 
-[ * ]: User action Supply Credits
-[ > ]: Instruction Set: {'controller': 'client', 'ctype': 'action', 'action': 'supply', 'supply': 'credits', 'client_id': 'ewsm-uid:K34uv5viKkMgfxIKBZvW:1594520388.6725106', 'session_token': 'ewsm-st:QT42ClA9pdmib5agxESY:1594520392.5960832', 'currency': 'RON', 'credits': 100, 'cost': 4.7, 'notes': 'EWallet user action Supply notes added by functional test suit.'}
+[ * ]: User action STokenKeepAlive
+[ > ]: Instruction Set: {'controller': 'client', 'ctype': 'action', 'action': 'alive', 'alive': 'stoken', 'client_id': 'ewsm-uid:hYNPkXfhfEuntBHLzFEW:1602853935.9025865', 'session_token': 'ewsm-st:gBQAVYnWzhJ19XGUwXHx:1602853935.9073925'}
+[ < ]: Response: {'failed': False, 'stoken': 'ewsm-st:gBQAVYnWzhJ19XGUwXHx:1602853935.9073925', 'extended': 30, 'time_unit': 'minutes', 'stoken_data': {'ctoken': 'ewsm-uid:hYNPkXfhfEuntBHLzFEW:1602853935.9025865', 'worker_id': 1, 'create_date': '16-10-2020 16:12:15', 'write_date': '16-10-2020 16:12:19', 'label': 'ewsm-st:gBQAVYnWzhJ19XGUwXHx:1602853935.9073925', 'active': True, 'unlink': False, 'valid_to': '16-10-2020 16:42:19'}}
+
+[ + ]: Prerequisites -
+[...]: Client action RequestClientID
+[...]: Client action RequestSessionToken
+[...]: Client action NewMaster
+[...]: Client action AcquireMaster
+[...]: User action CreateAccount (1)
+[...]: User action CreateAccount (2)
+[...]: User action AccountLogin (2)
+
+[ * ]: User action SupplyCredits
+[ > ]: Instruction Set: {'controller': 'client', 'ctype': 'action', 'action': 'supply', 'supply': 'credits', 'client_id': 'ewsm-uid:I6C5Ekl2P1D7BS4fEq7Z:1602853944.3593109', 'session_token': 'ewsm-st:tEotJWvBDOxjcSLL0G4X:1602853944.3646512', 'currency': 'RON', 'credits': 100, 'cost': 4.7, 'notes': 'EWallet user action SupplyCredits notes added by EWSC functional test suit.'}
 [ < ]: Response: {'failed': False, 'ewallet_credits': 100, 'supplied_credits': 100, 'transfer_record': 1, 'invoice_record': 1}
 
 [ + ]: Prerequisites -
-[...]: User action Request Client ID
-[...]: User action Request Session Token
-[...]: User action Create New Account (1)
-[...]: User action Create New Account (2)
-[...]: User action Account Login (1)
-[...]: User action Account Login (2)
+[...]: Client action RequestClientID
+[...]: Client action RequestSessionToken
+[...]: Client action NewMaster
+[...]: Client action AcquireMaster
+[...]: User action CreateAccount (1)
+[...]: User action CreateAccount (2)
+[...]: User action AccountLogin (2)
+[...]: User action AccountLogin (1)
 
-[ * ]: User action Switch Active Session User
-[ > ]: Instruction Set: {'controller': 'client', 'ctype': 'action', 'action': 'switch', 'switch': 'account', 'account': 'ewallet2@alvearesolutions.ro', 'client_id': 'ewsm-uid:ODyDUj4w18Hj5qHfisVo:1594520394.8423676', 'session_token': 'ewsm-st:VQTkR1ItiK5OI9Lo2cDj:1594520396.8437536'}
-[ < ]: Response: {'failed': False, 'account': 'ewallet2@alvearesolutions.ro', 'session_data': {'session_user_account': 'ewallet2@alvearesolutions.ro', 'session_credit_ewallet': 2, 'session_contact_list': 2, 'session_account_archive': {'ewallet1@alvearesolutions.ro': 'TestEWalletUser1', 'ewallet2@alvearesolutions.ro': 'TestEWalletUser2'}}}
-
-[ + ]: Prerequisites -
-[...]: User action Request Client ID
-[...]: User action Request Session Token
-[...]: User action Create New Account
-[...]: User action Account Login
-[...]: User action Create Contact List
-
-[ * ]: User action Switch Contact List
-[ > ]: Instruction Set: {'controller': 'client', 'ctype': 'action', 'action': 'switch', 'switch': 'contact_list', 'list_id': 2, 'client_id': 'ewsm-uid:E66RoxbJ4CHMxEg4qf5M:1594520399.118334', 'session_token': 'ewsm-st:t2Rm8LGw3r3IWuqMHnRT:1594520401.2726505'}
-[ < ]: Response: {'failed': False, 'contact_list': 2, 'list_data': {'id': 2, 'user': 2, 'reference': 'Contact List', 'create_date': '12-07-2020 05:20:02', 'write_date': '12-07-2020 05:20:02', 'records': {}}}
+[ * ]: User action SwitchSessionUser
+[ > ]: Instruction Set: {'controller': 'client', 'ctype': 'action', 'action': 'switch', 'switch': 'account', 'account': 'ewallet2@alvearesolutions.ro', 'client_id': 'ewsm-uid:CdxEa2qth8UQ4vMrP4Nn:1602853955.928544', 'session_token': 'ewsm-st:czGucJwT0C9ilgoDetKO:1602853955.935814'}
+[ < ]: Response: {'failed': False, 'account': 'ewallet2@alvearesolutions.ro', 'session_data': {'session_user_account': 'ewallet2@alvearesolutions.ro', 'session_credit_ewallet': 3, 'session_contact_list': 3, 'session_account_archive': {'ewallet1@alvearesolutions.ro': 'TestEWalletUser1', 'ewallet2@alvearesolutions.ro': 'TestEWalletUser2'}}}
 
 [ + ]: Prerequisites -
-[...]: User action Request Client ID
-[...]: User action Request Session Token
-[...]: User action Create New Account
-[...]: User action Account Login
-[...]: User action Create Conversion Sheet
+[...]: Client action RequestClientID
+[...]: Client action RequestSessionToken
+[...]: Client action NewMaster
+[...]: Client action AcquireMaster
+[...]: User action CreateAccount (1)
+[...]: User action CreateAccount (2)
+[...]: User action AccountLogin (2)
+[...]: User action CreateContactList
 
-[ * ]: User action Switch Conversion Sheet
-[ > ]: Instruction Set: {'controller': 'client', 'ctype': 'action', 'action': 'switch', 'switch': 'conversion_sheet', 'sheet_id': 2, 'client_id': 'ewsm-uid:vJKmslx9k3gPMgwd36Sm:1594520403.4948378', 'session_token': 'ewsm-st:0tkep7x8tIagU6rL2Icr:1594520405.5620215'}
-[ < ]: Response: {'failed': False, 'conversion_sheet': 2, 'sheet_data': {'id': 2, 'clock': 2, 'reference': 'Conversion Sheet', 'create_date': '12-07-2020 05:20:06', 'write_date': '12-07-2020 05:20:06', 'records': {}}}
-
-[ + ]: Prerequisites -
-[...]: User action Request Client ID
-[...]: User action Request Session Token
-[...]: User action Create New Account
-[...]: User action Account Login
-[...]: User action Create Credit Clock
-
-[ * ]: User action Switch Credit Clock
-[ > ]: Instruction Set: {'controller': 'client', 'ctype': 'action', 'action': 'switch', 'switch': 'credit', 'credit': 'clock', 'clock_id': 2, 'client_id': 'ewsm-uid:g7NpU2qZ4We8Zscnf6qy:1594520407.6312666', 'session_token': 'ewsm-st:6E2sOt1F9j7zpNhgyE2O:1594520409.8508413'}
-[ < ]: Response: {'failed': False, 'clock': 2, 'clock_data': {'id': 2, 'ewallet': 2, 'reference': 'Credit Clock', 'create_date': '12-07-2020 05:20:10', 'write_date': '12-07-2020 05:20:10', 'credit_clock': 0.0, 'clock_state': 'inactive', 'time_sheet': 2, 'time_sheet_archive': {2: 'Time Sheet'}, 'conversion_sheet': 2, 'conversion_sheet_archive': {2: 'Conversion Sheet'}}}
+[ * ]: User action SwitchContactList
+[ > ]: Instruction Set: {'controller': 'client', 'ctype': 'action', 'action': 'switch', 'switch': 'contact', 'contact': 'list', 'list_id': 3, 'client_id': 'ewsm-uid:81SPNkwdta42iEoYAmoU:1602853964.9120948', 'session_token': 'ewsm-st:qWg5dlrOkcemv2mwv33H:1602853964.9170086'}
+[ < ]: Response: {'failed': False, 'contact_list': 3, 'list_data': {'id': 3, 'user': 3, 'reference': 'Contact List', 'create_date': '16-10-2020 16:12:47', 'write_date': '16-10-2020 16:12:47', 'records': {}}}
 
 [ + ]: Prerequisites -
-[...]: User action Request Client ID
-[...]: User action Request Session Token
-[...]: User action Create New Account
-[...]: User action Account Login
-[...]: User action Create Credit EWallet
+[...]: Client action RequestClientID
+[...]: Client action RequestSessionToken
+[...]: Client action NewMaster
+[...]: Client action AcquireMaster
+[...]: User action CreateAccount (1)
+[...]: User action CreateAccount (2)
+[...]: User action AccountLogin (2)
+[...]: User action CreateConversionSheet
 
-[ * ]: User action Switch Credit EWallet
-[ > ]: Instruction Set: {'controller': 'client', 'ctype': 'action', 'action': 'switch', 'switch': 'credit', 'credit': 'ewallet', 'ewallet_id': 2, 'client_id': 'ewsm-uid:7qD6cERzjDSYoUTE58S6:1594520412.3143327', 'session_token': 'ewsm-st:Ibrh2LbKBRrpQ3KGExvw:1594520414.5741177'}
-[ < ]: Response: {'failed': False, 'ewallet': 2, 'ewallet_data': {'id': 2, 'user': 2, 'reference': 'Credit EWallet', 'create_date': '12-07-2020 05:20:15', 'write_date': '12-07-2020 05:20:16', 'credits': 0, 'clock': 2, 'clock_archive': {2: 'Credit Clock'}, 'transfer_sheet': 2, 'transfer_sheet_archive': {2: 'Transfer Sheet'}, 'invoice_sheet': 2, 'invoice_sheet_archive': {2: 'Invoice Sheet'}}}
-
-[ + ]: Prerequisites -
-[...]: User action Request Client ID
-[...]: User action Request Session Token
-[...]: User action Create New Account
-[...]: User action Account Login
-[...]: User action Create Invoice Sheet
-
-[ * ]: User action Switch Invoice Sheet
-[ > ]: Instruction Set: {'controller': 'client', 'ctype': 'action', 'action': 'switch', 'switch': 'invoice_sheet', 'sheet_id': 2, 'client_id': 'ewsm-uid:lKrY83jqm0qVO2aj8NZm:1594520418.4601908', 'session_token': 'ewsm-st:PH457flloAvDvOQYuGSO:1594520420.9445035'}
-[ < ]: Response: {'failed': False, 'invoice_sheet': 2, 'sheet_data': {'id': 2, 'ewallet': 2, 'reference': 'Invoice Sheet', 'create_date': '12-07-2020 05:20:22', 'write_date': '12-07-2020 05:20:22', 'records': {}}}
+[ * ]: User action SwitchConversionSheet
+[ > ]: Instruction Set: {'controller': 'client', 'ctype': 'action', 'action': 'switch', 'switch': 'conversion', 'conversion': 'list', 'sheet_id': 3, 'client_id': 'ewsm-uid:Vij3u4tV3peVE42tJ5qT:1602853976.7792513', 'session_token': 'ewsm-st:XpBeuK01iWBFCnfRW7s6:1602853976.8389301'}
+[ < ]: Response: {'failed': False, 'conversion_sheet': 3, 'sheet_data': {'id': 3, 'clock': 3, 'reference': 'ConversionSheet', 'create_date': '16-10-2020 16:13:00', 'write_date': '16-10-2020 16:13:00', 'records': {}}}
 
 [ + ]: Prerequisites -
-[...]: User action Request Client ID
-[...]: User action Request Session Token
-[...]: User action Create New Account
-[...]: User action Account Login
-[...]: User action Create Time Sheet
+[...]: Client action RequestClientID
+[...]: Client action RequestSessionToken
+[...]: Client action NewMaster
+[...]: Client action AcquireMaster
+[...]: User action CreateAccount (1)
+[...]: User action CreateAccount (2)
+[...]: User action AccountLogin (2)
+[...]: User action CreateCreditClock
 
-[ * ]: User action Switch Time Sheet
-[ > ]: Instruction Set: {'controller': 'client', 'ctype': 'action', 'action': 'switch', 'switch': 'time_sheet', 'sheet_id': 2, 'client_id': 'ewsm-uid:vRcJJlECKUQDVEpkQUJA:1594520423.2627048', 'session_token': 'ewsm-st:EolWiO0Rz4A7w9BkhvoP:1594520425.5481076'}
-[ < ]: Response: {'failed': False, 'time_sheet': 2, 'sheet_data': {'id': 2, 'clock': 2, 'reference': 'Time Sheet', 'create_date': '12-07-2020 05:20:26', 'write_date': '12-07-2020 05:20:26', 'records': {}}}
-
-[ + ]: Prerequisites -
-[...]: User action Request Client ID
-[...]: User action Request Session Token
-[...]: User action Create New Account
-[...]: User action Account Login
-[...]: User action Create Transfer Sheet
-
-[ * ]: User action Switch Transfer Sheet
-[ > ]: Instruction Set: {'controller': 'client', 'ctype': 'action', 'action': 'switch', 'switch': 'transfer_sheet', 'client_id': 'ewsm-uid:6rANX8DCnWsXbpRxLQMi:1594520427.990208', 'session_token': 'ewsm-st:48toDCkYL8TTqRVKPFAG:1594520430.3880255', 'sheet_id': 2}
-[ < ]: Response: {'failed': False, 'transfer_sheet': 2, 'sheet_data': {'id': 2, 'ewallet': 2, 'reference': 'Transfer Sheet', 'create_date': '12-07-2020 05:20:31', 'write_date': '12-07-2020 05:20:31', 'records': {}}}
+[ * ]: User action SwitchCreditClock
+[ > ]: Instruction Set: {'controller': 'client', 'ctype': 'action', 'action': 'switch', 'switch': 'credit', 'credit': 'clock', 'clock_id': 3, 'client_id': 'ewsm-uid:U0rrzRcXmKGPHFDUHwlL:1602853988.1008143', 'session_token': 'ewsm-st:ZgV9kkAKGe3NH89F90QZ:1602853988.1054935'}
+[ < ]: Response: {'failed': False, 'clock': 3, 'clock_data': {'id': 3, 'ewallet': 3, 'reference': 'Credit Clock', 'create_date': '16-10-2020 16:13:10', 'write_date': '16-10-2020 16:13:10', 'credit_clock': 0.0, 'clock_state': 'inactive', 'time_sheet': 3, 'time_sheet_archive': {3: 'TimeSheet'}, 'conversion_sheet': 3, 'conversion_sheet_archive': {3: 'ConversionSheet'}}}
 
 [ + ]: Prerequisites -
-[...]: User action Request Client ID
-[...]: User action Request Session Token
-[...]: User action Create New Account
-[...]: User action Account Login
-[...]: User action New Contact Record
-[...]: User action Supply EWallet Credits
+[...]: Client action RequestClientID
+[...]: Client action RequestSessionToken
+[...]: Client action NewMaster
+[...]: Client action AcquireMaster
+[...]: User action CreateAccount (1)
+[...]: User action CreateAccount (2)
+[...]: User action AccountLogin (2)
+[...]: User action CreateCreditEWallet
 
-[ * ]: User action Transfer Credits.
-[ > ]: Instruction Set: {'controller': 'client', 'ctype': 'action', 'action': 'transfer', 'transfer': 'credits', 'client_id': 'ewsm-uid:H89FeTacncLolkuFZQXF:1594520432.6219118', 'session_token': 'ewsm-st:AESipKdkelcwISNSYuII:1594520435.016607', 'transfer_to': 'ewallet1@alvearesolutions.ro', 'credits': 30}
+[ * ]: User action SwitchCreditEWallet
+[ > ]: Instruction Set: {'controller': 'client', 'ctype': 'action', 'action': 'switch', 'switch': 'credit', 'credit': 'ewallet', 'ewallet_id': 3, 'client_id': 'ewsm-uid:e2SxScIWxR1VDLahMRNw:1602853997.5257716', 'session_token': 'ewsm-st:aoaAy4qby9Rj8HWekXyn:1602853997.5307257'}
+[ < ]: Response: {'failed': False, 'ewallet': 3, 'ewallet_data': {'id': 3, 'user': 3, 'reference': 'Credit EWallet', 'create_date': '16-10-2020 16:13:20', 'write_date': '16-10-2020 16:13:20', 'credits': 0, 'clock': 3, 'clock_archive': {3: 'Credit Clock'}, 'transfer_sheet': 3, 'transfer_sheet_archive': {3: 'Transfer Sheet'}, 'invoice_sheet': 3, 'invoice_sheet_archive': {3: 'Invoice Sheet'}}}
+
+[ + ]: Prerequisites -
+[...]: Client action RequestClientID
+[...]: Client action RequestSessionToken
+[...]: Client action NewMaster
+[...]: Client action AcquireMaster
+[...]: User action CreateAccount (1)
+[...]: User action CreateAccount (2)
+[...]: User action AccountLogin (2)
+[...]: User action CreateInvoiceSheet
+
+[ * ]: User action SwitchInvoiceSheet
+[ > ]: Instruction Set: {'controller': 'client', 'ctype': 'action', 'action': 'switch', 'switch': 'invoice', 'invoice': 'list', 'sheet_id': 3, 'client_id': 'ewsm-uid:jpgNoT4vDwvOweK9GvCY:1602854006.9530225', 'session_token': 'ewsm-st:n4gplm4b34swHmQEQUjw:1602854006.9604673'}
+[ < ]: Response: {'failed': False, 'invoice_sheet': 3, 'sheet_data': {'id': 3, 'ewallet': 3, 'reference': 'Invoice Sheet', 'create_date': '16-10-2020 16:13:29', 'write_date': '16-10-2020 16:13:29', 'records': {}}}
+
+[ + ]: Prerequisites -
+[...]: Client action RequestClientID
+[...]: Client action RequestSessionToken
+[...]: Client action NewMaster
+[...]: Client action AcquireMaster
+[...]: User action CreateAccount (1)
+[...]: User action CreateAccount (2)
+[...]: User action AccountLogin (2)
+[...]: User action CreateTimeSheet
+
+[ * ]: User action SwitchTimeSheet
+[ > ]: Instruction Set: {'controller': 'client', 'ctype': 'action', 'action': 'switch', 'switch': 'time', 'time': 'list', 'sheet_id': 3, 'client_id': 'ewsm-uid:bIiVmV0tZavGSlsEHT1G:1602854015.3946202', 'session_token': 'ewsm-st:ha2jELi9GQy5FGuUFfU1:1602854015.3999414'}
+[ < ]: Response: {'failed': False, 'time_sheet': 3, 'sheet_data': {'id': 3, 'clock': 3, 'reference': 'TimeSheet', 'create_date': '16-10-2020 16:13:37', 'write_date': '16-10-2020 16:13:37', 'records': {}}}
+
+[ + ]: Prerequisites -
+[...]: User action RequestClientID
+[...]: User action RequestSessionToken
+[...]: Client action NewMasterAccount
+[...]: Client action AcquireMaster
+[...]: User action CreateNewAccount (1)
+[...]: User action CreateNewAccount (2)
+[...]: User action AccountLogin (2)
+[...]: User action CreateTransferSheet
+
+[ * ]: User action SwitchTransferSheet
+[ > ]: Instruction Set: {'controller': 'client', 'ctype': 'action', 'action': 'switch', 'switch': 'transfer', 'transfer': 'list', 'client_id': 'ewsm-uid:2sK43H9rdd5kLD5EVnW2:1602854023.6214204', 'session_token': 'ewsm-st:MVyeudIIRa4OksaF4laf:1602854023.6263063', 'sheet_id': 3}
+[ < ]: Response: {'failed': False, 'transfer_sheet': 3, 'sheet_data': {'id': 3, 'ewallet': 3, 'reference': 'Transfer Sheet', 'create_date': '16-10-2020 16:13:47', 'write_date': '16-10-2020 16:13:47', 'records': {}}}
+
+[ + ]: Prerequisites -
+[...]: Client action RequestClientID
+[...]: Client action RequestSessionToken
+[...]: Client action NewMaster
+[...]: Client action AcquireMaster
+[...]: User action CreateAccount (1)
+[...]: User action CreateAccount (2)
+[...]: User action AccountLogin (2)
+[...]: User action CreateContactRecord
+[...]: User action SupplyCredits
+
+[ * ]: User action TransferCredits.
+[ > ]: Instruction Set: {'controller': 'client', 'ctype': 'action', 'action': 'transfer', 'transfer': 'credits', 'client_id': 'ewsm-uid:FAtGYjPmRuR3DCcndtns:1602854036.881228', 'session_token': 'ewsm-st:MMXxYikZHeemFjGwQrXw:1602854036.8858664', 'transfer_to': 'ewallet1@alvearesolutions.ro', 'credits': 30}
 [ < ]: Response: {'failed': False, 'transfered_to': 'ewallet1@alvearesolutions.ro', 'ewallet_credits': 70, 'transfered_credits': 30, 'transfer_record': 3}
 
 [ + ]: Prerequisites -
-[...]: User action Request Client ID
-[...]: User action Request Session Token
-[...]: User action Create New Account
-[...]: User action Account Login
+[...]: Client action RequestClientID
+[...]: Client action RequestSessionToken
+[...]: Client action NewMaster
+[...]: Client action AcquireMaster
+[...]: User action CreateAccount (1)
+[...]: User action CreateAccount (2)
+[...]: User action AccountLogin (2)
 
-[ * ]: User action Unlink Account
-[ > ]: Instruction Set: {'controller': 'client', 'ctype': 'action', 'action': 'unlink', 'unlink': 'account', 'client_id': 'ewsm-uid:tgpD9pqP9Futxrx9z8uz:1594520437.4937003', 'session_token': 'ewsm-st:Gho7TjBw9ayhsLWnNx41:1594520439.7286315'}
+[ * ]: User action UnlinkAccount
+[ > ]: Instruction Set: {'controller': 'client', 'ctype': 'action', 'action': 'unlink', 'unlink': 'account', 'client_id': 'ewsm-uid:CJ3BzYfPUUGEya5v3XcY:1602854048.352329', 'session_token': 'ewsm-st:N06tyPMgBuCAY4AFj4Ss:1602854048.3570676', 'forced_removal': True}
 [ < ]: Response: {'failed': False, 'account': 'ewallet2@alvearesolutions.ro'}
 
 [ + ]: Prerequisites -
-[...]: User action Request Client ID
-[...]: User action Request Session Token
-[...]: User action Create New Account
-[...]: User action Account Login
-[...]: User action Create Contact List
+[...]: Client action RequestClientID
+[...]: Client action RequestSessionToken
+[...]: Client action NewMaster
+[...]: Client action AcquireMaster
+[...]: User action CreateAccount (1)
+[...]: User action CreateAccount (2)
+[...]: User action AccountLogin (2)
+[...]: User action CreateContactList
 
-[ * ]: User action Unlink Contact List
-[ > ]: Instruction Set: {'controller': 'client', 'ctype': 'action', 'action': 'unlink', 'unlink': 'contact', 'contact': 'list', 'list_id': 2, 'client_id': 'ewsm-uid:wKaBp76HdVcj2jLC38PI:1594520442.2478828', 'session_token': 'ewsm-st:IV4xVc49ahUlIovshhT0:1594520444.4909554'}
-[ < ]: Response: {'failed': False, 'contact_list': 2}
-
-[ + ]: Prerequisites -
-[...]: User action Request Client ID
-[...]: User action Request Session Token
-[...]: User action Create New Account
-[...]: User action Account Login
-[...]: User action New Contact Record
-
-[ * ]: User action Unlink Contact Record
-[ > ]: Instruction Set: {'controller': 'client', 'ctype': 'action', 'action': 'unlink', 'unlink': 'contact', 'contact': 'record', 'record_id': 1, 'client_id': 'ewsm-uid:gprP9Sl5WkX94vu7Q1UL:1594520446.7045307', 'session_token': 'ewsm-st:Ta17QryTd5W1XLgu6kKA:1594520448.8620262'}
-[ < ]: Response: {'failed': False, 'contact_list': 2, 'contact_record': 1}
+[ * ]: User action UnlinkContactList
+[ > ]: Instruction Set: {'controller': 'client', 'ctype': 'action', 'action': 'unlink', 'unlink': 'contact', 'contact': 'list', 'list_id': 3, 'client_id': 'ewsm-uid:i89BQ2xHr4PPWgLlkp68:1602854056.1332948', 'session_token': 'ewsm-st:NiXFQggoht5ORg1eBkIm:1602854056.140063'}
+[ < ]: Response: {'failed': False, 'contact_list': 3}
 
 [ + ]: Prerequisites -
-[...]: User action Request Client ID
-[...]: User action Request Session Token
-[...]: User action Create New Account
-[...]: User action Account Login
-[...]: User action Convert Credits To Clock
+[...]: Client action RequestClientID
+[...]: Client action RequestSessionToken
+[...]: Client action NewMaster
+[...]: Client action AcquireMaster
+[...]: User action CreateAccount (1)
+[...]: User action CreateAccount (2)
+[...]: User action AccountLogin (2)
+[...]: User action CreateContactRecord
 
-[ * ]: User action Unlink Conversion Record
-[ > ]: Instruction Set: {'controller': 'client', 'ctype': 'action', 'action': 'unlink', 'unlink': 'conversion', 'conversion': 'record', 'record_id': 1, 'client_id': 'ewsm-uid:T8Pr6Des4tvFbTuVXnyL:1594520451.3210425', 'session_token': 'ewsm-st:VU7teW24Fd6v7AtHGUEv:1594520453.5676665'}
-[ < ]: Response: {'failed': False, 'conversion_sheet': 2, 'conversion_record': 1}
-
-[ + ]: Prerequisites -
-[...]: User action Request Client ID
-[...]: User action Request Session Token
-[...]: User action Create New Account
-[...]: User action Account Login
-[...]: User action Create Conversion Sheet
-
-[ * ]: User action Unlink Conversion Sheet
-[ > ]: Instruction Set: {'controller': 'client', 'ctype': 'action', 'action': 'unlink', 'unlink': 'conversion', 'conversion': 'list', 'list_id': 2, 'client_id': 'ewsm-uid:ux5nkLNjHoJcajKtiBqi:1594520456.9180853', 'session_token': 'ewsm-st:0xTMJ2QMOgnOSVtio4A2:1594520460.874879'}
-[ < ]: Response: {'failed': False, 'conversion_sheet': 2}
+[ * ]: User action UnlinkContactRecord
+[ > ]: Instruction Set: {'controller': 'client', 'ctype': 'action', 'action': 'unlink', 'unlink': 'contact', 'contact': 'record', 'record_id': 1, 'client_id': 'ewsm-uid:Scstrz2s0mJbNUpyVc0y:1602854068.491364', 'session_token': 'ewsm-st:RUhMAQKfjubRdSXcjljX:1602854068.6069276'}
+[ < ]: Response: {'failed': False, 'contact_list': 3, 'contact_record': 1}
 
 [ + ]: Prerequisites -
-[...]: User action Request Client ID
-[...]: User action Request Session Token
-[...]: User action Create New Account
-[...]: User action Account Login
-[...]: User action Create Credit Clock
+[...]: Client action RequestClientID
+[...]: Client action RequestSessionToken
+[...]: Client action NewMaster
+[...]: Client action AcquireMaster
+[...]: User action CreateAccount (1)
+[...]: User action CreateAccount (2)
+[...]: User action AccountLogin (2)
+[...]: User action ConvertCreditsToClock
 
-[ * ]: User action Unlink Credit Clock
-[ > ]: Instruction Set: {'controller': 'client', 'ctype': 'action', 'action': 'unlink', 'unlink': 'credit', 'credit': 'clock', 'clock_id': 2, 'client_id': 'ewsm-uid:LNfTVc5eJY3D1oq4LtFZ:1594520464.5066051', 'session_token': 'ewsm-st:rYxIYhPRsalQvHRhRX6X:1594520466.5372055'}
-[ < ]: Response: {'failed': False, 'credit_clock': 2}
+[ * ]: User action UnlinkConversionRecord
+[ > ]: Instruction Set: {'controller': 'client', 'ctype': 'action', 'action': 'unlink', 'unlink': 'conversion', 'conversion': 'record', 'record_id': 1, 'client_id': 'ewsm-uid:YhQMZ52ornDvDIFuobq3:1602854079.0282648', 'session_token': 'ewsm-st:bCcnX0UYce2MygKUXfJl:1602854079.0330205'}
+[ < ]: Response: {'failed': False, 'conversion_sheet': 3, 'conversion_record': 1}
 
 [ + ]: Prerequisites -
-[...]: User action Request Client ID
-[...]: User action Request Session Token
-[...]: User action Create New Account
-[...]: User action Account Login
-[...]: User action Create Credit EWallet
+[...]: Client action RequestClientID
+[...]: Client action RequestSessionToken
+[...]: Client action NewMaster
+[...]: Client action AcquireMaster
+[...]: User action CreateAccount (1)
+[...]: User action CreateAccount (2)
+[...]: User action AccountLogin (2)
+[...]: User action CreateConversionSheet
 
-[ * ]: User action Unlink Credit EWallet
-[ > ]: Instruction Set: {'controller': 'client', 'ctype': 'action', 'action': 'unlink', 'unlink': 'credit', 'credit': 'ewallet', 'ewallet_id': 2, 'client_id': 'ewsm-uid:KAh5HHun90DiLYGRz51M:1594520468.754547', 'session_token': 'ewsm-st:29uadhdu9yh58EFJqUjZ:1594520470.9614015'}
-[ < ]: Response: {'failed': False, 'credit_ewallet': 2}
+[ * ]: User action UnlinkConversionSheet
+[ > ]: Instruction Set: {'controller': 'client', 'ctype': 'action', 'action': 'unlink', 'unlink': 'conversion', 'conversion': 'list', 'list_id': 3, 'client_id': 'ewsm-uid:eV8GYTMeQuGJWyQcTLQP:1602854086.528941', 'session_token': 'ewsm-st:KkIJZ2VGIWbBF8CwFsBV:1602854086.5354319'}
+[ < ]: Response: {'failed': False, 'conversion_sheet': 3}
 
-[ + ]: Prerequisits -
-[...]: User action Request Client ID
-[...]: User action Request Session Token
-[...]: User action Create New Account
-[...]: User action Account Login
-[...]: User action Pay Credits
+[ + ]: Prerequisites -
+[...]: Client action RequestClientID
+[...]: Client action RequestSessionToken
+[...]: Client action NewMaster
+[...]: Client action AcquireMaster
+[...]: User action CreateAccount (1)
+[...]: User action CreateAccount (2)
+[...]: User action AccountLogin (2)
+[...]: User action CreateCreditClock
 
-[ * ]: User action Unlink Invoice Record
-[ > ]: Instruction Set: {'controller': 'client', 'ctype': 'action', 'action': 'unlink', 'unlink': 'invoice', 'invoice': 'record', 'record_id': 1, 'client_id': 'ewsm-uid:kOAeWW8og91HopPsT4Bx:1594520474.3757093', 'session_token': 'ewsm-st:moEeGXAKefqykJR7CilO:1594520477.5689867'}
-[ < ]: Response: {'failed': False, 'invoice_sheet': 2, 'invoice_record': 1}
+[ * ]: User action UnlinkCreditClock
+[ > ]: Instruction Set: {'controller': 'client', 'ctype': 'action', 'action': 'unlink', 'unlink': 'credit', 'credit': 'clock', 'clock_id': 3, 'client_id': 'ewsm-uid:uKwgmN3A1Sk4secPDn87:1602854099.5657904', 'session_token': 'ewsm-st:jLJM5KC7SpurQbH1Kjpe:1602854099.621895'}
+[ < ]: Response: {'failed': False, 'credit_clock': 3}
 
-[ + ]: Prerequisits -
-[...]: User action Request Client ID
-[...]: User action Request Session Token
-[...]: User action Create New Account
-[...]: User action Account Login
-[...]: User action Create Invoice Sheet
+[ + ]: Prerequisites -
+[...]: Client action RequestClientID
+[...]: Client action RequestSessionToken
+[...]: Client action NewMaster
+[...]: Client action AcquireMaster
+[...]: User action CreateAccount (1)
+[...]: User action CreateAccount (2)
+[...]: User action AccountLogin
+[...]: User action CreateCreditEWallet
 
-[ * ]: User action Unlink Invoice Sheet
-[ > ]: Instruction Set: {'controller': 'client', 'ctype': 'action', 'action': 'unlink', 'unlink': 'invoice', 'invoice': 'list', 'list_id': 2, 'client_id': 'ewsm-uid:gc32ISCl3o3Pa9P6etXO:1594520479.974432', 'session_token': 'ewsm-st:yf4ez5uVQ3QiOD5DHNE7:1594520482.2337418'}
-[ < ]: Response: {'failed': False, 'invoice_sheet': 2}
-
-[ + ]: Prerequisits -
-[...]: User action Request Client ID
-[...]: User action Request Session Token
-[...]: User action Create New Account
-[...]: User action Account Login
-[...]: User action Start Clock Timer
-[...]: User action Stop Clock Timer
-
-[ * ]: User action Unlink Time Record
-[ > ]: Instruction Set: {'controller': 'client', 'ctype': 'action', 'action': 'unlink', 'unlink': 'time', 'time': 'record', 'record_id': 1, 'client_id': 'ewsm-uid:28AlPuAhhieNswUam0mK:1594520484.5748506', 'session_token': 'ewsm-st:31d2tY7RnDNxLIQKceCC:1594520488.0719326'}
-[ < ]: Response: {'failed': False, 'time_sheet': 2, 'time_record': 1}
+[ * ]: User action UnlinkCreditEWallet
+[ > ]: Instruction Set: {'controller': 'client', 'ctype': 'action', 'action': 'unlink', 'unlink': 'credit', 'credit': 'ewallet', 'ewallet_id': 3, 'client_id': 'ewsm-uid:fZ7alFUfeLeBHuDbDm5O:1602854108.9341497', 'session_token': 'ewsm-st:IkBNnNSgSLUZWYb6cAZu:1602854108.9411645'}
+[ < ]: Response: {'failed': False, 'credit_ewallet': 3}
 
 [ + ]: Prerequisits -
-[...]: User action Request Client ID
-[...]: User action Request Session Token
-[...]: User action Create New Account
-[...]: User action Account Login
-[...]: User action Create Time Sheet
+[...]: Client action RequestClientID
+[...]: Client action RequestSessionToken
+[...]: Client action NewMaster
+[...]: Client action AcquireMaster
+[...]: User action CreateAccount (1)
+[...]: User action CreateAccount (2)
+[...]: User action AccountLogin (2)
+[...]: User action PayCredits
 
-[ * ]: User action Unlink Time Sheet
-[ > ]: Instruction Set: {'controller': 'client', 'ctype': 'action', 'action': 'unlink', 'unlink': 'time', 'time': 'list', 'list_id': 2, 'client_id': 'ewsm-uid:pqAqinPhFQFKDkiqzBdr:1594520495.5139863', 'session_token': 'ewsm-st:IElJZX26phr5Bw838Mbp:1594520498.133295'}
-[ < ]: Response: {'failed': False, 'time_sheet': 2}
-
-[ + ]: Prerequisits -
-[...]: User action Request Client ID
-[...]: User action Request Session Token
-[...]: User action Create New Account
-[...]: User action Account Login
-[...]: User action Transfer Credits
-
-[ * ]: User action Unlink Transfer Record
-[ > ]: Instruction Set: {'controller': 'client', 'ctype': 'action', 'action': 'unlink', 'unlink': 'transfer', 'transfer': 'record', 'record_id': 1, 'client_id': 'ewsm-uid:LfAuAeOnAuNoUyZnhGKd:1594520500.4602122', 'session_token': 'ewsm-st:9znuegHs32JpJkDw67lV:1594520502.7408395'}
-[ < ]: Response: {'failed': False, 'transfer_sheet': 2, 'transfer_record': 1}
+[ * ]: User action UnlinkInvoiceRecord
+[ > ]: Instruction Set: {'controller': 'client', 'ctype': 'action', 'action': 'unlink', 'unlink': 'invoice', 'invoice': 'record', 'record_id': 1, 'client_id': 'ewsm-uid:Q7br9SZ4iJzjlWDXhlZ2:1602854117.508377', 'session_token': 'ewsm-st:SViwFHsqNKv38KoyiFdA:1602854117.512983'}
+[ < ]: Response: {'failed': False, 'invoice_sheet': 3, 'invoice_record': 1}
 
 [ + ]: Prerequisits -
-[...]: User action Request Client ID
-[...]: User action Request Session Token
-[...]: User action Create New Account
-[...]: User action Account Login
-[...]: User action Create Transfer Sheet
+[...]: Client action RequestClientID
+[...]: Client action RequestSessionToken
+[...]: Client action NewMaster
+[...]: Client action AcquireMaster
+[...]: User action CreateAccount (1)
+[...]: User action CreateAccount (2)
+[...]: User action AccountLogin (2)
+[...]: User action CreateInvoiceSheet
 
-[ * ]: User action Unlink Transfer Sheet
-[ > ]: Instruction Set: {'controller': 'client', 'ctype': 'action', 'action': 'unlink', 'unlink': 'transfer', 'transfer': 'list', 'list_id': 2, 'client_id': 'ewsm-uid:ohUaY7S1lUKceOV69Osz:1594520505.6650624', 'session_token': 'ewsm-st:J0YJnqXlwWNOmxkqacBh:1594520508.5247314'}
-[ < ]: Response: {'failed': False, 'transfer_sheet': 2}
+[ * ]: User action UnlinkInvoiceSheet
+[ > ]: Instruction Set: {'controller': 'client', 'ctype': 'action', 'action': 'unlink', 'unlink': 'invoice', 'invoice': 'list', 'list_id': 3, 'client_id': 'ewsm-uid:0uptUNlIwKbVG4iLRANx:1602854129.0120432', 'session_token': 'ewsm-st:RLFBrpBxx4nCXeYW5DJ0:1602854129.075179'}
+[ < ]: Response: {'failed': False, 'invoice_sheet': 3}
 
 [ + ]: Prerequisits -
-[...]: User action Request Client ID
-[...]: User action Request Session Token
-[...]: User action Create New Account
-[...]: User action Account Login
+[...]: Client action RequestClientID
+[...]: Client action RequestSessionToken
+[...]: Client action NewMaster
+[...]: Client action AcquireMaster
+[...]: User action CreateAccount (1)
+[...]: User action CreateAccount (2)
+[...]: User action AccountLogin (2)
+[...]: User action StartClockTimer
+[...]: User action StopClockTimer
 
-[ * ]: User action View Account
-[ > ]: Instruction Set: {'controller': 'client', 'ctype': 'action', 'action': 'view', 'view': 'account', 'client_id': 'ewsm-uid:4AlG0TIU7fS4rzY2xRLY:1594520510.6444478', 'session_token': 'ewsm-st:MC13kx9dJQ9eJdMLQdaQ:1594520513.0476303'}
-[ < ]: Response: {'failed': False, 'account': 'ewallet2@alvearesolutions.ro', 'account_data': {'id': 2, 'name': 'TestEWalletUser2', 'create_date': '12-07-2020 05:21:54', 'write_date': '12-07-2020 05:21:54', 'ewallet': 2, 'contact_list': 2, 'email': 'ewallet2@alvearesolutions.ro', 'phone': '123454321', 'alias': 'Test Alias', 'state_code': 1, 'state_name': 'LoggedIn', 'ewallet_archive': {2: 'Credit EWallet'}, 'contact_list_archive': {2: 'Contact List'}}}
+[ * ]: User action UnlinkTimeRecord
+[ > ]: Instruction Set: {'controller': 'client', 'ctype': 'action', 'action': 'unlink', 'unlink': 'time', 'time': 'record', 'record_id': 1, 'client_id': 'ewsm-uid:RCLZVqloRUE3DvlCn4pa:1602854139.6296859', 'session_token': 'ewsm-st:H2SFsFMPlMQnHpElFWbx:1602854139.6371152'}
+[ < ]: Response: {'failed': False, 'time_sheet': 3, 'time_record': 1}
+
+[ + ]: Prerequisits -
+[...]: Client action RequestClientID
+[...]: Client action RequestSessionToken
+[...]: Client action NewMaster
+[...]: Client action AcquireMaster
+[...]: User action CreateAccount (1)
+[...]: User action CreateAccount (2)
+[...]: User action AccountLogin (2)
+[...]: User action CreateTimeSheet
+
+[ * ]: User action UnlinkTimeSheet
+[ > ]: Instruction Set: {'controller': 'client', 'ctype': 'action', 'action': 'unlink', 'unlink': 'time', 'time': 'list', 'list_id': 3, 'client_id': 'ewsm-uid:DlgabVX1yhNXFZlKO8R1:1602854151.5674713', 'session_token': 'ewsm-st:8zWBtj71G0SjfBp2DAoZ:1602854151.5784318'}
+[ < ]: Response: {'failed': False, 'time_sheet': 3}
+
+[ + ]: Prerequisits -
+[...]: Client action RequestClientID
+[...]: Client action RequestSessionToken
+[...]: Client action NewMaster
+[...]: Client action AcquireMaster
+[...]: User action CreateAccount (1)
+[...]: User action CreateAccount (2)
+[...]: User action AccountLogin (2)
+[...]: User action TransferCredits
+
+[ * ]: User action UnlinkTransferRecord
+[ > ]: Instruction Set: {'controller': 'client', 'ctype': 'action', 'action': 'unlink', 'unlink': 'transfer', 'transfer': 'record', 'record_id': 1, 'client_id': 'ewsm-uid:080wC9EIP1eEpTxsVwje:1602854165.6459045', 'session_token': 'ewsm-st:e2yS81nFqYhBwQpUvsLM:1602854165.6968153'}
+[ < ]: Response: {'failed': False, 'transfer_sheet': 3, 'transfer_record': 1}
+
+[ + ]: Prerequisits -
+[...]: Client action RequestClientID
+[...]: Client action RequestSessionToken
+[...]: Client action NewMaster
+[...]: Client action AcquireMaster
+[...]: User action CreateAccount (1)
+[...]: User action CreateAccount (2)
+[...]: User action AccountLogin (2)
+[...]: User action CreateTransferSheet
+
+[ * ]: User action UnlinkTransferSheet
+[ > ]: Instruction Set: {'controller': 'client', 'ctype': 'action', 'action': 'unlink', 'unlink': 'transfer', 'transfer': 'list', 'list_id': 3, 'client_id': 'ewsm-uid:dwnDgxxZPDUKIw4Lp62q:1602854174.644185', 'session_token': 'ewsm-st:8hqAwMaosidvdcRi4PWj:1602854174.6510649'}
+[ < ]: Response: {'failed': False, 'transfer_sheet': 3}
+
+[ + ]: Prerequisits -
+[...]: Client action RequestClientID
+[...]: Client action RequestSessionToken
+[...]: Client action NewMaster
+[...]: Client action AcquireMaster
+[...]: User action CreateAccount (1)
+[...]: User action CreateAccount (2)
+[...]: User action AccountLogin (2)
+
+[ * ]: User action ViewAccount
+[ > ]: Instruction Set: {'controller': 'client', 'ctype': 'action', 'action': 'view', 'view': 'account', 'client_id': 'ewsm-uid:RkrtqtHmmsa26fpcrwcR:1602854182.034154', 'session_token': 'ewsm-st:AGnl3QfQWFQo7tXI4EiW:1602854182.0408442'}
+[ < ]: Response: {'failed': False, 'account': 'ewallet2@alvearesolutions.ro', 'account_data': {'id': 3, 'name': 'TestEWalletUser2', 'create_date': '16-10-2020 16:16:24', 'write_date': '16-10-2020 16:16:25', 'ewallet': 3, 'contact_list': 3, 'email': 'ewallet2@alvearesolutions.ro', 'phone': '123454321', 'alias': 'Test Alias', 'state': 1, 'ewallet_archive': {3: 'Credit EWallet'}, 'contact_list_archive': {3: 'Contact List'}, 'to_unlink': False, 'to_unlink_timestamp': None, 'subordonate_of': 1}}
 
 [ + ]: Prerequisists -
-[...]: User action Request Client ID
-[...]: User action Request Session Token
-[...]: User action Create New Account
-[...]: User action Account Login
-[...]: User action New Contact Record
+[...]: Client action RequestClientID
+[...]: Client action RequestSessionToken
+[...]: Client action NewMaster
+[...]: Client action AcquireMaster
+[...]: User action CreateAccount (1)
+[...]: User action CreateAccount (2)
+[...]: User action AccountLogin (2)
+[...]: User action NewContactRecord
 
-[ * ]: User action View Contact List
-[ > ]: Instruction Set: {'controller': 'client', 'ctype': 'action', 'action': 'view', 'view': 'contact', 'contact': 'list', 'client_id': 'ewsm-uid:7xuzQ01uV8DdGMXsAKll:1594520515.007913', 'session_token': 'ewsm-st:FWoowpDQmz24t99HWuaW:1594520517.1244872'}
-[ < ]: Response: {'failed': False, 'contact_list': 2, 'list_data': {'id': 2, 'user': 2, 'reference': 'Contact List', 'create_date': '12-07-2020 05:21:58', 'write_date': '12-07-2020 05:21:58', 'records': {1: 'Contact List Record'}}}
-
-[...]: Prerequisits -
-[...]: User action Request Client ID
-[...]: User action Request Session Token
-[...]: User action Create New Account
-[...]: User action Account Login
-[...]: User action New Contact Record
-
-[ * ]: User action View Contact Record
-[ > ]: Instruction Set: {'controller': 'client', 'ctype': 'action', 'action': 'view', 'view': 'contact', 'contact': 'record', 'client_id': 'ewsm-uid:8Tj5SJ6dPCxH5vNpjKKc:1594520519.0658255', 'session_token': 'ewsm-st:L67gRh5CtSqsGqICbkzY:1594520521.62433', 'record_id': 1}
-[ < ]: Response: {'failed': False, 'contact_list': 2, 'contact_record': 1, 'record_data': {'id': 1, 'contact_list': 2, 'reference': 'Contact List Record', 'create_date': '12-07-2020 05:22:03', 'write_date': '12-07-2020 05:22:03', 'name': 'Test User Name', 'email': 'ewallet1@alvearesolutions.ro', 'phone': '123454321', 'notes': 'Notes added by functional test'}}
-
-[...]: Prerequisits -
-[...]: User action Request Client ID
-[...]: User action Request Session Token
-[...]: User action Create New Account
-[...]: User action Account Login
-[...]: User action Supply EWallet Credits
-[...]: User action Convert Credits To Clock
-
-[ * ]: User action View Conversion Record
-[ > ]: Instruction Set: {'controller': 'client', 'ctype': 'action', 'action': 'view', 'view': 'conversion', 'conversion': 'record', 'record_id': 1, 'client_id': 'ewsm-uid:EfJqQyUxBpyuLyB7h4pF:1594520523.4774156', 'session_token': 'ewsm-st:dydQ2FbIAa2nnjBzumin:1594520525.625694'}
-[ < ]: Response: {'failed': False, 'conversion_sheet': 2, 'conversion_record': 1, 'record_data': {'id': 1, 'conversion_sheet': 2, 'reference': 'Conversion Sheet Record', 'create_date': '12-07-2020 05:22:07', 'write_date': '12-07-2020 05:22:07', 'conversion_type': 'credits2clock', 'minutes': 20.0, 'credits': 20}}
+[ * ]: User action ViewContactList
+[ > ]: Instruction Set: {'controller': 'client', 'ctype': 'action', 'action': 'view', 'view': 'contact', 'contact': 'list', 'client_id': 'ewsm-uid:uSyGsNJnUVzaScpj8Rbe:1602854190.9546852', 'session_token': 'ewsm-st:24nDofx1JkqKwJ5So4S1:1602854190.9594066'}
+[ < ]: Response: {'failed': False, 'contact_list': 3, 'list_data': {'id': 3, 'user': 3, 'reference': 'Contact List', 'create_date': '16-10-2020 16:16:37', 'write_date': '16-10-2020 16:16:40', 'records': {1: 'ContactRecord'}}}
 
 [ + ]: Prerequisits -
-[...]: User action Request Client ID
-[...]: User action Request Session Token
-[...]: User action Create New Account
-[...]: User action Account Login
-[...]: User action Supply EWallet Credits
-[...]: User action Convert Credits To Clock
+[...]: Client action RequestClientID
+[...]: Client action RequestSessionToken
+[...]: Client action NewMaster
+[...]: Client action AcquireMaster
+[...]: User action CreateAccount (1)
+[...]: User action CreateAccount (2)
+[...]: User action AccountLogin (2)
+[...]: User action NewContactRecord
 
-[ * ]: User action View Conversion Sheet
-[ > ]: Instruction Set: {'controller': 'client', 'ctype': 'action', 'action': 'view', 'view': 'conversion', 'conversion': 'list', 'client_id': 'ewsm-uid:14KTiK3DNoRQcNDbBjaF:1594520528.3689883', 'session_token': 'ewsm-st:FDkAuStzmYEsRGqWJkRk:1594520530.5677323'}
-[ < ]: Response: {'failed': False, 'conversion_sheet': 2, 'sheet_data': {'id': 2, 'clock': 2, 'reference': 'Conversion Sheet', 'create_date': '12-07-2020 05:22:11', 'write_date': '12-07-2020 05:22:11', 'records': {1: 'Conversion Sheet Record'}}}
-
-[ + ]: Prerequisits -
-[...]: User action Request Client ID
-[...]: User action Request Session Token
-[...]: User action Create New Account
-[...]: User action Account Login
-
-[ * ]: User action View Credit Clock
-[ > ]: Instruction Set: {'controller': 'client', 'ctype': 'action', 'action': 'view', 'view': 'credit', 'credit': 'clock', 'client_id': 'ewsm-uid:2WPkkNtU2WdlYkHfNooB:1594520534.1567855', 'session_token': 'ewsm-st:7Sveq9Ew62wOckRypMCE:1594520537.4677107'}
-[ < ]: Response: {'failed': False, 'clock': 2, 'clock_data': {'id': 2, 'ewallet': 2, 'reference': 'Credit Clock', 'create_date': '12-07-2020 05:22:18', 'write_date': '12-07-2020 05:22:19', 'credit_clock': 0.0, 'clock_state': 'inactive', 'time_sheet': 2, 'time_sheet_archive': {2: 'Time Sheet'}, 'conversion_sheet': 2, 'conversion_sheet_archive': {2: 'Conversion Sheet'}}}
+[ * ]: User action ViewContactRecord
+[ > ]: Instruction Set: {'controller': 'client', 'ctype': 'action', 'action': 'view', 'view': 'contact', 'contact': 'record', 'client_id': 'ewsm-uid:3LVk8LXNj3fs6knLUFdz:1602854206.6938152', 'session_token': 'ewsm-st:pjYE0aXiwL4Pz1rVHlit:1602854206.700469', 'record_id': 1}
+[ < ]: Response: {'failed': False, 'contact_list': 3, 'contact_record': 1, 'record_data': {'id': 1, 'contact_list': 3, 'reference': 'ContactRecord', 'create_date': '16-10-2020 16:16:50', 'write_date': '16-10-2020 16:16:50', 'name': 'Test User Name', 'email': 'ewallet1@alvearesolutions.ro', 'phone': '123454321', 'notes': 'Notes added by functional test'}}
 
 [ + ]: Prerequisits -
-[...]: User action Request Client ID
-[...]: User action Request Session Token
-[...]: User action Create New Account
-[...]: User action Account Login
+[...]: Client action RequestClientID
+[...]: Client action RequestSessionToken
+[...]: Client action NewMaster
+[...]: Client action AcquireMaster
+[...]: User action CreateAccount (1)
+[...]: User action CreateAccount (2)
+[...]: User action AccountLogin (2)
+[...]: User action SupplyCredits
+[...]: User action ConvertCreditsToClock
 
-[ * ]: User action View Credit EWallet
-[ > ]: Instruction Setx : {'controller': 'client', 'ctype': 'action', 'action': 'view', 'view': 'credit', 'credit': 'ewallet', 'client_id': 'ewsm-uid:SpuimFU6843GVYksouTY:1594520540.5067968', 'session_token': 'ewsm-st:47HGgH3GDLOazPf48FXx:1594520543.8327146'}
-[ < ]: Response: {'failed': False, 'ewallet': 2, 'ewallet_data': {'id': 2, 'user': 2, 'reference': 'Credit EWallet', 'create_date': '12-07-2020 05:22:24', 'write_date': '12-07-2020 05:22:24', 'credits': 0, 'clock': 2, 'clock_archive': {2: 'Credit Clock'}, 'transfer_sheet': 2, 'transfer_sheet_archive': {2: 'Transfer Sheet'}, 'invoice_sheet': 2, 'invoice_sheet_archive': {2: 'Invoice Sheet'}}}
-
-[ + ]: Prerequisits -
-[...]: User action Request Client ID
-[...]: User action Request Session Token
-[...]: User action Create New Account
-[...]: User action Account Login
-[...]: User action Supply EWallet Credits
-
-[ * ]: User action View Invoice Record
-[ > ]: Instruction Set: {'controller': 'client', 'ctype': 'action', 'action': 'view', 'view': 'invoice', 'invoice': 'record', 'record_id': 1, 'client_id': 'ewsm-uid:yUM2C3Tb1oscBZRArNz9:1594520545.4416149', 'session_token': 'ewsm-st:X3NvBdcvGqLkgDbKLqSL:1594520547.4533832'}
-[ < ]: Response: {'failed': False, 'invoice_sheet': 2, 'invoice_record': 1, 'record_data': {'id': 1, 'invoice_sheet': 1, 'reference': 'Invoice Sheet Record', 'create_date': '12-07-2020 05:22:29', 'write_date': '12-07-2020 05:22:29', 'credits': 100, 'currency': 'RON', 'cost': 4.7, 'seller': 1, 'notes': 'EWallet user action Supply notes added by functional test suit.'}}
-
-[...]: Prerequisits -
-[...]: User action Request Client ID
-[...]: User action Request Session Token
-[...]: User action Create New Account
-[...]: User action Account Login
-[...]: User action Supply EWallet Credits
-
-[ * ]: User action View Invoice Sheet
-[ > ]: Instruction Set: {'controller': 'client', 'ctype': 'action', 'action': 'view', 'view': 'invoice', 'invoice': 'list', 'client_id': 'ewsm-uid:WDFix1tC3r3jI9VQIG9j:1594520549.5064774', 'session_token': 'ewsm-st:M1vpqUQz5ONIq2ag3KAE:1594520551.7749639'}
-[ < ]: Response: {'failed': False, 'invoice_sheet': 2, 'sheet_data': {'id': 2, 'ewallet': 2, 'reference': 'Invoice Sheet', 'create_date': '12-07-2020 05:22:33', 'write_date': '12-07-2020 05:22:34', 'records': {}}}
+[ * ]: User action ViewConversionRecord
+[ > ]: Instruction Set: {'controller': 'client', 'ctype': 'action', 'action': 'view', 'view': 'conversion', 'conversion': 'record', 'record_id': 1, 'client_id': 'ewsm-uid:UJhRNcIOq2gMPOMS86Fw:1602854218.0347912', 'session_token': 'ewsm-st:cyZahDhcVlsLRYnN9N4D:1602854218.04091'}
+[ < ]: Response: {'failed': False, 'conversion_sheet': 3, 'conversion_record': 1, 'record_data': {'id': 1, 'conversion_sheet': 3, 'reference': 'ConversionRecord', 'create_date': '16-10-2020 16:17:04', 'write_date': '16-10-2020 16:17:04', 'conversion_type': 'credits2clock', 'minutes': 20.0, 'credits': 20}}
 
 [ + ]: Prerequisits -
-[...]: User action Request Client ID
-[...]: User action Request Session Token
-[...]: User action Create New Account
-[...]: User action Account Login
+[...]: Client action RequestClientID
+[...]: Client action RequestSessionToken
+[...]: Client action NewMaster
+[...]: Client action AcquireMaster
+[...]: User action CreateAccount (1)
+[...]: User action CreateAccount (2)
+[...]: User action AccountLogin (2)
+[...]: User action SupplyCredits
+[...]: User action ConvertCreditsToClock
 
-[ * ]: User action View Login Records
-[ > ]: Instruction Set: {'controller': 'client', 'ctype': 'action', 'action': 'view', 'view': 'login', 'client_id': 'ewsm-uid:eLvBBxDXMahXz2taoAx2:1594520554.3315094', 'session_token': 'ewsm-st:JknzCfEVNIAKKLnzmPmQ:1594520556.3258872'}
-[ < ]: Response: {'failed': False, 'account': 'ewallet2@alvearesolutions.ro', 'login_records': {1: '12-07-2020 05:17:58'}}
-
-[ + ]: Prerequisits -
-[...]: User action Request Client ID
-[...]: User action Request Session Token
-[...]: User action Create New Account
-[...]: User action Account Login(1)
-[...]: User action Account Logout
-[...]: User action Account Login (2)
-
-[ * ]: User action View Logout Records
-[ > ]: Instruction Set: {'controller': 'client', 'ctype': 'action', 'action': 'view', 'view': 'logout', 'client_id': 'ewsm-uid:ypt4RwXm0F64Bth93Z0l:1594520558.2460885', 'session_token': 'ewsm-st:eD13NfhTRAv8JlHkrYG7:1594520560.6393316'}
-[ < ]: Response: {'failed': False, 'account': 'ewallet2@alvearesolutions.ro', 'logout_records': {1: '12-07-2020 05:17:58'}}
+[ * ]: User action ViewConversionSheet
+[ > ]: Instruction Set: {'controller': 'client', 'ctype': 'action', 'action': 'view', 'view': 'conversion', 'conversion': 'list', 'client_id': 'ewsm-uid:z3BCTHXANzdEc6ns1Tz1:1602854227.8324926', 'session_token': 'ewsm-st:jbYiWjr4wXJFFoLmlxcF:1602854227.8378012'}
+[ < ]: Response: {'failed': False, 'conversion_sheet': 3, 'sheet_data': {'id': 3, 'clock': 3, 'reference': 'ConversionSheet', 'create_date': '16-10-2020 16:17:10', 'write_date': '16-10-2020 16:17:10', 'records': {1: 'ConversionRecord'}}}
 
 [ + ]: Prerequisits -
-[...]: User action Request Client ID
-[...]: User action Request Session Token
-[...]: User action Create New Account
-[...]: User action Account Login
-[...]: User action Supply EWallet Credits
-[...]: User action Convert Credits To Clock
-[...]: User action Start Clock Timer
-[...]: User action Stop Clock Timer
+[...]: Client action RequestClientID
+[...]: Client action RequestSessionToken
+[...]: Client action NewMaster
+[...]: Client action AcquireMaster
+[...]: User action CreateAccount (1)
+[...]: User action CreateAccount (2)
+[...]: User action AccountLogin (2)
 
-[ * ]: User action View Time Record
-[ > ]: Instruction Set: {'controller': 'client', 'ctype': 'action', 'action': 'view', 'view': 'time', 'time': 'record', 'record_id': 1, 'client_id': 'ewsm-uid:NVtIwThA5LJLM1o9duWl:1594520562.6529515', 'session_token': 'ewsm-st:xcXZOTZas1KInXFj4Pzj:1594520564.7605002'}
-[ < ]: Response: {'failed': False, 'time_sheet': 2, 'time_record': 1, 'record_data': {'id': 1, 'time_sheet': 2, 'reference': 'Time Sheet Record', 'create_date': '12-07-2020 05:22:47', 'write_date': '12-07-2020 05:22:50', 'time_start': '12-07-2020 05:22:47', 'time_stop': '12-07-2020 05:22:50', 'time_spent': 0.06, 'time_pending': 0.0, 'pending_count': 0}}
-
-[ + ]: Prerequisits -
-[...]: User action Request Client ID
-[...]: User action Request Session Token
-[...]: User action Create New Account
-[...]: User action Account Login
-[...]: User action Supply EWallet Credits
-[...]: User action Convert Credits To Clock
-[...]: User action Start Clock Timer
-[...]: User action Stop Clock Timer
-
-[ * ]: User action View Time Sheet
-[ > ]: Instruction Set: {'controller': 'client', 'ctype': 'action', 'action': 'view', 'view': 'time', 'time': 'list', 'client_id': 'ewsm-uid:1UjYlpNoQSxhPi6kz59S:1594520571.1336267', 'session_token': 'ewsm-st:rneTFjqulAdyy6QkBibv:1594520573.3204882'}
-[ < ]: Response: {'failed': False, 'time_sheet': 2, 'sheet_data': {'id': 2, 'clock': 2, 'reference': 'Time Sheet', 'create_date': '12-07-2020 05:22:54', 'write_date': '12-07-2020 05:22:54', 'records': {1: 'Time Sheet Record'}}}
+[ * ]: User action ViewCreditClock
+[ > ]: Instruction Set: {'controller': 'client', 'ctype': 'action', 'action': 'view', 'view': 'credit', 'credit': 'clock', 'client_id': 'ewsm-uid:gsufxNopR65Uqh7tzlUS:1602854237.6964793', 'session_token': 'ewsm-st:aOuIlqi260fbdoNvXArA:1602854237.7035692'}
+[ < ]: Response: {'failed': False, 'clock': 3, 'clock_data': {'id': 3, 'ewallet': 3, 'reference': 'Credit Clock', 'create_date': '16-10-2020 16:17:20', 'write_date': '16-10-2020 16:17:20', 'credit_clock': 0.0, 'clock_state': 'inactive', 'time_sheet': 3, 'time_sheet_archive': {3: 'TimeSheet'}, 'conversion_sheet': 3, 'conversion_sheet_archive': {3: 'ConversionSheet'}}}
 
 [ + ]: Prerequisits -
-[...]: User action Request Client ID
-[...]: User action Request Session Token
-[...]: User action Create New Account
-[...]: User action Account Login
-[...]: User action New Contact Record
-[...]: User action Supply EWallet Credits
-[...]: User action Transfer Credits
+[...]: Client action RequestClientID
+[...]: Client action RequestSessionToken
+[...]: Client action NewMaster
+[...]: Client action AcquireMaster
+[...]: User action CreateAccount (1)
+[...]: User action CreateAccount (2)
+[...]: User action AccountLogin (2)
 
-[ * ]: User action View Transfer Record
-[ > ]: Instruction Set: {'controller': 'client', 'ctype': 'action', 'action': 'view', 'view': 'transfer', 'transfer': 'record', 'record_id': 3, 'client_id': 'ewsm-uid:bVesr3kFNCmy3iyvE9DU:1594520579.4703586', 'session_token': 'ewsm-st:rRJu8vJeIYrBSnopK0Vf:1594520581.8173678'}
-[ < ]: Response: {'failed': False, 'transfer_sheet': 2, 'transfer_record': 3, 'record_data': {'id': 3, 'transfer_sheet': 2, 'reference': 'Transfer Sheet Record', 'create_date': '12-07-2020 05:23:04', 'write_date': '12-07-2020 05:23:04', 'transfer_type': 'transfer', 'transfer_from': 'ewallet2@alvearesolutions.ro', 'transfer_to': 'ewallet1@alvearesolutions.ro', 'credits': 30}}
+[ * ]: User action ViewCreditEWallet
+[ > ]: Instruction Set : {'controller': 'client', 'ctype': 'action', 'action': 'view', 'view': 'credit', 'credit': 'ewallet', 'client_id': 'ewsm-uid:a0GqVNNwDKKRrvQFP43C:1602854245.0679102', 'session_token': 'ewsm-st:ipsZFjcBUo9oZVHB1cv6:1602854245.074631'}
+[ < ]: Response: {'failed': False, 'ewallet': 3, 'ewallet_data': {'id': 3, 'user': 3, 'reference': 'Credit EWallet', 'create_date': '16-10-2020 16:17:27', 'write_date': '16-10-2020 16:17:28', 'credits': 0, 'clock': 3, 'clock_archive': {3: 'Credit Clock'}, 'transfer_sheet': 3, 'transfer_sheet_archive': {3: 'Transfer Sheet'}, 'invoice_sheet': 3, 'invoice_sheet_archive': {3: 'Invoice Sheet'}}}
 
 [ + ]: Prerequisits -
-[...]: User action Request Client ID
-[...]: User action Request Session Token
-[...]: User action Create New Account
-[...]: User action Account Login
-[...]: User action New Contact Record
-[...]: User action Supply EWallet Credits
-[...]: User action Transfer Credits
+[...]: Client action RequestClientID
+[...]: Client action RequestSessionToken
+[...]: Client action NewMaster
+[...]: Client action AcquireMaster
+[...]: User action CreateAccount (1)
+[...]: User action CreateAccount (2)
+[...]: User action AccountLogin (2)
+[...]: User action SupplyCredits
+[...]: User action PayCredits
 
-[ * ]: User action View Transfer Sheet
-[ > ]: Instruction Set: {'controller': 'client', 'ctype': 'action', 'action': 'view', 'view': 'transfer', 'transfer': 'list', 'client_id': 'ewsm-uid:Yt5FxHzmomJWUqtb2WiO:1594520584.2513745', 'session_token': 'ewsm-st:R14QVA2ddhfGUjnSzIz6:1594520586.3834827'}
-[ < ]: Response: {'failed': False, 'transfer_sheet': 2, 'sheet_data': {'id': 2, 'ewallet': 2, 'reference': 'Transfer Sheet', 'create_date': '12-07-2020 05:23:07', 'write_date': '12-07-2020 05:23:08', 'records': {2: 'Transfer Sheet Record', 3: 'Transfer Sheet Record'}}}
+[ * ]: User action ViewInvoiceRecord
+[ > ]: Instruction Set: {'controller': 'client', 'ctype': 'action', 'action': 'view', 'view': 'invoice', 'invoice': 'record', 'record_id': 2, 'client_id': 'ewsm-uid:21v1mGrRLVBTTARlIPrd:1602854252.8386295', 'session_token': 'ewsm-st:Wt4iQXCJdIanCKb7xEJx:1602854252.8437343'}
+[ < ]: Response: {'failed': False, 'invoice_sheet': 3, 'invoice_record': 2, 'record_data': {'id': 2, 'invoice_sheet': 3, 'transfer_record': None, 'reference': 'InvoiceRecord', 'create_date': '16-10-2020 16:17:39', 'write_date': '16-10-2020 16:17:39', 'credits': 100, 'currency': 'RON', 'cost': 4.7, 'seller': 1, 'notes': 'EWallet user action SupplyCredits notes added by EWSC functional test suit.'}}
+
+[ + ]: Prerequisits -
+[...]: Client action RequestClientID
+[...]: Client action RequestSessionToken
+[...]: Client action NewMaster
+[...]: Client action AcquireMaster
+[...]: User action CreateAccount (1)
+[...]: User action CreateAccount (2)
+[...]: User action AccountLogin (2)
+[...]: User action SupplyCredits
+
+[ * ]: User action ViewInvoiceSheet
+[ > ]: Instruction Set: {'controller': 'client', 'ctype': 'action', 'action': 'view', 'view': 'invoice', 'invoice': 'list', 'client_id': 'ewsm-uid:x23n8JfGuyDQSHNwWDL0:1602854263.6852083', 'session_token': 'ewsm-st:Zn441ju9ol62GyKU0b8d:1602854263.6917202'}
+[ < ]: Response: {'failed': False, 'invoice_sheet': 3, 'sheet_data': {'id': 3, 'ewallet': 3, 'reference': 'Invoice Sheet', 'create_date': '16-10-2020 16:17:46', 'write_date': '16-10-2020 16:17:46', 'records': {2: 'InvoiceRecord'}}}
+
+[ + ]: Prerequisits -
+[...]: Client action RequestClientID
+[...]: Client action RequestSessionToken
+[...]: Client action NewMaster
+[...]: Client action AcquireMaster
+[...]: User action CreateAccount (1)
+[...]: User action CreateAccount (2)
+[...]: User action AccountLogin (2)
+
+[ * ]: User action ViewLoginRecords
+[ > ]: Instruction Set: {'controller': 'client', 'ctype': 'action', 'action': 'view', 'view': 'login', 'client_id': 'ewsm-uid:oEHli3pHyBOhNwyNNZst:1602854273.0537195', 'session_token': 'ewsm-st:PMDFptb0KIAfmNo1sUVd:1602854273.0582469'}
+[ < ]: Response: {'failed': False, 'account': 'ewallet2@alvearesolutions.ro', 'login_records': {1: '16-10-2020 16:04:38'}}
+
+[ + ]: Prerequisits -
+[...]: Client action RequestClientID
+[...]: Client action RequestSessionToken
+[...]: Client action NewMaster
+[...]: Client action AcquireMaster
+[...]: User action CreateAccount (1)
+[...]: User action CreateAccount (2)
+[...]: User action AccountLogin (2)
+[...]: User action AccountLogout
+[...]: User action AccountLogin (2)
+
+[ * ]: User action ViewLogoutRecords
+[ > ]: Instruction Set: {'controller': 'client', 'ctype': 'action', 'action': 'view', 'view': 'logout', 'client_id': 'ewsm-uid:KleyYbpKNfiV1QhyHh25:1602854282.515779', 'session_token': 'ewsm-st:udjTKuHZny2Je0LjBTjy:1602854282.5211983'}
+[ < ]: Response: {'failed': False, 'account': 'ewallet2@alvearesolutions.ro', 'logout_records': {1: '16-10-2020 16:04:38'}}
+
+[ + ]: Prerequisits -
+[...]: Client action RequestClientID
+[...]: Client action RequestSessionToken
+[...]: Client action NewMaster
+[...]: Client action AcquireMaster
+[...]: User action CreateAccount (1)
+[...]: User action CreateAccount (2)
+[...]: User action AccountLogin (2)
+[...]: User action SupplyCredits
+[...]: User action ConvertCreditsToClock
+[...]: User action StartClockTimer
+[...]: User action StopClockTimer
+
+[ * ]: User action ViewTimeRecord
+[ > ]: Instruction Set: {'controller': 'client', 'ctype': 'action', 'action': 'view', 'view': 'time', 'time': 'record', 'record_id': 1, 'client_id': 'ewsm-uid:nIXQTnqQiKthk4Km4Nzw:1602854294.980496', 'session_token': 'ewsm-st:3Rzv0BpesWul03CbzSTB:1602854294.9876502'}
+[ < ]: Response: {'failed': False, 'time_sheet': 3, 'time_record': 1, 'record_data': {'id': 1, 'time_sheet': 3, 'reference': 'TimeRecord', 'create_date': '16-10-2020 16:18:20', 'write_date': '16-10-2020 16:18:23', 'time_start': '16-10-2020 16:18:20', 'time_stop': '16-10-2020 16:18:23', 'time_spent': 0.06, 'time_pending': 0.0, 'pending_count': 0}}
+
+[ + ]: Prerequisits -
+[...]: Client action RequestClientID
+[...]: Client action RequestSessionToken
+[...]: Client action NewMaster
+[...]: Client action AcquireMaster
+[...]: User action CreateAccount (1)
+[...]: User action CreateAccount (2)
+[...]: User action AccountLogin (2)
+[...]: User action SupplyCredits
+[...]: User action ConvertCreditsToClock
+[...]: User action StartClockTimer
+[...]: User action StopClockTimer
+
+[ * ]: User action ViewTimeSheet
+[ > ]: Instruction Set: {'controller': 'client', 'ctype': 'action', 'action': 'view', 'view': 'time', 'time': 'list', 'client_id': 'ewsm-uid:YvMounzys1VVem1L2GNo:1602854309.2064114', 'session_token': 'ewsm-st:LvQgjgsZ8NEGxuZ3DEMl:1602854309.2147672'}
+[ < ]: Response: {'failed': False, 'time_sheet': 3, 'sheet_data': {'id': 3, 'clock': 3, 'reference': 'TimeSheet', 'create_date': '16-10-2020 16:18:31', 'write_date': '16-10-2020 16:18:34', 'records': {1: 'TimeRecord'}}}
+
+[ + ]: Prerequisits -
+[...]: Client action RequestClientID
+[...]: Client action RequestSessionToken
+[...]: Client action NewMaster
+[...]: Client action AcquireMaster
+[...]: User action CreateAccount (1)
+[...]: User action CreateAccount (2)
+[...]: User action AccountLogin (2)
+[...]: User action CreateContactRecord
+[...]: User action SupplyCredits
+[...]: User action TransferCredits
+
+[ * ]: User action ViewTransferRecord
+[ > ]: Instruction Set: {'controller': 'client', 'ctype': 'action', 'action': 'view', 'view': 'transfer', 'transfer': 'record', 'record_id': 2, 'client_id': 'ewsm-uid:6D1LO4tcwVZXbijKJIXw:1602854322.3028688', 'session_token': 'ewsm-st:zO7xP9X8z2cMYHxdOKea:1602854322.309583'}
+[ < ]: Response: {'failed': False, 'transfer_sheet': 3, 'transfer_record': 2, 'record_data': {'id': 2, 'transfer_sheet': 3, 'reference': 'TransferRecord', 'create_date': '16-10-2020 16:18:47', 'write_date': '16-10-2020 16:18:47', 'transfer_type': 'incoming', 'transfer_from': 'ewsc.systemcore@alvearesolutions.ro', 'transfer_to': 'ewallet2@alvearesolutions.ro', 'credits': 100}}
+
+[ + ]: Prerequisits -
+[...]: Client action RequestClientID
+[...]: Client action RequestSessionToken
+[...]: Client action NewMaster
+[...]: Client action AcquireMaster
+[...]: User action CreateAccount (1)
+[...]: User action CreateAccount (2)
+[...]: User action AccountLogin (2)
+[...]: User action NewContactRecord
+[...]: User action SupplyCredits
+[...]: User action TransferCredits
+
+[ * ]: User action ViewTransferSheet
+[ > ]: Instruction Set: {'controller': 'client', 'ctype': 'action', 'action': 'view', 'view': 'transfer', 'transfer': 'list', 'client_id': 'ewsm-uid:TLee0IOvgEFCv8YaGfr1:1602854333.254101', 'session_token': 'ewsm-st:M1wwBPNplUhbCfHwTu0I:1602854333.258934'}
+[ < ]: Response: {'failed': False, 'transfer_sheet': 3, 'sheet_data': {'id': 3, 'ewallet': 3, 'reference': 'Transfer Sheet', 'create_date': '16-10-2020 16:18:56', 'write_date': '16-10-2020 16:19:00', 'records': {2: 'TransferRecord', 3: 'TransferRecord'}}}
 

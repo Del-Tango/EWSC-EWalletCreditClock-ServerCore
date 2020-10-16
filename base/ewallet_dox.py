@@ -16,6 +16,7 @@ def display_user_action_recover_account_instruction_set_example(**kwargs):
         'prerequisits': [
             'RequestClientID',
             'RequestSessionToken',
+            'AcquireMaster',
             'CreateAccount',
             'AccountLogin',
             'UnlinkAccount',
@@ -41,10 +42,10 @@ def display_user_action_recover_account_instruction_set_example(**kwargs):
                 'email': '<account-user-email type-str>',
                 'phone': '<account-user-phone type-str>',
                 'alias': '<account-user-alias type-str>',
-                'state_code': '<account-state-code type-int>',
-                'state_name': '<account-state-label type-int>',
+                'state': '<account-state-code type-int>',
                 'to_unlink': '<flag type-bool>',
                 'to_unlink_timestamp': '<%d-%m-%Y %H:%M:%S type-str tz-UTC or None>',
+                'subordonate_of': '<master-account-id type-int>',
                 'ewallet_archive': {
                     '<ewallet-id type-int>': '<ewallet-reference type-str>'
                 },
@@ -78,6 +79,7 @@ def display_user_action_pause_clock_timer_instruction_set_example(**kwargs):
         'prerequisits': [
             'RequestClientID',
             'RequestSessionToken',
+            'AcquireMaster',
             'CreateAccount',
             'AccountLogin',
             'SupplyCredits',
@@ -117,7 +119,8 @@ def display_user_action_resume_clock_timer_instruction_set_example(**kwargs):
         'prerequisits': [
             'RequestClientID',
             'RequestSessionToken',
-            'CreateNewAccount',
+            'AcquireMaster',
+            'CreateAccount',
             'AccountLogin',
             'SupplyCredits',
             'ConvertCreditsToClock',
@@ -157,7 +160,8 @@ def display_user_action_start_clock_timer_instruction_set_example(**kwargs):
         'prerequisits': [
             'RequestClientID',
             'RequestSessionToken',
-            'CreateNewAccount',
+            'AcquireMaster',
+            'CreateAccount',
             'AccountLogin',
             'SupplyCredits',
             'ConvertCreditsToClock',
@@ -192,7 +196,8 @@ def display_user_action_stop_clock_timer_instruction_set_example(**kwargs):
         'prerequisits': [
             'RequestClientID',
             'RequestSessionToken',
-            'CreateNewAccount',
+            'AcquireMaster',
+            'CreateAccount',
             'AccountLogin',
             'SupplyEWalletCredits',
             'ConvertCreditsToClock',
@@ -245,7 +250,8 @@ def display_user_action_account_login_instruction_set_example(**kwargs):
         'prerequisits': [
             'RequestClientID',
             'RequestSessionToken',
-            'CreateNewAccount',
+            'AcquireMaster',
+            'CreateAccount',
         ],
         'instruction_set': {
             'controller': 'client',
@@ -253,7 +259,7 @@ def display_user_action_account_login_instruction_set_example(**kwargs):
             'action': 'login',
             'client_id': '<client-id type-str>',
             'session_token': '<session-token type-str>',
-            'user_name': '<account-user-name type-str>',
+            'user_email': '<account-email-address type-str>',
             'user_pass': '<account-user-pass type-str>',
         },
         'response_ok': {
@@ -285,7 +291,8 @@ def display_user_action_account_logout_instruction_set_example(**kwargs):
         'prerequisits': [
             'RequestClientID',
             'RequestSessionToken',
-            'CreateNewAccount',
+            'AcquireMaster',
+            'CreateAccount',
             'AccountLogin',
         ],
         'instruction_set': {
@@ -324,7 +331,8 @@ def display_user_action_add_contact_list_record_instruction_set_example(**kwargs
         'prerequisits': [
             'RequestClientID',
             'RequestSessionToken',
-            'CreateNewAccount',
+            'AcquireMaster',
+            'CreateAccount',
             'AccountLogin',
         ],
         'instruction_set': {
@@ -335,6 +343,7 @@ def display_user_action_add_contact_list_record_instruction_set_example(**kwargs
             'contact': 'record',
             'client_id': '<client-id type-str>',
             'session_token': '<session-token type-str>',
+            'contact_list': '<contact-list-id type-int>',
             'user_name': '<contact-name type-str>',
             'user_email': '<contact-email type-str>',
             'user_phone': '<contact-phone type-str>',
@@ -363,7 +372,8 @@ def display_user_action_convert_clock_to_credits_instruction_set_example(**kwarg
         'prerequisits': [
             'RequestClientID',
             'RequestSessionToken',
-            'CreateNewAccount',
+            'AcquireMaster',
+            'CreateAccount',
             'AccountLogin',
             'SupplyCredits',
             'ConvertCreditsToClock',
@@ -402,7 +412,8 @@ def display_user_action_convert_credits_to_clock_instruction_set_example(**kwarg
         'prerequisits': [
             'RequestClientID',
             'RequestSessionToken',
-            'CreateNewAccount',
+            'AcquireMaster',
+            'CreateAccount',
             'AccountLogin',
             'SupplyEWalletCredits',
         ],
@@ -439,6 +450,7 @@ def display_user_action_create_new_account_instruction_set_example(**kwargs):
         'prerequisits': [
             'RequestClientID',
             'RequestSessionToken',
+            'AcquireMaster',
         ],
         'instruction_set': {
             'controller': 'client',
@@ -449,11 +461,13 @@ def display_user_action_create_new_account_instruction_set_example(**kwargs):
             'session_token': '<session-token type-str>',
             'user_name': '<account-user-name type-str>',
             'user_pass': '<account-user-pass type-str>',
-            'user_email': '<account-user-email type-str>'
+            'user_email': '<account-user-email type-str>',
+            'user_phone': '<account-phone-number type-str>',
+            'user_alias': '<account-alias type-str>',
         },
         'response_ok': {
             'failed': '<flag type-bool value-true>',
-            'account': '<account-user-email type-str>',
+            'account': '<account-email-address type-str>',
             'account_data': {
                 'id': '<account-id type-int>',
                 'name': '<account-user-name type-str>',
@@ -464,8 +478,7 @@ def display_user_action_create_new_account_instruction_set_example(**kwargs):
                 'email': '<account-user-email type-str>',
                 'phone': '<account-user-phone type-str>',
                 'alias': '<account-user-alias type-str>',
-                'state_code': '<account-state-code type-int>',
-                'state_name': '<account-state-label type-str>',
+                'state': '<account-state-code type-int>',
                 'ewallet_archive': {
                     '<ewallet-id type-int>': '<ewallet-reference type-str>'
                 },
@@ -491,7 +504,8 @@ def display_user_action_create_contact_list_instruction_set_example(**kwargs):
         'prerequisits': [
             'RequestClientID',
             'RequestSessionToken',
-            'CreateNewAccount',
+            'AcquireMaster',
+            'CreateAccount',
             'AccountLogin',
         ],
         'instruction_set': {
@@ -534,7 +548,8 @@ def display_user_action_create_conversion_sheet_instruction_set_example(**kwargs
         'prerequisits': [
             'RequestClientID',
             'RequestSessionToken',
-            'CreateNewAccount',
+            'AcquireMaster',
+            'CreateAccount',
             'AccountLogin',
         ],
         'instruction_set': {
@@ -577,7 +592,8 @@ def display_user_action_create_credit_clock_instruction_set_example(**kwargs):
         'prerequisits': [
             'RequestClientID',
             'RequestSessionToken',
-            'CreateNewAccount',
+            'AcquireMaster',
+            'CreateAccount',
             'AccountLogin',
         ],
         'instruction_set': {
@@ -627,7 +643,8 @@ def display_user_action_create_credit_ewallet_instruction_set_example(**kwargs):
         'prerequisits': [
             'RequestClientID',
             'RequestSessionToken',
-            'CreateNewAccount',
+            'AcquireMaster',
+            'CreateAccount',
             'AccountLogin',
         ],
         'instruction_set': {
@@ -680,7 +697,8 @@ def display_user_action_create_invoice_sheet_instruction_set_example(**kwargs):
         'prerequisits': [
             'RequestClientID',
             'RequestSessionToken',
-            'CreateNewAccount',
+            'AcquireMaster',
+            'CreateAccount',
             'AccountLogin',
         ],
         'instruction_set': {
@@ -723,7 +741,8 @@ def display_user_action_create_time_sheet_instruction_set_example(**kwargs):
         'prerequisits': [
             'RequestClientID',
             'RequestSessionToken',
-            'CreateNewAccount',
+            'AcquireMaster',
+            'CreateAccount',
             'AccountLogin',
         ],
         'instruction_set': {
@@ -766,7 +785,8 @@ def display_user_action_create_transfer_sheet_instruction_set_example(**kwargs):
         'prerequisits': [
             'RequestClientID',
             'RequestSessionToken',
-            'CreateNewAccount',
+            'AcquireMaster',
+            'CreateAccount',
             'AccountLogin',
         ],
         'instruction_set': {
@@ -809,7 +829,8 @@ def display_user_action_edit_account_instruction_set_example(**kwargs):
         'prerequisits': [
             'RequestClientID',
             'RequestSessionToken',
-            'CreateNewAccount',
+            'AcquireMaster',
+            'CreateAccount',
             'AccountLogin',
         ],
         'instruction_set': {
@@ -820,10 +841,10 @@ def display_user_action_edit_account_instruction_set_example(**kwargs):
             'client_id': '<client-id type-str>',
             'session_token': '<session-token type-str>',
             'user_name': '<account-user-name type-str>',
-            'user_phone': '<account-user-phone type-str>',
-            'user_email': '<account-user-email type-str>',
-            'user_pass': '<account-user-pass type-str>',
-            'user_alias': '<account-user-alias type-str>',
+            'user_phone': '<account-phone-number type-str>',
+            'user_email': '<account-email-address type-str>',
+            'user_pass': '<account-password type-str>',
+            'user_alias': '<account-alias type-str>',
         },
         'response_ok': {
             'failed': '<flag type-bool value-false>',
@@ -872,7 +893,8 @@ def display_user_action_pay_credits_instruction_set_example(**kwargs):
         'prerequisits': [
             'RequestClientID',
             'RequestSessionToken',
-            'CreateNewAccount',
+            'AcquireMaster',
+            'CreateAccount',
             'AccountLogin',
             'SupplyCredits',
         ],
@@ -882,7 +904,7 @@ def display_user_action_pay_credits_instruction_set_example(**kwargs):
             'action': 'pay',
             'client_id': '<client-id type-str>',
             'session_token': '<session-token type-str>',
-            'pay': '<account-user-email type-str>',
+            'pay': '<account-email-address type-str>',
             'credits': '<ewallet-credits type-int>',
         },
         'response_ok': {
@@ -963,7 +985,8 @@ def display_user_action_supply_credits_instruction_set_example(**kwargs):
         'prerequisits': [
             'RequestClientID',
             'RequestSessionToken',
-            'CreateNewAccount',
+            'AcquireMaster',
+            'CreateAccount',
             'AccountLogin',
         ],
         'instruction_set': {
@@ -1002,8 +1025,9 @@ def display_user_action_switch_active_session_user_instruction_set_example(**kwa
         'prerequisits': [
             'RequestClientID',
             'RequestSessionToken',
-            'CreateNewAccount (1)',
-            'CreateNewAccount (2)',
+            'AcquireMaster',
+            'CreateAccount (1)',
+            'CreateAccount (2)',
             'AccountLogin (1)',
             'AccountLogin (2)',
         ],
@@ -1045,7 +1069,8 @@ def display_user_action_switch_contact_list_instruction_set_example(**kwargs):
         'prerequisits': [
             'RequestClientID',
             'RequestSessionToken',
-            'CreateNewAccount',
+            'AcquireMaster',
+            'CreateAccount',
             'AccountLogin',
             'CreateContactList',
         ],
@@ -1090,7 +1115,8 @@ def display_user_action_switch_conversion_sheet_instruction_set_example(**kwargs
         'prerequisits': [
             'RequestClientID',
             'RequestSessionToken',
-            'CreateNewAccount',
+            'AcquireMaster',
+            'CreateAccount',
             'AccountLogin',
             'CreateConversionSheet',
         ],
@@ -1135,7 +1161,8 @@ def display_user_action_switch_credit_clock_instruction_set_example(**kwargs):
         'prerequisits': [
             'RequestClientID',
             'RequestSessionToken',
-            'CreateNewAccount',
+            'AcquireMaster',
+            'CreateAccount',
             'AccountLogin',
             'CreateCreditClock',
         ],
@@ -1159,7 +1186,7 @@ def display_user_action_switch_credit_clock_instruction_set_example(**kwargs):
                 'create_date': '<%d-%m-%Y %H:%M:%S type-str tz-UTC>',
                 'write_date': '<%d-%m-%Y %H:%M:%S type-str tz-UTC>',
                 'credit_clock': '<available-clock-minutes type-float>',
-                'clock_state': '<clock-timer-state type-str>',
+                'clock_state': '<clock-timer-state values-(active | inactive) type-str>',
                 'time_sheet': '<active-time-sheet-id type-int>',
                 'time_sheet_archive': {
                     '<time-sheet-id type-int>': '<time-sheet-reference type-str>'
@@ -1187,7 +1214,8 @@ def display_user_action_switch_credit_ewallet_instruction_set_example(**kwargs):
         'prerequisits': [
             'RequestClientID',
             'RequestSessionToken',
-            'CreateNewAccount',
+            'AcquireMaster',
+            'CreateAccount',
             'AccountLogin',
             'CreateCreditEWallet',
         ],
@@ -1242,7 +1270,8 @@ def display_user_action_switch_invoice_sheet_instruction_set_example(**kwargs):
         'prerequisits': [
             'RequestClientID',
             'RequestSessionToken',
-            'CreateNewAccount',
+            'AcquireMaster',
+            'CreateAccount',
             'AccountLogin',
             'CreateInvoiceSheet',
         ],
@@ -1287,7 +1316,8 @@ def display_user_action_switch_time_sheet_instruction_set_example(**kwargs):
         'prerequisits': [
             'RequestClientID',
             'RequestSessionToken',
-            'CreateNewAccount',
+            'AcquireMaster',
+            'CreateAccount',
             'AccountLogin',
             'CreateTimeSheet',
         ],
@@ -1332,7 +1362,8 @@ def display_user_action_switch_transfer_sheet_instruction_set_example(**kwargs):
         'prerequisits': [
             'RequestClientID',
             'RequestSessionToken',
-            'CreateNewAccount',
+            'AcquireMaster',
+            'CreateAccount',
             'AccountLogin',
             'CreateTransferSheet',
         ],
@@ -1377,7 +1408,8 @@ def display_user_action_transfer_credits_instruction_set_example(**kwargs):
         'prerequisits': [
             'RequestClientID',
             'RequestSessionToken',
-            'CreateNewAccount',
+            'AcquireMaster',
+            'CreateAccount',
             'AccountLogin',
             'NewContactRecord',
             'SupplyCredits',
@@ -1416,7 +1448,8 @@ def display_user_action_unlink_account_instruction_set_example(**kwargs):
         'prerequisits': [
             'RequestClientID',
             'RequestSessionToken',
-            'CreateNewAccount',
+            'AcquireMaster',
+            'CreateAccount',
             'AccountLogin',
         ],
         'instruction_set': {
@@ -1449,7 +1482,8 @@ def display_user_action_unlink_contact_list_instruction_set_example(**kwargs):
         'prerequisits': [
             'RequestClientID',
             'RequestSessionToken',
-            'CreateNewAccount',
+            'AcquireMaster',
+            'CreateAccount',
             'AccountLogin',
             'CreateContactList',
         ],
@@ -1484,7 +1518,8 @@ def display_user_action_unlink_contact_record_instruction_set_example(**kwargs):
         'prerequisits': [
             'RequestClientID',
             'RequestSessionToken',
-            'CreateNewAccount',
+            'AcquireMaster',
+            'CreateAccount',
             'AccountLogin',
             'NewContactRecord',
         ],
@@ -1520,7 +1555,8 @@ def display_user_action_unlink_conversion_record_instruction_set_example(**kwarg
         'prerequisits': [
             'RequestClientID',
             'RequestSessionToken',
-            'CreateNewAccount',
+            'AcquireMaster',
+            'CreateAccount',
             'AccountLogin',
             'ConvertCreditsToClock',
         ],
@@ -1556,7 +1592,8 @@ def display_user_action_unlink_conversion_sheet_instruction_set_example(**kwargs
         'prerequisits': [
             'RequestClientID',
             'RequestSessionToken',
-            'CreateNewAccount',
+            'AcquireMaster',
+            'CreateAccount',
             'AccountLogin',
             'CreateConversionSheet',
         ],
@@ -1591,7 +1628,8 @@ def display_user_action_unlink_credit_clock_instruction_set_example(**kwargs):
         'prerequisits': [
             'RequestClientID',
             'RequestSessionToken',
-            'CreateNewAccount',
+            'AcquireMaster',
+            'CreateAccount',
             'AccountLogin',
             'CreateCreditClock',
         ],
@@ -1626,7 +1664,8 @@ def display_user_action_unlink_credit_ewallet_instruction_set_example(**kwargs):
         'prerequisits': [
             'RequestClientID',
             'RequestSessionToken',
-            'CreateNewAccount',
+            'AcquireMaster',
+            'CreateAccount',
             'AccountLogin',
             'CreateCreditEWallet',
         ],
@@ -1661,7 +1700,8 @@ def display_user_action_unlink_invoice_record_instruction_set_example(**kwargs):
         'prerequisits': [
             'RequestClientID',
             'RequestSessionToken',
-            'CreateNewAccount',
+            'AcquireMaster',
+            'CreateAccount',
             'AccountLogin',
             'PayCredits',
         ],
@@ -1697,7 +1737,8 @@ def display_user_action_unlink_invoice_sheet_instruction_set_example(**kwargs):
         'prerequisits': [
             'RequestClientID',
             'RequestSessionToken',
-            'CreateNewAccount',
+            'AcquireMaster',
+            'CreateAccount',
             'AccountLogin',
             'CreateInvoiceSheet',
         ],
@@ -1732,7 +1773,8 @@ def display_user_action_unlink_time_record_instruction_set_example(**kwargs):
         'prerequisits': [
             'RequestClientID',
             'RequestSessionToken',
-            'CreateNewAccount',
+            'AcquireMaster',
+            'CreateAccount',
             'AccountLogin',
             'StartClockTimer',
             'StopClockTimer',
@@ -1769,7 +1811,8 @@ def display_user_action_unlink_time_sheet_instruction_set_example(**kwargs):
         'prerequisits': [
             'RequestClientID',
             'RequestSessionToken',
-            'CreateNewAccount',
+            'AcquireMaster',
+            'CreateAccount',
             'AccountLogin',
             'CreateTimeSheet',
         ],
@@ -1804,7 +1847,8 @@ def display_user_action_unlink_transfer_record_instruction_set_example(**kwargs)
         'prerequisits': [
             'RequestClientID',
             'RequestSessionToken',
-            'CreateNewAccount',
+            'AcquireMaster',
+            'CreateAccount',
             'AccountLogin',
             'TransferCredits',
         ],
@@ -1840,7 +1884,8 @@ def display_user_action_unlink_transfer_sheet_instruction_set_example(**kwargs):
         'prerequisits': [
             'RequestClientID',
             'RequestSessionToken',
-            'CreateNewAccount',
+            'AcquireMaster',
+            'CreateAccount',
             'AccountLogin',
             'CreateTransferSheet',
         ],
@@ -1875,7 +1920,8 @@ def display_user_action_view_account_instruction_set_example(**kwargs):
         'prerequisits': [
             'RequestClientID',
             'RequestSessionToken',
-            'CreateNewAccount',
+            'AcquireMaster',
+            'CreateAccount',
             'AccountLogin',
         ],
         'instruction_set': {
@@ -1928,7 +1974,8 @@ def display_user_action_view_contact_list_instruction_set_example(**kwargs):
         'prerequisits': [
             'RequestClientID',
             'RequestSessionToken',
-            'CreateNew Account',
+            'AcquireMaster',
+            'CreateAccount',
             'AccountLogin',
         ],
         'instruction_set': {
@@ -1971,7 +2018,8 @@ def display_user_action_view_contact_record_instruction_set_example(**kwargs):
         'prerequisits': [
             'RequestClientID',
             'RequestSessionToken',
-            'CreateNew Account',
+            'AcquireMaster',
+            'CreateAccount',
             'AccountLogin',
             'NewContactRecord',
         ],
@@ -2018,7 +2066,8 @@ def display_user_action_view_conversion_record_instruction_set_example(**kwargs)
         'prerequisits': [
             'RequestClientID',
             'RequestSessionToken',
-            'CreateNewAccount',
+            'AcquireMaster',
+            'CreateAccount',
             'AccountLogin',
             'SupplyCredits',
             'ConvertCreditsToClock',
@@ -2065,7 +2114,8 @@ def display_user_action_view_conversion_sheet_instruction_set_example(**kwargs):
         'prerequisits': [
             'RequestClientID',
             'RequestSessionToken',
-            'CreateNewAccount',
+            'AcquireMaster',
+            'CreateAccount',
             'AccountLogin',
             'SupplyCredits',
             'ConvertCreditsToClock',
@@ -2110,7 +2160,8 @@ def display_user_action_view_credit_clock_instruction_set_example(**kwargs):
         'prerequisits': [
             'RequestClientID',
             'RequestSessionToken',
-            'CreateNewAccount',
+            'AcquireMaster',
+            'CreateAccount',
             'AccountLogin',
         ],
         'instruction_set': {
@@ -2160,7 +2211,8 @@ def display_user_action_view_credit_ewallet_instruction_set_example(**kwargs):
         'prerequisits': [
             'RequestClientID',
             'RequestSessionToken',
-            'CreateNewAccount',
+            'AcquireMaster',
+            'CreateAccount',
             'AccountLogin',
         ],
         'instruction_set': {
@@ -2213,7 +2265,8 @@ def display_user_action_view_invoice_record_instruction_set_example(**kwargs):
         'prerequisits': [
             'RequestClientID',
             'RequestSessionToken',
-            'CreateNewAccount',
+            'AcquireMaster',
+            'CreateAccount',
             'AccountLogin',
             'SupplyCredits',
         ],
@@ -2261,7 +2314,7 @@ def display_user_action_view_invoice_sheet_instruction_set_example(**kwargs):
         'prerequisits': [
             'RequestClientID',
             'RequestSessionToken',
-            'CreateNewAccount',
+            'CreateAccount',
             'AccountLogin',
             'SupplyCredits',
         ],
@@ -2305,7 +2358,8 @@ def display_user_action_view_login_records_instruction_set_example(**kwargs):
         'prerequisits': [
             'RequestClientID',
             'RequestSessionToken',
-            'CreateNewAccount',
+            'AcquireMaster',
+            'CreateAccount',
             'AccountLogin',
         ],
         'instruction_set': {
@@ -2340,7 +2394,8 @@ def display_user_action_view_logout_records_instruction_set_example(**kwargs):
         'prerequisits': [
             'RequestClientID',
             'RequestSessionToken',
-            'CreateNewAccount',
+            'AcquireMaster',
+            'CreateAccount',
             'AccountLogin',
             'AccountLogout',
         ],
@@ -2376,7 +2431,8 @@ def display_user_action_view_time_record_instruction_set_example(**kwargs):
         'prerequisits': [
             'RequestClientID',
             'RequestSessionToken',
-            'CreateNewAccount',
+            'AcquireMaster',
+            'CreateAccount',
             'AccountLogin',
             'SupplyCredits',
             'ConvertCreditsToClock',
@@ -2427,7 +2483,8 @@ def display_user_action_view_time_sheet_instruction_set_example(**kwargs):
         'prerequisits': [
             'RequestClientID',
             'RequestSessionToken',
-            'CreateNewAccount',
+            'AcquireMaster',
+            'CreateAccount',
             'AccountLogin',
         ],
         'instruction_set': {
@@ -2470,7 +2527,8 @@ def display_user_action_view_transfer_record_instruction_set_example(**kwargs):
         'prerequisits': [
             'RequestClientID',
             'RequestSessionToken',
-            'CreateNewAccount',
+            'AcquireMaster',
+            'CreateAccount',
             'AccountLogin',
             'NewContactRecord',
             'SupplyEWalletCredits',
@@ -2519,7 +2577,8 @@ def display_user_action_view_transfer_sheet_instruction_set_example(**kwargs):
         'prerequisits': [
             'RequestClientID',
             'RequestSessionToken',
-            'CreateNewAccount',
+            'AcquireMaster',
+            'CreateAccount',
             'AccountLogin',
         ],
         'instruction_set': {
@@ -2834,7 +2893,6 @@ def display_user_action_ctoken_keep_alive_instruction_set_example(**kwargs):
         'prerequisits': [
             'RequestClientID',
             'RequestSessionToken',
-            'CreateMaster',
             'AcquireMaster',
             'CreateAccount',
             'AccountLogin',
@@ -2881,7 +2939,6 @@ def display_user_action_stoken_keep_alive_instruction_set_example(**kwargs):
         'prerequisits': [
             'RequestClientID',
             'RequestSessionToken',
-            'CreateMaster',
             'AcquireMaster',
             'CreateAccount',
             'AccountLogin',
@@ -2928,7 +2985,6 @@ def display_user_action_acquire_master_instruction_set_example(**kwargs):
         'prerequisits': [
             'RequestClientID',
             'RequestSessionToken',
-            'CreateMaster',
         ],
         'instruction_set': {
             'controller': 'client',
@@ -3024,11 +3080,12 @@ def display_master_action_account_login_instruction_set_example(**kwargs):
             'failed': '<flag type-bool value-false>',
             'account': '<master-email type-str>',
             'session_data': {
-                'id': '<session-id type-int>',
-                'master': '<master-email type-str>',
-                'create_date': '<datetime-string type-str>',
-                'write_date': '<datetime-string type-str>',
-                'expiration_date': '<datetime-string type-str>',
+                'session_user_account': '<account-email-address>',
+                'session_credit_ewallet': '<ewallet-id type-int>',
+                'session_contact_list': '<contact-list-id type-int>',
+                'session_account_archive': {
+                    '<account-email type-str>': '<account-name type-str>',
+                },
             }
         },
         'response_nok': {
@@ -3065,11 +3122,12 @@ def display_master_action_account_logout_instruction_set_example(**kwargs):
             'failed': '<flag type-bool value-false>',
             'account': '<master-email type-str>',
             'session_data': {
-                'id': '<session-id type-int>',
-                'master': '<master-email type-(str | None)>',
-                'create_date': '<datetime-string type-str>',
-                'write_date': '<datetime-string type-str>',
-                'expiration_date': '<datetime-string type-str>',
+                'session_user_account': '<account-email-address>',
+                'session_credit_ewallet': '<ewallet-id type-int>',
+                'session_contact_list': '<contact-list-id type-int>',
+                'session_account_archive': {
+                    '<account-email type-str>': '<account-name type-str>',
+                },
             }
         },
         'response_nok': {

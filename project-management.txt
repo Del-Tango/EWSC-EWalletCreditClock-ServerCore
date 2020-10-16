@@ -137,8 +137,8 @@ Less information is never the answer.
     - x - (EWCC) Pass config and log objects from ewcc down
     - x - (EWCC) Refactor test suit
     - x - (EWCC) Grooming session for log messages
-    -   - (EWSC) Groom EWDox json instruction set
-    - (EWAT) Groom tutor functional test suit
+    - x - (EWSC) Groom EWDox json instruction sets and OK responses
+    -   - (EWAT) Groom tutor functional test suit
     - (EWAT) Groom tutor instruction set inspections
     - (EWAT) Groom tutor interactive actions
     - (EWAT) Implement support for client ID validity checker inspections
