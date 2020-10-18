@@ -91,6 +91,10 @@ class CreditEWallet(Base):
 
     # FETCHERS
 
+    def fetch_credit_wallet_transfer_sheet_archive(self, **kwargs):
+        log.debug('')
+        return self.transfer_sheet_archive
+
     def fetch_credit_wallet_invoice_sheet_archive(self, **kwargs):
         log.debug('')
         return self.invoice_sheet_archive
@@ -598,7 +602,7 @@ class CreditEWallet(Base):
         log.debug('TODO - Cleanup all relationships')
         cleanup = {
             'invoice_sheet': self.action_cleanup_invoice_sheets(**kwargs),
-#           'transfer_sheet': self.action_cleanup_transfer_sheets(**kwargs),
+            'transfer_sheet': self.action_cleanup_transfer_sheets(**kwargs),
 #           'credit_clock': self.action_cleanup_credit_clocks(**kwargs),
         }
         return cleanup
@@ -946,6 +950,47 @@ class CreditEWallet(Base):
 
     # ACTIONS
 
+    def action_cleanup_transfer_sheets(self, **kwargs):
+        log.debug('')
+        transfer_sheet_archive = self.fetch_credit_wallet_transfer_sheet_archive()
+        command_chain_response = {
+            'failed': True,
+            'ewallet': self.fetch_credit_ewallet_id(),
+        }
+        lists_cleaned, cleanup_failures = 0, 0
+        if not transfer_sheet_archive:
+            command_chain_response.update({
+                'sheets_cleaned': lists_cleaned,
+                'cleanup_failures': cleanup_failures,
+            })
+            return command_chain_response
+        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
+            kwargs, 'action', 'cleanup'
+        )
+        for sheet in transfer_sheet_archive:
+            sheet.credit_transfer_sheet_controller(
+                action='cleanup', **sanitized_command_chain,
+            )
+            unlink = self.unlink_transfer_list(
+                list_id=sheet.fetch_transfer_sheet_id(), **kwargs
+            )
+            if not unlink or isinstance(unlink, dict) and \
+                    unlink.get('failed'):
+                cleanup_failures += 1
+                self.warning_could_not_unlink_transfer_sheet(
+                    sheet, kwargs, transfer_sheet_archive, lists_cleaned,
+                    cleanup_failures, unlink
+                )
+                continue
+            lists_cleaned += 1
+        command_chain_response.update({
+            'sheets_cleaned': lists_cleaned,
+            'cleanup_failures': cleanup_failures,
+        })
+        return self.error_no_transfer_sheets_cleaned_up(
+            kwargs, transfer_sheet_archive, lists_cleaned, cleanup_failures
+        ) if not lists_cleaned else command_chain_response
+
     def action_cleanup_invoice_sheets(self, **kwargs):
         log.debug('')
         invoice_sheet_archive = self.fetch_credit_wallet_invoice_sheet_archive()
@@ -1207,6 +1252,12 @@ class CreditEWallet(Base):
         check = self.check_transfer_sheet_belongs_to_credit_ewallet(
             transfer_sheet
         )
+        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
+            kwargs, 'action',
+        )
+        transfer_sheet.credit_transfer_sheet_controller(
+            action='cleanup', **sanitized_command_chain,
+        )
         if not check:
             return self.warning_transfer_sheet_does_not_belong_to_credit_ewallet(
                 kwargs, transfer_sheet, check
@@ -1390,6 +1441,16 @@ class CreditEWallet(Base):
     '''
     [ TODO ]: Fetch error messages from message file by key codes.
     '''
+
+    def warning_could_not_unlink_transfer_sheet(self, *args):
+        command_chain_response = {
+            'failed': True, 'level': 'credit-ewallet',
+            'warning': 'Something went wrong. '
+                       'Could not unlink transfer sheet. '
+                       'Details: {}'.format(args),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
 
     def warning_could_not_unlink_invoice_sheet(self, *args):
         command_chain_response = {
@@ -1617,6 +1678,15 @@ class CreditEWallet(Base):
     '''
     [ TODO ]: Fetch error messages from message file by key codes.
     '''
+
+    def error_no_transfer_sheets_cleaned_up(self, *args):
+        command_chain_response = {
+            'failed': True, 'level': 'credit-ewallet',
+            'error': 'No credit ewallet transfer sheets cleaned up. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
 
     def error_no_invoice_sheets_cleaned_up(self, *args):
         command_chain_response = {

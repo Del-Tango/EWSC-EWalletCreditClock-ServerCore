@@ -204,7 +204,7 @@ class CreditTransferSheetRecord(Base):
 
     def error_could_not_set_record_id(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'transfer-sheet',
             'error': 'Something went wrong. '
                      'Could not set transfer record id. '
                      'Details: {}'.format(args),
@@ -214,7 +214,7 @@ class CreditTransferSheetRecord(Base):
 
     def error_could_not_set_transfer_sheet_id(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'transfer-sheet',
             'error': 'Something went wrong. '
                      'Could not set transfer sheet id. '
                      'Details: {}'.format(args),
@@ -224,7 +224,7 @@ class CreditTransferSheetRecord(Base):
 
     def error_could_not_set_transfer_record_reference(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'transfer-sheet',
             'error': 'Something went wrong. '
                      'Could not set transfer record reference. '
                      'Details: {}'.format(args),
@@ -234,7 +234,7 @@ class CreditTransferSheetRecord(Base):
 
     def error_could_not_set_transfer_type(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'transfer-sheet',
             'error': 'Something went wrong. '
                      'Could not set transfer type. '
                      'Details: {}'.format(args),
@@ -244,7 +244,7 @@ class CreditTransferSheetRecord(Base):
 
     def error_could_not_set_transfer_from(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'transfer-sheet',
             'error': 'Something went wrong. '
                      'Could not set transfer from user account. '
                      'Details: {}'.format(args),
@@ -254,7 +254,7 @@ class CreditTransferSheetRecord(Base):
 
     def error_could_not_set_transfer_to(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'transfer-sheet',
             'error': 'Something went wrong. '
                      'Could not set transfer to user account. '
                      'Details: {}'.format(args),
@@ -264,7 +264,7 @@ class CreditTransferSheetRecord(Base):
 
     def error_could_not_set_credits(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'transfer-sheet',
             'error': 'Something went wrong. '
                      'Could not set transfer record credit count. '
                      'Details: {}'.format(args),
@@ -274,7 +274,7 @@ class CreditTransferSheetRecord(Base):
 
     def error_could_not_set_transfer_record_write_date(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'transfer-sheet',
             'error': 'Something went wrong. '
                      'Could not set transfer record write date. '
                      'Details: {}'.format(args),
@@ -284,7 +284,7 @@ class CreditTransferSheetRecord(Base):
 
     def error_no_record_id_found(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'transfer-sheet',
             'error': 'No transfer record id found. '
                      'Details: {}'.format(args),
         }
@@ -293,7 +293,7 @@ class CreditTransferSheetRecord(Base):
 
     def error_no_transfer_sheet_id_found(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'transfer-sheet',
             'error': 'No transfer sheet id found. '
                      'Details: {}'.format(args),
         }
@@ -302,7 +302,7 @@ class CreditTransferSheetRecord(Base):
 
     def error_no_reference_found(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'transfer-sheet',
             'error': 'No transfer record reference found. '
                      'Details: {}'.format(args),
         }
@@ -311,7 +311,7 @@ class CreditTransferSheetRecord(Base):
 
     def error_no_transfer_type_found(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'transfer-sheet',
             'error': 'No transfer type found. '
                      'Details: {}'.format(args),
         }
@@ -320,7 +320,7 @@ class CreditTransferSheetRecord(Base):
 
     def error_no_transfer_from_found(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'transfer-sheet',
             'error': 'No transfer from user account found. '
                      'Details: {}'.format(args),
         }
@@ -329,7 +329,7 @@ class CreditTransferSheetRecord(Base):
 
     def error_no_transfer_to_found(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'transfer-sheet',
             'error': 'No transfer to user account found. '
                      'Details: {}'.format(args),
         }
@@ -338,7 +338,7 @@ class CreditTransferSheetRecord(Base):
 
     def error_no_credits_found(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'transfer-sheet',
             'error': 'No credits found. '
                      'Details: {}'.format(args),
         }
@@ -657,6 +657,59 @@ class CreditTransferSheet(Base):
         log.debug('')
         return False if record not in self.records else True
 
+    # CLEANERS (LIST)
+
+    def cleanup_invoice_sheet_record_by_id(self, record_id, **kwargs):
+        log.debug('')
+        try:
+            kwargs['active_session'].query(
+                CreditTransferSheetRecord
+            ).filter_by(
+                record_id=record_id
+            ).delete()
+        except Exception as e:
+            return self.error_could_not_unlink_transfer_sheet_record(
+                record_id, kwargs, e
+            )
+        log.info('Successfully unlinked transfer sheet record.')
+        return record_id
+
+    def cleanup_transfer_sheet_records(self, **kwargs):
+        log.debug('')
+        records = self.fetch_transfer_sheet_records()
+        command_chain_response = {
+            'failed': False,
+            'transfer_sheet': self.fetch_transfer_sheet_id(),
+        }
+        records_cleaned, cleanup_failures = 0, 0
+        if not records:
+            command_chain_response.update({
+                'records_cleaned': records_cleaned,
+                'cleanup_failures': cleanup_failures,
+            })
+            return command_chain_response
+        for record in records:
+            try:
+                self.cleanup_transfer_sheet_record_by_id(
+                    record.fetch_record_id(), **kwargs
+                )
+            except Exception as e:
+                self.warning_could_not_cleanup_transfer_record(
+                    record, kwargs, records, records_cleaned,
+                    cleanup_failures, e
+                )
+                cleanup_failures += 1
+                continue
+            records_cleaned += 1
+        command_chain_response.update({
+            'records_cleaned': records_cleaned,
+            'cleanup_failures': cleanup_failures,
+        })
+        return self.error_no_transfer_records_cleaned(
+            kwargs, records, records_cleaned, cleanup_failures
+        ) if not records_cleaned else command_chain_response
+
+
     # ACTIONS (LIST)
 
 #   @pysnooper.snoop('logs/ewallet.log')
@@ -753,6 +806,7 @@ class CreditTransferSheet(Base):
             'append': self.append_transfer_sheet_record,
             'interogate': self.interogate_transfer_sheet_records,
             'clear': self.clear_transfer_sheet_records,
+            'cleanup': self.cleanup_transfer_sheet_records,
         }
         handle = handlers[kwargs['action']](**kwargs)
         if handle and kwargs['action'] != 'interogate':
@@ -764,9 +818,19 @@ class CreditTransferSheet(Base):
     [ TODO ]: Fetch warning messages from message file by key codes.
     '''
 
+    def warning_could_not_cleanup_transfer_record(self, *args):
+        command_chain_response = {
+            'failed': True, 'level': 'transfer-sheet',
+            'warning': 'Something went wrong. '
+                       'Could not cleanup transfer sheet record. '
+                       'Details: {}'.format(args),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
+
     def warning_record_not_in_transfer_sheet(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'transfer-sheet',
             'warning': 'Record not in transfer sheet. '
                        'Details: {}'.format(args),
         }
@@ -775,7 +839,7 @@ class CreditTransferSheet(Base):
 
     def warning_could_not_fetch_transfer_record(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'transfer-sheet',
             'warning': 'Something went wrong. '
                        'Could not fetch transfer sheet record. '
                        'Details: {}'.format(args),
@@ -788,9 +852,30 @@ class CreditTransferSheet(Base):
     [ TODO ]: Fetch error messages from message file by key codes.
     '''
 
+    def error_no_transfer_records_cleaned(self, *args):
+        command_chain_response = {
+            'failed': True, 'level': 'transfer-sheet',
+            'error': 'No transfer sheet records cleaned. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_could_not_unlink_transfer_sheet_record(self, *args):
+        command_chain_response = {
+            'failed': True, 'level': 'transfer-sheet',
+            'error': 'Something went wrong. '
+                     'Could not unlink transfer sheet record. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+
+
     def error_could_not_set_transfer_sheet_ewallet(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'transfer-sheet',
             'error': 'Something went wrong. '
                      'Could not set transfer sheet credit ewallet. '
                      'Details: {}'.format(args),
@@ -800,7 +885,7 @@ class CreditTransferSheet(Base):
 
     def error_could_not_set_transfer_sheet_create_date(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'transfer-sheet',
             'error': 'Something went wrong. '
                      'Could not set transfer sheet create date. '
                      'Details: {}'.format(args),
@@ -810,7 +895,7 @@ class CreditTransferSheet(Base):
 
     def error_could_not_set_transfer_sheet_write_date(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'transfer-sheet',
             'error': 'Something went wrong. '
                      'Could not set transfer sheet write date. '
                      'Details: {}'.format(args),
@@ -820,7 +905,7 @@ class CreditTransferSheet(Base):
 
     def error_could_not_set_transfer_sheet_id(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'transfer-sheet',
             'error': 'Something went wrong. '
                      'Could not set transfer sheet id. '
                      'Details: {}'.format(args),
@@ -830,7 +915,7 @@ class CreditTransferSheet(Base):
 
     def error_could_not_set_transer_sheet_ewallet_id(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'transfer-sheet',
             'error': 'Something went wrong. '
                      'Could not set transfer sheet ewallet id. '
                      'Details: {}'.format(args),
@@ -840,7 +925,7 @@ class CreditTransferSheet(Base):
 
     def error_could_not_set_transfer_sheet_reference(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'transfer-sheet',
             'error': 'Something went wrong. '
                      'Could not set transfer sheet reference. '
                      'Details: {}'.format(args),
@@ -850,7 +935,7 @@ class CreditTransferSheet(Base):
 
     def error_could_not_set_transfer_sheet_records(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'transfer-sheet',
             'error': 'Something went wrong. '
                      'Could not set transfer sheet records. '
                      'Details: {}'.format(args),
@@ -860,7 +945,7 @@ class CreditTransferSheet(Base):
 
     def error_could_not_remove_transfer_sheet_record(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'transfer-sheet',
             'error': 'Something went wrong. '
                      'Could not remove transfer sheet record. '
                      'Details: {}'.format(args),
@@ -870,7 +955,7 @@ class CreditTransferSheet(Base):
 
     def error_could_not_update_transfer_sheet_records(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'transfer-sheet',
             'error': 'Something went wrong. '
                      'Could not update transfer sheet records. '
                      'Details: {}'.format(args),
@@ -896,7 +981,7 @@ class CreditTransferSheet(Base):
 
     def error_no_transfer_sheet_id_found(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'transfer-sheet',
             'error': 'No transfer sheet id found. Details: {}'.format(args),
         }
         log.error(command_chain_response['error'])
@@ -904,7 +989,7 @@ class CreditTransferSheet(Base):
 
     def error_no_wallet_id_found(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'transfer-sheet',
             'error': 'No credit ewallet id found. Details: {}'.format(args),
         }
         log.error(command_chain_response['error'])
@@ -912,7 +997,7 @@ class CreditTransferSheet(Base):
 
     def error_no_reference_found(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'transfer-sheet',
             'error': 'No transfer sheet reference found. Details: {}'.format(args),
         }
         log.error(command_chain_response['error'])
@@ -920,7 +1005,7 @@ class CreditTransferSheet(Base):
 
     def error_no_records_found(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'transfer-sheet',
             'error': 'No transfer records found. Details: {}'.format(args),
         }
         log.error(command_chain_response['error'])
@@ -928,7 +1013,7 @@ class CreditTransferSheet(Base):
 
     def error_no_transfer_type_found(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'transfer-sheet',
             'error': 'No transfer type found. Details: {}'.format(args),
         }
         log.error(command_chain_response['error'])
@@ -936,7 +1021,7 @@ class CreditTransferSheet(Base):
 
     def error_no_transfer_sheet_controller_action_specified(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'transfer-sheet',
             'error': 'No transfer sheet controller action specified. '
                      'Details: {}'.format(args),
         }
@@ -945,7 +1030,7 @@ class CreditTransferSheet(Base):
 
     def error_no_credits_found(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'transfer-sheet',
             'error': 'No credits found. Details: {}'.format(args),
         }
         log.error(command_chain_response['error'])
@@ -953,7 +1038,7 @@ class CreditTransferSheet(Base):
 
     def error_no_transfer_sheet_record_identifier_specified(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'transfer-sheet',
             'error': 'No transfer sheet record identifier specified. '
                      'Details: {}'.format(args),
         }
@@ -962,7 +1047,7 @@ class CreditTransferSheet(Base):
 
     def error_no_transfer_record_creation_values_found(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'transfer-sheet',
             'error': 'No transfer sheet record creation values found. '
                      'Details: {}'.format(args),
         }
@@ -971,7 +1056,7 @@ class CreditTransferSheet(Base):
 
     def error_no_transfer_record_src_found(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'transfer-sheet',
             'error': 'No transfer sheet record source account found. '
                      'Details: {}'.format(args),
         }
@@ -980,7 +1065,7 @@ class CreditTransferSheet(Base):
 
     def error_no_transfer_record_dst_found(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'transfer-sheet',
             'error': 'No transfer sheet record destination account found. '
                      'Details: {}'.format(args),
         }
@@ -989,7 +1074,7 @@ class CreditTransferSheet(Base):
 
     def error_no_transfer_record_reference_found(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'transfer-sheet',
             'error': 'No transfer sheet record reference found. '
                      'Details: {}'.format(args),
         }
@@ -998,7 +1083,7 @@ class CreditTransferSheet(Base):
 
     def error_no_transfer_record_date_found(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'transfer-sheet',
             'error': 'No transfer sheet record date found. '
                      'Details: {}'.format(args),
         }
@@ -1007,7 +1092,7 @@ class CreditTransferSheet(Base):
 
     def error_no_transfer_record_id_found(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'transfer-sheet',
             'error': 'No transfer sheet record id found. '
                      'Details: {}'.format(args),
         }

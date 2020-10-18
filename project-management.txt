@@ -259,12 +259,12 @@ Less information is never the answer.
 
     -   - Cascade Unlink oriented actions:
         - x - UnlinkCreditEWallet cascade invoice sheets
-        -   - UnlinkCreditEWallet cascade transfer sheets
+        - x - UnlinkCreditEWallet cascade transfer sheets
         -   - UnlinkCreditEWallet cascade credit clock
         -   - UnlinkCreditClock cascade conversion sheets
         -   - UnlinkCreditClock cascade time sheets
         - x - UnlinkInvoiceSheet cascade invoice records
-        -   - UnlinkTransferSheet cascade transfer records
+        - x - UnlinkTransferSheet cascade transfer records
         -   - UnlinkConversionSheet cascade conversion records
         -   - UnlinkTimeSheet cascade time records
         - x - UnlinkContactList cascade contact records

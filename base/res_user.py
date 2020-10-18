@@ -1045,6 +1045,13 @@ class ResUser(Base):
             return self.warning_credit_ewallet_does_not_belong_to_current_user(
                 kwargs, ewallet, check
             )
+        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
+            kwargs, 'controller', 'action', 'cleanup',
+        )
+        cleanup_ewallet = ewallet.main_controller(
+            controller='user', action='cleanup', cleanup='ewallet',
+            **sanitized_command_chain,
+        )
         try:
             kwargs['active_session'].query(
                 CreditEWallet
