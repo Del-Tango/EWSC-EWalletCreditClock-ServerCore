@@ -509,7 +509,9 @@ class CreditClockTimeSheet(Base):
     create_date = Column(DateTime)
     write_date = Column(DateTime)
     clock = relationship('CreditClock', back_populates='time_sheet')
-    records = relationship('TimeSheetRecord')
+    records = relationship(
+        'TimeSheetRecord', cascade='delete, merge, save-update'
+    )
 
 #   @pysnooper.snoop('logs/ewallet.log')
     def __init__(self, **kwargs):

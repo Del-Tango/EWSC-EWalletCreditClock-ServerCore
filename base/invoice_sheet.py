@@ -437,7 +437,9 @@ class CreditInvoiceSheet(Base):
     create_date = Column(DateTime)
     write_date = Column(DateTime)
     wallet = relationship('CreditEWallet', back_populates='invoice_sheet')
-    records = relationship('CreditInvoiceSheetRecord')
+    records = relationship(
+        'CreditInvoiceSheetRecord', cascade='delete, merge, save-update'
+    )
 
     def __init__(self, **kwargs):
         self.create_date = kwargs.get('create_date', datetime.datetime.now())

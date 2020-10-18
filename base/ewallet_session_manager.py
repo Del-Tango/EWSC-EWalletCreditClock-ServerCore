@@ -4342,6 +4342,40 @@ class EWalletSessionManager():
               reduced redundancy.
     '''
 
+    def handle_master_action_unlink_account(self, **kwargs):
+        log.debug('')
+        instruction_set_validation = self.validate_instruction_set(kwargs)
+        if not instruction_set_validation \
+                or isinstance(instruction_set_validation, dict) \
+                and instruction_set_validation.get('failed'):
+            return instruction_set_validation
+        unlink_account = self.action_execute_user_instruction_set(**kwargs)
+        return self.warning_could_not_unlink_master_account(
+            kwargs, unlink_account
+        ) if not unlink_account or isinstance(unlink_account, dict) and \
+            unlink_account.get('failed') else unlink_account
+
+    def handle_client_action_unlink_account(self, **kwargs):
+        log.debug('')
+        instruction_set_validation = self.validate_instruction_set(kwargs)
+        if not instruction_set_validation \
+                or isinstance(instruction_set_validation, dict) \
+                and instruction_set_validation.get('failed'):
+            return instruction_set_validation
+        master_account_id = self.fetch_acquired_masters_from_client_token_set(
+            [kwargs['client_id']]
+        )
+        if isinstance(master_account_id, dict) and master_account_id.get('failed'):
+            return self.warning_no_master_account_acquired_by_ctoken(
+                kwargs, instruction_set_validation, master_account_id
+            )
+        kwargs.update({'master_id': master_account_id[0]})
+        unlink_account = self.action_execute_user_instruction_set(**kwargs)
+        return self.warning_could_not_unlink_user_account(
+            kwargs, unlink_account
+        ) if not unlink_account or isinstance(unlink_account, dict) and \
+            unlink_account.get('failed') else unlink_account
+
     # TODO
     def handle_system_action_close_sockets(self, **kwargs):
         '''
@@ -4580,19 +4614,6 @@ class EWalletSessionManager():
             kwargs, recover_account
         ) if not recover_account or isinstance(recover_account, dict) and \
             recover_account.get('failed') else recover_account
-
-    def handle_master_action_unlink_account(self, **kwargs):
-        log.debug('')
-        instruction_set_validation = self.validate_instruction_set(kwargs)
-        if not instruction_set_validation \
-                or isinstance(instruction_set_validation, dict) \
-                and instruction_set_validation.get('failed'):
-            return instruction_set_validation
-        unlink_account = self.action_execute_user_instruction_set(**kwargs)
-        return self.warning_could_not_unlink_master_account(
-            kwargs, unlink_account
-        ) if not unlink_account or isinstance(unlink_account, dict) and \
-            unlink_account.get('failed') else unlink_account
 
     def handle_master_action_edit_account(self, **kwargs):
         log.debug('')
@@ -5392,27 +5413,6 @@ class EWalletSessionManager():
             kwargs, unlink_contact_list
         ) if not unlink_contact_list or isinstance(unlink_contact_list, dict) and \
             unlink_contact_list.get('failed') else unlink_contact_list
-
-    def handle_client_action_unlink_account(self, **kwargs):
-        log.debug('')
-        instruction_set_validation = self.validate_instruction_set(kwargs)
-        if not instruction_set_validation \
-                or isinstance(instruction_set_validation, dict) \
-                and instruction_set_validation.get('failed'):
-            return instruction_set_validation
-        master_account_id = self.fetch_acquired_masters_from_client_token_set(
-            [kwargs['client_id']]
-        )
-        if isinstance(master_account_id, dict) and master_account_id.get('failed'):
-            return self.warning_no_master_account_acquired_by_ctoken(
-                kwargs, instruction_set_validation, master_account_id
-            )
-        kwargs.update({'master_id': master_account_id[0]})
-        unlink_account = self.action_execute_user_instruction_set(**kwargs)
-        return self.warning_could_not_unlink_user_account(
-            kwargs, unlink_account
-        ) if not unlink_account or isinstance(unlink_account, dict) and \
-            unlink_account.get('failed') else unlink_account
 
     def handle_client_action_switch_contact_list(self, **kwargs):
         log.debug('')

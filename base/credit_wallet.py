@@ -31,16 +31,25 @@ class CreditEWallet(Base):
     client = relationship('ResUser', back_populates='user_credit_wallet')
     credit_clock = relationship(
        'CreditClock', back_populates='wallet',
+        cascade='delete, merge, save-update'
     )
     transfer_sheet = relationship(
        'CreditTransferSheet', back_populates='wallet',
+        cascade='delete, merge, save-update'
     )
     invoice_sheet = relationship(
        'CreditInvoiceSheet', back_populates='wallet',
+        cascade='delete, merge, save-update'
     )
-    credit_clock_archive = relationship('CreditClock')
-    transfer_sheet_archive = relationship('CreditTransferSheet')
-    invoice_sheet_archive = relationship('CreditInvoiceSheet')
+    credit_clock_archive = relationship(
+        'CreditClock', cascade='delete, merge, save-update'
+    )
+    transfer_sheet_archive = relationship(
+        'CreditTransferSheet', cascade='delete, merge, save-update'
+    )
+    invoice_sheet_archive = relationship(
+        'CreditInvoiceSheet', cascade='delete, merge, save-update'
+    )
 
 #   @pysnooper.snoop('logs/ewallet.log')
     def __init__(self, **kwargs):
@@ -1060,6 +1069,7 @@ class CreditEWallet(Base):
             ).filter_by(
                 invoice_sheet_id=kwargs['list_id']
             ).delete()
+            kwargs['active_session'].commit()
         except Exception as e:
             self.error_could_not_unlink_invoice_sheet(kwargs, e)
         command_chain_response = {
@@ -1137,6 +1147,7 @@ class CreditEWallet(Base):
             ).filter_by(
                 transfer_sheet_id=kwargs['list_id']
             ).delete()
+            kwargs['active_session'].commit()
         except:
             return self.error_could_not_remove_transfer_sheet(kwargs)
         command_chain_response = {

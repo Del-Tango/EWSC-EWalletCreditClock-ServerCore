@@ -15,6 +15,7 @@ from .res_utils import ResUtils, Base
 from .credit_wallet import CreditEWallet
 from .contact_list import ContactList
 from .config import Config
+from .res_user_pass_hash_archive import ResUserPassHashArchive
 
 config, res_utils = Config(), ResUtils()
 log = logging.getLogger(config.log_config['log_name'])
@@ -749,6 +750,22 @@ class EWallet(Base):
 
     # CLEANERS
 
+    def cleanup_user_account(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('user_account'):
+            return self.error_no_user_account_specified(kwargs)
+        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
+            kwargs, 'ctype', 'action', 'cleanup'
+        )
+        cleanup_account = kwargs['user_account'].user_controller(
+            ctype='action', action='cleanup', cleanup='account',
+            **sanitized_command_chain
+        )
+        return self.warning_could_not_cleanup_user_account(
+            kwargs, cleanup_account
+        )if not cleanup_account or isinstance(cleanup_account, dict) and \
+            cleanup_account.get('failed') else cleanup_account
+
     def clear_session_active_user(self):
         log.debug('')
         self.set_session_active_user([])
@@ -1002,9 +1019,62 @@ class EWallet(Base):
 
     # UNLINKERS
     '''
-    [ WATCHOUT ]: Dragons be here.
+    [ WATCHOUT ]: Primordial Dragons be here from before the times of v.DeltaT.
     '''
 
+    def unlink_user_account_credit_ewallet(self, user_id, **kwargs):
+        log.debug('')
+        try:
+            ewallets = kwargs['active_session'].query(
+                CreditEWallet
+            ).filter_by(
+                client_id=user_id
+            )
+            if len(list(ewallets)) >= 1:
+                ewallets.delete()
+                kwargs['active_session'].commit()
+        except Exception as e:
+            kwargs['active_session'].rollback()
+            return self.error_could_not_unlink_user_account_login_records(
+                user_id, kwargs, e
+            )
+        return user_id
+
+    def unlink_user_account_contact_list(self, user_id, **kwargs):
+        log.debug('')
+        try:
+            contact_lists = kwargs['active_session'].query(
+                ContactList
+            ).filter_by(
+                client_id=user_id
+            )
+            if len(list(contact_lists)) >= 1:
+                contact_lists.delete()
+                kwargs['active_session'].commit()
+        except Exception as e:
+            kwargs['active_session'].rollback()
+            return self.error_could_not_unlink_user_account_login_records(
+                user_id, kwargs, e
+            )
+        return user_id
+
+    def unlink_user_account_pass_hash_archive(self, user_id, **kwargs):
+        log.debug('')
+        try:
+            pass_archives = kwargs['active_session'].query(
+                ResUserPassHashArchive
+            ).filter_by(
+                user_id=user_id
+            )
+            if len(list(pass_archives)) >= 1:
+                pass_archives.delete()
+                kwargs['active_session'].commit()
+        except Exception as e:
+            kwargs['active_session'].rollback()
+            return self.error_could_not_unlink_user_account_login_records(
+                user_id, kwargs, e
+            )
+        return user_id
 
     def unlink_master_account_login_records(self, master_id, **kwargs):
         log.debug('')
@@ -1092,6 +1162,9 @@ class EWallet(Base):
         return {
             'login': self.unlink_user_account_login_records(user_id, **kwargs),
             'logout': self.unlink_user_account_logout_records(user_id, **kwargs),
+            'password': self.unlink_user_account_pass_hash_archive(user_id, **kwargs),
+            'ewallet': self.unlink_user_account_credit_ewallet(user_id, **kwargs),
+            'contacts': self.unlink_user_account_contact_list(user_id, **kwargs),
         }
 
     # TODO
@@ -1198,6 +1271,135 @@ class EWallet(Base):
     def action_receive_transfer_record(self, **kwargs):
         log.debug('TODO - UNIMPLEMENTED')
 
+#   @pysnooper.snoop('logs/ewallet.log')
+    def action_unlink_user_account(self, **kwargs):
+        log.debug('')
+        user_id = kwargs.get('user_id') or \
+            self.fetch_active_session_user(obj=False)
+        if not user_id or isinstance(user_id, dict) and \
+                user_id.get('failed'):
+            return self.error_no_user_account_id_found(kwargs)
+        user_account = self.fetch_user_by_id(account_id=user_id, **kwargs)
+        if not user_account or isinstance(user_account, dict) and \
+                user_account.get('failed'):
+            return self.warning_could_not_fetch_user_account_by_id(kwargs)
+        check = self.check_user_account_belongs_to_ewallet_session(user_account)
+        if not check:
+            return self.warning_account_does_not_belong_to_ewallet_session(
+                kwargs, user_id, user_account, check
+            )
+        cleanup_account = self.cleanup_user_account(
+            user_account=user_account, **kwargs
+        )
+        user_email = user_account.fetch_user_email()
+        unlink_account = self.unlink_user_account(user_id=user_id, **kwargs)
+        if not unlink_account or isinstance(unlink_account, dict) and \
+                unlink_account.get('failed'):
+            kwargs['active_session'].rollback()
+            return self.warning_could_not_unlink_user_account(user_id, kwargs)
+        kwargs['active_session'].commit()
+        command_chain_response = {
+            'failed': False,
+            'account': user_email,
+        }
+        return command_chain_response
+
+#   @pysnooper.snoop('logs/ewallet.log')
+    def action_create_new_transfer_type_supply(self, **kwargs):
+        '''
+        [ NOTE   ]: User action 'supply credits' for active session user becomes
+                    User event 'request credits' for SystemCore account.
+                    Accessible from external api calls.
+        [ INPUT  ]: active_session=<orm-session>, partner_account=<partner>,
+                    credits=<credits>
+        [ RETURN ]: ({'ewallet_credits': <count>, 'supplied_credits': <count>} | False)
+        '''
+        log.debug('')
+        active_session = kwargs.get('active_session') or \
+                self.fetch_active_session()
+        partner_account = kwargs.get('partner_account') or \
+                self.fetch_system_core_user_account(**kwargs)
+        if not partner_account or isinstance(partner_account, dict) and \
+                partner_account.get('failed'):
+            return self.error_could_not_fetch_partner_account_for_transfer_type_supply(
+                kwargs
+            )
+        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
+            kwargs, 'ctype', 'partner_account', 'active_session'
+        )
+        credits_before = self.fetch_credit_wallet_credits()
+        credit_request = partner_account.user_controller(
+            ctype='event', event='request', request='credits',
+            partner_account=self.fetch_active_session_user(),
+            active_session=active_session, **sanitized_command_chain
+        )
+        if not credit_request or isinstance(credit_request, dict) and \
+                credit_request.get('failed'):
+            return self.warning_could_not_honour_credit_request(
+                kwargs, active_session, partner_account, credits_before,
+                credit_request
+            )
+        credits_after = self.fetch_credit_wallet_credits()
+        if not credits_after or isinstance(credits_after, dict) and \
+                credits_after.get('failed'):
+            return credits_after
+        if str(credits_after) != str(credits_before + kwargs.get('credits')):
+            active_session.rollback()
+            return self.error_supply_type_transfer_failure(
+                kwargs, active_session, partner_account, credits_before,
+                credit_request, credits_after
+            )
+        active_session.add(credit_request['invoice_record'])
+        active_session.add(credit_request['transfer_record'])
+        active_session.commit()
+        command_chain_response = {
+            'failed': False,
+            'ewallet_credits': credits_after,
+            'supplied_credits': kwargs['credits'],
+            'transfer_record': None if not credit_request.get('transfer_record') else \
+                credit_request['transfer_record'].fetch_record_id(),
+            'invoice_record': None if not credit_request.get('invoice_record') else \
+                credit_request['invoice_record'].fetch_record_id(),
+        }
+        return command_chain_response
+
+    def action_unlink_master_account(self, **kwargs):
+        log.debug('')
+        master_id = kwargs.get('master_id') or \
+            self.fetch_active_session_master(obj=False)
+        if not master_id or isinstance(master_id, dict) and \
+                master_id.get('failed'):
+            return self.error_no_master_account_id_found(kwargs)
+        master_account = self.fetch_master_account(
+            search_by='id', master_id=master_id, **kwargs
+        )
+        if not master_account or isinstance(master_account, dict) and \
+                master_account.get('failed'):
+            return self.warning_could_not_fetch_master_account_by_id(kwargs)
+        check = self.check_master_account_belongs_to_ewallet_session(
+            master_account
+        )
+        if not check:
+            return self.warning_account_does_not_belong_to_ewallet_session(
+                kwargs, master_id, master_account, check
+            )
+        user_email = master_account.fetch_user_email()
+        unlink_account = self.unlink_master_account(
+            master_id=master_id, **kwargs
+        )
+        if not unlink_account or isinstance(unlink_account, dict) and \
+                unlink_account.get('failed'):
+            kwargs['active_session'].rollback()
+            return self.warning_could_not_unlink_master_account(
+                master_id, kwargs
+            )
+        kwargs['active_session'].commit()
+        command_chain_response = {
+            'failed': False,
+            'account': user_email,
+        }
+        return command_chain_response
+
     def action_edit_master_key_code(self, **kwargs):
         log.debug('')
         active_master = kwargs.get('master_account') or \
@@ -1303,36 +1505,6 @@ class EWallet(Base):
                 'edit': edit_value_set,
                 'account_data': active_master.fetch_user_values(),
             }
-
-#   @pysnooper.snoop('logs/ewallet.log')
-    def action_unlink_user_account(self, **kwargs):
-        log.debug('')
-        user_id = kwargs.get('user_id') or \
-            self.fetch_active_session_user(obj=False)
-        if not user_id or isinstance(user_id, dict) and \
-                user_id.get('failed'):
-            return self.error_no_user_account_id_found(kwargs)
-        user_account = self.fetch_user_by_id(account_id=user_id, **kwargs)
-        if not user_account or isinstance(user_account, dict) and \
-                user_account.get('failed'):
-            return self.warning_could_not_fetch_user_account_by_id(kwargs)
-        check = self.check_user_account_belongs_to_ewallet_session(user_account)
-        if not check:
-            return self.warning_account_does_not_belong_to_ewallet_session(
-                kwargs, user_id, user_account, check
-            )
-        user_email = user_account.fetch_user_email()
-        unlink_account = self.unlink_user_account(user_id=user_id, **kwargs)
-        if not unlink_account or isinstance(unlink_account, dict) and \
-                unlink_account.get('failed'):
-            kwargs['active_session'].rollback()
-            return self.warning_could_not_unlink_user_account(user_id, kwargs)
-        kwargs['active_session'].commit()
-        command_chain_response = {
-            'failed': False,
-            'account': user_email,
-        }
-        return command_chain_response
 
 #   @pysnooper.snoop('logs/ewallet.log')
     def action_create_new_user_account(self, **kwargs):
@@ -1732,43 +1904,6 @@ class EWallet(Base):
                     session_values['expiration_date']
                 ),
             }
-        }
-        return command_chain_response
-
-    def action_unlink_master_account(self, **kwargs):
-        log.debug('')
-        master_id = kwargs.get('master_id') or \
-            self.fetch_active_session_master(obj=False)
-        if not master_id or isinstance(master_id, dict) and \
-                master_id.get('failed'):
-            return self.error_no_master_account_id_found(kwargs)
-        master_account = self.fetch_master_account(
-            search_by='id', master_id=master_id, **kwargs
-        )
-        if not master_account or isinstance(master_account, dict) and \
-                master_account.get('failed'):
-            return self.warning_could_not_fetch_master_account_by_id(kwargs)
-        check = self.check_master_account_belongs_to_ewallet_session(
-            master_account
-        )
-        if not check:
-            return self.warning_account_does_not_belong_to_ewallet_session(
-                kwargs, master_id, master_account, check
-            )
-        user_email = master_account.fetch_user_email()
-        unlink_account = self.unlink_master_account(
-            master_id=master_id, **kwargs
-        )
-        if not unlink_account or isinstance(unlink_account, dict) and \
-                unlink_account.get('failed'):
-            kwargs['active_session'].rollback()
-            return self.warning_could_not_unlink_master_account(
-                master_id, kwargs
-            )
-        kwargs['active_session'].commit()
-        command_chain_response = {
-            'failed': False,
-            'account': user_email,
         }
         return command_chain_response
 
@@ -2176,62 +2311,6 @@ class EWallet(Base):
             'transfer_sheet': transfer_sheet.fetch_transfer_sheet_id(),
             'transfer_record': record.fetch_record_id(),
             'record_data': record_values,
-        }
-        return command_chain_response
-
-#   @pysnooper.snoop('logs/ewallet.log')
-    def action_create_new_transfer_type_supply(self, **kwargs):
-        '''
-        [ NOTE   ]: User action 'supply credits' for active session user becomes
-                    User event 'request credits' for SystemCore account.
-                    Accessible from external api calls.
-        [ INPUT  ]: active_session=<orm-session>, partner_account=<partner>,
-                    credits=<credits>
-        [ RETURN ]: ({'ewallet_credits': <count>, 'supplied_credits': <count>} | False)
-        '''
-        log.debug('')
-        active_session = kwargs.get('active_session') or \
-                self.fetch_active_session()
-        partner_account = kwargs.get('partner_account') or \
-                self.fetch_system_core_user_account(**kwargs)
-        if not partner_account or isinstance(partner_account, dict) and \
-                partner_account.get('failed'):
-            return self.error_could_not_fetch_partner_account_for_transfer_type_supply(
-                kwargs
-            )
-        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
-            kwargs, 'ctype', 'partner_account', 'active_session'
-        )
-        credits_before = self.fetch_credit_wallet_credits()
-        credit_request = partner_account.user_controller(
-            ctype='event', event='request', request='credits',
-            partner_account=self.fetch_active_session_user(),
-            active_session=active_session, **sanitized_command_chain
-        )
-        if not credit_request or isinstance(credit_request, dict) and \
-                credit_request.get('failed'):
-            return self.warning_could_not_honour_credit_request(
-                kwargs, active_session, partner_account, credits_before,
-                credit_request
-            )
-        credits_after = self.fetch_credit_wallet_credits()
-        if not credits_after or isinstance(credits_after, dict) and \
-                credits_after.get('failed'):
-            return credits_after
-        if str(credits_after) != str(credits_before + kwargs.get('credits')):
-            active_session.rollback()
-            return self.error_supply_type_transfer_failure(kwargs)
-        active_session.add(credit_request['invoice_record'])
-        active_session.add(credit_request['transfer_record'])
-        active_session.commit()
-        command_chain_response = {
-            'failed': False,
-            'ewallet_credits': credits_after,
-            'supplied_credits': kwargs['credits'],
-            'transfer_record': None if not credit_request.get('transfer_record') else \
-                credit_request['transfer_record'].fetch_record_id(),
-            'invoice_record': None if not credit_request.get('invoice_record') else \
-                credit_request['invoice_record'].fetch_record_id(),
         }
         return command_chain_response
 
@@ -5194,6 +5273,16 @@ class EWallet(Base):
     [ TODO ]: Fetch warning messages from message file by key codes.
     '''
 
+    def warning_could_not_cleanup_user_account(self, *args):
+        command_chain_response = {
+            'failed': True, 'level': 'ewallet-session',
+            'warning': 'Something went wrong. '
+                       'Could not cleanup Subordonate user account. '
+                       'Details: {}'.format(args),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
+
     def warning_could_not_edit_master_company(self, *args):
         command_chain_response = {
             'failed': True, 'level': 'ewallet-session',
@@ -6288,6 +6377,26 @@ class EWallet(Base):
     [ TODO ]: Fetch error messages from message file by key codes.
     '''
 
+    def error_no_user_account_specified(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'level': 'ewallet-session',
+            'error': 'No user account specified. '
+                     'Details : {}'.format(args)
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_supply_type_transfer_failure(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'level': 'ewallet-session',
+            'error': 'Supply type transfer failure. '
+                     'Details : {}'.format(args)
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
     def error_could_not_unlink_user_account_logout_records(self, *args):
         command_chain_response = {
             'failed': True, 'level': 'ewallet-session',
@@ -7017,16 +7126,6 @@ class EWallet(Base):
             'level': 'ewallet-session',
             'error': 'No credit ewallet found. '
                      'Command chain details: {}'.format(command_chain)
-        }
-        log.error(command_chain_response['error'])
-        return command_chain_response
-
-    def error_supply_type_transfer_failure(self, command_chain):
-        command_chain_response = {
-            'failed': True,
-            'level': 'ewallet-session',
-            'error': 'Supply type transfer failure. Details : {}'\
-                     .format(command_chain)
         }
         log.error(command_chain_response['error'])
         return command_chain_response

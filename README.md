@@ -26,7 +26,7 @@ The EWCreditClock Suit contains:
 
     * (EWSC)  | Server Core           | Web Service with REST API   | v.Chronos (Beta)
     * (EWCC)  | Python Client Core    | Importable Library          | v.Chronos (Beta)
-    * (EWAT)  | API Tutor             | Tutor Script                | v.DeltaT (Alpha)
+    * (EWAT)  | API Tutor             | Tutor Script                | v.Chronos (Beta)
     * (EWDWC) | Default Web Client    | Web Portal Application      | TODO
     * (EWDMC) | Default Mobile Client | Android Portal Application  | TODO
     * (EWJCC) | Java Client Core      | Importable Library          | TODO

@@ -1,4 +1,7 @@
-# from itertools import count
+import datetime
+import logging
+import pysnooper
+
 from sqlalchemy import Column, String, Integer, ForeignKey, DateTime, Boolean #Table,Float,Date,
 from sqlalchemy.orm import relationship
 
@@ -8,11 +11,6 @@ from .res_user_pass_hash_archive import ResUserPassHashArchive
 from .res_utils import ResUtils, Base
 from .config import Config
 from .transaction_handler import EWalletTransactionHandler
-#from .ewallet_login import EWalletLogin
-import datetime
-# import random
-import logging
-import pysnooper
 
 res_utils, config = ResUtils(), Config()
 log_config = config.log_config
@@ -39,7 +37,7 @@ class ResUser(Base):
     )
     user_contact_list = relationship(
         'ContactList', back_populates='client',
-        cascade='delete, merge, save-update'
+        cascade='delete, merge, save-update, delete-orphan'
     )
     user_credit_wallet = relationship(
         'CreditEWallet', back_populates='client',
@@ -792,7 +790,84 @@ class ResUser(Base):
 
     # ACTIONS
 
-    @pysnooper.snoop('logs/ewallet.log')
+    def action_unlink_contact_list(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('list_id'):
+            return self.error_no_contact_list_id_found(kwargs)
+        contact_list = self.fetch_user_contact_list_by_id(
+            kwargs['list_id'], kwargs['active_session']
+        )
+        if isinstance(contact_list, dict) and \
+                contact_list.get('failed'):
+            return self.error_could_not_fetch_contact_list(
+                kwargs, contact_list
+            )
+        check = self.check_contact_list_belongs_to_user(contact_list)
+        if not check:
+            return self.warning_contact_list_does_not_belong_to_user(
+                kwargs, contact_list, check
+            )
+        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
+            kwargs, 'action', 'cleanup'
+        )
+        cleanup_list = contact_list.contact_list_controller(
+            action='cleanup', cleanup='records', **sanitized_command_chain,
+        )
+        unlink = self.unlink_contact_list(
+            kwargs['list_id'], active_session=kwargs['active_session']
+        )
+        if isinstance(unlink, dict) and unlink.get('failed'):
+            return self.error_could_not_unlink_contact_list(
+                kwargs, contact_list, check, unlink
+            )
+        log.info('Successfully removed user contact list.')
+        return kwargs['list_id']
+
+    def action_cleanup_contact_list(self, **kwargs):
+        '''
+        [ NOTE ]: Cleans all user contact lists and records.
+        '''
+        log.debug('')
+        contact_list_archive = self.fetch_user_contact_list_archive()
+        command_chain_response = {
+            'failed': False,
+            'user_id': self.fetch_user_id(),
+        }
+        lists_cleaned, cleanup_failures = 0, 0
+        if not contact_list_archive:
+            command_chain_response.update({
+                'lists_cleaned': lists_cleaned,
+                'cleanup_failures': cleanup_failures,
+            })
+            return command_chain_response
+        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
+            kwargs, 'action', 'cleanup'
+        )
+        for contact_list in contact_list_archive:
+            cleanup_list = contact_list.contact_list_controller(
+                action='cleanup', cleanup='records', **sanitized_command_chain,
+            )
+            try:
+                self.unlink_contact_list(
+                    contact_list.fetch_contact_list_id(), **kwargs
+                )
+            except Exception as e:
+                cleanup_failures += 1
+                self.warning_could_not_delete_contact_list(
+                    contact_list, kwargs, contact_list_archive, lists_cleaned,
+                    cleanup_failures, e
+                )
+                continue
+            lists_cleaned += 1
+        command_chain_response.update({
+            'lists_cleaned': lists_cleaned,
+            'cleanup_failures': cleanup_failures,
+        })
+        return self.error_no_user_contact_lists_cleaned(
+            kwargs, contact_list_archive, lists_cleaned, cleanup_failures
+        ) if not lists_cleaned else command_chain_response
+
+#   @pysnooper.snoop('logs/ewallet.log')
     def action_pay_partner_account(self, **kwargs):
         log.debug('')
         if not kwargs.get('pay'):
@@ -916,33 +991,6 @@ class ResUser(Base):
             return self.error_could_not_unlink_credit_ewallet(kwargs, e)
         log.info('Successfully removed user credit ewallet.')
         return kwargs['ewallet_id']
-
-    def action_unlink_contact_list(self, **kwargs):
-        log.debug('')
-        if not kwargs.get('list_id'):
-            return self.error_no_contact_list_id_found(kwargs)
-        contact_list = self.fetch_user_contact_list_by_id(
-            kwargs['list_id'], kwargs['active_session']
-        )
-        if isinstance(contact_list, dict) and \
-                contact_list.get('failed'):
-            return self.error_could_not_fetch_contact_list(
-                kwargs, contact_list
-            )
-        check = self.check_contact_list_belongs_to_user(contact_list)
-        if not check:
-            return self.warning_contact_list_does_not_belong_to_user(
-                kwargs, contact_list, check
-            )
-        unlink = self.unlink_contact_list(
-            kwargs['list_id'], active_session=kwargs['active_session']
-        )
-        if isinstance(unlink, dict) and unlink.get('failed'):
-            return self.error_could_not_unlink_contact_list(
-                kwargs, contact_list, check, unlink
-            )
-        log.info('Successfully removed user contact list.')
-        return kwargs['list_id']
 
     def action_switch_contact_list(self, **kwargs):
         log.debug('')
@@ -1207,6 +1255,28 @@ class ResUser(Base):
     def handle_user_event_signal(self, **kwargs):
         pass
 
+    # TODO
+    def handle_user_action_cleanup_account(self, **kwargs):
+        log.debug('TODO - Cleanup all relationships')
+        cleanup = {
+            'cleanup_contact_list': self.action_cleanup_contact_list(**kwargs),
+#           'cleanup_ewallet':,
+#           'cleanup_pass_hash':,
+#           'cleanup_login_records':,
+#           'cleanup_logout_records':,
+        }
+        return cleanup
+
+
+    def handle_user_action_cleanup(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('cleanup'):
+            return self.error_no_user_action_cleanup_target_specified(kwargs)
+        handlers = {
+            'account': self.handle_user_action_cleanup_account,
+        }
+        return handlers[kwargs['cleanup']](**kwargs)
+
     def handle_user_action_edit(self, **kwargs):
         log.debug('')
         if not kwargs.get('edit'):
@@ -1358,6 +1428,7 @@ class ResUser(Base):
             'unlink': self.handle_user_action_unlink,
             'transfer': self.handle_user_action_transfer,
             'edit': self.handle_user_action_edit,
+            'cleanup': self.handle_user_action_cleanup,
         }
         return handlers[kwargs['action']](**kwargs)
 
@@ -1387,9 +1458,19 @@ class ResUser(Base):
     [ TODO ]: Fetch error messages from message file by key codes.
     '''
 
+    def warning_could_not_delete_contact_list(self, *args):
+        command_chain_response = {
+            'failed': True, 'level': 'res-user',
+            'warning': 'Something went wrong. '
+                       'Could not delete contact list. '
+                       'Details: {}'.format(args),
+        }
+        log.warning(command_chain_response['warning'])
+        return False
+
     def warning_could_not_link_journal_records_for_credit_request_event(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'res-user',
             'warning': 'Something went wrong. '
                        'Could not link journal records for credit request event. '
                        'Details: {}'.format(args),
@@ -1399,7 +1480,7 @@ class ResUser(Base):
 
     def warning_invoice_record_already_linked(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'res-user',
             'warning': 'Invoice record already linked to a transfer record. '
                        'Details: {}'.format(args),
         }
@@ -1408,7 +1489,7 @@ class ResUser(Base):
 
     def warning_no_credit_ewallet_found_by_id(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'res-user',
             'warning': 'No credit ewallet found by id. '
                        'Details: {}'.format(args),
         }
@@ -1417,7 +1498,7 @@ class ResUser(Base):
 
     def warning_contact_list_does_not_belong_to_user(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'res-user',
             'warning': 'Contact list does not belong to active user. '
                        'Details: {}'.format(args),
         }
@@ -1426,7 +1507,7 @@ class ResUser(Base):
 
     def warning_could_not_fetch_contact_list(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'res-user',
             'warning': 'Something went wrong. '
                        'Could not fetch contact list. '
                        'Details: {}'.format(args),
@@ -1436,7 +1517,7 @@ class ResUser(Base):
 
     def warning_could_not_switch_time_sheet(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'res-user',
             'warning': 'Something went wrong. '
                        'Could not switch time sheet. '
                        'Details: {}'.format(args),
@@ -1446,7 +1527,7 @@ class ResUser(Base):
 
     def warning_could_not_switch_conversion_sheet(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'res-user',
             'warning': 'Something went wrong. '
                        'Could not switch conversion sheet. '
                        'Details: {}'.format(args),
@@ -1456,7 +1537,7 @@ class ResUser(Base):
 
     def warning_could_not_switch_invoice_sheet(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'res-user',
             'warning': 'Something went wrong. '
                        'Could not switch invoice sheet. '
                        'Details: {}'.format(args),
@@ -1466,7 +1547,7 @@ class ResUser(Base):
 
     def warning_could_not_switch_transfer_sheet(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'res-user',
             'warning': 'Something went wrong. '
                        'Could not switch transfer sheet. '
                        'Details: {}'.format(args),
@@ -1476,7 +1557,7 @@ class ResUser(Base):
 
     def warning_could_not_switch_credit_clock(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'res-user',
             'warning': 'Something went wrong. '
                        'Could not switch credit clock. '
                        'Details: {}'.format(args),
@@ -1486,7 +1567,7 @@ class ResUser(Base):
 
     def warning_credit_ewallet_does_not_belong_to_current_user(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'res-user',
             'warning': 'Credit ewallet does not belong to current user. '
                        'Details: {}'.format(args),
         }
@@ -1495,7 +1576,7 @@ class ResUser(Base):
 
     def warning_could_not_fetch_credit_wallet(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'res-user',
             'warning': 'Something went wrong. '
                        'Could not fetch credit ewallet. '
                        'Details: {}'.format(args),
@@ -1505,7 +1586,7 @@ class ResUser(Base):
 
     def warning_no_contact_list_found_by_id(self, list_id, command_chain):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'res-user',
             'warning': 'No contact list found by id {}. Command chain details : {}'\
                        .format(list_id, command_chain),
         }
@@ -1563,9 +1644,25 @@ class ResUser(Base):
     [ TODO ]: Fetch error messages from message file by key codes.
     '''
 
+    def error_no_user_contact_lists_cleaned(self, *args):
+        command_chain_response = {
+            'failed': True, 'level': 'res-user',
+            'error': 'No user contact lists cleaned. '
+                     'Details: {}'.format(args)
+        }
+        log.error(command_chain_response['error'])
+
+    def error_no_user_action_cleanup_target_specified(self, *args):
+        command_chain_response = {
+            'failed': True, 'level': 'res-user',
+            'error': 'No user action cleanup target specified. '
+                     'Details: {}'.format(args)
+        }
+        log.error(command_chain_response['error'])
+
     def error_could_not_set_user_master_account_id(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'res-user',
             'error': 'Something went wrong. '
                      'Could not set Master account ID. '
                      'Details: {}'.format(args)
@@ -1575,7 +1672,7 @@ class ResUser(Base):
 
     def error_no_user_email_check_function_found(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'res-user',
             'error': 'Something went wrong. '
                      'No email address check function found. '
                      'Details: {}'.format(args)
@@ -1585,7 +1682,7 @@ class ResUser(Base):
 
     def error_no_password_check_function_found(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'res-user',
             'error': 'Something went wrong. '
                      'No password check function found. '
                      'Details: {}'.format(args)
@@ -1595,7 +1692,7 @@ class ResUser(Base):
 
     def error_could_not_set_user_is_active_flag(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'res-user',
             'error': 'Something went wrong. '
                      'Could not set user is active flag. '
                      'Details: {}'.format(args)
@@ -1605,7 +1702,7 @@ class ResUser(Base):
 
     def error_could_not_freeze_user_account(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'res-user',
             'error': 'Something went wrong. '
                      'Could not freeze user account. '
                      'Details: {}'.format(args)
@@ -1615,7 +1712,7 @@ class ResUser(Base):
 
     def error_no_partner_account_found(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'res-user',
             'error': 'No partner account found. '
                      'Details: {}'.format(args)
         }
@@ -1624,7 +1721,7 @@ class ResUser(Base):
 
     def error_invalid_data_set_for_journal_record_link(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'res-user',
             'error': 'Invalid data set for journal record link. '
                      'Details: {}'.format(args)
         }
@@ -1633,7 +1730,7 @@ class ResUser(Base):
 
     def error_could_not_set_user_email(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'res-user',
             'error': 'Something went wrong. '
                      'Could not set user email address. '
                      'Details: {}'.format(args)
@@ -1643,7 +1740,7 @@ class ResUser(Base):
 
     def error_invalid_user_email(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'res-user',
             'error': 'Invalid user email. '
                      'Details: {}'.format(args)
         }
@@ -1652,7 +1749,7 @@ class ResUser(Base):
 
     def error_could_not_set_user_pass_hash(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'res-user',
             'error': 'Something went wrong. '
                      'Could not set user password hash. '
                      'Details: {}'.format(args)
@@ -1662,7 +1759,7 @@ class ResUser(Base):
 
     def error_could_not_edit_user_pass(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'res-user',
             'error': 'Something went wrong. '
                      'Could not edit user password. '
                      'Details: {}'.format(args)
@@ -1672,7 +1769,7 @@ class ResUser(Base):
 
     def error_invalid_user_pass(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'res-user',
             'error': 'Invalid user password. '
                      'Details: {}'.format(args),
         }
@@ -1681,7 +1778,7 @@ class ResUser(Base):
 
     def error_could_not_unlink_credit_ewallet(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'res-user',
             'error': 'Something went wrong. '
                      'Could not unlink credit ewallet. '
                      'Details: {}'.format(args),
@@ -1691,7 +1788,7 @@ class ResUser(Base):
 
     def error_could_not_unlink_credit_clock(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'res-user',
             'error': 'Something went wrong. '
                      'Could not unlink credit clock. '
                      'Details: {}'.format(args),
@@ -1701,7 +1798,7 @@ class ResUser(Base):
 
     def error_could_not_unlink_contact_list(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'res-user',
             'error': 'Something went wrong. '
                      'Could not unlink contact list. '
                      'Details: {}'.format(args),
@@ -1711,7 +1808,7 @@ class ResUser(Base):
 
     def error_could_not_fetch_contact_list(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'res-user',
             'error': 'Something went wrong. '
                      'Could not fetch contact list. '
                      'Details: {}'.format(args),
@@ -1721,7 +1818,7 @@ class ResUser(Base):
 
     def error_could_not_switch_contact_list(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'res-user',
             'error': 'Something went wrong. '
                      'Could not switch contact list. '
                      'Details: {}'.format(args),
@@ -1731,7 +1828,7 @@ class ResUser(Base):
 
     def error_invalid_user_account_state_code(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'res-user',
             'error': 'Invalid user account state code. '
                      'Details: {}'.format(args),
         }
@@ -1740,7 +1837,7 @@ class ResUser(Base):
 
     def error_could_not_set_user_pass_hash(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'res-user',
             'error': 'Something went wrong. '
                      'Could not set user password hash. '
                      'Details: {}'.format(args),
@@ -1750,7 +1847,7 @@ class ResUser(Base):
 
     def error_could_not_set_user_create_uid(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'res-user',
             'error': 'Something went wrong. '
                      'Could not set user create user id. '
                      'Details: {}'.format(args),
@@ -1760,7 +1857,7 @@ class ResUser(Base):
 
     def error_could_not_set_user_write_uid(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'res-user',
             'error': 'Something went wrong. '
                      'Could not set user write user id. '
                      'Details: {}'.format(args),
@@ -1770,7 +1867,7 @@ class ResUser(Base):
 
     def error_could_not_set_to_unlink_flag(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'res-user',
             'error': 'Something went wrong. '
                      'Could not set user to unlink flag. '
                      'Details: {}'.format(args),
@@ -1780,7 +1877,7 @@ class ResUser(Base):
 
     def error_could_not_set_to_unlink_timestamp(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'res-user',
             'error': 'Something went wrong. '
                      'Could not set user to unlink timestamp. '
                      'Details: {}'.format(args),
@@ -1790,7 +1887,7 @@ class ResUser(Base):
 
     def error_could_not_set_to_credit_ewallet_archive(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'res-user',
             'error': 'Something went wrong. '
                      'Could not set user credit ewallet to archive. '
                      'Details: {}'.format(args),
@@ -1800,7 +1897,7 @@ class ResUser(Base):
 
     def error_could_not_set_to_contact_list_archive(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'res-user',
             'error': 'Something went wrong. '
                      'Could not set user contact list to archive. '
                      'Details: {}'.format(args),
@@ -1810,7 +1907,7 @@ class ResUser(Base):
 
     def error_could_not_set_user_contact_list_archive(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'res-user',
             'error': 'Something went wrong. '
                      'Could not set user contact list archive. '
                      'Details: {}'.format(args),
@@ -1820,7 +1917,7 @@ class ResUser(Base):
 
     def error_no_user_contact_list_archive_found(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'res-user',
             'error': 'No user contact list archive found. '
                      'Details: {}'.format(args),
         }
@@ -1829,7 +1926,7 @@ class ResUser(Base):
 
     def error_could_not_set_user_credit_ewallet_archive(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'res-user',
             'error': 'Something went wrong. '
                      'Could not set user credit ewallet archive. '
                      'Details: {}'.format(args),
@@ -1839,7 +1936,7 @@ class ResUser(Base):
 
     def error_no_user_credit_wallet_archive_found(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'res-user',
             'error': 'No user credit ewallet archive found. '
                      'Details: {}'.format(args),
         }
@@ -1848,7 +1945,7 @@ class ResUser(Base):
 
     def error_could_not_set_user_pass_hash_archive(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'res-user',
             'error': 'Something went wrong. '
                      'Could not set user password hash archive. '
                      'Details: {}'.format(args),
@@ -1858,7 +1955,7 @@ class ResUser(Base):
 
     def error_no_user_pass_hash_archive_found(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'res-user',
             'error': 'No user password hash archive found. '
                      'Details: {}'.format(args),
         }
@@ -1867,7 +1964,7 @@ class ResUser(Base):
 
     def error_could_not_set_user_name(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'res-user',
             'error': 'Something went wrong. '
                      'Could not set user name. '
                      'Details: {}'.format(args),
@@ -1877,7 +1974,7 @@ class ResUser(Base):
 
     def error_no_user_name_found(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'res-user',
             'error': 'No user name found. '
                      'Details: {}'.format(args),
         }
@@ -1886,7 +1983,7 @@ class ResUser(Base):
 
     def error_could_not_set_user_credit_ewallet(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'res-user',
             'error': 'Something went wrong. '
                      'Could not set user credit ewallet. '
                      'Details: {}'.format(args),
@@ -1896,7 +1993,7 @@ class ResUser(Base):
 
     def error_no_credit_wallet_found(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'res-user',
             'error': 'No credit ewallet found. '
                      'Details: {}'.format(args),
         }
@@ -1905,7 +2002,7 @@ class ResUser(Base):
 
     def error_could_not_set_user_phone(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'res-user',
             'error': 'Something went wrong. '
                      'Could not set user phone. '
                      'Details: {}'.format(args),
@@ -1915,7 +2012,7 @@ class ResUser(Base):
 
     def error_no_user_phone_found(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'res-user',
             'error': 'No user phone found. '
                      'Details: {}'.format(args),
         }
@@ -1924,7 +2021,7 @@ class ResUser(Base):
 
     def error_no_set_by_parameter_specified(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'res-user',
             'error': 'No set by parameter specified. '
                      'Details: {}'.format(args),
         }
@@ -1933,7 +2030,7 @@ class ResUser(Base):
 
     def error_could_not_set_state_name(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'res-user',
             'error': 'Something went wrong. '
                      'Could not set user state label. '
                      'Details: {}'.format(args),
@@ -1943,7 +2040,7 @@ class ResUser(Base):
 
     def error_no_state_name_found(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'res-user',
             'error': 'No user state label found. '
                      'Details: {}'.format(args),
         }
@@ -1952,7 +2049,7 @@ class ResUser(Base):
 
     def error_no_state_code_found(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'res-user',
             'error': 'No user state code found. '
                      'Details: {}'.format(args),
         }
@@ -1961,7 +2058,7 @@ class ResUser(Base):
 
     def error_invalid_user_state_code(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'res-user',
             'error': 'Invalid user state code. '
                      'Details: {}'.format(args),
         }
@@ -1970,7 +2067,7 @@ class ResUser(Base):
 
     def error_could_not_set_user_state_code(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'res-user',
             'error': 'Something went wrong. '
                      'Could not set user state code. '
                      'Details: {}'.format(args),
@@ -1980,7 +2077,7 @@ class ResUser(Base):
 
     def error_could_not_set_user_alias(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'res-user',
             'error': 'Something went wrong. '
                      'Could not set user alias. '
                      'Details: {}'.format(args),
@@ -1990,7 +2087,7 @@ class ResUser(Base):
 
     def error_no_user_alias_found(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'res-user',
             'error': 'No user alias found. '
                      'Details: {}'.format(args),
         }
@@ -1999,7 +2096,7 @@ class ResUser(Base):
 
     def error_could_not_set_write_date(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'res-user',
             'error': 'Something went wrong. '
                      'Could not set write date. '
                      'Details: {}'.format(args),
@@ -2009,7 +2106,7 @@ class ResUser(Base):
 
     def error_could_not_set_contact_list(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'res-user',
             'error': 'Something went wrong. '
                      'Could not set contact list. '
                      'Details: {}'.format(args),
@@ -2019,7 +2116,7 @@ class ResUser(Base):
 
     def error_could_not_fetch_active_orm_session(self, command_chain):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'res-user',
             'error': 'Something went wrong. Could not fetch active orm session. '
                      'Command chain details : {}'.format(command_chain),
         }
@@ -2028,7 +2125,7 @@ class ResUser(Base):
 
     def error_could_not_view_login_records(self, command_chain):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'res-user',
             'error': 'Something went wrong. Could not view user account login records. '
                      'Command chain details : {}'.format(command_chain),
         }
@@ -2037,7 +2134,7 @@ class ResUser(Base):
 
     def error_no_user_action_view_target_specified(self, command_chain):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'res-user',
             'error': 'No user action view target specified. Command chain details : {}'
                      .format(command_chain),
         }
@@ -2046,7 +2143,7 @@ class ResUser(Base):
 
     def error_no_credit_clock_id_found(self, command_chain):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'res-user',
             'error': 'No ewallet credit clock id found. Command chain details : {}'
                      .format(command_chain),
         }
@@ -2055,7 +2152,7 @@ class ResUser(Base):
 
     def error_no_ewallet_id_found(self, command_chain):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'res-user',
             'error': 'No ewallet id found. Command chain details : {}'
                      .format(command_chain),
         }
@@ -2068,7 +2165,7 @@ class ResUser(Base):
 
     def error_no_contact_list_id_found(self, command_chain):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'res-user',
             'error': 'No contact list id found. Command chain details : {}'
                      .format(command_chain),
         }
@@ -2077,7 +2174,7 @@ class ResUser(Base):
 
     def error_no_invoice_sheet_id_specified(self, command_chain):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'res-user',
             'error': 'No invoice sheet id specified. Command chain details : {}'
                      .format(command_chain),
         }
@@ -2086,7 +2183,7 @@ class ResUser(Base):
 
     def error_no_transfer_sheet_id_found(self, command_chain):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'res-user',
             'error': 'No transfer sheet id found. Command chain details : {}'
                      .format(command_chain),
         }
@@ -2095,7 +2192,7 @@ class ResUser(Base):
 
     def error_could_not_fetch_user_credit_ewallet(self, command_chain):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'res-user',
             'error': 'Could not fetch active user credit ewallet. Command chain details : {}'
                      .format(command_chain),
         }
@@ -2104,7 +2201,7 @@ class ResUser(Base):
 
     def error_could_not_fetch_user_credit_wallet(self, command_chain):
         command_chain_reply = {
-            'failed': True,
+            'failed': True, 'level': 'res-user',
             'error': 'Could not fetch user credit wallet. Command chain details : {}'
                      .format(command_chain),
         }
@@ -2113,7 +2210,7 @@ class ResUser(Base):
 
     def error_could_not_create_new_transaction_handler(self, creation_values):
         command_chain_reply = {
-            'failed': True,
+            'failed': True, 'level': 'res-user',
             'error': 'Something went wrong. Could not create new transaction handler with creation values {}.'
                      .format(creation_values),
         }
@@ -2122,7 +2219,7 @@ class ResUser(Base):
 
     def error_could_not_create_new_credit_ewallet(self, creation_values):
         command_chain_reply = {
-            'failed': True,
+            'failed': True, 'level': 'res-user',
             'error': 'Something went wrong. Could not create new credit ewallet with creation values {}.'
                      .format(creation_values),
         }
@@ -2131,7 +2228,7 @@ class ResUser(Base):
 
     def error_could_not_edit_user_name(self, command_chain):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'res-user',
             'error': 'Something went wrong. Could not edit user name. Command chain details : {}'
                      .format(command_chain)
         }
@@ -2140,7 +2237,7 @@ class ResUser(Base):
 
     def error_could_not_edit_user_alias(self, command_chain):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'res-user',
             'error': 'Something went wrong. Could not edit user alias. Command chain details : {}'
                      .format(command_chain)
         }
@@ -2149,7 +2246,7 @@ class ResUser(Base):
 
     def error_could_not_edit_user_email(self, command_chain):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'res-user',
             'error': 'Something went wrong. Could not edit user email. Command chain details : {}'
                      .format(command_chain)
         }
@@ -2158,7 +2255,7 @@ class ResUser(Base):
 
     def error_could_not_edit_user_phone(self, command_chain):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'res-user',
             'error': 'Something went wrong. Could not edit user phone. Command chain details : {}'
                      .format(command_chain)
         }
@@ -2167,7 +2264,7 @@ class ResUser(Base):
 
     def error_no_user_name_specified_for_user_action_edit(self, command_chain):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'res-user',
             'error': 'No user name specified for user action edit. Command chain details : {}'
                      .format(command_chain)
         }
@@ -2176,7 +2273,7 @@ class ResUser(Base):
 
     def error_no_user_pass_specified_for_user_action_edit(self, command_chain):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'res-user',
             'error': 'No user pass specified for user action edit. Command chain details : {}'
                      .format(command_chain)
         }
@@ -2185,7 +2282,7 @@ class ResUser(Base):
 
     def error_no_user_alias_specified_for_user_action_edit(self, command_chain):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'res-user',
             'error': 'No user alias specified for user action edit. Command chain details : {}'
                      .format(command_chain)
         }
@@ -2194,7 +2291,7 @@ class ResUser(Base):
 
     def error_no_user_email_specified_for_user_action_edit(self, command_chain):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'res-user',
             'error': 'No user email specified for user action edit. Command chain details : {}'
                      .format(command_chain)
         }
@@ -2203,7 +2300,7 @@ class ResUser(Base):
 
     def error_no_user_phone_specified_for_user_action_edit(self, command_chain):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'res-user',
             'error': 'No user phone specified for user action edit. Command chain details : {}'
                      .format(command_chain)
         }

@@ -363,7 +363,10 @@ class CreditClockConversionSheet(Base):
     create_date = Column(DateTime)
     write_date = Column(DateTime)
     clock = relationship('CreditClock', back_populates='conversion_sheet')
-    records = relationship('CreditClockConversionSheetRecord')
+    records = relationship(
+        'CreditClockConversionSheetRecord',
+        cascade='delete, merge, save-update'
+    )
 
 #   @pysnooper.snoop('logs/ewallet.log')
     def __init__(self, **kwargs):

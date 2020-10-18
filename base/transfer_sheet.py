@@ -355,7 +355,9 @@ class CreditTransferSheet(Base):
     create_date = Column(DateTime)
     write_date = Column(DateTime)
     wallet = relationship('CreditEWallet', back_populates='transfer_sheet')
-    records = relationship('CreditTransferSheetRecord')
+    records = relationship(
+        'CreditTransferSheetRecord', cascade='delete, merge, save-update'
+    )
 
     def __init__(self, **kwargs):
 #       self.transfer_sheet_id = kwargs.get('transfer_sheet_id')

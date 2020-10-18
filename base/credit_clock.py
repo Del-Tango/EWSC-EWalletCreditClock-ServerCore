@@ -34,13 +34,21 @@ class CreditClock(Base):
     pending_time = Column(Float)
     pending_count = Column(Integer)
     wallet = relationship('CreditEWallet', back_populates='credit_clock')
-    time_sheet = relationship('CreditClockTimeSheet', back_populates='clock')
+    time_sheet = relationship(
+        'CreditClockTimeSheet', back_populates='clock',
+        cascade='delete, merge, save-update'
+    )
     active_time_record = relationship('TimeSheetRecord')
     conversion_sheet = relationship(
        'CreditClockConversionSheet', back_populates='clock',
+        cascade='delete, merge, save-update'
     )
-    time_sheet_archive = relationship('CreditClockTimeSheet')
-    conversion_sheet_archive = relationship('CreditClockConversionSheet')
+    time_sheet_archive = relationship(
+        'CreditClockTimeSheet', cascade='delete, merge, save-update'
+    )
+    conversion_sheet_archive = relationship(
+        'CreditClockConversionSheet', cascade='delete, merge, save-update'
+    )
 
     def __init__(self, *args, **kwargs):
         if not kwargs.get('active_session'):

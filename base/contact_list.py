@@ -2,7 +2,7 @@ import datetime
 import pysnooper
 import logging
 from sqlalchemy import Table, Column, String, Integer, Float, ForeignKey, Date, DateTime
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import relationship, backref
 
 from .config import Config
 from .res_utils import ResUtils, Base
@@ -16,7 +16,7 @@ class ContactListRecord(Base):
 
     record_id = Column(Integer, primary_key=True)
     contact_list_id = Column(
-        Integer, ForeignKey('contact_list.contact_list_id')
+        Integer, ForeignKey('contact_list.contact_list_id', ondelete='CASCADE')
     )
     create_date = Column(DateTime)
     write_date = Column(DateTime)
@@ -26,6 +26,10 @@ class ContactListRecord(Base):
     user_phone = Column(String)
     notes = Column(String)
     reference = Column(String)
+    contact_list = relationship(
+        'ContactList',
+        back_populates='records', single_parent=True,
+    )
 
     def __init__(self, **kwargs):
         self.create_date = kwargs.get('create_date', datetime.datetime.now())
@@ -367,7 +371,9 @@ class ContactList(Base):
     client = relationship(
         'ResUser', back_populates='user_contact_list'
     )
-    records = relationship('ContactListRecord')
+    records = relationship(
+        'ContactListRecord', cascade='all, delete, delete-orphan'
+    )
 
     def __init__(self, **kwargs):
         self.create_date = kwargs.get('create_date', datetime.datetime.now())
@@ -777,6 +783,67 @@ class ContactList(Base):
         kwargs['active_session'].add(record)
         return record
 
+    # CLEANERS (LIST)
+
+    def cleanup_contact_list_record_by_id(self, record_id, **kwargs):
+        log.debug('')
+        try:
+            kwargs['active_session'].query(
+                ContactListRecord
+            ).filter_by(
+                record_id=record_id
+            ).delete()
+        except Exception as e:
+            return self.error_could_not_unlink_contact_list_record(
+                record_id, kwargs, e
+            )
+        log.info('Successfully unlinked contact list record.')
+        return record_id
+
+    def cleanup_contact_list_records(self, **kwargs):
+        log.debug('')
+        records = self.fetch_contact_list_records()
+        command_chain_response = {
+            'failed': True,
+            'contact_list': self.fetch_contact_list_id(),
+        }
+        records_cleaned, cleanup_failures = 0, 0
+        if not records:
+            command_chain_response.update({
+                'records_cleaned': records_cleaned,
+                'cleanup_failures': cleanup_failures,
+            })
+            return command_chain_response
+        for record in records:
+            try:
+                self.cleanup_contact_list_record_by_id(
+                    record.fetch_record_id(), **kwargs
+                )
+            except Exception as e:
+                self.warning_could_not_cleanup_contact_record(
+                    record, kwargs, records, records_cleaned,
+                    cleanup_failures, e
+                )
+                cleanup_failures += 1
+                continue
+            records_cleaned += 1
+        command_chain_response.update({
+            'records_cleaned': records_cleaned,
+            'cleanup_failures': cleanup_failures,
+        })
+        return self.error_no_contact_records_cleaned(
+            kwargs, records, records_cleaned, cleanup_failures
+        ) if not records_cleaned else command_chain_response
+
+    def cleanup_contact_list(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('cleanup'):
+            return self.error_no_contact_list_cleanup_target_specified(kwargs)
+        handlers = {
+            'records': self.cleanup_contact_list_records,
+        }
+        return handlers[kwargs['cleanup']](**kwargs)
+
     # DISPLAYS (LIST)
 
     def display_contact_list_records(self, **kwargs):
@@ -811,6 +878,7 @@ class ContactList(Base):
             'create': self.create_contact_list_record,
             'update': self.update_contact_list,
             'interogate': self.interogate_contact_list,
+            'cleanup': self.cleanup_contact_list,
         }
         return handlers[kwargs['action']](**kwargs)
 
@@ -819,13 +887,23 @@ class ContactList(Base):
     [ TODO ]: Fetch warning messages from message file by key codes.
     '''
 
+    def warning_could_not_cleanup_contact_record(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'warning': 'Something went wrong. '
+                       'Could not cleanup contact list record. '
+                       'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['warning'])
+        return command_chain_response
+
     def warning_record_does_not_belong_to_contact_list(self, *args):
         command_chain_response = {
             'failed': True,
             'warning': 'Record does not belong to active contact list. '
                        'Details: {}'.format(args),
         }
-        log.error(command_chain_response['error'])
+        log.error(command_chain_response['warning'])
         return command_chain_response
 
     def warning_record_not_in_contact_list(self, *args):
@@ -834,7 +912,7 @@ class ContactList(Base):
             'warning': 'Record not found in contact list. '
                        'Details: {}'.format(args),
         }
-        log.error(command_chain_response['error'])
+        log.error(command_chain_response['warning'])
         return command_chain_response
 
     def warning_could_not_fetch_contact_records_from_database(self, *args):
@@ -844,13 +922,42 @@ class ContactList(Base):
                        'Could not fetch contact records from database. '
                        'Details: {}'.format(args),
         }
-        log.error(command_chain_response['error'])
+        log.error(command_chain_response['warning'])
         return command_chain_response
 
     # ERRORS (LIST)
     '''
     [ TODO ]: Fetch error messages from message file by key codes.
     '''
+
+    def error_could_not_unlink_contact_list_record(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Something went wrong. '
+                     'Could not unlink contact list record. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_no_contact_records_cleaned(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'Something went wrong. '
+                     'No contact list records cleaned. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_no_contact_list_cleanup_target_specified(self, *args):
+        command_chain_response = {
+            'failed': True,
+            'error': 'No contact list cleanup target specified. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
 
     def error_no_contact_list_record_removal_target_specified(self, *args):
         command_chain_response = {
