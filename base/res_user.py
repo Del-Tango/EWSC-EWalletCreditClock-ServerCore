@@ -733,6 +733,24 @@ class ResUser(Base):
 
     # UNLINKERS
 
+    def unlink_credit_ewallet(self, ewallet_id, **kwargs):
+        log.debug('')
+        active_session = kwargs.get('active_session') or \
+            self.fetch_user_active_session(stype='orm')
+        try:
+            active_session.query(
+                CreditEWallet
+            ).filter_by(
+                wallet_id=ewallet_id
+            ).delete()
+            kwargs['active_session'].commit()
+        except:
+            return self.error_could_not_unlink_credit_ewallet(
+                kwargs, active_session
+            )
+        log.info('Successfully unlinked credit ewallet.')
+        return ewallet_id
+
     def unlink_contact_list(self, list_id, **kwargs):
         log.debug('')
         active_session = kwargs.get('active_session') or \
@@ -743,6 +761,7 @@ class ResUser(Base):
             ).filter_by(
                 contact_list_id=list_id
             ).delete()
+            kwargs['active_session'].commit()
         except:
             return self.error_could_not_unlink_contact_list(
                 kwargs, active_session
@@ -789,6 +808,51 @@ class ResUser(Base):
         return transaction
 
     # ACTIONS
+
+    def action_cleanup_credit_ewallet(self, **kwargs):
+        '''
+        [ NOTE ]: Cleans all user ewallets, clocks and sheets.
+        '''
+        log.debug('')
+        ewallet_archive = self.fetch_user_credit_wallet_archive()
+        command_chain_response = {
+            'failed': False,
+            'user_id': self.fetch_user_id(),
+        }
+        ewallets_cleaned, cleanup_failures = 0, 0
+        if not ewallet_archive:
+            command_chain_response.update({
+                'ewallets_cleaned': ewallets_cleaned,
+                'cleanup_failures': cleanup_failures,
+            })
+            return command_chain_response
+        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
+            kwargs, 'controller', 'action', 'cleanup'
+        )
+        for ewallet in ewallet_archive:
+            cleanup_ewallet = ewallet.main_controller(
+                controller='user', action='cleanup', cleanup='ewallet',
+                **sanitized_command_chain,
+            )
+            try:
+                self.unlink_credit_ewallet(
+                    ewallet.fetch_credit_ewallet_id(), **kwargs
+                )
+            except Exception as e:
+                cleanup_failures += 1
+                self.warning_could_not_delete_credit_ewallet(
+                    ewallet, kwargs, ewallet_archive, ewallets_cleaned,
+                    cleanup_failures, e
+                )
+                continue
+            ewallets_cleaned += 1
+        command_chain_response.update({
+            'ewallets_cleaned': ewallets_cleaned,
+            'cleanup_failures': cleanup_failures,
+        })
+        return self.error_no_user_credit_ewallets_cleaned(
+            kwargs, ewallet_archive, ewallets_cleaned, cleanup_failures
+        ) if not ewallets_cleaned else command_chain_response
 
     def action_unlink_contact_list(self, **kwargs):
         log.debug('')
@@ -1260,7 +1324,7 @@ class ResUser(Base):
         log.debug('TODO - Cleanup all relationships')
         cleanup = {
             'cleanup_contact_list': self.action_cleanup_contact_list(**kwargs),
-#           'cleanup_ewallet':,
+            'cleanup_ewallet': self.action_cleanup_credit_ewallet(**kwargs),
 #           'cleanup_pass_hash':,
 #           'cleanup_login_records':,
 #           'cleanup_logout_records':,
@@ -1458,6 +1522,16 @@ class ResUser(Base):
     [ TODO ]: Fetch error messages from message file by key codes.
     '''
 
+    def warning_could_not_delete_credit_ewallet(self, *args):
+        command_chain_response = {
+            'failed': True, 'level': 'res-user',
+            'warning': 'Something went wrong. '
+                       'Could not delete credit ewallet. '
+                       'Details: {}'.format(args),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
+
     def warning_could_not_delete_contact_list(self, *args):
         command_chain_response = {
             'failed': True, 'level': 'res-user',
@@ -1466,7 +1540,7 @@ class ResUser(Base):
                        'Details: {}'.format(args),
         }
         log.warning(command_chain_response['warning'])
-        return False
+        return command_chain_response
 
     def warning_could_not_link_journal_records_for_credit_request_event(self, *args):
         command_chain_response = {
@@ -1476,7 +1550,7 @@ class ResUser(Base):
                        'Details: {}'.format(args),
         }
         log.warning(command_chain_response['warning'])
-        return False
+        return command_chain_response
 
     def warning_invoice_record_already_linked(self, *args):
         command_chain_response = {
@@ -1485,7 +1559,7 @@ class ResUser(Base):
                        'Details: {}'.format(args),
         }
         log.warning(command_chain_response['warning'])
-        return False
+        return command_chain_response
 
     def warning_no_credit_ewallet_found_by_id(self, *args):
         command_chain_response = {
@@ -1494,7 +1568,7 @@ class ResUser(Base):
                        'Details: {}'.format(args),
         }
         log.warning(command_chain_response['warning'])
-        return False
+        return command_chain_response
 
     def warning_contact_list_does_not_belong_to_user(self, *args):
         command_chain_response = {
@@ -1643,6 +1717,23 @@ class ResUser(Base):
     '''
     [ TODO ]: Fetch error messages from message file by key codes.
     '''
+
+    def error_no_user_credit_ewallets_cleaned(self, *args):
+        command_chain_response = {
+            'failed': True, 'level': 'res-user',
+            'error': 'No credit ewallets cleaned. '
+                     'Details: {}'.format(args)
+        }
+        log.error(command_chain_response['error'])
+
+    def error_could_not_unlink_credit_ewallet(self, *args):
+        command_chain_response = {
+            'failed': True, 'level': 'res-user',
+            'error': 'Something went wrong. '
+                     'Could not unlink credit ewallet. '
+                     'Details: {}'.format(args)
+        }
+        log.error(command_chain_response['error'])
 
     def error_no_user_contact_lists_cleaned(self, *args):
         command_chain_response = {

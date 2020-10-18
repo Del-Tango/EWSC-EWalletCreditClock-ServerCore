@@ -258,12 +258,12 @@ Less information is never the answer.
 - (EWSC) - TODO:
 
     -   - Cascade Unlink oriented actions:
-        -   - UnlinkCreditEWallet cascade invoice sheets
+        - x - UnlinkCreditEWallet cascade invoice sheets
         -   - UnlinkCreditEWallet cascade transfer sheets
         -   - UnlinkCreditEWallet cascade credit clock
         -   - UnlinkCreditClock cascade conversion sheets
         -   - UnlinkCreditClock cascade time sheets
-        -   - UnlinkInvoiceSheet cascade invoice records
+        - x - UnlinkInvoiceSheet cascade invoice records
         -   - UnlinkTransferSheet cascade transfer records
         -   - UnlinkConversionSheet cascade conversion records
         -   - UnlinkTimeSheet cascade time records

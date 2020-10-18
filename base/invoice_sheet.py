@@ -249,7 +249,7 @@ class CreditInvoiceSheetRecord(Base):
 
     def error_could_not_set_invoice_record_create_date(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'invoice-sheet',
             'error': 'Something went wrong. '
                      'Could not set invoice record create date. '
                      'Details: {}'.format(args),
@@ -259,7 +259,7 @@ class CreditInvoiceSheetRecord(Base):
 
     def error_could_not_set_transfer_record_id(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'invoice-sheet',
             'error': 'Something went wrong. '
                      'Could not set invoice record linked transfer record id. '
                      'Details: {}'.format(args),
@@ -269,7 +269,7 @@ class CreditInvoiceSheetRecord(Base):
 
     def error_could_not_set_record_id(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'invoice-sheet',
             'error': 'Something went wrong. '
                      'Could not set invoice record id. '
                      'Details: {}'.format(args),
@@ -279,7 +279,7 @@ class CreditInvoiceSheetRecord(Base):
 
     def error_could_not_set_invoice_record_write_date(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'invoice-sheet',
             'error': 'Something went wrong. '
                      'Could not set invoice record write date. '
                      'Details: {}'.format(args),
@@ -289,7 +289,7 @@ class CreditInvoiceSheetRecord(Base):
 
     def error_could_not_set_invoice_sheet_id(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'invoice-sheet',
             'error': 'Something went wrong. '
                      'Could not set invoice record sheet id. '
                      'Details: {}'.format(args),
@@ -299,7 +299,7 @@ class CreditInvoiceSheetRecord(Base):
 
     def error_could_not_set_invoice_record_reference(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'invoice-sheet',
             'error': 'Something went wrong. '
                      'Could not set invoice record reference. '
                      'Details: {}'.format(args),
@@ -309,7 +309,7 @@ class CreditInvoiceSheetRecord(Base):
 
     def error_could_not_set_credits(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'invoice-sheet',
             'error': 'Something went wrong. '
                      'Could not set invoice record credits. '
                      'Details: {}'.format(args),
@@ -319,7 +319,7 @@ class CreditInvoiceSheetRecord(Base):
 
     def error_could_not_set_currency(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'invoice-sheet',
             'error': 'Something went wrong. '
                      'Could not set invoice record currency. '
                      'Details: {}'.format(args),
@@ -329,7 +329,7 @@ class CreditInvoiceSheetRecord(Base):
 
     def error_could_not_set_cost(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'invoice-sheet',
             'error': 'Something went wrong. '
                      'Could not set invoice record cost. '
                      'Details: {}'.format(args),
@@ -339,7 +339,7 @@ class CreditInvoiceSheetRecord(Base):
 
     def error_could_not_set_seller_id(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'invoice-sheet',
             'error': 'Something went wrong. '
                      'Could not set invoice record seller id. '
                      'Details: {}'.format(args),
@@ -349,7 +349,7 @@ class CreditInvoiceSheetRecord(Base):
 
     def error_could_not_set_invoice_record_notes(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'invoice-sheet',
             'error': 'Something went wrong. '
                      'Could not set invoice record notes. '
                      'Details: {}'.format(args),
@@ -359,7 +359,7 @@ class CreditInvoiceSheetRecord(Base):
 
     def error_no_record_id_found(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'invoice-sheet',
             'error': 'No record id found. Details: {}'.format(args),
         }
         log.error(command_chain_response['error'])
@@ -367,7 +367,7 @@ class CreditInvoiceSheetRecord(Base):
 
     def error_no_invoice_sheet_id_found(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'invoice-sheet',
             'error': 'No invoice sheet id found. Details: {}'.format(args),
         }
         log.error(command_chain_response['error'])
@@ -375,7 +375,7 @@ class CreditInvoiceSheetRecord(Base):
 
     def error_no_reference_found(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'invoice-sheet',
             'error': 'No invoice record reference found. '
                      'Details: {}'.format(args),
         }
@@ -384,7 +384,7 @@ class CreditInvoiceSheetRecord(Base):
 
     def error_no_credits_found(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'invoice-sheet',
             'error': 'No credits found. '
                      'Details: {}'.format(args),
         }
@@ -393,7 +393,7 @@ class CreditInvoiceSheetRecord(Base):
 
     def error_no_currency_found(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'invoice-sheet',
             'error': 'No currency found. '
                      'Details: {}'.format(args),
         }
@@ -402,7 +402,7 @@ class CreditInvoiceSheetRecord(Base):
 
     def error_no_cost_found(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'invoice-sheet',
             'error': 'No cost found. '
                      'Details: {}'.format(args),
         }
@@ -411,7 +411,7 @@ class CreditInvoiceSheetRecord(Base):
 
     def error_no_seller_id_found(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'invoice-sheet',
             'error': 'No seller id found. '
                      'Details: {}'.format(args),
         }
@@ -420,7 +420,7 @@ class CreditInvoiceSheetRecord(Base):
 
     def error_no_notes_found(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'invoice-sheet',
             'error': 'No notes found. '
                      'Details: {}'.format(args),
         }
@@ -662,7 +662,68 @@ class CreditInvoiceSheet(Base):
         display = self.display_credit_invoice_sheet_records(records=[record])
         return record if display else False
 
+    # CLEANERS (LIST)
+
+    def cleanup_invoice_sheet_record_by_id(self, record_id, **kwargs):
+        log.debug('')
+        try:
+            kwargs['active_session'].query(
+                CreditInvoiceSheetRecord
+            ).filter_by(
+                record_id=record_id
+            ).delete()
+        except Exception as e:
+            return self.error_could_not_unlink_invoice_sheet_record(
+                record_id, kwargs, e
+            )
+        log.info('Successfully unlinked invoice sheet record.')
+        return record_id
+
+    def cleanup_invoice_sheet_records(self, **kwargs):
+        log.debug('')
+        records = self.fetch_invoice_sheet_records()
+        command_chain_response = {
+            'failed': False,
+            'invoice_sheet': self.fetch_invoice_sheet_id(),
+        }
+        records_cleaned, cleanup_failures = 0, 0
+        if not records:
+            command_chain_response.update({
+                'records_cleaned': records_cleaned,
+                'cleanup_failures': cleanup_failures,
+            })
+            return command_chain_response
+        for record in records:
+            try:
+                self.cleanup_invoice_sheet_record_by_id(
+                    record.fetch_record_id(), **kwargs
+                )
+            except Exception as e:
+                self.warning_could_not_cleanup_invoice_record(
+                    record, kwargs, records, records_cleaned,
+                    cleanup_failures, e
+                )
+                cleanup_failures += 1
+                continue
+            records_cleaned += 1
+        command_chain_response.update({
+            'records_cleaned': records_cleaned,
+            'cleanup_failures': cleanup_failures,
+        })
+        return self.error_no_invoice_records_cleaned(
+            kwargs, records, records_cleaned, cleanup_failures
+        ) if not records_cleaned else command_chain_response
+
     # ACTIONS (LIST)
+
+    def action_cleanup_invoice_sheet(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('cleanup'):
+            return self.error_no_invoice_sheet_cleanup_target_specified(kwargs)
+        handlers = {
+            'records': self.cleanup_invoice_sheet_records,
+        }
+        return handlers[kwargs['cleanup']](**kwargs)
 
 #   @pysnooper.snoop('logs/ewallet.log')
     def action_add_credit_invoice_sheet_record(self, **kwargs):
@@ -732,6 +793,7 @@ class CreditInvoiceSheet(Base):
             'remove': self.action_remove_credit_invoice_sheet_record,
             'interogate': self.action_interogate_credit_invoice_sheet_records,
             'clear': self.action_clear_credit_invoice_sheet_records,
+            'cleanup': self.action_cleanup_invoice_sheet,
         }
         return handlers[kwargs['action']](**kwargs)
 
@@ -758,9 +820,19 @@ class CreditInvoiceSheet(Base):
     [ NOTE ]: All warning handle messages should be fetched from message file by key codes
     '''
 
+    def warning_could_not_cleanup_invoice_record(self, *args):
+        command_chain_response = {
+            'failed': True, 'level': 'invoice-sheet',
+            'warning': 'Somthing went wrong. '
+                       'Could not cleanup invoice sheet record. '
+                       'Details: {}'.format(args),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
+
     def warning_record_not_in_invoice_sheet(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'invoice-sheet',
             'warning': 'Record not in invoice sheet. '
                        'Details: {}'.format(args),
         }
@@ -769,7 +841,7 @@ class CreditInvoiceSheet(Base):
 
     def warning_could_not_fetch_invoice_record(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'invoice-sheet',
             'warning': 'Something went wrong. '
                        'Could not fetch invoice sheet record. '
                        'Details: {}'.format(args),
@@ -782,9 +854,38 @@ class CreditInvoiceSheet(Base):
     [ NOTE ]: All error handle messages should be fetched from message file by key codes
     '''
 
+    def error_could_not_unlink_invoice_sheet_record(self, *args):
+        command_chain_response = {
+            'failed': True, 'level': 'invoice-sheet',
+            'error': 'Something went wrong. '
+                     'Could not unlink invoice sheet record. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_no_invoice_records_cleaned(self, *args):
+        command_chain_response = {
+            'failed': True, 'level': 'invoice-sheet',
+            'error': 'Something went wrong. '
+                     'No invoice sheet records cleaned. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_no_invoice_sheet_cleanup_target_specified(self, *args):
+        command_chain_response = {
+            'failed': True, 'level': 'invoice-sheet',
+            'error': 'No invoice sheet cleanup target specified. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
     def error_could_not_set_invoice_sheet_ewallet(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'invoice-sheet',
             'error': 'Something went wrong. '
                      'Could not set invoice sheet credit ewallet. '
                      'Details: {}'.format(args),
@@ -794,7 +895,7 @@ class CreditInvoiceSheet(Base):
 
     def error_could_not_set_invoice_sheet_create_date(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'invoice-sheet',
             'error': 'Something went wrong. '
                      'Could not set invoice sheet create date. '
                      'Details: {}'.format(args),
@@ -804,7 +905,7 @@ class CreditInvoiceSheet(Base):
 
     def error_could_not_set_invoice_sheet_id(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'invoice-sheet',
             'error': 'Something went wrong. '
                      'Could not set invoice sheet id. '
                      'Details: {}'.format(args),
@@ -814,7 +915,7 @@ class CreditInvoiceSheet(Base):
 
     def error_could_not_set_invoice_sheet_write_date(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'invoice-sheet',
             'error': 'Something went wrong. '
                      'Could not set invoice sheet write date. '
                      'Details: {}'.format(args),
@@ -824,7 +925,7 @@ class CreditInvoiceSheet(Base):
 
     def error_could_not_set_invoice_sheet_ewallet_id(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'invoice-sheet',
             'error': 'Something went wrong. '
                      'Could not set invoice sheet ewallet id. '
                      'Details: {}'.format(args),
@@ -834,7 +935,7 @@ class CreditInvoiceSheet(Base):
 
     def error_could_not_set_invoice_sheet_reference(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'invoice-sheet',
             'error': 'Something went wrong. '
                      'Could not set invoice sheet reference. '
                      'Details: {}'.format(args),
@@ -844,7 +945,7 @@ class CreditInvoiceSheet(Base):
 
     def error_no_invoice_records_found(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'invoice-sheet',
             'error': 'No invoice sheet records found. '
                      'Details: {}'.format(args),
         }
@@ -853,7 +954,7 @@ class CreditInvoiceSheet(Base):
 
     def error_invoice_record_already_in_sheet_record_set(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'invoice-sheet',
             'error': 'Duplicated invoice record. '
                      'Could not update invoice sheet records. '
                      'Details: {}'.format(args),
@@ -863,7 +964,7 @@ class CreditInvoiceSheet(Base):
 
     def error_could_not_update_invoice_sheet_records(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'invoice-sheet',
             'error': 'Something went wrong. '
                      'Could not update invoice sheet records. '
                      'Details: {}'.format(args),
@@ -873,7 +974,7 @@ class CreditInvoiceSheet(Base):
 
     def error_no_credits_found(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'invoice-sheet',
             'error': 'No credits found. '
                      'Details: {}'.format(args),
         }
@@ -882,7 +983,7 @@ class CreditInvoiceSheet(Base):
 
     def error_no_seller_id_found(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'invoice-sheet',
             'error': 'No seller id found. '
                      'Details: {}'.format(args),
         }
@@ -891,7 +992,7 @@ class CreditInvoiceSheet(Base):
 
     def error_could_not_remove_credit_invoice_sheet_record(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'invoice-sheet',
             'error': 'Something went wrong. '
                      'Could not remove invoice sheet record. '
                      'Details: {}'.format(args),
@@ -901,7 +1002,7 @@ class CreditInvoiceSheet(Base):
 
     def error_no_invoice_record_id_found(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'invoice-sheet',
             'error': 'No invoice sheet record id found. '
                      'Details: {}'.format(args),
         }
@@ -910,7 +1011,7 @@ class CreditInvoiceSheet(Base):
 
     def error_no_invoice_sheet_id_found(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'invoice-sheet',
             'error': 'No invoice sheet sheet id found. '
                      'Details: {}'.format(args),
         }
@@ -919,7 +1020,7 @@ class CreditInvoiceSheet(Base):
 
     def error_no_wallet_id_found(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'invoice-sheet',
             'error': 'No wallet id found. '
                      'Details: {}'.format(args),
         }
@@ -928,7 +1029,7 @@ class CreditInvoiceSheet(Base):
 
     def error_no_reference_found(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'invoice-sheet',
             'error': 'No invoice sheet reference found. '
                      'Details: {}'.format(args),
         }
@@ -937,7 +1038,7 @@ class CreditInvoiceSheet(Base):
 
     def error_no_records_found(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'invoice-sheet',
             'error': 'No invoice sheet records found. '
                      'Details: {}'.format(args),
         }
@@ -946,7 +1047,7 @@ class CreditInvoiceSheet(Base):
 
     def error_no_invoice_record_interogation_identifier_specified(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'invoice-sheet',
             'error': 'No invoice record interogation identifier specified. '
                      'Details: {}'.format(args),
         }
@@ -955,7 +1056,7 @@ class CreditInvoiceSheet(Base):
 
     def error_no_invoice_sheet_controller_action_specified(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'invoice-sheet',
             'error': 'No invoice sheet controller action specified. '
                      'Details: {}'.format(args),
         }
@@ -964,7 +1065,7 @@ class CreditInvoiceSheet(Base):
 
     def error_no_credits_found(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'invoice-sheet',
             'error': 'No credits found. '
                      'Details: {}'.format(args),
         }
@@ -973,7 +1074,7 @@ class CreditInvoiceSheet(Base):
 
     def error_no_invoice_record_search_identifier_specified(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'invoice-sheet',
             'error': 'No invoice record search identifier specified. '
                      'Details: {}'.format(args),
         }
@@ -982,7 +1083,7 @@ class CreditInvoiceSheet(Base):
 
     def error_no_new_invoice_record_values_found(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'invoice-sheet',
             'error': 'No new invoice record values found. '
                      'Details: {}'.format(args),
         }
@@ -991,7 +1092,7 @@ class CreditInvoiceSheet(Base):
 
     def error_no_active_session_found(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'invoice-sheet',
             'error': 'No active session found. '
                      'Details: {}'.format(args),
         }

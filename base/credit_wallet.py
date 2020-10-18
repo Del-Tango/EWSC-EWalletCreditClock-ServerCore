@@ -91,6 +91,10 @@ class CreditEWallet(Base):
 
     # FETCHERS
 
+    def fetch_credit_wallet_invoice_sheet_archive(self, **kwargs):
+        log.debug('')
+        return self.invoice_sheet_archive
+
     def fetch_credit_wallet_invoice_sheet_by_id(self, **kwargs):
         log.debug('')
         active_session = kwargs.get('active_session')
@@ -589,6 +593,25 @@ class CreditEWallet(Base):
 
     # HANDLERS
 
+    # TODO
+    def handle_user_action_cleanup_ewallet(self, **kwargs):
+        log.debug('TODO - Cleanup all relationships')
+        cleanup = {
+            'invoice_sheet': self.action_cleanup_invoice_sheets(**kwargs),
+#           'transfer_sheet': self.action_cleanup_transfer_sheets(**kwargs),
+#           'credit_clock': self.action_cleanup_credit_clocks(**kwargs),
+        }
+        return cleanup
+
+    def handle_user_action_cleanup(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('cleanup'):
+            return self.error_no_user_action_cleanup_target_specified(kwargs)
+        handlers = {
+            'ewallet': self.handle_user_action_cleanup_ewallet,
+        }
+        return handlers[kwargs['cleanup']](**kwargs)
+
 #   @pysnooper.snoop()
     def handle_switch_credit_wallet_clock_by_id(self, **kwargs):
         log.debug('')
@@ -923,6 +946,47 @@ class CreditEWallet(Base):
 
     # ACTIONS
 
+    def action_cleanup_invoice_sheets(self, **kwargs):
+        log.debug('')
+        invoice_sheet_archive = self.fetch_credit_wallet_invoice_sheet_archive()
+        command_chain_response = {
+            'failed': True,
+            'ewallet': self.fetch_credit_ewallet_id(),
+        }
+        lists_cleaned, cleanup_failures = 0, 0
+        if not invoice_sheet_archive:
+            command_chain_response.update({
+                'sheets_cleaned': lists_cleaned,
+                'cleanup_failures': cleanup_failures,
+            })
+            return command_chain_response
+        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
+            kwargs, 'action', 'cleanup'
+        )
+        for sheet in invoice_sheet_archive:
+            sheet.credit_invoice_sheet_controller(
+                action='cleanup', cleanup='records', **sanitized_command_chain,
+            )
+            unlink = self.unlink_invoice_list(
+                list_id=sheet.fetch_invoice_sheet_id(), **kwargs
+            )
+            if not unlink or isinstance(unlink, dict) and \
+                    unlink.get('failed'):
+                cleanup_failures += 1
+                self.warning_could_not_unlink_invoice_sheet(
+                    sheet, kwargs, invoice_sheet_archive, lists_cleaned,
+                    cleanup_failures, unlink
+                )
+                continue
+            lists_cleaned += 1
+        command_chain_response.update({
+            'sheets_cleaned': lists_cleaned,
+            'cleanup_failures': cleanup_failures,
+        })
+        return self.error_no_invoice_sheets_cleaned_up(
+            kwargs, invoice_sheet_archive, lists_cleaned, cleanup_failures
+        ) if not lists_cleaned else command_chain_response
+
     def action_unlink_clock(self, **kwargs):
         log.debug('')
         if not kwargs.get('clock_id'):
@@ -1063,6 +1127,12 @@ class CreditEWallet(Base):
             return self.warning_invoice_sheet_does_not_belong_to_credit_ewallet(
                 kwargs, invoice_sheet, check
             )
+        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
+            kwargs, 'action', 'cleanup',
+        )
+        cleanup_sheet = invoice_sheet.credit_invoice_sheet_controller(
+            action='cleanup', cleanup='records', **sanitized_command_chain,
+        )
         try:
             kwargs['active_session'].query(
                 CreditInvoiceSheet
@@ -1298,6 +1368,7 @@ class CreditEWallet(Base):
             'unlink': self.action_unlink,
             'switch_sheet': self.action_switch_credit_wallet_sheet,
             'switch_clock': self.action_switch_credit_wallet_clock,
+            'cleanup': self.handle_user_action_cleanup,
         }
         handle = handlers[kwargs['action']](**kwargs)
         if handle and kwargs['action'] != 'interogate':
@@ -1320,9 +1391,19 @@ class CreditEWallet(Base):
     [ TODO ]: Fetch error messages from message file by key codes.
     '''
 
+    def warning_could_not_unlink_invoice_sheet(self, *args):
+        command_chain_response = {
+            'failed': True, 'level': 'credit-ewallet',
+            'warning': 'Something went wrong. '
+                       'Could not unlink invoice sheet. '
+                       'Details: {}'.format(args),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
+
     def warning_could_not_fetch_invoice_sheet(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'credit-ewallet',
             'warning': 'Something went wrong. '
                        'Could not fetch invoice sheet. '
                        'Details: {}'.format(args),
@@ -1332,7 +1413,7 @@ class CreditEWallet(Base):
 
     def warning_could_not_unlink_time_sheet(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'credit-ewallet',
             'warning': 'Something went wrong. '
                        'Could not unlink time sheet. '
                        'Details: {}'.format(args),
@@ -1342,7 +1423,7 @@ class CreditEWallet(Base):
 
     def warning_could_not_unlink_time_record(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'credit-ewallet',
             'warning': 'Something went wrong. '
                        'Could not unlink time sheet record. '
                        'Details: {}'.format(args),
@@ -1352,7 +1433,7 @@ class CreditEWallet(Base):
 
     def warning_could_not_unlink_conversion_sheet(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'credit-ewallet',
             'warning': 'Something went wrong. '
                        'Could not unlink conversion sheet. '
                        'Details: {}'.format(args),
@@ -1362,7 +1443,7 @@ class CreditEWallet(Base):
 
     def warning_could_not_unlink_conversion_record(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'credit-ewallet',
             'warning': 'Something went wrong. '
                        'Could not unlink conversion record. '
                        'Details: {}'.format(args),
@@ -1372,7 +1453,7 @@ class CreditEWallet(Base):
 
     def warning_could_not_switch_credit_ewallet_time_sheet(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'credit-ewallet',
             'warning': 'Something went wrong. '
                        'Could not switch time sheet. '
                        'Details: {}'.format(args),
@@ -1382,7 +1463,7 @@ class CreditEWallet(Base):
 
     def warning_could_not_switch_credit_ewallet_conversion_sheet(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'credit-ewallet',
             'warning': 'Something went wrong. '
                        'Could not switch conversion sheet. '
                        'Details: {}'.format(args),
@@ -1392,7 +1473,7 @@ class CreditEWallet(Base):
 
     def warning_invoice_sheet_does_not_belong_to_credit_ewallet(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'credit-ewallet',
             'warning': 'Invoice sheet does not belong to active credit ewallet. '
                        'Details: {}'.format(args),
         }
@@ -1401,7 +1482,7 @@ class CreditEWallet(Base):
 
     def warning_could_not_switch_credit_ewallet_invoice_sheet(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'credit-ewallet',
             'warning': 'Something went wrong. '
                        'Could not switch invoice sheet. '
                        'Details: {}'.format(args),
@@ -1411,7 +1492,7 @@ class CreditEWallet(Base):
 
     def warning_transfer_sheet_does_not_belong_to_credit_ewallet(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'credit-ewallet',
             'warning': 'Transfer sheet does not belong to active credit ewallet. '
                        'Details: {}'.format(args),
         }
@@ -1420,7 +1501,7 @@ class CreditEWallet(Base):
 
     def warning_could_not_switch_credit_ewallet_transfer_sheet(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'credit-ewallet',
             'warning': 'Something went wrong. '
                        'Could not switch transfer sheet. '
                        'Details: {}'.format(args),
@@ -1430,7 +1511,7 @@ class CreditEWallet(Base):
 
     def warning_clock_does_not_belong_to_current_credit_ewallet(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'credit-ewallet',
             'warning': 'Clock does not belong to active credit ewallet. '
                        'Details: {}'.format(args),
         }
@@ -1439,7 +1520,7 @@ class CreditEWallet(Base):
 
     def warning_could_not_switch_credit_clock(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'credit-ewallet',
             'warning': 'Something went wrong. '
                        'Could not switch credit clock. '
                        'Details: {}'.format(args),
@@ -1449,7 +1530,7 @@ class CreditEWallet(Base):
 
     def warning_could_not_unlink_invoice_record(self, command_chain):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'credit-ewallet',
             'warning': 'Something went wrong. Could not unlink invoice sheet record. '\
                        'Command chain details : {}'.format(command_chain)
         }
@@ -1458,7 +1539,7 @@ class CreditEWallet(Base):
 
     def warning_could_not_unlink_transfer_record(self, command_chain):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'credit-ewallet',
             'warning': 'Something went wrong. Could not unlink transfer sheet record. '\
                        'Command chain details : {}'.format(command_chain),
         }
@@ -1467,7 +1548,7 @@ class CreditEWallet(Base):
 
     def warning_could_not_unlink_transfer_sheet_record(self, command_chain):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'credit-ewallet',
             'warning': 'Something went wrong. Could not unlink transfer sheet record. '\
                        'Command chain details : {}'.format(command_chain),
         }
@@ -1476,7 +1557,7 @@ class CreditEWallet(Base):
 
     def warning_could_not_fetch_transfer_sheet(self, command_chain, *args, **kwargs):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'credit-ewallet',
             'warning': 'Could not fetch transfer sheet. Command chain details : {}'\
                        .format(command_chain),
         }
@@ -1485,7 +1566,7 @@ class CreditEWallet(Base):
 
     def warning_no_invoice_sheet_found_by_id(self, command_chain):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'credit-ewallet',
             'warning': 'No invoice sheet found by id. Command chain details : {}'.format(command_chain),
         }
         log.warning(command_chain_response['warning'])
@@ -1493,7 +1574,7 @@ class CreditEWallet(Base):
 
     def warning_no_transfer_sheet_found_by_id(self, command_chain):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'credit-ewallet',
             'warning': 'No transfer sheet found by id. Command chain details : {}'.format(command_chain),
         }
         log.warning(command_chain_response['warning'])
@@ -1501,7 +1582,7 @@ class CreditEWallet(Base):
 
     def warning_no_credit_clock_found_by_id(self, command_chain):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'credit-ewallet',
             'warning': 'No credit clock found by id. Command chain details : {}'.format(command_chain),
         }
         log.warning(command_chain_response['warning'])
@@ -1509,7 +1590,7 @@ class CreditEWallet(Base):
 
     def warning_could_not_create_new_time_sheet(self, command_chain):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'credit-ewallet',
             'warning': 'Something went wrong. Could not create new time sheet. '\
                        'Command chain detils : {}'.format(command_chain),
         }
@@ -1518,7 +1599,7 @@ class CreditEWallet(Base):
 
     def warning_could_not_create_new_conversion_sheet(self, command_chain):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'credit-ewallet',
             'warning': 'Something went wrong. Could not create new conversion sheet. '\
                        'Command chain detils : {}'.format(command_chain),
         }
@@ -1537,9 +1618,27 @@ class CreditEWallet(Base):
     [ TODO ]: Fetch error messages from message file by key codes.
     '''
 
+    def error_no_invoice_sheets_cleaned_up(self, *args):
+        command_chain_response = {
+            'failed': True, 'level': 'credit-ewallet',
+            'error': 'No credit ewallet invoice sheets cleaned up. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_no_user_action_cleanup_target_specified(self, *args):
+        command_chain_response = {
+            'failed': True, 'level': 'credit-ewallet',
+            'error': 'No user action cleanup targe specified. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
     def error_no_invoice_list_id_specified(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'credit-ewallet',
             'error': 'No invoice sheet ID specified. '
                      'Details: {}'.format(args),
         }
@@ -1548,7 +1647,7 @@ class CreditEWallet(Base):
 
     def error_could_not_unlink_invoice_sheet(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'credit-ewallet',
             'error': 'Something went wrong. '
                      'Could not unlink invoice sheet. '
                      'Details: {}'.format(args),
@@ -1558,7 +1657,7 @@ class CreditEWallet(Base):
 
     def error_could_not_unlink_credit_clock(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'credit-ewallet',
             'error': 'Something went wrong. '
                      'Could not unlink credit clock. '
                      'Details: {}'.format(args),
@@ -1568,7 +1667,7 @@ class CreditEWallet(Base):
 
     def error_could_not_set_active_credit_clock(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'credit-ewallet',
             'error': 'Something went wrong. '
                      'Could not set active ewallet credit clock. '
                      'Details: {}'.format(args)
@@ -1578,7 +1677,7 @@ class CreditEWallet(Base):
 
     def error_could_not_set_client_user(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'credit-ewallet',
             'error': 'Something went wrong. '
                      'Could not set credit ewallet client user. '
                      'Details: {}'.format(args)
@@ -1588,7 +1687,7 @@ class CreditEWallet(Base):
 
     def error_could_not_set_active_ewallet_session(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'credit-ewallet',
             'error': 'Something went wrong. '
                      'Could not set active ewallet session. '
                      'Details: {}'.format(args)
@@ -1598,7 +1697,7 @@ class CreditEWallet(Base):
 
     def error_could_not_set_create_date(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'credit-ewallet',
             'error': 'Something went wrong. '
                      'Could not set credit ewallet create date. '
                      'Details: {}'.format(args)
@@ -1608,7 +1707,7 @@ class CreditEWallet(Base):
 
     def error_could_not_set_active_session_id(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'credit-ewallet',
             'error': 'Something went wrong. '
                      'Could not set credit ewallet active session id. '
                      'Details: {}'.format(args)
@@ -1618,7 +1717,7 @@ class CreditEWallet(Base):
 
     def error_could_not_set_client_user_id(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'credit-ewallet',
             'error': 'Something went wrong. '
                      'Could not set credit ewallet client user id. '
                      'Details: {}'.format(args)
@@ -1628,7 +1727,7 @@ class CreditEWallet(Base):
 
     def error_could_not_set_ewallet_id(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'credit-ewallet',
             'error': 'Something went wrong. '
                      'Could not set credit ewallet id. '
                      'Details: {}'.format(args)
@@ -1638,7 +1737,7 @@ class CreditEWallet(Base):
 
     def error_could_not_set_credit_clock_to_archive(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'credit-ewallet',
             'error': 'Something went wrong. '
                      'Could not set credit clock to archive. '
                      'Details: {}'.format(args)
@@ -1648,7 +1747,7 @@ class CreditEWallet(Base):
 
     def error_could_not_set_invoice_sheet_to_archive(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'credit-ewallet',
             'error': 'Something went wrong. '
                      'Could not set invoice sheet to archive. '
                      'Details: {}'.format(args)
@@ -1658,7 +1757,7 @@ class CreditEWallet(Base):
 
     def error_could_not_set_transfer_sheet_to_archive(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'credit-ewallet',
             'error': 'Something went wrong. '
                      'Could not set transfer sheet to archive. '
                      'Details: {}'.format(args)
@@ -1668,7 +1767,7 @@ class CreditEWallet(Base):
 
     def error_could_not_set_ewallet_write_date(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'credit-ewallet',
             'error': 'Something went wrong. '
                      'Could not set ewallet write date. '
                      'Details: {}'.format(args)
@@ -1678,7 +1777,7 @@ class CreditEWallet(Base):
 
     def error_could_not_set_invoice_sheet_archive(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'credit-ewallet',
             'error': 'Something went wrong. '
                      'Could not set ewallet invoice sheet archive. '
                      'Details: {}'.format(args)
@@ -1688,7 +1787,7 @@ class CreditEWallet(Base):
 
     def error_no_invoice_sheet_archive_found(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'credit-ewallet',
             'error': 'No invoice sheet archive. '
                      'Details: {}'.format(args)
         }
@@ -1697,7 +1796,7 @@ class CreditEWallet(Base):
 
     def error_could_not_set_transfer_sheet_archive(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'credit-ewallet',
             'error': 'Something went wrong. '
                      'Could not set ewallet transfer sheet archive. '
                      'Details: {}'.format(args)
@@ -1707,7 +1806,7 @@ class CreditEWallet(Base):
 
     def error_no_transfer_sheet_archive_found(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'credit-ewallet',
             'error': 'No transfer sheet archive found. '
                      'Details: {}'.format(args)
         }
@@ -1716,7 +1815,7 @@ class CreditEWallet(Base):
 
     def error_could_not_set_credit_clock_archive(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'credit-ewallet',
             'error': 'Something went wrong. '
                      'Could not set ewallet credit clock archive. '
                      'Details: {}'.format(args)
@@ -1726,7 +1825,7 @@ class CreditEWallet(Base):
 
     def error_no_credit_clock_archive_found(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'credit-ewallet',
             'error': 'No credit clock archive found. '
                      'Details: {}'.format(args)
         }
@@ -1735,7 +1834,7 @@ class CreditEWallet(Base):
 
     def error_could_not_set_ewallet_credits(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'credit-ewallet',
             'error': 'Something went wrong. '
                      'Could not set ewallet credits. '
                      'Details: {}'.format(args)
@@ -1745,7 +1844,7 @@ class CreditEWallet(Base):
 
     def error_no_credits_found(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'credit-ewallet',
             'error': 'No ewallet credits found. '
                      'Details: {}'.format(args)
         }
@@ -1754,7 +1853,7 @@ class CreditEWallet(Base):
 
     def error_could_not_set_credit_ewallet_reference(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'credit-ewallet',
             'error': 'Something went wrong. '
                      'Could not set credit ewallet reference. '
                      'Details: {}'.format(args)
@@ -1764,7 +1863,7 @@ class CreditEWallet(Base):
 
     def error_no_reference_found(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'credit-ewallet',
             'error': 'No credit ewallet reference found. '
                      'Details: {}'.format(args)
         }
@@ -1773,7 +1872,7 @@ class CreditEWallet(Base):
 
     def error_could_not_set_client_id(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'credit-ewallet',
             'error': 'Something went wrong. '
                      'Could not set credit ewallet client id. '
                      'Details: {}'.format(args)
@@ -1783,7 +1882,7 @@ class CreditEWallet(Base):
 
     def error_no_client_id_found(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'credit-ewallet',
             'error': 'No client id found. '
                      'Details: {}'.format(args)
         }
@@ -1792,7 +1891,7 @@ class CreditEWallet(Base):
 
     def error_could_not_set_credit_ewallet_id(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'credit-ewallet',
             'error': 'Something went wrong. '
                      'Could not set credit ewallet id. '
                      'Details: {}'.format(args)
@@ -1802,7 +1901,7 @@ class CreditEWallet(Base):
 
     def error_no_id_found(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'credit-ewallet',
             'error': 'No credit ewallet id found. '
                      'Details: {}'.format(args)
         }
@@ -1811,7 +1910,7 @@ class CreditEWallet(Base):
 
     def error_could_not_set_credit_clock(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'credit-ewallet',
             'error': 'Something went wrong. '
                      'Could not set credit ewallet credit clock. '
                      'Details: {}'.format(args)
@@ -1821,7 +1920,7 @@ class CreditEWallet(Base):
 
     def error_could_not_set_transfer_sheet(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'credit-ewallet',
             'error': 'Something went wrong. '
                      'Could not set credit ewallet transfer sheet. '
                      'Details: {}'.format(args)
@@ -1831,7 +1930,7 @@ class CreditEWallet(Base):
 
     def error_could_not_set_invoice_sheet(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'credit-ewallet',
             'error': 'Something went wrong. '
                      'Could not set credit ewallet invoice sheet. '
                      'Details: {}'.format(args)
@@ -1841,7 +1940,7 @@ class CreditEWallet(Base):
 
     def error_transfer_record_id_not_found(self, command_chain, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'credit-ewallet',
             'error': 'No transfer record id found. Details: {}, {}'
                      .format(command_chain, args)
         }
@@ -1850,7 +1949,7 @@ class CreditEWallet(Base):
 
     def error_no_active_session_found(self, command_chain):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'credit-ewallet',
             'error': 'No active session found. '\
                      'Command chain details : {}'.format(command_chain),
         }
@@ -1859,7 +1958,7 @@ class CreditEWallet(Base):
 
     def error_no_credit_clock_id_found(self, command_chain):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'credit-ewallet',
             'error': 'No credit ewallet credit clock id found. '\
                      'Command chain details : {}'.format(command_chain),
         }
@@ -1876,7 +1975,7 @@ class CreditEWallet(Base):
 
     def error_no_transfer_list_id_specified(self, command_chain):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'credit-ewallet',
             'error': 'No transfer list id specified. Command chain details : {}'\
                      .format(command_chain),
         }
@@ -1885,7 +1984,7 @@ class CreditEWallet(Base):
 
     def error_could_not_remove_transfer_sheet(self, command_chain):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'credit-ewallet',
             'error': 'Something went wrong. Could not remove transfer sheet. Command chain details : {}'\
                      .format(command_chain),
         }
@@ -1894,7 +1993,7 @@ class CreditEWallet(Base):
 
     def error_no_credit_ewallet_unlink_time_targe_specified(self, command_chain):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'credit-ewallet',
             'error': 'No credit ewallet unlink time target specified. Command chain details : {}'\
                      .format(command_chain),
         }
@@ -1903,7 +2002,7 @@ class CreditEWallet(Base):
 
     def error_no_credit_ewallet_unlink_conversion_target_specified(self, command_chain):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'credit-ewallet',
             'error': 'No credit ewallet unlink conversion target specified. Command chain details : {}'\
                      .format(command_chain),
         }
@@ -1912,7 +2011,7 @@ class CreditEWallet(Base):
 
     def error_invoice_record_id_not_found(self, command_chain):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'credit-ewallet',
             'error': 'Invoice record id not found. Command chain details : {}'\
                      .format(command_chain),
         }
@@ -1921,7 +2020,7 @@ class CreditEWallet(Base):
 
     def error_no_credit_ewallet_unlink_invoice_target_specified(self, command_chain):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'credit-ewallet',
             'error': 'No credit ewallet unlink invoice target specified. Command chain details : {}'\
                      .format(command_chain),
         }
@@ -1930,7 +2029,7 @@ class CreditEWallet(Base):
 
     def error_no_credit_ewallet_unlink_transfer_target_specified(self, command_chain):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'credit-ewallet',
             'error': 'No credit ewallet unlink transfer target specified. Command chain details : {}'\
                      .format(command_chain),
         }
@@ -1939,7 +2038,7 @@ class CreditEWallet(Base):
 
     def error_no_credit_ewallet_unlink_target_specified(self, command_chain):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'credit-ewallet',
             'error': 'No credit ewallet unlink target specified. Command chain details : {}'\
                      .format(command_chain),
         }
@@ -1948,7 +2047,7 @@ class CreditEWallet(Base):
 
     def error_could_not_fetch_credit_ewallet_credit_clock(self, command_chain):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'credit-ewallet',
             'error': 'Could not fetch credit ewallet credit clock. Command chain details : {}'\
                      .format(command_chain),
         }
@@ -1958,7 +2057,7 @@ class CreditEWallet(Base):
     def error_invalid_invoice_sheet_id(self, command_chain):
         log.error()
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'credit-ewallet',
             'error': 'Invalid invoice sheet id. Command chain details : {}'\
                      .format(command_chain),
         }
@@ -1968,7 +2067,7 @@ class CreditEWallet(Base):
     def error_invalid_transfer_sheet_id(self, command_chain):
         log.error()
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'credit-ewallet',
             'error': 'Invalid transfer sheet id. Command chain details : {}'\
                      .format(command_chain),
         }
@@ -1977,7 +2076,7 @@ class CreditEWallet(Base):
 
     def error_no_switch_credit_ewallet_transfer_sheet_indentifier_specified(self, command_chain):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'credit-ewallet',
             'error': 'No switch credit ewallet transfer sheet identifier specified. '\
                      'Command chain details : {}'.format(command_chain),
         }
@@ -1990,7 +2089,7 @@ class CreditEWallet(Base):
 
     def error_invalid_credit_clock_id(self, command_chain):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'credit-ewallet',
             'error': 'Invalid credit clock id. Command chain details : {}'\
                      .format(command_chain),
         }
@@ -1999,7 +2098,7 @@ class CreditEWallet(Base):
 
     def error_could_not_fetch_credit_clock(self, command_chain):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'credit-ewallet',
             'error': 'Could not fetch credit clock. Command chain details : {}'\
                      .format(command_chain),
         }
