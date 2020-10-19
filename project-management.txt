@@ -167,7 +167,7 @@ Less information is never the answer.
     - x - (EWAT) Implement support for client action CheckSTokenLinked interaction
     - x - (EWAT) Implement support for client action CheckSTokenSession interaction
     - x - (EWAT) Implement support for client action CheckSTokenStatus interaction
-    -   - (EWSC) Fix bug in Unlink oriented actions. Deletion not cascaded to children entities
+    - x - (EWSC) Fix bug in Unlink oriented actions. Deletion not cascaded to children entities
 
     [ NOTE ]: EWCreditClock suit version Chronos introduces the concept of
               Master User Accounts. On client action AcquireMaster, the
@@ -260,13 +260,13 @@ Less information is never the answer.
     -   - Cascade Unlink oriented actions:
         - x - UnlinkCreditEWallet cascade invoice sheets
         - x - UnlinkCreditEWallet cascade transfer sheets
-        -   - UnlinkCreditEWallet cascade credit clock
-        -   - UnlinkCreditClock cascade conversion sheets
-        -   - UnlinkCreditClock cascade time sheets
+        - x - UnlinkCreditEWallet cascade credit clock
+        - x - UnlinkCreditClock cascade conversion sheets
+        - x - UnlinkCreditClock cascade time sheets
         - x - UnlinkInvoiceSheet cascade invoice records
         - x - UnlinkTransferSheet cascade transfer records
-        -   - UnlinkConversionSheet cascade conversion records
-        -   - UnlinkTimeSheet cascade time records
+        - x - UnlinkConversionSheet cascade conversion records
+        - x - UnlinkTimeSheet cascade time records
         - x - UnlinkContactList cascade contact records
         - x - UnlinkAccount cascade credit ewallet
         - x - UnlinkAccount cascade contact list

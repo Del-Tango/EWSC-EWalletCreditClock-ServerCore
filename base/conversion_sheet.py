@@ -207,7 +207,7 @@ class CreditClockConversionSheetRecord(Base):
 
     def error_could_not_set_conversion_sheet_id(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'conversion-sheet',
             'error': 'Something went wrong. '
                      'Could not set conversion sheet id. '
                      'Details: {}'.format(args)
@@ -217,7 +217,7 @@ class CreditClockConversionSheetRecord(Base):
 
     def error_could_not_set_conversion_record_reference(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'conversion-sheet',
             'error': 'Something went wrong. '
                      'Could not set conversion record reference. '
                      'Details: {}'.format(args)
@@ -227,7 +227,7 @@ class CreditClockConversionSheetRecord(Base):
 
     def error_could_not_set_conversion_record_write_date(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'conversion-sheet',
             'error': 'Something went wrong. '
                      'Could not set conversion record write date. '
                      'Details: {}'.format(args)
@@ -237,7 +237,7 @@ class CreditClockConversionSheetRecord(Base):
 
     def error_could_not_set_conversion_record_create_date(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'conversion-sheet',
             'error': 'Something went wrong. '
                      'Could not set conversion record create date. '
                      'Details: {}'.format(args)
@@ -247,7 +247,7 @@ class CreditClockConversionSheetRecord(Base):
 
     def error_could_not_set_conversion_type(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'conversion-sheet',
             'error': 'Something went wrong. '
                      'Could not set conversion type. '
                      'Details: {}'.format(args)
@@ -257,7 +257,7 @@ class CreditClockConversionSheetRecord(Base):
 
     def error_could_not_set_minutes(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'conversion-sheet',
             'error': 'Something went wrong. '
                      'Could not set conversion record minutes. '
                      'Details: {}'.format(args)
@@ -267,7 +267,7 @@ class CreditClockConversionSheetRecord(Base):
 
     def error_could_not_set_credits(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'conversion-sheet',
             'error': 'Something went wrong. '
                      'Could not set conversion record credits. '
                      'Details: {}'.format(args)
@@ -277,7 +277,7 @@ class CreditClockConversionSheetRecord(Base):
 
     def error_no_conversion_record_create_date_found(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'conversion-sheet',
             'error': 'No conversion record create date found. '
                      'Details: {}'.format(args)
         }
@@ -286,7 +286,7 @@ class CreditClockConversionSheetRecord(Base):
 
     def error_could_not_set_conversion_record_id(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'conversion-sheet',
             'error': 'Something went wrong. '
                      'Could not set conversion record id. '
                      'Details: {}'.format(args)
@@ -296,7 +296,7 @@ class CreditClockConversionSheetRecord(Base):
 
     def error_no_conversion_record_id_found(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'conversion-sheet',
             'error': 'No conversion record id found. '
                      'Details: {}'.format(args)
         }
@@ -305,7 +305,7 @@ class CreditClockConversionSheetRecord(Base):
 
     def error_no_credits_found(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'conversion-sheet',
             'error': 'No credits found. Details: {}'.format(args)
         }
         log.error(command_chain_response['error'])
@@ -313,7 +313,7 @@ class CreditClockConversionSheetRecord(Base):
 
     def error_no_conversion_sheet_id_found(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'conversion-sheet',
             'error': 'No conversion sheet id found. Details: {}'.format(args)
         }
         log.error(command_chain_response['error'])
@@ -321,7 +321,7 @@ class CreditClockConversionSheetRecord(Base):
 
     def error_no_reference_found(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'conversion-sheet',
             'error': 'No conversion record reference found. '
                      'Details: {}'.format(args)
         }
@@ -330,7 +330,7 @@ class CreditClockConversionSheetRecord(Base):
 
     def error_no_write_date_found(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'conversion-sheet',
             'error': 'No conversion record write date found. '
                      'Details: {}'.format(args)
         }
@@ -339,7 +339,7 @@ class CreditClockConversionSheetRecord(Base):
 
     def error_no_conversion_type_found(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'conversion-sheet',
             'error': 'No conversion type found. Details: {}'.format(args)
         }
         log.error(command_chain_response['error'])
@@ -347,7 +347,7 @@ class CreditClockConversionSheetRecord(Base):
 
     def error_no_minutes_found(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'conversion-sheet',
             'error': 'No minutes found. Details: {}'.format(args)
         }
         log.error(command_chain_response['error'])
@@ -563,6 +563,23 @@ class CreditClockConversionSheet(Base):
         log.info('Successfully updated conversion sheet records.')
         return self.records
 
+    # CLEANERS (LIST)
+
+    def cleanup_conversion_sheet_record_by_id(self, record_id, **kwargs):
+        log.debug('')
+        try:
+            kwargs['active_session'].query(
+                CreditClockConversionSheetRecord
+            ).filter_by(
+                record_id=record_id
+            ).delete()
+        except Exception as e:
+            return self.error_could_not_unlink_conversion_sheet_record(
+                record_id, kwargs, e
+            )
+        log.info('Successfully unlinked conversion sheet record.')
+        return record_id
+
     # GENERAL (LIST)
 
     # TODO
@@ -627,6 +644,41 @@ class CreditClockConversionSheet(Base):
         return record
 
     # ACTIONS (LIST)
+
+    def action_cleanup_conversion_sheet_records(self, **kwargs):
+        log.debug('')
+        records = self.fetch_conversion_sheet_records()
+        command_chain_response = {
+            'failed': False,
+            'conversion_sheet': self.fetch_conversion_sheet_id(),
+        }
+        records_cleaned, cleanup_failures = 0, 0
+        if not records:
+            command_chain_response.update({
+                'records_cleaned': records_cleaned,
+                'cleanup_failures': cleanup_failures,
+            })
+            return command_chain_response
+        for record in records:
+            try:
+                self.cleanup_conversion_sheet_record_by_id(
+                    record.fetch_record_id(), **kwargs
+                )
+            except Exception as e:
+                self.warning_could_not_cleanup_conversion_record(
+                    record, kwargs, records, records_cleaned,
+                    cleanup_failures, e
+                )
+                cleanup_failures += 1
+                continue
+            records_cleaned += 1
+        command_chain_response.update({
+            'records_cleaned': records_cleaned,
+            'cleanup_failures': cleanup_failures,
+        })
+        return self.error_no_conversion_records_cleaned(
+            kwargs, records, records_cleaned, cleanup_failures
+        ) if not records_cleaned else command_chain_response
 
     def action_remove_conversion_sheet_record(self, **kwargs):
         log.debug('')
@@ -770,14 +822,25 @@ class CreditClockConversionSheet(Base):
             'remove': self.action_remove_conversion_sheet_record,
             'interogate': self.action_interogate_conversion_sheet_records,
             'clear': self.action_clear_conversion_sheet_records,
+            'cleanup': self.action_cleanup_conversion_sheet_records,
         }
         return handlers[kwargs['action']](**kwargs)
 
     # WARNINGS (LIST)
 
+    def warning_could_not_cleanup_conversion_record(self, *args):
+        command_chain_response = {
+            'failed': True, 'level': 'conversion-sheet',
+            'warning': 'Something went wrong. '
+                       'Could not cleanup conversion record. '
+                       'Details: {}'.format(args),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
+
     def warning_record_not_in_conversion_sheet(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'conversion-sheet',
             'warning': 'Record not in conversion sheet. '
                        'Details: {}'.format(args),
         }
@@ -786,7 +849,7 @@ class CreditClockConversionSheet(Base):
 
     def warning_could_not_fetch_conversion_record(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'conversion-sheet',
             'warning': 'Something went wrong. '
                        'Could not fetch conversion sheet record. '
                        'Details: {}'.format(args),
@@ -796,9 +859,28 @@ class CreditClockConversionSheet(Base):
 
     # ERRORS (LIST)
 
+    def error_no_conversion_records_cleaned(self, *args):
+        command_chain_response = {
+            'failed': True, 'level': 'conversion-sheet',
+            'error': 'No conversion sheet records cleaned. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_could_not_unlink_conversion_sheet_record(self, *args):
+        command_chain_response = {
+            'failed': True, 'level': 'conversion-sheet',
+            'error': 'Something went wrong. '
+                     'Could not unlink conversion sheet record. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
     def error_could_not_set_conversion_sheet_clock(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'conversion-sheet',
             'error': 'Something went wrong. '
                      'Could not set conversion sheet credit clock. '
                      'Details: {}'.format(args),
@@ -808,7 +890,7 @@ class CreditClockConversionSheet(Base):
 
     def error_could_not_set_clock_id(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'conversion-sheet',
             'error': 'Something went wrong. '
                      'Could not set conversion sheet credit clock id. '
                      'Details: {}'.format(args),
@@ -818,7 +900,7 @@ class CreditClockConversionSheet(Base):
 
     def error_could_not_set_conversion_sheet_reference(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'conversion-sheet',
             'error': 'Something went wrong. '
                      'Could not set conversion sheet reference. '
                      'Details: {}'.format(args),
@@ -828,7 +910,7 @@ class CreditClockConversionSheet(Base):
 
     def error_could_not_set_conversion_sheet_write_date(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'conversion-sheet',
             'error': 'Something went wrong. '
                      'Could not set conversion sheet write date. '
                      'Details: {}'.format(args),
@@ -838,7 +920,7 @@ class CreditClockConversionSheet(Base):
 
     def error_could_not_set_conversion_sheet_records(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'conversion-sheet',
             'error': 'Something went wrong. '
                      'Could not set conversion sheet records. '
                      'Details: {}'.format(args),
@@ -848,7 +930,7 @@ class CreditClockConversionSheet(Base):
 
     def error_could_not_remove_conversion_sheet_record(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'conversion-sheet',
             'error': 'Something went wrong. '
                      'Could not remove conversion sheet record. '
                      'Details: {}'.format(args),
@@ -858,7 +940,7 @@ class CreditClockConversionSheet(Base):
 
     def error_could_not_fetch_conversion_sheet_record_by_id(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'conversion-sheet',
             'error': 'Something went wrong. '
                      'Could not fetch conversion sheet record by id. '
                      'Details: {}'.format(args),
@@ -868,7 +950,7 @@ class CreditClockConversionSheet(Base):
 
     def error_no_conversion_record_id_found(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'conversion-sheet',
             'error': 'No conversion sheet record id found. '
                      'Details: {}'.format(args),
         }
@@ -877,7 +959,7 @@ class CreditClockConversionSheet(Base):
 
     def error_no_conversion_record_conversion_type_found(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'conversion-sheet',
             'error': 'No conversion type found. '
                      'Details: {}'.format(args),
         }
@@ -886,7 +968,7 @@ class CreditClockConversionSheet(Base):
 
     def error_no_conversion_records_interogation_target_specified(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'conversion-sheet',
             'error': 'No conversion record interogation target specified. '
                      'Details: {}'.format(args),
         }
@@ -895,7 +977,7 @@ class CreditClockConversionSheet(Base):
 
     def error_no_conversion_sheet_controller_action_specified(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'conversion-sheet',
             'error': 'No conversion sheet controller action specified. '
                      'Details: {}'.format(args),
         }
@@ -904,7 +986,7 @@ class CreditClockConversionSheet(Base):
 
     def error_no_records_found(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'conversion-sheet',
             'error': 'No conversion records found. '
                      'Details: {}'.format(args),
         }
@@ -913,7 +995,7 @@ class CreditClockConversionSheet(Base):
 
     def error_no_conversion_record_found(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'conversion-sheet',
             'error': 'No conversion record found. '
                      'Details: {}'.format(args),
         }
@@ -922,7 +1004,7 @@ class CreditClockConversionSheet(Base):
 
     def error_no_clock_id_found(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'conversion-sheet',
             'error': 'No clock id found. '
                      'Details: {}'.format(args),
         }
@@ -931,7 +1013,7 @@ class CreditClockConversionSheet(Base):
 
     def error_no_reference_found(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'conversion-sheet',
             'error': 'No reference found. '
                      'Details: {}'.format(args),
         }
@@ -940,7 +1022,7 @@ class CreditClockConversionSheet(Base):
 
     def error_no_write_date_found(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'conversion-sheet',
             'error': 'No write date found. '
                      'Details: {}'.format(args),
         }
@@ -949,7 +1031,7 @@ class CreditClockConversionSheet(Base):
 
     def error_no_conversion_record_type_found(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'conversion-sheet',
             'error': 'No conversion record type found. '
                      'Details: {}'.format(args),
         }
@@ -958,7 +1040,7 @@ class CreditClockConversionSheet(Base):
 
     def error_no_conversion_sheet_record_identifier_specified(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'conversion-sheet',
             'error': 'No conversion sheet record identifier specified. '
                      'Details: {}'.format(args),
         }
@@ -967,7 +1049,7 @@ class CreditClockConversionSheet(Base):
 
     def error_no_conversion_record_credits_found(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'conversion-sheet',
             'error': 'No conversion record credits found. '
                      'Details: {}'.format(args),
         }
@@ -976,7 +1058,7 @@ class CreditClockConversionSheet(Base):
 
     def error_no_conversion_record_minutes_found(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'conversion-sheet',
             'error': 'No conversion record minutes found. '
                      'Details: {}'.format(args),
         }
@@ -985,7 +1067,7 @@ class CreditClockConversionSheet(Base):
 
     def error_no_conversion_record_reference_found(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'conversion-sheet',
             'error': 'No conversion record reference found. '
                      'Details: {}'.format(args),
         }
@@ -994,7 +1076,7 @@ class CreditClockConversionSheet(Base):
 
     def error_no_conversion_record_date_found(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'conversion-sheet',
             'error': 'No conversion record date found. '
                      'Details: {}'.format(args),
         }

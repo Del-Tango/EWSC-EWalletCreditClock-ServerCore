@@ -85,6 +85,14 @@ class CreditClock(Base):
 
     # FETCHERS
 
+    def fetch_credit_clock_time_sheet_archive(self, **kwargs):
+        log.debug('')
+        return self.time_sheet_archive
+
+    def fetch_credit_clock_conversion_sheet_archive(self, **kwargs):
+        log.debug('')
+        return self.conversion_sheet_archive
+
     def fetch_credit_clock_conversion_sheet_by_id(self, **kwargs):
         log.debug('')
         if not kwargs.get('active_session'):
@@ -712,6 +720,23 @@ class CreditClock(Base):
 
     # HANDLERS
 
+    def handle_user_action_cleanup_credit_clock(self, **kwargs):
+        log.debug('')
+        cleanup = {
+            'conversion_sheets': self.action_cleanup_conversion_sheets(**kwargs),
+            'time_sheets': self.action_cleanup_time_sheets(**kwargs),
+        }
+        return cleanup
+
+    def handle_user_action_cleanup(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('cleanup'):
+            return self.error_no_user_action_cleanup_target_specified(kwargs)
+        handlers = {
+            'clock': self.handle_user_action_cleanup_credit_clock,
+        }
+        return handlers[kwargs['cleanup']](**kwargs)
+
     # GENERAL
 
     # TODO
@@ -1041,6 +1066,85 @@ class CreditClock(Base):
 
     # ACTIONS
 
+    def action_cleanup_time_sheets(self, **kwargs):
+        log.debug('')
+        time_sheet_archive = self.fetch_credit_clock_time_sheet_archive()
+        command_chain_response = {
+            'failed': False,
+            'clock': self.fetch_credit_clock_id(),
+        }
+        lists_cleaned, cleanup_failures = 0, 0
+        if not time_sheet_archive:
+            command_chain_response.update({
+                'sheets_cleaned': lists_cleaned,
+                'cleanup_failures': cleanup_failures,
+            })
+            return command_chain_response
+        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
+            kwargs, 'action', 'cleanup'
+        )
+        for sheet in time_sheet_archive:
+            unlink = self.unlink_time_list(
+                list_id=sheet.fetch_time_sheet_id(), **kwargs
+            )
+            if not unlink or isinstance(unlink, dict) and \
+                    unlink.get('failed'):
+                cleanup_failures += 1
+                self.warning_could_not_unlink_time_sheet(
+                    sheet, kwargs, time_sheet_archive, lists_cleaned,
+                    cleanup_failures, unlink
+                )
+                continue
+            lists_cleaned += 1
+        command_chain_response.update({
+            'sheets_cleaned': lists_cleaned,
+            'cleanup_failures': cleanup_failures,
+        })
+        return self.error_no_time_sheets_cleaned_up(
+            kwargs, time_sheet_archive, lists_cleaned, cleanup_failures
+        ) if not lists_cleaned else command_chain_response
+
+    def action_cleanup_conversion_sheets(self, **kwargs):
+        log.debug('')
+        conversion_sheet_archive = self.fetch_credit_clock_conversion_sheet_archive()
+        command_chain_response = {
+            'failed': False,
+            'clock': self.fetch_credit_clock_id(),
+        }
+        lists_cleaned, cleanup_failures = 0, 0
+        if not conversion_sheet_archive:
+            command_chain_response.update({
+                'sheets_cleaned': lists_cleaned,
+                'cleanup_failures': cleanup_failures,
+            })
+            return command_chain_response
+        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
+            kwargs, 'action', 'cleanup'
+        )
+        for sheet in conversion_sheet_archive:
+            sheet.credit_clock_conversion_sheet_controller(
+                action='cleanup', **sanitized_command_chain,
+            )
+            unlink = self.unlink_conversion_list(
+                list_id=sheet.fetch_conversion_sheet_id(), **kwargs
+            )
+            if not unlink or isinstance(unlink, dict) and \
+                    unlink.get('failed'):
+                cleanup_failures += 1
+                self.warning_could_not_unlink_conversion_sheet(
+                    sheet, kwargs, conversion_sheet_archive, lists_cleaned,
+                    cleanup_failures, unlink
+                )
+                continue
+            lists_cleaned += 1
+        command_chain_response.update({
+            'sheets_cleaned': lists_cleaned,
+            'cleanup_failures': cleanup_failures,
+        })
+        return self.error_no_conversion_sheets_cleaned_up(
+            kwargs, conversion_sheet_archive, lists_cleaned, cleanup_failures
+        ) if not lists_cleaned else command_chain_response
+
 #   @pysnooper.snoop('logs/ewallet.log')
     def action_stop_timer(self, **kwargs):
         '''
@@ -1355,6 +1459,12 @@ class CreditClock(Base):
             return self.warning_time_sheet_does_not_belong_to_credit_clock(
                 kwargs, time_sheet, check
             )
+        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
+            kwargs, 'action'
+        )
+        cleanup = time_sheet.credit_clock_time_sheet_controller(
+            action='cleanup', **sanitized_command_chain,
+        )
         try:
             kwargs['active_session'].query(
                 CreditClockTimeSheet
@@ -1434,6 +1544,12 @@ class CreditClock(Base):
             return self.warning_conversion_sheet_does_not_belong_to_credit_clock(
                 kwargs, conversion_sheet, check
             )
+        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
+            kwargs, 'action'
+        )
+        cleanup = conversion_sheet.credit_clock_conversion_sheet_controller(
+            action='cleanup', **sanitized_command_chain,
+        )
         try:
             kwargs['active_session'].query(
                 CreditClockConversionSheet
@@ -1590,6 +1706,7 @@ class CreditClock(Base):
             'interogate': self.action_interogate_credit_clock,
             'switch_sheet': self.action_switch_credit_clock_sheet,
             'unlink': self.action_unlink,
+            'cleanup': self.handle_user_action_cleanup,
         }
         handle = handlers[kwargs.get('action')](**kwargs)
         if handle and kwargs.get('action') != 'interogate':
@@ -1647,9 +1764,36 @@ class CreditClock(Base):
     [ TODO ]: Fetch error messages from message file by key codes.
     '''
 
+    def error_no_time_sheets_cleaned_up(self, *args):
+        command_chain_response = {
+            'failed': True, 'level': 'credit-clock',
+            'error': 'No time sheets cleaned up. '
+                     'Details: {}'.format(*args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_no_conversion_sheets_cleaned_up(self, *args):
+        command_chain_response = {
+            'failed': True, 'level': 'credit-clock',
+            'error': 'No conversion sheets cleaned up. '
+                     'Details: {}'.format(*args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_no_user_action_cleanup_target_specified(self, *args):
+        command_chain_response = {
+            'failed': True, 'level': 'credit-clock',
+            'error': 'No user action cleanup target specified. '
+                     'Details: {}'.format(*args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
     def error_clock_state_check_type_not_supported(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'credit-clock',
             'error': 'Credit clock state check type not supported. '
                      'Details: {}'.format(*args),
         }
@@ -1658,7 +1802,7 @@ class CreditClock(Base):
 
     def error_no_clock_state_check_type_specified(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'credit-clock',
             'error': 'No clock state check type specified. '
                      'Details: {}'.format(*args),
         }
@@ -1667,7 +1811,7 @@ class CreditClock(Base):
 
     def error_illegal_credit_clock_state(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'credit-clock',
             'error': 'Illegal credit clock state. '
                      'Details: {}'.format(*args),
         }
@@ -1676,7 +1820,7 @@ class CreditClock(Base):
 
     def error_no_state_found_for_credit_clock(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'credit-clock',
             'error': 'No state found for credit clock. '
                      'Details: {}'.format(args),
         }
@@ -1685,7 +1829,7 @@ class CreditClock(Base):
 
     def error_no_credit_clock_interogation_target_specified(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'credit-clock',
             'error': 'No credit clock interogation target specified. '
                      'Details: {}'.format(args),
         }
@@ -1694,7 +1838,7 @@ class CreditClock(Base):
 
     def error_could_not_start_credit_clock_timer(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'credit-clock',
             'error': 'Something went wrong. '
                      'Could not start credit clock timer. '
                      'Details: {}'.format(args),
@@ -1704,7 +1848,7 @@ class CreditClock(Base):
 
     def error_could_not_remove_time_sheet(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'credit-clock',
             'error': 'Something went wrong. '
                      'Could not remove time sheet. '
                      'Details: {}'.format(args),
@@ -1714,7 +1858,7 @@ class CreditClock(Base):
 
     def error_could_not_remove_conversion_sheet(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'credit-clock',
             'error': 'Something went wrong. '
                      'Could not remove conversion sheet. '
                      'Details: {}'.format(args),
@@ -1724,7 +1868,7 @@ class CreditClock(Base):
 
     def error_could_not_switch_time_sheet(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'credit-clock',
             'error': 'Something went wrong. '
                      'Could not switch time sheet. '
                      'Details: {}'.format(args)
@@ -1734,7 +1878,7 @@ class CreditClock(Base):
 
     def error_could_not_switch_conversion_sheet(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'credit-clock',
             'error': 'Something went wrong. '
                      'Could not switch conversion sheet. '
                      'Details: {}'.format(args)
@@ -1744,7 +1888,7 @@ class CreditClock(Base):
 
     def error_could_not_set_time_sheet_to_archive(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'credit-clock',
             'error': 'Something went wrong. '
                      'Could not set time sheet to archive. '
                      'Details: {}'.format(args)
@@ -1754,7 +1898,7 @@ class CreditClock(Base):
 
     def error_could_not_set_conversion_sheet_to_archive(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'credit-clock',
             'error': 'Something went wrong. '
                      'Could not set conversion sheet to archive. '
                      'Details: {}'.format(args)
@@ -1764,7 +1908,7 @@ class CreditClock(Base):
 
     def error_could_not_set_credit_clock_time(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'credit-clock',
             'error': 'Something went wrong. '
                      'Could not set credit clock time. '
                      'Details: {}'.format(args)
@@ -1774,7 +1918,7 @@ class CreditClock(Base):
 
     def error_no_credit_clock_time_found(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'credit-clock',
             'error': 'No credit clock time found. '
                      'Details: {}'.format(args)
         }
@@ -1783,7 +1927,7 @@ class CreditClock(Base):
 
     def error_could_not_set_credit_clock_write_date(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'credit-clock',
             'error': 'Something went wrong. '
                      'Could not set credit clock write date. '
                      'Details: {}'.format(args)
@@ -1793,7 +1937,7 @@ class CreditClock(Base):
 
     def error_no_credit_clock_write_date_found(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'credit-clock',
             'error': 'No credit clock write date found. '
                      'Details: {}'.format(args)
         }
@@ -1802,7 +1946,7 @@ class CreditClock(Base):
 
     def error_no_credit_clock_create_date_found(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'credit-clock',
             'error': 'No credit clock create date found. '
                      'Details: {}'.format(args)
         }
@@ -1811,7 +1955,7 @@ class CreditClock(Base):
 
     def error_could_not_set_credit_clock_create_date(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'credit-clock',
             'error': 'Something went wrong. '
                      'Could not set credit clock create date. '
                      'Details: {}'.format(args)
@@ -1821,7 +1965,7 @@ class CreditClock(Base):
 
     def error_could_not_set_credit_clock_reference(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'credit-clock',
             'error': 'Something went wrong. '
                      'Could not set credit clock reference. '
                      'Details: {}'.format(args)
@@ -1831,7 +1975,7 @@ class CreditClock(Base):
 
     def error_no_credit_clock_reference_found(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'credit-clock',
             'error': 'No credit clock reference found. '
                      'Details: {}'.format(args)
         }
@@ -1840,7 +1984,7 @@ class CreditClock(Base):
 
     def error_could_not_set_credit_clock_ewallet_id(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'credit-clock',
             'error': 'Something went wrong. '
                      'Could not set credit clock ewallet id. '
                      'Details: {}'.format(args)
@@ -1850,7 +1994,7 @@ class CreditClock(Base):
 
     def error_no_ewallet_id_found(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'credit-clock',
             'error': 'No credit ewallet id specified. '
                      'Details: {}'.format(args)
         }
@@ -1859,7 +2003,7 @@ class CreditClock(Base):
 
     def error_no_credit_clock_time_spent_specified(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'credit-clock',
             'error': 'No credit clock time spent specified. '
                      'Details: {}'.format(args)
         }
@@ -1868,7 +2012,7 @@ class CreditClock(Base):
 
     def error_could_not_set_credit_clock_time_spent(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'credit-clock',
             'error': 'Something went wrong. '
                      'Could not set credit clock time spent. '
                      'Details: {}'.format(args)
@@ -1878,7 +2022,7 @@ class CreditClock(Base):
 
     def error_no_credit_clock_stop_time_specified(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'credit-clock',
             'error': 'No credit clock timer stop timestamp specified. '
                      'Details: {}'.format(args)
         }
@@ -1887,7 +2031,7 @@ class CreditClock(Base):
 
     def error_could_not_set_credit_clock_stop_time(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'credit-clock',
             'error': 'Something went wrong. '
                      'Could not set credit clock timer stop timestamp. '
                      'Details: {}'.format(args)
@@ -1897,7 +2041,7 @@ class CreditClock(Base):
 
     def error_no_credit_clock_start_time_specified(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'credit-clock',
             'error': 'No credit clock timer start timestamp specified. '
                      'Details: {}'.format(args)
         }
@@ -1906,7 +2050,7 @@ class CreditClock(Base):
 
     def error_could_not_set_credit_clock_start_time(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'credit-clock',
             'error': 'Something went wrong. '
                      'Could not set credit clock timer start timestamp. '
                      'Details: {}'.format(args)
@@ -1916,7 +2060,7 @@ class CreditClock(Base):
 
     def error_no_credit_clock_ewallet_found(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'credit-clock',
             'error': 'No credit ewallet found. '
                      'Details: {}'.format(args)
         }
@@ -1925,7 +2069,7 @@ class CreditClock(Base):
 
     def error_could_not_set_credit_ewallet(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'credit-clock',
             'error': 'Something went wrong. '
                      'Could not set credit ewallet. '
                      'Details: {}'.format(args)
@@ -1935,7 +2079,7 @@ class CreditClock(Base):
 
     def error_no_credit_clock_conversion_sheet_archive_found(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'credit-clock',
             'error': 'No conversion sheet archive found. '
                      'Details: {}'.format(args)
         }
@@ -1944,7 +2088,7 @@ class CreditClock(Base):
 
     def error_could_not_set_conversion_sheet_archive(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'credit-clock',
             'error': 'Something went wrong. '
                      'Could not set credit clock conversion sheet archive. '
                      'Details: {}'.format(args)
@@ -1954,7 +2098,7 @@ class CreditClock(Base):
 
     def error_could_not_set_time_sheet_archive(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'credit-clock',
             'error': 'Something went wrong. '
                      'Could not set credit clock time sheet archive. '
                      'Details: {}'.format(args)
@@ -1964,7 +2108,7 @@ class CreditClock(Base):
 
     def error_no_credit_clock_time_sheet_archive_found(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'credit-clock',
             'error': 'No credit clock time sheet archive found. '
                      'Details: {}'.format(args)
         }
@@ -1973,7 +2117,7 @@ class CreditClock(Base):
 
     def error_could_not_set_credit_clock_state(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'credit-clock',
             'error': 'Something went wrong. '
                      'Could not set credit clock state. '
                      'Details: {}'.format(args)
@@ -1983,7 +2127,7 @@ class CreditClock(Base):
 
     def error_no_credit_clock_state_specified(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'credit-clock',
             'error': 'No credit clock state specified. '
                      'Details: {}'.format(args)
         }
@@ -1992,7 +2136,7 @@ class CreditClock(Base):
 
     def error_no_credit_clock_active_time_record_found(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'credit-clock',
             'error': 'No active time record found. '
                      'Details: {}'.format(args)
         }
@@ -2001,7 +2145,7 @@ class CreditClock(Base):
 
     def error_could_not_set_credit_clock_active_time_record(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'credit-clock',
             'error': 'Something went wrong. '
                      'Could not set credit clock active time record. '
                      'Details: {}'.format(args)
@@ -2011,7 +2155,7 @@ class CreditClock(Base):
 
     def error_could_not_set_credit_clock_pending_count(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'credit-clock',
             'error': 'Something went wrong. '
                      'Could not set credit clock pending count. '
                      'Details: {}'.format(args)
@@ -2021,7 +2165,7 @@ class CreditClock(Base):
 
     def error_no_pending_count_found(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'credit-clock',
             'error': 'No pending count found. '
                      'Details: {}'.format(args)
         }
@@ -2030,7 +2174,7 @@ class CreditClock(Base):
 
     def error_no_pending_time_found(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'credit-clock',
             'error': 'No pending time found. '
                      'Details: {}'.format(args)
         }
@@ -2039,7 +2183,7 @@ class CreditClock(Base):
 
     def error_could_not_set_credit_clock_pending_time(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'credit-clock',
             'error': 'Something went wrong. '
                      'Could not set credit clock pending time. '
                      'Details: {}'.format(args)
@@ -2049,7 +2193,7 @@ class CreditClock(Base):
 
     def error_could_not_set_credit_clock_conversion_sheet(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'credit-clock',
             'error': 'Something went wrong. '
                      'Could not set credit clock conversion sheet. '
                      'Details: {}'.format(args)
@@ -2059,7 +2203,7 @@ class CreditClock(Base):
 
     def error_could_not_set_credit_clock_time_sheet(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'credit-clock',
             'error': 'Something went wrong. '
                      'Could not set credit clock time sheet. '
                      'Details: {}'.format(args)
@@ -2069,7 +2213,7 @@ class CreditClock(Base):
 
     def error_no_conversion_list_id_specified(self, command_chain, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'credit-clock',
             'error': 'No conversion sheet id specified. Details: {}, {}'
                      .format(command_chain, args)
         }
@@ -2078,7 +2222,7 @@ class CreditClock(Base):
 
     def error_no_credit_conversion_type_specified(self, command_chain):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'credit-clock',
             'error': 'No credit conversion type specified. '\
                      'active time record. Command chain details : {}'\
                      .format(command_chain),
@@ -2088,7 +2232,7 @@ class CreditClock(Base):
 
     def error_could_not_fetch_active_time_record(self, command_chain):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'credit-clock',
             'error': 'Something went wrong. Could not fetch credit clock. '\
                      'active time record. Command chain details : {}'\
                      .format(command_chain),
@@ -2098,7 +2242,7 @@ class CreditClock(Base):
 
     def error_no_active_session_found(self, command_chain):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'credit-clock',
             'error': 'No active SqlAlchemy ORM session found. Command chain details : {}'\
                      .format(command_chain),
         }
@@ -2107,7 +2251,7 @@ class CreditClock(Base):
 
     def error_no_time_list_id_specified(self, command_chain):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'credit-clock',
             'error': 'No time list id specified. Command chain details : {}'\
                      .format(command_chain),
         }
@@ -2116,7 +2260,7 @@ class CreditClock(Base):
 
     def error_no_invoice_list_id_specified(self, command_chain):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'credit-clock',
             'error': 'No invoice list id specified. Command chain details : {}'\
                      .format(command_chain),
         }
@@ -2125,7 +2269,7 @@ class CreditClock(Base):
 
     def error_no_time_sheet_record_id_found(self, command_chain):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'credit-clock',
             'error': 'No time sheet record id found. Command chain details : {}'\
                      .format(command_chain),
         }
@@ -2134,7 +2278,7 @@ class CreditClock(Base):
 
     def error_could_not_fetch_time_sheet(self, command_chain):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'credit-clock',
             'error': 'Could not fetch time sheet. Command chain details : {}'\
                      .format(command_chain),
         }
@@ -2143,7 +2287,7 @@ class CreditClock(Base):
 
     def error_no_credit_clock_unlink_time_target_specified(self, command_chain):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'credit-clock',
             'error': 'No credit clock unlink time target specified. Command chain details : {}'\
                      .format(command_chain),
         }
@@ -2152,7 +2296,7 @@ class CreditClock(Base):
 
     def error_could_not_fetch_conversion_sheet(self, command_chain):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'credit-clock',
             'error': 'Something went wrong. Could not fetch credit clock conversion sheet. '\
                      'Command chain details : {}'.format(command_chain),
         }
@@ -2161,7 +2305,7 @@ class CreditClock(Base):
 
     def error_no_conversion_sheet_record_id_found(self, command_chain):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'credit-clock',
             'error': 'No conversion sheet record id found. Command chain details : {}'\
                      .format(command_chain),
         }
@@ -2170,7 +2314,7 @@ class CreditClock(Base):
 
     def error_no_credit_clock_unlink_conversion_target_specified(self, command_chain):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'credit-clock',
             'error': 'No credit clock action unlink conversion target specified. Command chain details : {}'\
                      .format(command_chain),
             }
@@ -2179,7 +2323,7 @@ class CreditClock(Base):
 
     def error_no_credit_clock_action_unlink_target_specified(self, command_chain):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'credit-clock',
             'error': 'No credit clock action unlink target specified. Command chain details : {}'\
                      .format(command_chain),
         }
@@ -2383,9 +2527,29 @@ class CreditClock(Base):
     [ TODO ]: Fetch warning messages from message file by key codes.
     '''
 
+    def warning_could_not_unlink_time_sheet(self, *args):
+        command_chain_response = {
+            'failed': True, 'level': 'credit-clock',
+            'warning': 'Something went wrong. '
+                       'Could not unlink time sheet. '
+                       'Details: {}'.format(args),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
+
+    def warning_could_not_unlink_conversion_sheet(self, *args):
+        command_chain_response = {
+            'failed': True, 'level': 'credit-clock',
+            'warning': 'Something went wrong. '
+                       'Could not unlink conversion sheet. '
+                       'Details: {}'.format(args),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
+
     def warning_unsuccessful_credit_clock_time_sheet_record_update(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'credit-clock',
             'warning': 'Unsuccessful credit clock time sheet record update. '\
                        'Details: {}'.format(args),
         }
@@ -2394,7 +2558,7 @@ class CreditClock(Base):
 
     def warning_could_not_unlink_credit_clock_time_sheet_record(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'credit-clock',
             'warning': 'Something went wrong. '
                        'Could not unlink time sheet record. '
                        'Details: {}'.format(args),
@@ -2404,7 +2568,7 @@ class CreditClock(Base):
 
     def warning_could_not_unlink_credit_clock_conversion_sheet_record(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'credit-clock',
             'warning': 'Something went wrong. '
                        'Could not unlink conversion sheet record. '
                        'Details: {}'.format(args),
@@ -2414,7 +2578,7 @@ class CreditClock(Base):
 
     def warning_time_sheet_does_not_belong_to_credit_clock(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'credit-clock',
             'warning': 'Time sheet does not belong to active credit clock. '
                        'Details: {}'.format(args),
         }
@@ -2423,7 +2587,7 @@ class CreditClock(Base):
 
     def warning_conversion_sheet_does_not_belong_to_credit_clock(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'credit-clock',
             'warning': 'Conversion sheet does not belong to active credit clock. '
                        'Details: {}'.format(args),
         }
@@ -2432,7 +2596,7 @@ class CreditClock(Base):
 
     def warning_could_not_fetch_conversion_sheet_by_id(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'credit-clock',
             'warning': 'Something went wrong. '
                        'Could not fetch conversion sheet by id. '
                        'Details: {}'.format(args),
@@ -2442,7 +2606,7 @@ class CreditClock(Base):
 
     def warning_invalid_credit_clock_state(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'credit-clock',
             'warning': 'Invalid credit clock state. '
                        'Details: {}'.format(args),
         }
@@ -2451,7 +2615,7 @@ class CreditClock(Base):
 
     def warning_could_not_fetch_active_conversion_sheet(self, command_chain):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'credit-clock',
             'warning': 'Something went wrong. Could not fetch credit clock active conversion sheet. '\
                        'Command chain details : {}'.format(command_chain),
         }
@@ -2460,7 +2624,7 @@ class CreditClock(Base):
 
     def warning_could_not_convert(self, command_chain):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'credit-clock',
             'warning': 'Something went wrong. Conversion failure. '\
                        'Command chain details : {}'.format(command_chain),
         }
@@ -2469,7 +2633,7 @@ class CreditClock(Base):
 
     def warning_illegal_credit_clock_state(self, command_chain, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'credit-clock',
             'warning': 'Illegal credit clock state. Command chain details : {}'\
                        .format(command_chain),
         }
@@ -2478,7 +2642,7 @@ class CreditClock(Base):
 
     def warning_insufficient_time_to_convert(self, remainder, command_chain):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'credit-clock',
             'warning': 'Not enough time to convert. Conversion remainder {}. '\
                        'Instruction set details : {}'.format(remainder, command_chain),
         }
@@ -2487,7 +2651,7 @@ class CreditClock(Base):
 
     def warning_could_not_fetch_time_sheet_by_id(self, command_chain):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'credit-clock',
             'warning': 'Could not fetch time sheet by id. Command chain details : {}'\
                        .format(command_chain),
         }
@@ -2496,7 +2660,7 @@ class CreditClock(Base):
 
     def warning_could_not_fetch_conversion_sheet_by_id_(self, command_chain):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'credit-clock',
             'warning': 'Could not fetch conversion sheet by id. Command chain details {}'\
                        .format(command_chain),
         }

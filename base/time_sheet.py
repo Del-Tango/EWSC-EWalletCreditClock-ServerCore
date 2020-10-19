@@ -286,7 +286,7 @@ class TimeSheetRecord(Base):
 
     def warning_could_not_fetch_time_record(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'time-sheet',
             'warning': 'Something went wrong. '
                        'Could not fetch credit clock time sheet record. '
                        'Details: {}'.format(args),
@@ -301,7 +301,7 @@ class TimeSheetRecord(Base):
 
     def error_could_not_set_credit_clock_id(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'time-sheet',
             'error': 'Something went wrong. '
                      'Could not set record credit clock id. '
                      'Details: {}'.format(args),
@@ -311,7 +311,7 @@ class TimeSheetRecord(Base):
 
     def error_could_not_set_time_record_create_uid(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'time-sheet',
             'error': 'Something went wrong. '
                      'Could not set time record create UID. '
                      'Details: {}'.format(args),
@@ -321,7 +321,7 @@ class TimeSheetRecord(Base):
 
     def error_could_not_set_time_record_write_uid(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'time-sheet',
             'error': 'Something went wrong. '
                      'Could not set time record write UID. '
                      'Details: {}'.format(args),
@@ -331,7 +331,7 @@ class TimeSheetRecord(Base):
 
     def error_could_not_set_time_pending(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'time-sheet',
             'error': 'Something went wrong. '
                      'Could not set record pending time. '
                      'Details: {}'.format(args),
@@ -341,7 +341,7 @@ class TimeSheetRecord(Base):
 
     def error_could_not_set_pending_count(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'time-sheet',
             'error': 'Something went wrong. '
                      'Could not set record pending count. '
                      'Details: {}'.format(args),
@@ -351,7 +351,7 @@ class TimeSheetRecord(Base):
 
     def error_could_not_set_time_sheet_id(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'time-sheet',
             'error': 'Something went wrong. '
                      'Could not set record time sheet id. '
                      'Details: {}'.format(args),
@@ -361,7 +361,7 @@ class TimeSheetRecord(Base):
 
     def error_could_not_set_time_record_reference(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'time-sheet',
             'error': 'Something went wrong. '
                      'Could not set time record reference. '
                      'Details: {}'.format(args),
@@ -371,7 +371,7 @@ class TimeSheetRecord(Base):
 
     def error_could_not_set_time_record_write_date(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'time-sheet',
             'error': 'Something went wrong. '
                      'Could not set time record write date. '
                      'Details: {}'.format(args),
@@ -381,7 +381,7 @@ class TimeSheetRecord(Base):
 
     def error_could_not_set_start_time(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'time-sheet',
             'error': 'Something went wrong. '
                      'Could not set record start timestamp. '
                      'Details: {}'.format(args),
@@ -391,7 +391,7 @@ class TimeSheetRecord(Base):
 
     def error_could_not_set_stop_time(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'time-sheet',
             'error': 'Something went wrong. '
                      'Could not set record stop timestamp. '
                      'Details: {}'.format(args),
@@ -401,7 +401,7 @@ class TimeSheetRecord(Base):
 
     def error_could_not_set_spent_time(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'time-sheet',
             'error': 'Something went wrong. '
                      'Could not set record time spent. '
                      'Details: {}'.format(args),
@@ -411,7 +411,7 @@ class TimeSheetRecord(Base):
 
     def error_no_time_record_id_found(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'time-sheet',
             'error': 'No time record id found. '
                      'Details: {}'.format(args),
         }
@@ -420,7 +420,7 @@ class TimeSheetRecord(Base):
 
     def error_no_pending_time_found(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'time-sheet',
             'error': 'No pending time found. '
                      'Details: {}'.format(args),
         }
@@ -429,7 +429,7 @@ class TimeSheetRecord(Base):
 
     def error_no_pending_count_found(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'time-sheet',
             'error': 'No pending count found. '
                      'Details: {}'.format(args),
         }
@@ -438,7 +438,7 @@ class TimeSheetRecord(Base):
 
     def error_no_start_time_found(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'time-sheet',
             'error': 'No start time found. '
                      'Details: {}'.format(args),
         }
@@ -447,7 +447,7 @@ class TimeSheetRecord(Base):
 
     def error_no_stop_time_found(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'time-sheet',
             'error': 'No stop time found. '
                      'Details: {}'.format(args),
         }
@@ -456,7 +456,7 @@ class TimeSheetRecord(Base):
 
     def error_no_spent_time_found(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'time-sheet',
             'error': 'No spent time found. '
                      'Details: {}'.format(args),
         }
@@ -465,7 +465,7 @@ class TimeSheetRecord(Base):
 
     def error_no_time_sheet_id_found(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'time-sheet',
             'error': 'No time sheet id found. '
                      'Details: {}'.format(args),
         }
@@ -474,7 +474,7 @@ class TimeSheetRecord(Base):
 
     def error_no_reference_found(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'time-sheet',
             'error': 'No reference found. '
                      'Details: {}'.format(args),
         }
@@ -483,7 +483,7 @@ class TimeSheetRecord(Base):
 
     def error_no_write_date_found(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'time-sheet',
             'error': 'No write date found. '
                      'Details: {}'.format(args),
         }
@@ -492,7 +492,7 @@ class TimeSheetRecord(Base):
 
     def error_no_time_spent_found(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'time-sheet',
             'error': 'No time spent found. '
                      'Details: {}'.format(args),
         }
@@ -722,7 +722,94 @@ class CreditClockTimeSheet(Base):
         log.debug('')
         return False if record not in self.records else True
 
+    # CLEANERS (LIST)
+
+    def cleanup_time_sheet_record_by_id(self, record_id, **kwargs):
+        log.debug('')
+        try:
+            kwargs['active_session'].query(
+                TimeSheetRecord
+            ).filter_by(
+                record_id=record_id
+            ).delete()
+        except Exception as e:
+            return self.error_could_not_unlink_time_sheet_record(
+                record_id, kwargs, e
+            )
+        log.info('Successfully unlinked time sheet record.')
+        return record_id
+
     # ACTIONS (LIST)
+
+    def action_cleanup_time_sheet_records(self, **kwargs):
+        log.debug('')
+        records = self.fetch_time_sheet_records()
+        command_chain_response = {
+            'failed': False,
+            'time_sheet': self.fetch_time_sheet_id(),
+        }
+        records_cleaned, cleanup_failures = 0, 0
+        if not records:
+            command_chain_response.update({
+                'records_cleaned': records_cleaned,
+                'cleanup_failures': cleanup_failures,
+            })
+            return command_chain_response
+        for record in records:
+            try:
+                self.cleanup_time_sheet_record_by_id(
+                    record.fetch_record_id(), **kwargs
+                )
+            except Exception as e:
+                self.warning_could_not_cleanup_time_record(
+                    record, kwargs, records, records_cleaned,
+                    cleanup_failures, e
+                )
+                cleanup_failures += 1
+                continue
+            records_cleaned += 1
+        command_chain_response.update({
+            'records_cleaned': records_cleaned,
+            'cleanup_failures': cleanup_failures,
+        })
+        return self.error_no_time_records_cleaned(
+            kwargs, records, records_cleaned, cleanup_failures
+        ) if not records_cleaned else command_chain_response
+
+    def action_interogate_time_sheet_records_by_date(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('date'):
+            return self.error_no_time_record_date_found(kwargs)
+        handlers = {
+            'date': self.search_time_sheet_record_by_date,
+            'before': self.search_time_sheet_record_before_date,
+            'after': self.search_time_sheet_record_after_date,
+        }
+        return handlers[kwargs['date']](**kwargs)
+
+    def action_interogate_time_sheet_records_by_time_spent(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('time'):
+            return self.error_no_time_record_time_found(kwargs)
+        handlers = {
+            'time': self.search_time_sheet_record_by_time,
+            'more': self.search_time_sheet_record_greater_time,
+            'less': self.search_time_sheet_record_lesser_time,
+        }
+        return handlers[kwargs['time']](**kwargs)
+
+    def action_interogate_time_sheet_records(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('search_by'):
+            return self.error_no_time_record_identifier_specified(kwargs)
+        handlers = {
+            'id': self.action_interogate_time_sheet_records_by_id,
+            'reference': self.action_interogate_time_sheet_records_by_reference,
+            'date': self.action_interogate_time_sheet_records_by_date,
+            'time_spent': self.action_interogate_time_sheet_records_by_time_spent,
+            'all': self.action_interogate_all_time_sheet_records,
+        }
+        return handlers[kwargs['search_by']](**kwargs)
 
     def action_remove_time_sheet_record(self, **kwargs):
         log.debug('')
@@ -809,41 +896,6 @@ class CreditClockTimeSheet(Base):
 
     # CONTROLLERS (LIST)
 
-    def action_interogate_time_sheet_records_by_date(self, **kwargs):
-        log.debug('')
-        if not kwargs.get('date'):
-            return self.error_no_time_record_date_found(kwargs)
-        handlers = {
-            'date': self.search_time_sheet_record_by_date,
-            'before': self.search_time_sheet_record_before_date,
-            'after': self.search_time_sheet_record_after_date,
-        }
-        return handlers[kwargs['date']](**kwargs)
-
-    def action_interogate_time_sheet_records_by_time_spent(self, **kwargs):
-        log.debug('')
-        if not kwargs.get('time'):
-            return self.error_no_time_record_time_found(kwargs)
-        handlers = {
-            'time': self.search_time_sheet_record_by_time,
-            'more': self.search_time_sheet_record_greater_time,
-            'less': self.search_time_sheet_record_lesser_time,
-        }
-        return handlers[kwargs['time']](**kwargs)
-
-    def action_interogate_time_sheet_records(self, **kwargs):
-        log.debug('')
-        if not kwargs.get('search_by'):
-            return self.error_no_time_record_identifier_specified(kwargs)
-        handlers = {
-            'id': self.action_interogate_time_sheet_records_by_id,
-            'reference': self.action_interogate_time_sheet_records_by_reference,
-            'date': self.action_interogate_time_sheet_records_by_date,
-            'time_spent': self.action_interogate_time_sheet_records_by_time_spent,
-            'all': self.action_interogate_all_time_sheet_records,
-        }
-        return handlers[kwargs['search_by']](**kwargs)
-
     def credit_clock_time_sheet_controller(self, **kwargs):
         log.debug('')
         if not kwargs.get('action'):
@@ -853,6 +905,7 @@ class CreditClockTimeSheet(Base):
             'remove': self.action_remove_time_sheet_record,
             'interogate': self.action_interogate_time_sheet_records,
             'clear': self.action_clear_time_sheet_records,
+            'cleanup': self.action_cleanup_time_sheet_records,
         }
         return handlers[kwargs['action']](**kwargs)
 
@@ -861,9 +914,19 @@ class CreditClockTimeSheet(Base):
     [ TODO ]: Fetch warning messages from message file by key codes.
     '''
 
+    def warning_could_not_cleanup_time_record(self, *args):
+        command_chain_response = {
+            'failed': True, 'level': 'time-sheet',
+            'warning': 'Something went wrong. '
+                       'Could not cleanup time sheet record. '
+                       'Details: {}'.format(args),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
+
     def warning_record_not_in_time_sheet(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'time-sheet',
             'warning': 'Record no in time sheet. '
                        'Details: {}'.format(args),
         }
@@ -872,7 +935,7 @@ class CreditClockTimeSheet(Base):
 
     def warning_could_not_fetch_time_record(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'time-sheet',
             'warning': 'Something went wrong. '
                        'Could not fetch time sheet record. '
                        'Details: {}'.format(args),
@@ -885,9 +948,28 @@ class CreditClockTimeSheet(Base):
     [ TODO ]: Fetch error messages from message file by key codes.
     '''
 
+    def error_no_time_records_cleaned(self, *args):
+        command_chain_response = {
+            'failed': True, 'level': 'time-sheet',
+            'error': 'No time records cleaned. '
+                     'Details: {}'.format(args),
+        }
+        log.warning(command_chain_response['error'])
+        return command_chain_response
+
+    def error_could_not_unlink_time_sheet_record(self, *args):
+        command_chain_response = {
+            'failed': True, 'level': 'time-sheet',
+            'error': 'Something went wrong. '
+                     'Could not unlink time sheet record. '
+                     'Details: {}'.format(args),
+        }
+        log.warning(command_chain_response['error'])
+        return command_chain_response
+
     def error_could_not_set_time_sheet_credit_clock(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'time-sheet',
             'error': 'Something went wrong. '
                      'Could not set time sheet credit clock. '
                      'Details: {}'.format(args),
@@ -897,7 +979,7 @@ class CreditClockTimeSheet(Base):
 
     def error_could_not_set_time_sheet_id(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'time-sheet',
             'error': 'Something went wrong. '
                      'Could not set time sheet id. '
                      'Details: {}'.format(args),
@@ -907,7 +989,7 @@ class CreditClockTimeSheet(Base):
 
     def error_could_not_set_clock_id(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'time-sheet',
             'error': 'Something went wrong. '
                      'Could not set time sheet credit clock id. '
                      'Details: {}'.format(args),
@@ -917,7 +999,7 @@ class CreditClockTimeSheet(Base):
 
     def error_could_not_set_time_sheet_reference(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'time-sheet',
             'error': 'Something went wrong. '
                      'Could not set time sheet reference. '
                      'Details: {}'.format(args),
@@ -927,7 +1009,7 @@ class CreditClockTimeSheet(Base):
 
     def error_could_not_set_time_sheet_records(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'time-sheet',
             'error': 'Something went wrong. '
                      'Could not set time sheet records. '
                      'Details: {}'.format(args),
@@ -937,7 +1019,7 @@ class CreditClockTimeSheet(Base):
 
     def error_could_not_set_time_sheet_write_date(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'time-sheet',
             'error': 'Something went wrong. '
                      'Could not set time sheet write date. '
                      'Details: {}'.format(args),
@@ -947,7 +1029,7 @@ class CreditClockTimeSheet(Base):
 
     def error_no_time_sheet_write_date_found(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'time-sheet',
             'error': 'No time sheet write date found. '
                      'Details: {}'.format(args),
         }
@@ -956,7 +1038,7 @@ class CreditClockTimeSheet(Base):
 
     def error_could_not_update_time_sheet_records(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'time-sheet',
             'error': 'Something went wrong. '
                      'Could not update time sheet records. '
                      'Details: {}'.format(args),
@@ -966,7 +1048,7 @@ class CreditClockTimeSheet(Base):
 
     def error_could_not_remove_time_sheet_record(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'time-sheet',
             'error': 'Something went wrong. '
                      'Could not remove time sheet record. '
                      'Details: {}'.format(args),
@@ -976,7 +1058,7 @@ class CreditClockTimeSheet(Base):
 
     def error_no_time_record_identifier_specified(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'time-sheet',
             'error': 'No time sheet record identifier specified. '
                      'Details: {}'.format(args),
         }
@@ -985,7 +1067,7 @@ class CreditClockTimeSheet(Base):
 
     def error_no_time_record_id_found(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'time-sheet',
             'error': 'No time record id found. '
                      'Details: {}'.format(args),
         }
@@ -994,7 +1076,7 @@ class CreditClockTimeSheet(Base):
 
     def error_no_active_session_found(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'time-sheet',
             'error': 'No active session found. '
                      'Details: {}'.format(args),
         }
@@ -1003,7 +1085,7 @@ class CreditClockTimeSheet(Base):
 
     def error_no_time_sheet_controller_action_specified(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'time-sheet',
             'error': 'No time sheet controller action specified. '
                      'Details: {}'.format(args),
         }
@@ -1012,7 +1094,7 @@ class CreditClockTimeSheet(Base):
 
     def error_no_time_sheet_id_found(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'time-sheet',
             'error': 'No time sheet id found. '
                      'Details: {}'.format(args),
         }
@@ -1021,7 +1103,7 @@ class CreditClockTimeSheet(Base):
 
     def error_no_time_sheet_clock_id_found(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'time-sheet',
             'error': 'No time sheet credit clock id found. '
                      'Details: {}'.format(args),
         }
@@ -1030,7 +1112,7 @@ class CreditClockTimeSheet(Base):
 
     def error_no_time_sheet_reference_found(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'time-sheet',
             'error': 'No time sheet reference found. '
                      'Details: {}'.format(args),
         }
@@ -1039,7 +1121,7 @@ class CreditClockTimeSheet(Base):
 
     def error_no_time_sheet_records_found(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'time-sheet',
             'error': 'No time sheet records found. '
                      'Details: {}'.format(args),
         }
@@ -1048,7 +1130,7 @@ class CreditClockTimeSheet(Base):
 
     def error_no_time_record_date_found(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'time-sheet',
             'error': 'No time sheet record date found. '
                      'Details: {}'.format(args),
         }
@@ -1057,7 +1139,7 @@ class CreditClockTimeSheet(Base):
 
     def error_no_time_record_time_found(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'time-sheet',
             'error': 'No time sheet record time found. '
                      'Details: {}'.format(args),
         }
@@ -1066,7 +1148,7 @@ class CreditClockTimeSheet(Base):
 
     def error_no_time_record_reference_found(self, *args):
         command_chain_response = {
-            'failed': True,
+            'failed': True, 'level': 'time-sheet',
             'error': 'No time sheet record reference found. '
                      'Details: {}'.format(args),
         }

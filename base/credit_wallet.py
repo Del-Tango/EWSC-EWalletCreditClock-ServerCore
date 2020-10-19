@@ -91,6 +91,10 @@ class CreditEWallet(Base):
 
     # FETCHERS
 
+    def fetch_credit_wallet_credit_clock_archive(self, **kwargs):
+        log.debug('')
+        return self.credit_clock_archive
+
     def fetch_credit_wallet_transfer_sheet_archive(self, **kwargs):
         log.debug('')
         return self.transfer_sheet_archive
@@ -148,7 +152,7 @@ class CreditEWallet(Base):
         log.debug('')
         active_session = kwargs.get('active_session')
         if not active_session:
-            return self.error_no_active_session_found()
+            return self.error_no_active_session_found(kwargs)
         if not kwargs.get('code') or not isinstance(kwargs['code'], int):
             return self.error_invalid_credit_clock_id(kwargs)
         query = list(
@@ -597,13 +601,12 @@ class CreditEWallet(Base):
 
     # HANDLERS
 
-    # TODO
     def handle_user_action_cleanup_ewallet(self, **kwargs):
-        log.debug('TODO - Cleanup all relationships')
+        log.debug('')
         cleanup = {
             'invoice_sheet': self.action_cleanup_invoice_sheets(**kwargs),
             'transfer_sheet': self.action_cleanup_transfer_sheets(**kwargs),
-#           'credit_clock': self.action_cleanup_credit_clocks(**kwargs),
+            'credit_clock': self.action_cleanup_credit_clocks(**kwargs),
         }
         return cleanup
 
@@ -950,6 +953,45 @@ class CreditEWallet(Base):
 
     # ACTIONS
 
+#   @pysnooper.snoop('logs/ewallet.log')
+    def action_cleanup_credit_clocks(self, **kwargs):
+        log.debug('')
+        credit_clock_archive = self.fetch_credit_wallet_credit_clock_archive()
+        command_chain_response = {
+            'failed': True,
+            'ewallet': self.fetch_credit_ewallet_id(),
+        }
+        clocks_cleaned, cleanup_failures = 0, 0
+        if not credit_clock_archive:
+            command_chain_response.update({
+                'clocks_cleaned': clocks_cleaned,
+                'cleanup_failures': cleanup_failures,
+            })
+            return command_chain_response
+        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
+            kwargs, 'controller', 'action', 'cleanup'
+        )
+        for clock in credit_clock_archive:
+            unlink = self.unlink_clock(
+                clock_id=clock.fetch_credit_clock_id(), **kwargs
+            )
+            if not unlink or isinstance(unlink, dict) and \
+                    unlink.get('failed'):
+                cleanup_failures += 1
+                self.warning_could_not_unlink_credit_clock(
+                    clock, kwargs, credit_clock_archive, clocks_cleaned,
+                    cleanup_failures, unlink
+                )
+                continue
+            clocks_cleaned += 1
+        command_chain_response.update({
+            'clocks_cleaned': clocks_cleaned,
+            'cleanup_failures': cleanup_failures,
+        })
+        return self.error_no_credit_clocks_cleaned_up(
+            kwargs, credit_clock_archive, clocks_cleaned, cleanup_failures
+        ) if not clocks_cleaned else command_chain_response
+
     def action_cleanup_transfer_sheets(self, **kwargs):
         log.debug('')
         transfer_sheet_archive = self.fetch_credit_wallet_transfer_sheet_archive()
@@ -969,7 +1011,7 @@ class CreditEWallet(Base):
         )
         for sheet in transfer_sheet_archive:
             sheet.credit_transfer_sheet_controller(
-                action='cleanup', **sanitized_command_chain,
+                action='cleanup', **sanitized_command_chain
             )
             unlink = self.unlink_transfer_list(
                 list_id=sheet.fetch_transfer_sheet_id(), **kwargs
@@ -1010,7 +1052,7 @@ class CreditEWallet(Base):
         )
         for sheet in invoice_sheet_archive:
             sheet.credit_invoice_sheet_controller(
-                action='cleanup', cleanup='records', **sanitized_command_chain,
+                action='cleanup', cleanup='records', **sanitized_command_chain
             )
             unlink = self.unlink_invoice_list(
                 list_id=sheet.fetch_invoice_sheet_id(), **kwargs
@@ -1156,6 +1198,43 @@ class CreditEWallet(Base):
         )
 
     # UNLINKERS
+
+    def unlink_clock(self, **kwargs):
+        log.debug('')
+        if not kwargs.get('clock_id'):
+            return self.error_no_credit_clock_id_found()
+        credit_clock = self.fetch_credit_wallet_clock(
+            identifier='id', code=kwargs['clock_id'],
+            active_session=kwargs.get('active_session'),
+        )
+        check = self.check_clock_belongs_to_credit_ewallet(
+            credit_clock
+        )
+        if not check:
+            return self.warning_clock_does_not_belong_to_credit_ewallet(
+                kwargs, credit_clock, check
+            )
+        sanitized_command_chain = res_utils.remove_tags_from_command_chain(
+            kwargs, 'controller', 'action', 'cleanup',
+        )
+        cleanup_clock = credit_clock.main_controller(
+            controller='user', action='cleanup', cleanup='clock',
+            **sanitized_command_chain,
+        )
+        try:
+            kwargs['active_session'].query(
+                CreditClock
+            ).filter_by(
+                clock_id=kwargs['clock_id']
+            ).delete()
+            kwargs['active_session'].commit()
+        except Exception as e:
+            self.error_could_not_unlink_credit_clock(kwargs, e)
+        command_chain_response = {
+            'failed': False,
+            'credit_clock': kwargs['clock_id'],
+        }
+        return command_chain_response
 
     def unlink_invoice_list(self, **kwargs):
         log.debug('')
@@ -1371,23 +1450,6 @@ class CreditEWallet(Base):
                 }
         return _handlers[kwargs['sheet']](**kwargs)
 
-    def unlink_clock(self, **kwargs):
-        log.debug('')
-        if not kwargs.get('clock_id'):
-            return self.error_no_credit_clock_id_found()
-        log.info('Attempting to fetch credit clock...')
-        _clock = self.fetch_credit_wallet_clock(
-                identifier='id', code=kwargs['clock_id']
-                )
-        if not _clock:
-            return self.warning_could_not_fetch_credit_clock(
-                    'id', kwargs['clock_id']
-                    )
-        _unlink = self.credit_clock_archive.pop(kwargs['clock_id'])
-        if _unlink:
-            log.info('Successfully removed credit clock.')
-        return _unlink
-
     # CONTROLLERS
 
     def system_controller(self, **kwargs):
@@ -1441,6 +1503,16 @@ class CreditEWallet(Base):
     '''
     [ TODO ]: Fetch error messages from message file by key codes.
     '''
+
+    def warning_could_not_unlink_credit_clock(self, *args):
+        command_chain_response = {
+            'failed': True, 'level': 'credit-ewallet',
+            'warning': 'Something went wrong. '
+                       'Could not unlink credit clock. '
+                       'Details: {}'.format(args),
+        }
+        log.warning(command_chain_response['warning'])
+        return command_chain_response
 
     def warning_could_not_unlink_transfer_sheet(self, *args):
         command_chain_response = {
@@ -1678,6 +1750,25 @@ class CreditEWallet(Base):
     '''
     [ TODO ]: Fetch error messages from message file by key codes.
     '''
+
+    def error_could_not_remove_credit_clock_from_archive(self, *args):
+        command_chain_response = {
+            'failed': True, 'level': 'credit-ewallet',
+            'error': 'Something went wrong. '
+                     'Could not remove credit clock from archive. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
+
+    def error_no_credit_clocks_cleaned_up(self, *args):
+        command_chain_response = {
+            'failed': True, 'level': 'credit-ewallet',
+            'error': 'No credit clocks cleaned up. '
+                     'Details: {}'.format(args),
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
 
     def error_no_transfer_sheets_cleaned_up(self, *args):
         command_chain_response = {
