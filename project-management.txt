@@ -3,10 +3,10 @@
 ################################################################################
 Less information is never the answer.
 
-* v.DeltaT (alpha/POC - bleeding edge) - Released
+* v.DeltaT (0.1.0 - alpha/POC - bleeding edge) - Released
     - x - EWallet Credit Clock - Virtual Payment System - initial suit version.
 
-* v.Chronos (beta/MVP - bleeding edge) - Released
+* v.Chronos (0.2.0 - beta/MVP - bleeding edge) - Released
     - x - (EWSC) Refactor client id to token object
     - x - (EWSC) Refactor session token to token object
     - x - (EWSC) Separater workers on different processes
@@ -177,6 +177,7 @@ Less information is never the answer.
               account class ResUser.
 
 * v.WhiteRabbit (1.0.0 - stable) - Under development
+    - (EWSC) Grooming session for setter functions. Perform input type checks.
     - (EWSC) Implement system action StopAccountCleaner cron
     - (EWSC) Implement system action StopWorkerCleaner cron
     - (EWSC) Implement system action StopSessionCleaner cron
@@ -257,7 +258,8 @@ Less information is never the answer.
 
 - (EWSC) - TODO:
 
-    -   - Cascade Unlink oriented actions:
+    - x - Cascade Unlink oriented actions:
+
         - x - UnlinkCreditEWallet cascade invoice sheets
         - x - UnlinkCreditEWallet cascade transfer sheets
         - x - UnlinkCreditEWallet cascade credit clock
@@ -277,6 +279,7 @@ Less information is never the answer.
         - x - UnlinkMaster cascade logout records
 
     - x - Check CToken Master ID for user actions:
+
         - x - User action Create Account
         - x - User action Account Login
         - x - User action Account Logout
@@ -358,12 +361,6 @@ Less information is never the answer.
 - (EWCC) - TODO:
 
 - (EWCC) - TESTS:
-
-    - Unit
-        -
-
-    - Functional
-        -
 
 ################################################################################
 - EWallet Credit Clock - API Tutor

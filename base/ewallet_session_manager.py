@@ -2027,6 +2027,57 @@ class EWalletSessionManager():
 
     # TODO
 #   @pysnooper.snoop('logs/ewallet.log')
+    def cleanup_user_accounts(self, **kwargs):
+        log.debug(
+            'TODO - Refactor '
+            '' if not kwargs.get('from_cron') else \
+            '- Automated Action: {} -'.format(
+                self.fetch_account_cleaner_cron_default_label()
+            )
+        )
+        freeze_interval = self.fetch_account_unlink_freeze_interval()
+        orm_session = res_utils.session_factory()
+        accounts_removed = []
+        user_query = list(
+            orm_session.query(ResUser).filter_by(to_unlink=True)
+        )
+        if not user_query:
+            log.info('No user accounts marked for unlink found.')
+            return False
+        accounts_to_unlink = len(user_query)
+        try:
+            sanitized_instruction_set = res_utils.remove_tags_from_command_chain(
+                kwargs, 'action', 'cleanup', 'account'
+            )
+            for account in user_query:
+                user_id = account.fetch_user_id()
+                check = res_utils.check_days_since_timestamp(
+                    account.to_unlink_timestamp, freeze_interval
+                )
+                log.info('Checking unlink timestamp...')
+                if not check:
+                    log.info('Account {} not ready for unlink.'.format(user_id))
+                    continue
+                log.info('Cleaning up user account {}.'.format(user_id))
+                account.user_controller(
+                    ctype='action', action='cleanup', cleanup='account',
+                    **sanitized_instruction_set
+                )
+                try:
+                    orm_session.query(ResUser).filter_by(user_id=user_id).delete()
+                    orm_session.commit()
+                except Exception as e:
+                    self.warning_could_not_cleanup_user_account(
+                        freeze_interval, orm_session, accounts_removed, user_query,
+                        accounts_to_unlink, account, check, user_id, e
+                    )
+                    continue
+                accounts_removed.append(user_id)
+        finally:
+            orm_session.close()
+
+    # TODO
+#   @pysnooper.snoop('logs/ewallet.log')
     def cleanup_master_user_accounts(self, master_ids):
         log.debug('TODO - Refactor')
         orm_session = res_utils.session_factory()
@@ -2132,50 +2183,6 @@ class EWalletSessionManager():
             'subordonates_cleaned': len(accounts_removed),
         }
         return instruction_set_response
-
-    # TODO
-#   @pysnooper.snoop('logs/ewallet.log')
-    def cleanup_user_accounts(self, **kwargs):
-        log.debug(
-            'TODO - Refactor '
-            '' if not kwargs.get('from_cron') else \
-            '- Automated Action: {} -'.format(
-                self.fetch_account_cleaner_cron_default_label()
-            )
-        )
-        freeze_interval = self.fetch_account_unlink_freeze_interval()
-        orm_session = res_utils.session_factory()
-        accounts_removed = []
-        user_query = list(
-            orm_session.query(ResUser).filter_by(to_unlink=True)
-        )
-        if not user_query:
-            log.info('No user accounts marked for unlink found.')
-            return False
-        accounts_to_unlink = len(user_query)
-        try:
-            for account in user_query:
-                user_id = account.fetch_user_id()
-                check = res_utils.check_days_since_timestamp(
-                    account.to_unlink_timestamp, freeze_interval
-                )
-                log.info('Checking unlink timestamp...')
-                if not check:
-                    log.info('Account {} not ready for unlink.'.format(user_id))
-                    continue
-                log.info('Cleaning up user account {}.'.format(user_id))
-                try:
-                    orm_session.query(ResUser).filter_by(user_id=user_id).delete()
-                    orm_session.commit()
-                except Exception as e:
-                    self.warning_could_not_cleanup_user_account(
-                        freeze_interval, orm_session, accounts_removed, user_query,
-                        accounts_to_unlink, account, check, user_id, e
-                    )
-                    continue
-                accounts_removed.append(user_id)
-        finally:
-            orm_session.close()
 
 #   @pysnooper.snoop('logs/ewallet.log')
     def cleanup_ewallet_sessions(self, **kwargs):

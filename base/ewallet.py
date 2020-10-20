@@ -508,6 +508,8 @@ class EWallet(Base):
 #   @pysnooper.snoop('logs/ewallet.log')
     def set_session_credit_wallet(self, credit_wallet):
         log.debug('')
+        if not credit_wallet or isinstance(credit_wallet, dict):
+            return self.error_invalid_credit_ewallet(credit_wallet)
         try:
             self.credit_wallet = credit_wallet if \
                 isinstance(credit_wallet, list) else [credit_wallet]
@@ -750,6 +752,7 @@ class EWallet(Base):
 
     # CLEANERS
 
+#   @pysnooper.snoop('logs/ewallet.log')
     def cleanup_user_account(self, **kwargs):
         log.debug('')
         if not kwargs.get('user_account'):
@@ -763,7 +766,7 @@ class EWallet(Base):
         )
         return self.warning_could_not_cleanup_user_account(
             kwargs, cleanup_account
-        )if not cleanup_account or isinstance(cleanup_account, dict) and \
+        ) if not cleanup_account or isinstance(cleanup_account, dict) and \
             cleanup_account.get('failed') else cleanup_account
 
     def clear_session_active_user(self):
@@ -1163,8 +1166,6 @@ class EWallet(Base):
             'login': self.unlink_user_account_login_records(user_id, **kwargs),
             'logout': self.unlink_user_account_logout_records(user_id, **kwargs),
             'password': self.unlink_user_account_pass_hash_archive(user_id, **kwargs),
-            'ewallet': self.unlink_user_account_credit_ewallet(user_id, **kwargs),
-            'contacts': self.unlink_user_account_contact_list(user_id, **kwargs),
         }
 
     # TODO
@@ -1221,9 +1222,12 @@ class EWallet(Base):
             ).filter_by(
                 user_id=kwargs['user_id']
             )
-            user = list(user_account)
+            user = list(user_account)[0]
             # Forced user account removal easter egg
             if kwargs.get('forced_removal'):
+                self.cleanup_user_account(
+                    user_account=user, **kwargs
+                )
                 user_account.delete()
                 self.unlink_user_account_records(
                     kwargs['user_id'], active_session=kwargs['active_session']
@@ -1241,6 +1245,9 @@ class EWallet(Base):
             )
             # If 30 days since account marked for removal, remove from db
             if check:
+                self.cleanup_user_account(
+                    user_account=user_account, **kwargs
+                )
                 user_account.delete()
                 self.unlink_user_account_records(
                     kwargs['user_id'], active_session=kwargs['active_session']
@@ -1288,9 +1295,6 @@ class EWallet(Base):
             return self.warning_account_does_not_belong_to_ewallet_session(
                 kwargs, user_id, user_account, check
             )
-        cleanup_account = self.cleanup_user_account(
-            user_account=user_account, **kwargs
-        )
         user_email = user_account.fetch_user_email()
         unlink_account = self.unlink_user_account(user_id=user_id, **kwargs)
         if not unlink_account or isinstance(unlink_account, dict) and \
@@ -1848,12 +1852,15 @@ class EWallet(Base):
             'session_data': {
                 'session_user_account': None
                     if not session_values['user_account']
+                    or isinstance(session_values['user_account'], dict)
                     else session_values['user_account'].fetch_user_email(),
                 'session_credit_ewallet': None
                     if not session_values['credit_ewallet']
+                    or isinstance(session_values['credit_ewallet'], dict)
                     else session_values['credit_ewallet'].fetch_credit_ewallet_id(),
                 'session_contact_list': None
                     if not session_values['contact_list']
+                    or isinstance(session_values['contact_list'], dict)
                     else session_values['contact_list'].fetch_contact_list_id(),
                 'session_account_archive': None
                     if not session_values['user_account_archive']
@@ -2296,15 +2303,19 @@ class EWallet(Base):
         transfer_from_id = record.fetch_record_transfer_from()
         transfer_to_id = record.fetch_record_transfer_to()
 
-        record_values['transfer_from'] = None if not transfer_from_id \
-            else self.fetch_user(
-                identifier='id', account_id=transfer_from_id, **kwargs
-            ).fetch_user_email()
+        src_user = self.fetch_user(
+            identifier='id', account_id=transfer_from_id, **kwargs
+        )
+        dst_user = self.fetch_user(
+            identifier='id', account_id=transfer_to_id, **kwargs
+        )
 
-        record_values['transfer_to'] = None if not transfer_to_id \
-            else self.fetch_user(
-                identifier='id', account_id=transfer_to_id, **kwargs
-            ).fetch_user_email()
+        record_values['transfer_from'] = None if not src_user or \
+            isinstance(src_user, dict) and src_user.get('failed') \
+            else src_user.fetch_user_email()
+        record_values['transfer_to'] = None if not dst_user or \
+            isinstance(dst_user, dict) and dst_user.get('failed') \
+            else dst_user.fetch_user_email()
 
         command_chain_response = {
             'failed': False,
@@ -3024,12 +3035,16 @@ class EWallet(Base):
             'account_data': user.fetch_user_values(),
             'session_data': {
                 'session_user_account': None if not session_values['user_account']
+                    or isinstance(session_values['user_account'], dict)
                     else session_values['user_account'].fetch_user_email(),
                 'session_credit_ewallet': None if not session_values['credit_ewallet']
+                    or isinstance(session_values['credit_ewallet'], dict)
                     else session_values['credit_ewallet'].fetch_credit_ewallet_id(),
                 'session_contact_list': None if not session_values['contact_list']
+                    or isinstance(session_values['contact_list'], dict)
                     else session_values['contact_list'].fetch_contact_list_id(),
                 'session_account_archive': None if not session_values['user_account_archive']
+                    or isinstance(session_values['user_account_archive'], dict)
                     else session_values['user_account_archive']
             }
         }
@@ -6376,6 +6391,15 @@ class EWallet(Base):
     '''
     [ TODO ]: Fetch error messages from message file by key codes.
     '''
+
+    def error_invalid_credit_ewallet(self, *args):
+        command_chain_response = {
+            'failed': True, 'level': 'ewallet-session',
+            'error': 'Invalid credit ewallet. '
+                     'Details : {}'.format(args)
+        }
+        log.error(command_chain_response['error'])
+        return command_chain_response
 
     def error_no_user_account_specified(self, *args):
         command_chain_response = {

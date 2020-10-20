@@ -309,9 +309,13 @@ class ResUser(Base):
             'name': self.user_name,
             'create_date': res_utils.format_datetime(self.user_create_date),
             'write_date': res_utils.format_datetime(self.user_write_date),
-            'ewallet': None if not credit_ewallet else
+            'ewallet': None if not credit_ewallet or
+                isinstance(credit_ewallet, dict) and
+                credit_ewallet.get('failed') else
                 credit_ewallet.fetch_credit_ewallet_id(),
-            'contact_list': None if not contact_list else
+            'contact_list': None if not contact_list  or
+                isinstance(contact_list, dict) and
+                contact_list.get('failed') else
                 contact_list.fetch_contact_list_id(),
             'email': self.user_email,
             'phone': self.user_phone,
@@ -346,7 +350,6 @@ class ResUser(Base):
             )
         log.info('Successfully set user master account ID.')
         return True
-
 
     def set_is_active(self, flag=True):
         log.debug('')
@@ -1487,6 +1490,8 @@ class ResUser(Base):
             'credits': self.event_request_credits,
         }
         return handlers[kwargs['request']](**kwargs)
+
+    # CONTROLLERS
 
     def user_action_controller(self, **kwargs):
         log.debug('')
