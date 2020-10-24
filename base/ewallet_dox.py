@@ -335,7 +335,7 @@ def display_user_action_add_contact_list_record_instruction_set_example(**kwargs
     log.debug('')
     instruction_set_response = {
         'failed': False,
-        'action': 'AddContactList',
+        'action': 'CreateContactRecord',
         'prerequisits': [
             'RequestClientID',
             'RequestSessionToken',
@@ -1157,7 +1157,7 @@ def display_user_action_switch_conversion_sheet_instruction_set_example(**kwargs
             'sheet_id': '<conversion-sheet-id type-int>',
         },
         'response_ok': {
-            'failed': False,
+            'failed': '<flag type-bool value-false>',
             'conversion_sheet': '<conversion-sheet-id type-int>',
             'sheet_data': {
                 'id': '<conversion-sheet-id type-int>',

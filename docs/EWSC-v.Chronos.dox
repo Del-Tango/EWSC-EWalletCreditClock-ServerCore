@@ -1,0 +1,5304 @@
+###############################################################################
+            - EWallet Credit Clock - Virtual Payment System Suit -
+                    - Server Core (EWSC) < TechDox > -
+###############################################################################
+
+
+    * [ Metadata for the soul ]:
+    |
+    |___* Last Updated On: Tue Oct 20 23:01:14 EEST 2020
+    |
+    |___* Last Updated By: S:Mx093pk01
+
+
+    [ NOTE ]: Chapter hopping this manual in Vim should be done with:
+              Esc /'Chapter <chapter-number>'
+
+    [ NOTE ]: Chapter section hopping this manual in Vim should be done with:
+              Esc /'Section <chapter-number>:<section-number>'
+
+    [ NOTE ]: Line hopping this manual in Vim should be done with:
+              Esc :<line-number>
+
+
+        _________________________________
+       /    EWSC-TechDox - INDEX
+===============================================================================
+
+    1.  Introduction ......................................................... TODO
+
+        1.1. Entity relationship hierarchy ...................................
+
+        1.2. Interface design ................................................
+
+        1.3. Action/Event controller scope ...................................
+
+    2.  Setup and Configuration .............................................. TODO
+
+    3.  Session Manager ...................................................... TODO
+
+    4.  Session Worker ....................................................... TODO
+
+    5.  EWallet Session ...................................................... TODO
+
+    6.  Client Token ......................................................... TODO
+
+    7.  Session Token ........................................................ TODO
+
+    8.  Master Accounts ...................................................... TODO
+
+    9.  Subordonate Accounts ................................................. TODO
+
+    10. Credit EWallet ....................................................... TODO
+
+    11. Credit Clock ......................................................... TODO
+
+    12. Transfer Sheets ...................................................... TODO
+
+    13. Invoice Sheets ....................................................... TODO
+
+    14. Conversion Sheets .................................................... TODO
+
+    15. Time Sheets .......................................................... TODO
+
+    16. Contact List ......................................................... TODO
+
+    17. Controllers .......................................................... TODO
+
+        17.1.  System Controller ............................................. TODO
+
+        17.2.  Master Controller ............................................. TODO
+
+        17.3.  Client Controller ............................................. TODO
+
+    18. Actions ..............................................................
+
+        18.1.   Client action AcquireMaster ..................................
+
+        18.2.   Client action CreateMaster ...................................
+
+        18.3.   Client action RequestClientID ................................
+
+        18.4.   Client action RequestSessionToken ............................
+
+        18.5.   Client action CheckCTokenValid ...............................
+
+        18.6.   Client action CheckCTokenLinked ..............................
+
+        18.7.   Client action CheckCTokenSession .............................
+
+        18.8.   Client action CheckCTokenStatus ..............................
+
+        18.9.   Client action CheckSTokenValid ...............................
+
+        18.10.  Client action CheckSTokenLinked ..............................
+
+        18.11.  Client action CheckSTokenSession .............................
+
+        18.12.  Client action CheckSTokenStatus ..............................
+
+        18.13.  Client action STokenKeepAlive ................................
+
+        18.14.  Client action CTokenKeepAlive ................................
+
+        18.15.  Client action IssueReport ....................................
+
+        18.16.  Client action ReleaseMaster ..................................
+
+        18.17.  Master action AccountLogin ...................................
+
+        18.18.  Master action AccountLogout ..................................
+
+        18.19.  Master action ViewAccount ....................................
+
+        18.20.  Master action EditAccount ....................................
+
+        18.21.  Master action UnlinkAccount ..................................
+
+        18.22.  Master action RecoverAccount .................................
+
+        18.23.  Master action InspectCTokens .................................
+
+        18.24.  Master action InspectCToken ..................................
+
+        18.25.  Master action InspectSubPool .................................
+
+        18.26.  Master action InspectSubordonate .............................
+
+        18.27.  Master action ViewLoginRecords ...............................
+
+        18.28.  Master action ViewLogoutRecords ..............................
+
+        18.29.  System action NewWorker ...................................... TODO
+
+        18.30.  System action NewSession ..................................... TODO
+
+        18.31.  System action FreezeMaster ................................... TODO
+
+        18.32.  System action UnfreezeMaster ................................. TODO
+
+        18.33.  System action IncreaseMasterSubPool .......................... TODO
+
+        18.34.  System action DecreaseMasterSubPool .......................... TODO
+
+        18.35.  System action InterogateSessionWorkers ....................... TODO
+
+        18.36.  System action TargetCleanupMaster ............................ TODO
+
+        18.37.  System action TargetCleanupWorker ............................ TODO
+
+        18.38.  System action TargetCleanupSession ........................... TODO
+
+        18.39.  System action TargetCleanupCToken ............................ TODO
+
+        18.40.  System action TargetCleanupSToken ............................ TODO
+
+        18.41.  System action SweepCleanupMasters ............................ TODO
+
+        18.42.  System action SweepCleanupCTokens ............................ TODO
+
+        18.43.  System action SweepCleanupSTokens ............................ TODO
+
+        18.44.  System action SweepCleanupWorkers ............................ TODO
+
+        18.45.  System action SweepCleanupSessions ........................... TODO
+
+        18.46.  System action StartAccountCleaner ............................ TODO
+
+        18.47.  System action StartSessionCleaner ............................ TODO
+
+        18.48.  System action StartWorkerCleaner ............................. TODO
+
+        18.49.  System action StartCTokenCleaner ............................. TODO
+
+        18.51.  System action OpenSockets .................................... TODO
+
+        18.52.  System action CloseSockets ................................... TODO
+
+        18.53.  System action StartInstructionListener ....................... TODO
+
+        18.54.  User action CreateAccount ....................................
+
+        18.55.  User action AccountLogin .....................................
+
+        18.56.  User action AccountLogout ....................................
+
+        18.57.  User action SupplyCredits ....................................
+
+        18.58.  User action PayCredits .......................................
+
+        18.59.  User action ConvertCredits2Clock .............................
+
+        18.61.  User action ConvertClock2Credits .............................
+
+        18.62.  User action CreateContactRecord ..............................
+
+        18.63.  User action TransferCredits ..................................
+
+        18.64.  User action EditAccount ......................................
+
+        18.65.  User action StartClockTimer ..................................
+
+        18.66.  User action PauseClockTimer ..................................
+
+        18.67.  User action ResumeClockTimer .................................
+
+        18.68.  User action StopClockTimer ...................................
+
+        18.69.  User action ViewContactList ..................................
+
+        18.71.  User action ViewContactRecord ................................
+
+        18.72.  User action ViewTransferSheet ................................
+
+        18.73.  User action ViewTransferRecord ...............................
+
+        18.74.  User action ViewTimeSheet ....................................
+
+        18.75.  User action ViewTimeRecord ...................................
+
+        18.76.  User action ViewConversionSheet ..............................
+
+        18.77.  User action ViewConversionRecord .............................
+
+        18.78.  User action ViewAccount ......................................
+
+        18.79.  User action ViewCreditEWallet ................................
+
+        18.81.  User action ViewCreditClock ..................................
+
+        18.82.  User action ViewInvoiceSheet .................................
+
+        18.83.  User action ViewInvoiceRecord ................................
+
+        18.84.  User action ViewLoginRecords .................................
+
+        18.85.  User action ViewLogoutRecords ................................
+
+        18.86.  User action CreateContactList ................................
+
+        18.87.  User action CreateCreditEWallet ..............................
+
+        18.88.  User action CreateCreditClock ................................
+
+        18.89.  User action CreateTransferSheet ..............................
+
+        18.91.  User action CreateInvoiceSheet ...............................
+
+        18.92.  User action CreateConversionSheet ............................
+
+        18.93.  User action CreateTimeSheet ..................................
+
+        18.94.  User action SwitchAccount ....................................
+
+        18.95.  User action SwitchCreditEWallet ..............................
+
+        18.96.  User action SwitchCreditClock ................................
+
+        18.97.  User action SwitchTransferSheet ..............................
+
+        18.98.  User action SwitchInvoiceSheet ...............................
+
+        18.99.  User action SwitchConversionSheet ............................
+
+        18.100. User action SwitchTimeSheet ..................................
+
+        18.101. User action SwitchContactList ................................
+
+        18.102. User action UnlinkAccount ....................................
+
+        18.103. User action UnlinkContactList ................................
+
+        18.104. User action UnlinkContactRecord ..............................
+
+        18.105. User action UnlinkConversionSheet ............................
+
+        18.106. User action UnlinkConversionRecord ...........................
+
+        18.107. User action UnlinkTransferSheet ..............................
+
+        18.108. User action UnlinkTransferRecord .............................
+
+        18.109. User action UnlinkTimeSheet ..................................
+
+        18.110. User action UnlinkTimeRecord .................................
+
+        18.111. User action UnlinkInvoiceSheet ...............................
+
+        18.112. User action UnlinkInvoiceRecord ..............................
+
+        18.113. User action UnlinkCreditEWallet ..............................
+
+        18.114. User action UnlinkCreditClock ................................
+
+        18.115. User action RecoverAccount ...................................
+
+    19. Events (Unimplemented) ............................................... TODO
+
+    20. EWDox ................................................................ TODO
+
+    21. Cron jobs ............................................................ TODO
+
+
+        _________________________________
+       /    EWSC-TechDox - Chapter 1
+===============================================================================
+    Introduction
+===============================================================================
+
+     __________________________________________________________________________
+____/   Section 1:1 (EWSC) Entity Relationship Hierarchy
+
+    [ NOTE ]: Session manager workers operate on separate processes and
+              communicate through process safe queues.
+
+    [ NOTE ]: EWallet sessions have a SqlAlchemy ORM session attached.
+
+    [ NOTE ]: The following description excludes all master user account
+              relationships.
+
+
+                  (Server Core)
+                        |
+                        * Session Manager
+                        |
+                        |_ * Worker 1
+                        |  |
+                        |  |_ * EWallet Session 1
+                        |  |  |
+                        |  |  |_ * User Account
+                        |  |  |  |
+                        |  |  |  |_ * Credit EWallet
+                        |  |  |  |  |
+                        |  |  |  |  |_ * Credit Clock
+                        |  |  |  |  |  |
+                        |  |  |  |  |  |_ * Time Sheet
+                        |  |  |  |  |  |  |
+                        |  |  |  |  |  |  |_ * Time Record
+                        |  |  |  |  |  |
+                        |  |  |  |  |  |
+                        |  |  |  |  |  |_ * Conversion Sheet
+                        |  |  |  |  |     |
+                        |  |  |  |  |     |_ * Conversion Record
+                        |  |  |  |  |
+                        |  |  |  |  |_ * Invoice Sheet
+                        |  |  |  |  |  |
+                        |  |  |  |  |  |_ * Invoice Record
+                        |  |  |  |  |
+                        |  |  |  |  |_ * Transfer Sheet
+                        |  |  |  |     |
+                        |  |  |  |     |_ * Transfer Record
+                        |  |  |  |
+                        |  |  |  |
+                        |  |  |  |_ * Contact List
+                        |  |  |     |
+                        |  |  |     |_ * Contact Record
+                        |  |  |
+                        |  |  |
+                        |  |  |_ * Credit EWallet
+                        |  |  |
+                        |  |  |_ * Contact List
+                        |  |  |
+                        |  |  |_ * SqlAlchemy ORM Session
+                        |  |
+                        |  |
+                        |  |_ * EWallet Session (N)
+                        |     '
+                        |     '
+                        |_ * Worker (N)
+                        '
+                        '
+
+     __________________________________________________________________________
+____/   Section 1:2 (EWSC) Interface Design
+
+             (Entity instruction set)
+                        |
+                        V
+
+                        * Controllers
+                        |
+                        |_ * Jumptable Handlers
+                        |
+                        |_ * Action/Event Handlers
+                           |
+                           |_ * Resources
+                              |
+                              |_. Fetchers
+                              |_. Setters
+                              |_. Cleaners
+                              |_. Formatters
+                              |_. Computers
+                              |_. Displays
+                              |_. Creators
+                              |_. Spawners
+                              |_. Generators
+                              |_. General
+                              |_. Warning Handlers
+                              |_. Error Handlers
+
+
+     __________________________________________________________________________
+____/   Section 1:3 (EWSC) Action/Event controller scope
+
+                        _____________________________________
+                        |
+                        |         ___________________________
+                        |         |
+                        |         |         _________________
+                        |         |         |
+                        |         |         |       _________
+                        |         |         |       |
+                        |         |         |       |
+                        |         |         |       |
+                System -| Client -| Master -| User -|
+                        |         |         |       |
+                        |         |         |       |
+                        |         |         |       |________
+                        |         |         |
+                        |         |         |________________
+                        |         |
+                        |         |__________________________
+                        |
+                        |____________________________________
+
+
+
+        _________________________________
+       /    EWSC-TechDox - Chapter 2
+===============================================================================
+    Setup and Configuration
+===============================================================================
+
+        _________________________________
+       /    EWSC-TechDox - Chapter 3
+===============================================================================
+    Session Manager
+===============================================================================
+
+        _________________________________
+       /    EWSC-TechDox - Chapter 4
+===============================================================================
+    Session Worker
+===============================================================================
+
+        _________________________________
+       /    EWSC-TechDox - Chapter 5
+===============================================================================
+    EWallet Session
+===============================================================================
+
+        _________________________________
+       /    EWSC-TechDox - Chapter 6
+===============================================================================
+    Client Token
+===============================================================================
+
+        _________________________________
+       /    EWSC-TechDox - Chapter 7
+===============================================================================
+    Session Token
+===============================================================================
+
+        _________________________________
+       /    EWSC-TechDox - Chapter 8
+===============================================================================
+    Master Accounts
+===============================================================================
+
+        _________________________________
+       /    EWSC-TechDox - Chapter 9
+===============================================================================
+    Subordonate Accounts
+===============================================================================
+
+        _________________________________
+       /    EWSC-TechDox - Chapter 10
+===============================================================================
+    Credit EWallet
+===============================================================================
+
+        _________________________________
+       /    EWSC-TechDox - Chapter 11
+===============================================================================
+    Credit Clock
+===============================================================================
+
+        _________________________________
+       /    EWSC-TechDox - Chapter 12
+===============================================================================
+    Transfer Sheet
+===============================================================================
+
+* Transfer Sheet (Fields)
+    - transfer_sheet_id     - <    label-id                 primary-key                                                         type-int        > -
+    - wallet_id             - <    label-ewallet            ForeignKey-credit_ewallet.wallet_id                                 type-int        > -
+    - reference             - <    label-reference                                                                              type-str        > -
+    - create_date           - <    label-create_date                                                                            type-datetime   > -
+    - write_date            - <    label-write_date                                                                             type-datetime   > -
+    - wallet                - <                             relationship-CreditEWallet backpopulates-transfer_sheet             type-list       > -
+    - records               - <    label-records            relationship-CreditTransferSheetRecord                              type-list       > -
+
+* Transfer Record (Fields)
+    - record_id             - <    label-id                 primary-key                                                         type-int        > -
+    - reference             - <    label-reference                                                                              type-str        > -
+    - create_date           - <    label-create_date                                                                            type-datetime   > -
+    - write_date            - <    label-write_date                                                                             type-datetime   > -
+    - transfer_type         - <    label-transfer_type                                                                          type-str        > -
+    - transfer_from         - <    label-transfer_from      ForeignKey-res_user.user_id                                         type-int        > -
+    - transfer_to           - <    label-transfer_to        ForeignKey-res_user.user_id                                         type-int        > -
+    - credits               - <    label-credits                                                                                type-int        > -
+    - transfer_sheet_id     - <                             ForeignKey-credit_transfer_sheet.transfer_sheet_id                  type-int        > -
+
+
+        _________________________________
+       /    EWSC-TechDox - Chapter 13
+===============================================================================
+    Invoice Sheet
+===============================================================================
+
+* Invoice Sheet (Fields)
+    - invoice_sheet_id      - <    label-id                 primary-key                                                         type-int        > -
+    - wallet_id             - <    label-ewallet            ForeignKey-credit_ewallet.wallet_id                                 type-int        > -
+    - reference             - <    label-reference                                                                              type-str        > -
+    - create_date           - <    label-create_date                                                                            type-datetime   > -
+    - write_date            - <    label-write_date                                                                             type-datetime   > -
+    - wallet                - <                             relationship-CreditEWallet backpopulates-invoice_sheet              type-list       > -
+    - records               - <    label-records            relationship-CreditInvoiceSheetRecord                               type-list       > -
+
+* Invoice Record (Fields)
+    - record_id             - <    label-id                 primary-key                                                         type-int        > -
+    - invoice_sheet_id      - <    label-invoice_sheet      ForeignKey-credit_invoice_sheet.invoice_sheet_id                    type-int        > -
+    - transfer_record_id    - <    label-transfer_record    ForeignKey-transfer_sheet_record.record_id                          type-int        > -
+    - reference             - <    label-reference                                                                              type-str        > -
+    - create_date           - <    label-create_date                                                                            type-datetime   > -
+    - write_date            - <    label-write_date                                                                             type-datetime   > -
+    - credits               - <    label-credits                                                                                type-int        > -
+    - currency              - <    label-currency                                                                               type-str        > -
+    - cost                  - <    label-cost                                                                                   type-float      > -
+    - seller_id             - <    label-seller             ForeignKey-res_user.user_id                                         type-int        > -
+    - notes                 - <    label-notes                                                                                  type-str        > -
+
+        _________________________________
+       /    EWSC-TechDox - Chapter 14
+===============================================================================
+    Conversion Sheet
+===============================================================================
+
+* Conversion Sheet (Fields)
+    - conversion_sheet_id   - <    label-id                 primary-key                                                         type-int        > -
+    - clock_id              - <    label-clock              ForeignKey-credit_clock.clock_id                                    type-int        > -
+    - reference             - <    label-reference                                                                              type-str        > -
+    - create_date           - <    label-create_date                                                                            type-datetime   > -
+    - write_date            - <    label-write_date                                                                             type-datetime   > -
+    - clock                 - <                             relationship-CreditClock backpopulates-conversion_sheet             type-list       > -
+    - records               - <    label-records            relationship-CreditClockConversionSheetRecord                       type-list       > -
+
+* Conversion Record (Fields)
+    - record_id             - <    label-id                 primary-key                                                         type-int        > -
+    - conversion_sheet_id   - <    label-conversion_sheet   relationship-credit_clock_conversion_sheet.conversion_sheet_id      type-int        > -
+    - reference             - <    label-reference          ForeignKey-credit_clock_conversion_sheeet.conversion_sheet_id       type-str        > -
+    - create_date           - <    label-create_date                                                                            type-datetime   > -
+    - write_date            - <    label-write_date                                                                             type-datetime   > -
+    - conversion_type       - <    label-conversion_type                                                                        type-str        > -
+    - minutes               - <    label-minutes                                                                                type-float      > -
+    - credits               - <    label-credits                                                                                type-int        > -
+
+        _________________________________
+       /    EWSC-TechDox - Chapter 15
+===============================================================================
+    Time Sheet
+===============================================================================
+
+* Time Sheet (Fields)
+    - time_sheet_id         - <    label-id                 primary-key                                                         type-int        > -
+    - clock_id              - <    label-clock              ForeignKey-credit_clock.clock_id                                    type-int        > -
+    - reference             - <    label-reference                                                                              type-str        > -
+    - create_date           - <    label-create_date                                                                            type-datetime   > -
+    - write_date            - <    label-write_date                                                                             type-datetime   > -
+    - clock                 - <                             relationship-CreditClock backpopulates-time_sheet                   type-list       > -
+    - records               - <    label-records            relationship-TimeSheetRecord                                        type-list       > -
+
+* Time Record (Fields)
+    - record_id             - <    label-id                 primary-key                                                         type-int        > -
+    - reference             - <    label-reference                                                                              type-str        > -
+    - create_date           - <    label-create_date                                                                            type-datetime   > -
+    - write_date            - <    label-write_date                                                                             type-datetime   > -
+    - time_start            - <    label-time_start                                                                             type-float      > -
+    - time_stop             - <    label-time_stop                                                                              type-float      > -
+    - time_spent            - <    label-time_spent                                                                             type-float      > -
+    - time_pending          - <    label-time_pending                                                                           type-float      > -
+    - pending_count         - <    label-pending_count                                                                          type-int        > -
+    - time_sheet_id         - <    label-time_sheet         ForeignKey-credit_clock_time_sheet.time_sheet_id                    type-int        > -
+    - credit_clock_id       - <                             ForeignKey-credit_clock.clock_id                                    type-int        > -
+
+        _________________________________
+       /    EWSC-TechDox - Chapter 16
+===============================================================================
+    Contact List
+===============================================================================
+
+        _________________________________
+       /    EWSC-TechDox - Chapter 17
+===============================================================================
+    Controllers
+===============================================================================
+
+     __________________________________________________________________________
+____/   Section 17:1 (Controller) System
+
+     __________________________________________________________________________
+____/   Section 17:3 (Controller) Client
+
+     __________________________________________________________________________
+____/   Section 17:2 (Controller) Master
+
+
+        _________________________________
+       /    EWSC-TechDox - Chapter 18
+===============================================================================
+    Actions
+===============================================================================
+
+
+     __________________________________________________________________________
+____/   Section 18:1 (Client) AcquireMaster
+
+    - Client action Acquire Master
+
+        - Label: AcquireMaster
+
+        - Prerequisits:
+            - RequestClientID
+            - RequestSessionToken
+
+        - Instruction Set: {
+            'controller': 'client',
+            'ctype': 'action',
+            'action': 'acquire',
+            'acquire': 'master',
+            'master': '<master-email type-str>',
+            'key': '<master-pass-key type-str>',
+            'client_id': '<session-token type-str>',
+            'session_token': '<session-token type-str>',
+        }
+
+        - Instruction Set Response:
+
+            - OK: {
+                'failed': '<flag type-bool value-false>',
+                'client_id': '<client-token-label type-str>',
+                'master': '<master-email type-str>',
+            }
+
+            - NOK: {
+                'failed': '<flag type-bool value-true>',
+                'error': '<error-message type-str>',
+                'level': '<entity-level type-str>',
+                'details': '<data-set type-set>',
+                'warning': '<warning-message type-str>'
+            }
+
+        - State Oriented Restrictions:
+
+            - CToken States:
+                - Master Unlinked
+                - SToken Linked
+
+            - SToken States:
+                - Session Plugged
+
+     __________________________________________________________________________
+____/   Section 18:2 (Client) CreateMaster
+
+    - Client action Create Master
+        - State Oriented Restrictions:
+            - CToken States:
+                - Master Unlinked
+                - SToken Linked
+
+     __________________________________________________________________________
+____/   Section 18:3 (Client) RequestClientID
+
+    - Client action Request Client ID
+
+        - Label: 'RequestClientID
+
+        - Instruction Set: {
+            'controller': 'client',
+            'ctype': 'action',
+            'action': 'request',
+            'request': 'client_id'
+        }
+
+        - Response:
+
+            - OK: {
+                'failed': '<flag type-bool value-false>',
+                'client_id': '<client-id type-str>',
+            }
+
+            - NOK: {
+                'failed': '<flag type-bool value-true>',
+                'error': '<error-message type-str>',
+                'warning': '<warning-message type-str>',
+                'level': '<entity-level type-str>',
+                'details': '<data-set type-set>',
+            }
+
+        - State Oriented Restrictions:
+
+            - User Account States:
+                - Logged (In | Out)
+
+     __________________________________________________________________________
+____/   Section 18:4 (Client) RequestSessionToken
+
+    - Client action Request Session Token
+
+        - Label: RequestSessionToken
+
+        - Prerequisits:
+            - RequestClientID
+
+        - Instruction Set: {
+            'controller': 'client',
+            'ctype': 'action',
+            'action': 'request',
+            'request': 'session_token',
+            'client_id': '<client-id type-str>',
+        }
+
+        - Response:
+
+            - OK: {
+                'failed': '<flag type-bool value-false>',
+                'session_token': '<session-token type-str>',
+            }
+
+            - NOK: {
+                'failed': '<flag type-bool value-true>',
+                'error': '<error-message type-str>',
+                'warning': '<warning-message type-str>',
+                'level': '<entity-level type-str>',
+                'details': '<data-set type-set>',
+            }
+
+        - State Oriented Restrictions:
+
+            - User Account States:
+                - Logged (In | Out)
+
+            - CToken States:
+                - Master (Linked | Unlinked)
+
+     __________________________________________________________________________
+____/   Section 18:5 (Client) CheckCTokenValid
+
+    - Client action Check CToken Valid
+
+        - Label: CheckCTokenValid
+
+        - Prerequisits:
+            - RequestClientID
+
+        - Instruction Set: {
+            'controller': 'client',
+            'ctype': 'action',
+            'action': 'verify',
+            'verify': 'ctoken',
+            'ctoken': 'validity',
+            'client_id': '<client-id type-str>',
+        }
+
+        - Response:
+
+            - OK: {
+                'failed': '<flag type-bool value-false>',
+                'client_id': '<client-id type-str>',
+                'valid': '<validity-flag type-bool>',
+                'registered': '<registration-flag type-bool>',
+                'expired': '<expiration-flag type-bool>',
+            }
+
+            - NOK: {
+                'failed': '<flag type-bool value-true>',
+                'error': '<error-message type-str>',
+                'level': '<entity-level type-str>',
+                'details': '<data-set type-set>',
+                'warning': '<warning-message type-str>'
+            }
+
+        - State Oriented Restrictions:
+
+            - User Account States:
+                - Logged (In | Out)
+
+            - CToken States:
+                - Master (Linked | Unlinked)
+
+     __________________________________________________________________________
+____/   Section 18:6 (Client) CheckCTokenLinked
+
+    - Client action Check CToken Linked
+
+        - Label: CheckCTokenLinked
+
+        - Prerequisits:
+            RequestClientID
+
+        - Instruction Set: {
+            'controller': 'client',
+            'ctype': 'action',
+            'action': 'verify',
+            'verify': 'ctoken',
+            'ctoken': 'linked',
+            'client_id': '<client-id type-str>',
+        }
+
+        - Response:
+
+            - OK: {
+                'failed': '<flag type-bool value-false>',
+                'client_id': '<client-id type-str>',
+                'session_token': '<session-token type-str>',
+                'linked': '<association-flag type-bool>',
+            }
+
+            - NOK: {
+                'failed': '<flag type-bool value-true>',
+                'error': '<error-message type-str>',
+                'level': '<entity-level type-str>',
+                'details': '<data-set type-set>',
+                'warning': '<warning-message type-str>',
+            }
+
+        - State Oriented Restrictions:
+
+            - User Account States:
+                - Logged (In | Out)
+
+            - CToken States:
+                - Master (Linked | Unlinked)
+
+     __________________________________________________________________________
+____/   Section 18:7 (Client) CheckCTokenSession
+
+    - Client action Check CToken Session
+
+        - Label: CheckCTokenSession
+
+        - Prerequisits:
+            RequestClientID
+
+        - Instruction Set: {
+            'controller': 'client',
+            'ctype': 'action',
+            'action': 'verify',
+            'verify': 'ctoken',
+            'ctoken': 'session',
+            'client_id': '<client-id type-str>',
+        }
+
+        - Response:
+
+            - OK: {
+                'failed': '<flag type-bool value-false>',
+                'client_id': '<client-id type-str>',
+                'plugged': '<connection-flag type-bool>',
+                'session': '<session-id type-int>',
+            }
+
+            - NOK: {
+                'failed': '<flag type-bool value-true>',
+                'error': '<error-message type-str>',
+                'level': '<entity-level type-str>',
+                'details': '<data-set type-set>',
+                'warning': '<warning-message type-str>',
+            }
+
+        - State Oriented Restrictions:
+
+            - User Account States:
+                - Logged (In | Out)
+
+     __________________________________________________________________________
+____/   Section 18:8 (Client) CheckCTokenStatus
+
+    - Client action Check CToken Status
+
+        - Label: CheckCTokenState
+
+        - Prerequisits:
+            - RequestClientID
+
+        - Instruction Set: {
+            'controller': 'client',
+            'ctype': 'action',
+            'action': 'verify',
+            'verify': 'ctoken',
+            'ctoken': 'status',
+            'client_id': '<client-id type-str>',
+        }
+
+        - Response:
+
+            - OK: {
+                'failed': '<flag type-bool value-false>',
+                'client_id': '<client-id type-str>',
+                'session_token': '<session-token type-str>',
+                'valid': '<validity-flag type-bool>',
+                'linked': '<association-flag type-bool>',
+                'plugged': '<connection-flag type-bool>',
+                'master': '<acquired-flag type-bool>',
+                'session': '<session-id type-int>',
+                'acquired': '<master-email type-str>',
+            }
+
+            - NOK: {
+                'failed': '<flag type-bool value-true>',
+                'error': '<error-message type-str>',
+                'level': '<entity-level type-str>',
+                'details': '<data-set type-set>',
+                'warning': '<warning-message type-str>',
+            }
+
+        - State Oriented Restrictions:
+
+            - User Account States:
+                - Logged (In | Out)
+
+            - CToken States:
+                - Master (Linked | Unlinked)
+
+     __________________________________________________________________________
+____/   Section 18:9 (Client) CheckSTokenValid
+
+    - Client action Check SToken Valid
+
+        - Label: CheckSTokenValid
+
+        - Prerequisits:
+            - RequestClientID
+            - RequestSessionToken
+
+        - Instruction Set: {
+            'controller': 'client',
+            'ctype': 'action',
+            'action': 'verify',
+            'verify': 'stoken',
+            'stoken': 'validity',
+            'session_token': '<session-token type-str>',
+        }
+
+        - Response:
+
+            - OK: {
+                'failed': '<flag type-bool value-false>',
+                'session_token': '<session-token type-str>',
+                'valid': '<validity-flag type-bool>',
+                'registered': '<registration-flag type-bool>',
+                'expired': '<expiration-flag type-bool>',
+            }
+
+            - NOK: {
+                'failed': '<flag type-bool value-true>',
+                'error': '<error-message type-str>',
+                'level': '<entity-level type-str>',
+                'details': '<data-set type-set>',
+                'warning': '<warning-message type-str>',
+            }
+
+        - State Oriented Restrictions:
+
+            - User Account States:
+                - Logged (In | Out)
+
+            - CToken States:
+                - Master (Linked | Unlinked)
+
+     __________________________________________________________________________
+____/   Section 18:10 (Client) CheckSTokenLinked
+
+    - Client action Check SToken Linked
+
+        - Label: CheckSTokenLinked'
+
+        - Prerequisits:
+            - RequestClientID
+            - RequestSessionToken
+
+        - Instruction Set: {
+            'controller': 'client',
+            'ctype': 'action',
+            'action': 'verify',
+            'verify': 'stoken',
+            'stoken': 'linked',
+            'session_token': '<session-token type-str>',
+        }
+
+        - Response:
+
+            - OK: {
+                'failed': '<flag type-bool value-false>',
+                'client_id': '<client-id type-str>',
+                'session_token': '<session-token type-str>',
+                'linked': '<association-flag type-bool>',
+            }
+
+            - NOK: {
+                'failed': '<flag type-bool value-true>',
+                'error': '<error-message type-str>',
+                'level': '<entity-level type-str>',
+                'details': '<data-set type-set>',
+                'warning': '<warning-message type-str>',
+            }
+
+        - State Oriented Restrictions:
+
+            - User Account States:
+                - Logged (In | Out)
+
+            - CToken States:
+                - Master (Linked | Unlinked)
+
+     __________________________________________________________________________
+____/   Section 18:11 (Client) CheckSTokenSession
+
+    - Client action Check SToken Session
+
+        - Label: CheckSTokenSession
+
+        - Prerequisits:
+            - RequestClientID
+            - RequestSessionToken
+
+        - Instruction Set: {
+            'controller': 'client',
+            'ctype': 'action',
+            'action': 'verify',
+            'verify': 'stoken',
+            'stoken': 'session',
+            'session_token': '<session-token type-str>',
+        }
+
+        - Response:
+
+            - OK: {
+                'failed': '<flag type-bool value-false>',
+                'session_token': '<session-token type-str>',
+                'session': '<session-id type-int>',
+                'plugged': '<connection-flag type-bool>',
+            }
+
+            - NOK: {
+                'failed': '<flag type-bool value-true>',
+                'error': '<error-message type-str>',
+                'level': '<entity-level type-str>',
+                'details': '<data-set type-set>',
+                'warning': '<warning-message type-str>',
+            }
+
+        - State Oriented Restrictions:
+
+            - User Account States:
+                - Logged (In | Out)
+
+            - CToken States:
+                - Master (Linked | Unlinked)
+
+     __________________________________________________________________________
+____/   Section 18:12 (Client) CheckSTokenStatus
+
+    - Client action Check SToken Status
+
+        - Label: CheckSTokenState
+
+        - Prerequisits:
+            - RequestClientID
+            - RequestSessionToken
+
+        - Instruction Set: {
+            'controller': 'client',
+            'ctype': 'action',
+            'action': 'verify',
+            'verify': 'stoken',
+            'stoken': 'status',
+            'session_token': '<session-token type-str>',
+        }
+
+        - Response:
+
+            - OK: {
+                'failed': '<flag type-bool value-false>',
+                'client_id': '<client-id type-str>',
+                'session_token': '<session-token type-str>',
+                'session': '<session-id type-int>',
+                'valid': '<validity-flag type-bool>',
+                'linked': '<association-flag type-bool>',
+                'plugged': '<connection-flag type-bool>',
+                'session': '<session-id type-int>',
+            }
+
+            - NOK: {
+                'failed': '<flag type-bool value-true>',
+                'error': '<error-message type-str>',
+                'level': '<entity-level type-str>',
+                'details': '<data-set type-set>',
+                'warning': '<warning-message type-str>'
+            }
+
+        - State Oriented Restrictions:
+
+            - User Account States:
+                - Logged (In | Out)
+
+            - CToken States:
+                - Master (Linked | Unlinked)
+
+     __________________________________________________________________________
+____/   Section 18:13 (Client) STokenKeepAlive
+
+    - Client action STokenKeepAlive
+
+        - Label: STokenKeepAlive
+
+        - Prerequisits:
+            - RequestClientID
+            - RequestSessionToken
+            - AcquireMaster
+            - CreateAccount
+            - AccountLogin
+
+        - Instruction Set: {
+            'controller': 'client',
+            'ctype': 'action',
+            'action': 'alive',
+            'alive': 'stoken',
+            'client_id': '<client-token type-str>',
+            'session_token': '<session-token type-str>',
+        }
+
+        - Response:
+
+            - OK: {
+                'failed': '<flag type-bool value-false>',
+                'stoken': '<session-token-label type-str>',
+                'extended': '<time-unit_count type-int>',
+                'time_unit': '<time-unit-label type-str>',
+                'stoken_data': {
+                    'ctoken': '<linked-ctoken-label type-str>',
+                    'worker_id': '<linked-worker-id type-int>',
+                    'create_date': '<datetime-string type-str>',
+                    'write_date': '<datetime-string type-str>',
+                    'label': '<client-id type-str>',
+                    'active': '<active-flag type-bool>',
+                    'unlink': '<unlink-flag type-bool>',
+                    'valid_to': '<datetime-string type-str>',
+                }
+            }
+
+            - NOK: {
+                'failed': '<flag type-bool value-true>',
+                'error': '<error-message type-str>',
+                'level': '<entity-level type-str>',
+                'details': '<data-set type-set>',
+                'warning': '<warning-message type-str>'
+            }
+
+        - State Oriented Restrictions:
+
+            - User Account States:
+                - Logged (In | Out)
+
+            - CToken States:
+                - Master (Linked | Unlinked)
+
+            - SToken States:
+                - CToken (Linked | Unlinked)
+
+     __________________________________________________________________________
+____/   Section 18:14 (Client) CTokenKeepAlive
+
+    - Client action CTokenKeepAlive
+
+        - Label: CTokenKeepAlive
+
+        - Prerequisits:
+            - RequestClientID
+            - RequestSessionToken
+            - AcquireMaster
+            - CreateAccount
+            - AccountLogin
+
+        - Instruction Set: {
+            'controller': 'client',
+            'ctype': 'action',
+            'action': 'alive',
+            'alive': 'ctoken',
+            'client_id': '<client-token type-str>',
+            'session_token': '<session-token type-str>',
+        }
+
+        - Response:
+
+            - OK: {
+                'failed': '<flag type-bool value-false>',
+                'ctoken': '<client-token-label type-str>',
+                'extended': '<time-unit_count type-int>',
+                'time_unit': '<time-unit-label type-str>',
+                'ctoken_data': {
+                    'stoken': '<linked-stoken-label type-str>',
+                    'acquired_master': '<linked-master-id type-int>',
+                    'create_date': '<datetime-string type-str>',
+                    'write_date': '<datetime-string type-str>',
+                    'label': '<client-id type-str>',
+                    'active': '<active-flag type-bool>',
+                    'unlink': '<unlink-flag type-bool>',
+                    'valid_to': '<datetime-string type-str>',
+                }
+            }
+
+            - NOK: {
+                'failed': '<flag type-bool value-true>',
+                'error': '<error-message type-str>',
+                'level': '<entity-level type-str>',
+                'details': '<data-set type-set>',
+                'warning': '<warning-message type-str>'
+            }
+
+        - State Oriented Restrictions:
+
+            - User Account States:
+                - Logged (In | Out)
+
+            - CToken States:
+                - Master (Linked | Unlinked)
+                - SToken (Linked | Unlinked)
+
+     __________________________________________________________________________
+____/   Section 18:15 (Client) IssueReport
+
+    - Client action IssueReport
+
+        - Label: IssueReport
+
+        - Prerequisits:
+            - RequestClientID
+            - RequestSessionToken
+
+        - Instruction Set: {
+            'controller': 'client',
+            'ctype': 'action',
+            'action': 'report',
+            'report': 'issue',
+            'client_id': '<client-token type-str>',
+            'session_token': '<session-token type-str>',
+        }
+
+        - Response:
+
+            - OK: {
+                'failed': '<flag type-bool value-false>',
+                'contact': '<contact-email type-str>',
+                'issue': '<issue-hash-id type-str>',
+                'source': '<source-ip-addr type-str>',
+                'timestamp': '<datetime-string type-str>',
+            }
+
+            - NOK: {
+                'failed': '<flag type-bool value-true>',
+                'error': '<error-message type-str>',
+                'level': '<entity-level type-str>',
+                'details': '<data-set type-set>',
+                'warning': '<warning-message type-str>'
+            }
+
+        - State Oriented Restrictions:
+
+            - User Account States:
+                - Logged (In | Out)
+
+            - CToken States:
+                - Master (Linked | Unlinked)
+                - SToken (Linked | Unlinked)
+
+     __________________________________________________________________________
+____/   Section 18:16 (Client) ReleaseMaster
+
+    - Client action ReleaseMaster
+
+        - Label: ReleaseMaster
+
+        - Prerequisits:
+            - RequestClientID
+            - RequestSessionToken
+            - CreateMaster
+            - AcquireMaster
+
+        - Instruction Set: {
+            'controller': 'client',
+            'ctype': 'action',
+            'action': 'acquire',
+            'acquire': 'master',
+            'master': '<master-email type-str>',
+            'key': '<master-pass-key type-str>',
+            'client_id': '<client-token type-str>',
+            'session_token': '<session-token type-str>',
+        }
+
+        - Response:
+
+            - OK: {
+                'failed': '<flag type-bool value-false>',
+                'client_id': '<client-token-label type-str>',
+                'released': '<master-email type-str>',
+                'ctoken_data': {
+                    'stoken': '<linked-stoken-label type-(str, None)>',
+                    'acquired_master': '<master-id type-(int, None)>',
+                    'create_date': '<datetime-string type-str>',
+                    'write_date': '<datetime-string type-str>',
+                    'label': '<client-id type-str>',
+                    'active': '<active-flag type-bool>',
+                    'unlink': '<unlink-flag type-bool>',
+                    'valid_to': '<datetime-string type-str>',
+                }
+            }
+
+            - NOK: {
+                'failed': '<flag type-bool value-true>',
+                'error': '<error-message type-str>',
+                'level': '<entity-level type-str>',
+                'details': '<data-set type-set>',
+                'warning': '<warning-message type-str>'
+            }
+
+        - State Oriented Restrictions:
+
+            - User Account States:
+                - Logged (In | Out)
+
+            - CToken States:
+                - Master Linked
+                - SToken Linked
+
+            - SToken States:
+                - Session Plugged
+
+     __________________________________________________________________________
+____/   Section 18:17 (Master) AccountLogin
+
+    - Master action AccountLogin
+
+        - Label: MasterAccountLogin
+
+        - Prerequisits:
+            - RequestClientID
+            - RequestSessionToken
+            - CreateMaster
+
+        - Instruction Set: {
+            'controller': 'master',
+            'ctype': 'action',
+            'action': 'login',
+            'user_email': '<email-address type-str>',
+            'user_pass': '<password type-str>',
+            'client_id': '<client-token type-str>',
+            'session_token': '<session-token type-str>',
+        }
+
+        - Response:
+
+            - OK: {
+                'failed': '<flag type-bool value-false>',
+                'account': '<master-email type-str>',
+                'session_data': {
+                    'session_user_account': '<account-email-address>',
+                    'session_credit_ewallet': '<ewallet-id type-int>',
+                    'session_contact_list': '<contact-list-id type-int>',
+                    'session_account_archive': {
+                        '<account-email type-str>': '<account-name type-str>',
+                    },
+                }
+            }
+
+            - NOK: {
+                'failed': '<flag type-bool value-true>',
+                'error': '<error-message type-str>',
+                'level': '<entity-level type-str>',
+                'details': '<data-set type-set>',
+                'warning': '<warning-message type-str>'
+            }
+
+        - State Oriented Restrictions:
+
+            - CToken States:
+                - Master (Linked | Unlink)
+                - SToken Linked
+
+            - SToken States:
+                - Sesion Plugged
+
+     __________________________________________________________________________
+____/   Section 18:18 (Master) AccountLogout
+
+    - Master action AccountLogout
+
+        - Label: MasterAccountLogout
+
+        - Prerequisits:
+            - RequestClientID
+            - RequestSessionToken
+            - CreateMaster
+            - MasterAccountLogin
+
+        - Instruction Set: {
+            'controller': 'master',
+            'ctype': 'action',
+            'action': 'logout',
+            'user_email': '<email-address type-str>',
+            'user_pass': '<password type-str>',
+            'client_id': '<client-token type-str>',
+            'session_token': '<session-token type-str>',
+        }
+
+        - Response:
+
+        - OK: {
+            'failed': '<flag type-bool value-false>',
+            'account': '<master-email type-str>',
+            'session_data': {
+                'session_user_account': '<account-email-address>',
+                'session_credit_ewallet': '<ewallet-id type-int>',
+                'session_contact_list': '<contact-list-id type-int>',
+                'session_account_archive': {
+                    '<account-email type-str>': '<account-name type-str>',
+                },
+            }
+        }
+
+        - NOK: {
+            'failed': '<flag type-bool value-true>',
+            'error': '<error-message type-str>',
+            'level': '<entity-level type-str>',
+            'details': '<data-set type-set>',
+            'warning': '<warning-message type-str>'
+        }
+
+        - State Oriented Restrictions:
+
+            - Master Account States:
+                - Logged In
+
+            - CToken States:
+                - Master (Linked | Unlink)
+                - SToken Linked
+
+            - SToken States:
+                - Sesion Plugged
+
+     __________________________________________________________________________
+____/   Section 18:19 (Master) ViewAccount
+
+    - Master action ViewAccount
+
+        - Label: MasterViewAccount
+
+        - Prerequisits:
+            - RequestClientID
+            - RequestSessionToken
+            - CreateMaster
+            - MasterAccountLogin
+
+        - Instruction Set: {
+            'controller': 'master',
+            'ctype': 'action',
+            'action': 'view',
+            'view': 'account',
+            'client_id': '<client-token type-str>',
+            'session_token': '<session-token type-str>',
+        }
+
+        - Response:
+
+            - OK: {
+                'failed': '<flag type-bool value-false>',
+                'account': '<master-email type-str>',
+                'account_data': {
+                    'id': '<master-id type-int>',
+                    'name': '<master-user-name type-str>',
+                    'create_date': '<datetime-string type-str>',
+                    'write_date': '<datetime-string type-str>',
+                    'email': '<master-email type-str>',
+                    'phone': '<master-phone type-str>',
+                    'alias': '<master-alias type-str>',
+                    'key_code': '<master-pass-key type-str>',
+                    'account_limit': '<subordonate-count type-int>',
+                    'company': '<master-company type-str>',
+                    'address': '<master-address type-str>',
+                    'subordonate_pool': {
+                        '<account-id type-int>': '<account-email type-str>'
+                    },
+                    'acquired_ctokens': '<ctoken-count type-int>',
+                    'active': '<active-flag type-bool>',
+                }
+            }
+
+            - NOK: {
+                'failed': '<flag type-bool value-true>',
+                'error': '<error-message type-str>',
+                'level': '<entity-level type-str>',
+                'details': '<data-set type-set>',
+                'warning': '<warning-message type-str>'
+            }
+
+        - State Oriented Restrictions:
+
+            - Master Account States:
+                - Logged In
+
+            - CToken States:
+                - Master (Linked | Unlink)
+                - SToken Linked
+
+            - SToken States:
+                - Sesion Plugged
+
+     __________________________________________________________________________
+____/   Section 18:20 (Master) EditAccount
+
+    - Master action EditAccount
+
+        - Label: MasterEditAccount
+
+        - Prerequisits:
+            - RequestClientID
+            - RequestSessionToken
+            - CreateMaster
+            - MasterAccountLogin
+
+        - Instruction Set: {
+            'controller': 'master',
+            'ctype': 'action',
+            'action': 'edit',
+            'edit': 'account',
+            'user_name': '<new-name optional-true type-str>',
+            'user_phone': '<new-phone optional-true type-str>',
+            'user_email': '<new-email optional-true type-str>',
+            'user_alias': '<new-alias optional-true type-str>',
+            'user_pass': '<new-password optional-true type-str>',
+            'client_id': '<client-token type-str>',
+            'session_token': '<session-token type-str>',
+        }
+
+        - Response:
+
+            - OK: {
+                'failed': '<flag type-bool value-false>',
+                'account': '<master-email type-str>',
+                'edit': {
+                    'name': '<modifier-flag type-bool>',
+                    'pass': '<modifier-flag type-bool>',
+                    'alias': '<modifier-flag type-bool>',
+                    'email': '<modifier-flag type-bool>',
+                    'phone': '<modifier-flag type-bool>',
+                },
+                'account_data': {
+                    'id': '<master-id type-int>',
+                    'name': '<master-user-name type-str>',
+                    'create_date': '<datetime-string type-str>',
+                    'write_date': '<datetime-string type-str>',
+                    'email': '<master-email type-str>',
+                    'phone': '<master-phone type-str>',
+                    'alias': '<master-alias type-str>',
+                    'key_code': '<master-pass-key type-str>',
+                    'account_limit': '<subordonate-count type-int>',
+                    'company': '<master-company type-str>',
+                    'address': '<master-address type-str>',
+                    'subordonate_pool': {
+                        '<account-id type-int>': '<account-email type-str>'
+                    },
+                    'acquired_ctokens': '<ctoken-count type-int>',
+                    'active': '<active-flag type-bool>',
+                }
+            }
+
+            - NOK: {
+                'failed': '<flag type-bool value-true>',
+                'error': '<error-message type-str>',
+                'level': '<entity-level type-str>',
+                'details': '<data-set type-set>',
+                'warning': '<warning-message type-str>'
+            }
+
+        - State Oriented Restrictions:
+
+            - Master Account States:
+                - Logged In
+
+            - CToken States:
+                - Master (Linked | Unlink)
+                - SToken Linked
+
+            - SToken States:
+                - Sesion Plugged
+
+     __________________________________________________________________________
+____/   Section 18:21 (Master) UnlinkAccount
+
+    - Master action UnlinkAccount
+
+        - Label: MasterUnlinkAccount
+
+        - Prerequisits:
+            - RequestClientID
+            - RequestSessionToken
+            - CreateMaster
+            - MasterAccountLogin
+
+        - Instruction Set: {
+            'controller': 'master',
+            'ctype': 'action',
+            'action': 'unlink',
+            'unlink': 'account',
+            'client_id': '<client-token type-str>',
+            'session_token': '<session-token type-str>',
+        }
+
+        - Response:
+
+            - OK: {
+                'failed': '<flag type-bool value-false>',
+                'account': '<master-email type-str>',
+            }
+
+            - NOK: {
+                'failed': '<flag type-bool value-true>',
+                'error': '<error-message type-str>',
+                'level': '<entity-level type-str>',
+                'details': '<data-set type-set>',
+                'warning': '<warning-message type-str>'
+            }
+
+        - State Oriented Restrictions:
+
+            - Master Account States:
+                - Logged In
+                - Not Pending Unlink
+
+            - CToken States:
+                - Master (Linked | Unlink)
+                - SToken Linked
+
+            - SToken States:
+                - Sesion Plugged
+
+     __________________________________________________________________________
+____/   Section 18:22 (Master) RecoverAccount
+
+    - Master action RecoverAccount
+
+        - Label: MasterRecoverAccount
+
+        - Prerequisits:
+            - RequestClientID
+            - RequestSessionToken
+            - CreateMaster
+            - MasterAccountLogin
+            - MasterUnlinkAccount
+
+        - Instruction Set: {
+            'controller': 'master',
+            'ctype': 'action',
+            'action': 'recover',
+            'recover': 'account',
+            'client_id': '<client-token type-str>',
+            'session_token': '<session-token type-str>',
+        }
+
+        - Response:
+
+            - OK: {
+                'failed': '<flag type-bool value-false>',
+                'account': '<master-email type-str>',
+                'account_data': {
+                    'id': '<master-id type-int>',
+                    'name': '<master-user-name type-str>',
+                    'create_date': '<datetime-string type-str>',
+                    'write_date': '<datetime-string type-str>',
+                    'email': '<master-email type-str>',
+                    'phone': '<master-phone type-str>',
+                    'alias': '<master-alias type-str>',
+                    'key_code': '<master-pass-key type-str>',
+                    'account_limit': '<subordonate-count type-int>',
+                    'company': '<master-company type-str>',
+                    'address': '<master-address type-str>',
+                    'subordonate_pool': {
+                        '<account-id type-int>': '<account-email type-str>'
+                    },
+                    'acquired_ctokens': '<ctoken-count type-int>',
+                    'active': '<active-flag type-bool>',
+                },
+            }
+
+            - NOK: {
+                'failed': '<flag type-bool value-true>',
+                'error': '<error-message type-str>',
+                'level': '<entity-level type-str>',
+                'details': '<data-set type-set>',
+                'warning': '<warning-message type-str>'
+            }
+
+        - State Oriented Restrictions:
+
+            - Master Account States:
+                - Logged In
+                - Pending Unlink
+
+            - CToken States:
+                - Master (Linked | Unlink)
+                - SToken Linked
+
+            - SToken States:
+                - Sesion Plugged
+
+     __________________________________________________________________________
+____/   Section 18:23 (Master) InspectCTokens
+
+    - Master action InspectCTokens
+
+        - Label: MasterInspectCTokens
+
+        - Prerequisits:
+            - RequestClientID
+            - RequestSessionToken
+            - CreateMaster
+            - MasterAccountLogin
+            - AcquireMaster
+
+        - Instruction Set: {
+            'controller': 'master',
+            'ctype': 'action',
+            'action': 'inspect',
+            'inspect': 'ctokens',
+            'client_id': '<client-token type-str>',
+            'session_token': '<session-token type-str>',
+        }
+
+        - Response:
+
+            - OK: {
+                'failed': '<flag type-bool value-false>',
+                'account': '<master-email type-str>',
+                'account_data': {
+                    'id': '<master-id type-int>',
+                    'name': '<master-user-name type-str>',
+                    'create_date': '<datetime-string type-str>',
+                    'write_date': '<datetime-string type-str>',
+                    'email': '<master-email type-str>',
+                    'phone': '<master-phone type-str>',
+                    'alias': '<master-alias type-str>',
+                    'key_code': '<master-pass-key type-str>',
+                    'account_limit': '<subordonate-count type-int>',
+                    'company': '<master-company type-str>',
+                    'address': '<master-address type-str>',
+                    'subordonate_pool': {
+                        '<account-id type-int>': '<account-email type-str>'
+                    },
+                    'acquired_ctokens': '<ctoken-count type-int>',
+                    'active': '<active-flag type-bool>',
+                },
+                'ctokens': ['<ctoken-label type-str>', '...']
+            }
+
+            - NOK: {
+                'failed': '<flag type-bool value-true>',
+                'error': '<error-message type-str>',
+                'level': '<entity-level type-str>',
+                'details': '<data-set type-set>',
+                'warning': '<warning-message type-str>'
+            }
+
+        - State Oriented Restrictions:
+
+            - Master Account States:
+                - Logged In
+                - Not Pending Unlink
+
+            - CToken States:
+                - Master (Linked | Unlink)
+                - SToken Linked
+
+            - SToken States:
+                - Sesion Plugged
+
+     __________________________________________________________________________
+____/   Section 18:24 (Master) InspectCToken
+
+    - Master action InspectCToken
+
+        - Label: MasterInspectCToken
+
+        - Prerequisits:
+            - RequestClientID
+            - RequestSessionToken
+            - CreateMaster
+            - MasterAccountLogin
+            - AcquireMaster
+
+        - Instruction Set: {
+            'controller': 'master',
+            'ctype': 'action',
+            'action': 'inspect',
+            'inspect': 'ctoken',
+            'ctoken': '<ctoken-label type-str>',
+            'client_id': '<client-token type-str>',
+            'session_token': '<session-token type-str>',
+        }
+
+        - Response:
+
+            - OK: {
+                'failed': '<flag type-bool value-false>',
+                'account': '<master-email type-str>',
+                'ctoken': '<ctoken-label type-str>',
+                'ctoken_data': {
+                    'stoken': '<linked-stoken-label type-(str | None)>',
+                    'acquired_master': '<master-id type-(int | None)>',
+                    'create_date': '<datetime-string type-str>',
+                    'write_date': '<datetime-string type-str>',
+                    'label': '<ctoken-label type-str>',
+                    'unlink': '<unlink-flag type-bool>',
+                    'valid_to': '<datetime-string type-str>',
+                    'active': '<active-flag type-bool>',
+                },
+            }
+
+            - NOK: {
+                'failed': '<flag type-bool value-true>',
+                'error': '<error-message type-str>',
+                'level': '<entity-level type-str>',
+                'details': '<data-set type-set>',
+                'warning': '<warning-message type-str>'
+            }
+
+        - State Oriented Restrictions:
+
+            - Master Account States:
+                - Logged In
+                - Not Pending Unlink
+
+            - CToken States:
+                - Master (Linked | Unlink)
+                - SToken Linked
+
+            - SToken States:
+                - Sesion Plugged
+
+        - Relationship Oriented Restrictions:
+
+            - CToken Relationships:
+                - Master Acquired
+
+     __________________________________________________________________________
+____/   Section 18:25 (Master) InspectSubPool
+
+    - Master action InspectSubPool
+
+        - Label: MasterInspectSubPool
+
+        - Prerequisits: [
+            'RequestClientID',
+            'RequestSessionToken',
+            'CreateMaster',
+            'MasterAccountLogin',
+            'AcquireMaster',
+            'CreateAccount',
+
+        - Instruction Set: {
+            'controller': 'master',
+            'ctype': 'action',
+            'action': 'inspect',
+            'inspect': 'subpool',
+            'client_id': '<client-token type-str>',
+            'session_token': '<session-token type-str>',
+        }
+
+        - Response:
+
+            - OK: {
+                'failed': '<flag type-bool value-false>',
+                'account': '<master-email type-str>',
+                'subpool': {
+                    '<account-id type-int>': '<account-email type-str>'
+                },
+            }
+
+            - NOK: {
+                'failed': '<flag type-bool value-true>',
+                'error': '<error-message type-str>',
+                'level': '<entity-level type-str>',
+                'details': '<data-set type-set>',
+                'warning': '<warning-message type-str>'
+            }
+
+        - State Oriented Restrictions:
+
+            - Master Account States:
+                - Logged In
+                - Not Pending Unlink
+
+            - CToken States:
+                - Master (Linked | Unlink)
+                - SToken Linked
+
+            - SToken States:
+                - Sesion Plugged
+
+     __________________________________________________________________________
+____/   Section 18:26 (Master) InspectSubordonate
+
+    - Master action InspectSubordonate
+
+        - Label: MasterInspectSubordonate
+
+        - Prerequisits:
+            - RequestClientID
+            - RequestSessionToken
+            - CreateMaster
+            - MasterAccountLogin
+            - AcquireMaster
+            - CreateAccount
+
+        - Instruction Set: {
+            'controller': 'master',
+            'ctype': 'action',
+            'action': 'inspect',
+            'inspect': 'subordonate',
+            'subordonate': '<account-id type-int>',
+            'client_id': '<client-token type-str>',
+            'session_token': '<session-token type-str>',
+        }
+
+        - Response:
+
+            - OK: {
+                'failed': '<flag type-bool value-false>',
+                'account': '<master-email type-str>',
+                'subordonate': {
+                    'id': '<account-id type-int>',
+                    'name': '<account-user-name type-str>',
+                    'create_date': '<datetime-string type-str>',
+                    'write_date': '<datetime-string type-str>',
+                    'ewallet': '<ewallet-id type-int>',
+                    'contact_list': '<list-id type-int>',
+                    'email': '<account-user-email type-str>',
+                    'phone': '<account-user-phone type-str>',
+                    'alias': '<account-user-alias type-str>',
+                    'state': '<login-state type-int values-(0, 1)>',
+                    'ewallet_archive': {
+                        '<ewallet-id type-int>': '<ewallet-reference type-str>'
+                    },
+                    'contact_list_archive': {
+                        '<list-id type-int>': '<list-reference type-str>'
+                    },
+                    'to_unlink': '<unlink-flag type-bool>',
+                    'to_unlink_timestamp': '<datetime-string type-(str | None)>',
+                    'subordonate_of': '<master-id type-int>',
+                }
+            }
+
+            - NOK: {
+                'failed': '<flag type-bool value-true>',
+                'error': '<error-message type-str>',
+                'level': '<entity-level type-str>',
+                'details': '<data-set type-set>',
+                'warning': '<warning-message type-str>'
+            }
+
+        - State Oriented Restrictions:
+
+            - Master Account States:
+                - Logged In
+                - Not Pending Unlink
+
+            - CToken States:
+                - Master (Linked | Unlink)
+                - SToken Linked
+
+            - SToken States:
+                - Sesion Plugged
+
+        - Relationship oriented restrictions:
+
+            - User account Relationships:
+                - Subordonate
+
+     __________________________________________________________________________
+____/   Section 18:27 (Master) ViewLoginRecords
+
+    - Master action ViewLoginRecords
+
+        - Label: MasterViewLogin
+
+        - Prerequisits:
+            - RequestClientID
+            - RequestSessionToken
+            - CreateMaster
+            - MasterAccountLogin
+
+        - Instruction Set: {
+            'controller': 'master',
+            'ctype': 'action',
+            'action': 'view',
+            'view': 'login',
+            'client_id': '<client-token type-str>',
+            'session_token': '<session-token type-str>',
+        }
+
+        - Response:
+
+            - OK: {
+                'failed': '<flag type-bool value-false>',
+                'account': '<master-email type-str>',
+                'login_records': {
+                    '<record-id type-int>': '<datetime-string type-str>'
+                }
+            }
+
+            - NOK: {
+                'failed': '<flag type-bool value-true>',
+                'error': '<error-message type-str>',
+                'level': '<entity-level type-str>',
+                'details': '<data-set type-set>',
+                'warning': '<warning-message type-str>'
+            }
+
+        - State Oriented Restrictions:
+
+            - Master Account States:
+                - Logged In
+                - Not Pending Unlink
+
+            - CToken States:
+                - Master (Linked | Unlink)
+                - SToken Linked
+
+            - SToken States:
+                - Sesion Plugged
+
+     __________________________________________________________________________
+____/   Section 18:28 (Master) ViewLogoutRecords
+
+    - Master action ViewLogoutRecords
+
+        - Label: MasterViewLogout
+
+        - Prerequisits:
+            - RequestClientID
+            - RequestSessionToken
+            - CreateMaster
+            - MasterAccountLogin
+            - MasterAccountLogout
+
+        - Instruction Set: {
+            'controller': 'master',
+            'ctype': 'action',
+            'action': 'view',
+            'view': 'logout',
+            'client_id': '<client-token type-str>',
+            'session_token': '<session-token type-str>',
+        }
+
+        - Response:
+
+            - OK: {
+                'failed': '<flag type-bool value-false>',
+                'account': '<master-email type-str>',
+                'logout_records': {
+                    '<record-id type-int>': '<datetime-string type-str>'
+                }
+            }
+
+            - NOK: {
+                'failed': '<flag type-bool value-true>',
+                'error': '<error-message type-str>',
+                'level': '<entity-level type-str>',
+                'details': '<data-set type-set>',
+                'warning': '<warning-message type-str>'
+            }
+
+        - State Oriented Restrictions:
+
+            - Master Account States:
+                - Logged In
+                - Not Pending Unlink
+
+            - CToken States:
+                - Master (Linked | Unlink)
+                - SToken Linked
+
+            - SToken States:
+                - Sesion Plugged
+
+     __________________________________________________________________________
+____/   Section 18:29 (System) NewWorker
+
+     __________________________________________________________________________
+____/   Section 18:30 (System) NewSession
+
+     __________________________________________________________________________
+____/   Section 18:31 (System) FreezeMaster
+
+     __________________________________________________________________________
+____/   Section 18:32 (System) UnfreezeMaster
+
+     __________________________________________________________________________
+____/   Section 18:33 (System) IncreaseMasterSubPool
+
+     __________________________________________________________________________
+____/   Section 18:34 (System) DecreaseMasterSubPool
+
+     __________________________________________________________________________
+____/   Section 18:35 (System) InterogateSessionWorkers
+
+     __________________________________________________________________________
+____/   Section 18:36 (System) TargetCleanupMaster
+
+     __________________________________________________________________________
+____/   Section 18:37 (System) TargetCleanupWorker
+
+     __________________________________________________________________________
+____/   Section 18:38 (System) TargetCleanupSession
+
+     __________________________________________________________________________
+____/   Section 18:39 (System) TargetCleanupCToken
+
+     __________________________________________________________________________
+____/   Section 18:40 (System) TargetCleanupSToken
+
+     __________________________________________________________________________
+____/   Section 18:41 (System) SweepCleanupMasters
+
+    - System action Sweep Cleanup Masters
+        - State Oriented Restrictions:
+            - Master Account States:
+                - No master ids specified
+                    - Account (Flaged for Unlink | Past Freeze Interval)
+                - Specific master ids
+                    - Account Exists
+
+     __________________________________________________________________________
+____/   Section 18:42 (System) SweepCleanupCTokens
+
+    - System action Sweep Cleanup CTokens
+        - State Oriented Restrictions:
+            - Client Token States:
+                - Expired
+
+     __________________________________________________________________________
+____/   Section 18:43 (System) SweepCleanupSTokens
+
+    - System action Sweep Cleanup STokens
+        - State Oriented Restrictions:
+            - Session Token States:
+                - Expired
+
+     __________________________________________________________________________
+____/   Section 18:44 (System) SweepCleanupWorkers
+
+    - System action Sweep Cleanup Workers
+        - State Oriented Restrictions:
+            - Session Worker States:
+                - Vacant
+
+     __________________________________________________________________________
+____/   Section 18:45 (System) SweepCleanupSessions
+
+    - System action Sweep Cleanup Sessions
+        - State Oriented Restrictions:
+            - EWallet Session States:
+                - Session (Expired | Empty)
+
+     __________________________________________________________________________
+____/   Section 18:46 (System) StartAccountCleaner
+
+    - System action Start Account Cleaner
+        - State Oriented Restrictions:
+            - Cleaner Thread States:
+                - Thread (Active | Inactive)
+
+     __________________________________________________________________________
+____/   Section 18:47 (System) StartSessionCleaner
+
+    - System action Start Session Cleaner
+        - State Oriented Restrictions:
+            - Cleaner Thread States:
+                - Thread (Active | Inactive)
+
+     __________________________________________________________________________
+____/   Section 18:48 (System) StartWorkerCleaner
+
+    - System action Start Worker Cleaner
+        - State Oriented Restrictions:
+            - Cleaner Thread States:
+                - Thread (Active | Inactive)
+
+     __________________________________________________________________________
+____/   Section 18:49 (System) StartCTokenCleaner
+
+    - System action Start CToken Cleaner
+        - State Oriented Restrictions:
+            - Cleaner Thread States:
+                - Thread (Active | Inactive)
+
+     __________________________________________________________________________
+____/   Section 18:51 (System) OpenSockets
+
+    - System action Open Sockets
+        - State Oriented Restrictions:
+            - Socket Handler States:
+                - Sockets Closed
+
+     __________________________________________________________________________
+____/   Section 18:52 (System) CloseSockets
+
+    - System action Close Sockets
+        - State Oriented Restrictions:
+            - Socket Handler States:
+                - Sockets Open
+
+     __________________________________________________________________________
+____/   Section 18:53 (System) StartInstructionListener
+
+    - System action Start Instruction Listener
+        - State Oriented Restrictions:
+            - Socket Handler States:
+                - Sockets Open
+
+     __________________________________________________________________________
+____/   Section 18:54 (User) CreateAccount
+
+    - User action Create Account
+
+        - Label: CreateAccount
+
+        - Prerequisits:
+            - RequestClientID
+            - RequestSessionToken
+            - AcquireMaster
+
+        - Instruction Set: {
+            'controller': 'client',
+            'ctype': 'action',
+            'action': 'new',
+            'new': 'account',
+            'client_id': '<client-id type-str>',
+            'session_token': '<session-token type-str>',
+            'user_name': '<account-user-name type-str>',
+            'user_pass': '<account-user-pass type-str>',
+            'user_email': '<account-user-email type-str>',
+            'user_phone': '<account-phone-number type-str>',
+            'user_alias': '<account-alias type-str>',
+        }
+
+        - Response:
+
+            - OK: {
+                'failed': '<flag type-bool value-true>',
+                'account': '<account-email-address type-str>',
+                'account_data': {
+                    'id': '<account-id type-int>',
+                    'name': '<account-user-name type-str>',
+                    'create_date': '<%d-%m-%Y %H:%M:%S type-str tz-UTC>',
+                    'write_date': '<%d-%m-%Y %H:%M:%S type-str tz-UTC>',
+                    'ewallet': '<active-ewallet-id type-int>',
+                    'contact_list': '<active-contact-list-id type-int>',
+                    'email': '<account-user-email type-str>',
+                    'phone': '<account-user-phone type-str>',
+                    'alias': '<account-user-alias type-str>',
+                    'state': '<account-state-code type-int>',
+                    'ewallet_archive': {
+                        '<ewallet-id type-int>': '<ewallet-reference type-str>'
+                    },
+                    'contact_list_archive': {
+                        '<contact-list-id type-int>': '<contact-list-reference type-str>'
+                    }
+                }
+            }
+
+            - NOK: {
+                'failed': '<flag type-bool value-true>',
+                'error': '<error-message type-str>',
+                'level': '<entity-level type-str>',
+                'details': '<data-set type-set>',
+                'warning': '<warning-message type-str>'
+            }
+
+        - State Oriented Restrictions:
+
+            - User Account States:
+                - Logged (In | Out)
+
+            - CToken States:
+                - Master Linked
+                - SToken Linked
+
+            - SToken States:
+                - Session Plugged
+
+        - Relationship Oriented Restrictions:
+
+            - Acquired Master Relationships:
+                - Subordonate Of
+
+     __________________________________________________________________________
+____/   Section 18:55 (User) AccountLogin
+
+    - User action Account Login
+
+        - Label: AccountLogin
+
+        - Prerequisits:
+            - RequestClientID
+            - RequestSessionToken
+            - AcquireMaster
+            - CreateAccount
+
+        - Instruction Set: {
+            'controller': 'client',
+            'ctype': 'action',
+            'action': 'login',
+            'client_id': '<client-id type-str>',
+            'session_token': '<session-token type-str>',
+            'user_email': '<account-email-address type-str>',
+            'user_pass': '<account-user-pass type-str>',
+        }
+
+        - Response:
+
+            - OK: {
+                'failed': '<flag type-bool value-false>',
+                'account': '<account-user-email type-str>',
+                'session_data': {
+                    'session_user_account': '<account-user-email type-str>',
+                    'session_credit_ewallet': '<active-session-ewallet-id type-int>',
+                    'session_contact_list': '<active-session-contact-list-id type-int>',
+                    'session_account_archive': {
+                        '<account-user-email type-str>': '<account-user-name type-str>',
+                    }
+                }
+            }
+
+            - NOK: {
+                'failed': '<flag type-bool value-true>',
+                'error': '<error-message type-str>',
+                'level': '<entity-level type-str>',
+                'details': '<data-set type-set>',
+                'warning': '<warning-message type-str>'
+            }
+
+        - User Account States:
+            - Logged (In | Out)
+
+     __________________________________________________________________________
+____/   Section 18:56 (User) AccountLogout
+
+    - User action Account Logout
+
+        - Label: AccountLogout
+
+        - Prerequisits:
+            - RequestClientID
+            - RequestSessionToken
+            - AcquireMaster
+            - CreateAccount
+            - AccountLogin
+
+        - Instruction Set: {
+            'controller': 'client',
+            'ctype': 'action',
+            'action': 'logout',
+            'client_id': '<client-id type-str>',
+            'session_token': '<session-token type-str>',
+        }
+
+        - Response:
+
+            - OK: {
+                'failed': False,
+                'account': '<account-user-email type-(str|none)>',
+                'session_data': {
+                    'session_user_account': '<next-account-user-email type-(str|none)>',
+                    'session_credit_ewallet': '<next-active-session-ewallet-id type-(int|none)>',
+                    'session_contact_list': '<next-active-session-contact-list-id type-(int|none)>',
+                    'session_account_archive': {
+                        '<account-user-email type-str>': '<account-user-name type-(str|none)>',
+                    }
+                }
+            }
+
+            - NOK: {
+                'failed': '<flag type-bool value-true>',
+                'error': '<error-message type-str>',
+                'level': '<entity-level type-str>',
+                'details': '<data-set type-set>',
+                'warning': '<warning-message type-str>'
+            }
+
+        - User Account States:
+            - Logged In
+
+     __________________________________________________________________________
+____/   Section 18:57 (User) SupplyCredits
+
+    - User action SupplyCredits
+
+        - Label: SupplyCredits
+
+        - Prerequisits:
+            - RequestClientID
+            - RequestSessionToken
+            - AcquireMaster
+            - CreateAccount
+            - AccountLogin
+
+        - Instruction Set: {
+            'controller': 'client',
+            'ctype': 'action',
+            'action': 'supply',
+            'supply': 'credits',
+            'client_id': '<client-id type-str>',
+            'session_token': '<session-token type-str>',
+            'currency': '<currency-label type-str>',
+            'credits': '<ewallet-credits type-int>',
+            'cost': '<currency-cost-per-credit type-float>',
+            'notes': '<supply-notes type-str>'
+        }
+
+        - Response:
+
+            - OK: {
+                'failed': '<flag type-bool value-false>',
+                'ewallet_credits': '<available-ewallet-credits type-int>',
+                'supplied_credits': '<supplied-ewallet-credits type-int>',
+                'transfer_record': '<transfer-record-id type-int>',
+                'invoice_record': '<invoice-record-id type-int>',
+            }
+
+            - NOK: {
+                'failed': '<flag type-bool value-true>',
+                'error': '<error-message type-str>',
+                'warning': '<warning-message type-str>',
+                'level': '<entity-level type-str>',
+                'details': '<data-set type-set>',
+            }
+
+        - User Account States:
+            - Logged In
+
+     __________________________________________________________________________
+____/   Section 18:58 (User) PayCredits
+
+    - User action Pay Credits
+
+        - Label: PayCredits
+
+        - Prerequisits:
+            - RequestClientID
+            - RequestSessionToken
+            - AcquireMaster
+            - CreateAccount
+            - AccountLogin
+            - SupplyCredits
+
+        - Instruction Set: {
+            'controller': 'client',
+            'ctype': 'action',
+            'action': 'pay',
+            'client_id': '<client-id type-str>',
+            'session_token': '<session-token type-str>',
+            'pay': '<account-email-address type-str>',
+            'credits': '<ewallet-credits type-int>',
+        }
+
+        - Response:
+
+            - OK: {
+                'failed': '<flag type-bool value-false>',
+                'payed': '<account-user-email type-str>',
+                'ewallet_credits': '<available-ewallet-credits type-int>',
+                'spent_credits': '<credits-consumed type-int>',
+                'invoice_record': '<invoice-record-id type-int>',
+                'transfer_record': '<transfer-record-id type-int>',
+            }
+
+            - NOK: {
+                'failed': '<flag type-bool value-true>',
+                'error': '<error-message type-str>',
+                'warning': '<warning-message type-str>',
+                'level': '<entity-level type-str>',
+                'details': '<data-set type-set>',
+            }
+
+        - User Account States:
+            - Logged In
+
+     __________________________________________________________________________
+____/   Section 18:59 (User) ConvertCreditsToClock
+
+    - User action Convert Credits2Clock
+
+        - Label: ConvertCreditsToClock
+
+        - Prerequisits:
+            - RequestClientID
+            - RequestSessionToken
+            - AcquireMaster
+            - CreateAccount
+            - AccountLogin
+            - SupplyEWalletCredits
+
+        - Instruction Set: {
+            'controller': 'client',
+            'ctype': 'action',
+            'action': 'convert',
+            'convert': 'credits2clock',
+            'client_id': '<client-id type-str>',
+            'session_token': '<session-token type-str>',
+            'credits': '<ewallet-credits type-int>',
+            'notes': '<conversion-notes type-str>'
+        }
+
+        - Response:
+
+            - OK: {
+                'failed': '<flag type-bool value-false>',
+                'conversion_record': '<conversion-record-id type-int>',
+                'ewallet_credits': '<available-ewallet-credits type-int>',
+                'credit_clock': '<available-clock-time type-float>',
+                'converted_credits': '<credits-converted-to-clock type-int>'
+            }
+
+            - NOK: {
+                'failed': '<flag type-bool value-true>',
+                'error': '<error-message type-str>',
+                'level': '<entity-level type-str>',
+                'details': '<data-set type-set>',
+                'warning': '<warning-message type-str>'
+            }
+
+        - User Account States:
+            - Logged In
+
+     __________________________________________________________________________
+____/   Section 18:61 (User) ConvertClockToCredits
+
+    - User action Convert Clock2Credits
+
+        - Label: ConvertClockToCredits
+
+        - Prerequisits:
+            - RequestClientID
+            - RequestSessionToken
+            - AcquireMaster
+            - CreateAccount
+            - AccountLogin
+            - SupplyCredits
+            - ConvertCreditsToClock
+
+        - Instruction Set: {
+            'controller': 'client',
+            'ctype': 'action',
+            'action': 'convert',
+            'convert': 'clock2credits',
+            'client_id': '<client-id type-str>',
+            'session_token': '<session-token type-str>',
+            'minutes': '<minutes-to-convert type-float>',
+            'notes': '<notes type-str>',
+        }
+
+        - Response:
+
+            - OK: {
+                'failed': '<flag type-bool value-false>',
+                'conversion_record': '<conversion-record-id type-int>',
+                'ewallet_credits': '<available-ewallet-credits type-int>',
+                'credit_clock': '<available-clock-time type-float>',
+                'converted_minutes': '<minutes-converted-to-credits type-float>',
+            }
+
+            - NOK: {
+                'failed': '<flag type-bool value-true>',
+                'error': '<error-message type-str>',
+                'level': '<entity-level type-str>',
+                'details': '<data-set type-set>',
+                'warning': '<warning-message type-str>'
+            }
+
+        - User Account States:
+            - Logged In
+
+     __________________________________________________________________________
+____/   Section 18:62 (User) CreateContactRecord
+
+    - User action Create Contact Record
+
+        - Label: CreateContactRecord
+
+        - Prerequisits:
+            - RequestClientID
+            - RequestSessionToken
+            - AcquireMaster
+            - CreateAccount
+            - AccountLogin
+
+        - Instruction Set: {
+            'controller': 'client',
+            'ctype': 'action',
+            'action': 'new',
+            'new': 'contact',
+            'contact': 'record',
+            'client_id': '<client-id type-str>',
+            'session_token': '<session-token type-str>',
+            'contact_list': '<contact-list-id type-int>',
+            'user_name': '<contact-name type-str>',
+            'user_email': '<contact-email type-str>',
+            'user_phone': '<contact-phone type-str>',
+            'user_reference': '<contact-reference type-str>',
+            'notes': '<contact-notes type-str>',
+        }
+
+        - Response:
+
+            - OK: {
+                'failed': '<flag type-bool value-false>',
+                'contact_record': '<contact-record-id type-int>',
+                'contact_list': '<contact-list-id type-int>',
+            }
+
+            - NOK: {
+                'failed': '<flag type-bool value-true>',
+                'error': '<error-message type-str>',
+                'level': '<entity-level type-str>',
+                'details': '<data-set type-set>',
+                'warning': '<warning-message type-str>'
+            }
+
+        - User Account States:
+            - Logged In
+
+     __________________________________________________________________________
+____/   Section 18:63 (User) TransferCredits
+
+    - User action Transfer Credits
+
+        - Label: TransferCredits
+
+        - Prerequisits:
+            - RequestClientID
+            - RequestSessionToken
+            - AcquireMaster
+            - CreateAccount
+            - AccountLogin
+            - NewContactRecord
+            - SupplyCredits
+
+        - Instruction Set: {
+            'controller': 'client',
+            'ctype': 'action',
+            'action': 'transfer',
+            'transfer': 'credits',
+            'client_id': '<client-id type-str>',
+            'session_token': '<session-token type-str>',
+            'transfer_to': '<account-user-email type-str>',
+            'credits': '<ewallet-credits type-int>'
+        }
+
+        - Response:
+
+            - OK: {
+                'failed': '<flag type-bool value-false>',
+                'transfered_to': '<account-user-email type-str>',
+                'ewallet_credits': '<available-ewallet-credits type-int>',
+                'transfered_credits': '<credits-consumed type-int>',
+                'transfer_record': '<transfer-record-id type-int>',
+            }
+
+            - NOK: {
+                'failed': '<flag type-bool value-true>',
+                'error': '<error-message type-str>',
+                'warning': '<warning-message type-str>',
+                'level': '<entity-level type-str>',
+                'details': '<data-set type-set>',
+            }
+
+        - User Account States:
+            - Logged In
+
+     __________________________________________________________________________
+____/   Section 18:64 (User) EditAccount
+
+    - User action Edit Account
+
+        - Label: EditAccount
+
+        - Prerequisits:
+            - RequestClientID
+            - RequestSessionToken
+            - AcquireMaster
+            - CreateAccount
+            - AccountLogin
+
+        - Instruction Set: {
+            'controller': 'client',
+            'ctype': 'action',
+            'action': 'edit',
+            'edit': 'account',
+            'client_id': '<client-id type-str>',
+            'session_token': '<session-token type-str>',
+            'user_name': '<account-user-name type-str>',
+            'user_phone': '<account-phone-number type-str>',
+            'user_email': '<account-email-address type-str>',
+            'user_pass': '<account-password type-str>',
+            'user_alias': '<account-alias type-str>',
+        }
+
+        - Response:
+
+            - OK: {
+                'failed': '<flag type-bool value-false>',
+                'account': '<account-user-email type-str>',
+                'edit': {
+                    'name': '<flag type-bool>',
+                    'pass': '<flag type-bool>',
+                    'alias': '<flag type-bool>',
+                    'email': '<flag type-bool>',
+                    'phone': '<flag type-bool>',
+                },
+                'account_data': {
+                    'id': '<account-id type-int>',
+                    'name': '<account-user-name type-str>',
+                    'create_date': '<%d-%m-%Y %H:%M:%S type-str tz-UTC>',
+                    'write_date': '<%d-%m-%Y %H:%M:%S type-str tz-UTC>',
+                    'ewallet': '<active-ewallet-id type-int>',
+                    'contact_list': '<active-contact-list-id type-int>',
+                    'email': '<account-user-email type-str>',
+                    'phone': '<account-user-phone type-str',
+                    'alias': '<account-user-alias type-str>',
+                    'state_code': '<account-state-code type-int>',
+                    'state_name': '<account-state-label type-str>',
+                    'ewallet_archive': {
+                        '<ewallet-id type-int>': '<ewallet-reference type-str>'
+                    },
+                    'contact_list_archive': {
+                        '<contact-list-id type-int>': '<contact-list-reference type-str>'
+                    }
+                }
+            }
+
+            - NOK: {
+                'failed': '<flag type-bool value-true>',
+                'error': '<error-message type-str>',
+                'warning': '<warning-message type-str>',
+                'level': '<entity-level type-str>',
+                'details': '<data-set type-set>',
+            }
+
+        - User Account States:
+            - Logged In
+
+     __________________________________________________________________________
+____/   Section 18:65 (User) StartClockTimer
+
+    - User action Start Clock Timer
+
+        - Label: StartClockTimer
+
+        - Prerequisits:
+            - RequestClientID
+            - RequestSessionToken
+            - AcquireMaster
+            - CreateAccount
+            - AccountLogin
+            - SupplyCredits
+            - ConvertCreditsToClock
+
+        - Instruction Set: {
+            'controller': 'client',
+            'ctype': 'action',
+            'action': 'start',
+            'start': 'clock_timer',
+            'client_id': '<client-id type-str>',
+            'session_token': '<session-token type-str>',
+        }
+
+        - Respons:
+
+        - OK: {
+            'failed': '<flag type-bool value-false>',
+            'clock': '<clock-id type-int>',
+            'start_timestamp': '<%d-%m-%Y %H:%M:%S type-str tz-UTC>',
+        }
+
+        - NOK: {
+            'failed': '<flag type-bool value-true>',
+            'error': '<error-message type-str>',
+            'level': '<entity-level type-str>',
+            'details': '<data-set type-set>',
+            'warning': '<warning-message type-str>'
+        }
+
+        - User Account States:
+            - Logged In
+
+     __________________________________________________________________________
+____/   Section 18:66 (User) PauseClockTimer
+
+    - User action Pause Clock Timer
+
+        - Label: PauseClockTimer
+
+        - Prerequisits:
+            - RequestClientID
+            - RequestSessionToken
+            - AcquireMaster
+            - CreateAccount
+            - AccountLogin
+            - SupplyCredits
+            - ConvertCreditsToClock
+            - StartClockTimer
+
+        - Instruction_set: {
+            'controller': 'client',
+            'ctype': 'action',
+            'action': 'pause',
+            'pause': 'clock_timer',
+            'client_id': '<client-id type-str>',
+            'session_token': '<session-token type-str>',
+        }
+
+        - Response:
+
+            - OK: {
+                'failed': '<flag type-bool value-false>',
+                'clock': '<clock-id type-int>',
+                'pending_time': '<minutes-spent-pending type-float>',
+                'start_timestamp': '<%d-%m-%Y %H:%M:%S type-str tz-UTC>',
+                'pause_timestamp': '<%d-%m-%Y %H:%M:%S type-str tz-UTC>',
+                'pending_count': '<number-of-session-pendings type-int>',
+            }
+
+            - NOK: {
+                'failed': '<flag type-bool value-true>',
+                'error': '<error-message type-str>',
+                'level': '<entity-level type-str>',
+                'details': '<data-set type-set>',
+                'warning': '<warning-message type-str>'
+            }
+
+        - User Account States:
+            - Logged In
+
+     __________________________________________________________________________
+____/   Section 18:67 (User) ResumeClockTimer
+
+    - User action Resume Clock Timer
+
+        - Label: ResumeClockTimer
+
+        - Prerequisits:
+            - RequestClientID
+            - RequestSessionToken
+            - AcquireMaster
+            - CreateAccount
+            - AccountLogin
+            - SupplyCredits
+            - ConvertCreditsToClock
+            - StartClockTimer
+            - PauseClockTimer
+
+        - Instruction Set: {
+            'controller': 'client',
+            'ctype': 'action',
+            'action': 'resume',
+            'resume': 'clock_timer',
+            'client_id': '<client-id type-str>',
+            'session_token': '<session-token type-str>'
+        }
+
+        - Response:
+
+            - OK: {
+                'failed': '<flag type-bool value-false>',
+                'clock': '<clock-id type-int>',
+                'pending_time': '<minutes-spent-pending type-float>',
+                'pause_timestamp': '<%d-%m-%Y %H:%M:%S type-str tz-UTC>',
+                'resume_timestamp': '<%d-%m-%Y %H:%M:%S type-str tz-UTC>',
+                'pending_count': '<number-of-session-pendings type-int>',
+            }
+
+            - NOK: {
+                'failed': '<flag type-bool value-true>',
+                'error': '<error-message type-str>',
+                'level': '<entity-level type-str>',
+                'details': '<data-set type-set>',
+                'warning': '<warning-message type-str>'
+            }
+
+        - User Account States:
+            - Logged In
+
+     __________________________________________________________________________
+____/   Section 18:68 (User) StopClockTimer
+
+    - User action Stop Clock Timer
+
+        - Label: StopClockTimer
+
+        - Prerequisits:
+            - RequestClientID
+            - RequestSessionToken
+            - AcquireMaster
+            - CreateAccount
+            - AccountLogin
+            - SupplyEWalletCredits
+            - ConvertCreditsToClock
+            - StartClockTimer
+
+        - Instruction Set: {
+            'controller': 'client',
+            'ctype': 'action',
+            'action': 'stop',
+            'stop': 'clock_timer',
+            'client_id': '<client-id type-str>',
+            'session_token': '<session-token type-str>'
+        }
+
+        - Response:
+
+            - OK: {
+                'failed': '<flag type-bool value-false>',
+                'clock': '<clock-id type-int>',
+                'pending_count': '<number-of-session-pendings type-int>',
+                'pending_time': '<minutes-spent-pending type-float>',
+                'start_timestamp': '<%d-%m-%Y %H:%M:%S type-str tz-UTC>',
+                'stop_timestamp': '<%d-%m-%Y %H:%M:%S type-str tz-UTC>',
+                'minutes_spent': '<clock-minutes-used type-float>',
+                'time_record': '<record-id type-int>',
+                'record_data': {
+                    'id': '<record-id type-int>',
+                    'time_sheet': '<time-sheet-id type-int>',
+                    'reference': '<record-reference type-str>',
+                    'create_date': '<%d-%m-%Y %H:%M:%S type-str tz-UTC>',
+                    'write_date': '<%d-%m-%Y %H:%M:%S type-str tz-UTC>',
+                    'time_start': '<%d-%m-%Y %H:%M:%S type-str tz-UTC>',
+                    'time_stop': '<%d-%m-%Y %H:%M:%S type-str tz-UTC>',
+                    'time_spent': '<clock-minutes-used type-float>',
+                    'time_pending': '<minutes-spent-pending type-float>',
+                    'pending_count': '<number-of-session-pendings type-int>',
+                }
+            }
+
+            - NOK: {
+                'failed': '<flag type-bool value-true>',
+                'error': '<error-message type-str>',
+                'level': '<entity-level type-str>',
+                'details': '<data-set type-set>',
+                'warning': '<warning-message type-str>'
+            }
+
+        - User Account States:
+            - Logged In
+
+     __________________________________________________________________________
+____/   Section 18:69 (User) ViewContactList
+
+    - User action View Contact List
+
+        - Label: ViewContactList
+
+        - Prerequisits:
+            - RequestClientID
+            - RequestSessionToken
+            - AcquireMaster
+            - CreateAccount
+            - AccountLogin
+
+        - Instruction Set: {
+            'controller': 'client',
+            'ctype': 'action',
+            'action': 'view',
+            'view': 'contact',
+            'contact': 'list',
+            'client_id': '<client-id type-str>',
+            'session_token': '<session-token type-str>',
+        }
+
+        - Response:
+
+            - OK: {
+                'failed': '<flag type-bool value-false>',
+                'contact_list': '<contact-list-id type-int>',
+                'list_data': {
+                    'id': '<contact-list-id type-int>',
+                    'user': '<account-id type-int>',
+                    'reference': '<contact-list-reference type-str>',
+                    'create_date': '<%d-%m-%Y %H:%M:%S type-str tz-UTC>',
+                    'write_date': '<%d-%m-%Y %H:%M:%S type-str tz-UTC>',
+                    'records': {
+                        '<contact-record-id type-int>': '<contact-record-reference type-str>'
+                    }
+                }
+            }
+
+            - NOK: {
+                'failed': '<flag type-bool value-true>',
+                'error': '<error-message type-str>',
+                'warning': '<warning-message type-str>',
+                'level': '<entity-level type-str>',
+                'details': '<data-set type-set>',
+            }
+
+        - User Account States:
+            - Logged In
+
+     __________________________________________________________________________
+____/   Section 18:71 (User) ViewContactRecord
+
+    - User action View Contact Record
+
+        - Label: ViewContactRecord
+
+        - Prerequisits:
+            - RequestClientID
+            - RequestSessionToken
+            - AcquireMaster
+            - CreateAccount
+            - AccountLogin
+            - NewContactRecord
+
+        - Instruction Set: {
+            'controller': 'client',
+            'ctype': 'action',
+            'action': 'view',
+            'view': 'contact',
+            'contact': 'record',
+            'client_id': '<client-id type-str>',
+            'session_token': '<session-token type-str>',
+            'record_id': '<contact-record-id type-int>',
+        }
+
+        - Response:
+
+            - OK: {
+                'failed': '<flag type-bool value-false>',
+                'contact_list': '<contact-list-id type-int>',
+                'contact_record': '<contact-record-id type-int>',
+                'record_data': {
+                    'id': '<contact-record-id type-int>',
+                    'contact_list': '<contact-list-id type-int>',
+                    'reference': '<contact-record-reference type-str>',
+                    'create_date': '<%d-%m-%Y %H:%M:%S type-str tz-UTC>',
+                    'write_date': '<%d-%m-%Y %H:%M:%S type-str tz-UTC>',
+                    'name': '<contact-record-name type-str>',
+                    'email': '<contact-record-email type-str>',
+                    'phone': '<contact-record-phone type-str>',
+                    'notes': '<contact-record-notes type-str>'
+                }
+            }
+
+            - NOK: {
+                'failed': '<flag type-bool value-true>',
+                'error': '<error-message type-str>',
+                'warning': '<warning-message type-str>',
+                'level': '<entity-level type-str>',
+                'details': '<data-set type-set>',
+            }
+
+        - User Account States:
+            - Logged In
+
+     __________________________________________________________________________
+____/   Section 18:72 (User) ViewTransferSheet
+
+    - User action View Transfer Sheet
+
+        - Label: ViewTransferSheet
+
+        - Prerequisits:
+            - RequestClientID
+            - RequestSessionToken
+            - AcquireMaster
+            - CreateAccount
+            - AccountLogin
+
+        - Instruction Set: {
+            'controller': 'client',
+            'ctype': 'action',
+            'action': 'view',
+            'view': 'transfer',
+            'transfer': 'list',
+            'client_id': '<client-id type-str>',
+            'session_token': '<session-token type-str>',
+        }
+
+        - Response:
+
+            - OK: {
+                'failed': '<flag type-bool value-false>',
+                'transfer_sheet': '<transfer-sheet-id type-int>',
+                'sheet_data': {
+                    'id': '<transfer-sheet-id type-int>',
+                    'ewallet': '<ewallet-id type-int>',
+                    'reference': '<transfer-sheet-reference type-str>',
+                    'create_date': '<%d-%m-%Y %H:%M:%S type-str tz-UTC>',
+                    'write_date': '<%d-%m-%Y %H:%M:%S type-str tz-UTC>',
+                    'records': {
+                        '<transfer-record-id type-int>': '<transfer-record-reference type-str>',
+                    }
+                }
+            }
+
+            - NOK: {
+                'failed': '<flag type-bool value-true>',
+                'error': '<error-message type-str>',
+                'warning': '<warning-message type-str>',
+                'level': '<entity-level type-str>',
+                'details': '<data-set type-set>',
+            }
+
+        - User Account States:
+            - Logged In
+
+     __________________________________________________________________________
+____/   Section 18:73 (User) ViewTransferRecord
+
+    - User action View Transfer Record
+
+        - Label: ViewTransferRecord
+
+        - Prerequisits:
+            - RequestClientID
+            - RequestSessionToken
+            - AcquireMaster
+            - CreateAccount
+            - AccountLogin
+            - NewContactRecord
+            - SupplyEWalletCredits
+            - TransferCredits
+
+        - Instruction Set: {
+            'controller': 'client',
+            'ctype': 'action',
+            'action': 'view',
+            'view': 'transfer',
+            'transfer': 'record',
+            'client_id': '<client-id type-str>',
+            'session_token': '<session-token type-str>',
+            'record_id': '<transfer-record-id type-int>',
+        }
+
+        - Response:
+
+            - OK: {
+                'failed': '<flag type-bool value-false>',
+                'transfer_sheet': '<transfer-sheet-id type-int>',
+                'transfer_record': '<transfer-record-id type-int>',
+                'record_data': {
+                    'id': '<transfer-record-id type-int>',
+                    'transfer_sheet': '<transfer-sheet-id type-int>',
+                    'reference': '<trasfer-record-reference type-str>',
+                    'create_date': '<%d-%m-%Y %H:%M:%S type-str tz-UTC>',
+                    'write_date': '<%d-%m-%Y %H:%M:%S type-str tz-UTC>',
+                    'transfer_type': '<transfer-type type-str>',
+                    'transfer_from': '<account-user-email type-str>',
+                    'transfer_to': '<account-user-email type-str>',
+                    'credits': '<credits-transfered type-int>',
+                }
+            }
+
+            - NOK: {
+                'failed': '<flag type-bool value-true>',
+                'error': '<error-message type-str>',
+                'warning': '<warning-message type-str>',
+                'level': '<entity-level type-str>',
+                'details': '<data-set type-set>',
+            }
+
+        - User Account States:
+            - Logged In
+
+     __________________________________________________________________________
+____/   Section 18:74 (User) ViewTimeSheet
+
+    - User action View Time Sheet
+
+        - Label: ViewTimeSheet
+
+        - Prerequisits:
+            - RequestClientID
+            - RequestSessionToken
+            - AcquireMaster
+            - CreateAccount
+            - AccountLogin
+
+        - Instruction Set: {
+            'controller': 'client',
+            'ctype': 'action',
+            'action': 'view',
+            'view': 'time',
+            'time': 'list',
+            'client_id': '<client-id type-str>',
+            'session_token': '<session-token type-str>',
+        }
+
+        - Response:
+
+            - OK: {
+                'failed': '<flag type-bool value-false>',
+                'time_sheet': '<time-sheet-id type-int>',
+                'sheet_data': {
+                    'id': '<time-sheet-id type-int>',
+                    'clock': '<credit-clock-id type-int>',
+                    'reference': '<time-sheet-reference type-str>',
+                    'create_date': '<%d-%m-%Y %H:%M:%S type-str tz-UTC>',
+                    'write_date': '<%d-%m-%Y %H:%M:%S type-str tz-UTC>',
+                    'records': {
+                        '<time-record-id type-int>': '<time-record-reference type-str>'
+                    }
+                }
+            }
+
+            - NOK: {
+                'failed': '<flag type-bool value-true>',
+                'error': '<error-message type-str>',
+                'warning': '<warning-message type-str>',
+                'level': '<entity-level type-str>',
+                'details': '<data-set type-set>',
+            }
+
+        - User Account States:
+            - Logged In
+
+     __________________________________________________________________________
+____/   Section 18:75 (User) ViewTimeRecord
+
+    - User action View Time Record
+
+        - Label: ViewTimeRecord
+
+        - Prerequisits:
+            - RequestClientID
+            - RequestSessionToken
+            - AcquireMaster
+            - CreateAccount
+            - AccountLogin
+            - SupplyCredits
+            - ConvertCreditsToClock
+            - StartClockTimer
+            - StopClockTimer
+
+        - Instruction Set: {
+            'controller': 'client',
+            'ctype': 'action',
+            'action': 'view',
+            'view': 'time',
+            'time': 'record',
+            'client_id': '<client-id type-str>',
+            'session_token': '<session-token type-str>',
+            'record_id': '<time-record-id type-int>',
+        }
+
+        - Response:
+
+            - OK: {
+                'failed': '<flag type-bool value-false>',
+                'time_sheet': '<time-sheet-id type-int>',
+                'time_record': '<time-record-id type-int>',
+                'record_data': {
+                    'id': '<time-record-id type-int>',
+                    'time_sheet': '<time-sheet-id type-int>',
+                    'reference': '<time-record-reference type-str>',
+                    'create_date': '<%d-%m-%Y %H:%M:%S type-str tz-UTC>',
+                    'write_date': '<%d-%m-%Y %H:%M:%S type-str tz-UTC>',
+                    'time_start': '<%d-%m-%Y %H:%M:%S type-str tz-UTC>',
+                    'time_stop': '<%d-%m-%Y %H:%M:%S type-str tz-UTC>',
+                    'time_spent': '<clock-minutes-consumed type-float>',
+                    'time_pending': '<minutes-spent-pending type-float>',
+                    'pending_count': '<number-of-session-pendings type-int>',
+                }
+            }
+
+            - NOK: {
+                'failed': '<flag type-bool value-true>',
+                'error': '<error-message type-str>',
+                'warning': '<warning-message type-str>',
+                'level': '<entity-level type-str>',
+                'details': '<data-set type-set>',
+            }
+
+        - User Account States:
+            - Logged In
+
+     __________________________________________________________________________
+____/   Section 18:76 (User) ViewConversionSheet
+
+    - User action View Conversion Sheet
+
+        - Label: ViewConversionSheet
+
+        - Prerequisits:
+            - RequestClientID
+            - RequestSessionToken
+            - AcquireMaster
+            - CreateAccount
+            - AccountLogin
+            - SupplyCredits
+            - ConvertCreditsToClock
+
+        - Instruction Set: {
+            'controller': 'client',
+            'ctype': 'action',
+            'action': 'view',
+            'view': 'conversion',
+            'conversion': 'list',
+            'client_id': '<client-id type-str>',
+            'session_token': '<session-token type-str>',
+        }
+
+        - Response:
+
+            - OK: {
+                'failed': '<flag type-bool value-false>',
+                'conversion_sheet': '<conversion-sheet-id type-int>',
+                'sheet_data': {
+                    'id': '<conversion-sheet-id type-int>',
+                    'clock': '<credit-clock-id type-int>',
+                    'reference': '<conversion-sheet-reference type-str>',
+                    'create_date': '<%d-%m-%Y %H:%M:%S type-str tz-UTC>',
+                    'write_date': '<%d-%m-%Y %H:%M:%S type-str tz-UTC>',
+                    'records': {
+                        '<conversion-record-id type-int>': '<conversion-record-reference type-str>'
+                    }
+                }
+            }
+
+            - NOK: {
+                'failed': '<flag type-bool value-true>',
+                'error': '<error-message type-str>',
+                'warning': '<warning-message type-str>',
+                'level': '<entity-level type-str>',
+                'details': '<data-set type-set>',
+            }
+
+        - User Account States:
+            - Logged In
+
+     __________________________________________________________________________
+____/   Section 18:77 (User) ViewConversionRecord
+
+    - User action View Conversion Record
+
+        - Label: ViewConversionRecord
+
+        - Prerequisits:
+            - RequestClientID
+            - RequestSessionToken
+            - AcquireMaster
+            - CreateAccount
+            - AccountLogin
+            - SupplyCredits
+            - ConvertCreditsToClock
+
+        - Instruction Set: {
+            'controller': 'client',
+            'ctype': 'action',
+            'action': 'view',
+            'view': 'conversion',
+            'conversion': 'record',
+            'client_id': '<client-id type-str>',
+            'session_token': '<session-token type-str>',
+            'record_id': '<conversion-record-id>',
+        }
+
+        - Response:
+
+            - OK: {
+                'failed': '<flag type-bool value-false>',
+                'conversion_sheet': '<conversion-sheet-id type-int>',
+                'conversion_record': '<conversion-record-id type-int>',
+                'record_data': {
+                    'id': '<conversion-record-id type-int>',
+                    'conversion_sheet': '<conversion-sheet-id type-int>',
+                    'reference': '<conversion-record-reference type-str>',
+                    'create_date': '<%d-%m-%Y %H:%M:%S type-str tz-UTC>',
+                    'write_date': '<%d-%m-%Y %H:%M:%S type-str tz-UTC>',
+                    'conversion_type': '<conversion-type type-str>',
+                    'minutes': '<conversion-minutes type-float>',
+                    'credits': '<conversion-credits type-int>',
+                }
+            }
+
+            - NOK: {
+                'failed': '<flag type-bool value-true>',
+                'error': '<error-message type-str>',
+                'warning': '<warning-message type-str>',
+                'level': '<entity-level type-str>',
+                'details': '<data-set type-set>',
+            }
+
+        - User Account States:
+            - Logged In
+
+     __________________________________________________________________________
+____/   Section 18:78 (User) ViewAccount
+
+    - User action View Account
+
+        - Label: ViewAccount
+
+        - Prerequisits:
+            - RequestClientID
+            - RequestSessionToken
+            - AcquireMaster
+            - CreateAccount
+            - AccountLogin
+
+        - Instruction Set: {
+            'controller': 'client',
+            'ctype': 'action',
+            'action': 'view',
+            'view': 'account',
+            'client_id': '<client-id type-str>',
+            'session_token': '<session-token type-str>',
+        }
+
+        - Response:
+
+            - OK: {
+                'failed': '<flag type-bool value-false>',
+                'account': '<account-user-email type-str>',
+                'account_data': {
+                    'id': '<account-id type-int>',
+                    'name': '<account-user-name type-str>',
+                    'create_date': '<%d-%m-%Y %H:%M:%S type-str tz-UTC>',
+                    'write_date': '<%d-%m-%Y %H:%M:%S type-str tz-UTC>',
+                    'ewallet': '<active-ewallet-id type-int>',
+                    'contact_list': '<active-contact-list-id type-int>',
+                    'email': '<account-user-email type-str>',
+                    'phone': '<account-user-phone type-str>',
+                    'alias': '<account-user-alias type-str>',
+                    'state_code': '<account-state-code type-int>',
+                    'state_name': '<account-state-label type-int>',
+                    'to_unlink': '<flag type-bool>',
+                    'to_unlink_timestamp': '<%d-%m-%Y %H:%M:%S type-str tz-UTC or None>',
+                    'ewallet_archive': {
+                        '<ewallet-id type-int>': '<ewallet-reference type-str>'
+                    },
+                    'contact_list_archive':{
+                        '<contact-list-id type-int>': '<contact-list-reference type-str>'
+                    }
+                }
+            }
+
+            - NOK: {
+                'failed': '<flag type-bool value-true>',
+                'error': '<error-message type-str>',
+                'warning': '<warning-message type-str>',
+                'level': '<entity-level type-str>',
+                'details': '<data-set type-set>',
+            }
+
+        - User Account States:
+            - Logged In
+
+     __________________________________________________________________________
+____/   Section 18:79 (User) ViewCreditEWallet
+
+    - User action View Credit EWallet
+
+        - Label: ViewCreditEWallet
+
+        - Prerequisits:
+            - RequestClientID
+            - RequestSessionToken
+            - AcquireMaster
+            - CreateAccount
+            - AccountLogin
+
+        - Instruction Set: {
+            'controller': 'client',
+            'ctype': 'action',
+            'action': 'view',
+            'view': 'credit',
+            'credit': 'ewallet',
+            'client_id': '<client-id type-str>',
+            'session_token': '<session-token type-str>',
+        }
+
+        - Response:
+
+            - OK: {
+                'failed': '<flag type-bool value-false>',
+                'ewallet': '<ewallet-id type-int>',
+                'ewallet_data': {
+                    'id': '<ewallet-id type-int>',
+                    'user': '<account-id type-int>',
+                    'reference': '<ewallet-reference type-str>',
+                    'create_date': '<%d-%m-%Y %H:%M:%S type-str tz-UTC>',
+                    'write_date': '<%d-%m-%Y %H:%M:%S type-str tz-UTC>',
+                    'credits': '<available-credits type-int>',
+                    'clock': '<active-credit-clock-id type-int>',
+                    'clock_archive': {
+                        '<credit-clock-id type-int>': '<credit-clock-reference type-str>'
+                    },
+                    'transfer_sheet': '<active-transfer-sheet-id type-int>',
+                    'transfer_sheet_archive': {
+                        '<transfer-sheet-id type-int>': '<transfer-sheet-reference type-str>'
+                    },
+                    'invoice_sheet': '<active-invoice-sheet-id type-int>',
+                    'invoice_sheet_archive': {
+                        '<invoice-sheet-id type-int>': '<invoice-sheet-reference type-str>'
+                    }
+                }
+            }
+
+            - NOK: {
+                'failed': '<flag type-bool value-true>',
+                'error': '<error-message type-str>',
+                'warning': '<warning-message type-str>',
+                'level': '<entity-level type-str>',
+                'details': '<data-set type-set>',
+            }
+
+        - User Account States:
+            - Logged In
+
+     __________________________________________________________________________
+____/   Section 18:81 (User) ViewCreditClock
+
+
+    - User action View Credit Clock
+
+        - Label: ViewCreditClock
+
+        - Prerequisits:
+            - RequestClientID
+            - RequestSessionToken
+            - AcquireMaster
+            - CreateAccount
+            - AccountLogin
+
+        - Instruction Set: {
+            'controller': 'client',
+            'ctype': 'action',
+            'action': 'view',
+            'view': 'credit',
+            'credit': 'clock',
+            'client_id': '<client-id type-str>',
+            'session_token': '<session-token type-str>',
+        }
+
+        - Response:
+
+            - OK: {
+                'failed': '<flag type-bool value-false>',
+                'clock': '<credit-clock-id type-int>',
+                'clock_data': {
+                    'id': '<credit-clock-id type-int>',
+                    'ewallet': '<ewallet-id type-int>',
+                    'reference': '<credit-clock-reference type-int>',
+                    'create_date': '<%d-%m-%Y %H:%M:%S type-str tz-UTC>',
+                    'write_date': '<%d-%m-%Y %H:%M:%S type-str tz-UTC>',
+                    'credit_clock': '<available-clock-minutes type-float>',
+                    'clock_state': '<clock-timer-state type-str>',
+                    'time_sheet': '<active-time-sheet-id type-int>',
+                    'time_sheet_archive': {
+                        '<time-sheet-id type-int>': '<time-sheet-reference type-str>'
+                    },
+                    'conversion_sheet': '<active-conversion-sheet-id type-int>',
+                    'conversion_sheet_archive': {
+                        '<conversion-sheet-id type-int>': '<conversion-sheet-reference type-str>'
+                    }
+                }
+            }
+
+            - NOK: {
+                'failed': '<flag type-bool value-true>',
+                'error': '<error-message type-str>',
+                'warning': '<warning-message type-str>',
+                'level': '<entity-level type-str>',
+                'details': '<data-set type-set>',
+            }
+
+        - User Account States:
+            - Logged In
+
+     __________________________________________________________________________
+____/   Section 18:82 (User) ViewInvoiceSheet
+
+    - User action View Invoice Sheet
+
+        - Label: ViewInvoiceSheet
+
+        - Prerequisits:
+            - RequestClientID
+            - RequestSessionToken
+            - CreateAccount
+            - AccountLogin
+            - SupplyCredits
+
+        - Instruction Set: {
+            'controller': 'client',
+            'ctype': 'action',
+            'action': 'view',
+            'view': 'invoice',
+            'invoice': 'list',
+            'client_id': '<client-id type-str>',
+            'session_token': '<session-token type-str>',
+        }
+
+        - Response:
+
+            - OK: {
+                'failed': '<flag type-bool value-false>',
+                'invoice_sheet': '<invoice-sheet-id type-int>',
+                'sheet_data': {
+                    'id': '<invoice-sheet-id type-int>',
+                    'ewallet': '<ewallet-id type-int>',
+                    'reference': '<invoice-sheet-reference type-str>',
+                    'create_date': '<%d-%m-%Y %H:%M:%S type-str tz-UTC>',
+                    'write_date': '<%d-%m-%Y %H:%M:%S type-str tz-UTC>',
+                    'records': {
+                        '<invoice-record-id type-int>': '<invoice-record-reference type-str>'
+                    }
+                }
+            }
+
+            - NOK: {
+                'failed': '<flag type-bool value-true>',
+                'error': '<error-message type-str>',
+                'warning': '<warning-message type-str>',
+                'level': '<entity-level type-str>',
+                'details': '<data-set type-set>',
+            }
+
+        - User Account States:
+            - Logged In
+
+     __________________________________________________________________________
+____/   Section 18:83 (User) ViewInvoiceRecord
+
+    - User action View Invoice Record
+
+        - Label: ViewInvoiceRecord
+
+        - Prerequisits:
+            - RequestClientID
+            - RequestSessionToken
+            - AcquireMaster
+            - CreateAccount
+            - AccountLogin
+            - SupplyCredits
+
+        - Instruction Set: {
+            'controller': 'client',
+            'ctype': 'action',
+            'action': 'view',
+            'view': 'invoice',
+            'invoice': 'record',
+            'client_id': '<client-id type-str>',
+            'session_token': '<session-token type-str>',
+            'record_id': '<invoice-record-id type-int>',
+        }
+
+        - Response:
+
+            - OK: {
+                'failed': '<flag type-bool value-false>',
+                'invoice_sheet': '<invoice-sheet-id type-int>',
+                'invoice_record': '<invoice-record-id type-int>',
+                'record_data': {
+                    'id': '<invoice-record-id type-int>',
+                    'invoice_sheet': '<invoice-sheet-id type-int>',
+                    'reference': '<invoice-record-reference type-str>',
+                    'create_date': '<%d-%m-%Y %H:%M:%S type-str tz-UTC>',
+                    'write_date': '<%d-%m-%Y %H:%M:%S type-str tz-UTC>',
+                    'credits': '<invoice-credits type-int>',
+                    'currency': '<invoice-currency-label type-str>',
+                    'cost': '<invoice-currency-credit-cost type-float>',
+                    'seller': '<invoice-account-id type-int>',
+                    'notes': '<invoice-record-notes type-str>'
+                }
+            }
+
+            - NOK: {
+                'failed': '<flag type-bool value-true>',
+                'error': '<error-message type-str>',
+                'warning': '<warning-message type-str>',
+                'level': '<entity-level type-str>',
+                'details': '<data-set type-set>',
+            }
+
+        - User Account States:
+            - Logged In
+
+     __________________________________________________________________________
+____/   Section 18:84 (User) ViewLoginRecords
+
+    - User action View Login Records
+
+        - Label: ViewLoginRecords
+
+        - Prerequisits:
+            - RequestClientID
+            - RequestSessionToken
+            - AcquireMaster
+            - CreateAccount
+            - AccountLogin
+
+        - Instruction Set: {
+            'controller': 'client',
+            'ctype': 'action',
+            'action': 'view',
+            'view': 'login',
+            'client_id': '<client-id type-str>',
+            'session_token': '<session-token type-str>',
+        }
+
+        - Response:
+
+            - OK: {
+                'failed': '<flag type-bool value-false>',
+                'account': '<account-user-email type-str>',
+                'login_records': {
+                    '<login-record-id type-int>': '<%d-%m-%Y %H:%M:%S type-str tz-UTC>'
+                }
+            }
+
+            - NOK: {
+                'failed': '<flag type-bool value-true>',
+                'error': '<error-message type-str>',
+                'warning': '<warning-message type-str>',
+                'level': '<entity-level type-str>',
+                'details': '<data-set type-set>',
+            }
+
+        - User Account States:
+            - Logged In
+
+     __________________________________________________________________________
+____/   Section 18:85 (User) ViewLogoutRecords
+
+    - User action View Logout Records
+
+        - Label: ViewLogoutRecords
+
+        - Prerequisits:
+            - RequestClientID
+            - RequestSessionToken
+            - AcquireMaster
+            - CreateAccount
+            - AccountLogin
+            - AccountLogout
+
+        - Instruction Set: {
+            'controller': 'client',
+            'ctype': 'action',
+            'action': 'view',
+            'view': 'logout',
+            'client_id': '<client-id type-str>',
+            'session_token': '<session-token type-str>',
+        }
+
+        - Response:
+
+            - OK: {
+                'failed': '<flag type-bool value-false>',
+                'account': '<account-user-email type-str>',
+                'logout_records': {
+                    '<logout-record-id type-int>': '<%d-%m-%Y %H:%M:%S type-str tz-UTC>'
+                }
+            }
+
+            - NOK: {
+                'failed': '<flag type-bool value-true>',
+                'error': '<error-message type-str>',
+                'warning': '<warning-message type-str>',
+                'level': '<entity-level type-str>',
+                'details': '<data-set type-set>',
+            }
+
+        - User Account States:
+            - Logged In
+
+     __________________________________________________________________________
+____/   Section 18:86 (User) CreateContactList
+
+    - User action Create Contact List
+
+        - Label: CreateContactList
+
+        - Prerequisits:
+            - RequestClientID
+            - RequestSessionToken
+            - AcquireMaster
+            - CreateAccount
+            - AccountLogin
+
+        - Instruction Set: {
+            'controller': 'client',
+            'ctype': 'action',
+            'action': 'new',
+            'new': 'contact',
+            'contact': 'list',
+            'client_id': '<client-id type-str>',
+            'session_token': '<session-token type-str>',
+        }
+
+        - Response:
+
+            - OK: {
+                'failed': '<flag type-bool value-true>',
+                'contact_list': '<contact-list-id type-int>',
+                'list_data': {
+                    'id': '<contact-list-id type-int>',
+                    'user': '<account-id type-int>',
+                    'reference': '<contact-list-reference type-str>',
+                    'create_date': '<%d-%m-%Y %H:%M:%S type-str tz-UTC>',
+                    'write_date': '<%d-%m-%Y %H:%M:%S type-str tz-UTC>',
+                    'records': {
+                        '<contact-record-id type-int>': '<contact-record-reference type-str>'
+                    }
+                }
+            }
+
+            - NOK: {
+                'failed': '<flag type-bool value-true>',
+                'error': '<error-message type-str>',
+                'level': '<entity-level type-str>',
+                'details': '<data-set type-set>',
+                'warning': '<warning-message type-str>'
+            }
+
+        - User Account States:
+            - Logged In
+
+     __________________________________________________________________________
+____/   Section 18:87 (User) CreateCreditEWallet
+
+    - User action Create Credit EWallet
+
+        - Label: CreateCreditEWallet
+
+        - Prerequisits:
+            - RequestClientID
+            - RequestSessionToken
+            - AcquireMaster
+            - CreateAccount
+            - AccountLogin
+
+        - Instruction Set: {
+            'controller': 'client',
+            'ctype': 'action',
+            'action': 'new',
+            'new': 'credit',
+            'credit': 'ewallet',
+            'client_id': '<client-id type-str>',
+            'session_token': '<session-token type-str>',
+        }
+
+        - Response:
+
+            - OK: {
+                'failed': '<flag type-bool value-false>',
+                'ewallet': '<ewallet-id type-int>',
+                'ewallet_data': {
+                    'id': '<ewallet-id type-int>',
+                    'user': '<account-id type-int>',
+                    'reference': '<ewallet-reference type-str>',
+                    'create_date': '<%d-%m-%Y %H:%M:%S type-str tz-UTC>',
+                    'write_date': '<%d-%m-%Y %H:%M:%S type-str tz-UTC>',
+                    'credits': '<available-credits type-int>',
+                    'clock': '<credit-clock-id type-int>',
+                    'clock_archive': {
+                        '<credit-clock-id type-int>': '<credit-clock-reference type-str>'
+                    },
+                    'transfer_sheet': '<active-transfer-sheet-id type-int>',
+                    'transfer_sheet_archive': {
+                        '<transfer-sheet-id type-int>': '<transfer-sheet-reference type-str>'
+                    },
+                    'invoice_sheet': '<active-invoice-sheet-id type-int>',
+                    'invoice_sheet_archive': {
+                        '<invoice-sheet-id type-int>': '<invoice-sheet-reference type-str>'
+                    }
+                }
+            }
+
+            - NOK: {
+                'failed': '<flag type-bool value-true>',
+                'error': '<error-message type-str>',
+                'warning': '<warning-message type-str>',
+                'level': '<entity-level type-str>',
+                'details': '<data-set type-set>',
+            }
+
+        - User Account States:
+            - Logged In
+
+     __________________________________________________________________________
+____/   Section 18:88 (User) CreateCreditClock
+
+    - User action Create Credit Clock
+
+        - Label: CreateCreditClock
+
+        - Prerequisits:
+            - RequestClientID
+            - RequestSessionToken
+            - AcquireMaster
+            - CreateAccount
+            - AccountLogin
+
+        - Instruction Set: {
+            'controller': 'client',
+            'ctype': 'action',
+            'action': 'new',
+            'new': 'credit',
+            'credit': 'clock',
+            'client_id': '<client-id type-str>',
+            'session_token': '<session-token type-str>',
+        }
+
+        - Response:
+
+            - OK: {
+                'failed': '<flag type-bool value-false>',
+                'clock': '<credit-clock-id type-int>',
+                'clock_data': {
+                    'id': '<credit-clock-id type-int>',
+                    'ewallet': '<ewallet-id type-int>',
+                    'reference': '<credit-clock-reference type-str>',
+                    'create_date': '<%d-%m-%Y %H:%M:%S type-str tz-UTC>',
+                    'write_date': '<%d-%m-%Y %H:%M:%S type-str tz-UTC>',
+                    'credit_clock': '<available-clock-minutes type-float>',
+                    'clock_state': '<clock-timer-state type-str>',
+                    'time_sheet': '<active-time-sheet-id type-int>',
+                    'time_sheet_archive': {
+                        '<time-sheet-id type-int>': '<time-sheet-reference type-str>'
+                    },
+                    'conversion_sheet': '<active-conversion-sheet-id type-int>',
+                    'conversion_sheet_archive': {
+                        '<conversion-sheet-id type-int>': '<conversion-sheet-reference type-str>'
+                    }
+                }
+            }
+
+            - NOK: {
+                'failed': '<flag type-bool value-true>',
+                'error': '<error-message type-str>',
+                'warning': '<warning-message type-str>',
+                'level': '<entity-level type-str>',
+                'details': '<data-set type-set>',
+            }
+
+        - User Account States:
+            - Logged In
+
+     __________________________________________________________________________
+____/   Section 18:89 (User) CreateTransferSheet
+
+    - User action Create Transfer Sheet
+
+        - Label: CreateTransferSheet
+
+        - Prerequisits:
+            - RequestClientID
+            - RequestSessionToken
+            - AcquireMaster
+            - CreateAccount
+            - AccountLogin
+
+        - Instruction Set: {
+            'controller': 'client',
+            'ctype': 'action',
+            'action': 'new',
+            'new': 'transfer',
+            'transfer': 'list',
+            'client_id': '<client-id type-str>',
+            'session_token': '<session-token type-str>',
+        }
+
+        - Response:
+
+            - OK: {
+                'failed': '<flag type-bool value-false>',
+                'transfer_sheet': '<transfer-sheet-id type-int>',
+                'sheet_data': {
+                    'id': '<transfer-sheet-id type-int>',
+                    'ewallet': '<ewallet-id type-int>',
+                    'reference': '<transfer-sheet-reference type-int>',
+                    'create_date': '<%d-%m-%Y %H:%M:%S type-str tz-UTC>',
+                    'write_date': '<%d-%m-%Y %H:%M:%S type-str tz-UTC>',
+                    'records': {
+                        '<time-record-id type-int>': '<time-record-reference type-str>'
+                    }
+                }
+            }
+
+            - NOK: {
+                'failed': '<flag type-bool value-true>',
+                'error': '<error-message type-str>',
+                'warning': '<warning-message type-str>',
+                'level': '<entity-level type-str>',
+                'details': '<data-set type-set>',
+            }
+
+        - User Account States:
+            - Logged In
+
+     __________________________________________________________________________
+____/   Section 18:91 (User) CreateInvoiceSheet
+
+    - User action Create Invoice Sheet
+
+        - Label: CreateInvoiceSheet
+
+        - Prerequisits:
+            - RequestClientID
+            - RequestSessionToken
+            - AcquireMaster
+            - CreateAccount
+            - AccountLogin
+
+        - Instruction Set: {
+            'controller': 'client',
+            'ctype': 'action',
+            'action': 'new',
+            'new': 'invoice',
+            'invoice': 'list',
+            'client_id': '<client-id type-str>',
+            'session_token': '<session-token type-str>',
+        }
+
+        - Response:
+
+            - OK: {
+                'failed': '<flag type-bool value-false>',
+                'invoice_sheet': '<invoice-sheet-id type-int>',
+                'sheet_data': {
+                    'id': '<invoice-sheet-id type-int>',
+                    'ewallet': '<ewallet-id type-int>',
+                    'reference': '<invoice-sheet-reference type-str>',
+                    'create_date': '<%d-%m-%Y %H:%M:%S type-str tz-UTC>',
+                    'write_date': '<%d-%m-%Y %H:%M:%S type-str tz-UTC>',
+                    'records': {
+                        '<invoice-record-id type-int>': '<invoice-record-reference type-str>'
+                    }
+                }
+            }
+
+            - NOK: {
+                'failed': '<flag type-bool value-true>',
+                'error': '<error-message type-str>',
+                'warning': '<warning-message type-str>',
+                'level': '<entity-level type-str>',
+                'details': '<data-set type-set>',
+            }
+
+        - User Account States:
+            - Logged In
+
+     __________________________________________________________________________
+____/   Section 18:92 (User) CreateConversionSheet
+
+    - User action Create Conversion Sheet
+
+        - Label: CreateConversionSheet
+
+        - Prerequisits:
+            - RequestClientID
+            - RequestSessionToken
+            - AcquireMaster
+            - CreateAccount
+            - AccountLogin
+
+        - Instruction_set: {
+            'controller': 'client',
+            'ctype': 'action',
+            'action': 'new',
+            'new': 'conversion',
+            'conversion': 'list',
+            'client_id': '<client-id type-str>',
+            'session_token': '<session-token type-str>',
+        }
+
+        - Response:
+
+            - OK: {
+                'failed': '<flag type-bool value-false>',
+                'conversion_sheet': '<conversion-sheet-id type-int>',
+                'sheet_data': {
+                    'id': '<conversion-sheet-id type-int>',
+                    'clock': '<credit-clock-id type-int>',
+                    'reference': '<conversion-sheet-reference type-str>',
+                    'create_date': '<%d-%m-%Y %H:%M:%S type-str tz-UTC>',
+                    'write_date': '<%d-%m-%Y %H:%M:%S type-str tz-UTC>',
+                    'records': {
+                        '<conversion-record-id type-int>': '<conversion-record-reference type-str>'
+                    }
+                }
+            }
+
+            - NOK: {
+                'failed': '<flag type-bool value-true>',
+                'error': '<error-message type-str>',
+                'level': '<entity-level type-str>',
+                'details': '<data-set type-set>',
+                'warning': '<warning-message type-str>'
+            }
+
+        - User Account States:
+            - Logged In
+
+     __________________________________________________________________________
+____/   Section 18:93 (User) CreateTimeSheet
+
+    - User action Create Time Sheet
+
+        - Label: CreateTimeSheet
+
+        - Prerequisits:
+            - RequestClientID
+            - RequestSessionToken
+            - AcquireMaster
+            - CreateAccount
+            - AccountLogin
+
+        - Instruction Set: {
+            'controller': 'client',
+            'ctype': 'action',
+            'action': 'new',
+            'new': 'time',
+            'time': 'list',
+            'client_id': '<client-id type-str>',
+            'session_token': '<session-token type-str>',
+        }
+
+        - Response:
+
+            - OK: {
+                'failed': '<flag type-bool value-false>',
+                'time_sheet': '<time-sheet-id type-int>',
+                'sheet_data': {
+                    'id': '<time-sheet-id type-int>',
+                    'clock': '<credit-clock-id type-int>',
+                    'reference': '<time-sheet-reference type-str>',
+                    'create_date': '<%d-%m-%Y %H:%M:%S type-str tz-UTC>',
+                    'write_date': '<%d-%m-%Y %H:%M:%S type-str tz-UTC>',
+                    'records': {
+                        '<time-record-id type-int>': '<time-record-reference type-str>'
+                    }
+                }
+            }
+
+            - NOK: {
+                'failed': '<flag type-bool value-true>',
+                'error': '<error-message type-str>',
+                'warning': '<warning-message type-str>',
+                'level': '<entity-level type-str>',
+                'details': '<data-set type-set>',
+            }
+
+        - User Account States:
+            - Logged In
+
+     __________________________________________________________________________
+____/   Section 18:94 (User) SwitchAccount
+
+    - User action Switch Account
+
+        - Label: SwitchAccount
+
+        - Prerequisits:
+            - RequestClientID
+            - RequestSessionToken
+            - AcquireMaster
+            - CreateAccount (1)
+            - CreateAccount (2)
+            - AccountLogin  (1)
+            - AccountLogin  (2)
+
+        - Instruction Set: {
+            'controller': 'client',
+            'ctype': 'action',
+            'action': 'switch',
+            'switch': 'account',
+            'client_id': '<client-id type-str>',
+            'session_token': '<session-token type-str>',
+            'account': '<account-user-email type-str>',
+        }
+
+        - Response:
+
+            - OK: {
+                'failed': '<flag type-bool value-false>',
+                'account': '<account-user-email type-str>',
+                'session_data': {
+                    'session_user_account': '<account-user-email type-str>',
+                    'session_credit_ewallet': '<credit-ewallet-id type-int>',
+                    'session_contact_list': '<contact-list-id type-int>',
+                    'session_account_archive': {
+                        '<account-user-email type-str>': '<account-user-name type-str>',
+                    }
+                }
+            }
+
+            - NOK: {
+                'failed': '<flag type-bool value-true>',
+                'error': '<error-message type-str>',
+                'warning': '<warning-message type-str>',
+                'level': '<entity-level type-str>',
+                'details': '<data-set type-set>',
+            }
+
+        - User Account States:
+            - Logged In
+
+     __________________________________________________________________________
+____/   Section 18:95 (User) SwitchCreditEWallet
+
+    - User action Switch Credit EWallet
+
+        - Label: SwitchCreditEWallet
+
+        - Prerequisits:
+            - RequestClientID
+            - RequestSessionToken
+            - AcquireMaster
+            - CreateAccount
+            - AccountLogin
+            - CreateCreditEWallet
+
+        - Instruction Set: {
+            'controller': 'client',
+            'ctype': 'action',
+            'action': 'switch',
+            'switch': 'credit',
+            'credit': 'ewallet',
+            'client_id': '<client-id type-str>',
+            'session_token': '<session-token type-str>',
+            'ewallet_id': '<ewallet-id type-int>',
+        }
+
+        - Response:
+
+            - OK: {
+                'failed': '<flag type-bool value-false>',
+                'ewallet': '<ewallet-id type-int>',
+                'ewallet_data': {
+                    'id': '<ewallet-id type-int>',
+                    'user': '<account-id type-int>',
+                    'reference': '<ewallet-reference type-str>',
+                    'create_date': '<%d-%m-%Y %H:%M:%S type-str tz-UTC>',
+                    'write_date': '<%d-%m-%Y %H:%M:%S type-str tz-UTC>',
+                    'credits': '<available-credits type-int>',
+                    'clock': '<active-credit-clock-id type-int>',
+                    'clock_archive': {
+                        '<credit-clock-id type-int>': '<credit-clock-reference type-str>'
+                    },
+                    'transfer_sheet': '<active-transfer-sheet-id type-int>',
+                    'transfer_sheet_archive': {
+                        '<transfer-sheet-id type-int>': '<transfer-sheet-reference type-str>'
+                    },
+                    'invoice_sheet': '<active-invoice-sheet-id type-int>',
+                    'invoice_sheet_archive': {
+                        '<invoice-sheet-id type-int>': '<invoice-sheet-reference type-str>'
+                    }
+                }
+            }
+
+            - NOK: {
+                'failed': '<flag type-bool value-true>',
+                'error': '<error-message type-str>',
+                'warning': '<warning-message type-str>',
+                'level': '<entity-level type-str>',
+                'details': '<data-set type-set>',
+            }
+
+        - User Account States:
+            - Logged In
+
+     __________________________________________________________________________
+____/   Section 18:96 (User) SwitchCreditClock
+
+    - User action Switch Credit Clock
+
+        - Label: SwitchCreditClock
+
+        - Prerequisits:
+            - RequestClientID
+            - RequestSessionToken
+            - AcquireMaster
+            - CreateAccount
+            - AccountLogin
+            - CreateCreditClock
+
+        - Instruction Set: {
+            'controller': 'client',
+            'ctype': 'action',
+            'action': 'switch',
+            'switch': 'credit',
+            'credit': 'clock',
+            'client_id': '<client-id type-str>',
+            'session_token': '<session-token type-str>',
+            'clock_id': '<credit-clock-id type-int>',
+        }
+
+        - Response:
+
+            - OK: {
+                'failed': '<flag type-bool value-false>',
+                'clock': '<credit-clock-id type-int>',
+                'clock_data': {
+                    'id': '<credit-clock-id type-int>',
+                    'ewallet': '<ewallet-id type-int>',
+                    'reference': '<credit-clock-reference type-str>',
+                    'create_date': '<%d-%m-%Y %H:%M:%S type-str tz-UTC>',
+                    'write_date': '<%d-%m-%Y %H:%M:%S type-str tz-UTC>',
+                    'credit_clock': '<available-clock-minutes type-float>',
+                    'clock_state': '<clock-timer-state values-(active | inactive) type-str>',
+                    'time_sheet': '<active-time-sheet-id type-int>',
+                    'time_sheet_archive': {
+                        '<time-sheet-id type-int>': '<time-sheet-reference type-str>'
+                    },
+                    'conversion_sheet': '<active-conversion-sheet-id type-int>',
+                    'conversion_sheet_archive': {
+                        '<conversion-sheet-id type-int>': '<conversion-sheet-reference type-str>'
+                    }
+                }
+            }
+
+            - NOK: {
+                'failed': '<flag type-bool value-true>',
+                'error': '<error-message type-str>',
+                'warning': '<warning-message type-str>',
+                'level': '<entity-level type-str>',
+                'details': '<data-set type-set>',
+            }
+
+        - User Account States:
+            - Logged In
+
+     __________________________________________________________________________
+____/   Section 18:97 (User) SwitchTransferSheet
+
+    - User action Switch Transfer Sheet
+
+        - Label: SwitchTransferSheet
+
+        - Prerequisits:
+            - RequestClientID
+            - RequestSessionToken
+            - AcquireMaster
+            - CreateAccount
+            - AccountLogin
+            - CreateTransferSheet
+
+        - Instruction Set: {
+            'controller': 'client',
+            'ctype': 'action',
+            'action': 'switch',
+            'switch': 'transfer',
+            'transfer': 'list',
+            'client_id': '<client-id type-str>',
+            'session_token': '<session-token type-str>',
+            'sheet_id': '<transfer-sheet-id type-int>',
+        }
+
+        - Response:
+
+            - OK: {
+                'failed': '<flag type-bool value-false>',
+                'transfer_sheet': '<transfer-sheet-id type-int>',
+                'sheet_data': {
+                    'id': '<transfer-sheet-id type-int>',
+                    'ewallet': '<ewallet-id type-int>',
+                    'reference': '<transfer-sheet-reference type-int>',
+                    'create_date': '<%d-%m-%Y %H:%M:%S type-str tz-UTC>',
+                    'write_date': '<%d-%m-%Y %H:%M:%S type-str tz-UTC>',
+                    'records': {
+                        '<transfer-record-id type-int>': '<transfer-record-reference type-str>'
+                    }
+                }
+            }
+
+            - NOK: {
+                'failed': '<flag type-bool value-true>',
+                'error': '<error-message type-str>',
+                'warning': '<warning-message type-str>',
+                'level': '<entity-level type-str>',
+                'details': '<data-set type-set>',
+            }
+
+        - User Account States:
+            - Logged In
+
+     __________________________________________________________________________
+____/   Section 18:98 (User) SwitchInvoiceSheet
+
+    - User action Switch Invoice Sheet
+
+        - Label: SwitchInvoiceSheet
+
+        - Prerequisits:
+            - RequestClientID
+            - RequestSessionToken
+            - AcquireMaster
+            - CreateAccount
+            - AccountLogin
+            - CreateInvoiceSheet
+
+        - Instruction Set: {
+            'controller': 'client',
+            'ctype': 'action',
+            'action': 'switch',
+            'switch': 'invoice',
+            'invoice': 'list',
+            'client_id': '<client-id type-str>',
+            'session_token': '<session-token type-str>',
+            'sheet_id': '<invoice-sheet-id type-int>',
+        }
+
+        - Response:
+
+            - OK: {
+                'failed': '<flag type-bool value-false>',
+                'invoice_sheet': '<invoice-sheet-id type-int>',
+                'sheet_data': {
+                    'id': '<invoice-sheet-id type-int>',
+                    'ewallet': '<ewallet-id type-int>',
+                    'reference': '<invoice-sheet-reference type-int>',
+                    'create_date': '<%d-%m-%Y %H:%M:%S type-str tz-UTC>',
+                    'write_date': '<%d-%m-%Y %H:%M:%S type-str tz-UTC>',
+                    'records': {
+                        '<invoice-record-id type-int>': '<invoice-record-reference type-str>'
+                    }
+                }
+            }
+
+            - NOK: {
+                'failed': '<flag type-bool value-true>',
+                'error': '<error-message type-str>',
+                'warning': '<warning-message type-str>',
+                'level': '<entity-level type-str>',
+                'details': '<data-set type-set>',
+            }
+
+        - User Account States:
+            - Logged In
+
+     __________________________________________________________________________
+____/   Section 18:99 (User) SwitchConversionSheet
+
+    - User action Switch Conversion Sheet
+
+        - Label: SwitchConversionSheet
+
+        - Prerequisits:
+            - RequestClientID
+            - RequestSessionToken
+            - AcquireMaster
+            - CreateAccount
+            - AccountLogin
+            - CreateConversionSheet
+
+        - Instruction Set: {
+            'controller': 'client',
+            'ctype': 'action',
+            'action': 'switch',
+            'switch': 'conversion',
+            'conversion': 'list',
+            'client_id': '<client-id type-str>',
+            'session_token': '<session-token type-str>',
+            'sheet_id': '<conversion-sheet-id type-int>',
+        }
+
+        - Response:
+
+            - OK: {
+                'failed': '<flag type-bool value-false>',
+                'conversion_sheet': '<conversion-sheet-id type-int>',
+                'sheet_data': {
+                    'id': '<conversion-sheet-id type-int>',
+                    'clock': '<conversion-sheet-id type-int>',
+                    'reference': '<conversion-sheet-reference type-str>',
+                    'create_date': '<%d-%m-%Y %H:%M:%S type-str tz-UTC>',
+                    'write_date': '<%d-%m-%Y %H:%M:%S type-str tz-UTC>',
+                    'records': {
+                        '<conversion-record-id type-int>': '<conversion-record-reference type-str>'
+                    }
+                }
+            }
+
+            - NOK: {
+                'failed': '<flag type-bool value-true>',
+                'error': '<error-message type-str>',
+                'warning': '<warning-message type-str>',
+                'level': '<entity-level type-str>',
+                'details': '<data-set type-set>',
+            }
+
+        - User Account States:
+            - Logged In
+
+     __________________________________________________________________________
+____/   Section 18:100 (User) SwitchTimeSheet
+
+    - User action Switch Time Sheet
+
+        - Label: SwitchTimeSheet
+
+        - Prerequisits:
+            - RequestClientID
+            - RequestSessionToken
+            - AcquireMaster
+            - CreateAccount
+            - AccountLogin
+            - CreateTimeSheet
+
+        - Instruction Set: {
+            'controller': 'client',
+            'ctype': 'action',
+            'action': 'switch',
+            'switch': 'time',
+            'time': 'list',
+            'client_id': '<client-id type-str>',
+            'session_token': '<session-token type-str>',
+            'sheet_id': '<time-sheet-id type-int>',
+        }
+
+        - Response:
+
+            - OK: {
+                'failed': '<flag type-bool value-false>',
+                'time_sheet': '<time-sheet-id type-int>',
+                'sheet_data': {
+                    'id': '<time-sheet-id type-int>',
+                    'clock': '<credit-clock-id type-int>',
+                    'reference': '<time-sheet-reference type-str>',
+                    'create_date': '<%d-%m-%Y %H:%M:%S type-str tz-UTC>',
+                    'write_date': '<%d-%m-%Y %H:%M:%S type-str tz-UTC>',
+                    'records': {
+                        '<time-record-id type-int>': '<time-record-reference type-str>'
+                    }
+                }
+            }
+
+            - NOK: {
+                'failed': '<flag type-bool value-true>',
+                'error': '<error-message type-str>',
+                'warning': '<warning-message type-str>',
+                'level': '<entity-level type-str>',
+                'details': '<data-set type-set>',
+            }
+
+        - User Account States:
+            - Logged In
+
+     __________________________________________________________________________
+____/   Section 18:101 (User) SwitchContactList
+
+    - User action Switch Contact List
+
+        - Label: SwitchContactList
+
+        - Prerequisits:
+            - RequestClientID
+            - RequestSessionToken
+            - AcquireMaster
+            - CreateAccount
+            - AccountLogin
+            - CreateContactList
+
+        - Instruction Set: {
+            'controller': 'client',
+            'ctype': 'action',
+            'action': 'switch',
+            'switch': 'contact',
+            'contact': 'list',
+            'client_id': '<client-id type-str>',
+            'session_token': '<session-token type-str>',
+            'list_id': '<contact-list-id type-int>',
+        }
+
+        - Response:
+
+            - OK: {
+                'failed': '<flag type-bool value-false>',
+                'contact_list': '<contact-list-id type-int>',
+                'list_data': {
+                    'id': '<contact-list-id type-int>',
+                    'user': '<account-id type-int>',
+                    'reference': '<contact-list-reference type-str>',
+                    'create_date': '<%d-%m-%Y %H:%M:%S type-str tz-UTC>',
+                    'write_date': '<%d-%m-%Y %H:%M:%S type-str tz-UTC>',
+                    'records': {
+                        '<contact-record-id type-int>': '<contact-record-email type-str>'
+                    }
+                }
+            }
+
+            - NOK: {
+                'failed': '<flag type-bool value-true>',
+                'error': '<error-message type-str>',
+                'warning': '<warning-message type-str>',
+                'level': '<entity-level type-str>',
+                'details': '<data-set type-set>',
+            }
+
+        - User Account States:
+            - Logged In
+
+     __________________________________________________________________________
+____/   Section 18:102 (User) UnlinkAccount
+
+    - User action Unlink Account
+
+        - Label: UnlinkAccount
+
+        - Prerequisits:
+            - RequestClientID
+            - RequestSessionToken
+            - AcquireMaster
+            - CreateAccount
+            - AccountLogin
+
+        - Instruction Set: {
+            'controller': 'client',
+            'ctype': 'action',
+            'action': 'unlink',
+            'unlink': 'account',
+            'client_id': '<client-id type-str>',
+            'session_token': '<session-token type-str>',
+            'forced_removal': '<forced-flag optional-true type-bool>',
+        }
+
+        - Response:
+
+            - OK: {
+                'failed': '<flag type-bool value-false>',
+                'account': '<account-user-email type-str>',
+            }
+
+            - NOK: {
+                'failed': '<flag type-bool value-true>',
+                'level': '<entity-level type-str>',
+                'details': '<data-set type-set>',
+                'error': '<error-message type-str>',
+                'warning': '<warning-message type-str>',
+            }
+
+        - User Account States:
+            - Logged In
+
+     __________________________________________________________________________
+____/   Section 18:104 (User) UnlinkContactList
+
+    - User action Unlink Contact List
+
+        - Label: UnlinkContactList
+
+        - Prerequisits:
+            - RequestClientID
+            - RequestSessionToken
+            - AcquireMaster
+            - CreateAccount
+            - AccountLogin
+            - CreateContactList
+
+        - Instruction Set: {
+            'controller': 'client',
+            'ctype': 'action',
+            'action': 'unlink',
+            'unlink': 'contact',
+            'contact': 'list',
+            'client_id': '<client-id type-str>',
+            'session_token': '<session-token type-str>',
+            'list_id': '<contact-list-id type-int>',
+        }
+
+        - Response:
+
+            - OK: {
+                'failed': '<flag type-bool value-false>',
+                'contact_list': '<contact-list-id type-int>',
+            }
+
+            - NOK: {
+                'failed': '<flag type-bool value-true>',
+                'error': '<error-message type-str>',
+                'warning': '<warning-message type-str>',
+                'level': '<entity-level type-str>',
+                'details': '<data-set type-set>',
+            }
+
+        - User Account States:
+            - Logged In
+
+     __________________________________________________________________________
+____/   Section 18:105 (User) UnlinkContactRecord
+
+    - User action Unlink Contact Record
+
+        - Label: UnlinkContactRecord
+
+        - Prerequisits:
+            - RequestClientID
+            - RequestSessionToken
+            - AcquireMaster
+            - CreateAccount
+            - AccountLogin
+            - NewContactRecord
+
+        - Instruction Set: {
+            'controller': 'client',
+            'ctype': 'action',
+            'action': 'unlink',
+            'unlink': 'contact',
+            'contact': 'record',
+            'client_id': '<client-id type-str>',
+            'session_token': '<session-token type-str>',
+            'record_id': '<contact-record-id type-int>',
+        }
+
+        - Response:
+
+            - OK: {
+                'failed': '<flag type-bool value-false>',
+                'contact_list': '<contact-list-id type-int>',
+                'contact_record': '<contact-record-id type-int>',
+            }
+
+            - NOK: {
+                'failed': '<flag type-bool value-true>',
+                'error': '<error-message type-str>',
+                'warning': '<warning-message type-str>',
+                'level': '<entity-level type-str>',
+                'details': '<data-set type-set>',
+            }
+
+        - User Account States:
+            - Logged In
+
+     __________________________________________________________________________
+____/   Section 18:106 (User) UnlinkConversionSheet
+
+    - User action Unlink Conversion Sheet
+
+        - Label: UnlinkConversionSheet
+
+        - Prerequisits:
+            - RequestClientID
+            - RequestSessionToken
+            - AcquireMaster
+            - CreateAccount
+            - AccountLogin
+            - CreateConversionSheet
+
+        - Instruction Set: {
+            'controller': 'client',
+            'ctype': 'action',
+            'action': 'unlink',
+            'unlink': 'conversion',
+            'conversion': 'list',
+            'client_id': '<client-id type-str>',
+            'session_token': '<session-token type-str>',
+            'list_id': '<conversion-sheet-id type-int>',
+        }
+
+        - Response:
+
+            - OK: {
+                'failed': '<flag type-bool value-false>',
+                'conversion_sheet': '<conversion-sheet-id type-int>',
+            }
+
+            - NOK: {
+                'failed': '<flag type-bool value-true>',
+                'error': '<error-message type-str>',
+                'warning': '<warning-message type-str>',
+                'level': '<entity-level type-str>',
+                'details': '<data-set type-set>',
+            }
+
+        - User Account States:
+            - Logged In
+
+     __________________________________________________________________________
+____/   Section 18:107 (User) UnlinkConversionRecord
+
+    - User action Unlink Conversion Record
+
+        - Label: UnlinkConversionRecord
+
+        - Prerequisits:
+            - RequestClientID
+            - RequestSessionToken
+            - AcquireMaster
+            - CreateAccount
+            - AccountLogin
+            - ConvertCreditsToClock
+
+        - Instruction Set: {
+            'controller': 'client',
+            'ctype': 'action',
+            'action': 'unlink',
+            'unlink': 'conversion',
+            'conversion': 'record',
+            'client_id': '<client-id type-str>',
+            'session_token': '<session-token type-str>',
+            'record_id': '<conversion-record-id type-int>',
+        }
+
+        - Response:
+
+            - OK: {
+                'failed': '<flag type-bool value-false>',
+                'conversion_sheet': '<conversion-sheet-id type-int>',
+                'conversion_record': '<conversion-record-id type-int>',
+            }
+
+            - NOK: {
+                'failed': '<flag type-bool value-true>',
+                'error': '<error-message type-str>',
+                'warning': '<warning-message type-str>',
+                'level': '<entity-level type-str>',
+                'details': '<data-set type-set>',
+            }
+
+        - User Account States:
+            - Logged In
+
+     __________________________________________________________________________
+____/   Section 18:108 (User) UnlinkTransferSheet
+
+    - User action Unlink Transfer Sheet
+
+        - Label: UnlinkTransferSheet
+
+        - Prerequisits:
+            - RequestClientID
+            - RequestSessionToken
+            - AcquireMaster
+            - CreateAccount
+            - AccountLogin
+            - CreateTransferSheet
+
+        - Instruction Set: {
+            'controller': 'client',
+            'ctype': 'action',
+            'action': 'unlink',
+            'unlink': 'transfer',
+            'transfer': 'list',
+            'client_id': '<client-id type-str>',
+            'session_token': '<session-token type-str>',
+            'list_id': '<transfer-sheet-id type-int>',
+        }
+
+        - Response:
+
+            - OK: {
+                'failed': '<flag type-bool value-false>',
+                'transfer_sheet': '<transfer-sheet-id type-int>',
+            }
+
+            - NOK: {
+                'failed': '<flag type-bool value-true>',
+                'error': '<error-message type-str>',
+                'warning': '<warning-message type-str>',
+                'level': '<entity-level type-str>',
+                'details': '<data-set type-set>',
+            }
+
+        - User Account States:
+            - Logged In
+
+     __________________________________________________________________________
+____/   Section 18:109 (User) UnlinkTransferRecord
+
+    - User action Unlink Transfer Record
+
+        - Label: UnlinkTransferRecord
+
+        - Prerequisits:
+            - RequestClientID
+            - RequestSessionToken
+            - AcquireMaster
+            - CreateAccount
+            - AccountLogin
+            - TransferCredits
+
+        - Instruction_set: {
+            'controller': 'client',
+            'ctype': 'action',
+            'action': 'unlink',
+            'unlink': 'transfer',
+            'transfer': 'record',
+            'client_id': '<client-id type-str>',
+            'session_token': '<session-token type-str>',
+            'record_id': '<transfer-record-id type-int>',
+        }
+
+        - Response:
+
+            - OK: {
+                'failed': '<flag type-bool value-false>',
+                'transfer_sheet': '<transfer-sheet-id type-int>',
+                'transfer_record': '<transfer-record-id type-int>'
+            }
+
+            - NOK: {
+                'failed': '<flag type-bool value-true>',
+                'error': '<error-message type-str>',
+                'warning': '<warning-message type-str>',
+                'level': '<entity-level type-str>',
+                'details': '<data-set type-set>',
+            }
+
+        - User Account States:
+            - Logged In
+
+     __________________________________________________________________________
+____/   Section 18:110 (User) UnlinkTimeSheet
+
+    - User action Unlink Time Sheet
+
+        - Label: UnlinkTimeSheet
+
+        - Prerequisits:
+            - RequestClientID
+            - RequestSessionToken
+            - AcquireMaster
+            - CreateAccount
+            - AccountLogin
+            - CreateTimeSheet
+
+        - Instruction Set: {
+            'controller': 'client',
+            'ctype': 'action',
+            'action': 'unlink',
+            'unlink': 'time',
+            'time': 'list',
+            'client_id': '<client-id type-str>',
+            'session_token': '<session-token type-str>',
+            'list_id': '<time-sheet-id type-int>',
+        }
+
+        - Response:
+
+            - OK: {
+                'failed': '<flag type-bool value-false>',
+                'time_sheet': '<time-sheet-id type-int>',
+            }
+
+            - NOK: {
+                'failed': '<flag type-bool value-true>',
+                'error': '<error-message type-str>',
+                'warning': '<warning-message type-str>',
+                'level': '<entity-level type-str>',
+                'details': '<data-set type-set>',
+            }
+
+        - User Account States:
+            - Logged In
+
+     __________________________________________________________________________
+____/   Section 18:111 (User) UnlinkTimeRecord
+
+    - User action Unlink Time Record
+
+        - Label: UnlinkTimeRecord
+
+        - Prerequisits:
+            - RequestClientID
+            - RequestSessionToken
+            - AcquireMaster
+            - CreateAccount
+            - AccountLogin
+            - StartClockTimer
+            - StopClockTimer
+
+        - Instruction Set: {
+            'controller': 'client',
+            'ctype': 'action',
+            'action': 'unlink',
+            'unlink': 'time',
+            'time': 'record',
+            'client_id': '<client-id type-str>',
+            'session_token': '<session-token type-str>',
+            'record_id': '<time-record-id type-int>',
+        }
+
+        - Response:
+
+            - OK: {
+                'failed': '<flag type-bool value-false>',
+                'time_sheet': '<time-sheet-id type-int>',
+                'time_record': '<time-record-id type-int>',
+            }
+
+            - NOK: {
+                'failed': '<flag type-bool value-true>',
+                'error': '<error-message type-str>',
+                'warning': '<warning-message type-str>',
+                'level': '<entity-level type-str>',
+                'details': '<data-set type-set>',
+            }
+
+        - User Account States:
+            - Logged In
+
+     __________________________________________________________________________
+____/   Section 18:112 (User) UnlinkInvoiceSheet
+
+    - User action Unlink Invoice Sheet
+
+        - Label: UnlinkInvoiceSheet
+
+        - Prerequisits:
+            - RequestClientID
+            - RequestSessionToken
+            - AcquireMaster
+            - CreateAccount
+            - AccountLogin
+            - CreateInvoiceSheet
+
+        - Instruction Set: {
+            'controller': 'client',
+            'ctype': 'action',
+            'action': 'unlink',
+            'unlink': 'invoice',
+            'invoice': 'list',
+            'client_id': '<client-id type-str>',
+            'session_token': '<session-token type-str>',
+            'list_id': '<invoice-sheet-id type-int>',
+        }
+
+        - Response:
+
+            - OK: {
+                'failed': '<flag type-bool value-false>',
+                'invoice_sheet': '<invoice-sheet-id type-int>',
+            }
+
+            - NOK: {
+                'failed': '<flag type-bool value-true>',
+                'error': '<error-message type-str>',
+                'warning': '<warning-message type-str>',
+                'level': '<entity-level type-str>',
+                'details': '<data-set type-set>',
+            }
+
+        - User Account States:
+            - Logged In
+
+     __________________________________________________________________________
+____/   Section 18:113 (User) UnlinkInvoiceRecord
+
+    - User action Unlink Invoice Record
+
+        - Label: UnlinkInvoiceRecord
+
+        - Prerequisits:
+            - RequestClientID
+            - RequestSessionToken
+            - AcquireMaster
+            - CreateAccount
+            - AccountLogin
+            - PayCredits
+
+        - Instruction Set: {
+            'controller': 'client',
+            'ctype': 'action',
+            'action': 'unlink',
+            'unlink': 'invoice',
+            'invoice': 'record',
+            'client_id': '<client-id type-str>',
+            'session_token': '<session-token type-str>',
+            'record_id': '<invoice-record-id type-int>',
+        }
+
+        - Response:
+
+            - OK: {
+                'failed': '<flag type-bool value-false>',
+                'invoice_sheet': '<invoice-sheet-id type-int>',
+                'invoice_record': '<invoice-record-id type-int>',
+            }
+
+            - NOK: {
+                'failed': '<flag type-bool value-true>',
+                'error': '<error-message type-str>',
+                'warning': '<warning-message type-str>',
+                'level': '<entity-level type-str>',
+                'details': '<data-set type-set>',
+            }
+
+        - User Account States:
+            - Logged In
+
+     __________________________________________________________________________
+____/   Section 18:114 (User) UnlinkCreditEWallet
+
+    - User action Unlink Credit EWallet
+
+        - Label: UnlinkCreditEWallet
+
+        - Prerequisits:
+            - RequestClientID
+            - RequestSessionToken
+            - AcquireMaster
+            - CreateAccount
+            - AccountLogin
+            - CreateCreditEWallet
+
+        - Instruction Set: {
+            'controller': 'client',
+            'ctype': 'action',
+            'action': 'unlink',
+            'unlink': 'credit',
+            'credit': 'ewallet',
+            'client_id': '<client-id type-str>',
+            'session_token': '<session-token type-str>',
+            'ewallet_id': '<ewallet-id type-int>',
+        }
+
+        - Response:
+
+            - OK: {
+                'failed': '<flag type-bool value-false>',
+                'ewallet': '<ewallet-id type-int>',
+            }
+
+            - NOK: {
+                'failed': '<flag type-bool value-true>',
+                'error': '<error-message type-str>',
+                'warning': '<warning-message type-str>',
+                'level': '<entity-level type-str>',
+                'details': '<data-set type-set>',
+            }
+
+        - User Account States:
+            - Logged In
+
+     __________________________________________________________________________
+____/   Section 18:115 (User) UnlinkCreditClock
+
+    - User action Unlink Credit Clock
+
+        - Label: UnlinkCreditClock
+
+        - Prerequisits:
+            - RequestClientID
+            - RequestSessionToken
+            - AcquireMaster
+            - CreateAccount
+            - AccountLogin
+            - CreateCreditClock
+
+        - Instruction Set: {
+            'controller': 'client',
+            'ctype': 'action',
+            'action': 'unlink',
+            'unlink': 'credit',
+            'credit': 'clock',
+            'client_id': '<client-id type-str>',
+            'session_token': '<session-token type-str>',
+            'clock_id': '<credit-clock-id type-int>',
+        }
+
+        - Response:
+
+            - OK: {
+                'failed': '<flag type-bool value-false>',
+                'credit_clock': '<credit-clock-id type-int>',
+            }
+
+            - NOK: {
+                'failed': '<flag type-bool value-true>',
+                'error': '<error-message type-str>',
+                'warning': '<warning-message type-str>',
+                'level': '<entity-level type-str>',
+                'details': '<data-set type-set>',
+            }
+
+        - User Account States:
+            - Logged In
+
+     __________________________________________________________________________
+____/   Section 18:116 (User) RecoverAccount
+
+    - User action Recover Account
+
+        - Label: RecoverAccount
+
+        - Prerequisits:
+            - RequestClientID
+            - RequestSessionToken
+            - AcquireMaster
+            - CreateAccount
+            - AccountLogin
+            - UnlinkAccount
+
+        - Instruction Set: {
+            'controller': 'client',
+            'ctype': 'action',
+            'action': 'recover',
+            'recover': 'account',
+            'client_id': '<client-id type-str>',
+            'session_token': '<session-token type-str>',
+        }
+
+        - Response:
+
+            - OK: {
+                'failed': '<flag type-bool value-false>',
+                'account': '<account-user-email type-str>',
+                'account_data': {
+                    'id': '<account-id type-int>',
+                    'name': '<account-user-name type-str>',
+                    'create_date': '<%d-%m-%Y %H:%M:%S type-str tz-UTC>',
+                    'write_date': '<%d-%m-%Y %H:%M:%S type-str tz-UTC>',
+                    'ewallet': '<active-ewallet-id type-int>',
+                    'contact_list': '<active-contact-list-id type-int>',
+                    'email': '<account-user-email type-str>',
+                    'phone': '<account-user-phone type-str>',
+                    'alias': '<account-user-alias type-str>',
+                    'state': '<account-state-code type-int>',
+                    'to_unlink': '<flag type-bool>',
+                    'to_unlink_timestamp': '<%d-%m-%Y %H:%M:%S type-str tz-UTC or None>',
+                    'subordonate_of': '<master-account-id type-int>',
+                    'ewallet_archive': {
+                        '<ewallet-id type-int>': '<ewallet-reference type-str>'
+                    },
+                    'contact_list_archive':{
+                        '<contact-list-id type-int>': '<contact-list-reference type-str>'
+                    },
+                },
+                'session_data': {
+                    'session_user_account': '<account-user-email type-str>',
+                    'session_credit_ewallet': '<active-session-ewallet-id type-int>',
+                    'session_contact_list': '<active-session-contact-list-id type-int>',
+                    'session_account_archive': {
+                        '<account-user-email type-str>': '<account-user-name type-str>',
+                    },
+                },
+            }
+
+            - NOK: {
+                'failed': '<flag type-bool value-true>',
+                'error': '<error-message type-str>',
+                'level': '<entity-level type-str>',
+                'details': '<data-set type-set>',
+                'warning': '<warning-message type-str>'
+            }
+
+        - User Account States:
+            - Logged In
+
+        _________________________________
+       /    EWSC-TechDox - Chapter 19
+===============================================================================
+    Events
+===============================================================================
+
+        _________________________________
+       /    EWSC-TechDox - Chapter 20
+===============================================================================
+    EWDox
+===============================================================================
+
+        _________________________________
+       /    EWSC-TechDox - Chapter 21
+===============================================================================
+    Cron Jobs
+===============================================================================
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
