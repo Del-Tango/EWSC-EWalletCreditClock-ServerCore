@@ -185,6 +185,7 @@ Less information is never the answer.
     - (EWSC) Implement clock timer session termination upon clock depletion
     - (EWSC) Refactor client action IssueReport to add server side logs
     - (EWSC) Refactor EWServer to have only one config object passed
+    - (EWSC) Refactor worker session token map, allow multiple session tokens per client token
     - (EWSC, EWCC, EWAT) Implement entity record limiter queue mechanism
     - (EWSC, EWCC, EWAT) Refactor master action Edit to include master key code
     - (EWSC, EWCC, EWAT) Send user account password as hash

@@ -20,22 +20,22 @@ class TestEWalletSessionManagerSystemWorkerTargetCleanup(unittest.TestCase):
         #           not passed over worker limit defined in config file to handle new
         #           session token requests
 
-        print('[...]: System action NewWorker (1)')
+        print('[...]: System action CreateWorker (1)')
         worker = session_manager.session_manager_controller(
             controller='system', ctype='action', action='new', new='worker'
         )
 
-        print('[...]: System action NewWorker (2)')
+        print('[...]: System action CreateWorker (2)')
         worker = session_manager.session_manager_controller(
             controller='system', ctype='action', action='new', new='worker'
         )
 
-        print('[...]: System action NewWorker (3)')
+        print('[...]: System action CreateWorker (3)')
         worker = session_manager.session_manager_controller(
             controller='system', ctype='action', action='new', new='worker'
         )
 
-        print('[...]: System action NewWorker (4)')
+        print('[...]: System action CreateWorker (4)')
         worker = session_manager.session_manager_controller(
             controller='system', ctype='action', action='new', new='worker'
         )

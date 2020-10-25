@@ -13,7 +13,7 @@ class TestEWalletSessionManagerSystemActionNewSession(unittest.TestCase):
         session_manager = manager.EWalletSessionManager()
 
         # Create first EWallet Session Worker
-        print('[...]: System action NewWorker')
+        print('[...]: System action CreateWorker')
         worker = session_manager.session_manager_controller(
             controller='system', ctype='action', action='new', new='worker'
         )
@@ -33,7 +33,7 @@ class TestEWalletSessionManagerSystemActionNewSession(unittest.TestCase):
             )
 
     def test_system_new_session_functionality(self):
-        print('\n[ * ]: System action NewSession')
+        print('\n[ * ]: System action CreateSession')
         instruction_set = {
             'controller': 'system', 'ctype': 'action', 'action': 'new',
             'new': 'session', 'reference': 'EWallet Session Test'

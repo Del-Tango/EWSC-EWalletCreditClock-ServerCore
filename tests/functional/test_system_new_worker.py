@@ -28,7 +28,7 @@ class TestEWalletSessionManagerSystemActionNewWorker(unittest.TestCase):
             )
 
     def test_system_new_worker_functionality(self):
-        print('[ * ]: System action NewWorker')
+        print('[ * ]: System action CreateWorker')
         instruction_set = {
             'controller': 'system', 'ctype': 'action', 'action': 'new',
             'new': 'worker'

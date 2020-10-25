@@ -14,7 +14,7 @@ class TestEWalletSessionManagerSystemSessionCleanupTarget(unittest.TestCase):
         session_manager = manager.EWalletSessionManager()
 
         # Create first EWallet Session Worker
-        print('[...]: System action NewWorker')
+        print('[...]: System action CreateWorker')
         worker = session_manager.session_manager_controller(
             controller='system', ctype='action', action='new', new='worker'
         )

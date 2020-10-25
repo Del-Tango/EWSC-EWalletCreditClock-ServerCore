@@ -26,6 +26,7 @@ class EWalletSessionUser(Base):
     [ NOTE ]: Many2many table for user sessions.
     '''
     __tablename__ = 'ewallet_session_user'
+
     id = Column(Integer, primary_key=True)
     session_id = Column(Integer, ForeignKey('ewallet.id'))
     user_id = Column(Integer, ForeignKey('res_user.user_id'))

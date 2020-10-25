@@ -35,33 +35,73 @@
 
     2.  Setup and Configuration .............................................. TODO
 
+        2.1. Config File .....................................................
+
     3.  Session Manager ...................................................... TODO
+
+        3.1. Session Manager Attribute Map ...................................
 
     4.  Session Worker ....................................................... TODO
 
+        4.1. Session Worker Attribute Map ....................................
+
     5.  EWallet Session ...................................................... TODO
+
+        5.1. EWallet Session Attribute Map ...................................
 
     6.  Client Token ......................................................... TODO
 
+        6.1. Client Token Attribute Map ......................................
+
     7.  Session Token ........................................................ TODO
+
+        7.1. Session Token Attribute Map .....................................
 
     8.  Master Accounts ...................................................... TODO
 
+        8.1. Master Account Attribute Map ....................................
+
     9.  Subordonate Accounts ................................................. TODO
+
+        9.1. Subordonate Account Attribute Map ...............................
 
     10. Credit EWallet ....................................................... TODO
 
+        10.1. Credit EWallet Attribute Map ...................................
+
     11. Credit Clock ......................................................... TODO
+
+        11.1. Credit Clock Attribute Map .....................................
 
     12. Transfer Sheets ...................................................... TODO
 
+        12.1. Transfer Sheet Attribute Map ...................................
+
+        12.2. Transfer Record Attribute Map ..................................
+
     13. Invoice Sheets ....................................................... TODO
+
+        13.1. Invoice Sheet Attribute Map ....................................
+
+        13.2. Invoice Record Attribute Map ...................................
 
     14. Conversion Sheets .................................................... TODO
 
+        14.1. Conversion Sheet Attribute Map .................................
+
+        14.2. Conversion Record Attribute Map ................................
+
     15. Time Sheets .......................................................... TODO
 
+        15.1. Time Sheet Attribute Map .......................................
+
+        15.2. Time Record Attribute Map ......................................
+
     16. Contact List ......................................................... TODO
+
+        16.1. Contact List Attribute Map .'...................................
+
+        16.2. Contact Record Attribute Map ...................................
 
     17. Controllers .......................................................... TODO
 
@@ -129,35 +169,35 @@
 
         18.28.  Master action ViewLogoutRecords ..............................
 
-        18.29.  System action NewWorker ...................................... TODO
+        18.29.  System action CreateWorker ...................................
 
-        18.30.  System action NewSession ..................................... TODO
+        18.30.  System action CreateSession ..................................
 
-        18.31.  System action FreezeMaster ................................... TODO
+        18.31.  System action FreezeMaster ...................................
 
-        18.32.  System action UnfreezeMaster ................................. TODO
+        18.32.  System action UnfreezeMaster .................................
 
-        18.33.  System action IncreaseMasterSubPool .......................... TODO
+        18.33.  System action IncreaseMasterSubPool ..........................
 
-        18.34.  System action DecreaseMasterSubPool .......................... TODO
+        18.34.  System action DecreaseMasterSubPool ..........................
 
-        18.35.  System action InterogateSessionWorkers ....................... TODO
+        18.35.  System action InterogateSessionWorkers .......................
 
-        18.36.  System action TargetCleanupMaster ............................ TODO
+        18.36.  System action TargetCleanupMaster ............................
 
-        18.37.  System action TargetCleanupWorker ............................ TODO
+        18.37.  System action TargetCleanupWorker ............................
 
-        18.38.  System action TargetCleanupSession ........................... TODO
+        18.38.  System action TargetCleanupSession ...........................
 
-        18.39.  System action TargetCleanupCToken ............................ TODO
+        18.39.  System action TargetCleanupCToken ............................
 
-        18.40.  System action TargetCleanupSToken ............................ TODO
+        18.40.  System action TargetCleanupSToken ............................
 
-        18.41.  System action SweepCleanupMasters ............................ TODO
+        18.41.  System action SweepCleanupMasters ............................
 
-        18.42.  System action SweepCleanupCTokens ............................ TODO
+        18.42.  System action SweepCleanupCTokens ............................
 
-        18.43.  System action SweepCleanupSTokens ............................ TODO
+        18.43.  System action SweepCleanupSTokens ............................
 
         18.44.  System action SweepCleanupWorkers ............................ TODO
 
@@ -430,11 +470,143 @@ ____/   Section 1:3 (EWSC) Action/Event controller scope
     Setup and Configuration
 ===============================================================================
 
+     __________________________________________________________________________
+____/   Section 2:1 (EWSC) Config File
+
+    [ NOTE ]: Config file options are to be set on separate lines using
+              the following format - <key> : <value>
+
+    - Server Setup
+
+        - run_mode                          - <     running-mode-flag           default-prepay              values-(prepay | credit)          type-str     > -
+        - server_address                    - <     ip-address                  default-127.0.0.1                                             type-str     > -
+        - server_port                       - <     port-number                 default-80                                                    type-str     > -
+
+    - Logger Setup
+
+        - log_name                          - <     logger                      default-EWServerCore                                          type-str     > -
+        - log_level                         - <     log-level                   default-DEBUG                                                 type-str     > -
+        - log_dir                           - <     directory                   default-logs/                                                 type-str     > -
+        - log_file                          - <     file                        default-ewallet.log                                           type-str     > -
+        - log_record_format                 - <     log-string-format
+                                                                                default-[ %(asctime)s ] %(name)s [ %(levelname)s ] - %(thread)d - %(filename)s - %(lineno)d: %(funcName)s - %(message)s
+                                                                                                                                              type-str     > -
+        - log_date_format                   - <     timestamp-string-format     default-%Y-%m-%d %H:%M:%S                                     type-str     > -
+
+    - Reports Setup
+
+        - reports_dir                       - <     directory                   default-reports/                                              type-str     > -
+        - issues_dir                        - <     directory                   default-issue_reports/                                        type-str     > -
+
+    - Config Setup
+
+        - conf_dir                          - <     directory                   default-conf/                                                 type-str     > -
+        - conf_file                         - <     file                        default-ewallet.conf                                          type-str     > -
+
+    - Session Manager Setup
+
+        - client_id_prefix                  - <     ctoken-label-prefix         default-ewsm-uid                                              type-str     > -
+        - client_id_length                  - <     ctoken-label-length         default-20                  unit-characters                   type-int     > -
+        - session_token_prefix              - <     stoken-label-prefix         default-ewsm-st                                               type-str     > -
+        - session_token_length              - <     stoken-label-length         default-20                  unit-characters                   type-int     > -
+        - system_user_name                  - <     ewsc-system-user-name       default-EWSCSystemCore                                        type-str     > -
+        - system_user_email                 - <     ewsc-system-user-email      default-ewsc.systemcore@alvearesolutions.ro                   type-str     > -
+        - system_user_alias                 - <     ewsc-system-user-alias      default-S:Core                                                type-str     > -
+        - client_id_validity                - <     ctoken-validity-interval    default-30                  unit-minutes                      type-int     > -
+        - session_token_validity            - <     stoken-validity-interval    default-30                  unit-minutes                      type-int     > -
+
+    - Session Worker Setip
+
+        - worker_reference                  - <     reference                   default-SessionWorker                                         type-str     > -
+        - worker_sigterm                    - <     worker-signal-string        default-terminate_worker                                      type-str     > -
+        - worker_limit                      - <     worker-pool-size            default-10                  unit-workers                      type-int     > -
+        - session_limit                     - <     session-pool-size           default-10                  unit-sessions                     type-int     > -
+
+    - EWallet Session Setup
+
+        - ewallet_session_validity          - <     session-validity            default-30                  unit-minutes                      type-int     > -
+
+    - Cron Setup
+
+        - account_cleaner_cron_label        - <     cron-label                  default-AccountCleaner                                        type-str     > -
+        - worker_cleaner_cron_label         - <     cron-label                  default-WorkerCleaner                                         type-str     > -
+        - session_cleaner_cron_label        - <     cron-label                  default-SessionCleaner                                        type-str     > -
+        - ctoken_cleaner_cron_label         - <     cron-label                  default-CTokenCleaner                                         type-str     > -
+        - account_cleaner_cron_interval     - <     trigger-interval            default-24                  unit-hours                        type-int     > -
+        - worker_cleaner_cron_interval      - <     trigger-interval            default-1                   unit-hours                        type-int     > -
+        - session_cleaner_cron_interval     - <     trigger-interval            default-30                  unit-minutes                      type-int     > -
+        - ctoken_cleaner_cron_interval      - <     trigger-interval            default-30                  unit-minutes                      type-int     > -
+
+    - Socket Handler Setup
+
+        - socket_handler_address            - <     ip-address                  default-127.0.0.1                                             type-str     > -
+        - esm_instruction_port              - <     port-number                 default-8080                                                  type-int     > -
+        - esm_response_port                 - <     port-number                 default-8081                                                  type-int     > -
+
+    - Client Setup
+
+        - keep_logged_in                    - <     keep-login-flag             default-0                   values-(0 | 1)                    type-int     > -
+        - account_unlink_freeze_interval    - <     account-recover-period      default-30                  unit-days                         type-int     > -
+
+    - Master Setup
+
+        - subordonate_pool_size             - <     account-pool-size           default-10                  unit-subordonates                 type-int     > -
+        - master_key_code                   - <     master-account-key-code     default-EWSC-Master-Key-Code                                  type-str     > -
+        - master_unlink_freeze_interval     - <     account-recover-period      default-30                  unit-days                         type-int     > -
+
+    - Credit EWallet Setup
+
+        - wallet_reference                  - <     reference                   default-EWallet                                               type-str     > -
+
+    - Credit Clock Setup
+
+        - clock_reference                   - <     reference                   default-CreditClock                                           type-str     > -
+
+    - Contact List Setup
+
+        - contact_list_reference            - <     reference                   default-ContactList                                           type-str     > -
+        - contact_record_reference          - <     reference                   default-ContactRecord                                         type-str     > -
+
+    - Time Sheet Setup
+
+        - time_sheet_reference              - <     reference                   default-TimeSheet                                             type-str     > -
+        - time_record_reference             - <     reference                   default-TimeRecord                                            type-str     > -
+
+    - Invoice Sheet Setup
+
+        - invoice_sheet_reference           - <     reference                   default-InvoiceSheet                                          type-str     > -
+        - invoice_record_reference          - <     reference                   default-InvoiceRecord                                         type-str     > -
+
+    - Transfer Sheet Setup
+
+        - transfer_sheet_reference          - <     reference                   default-TimeSheet                                             type-str     > -
+        - transfer_record_reference         - <     reference                   default-TimeRecord                                            type-str     > -
+
+    - Conversion Sheet Setup
+
+        - conversion_sheet_reference        - <     reference                   default-ConversionSheet                                       type-str     > -
+        - conversion_record_reference       - <     reference                   default-ConversionRecord                                      type-str     > -
+
         _________________________________
        /    EWSC-TechDox - Chapter 3
 ===============================================================================
     Session Manager
 ===============================================================================
+
+     __________________________________________________________________________
+____/   Section 3:1 (Fields) Session Manager
+
+    - config            - <     config          values-(<Config>        | None)                                                                                 type-object     > -
+    - res_utils         - <     utils           values-(<ResUtils>      | None)                                                                                 type-object     > -
+    - socket_handler    - <     socket-handler  values-(<SocketHandler> | None)                                                                                 type-object     > -
+    - create_date       - <     create-date     values-(<Datetime>      | None)                                                                                 type-datetime   > -
+    - write_date        - <     write-date      values-(<Datetime>      | None)                                                                                 type-datetime   > -
+    - cleaner_thread    - <     thread          values-(<Thread>        | None)                                                                                 type-object     > -
+    - primary_session   - <     session         values-(<EWallet>       | None)                                                                                 type-object     > -
+    - worker_pool       - <     worker-pool     values-{<worker-id>: {process: <Proc>, instruction: <Queue>, response: <Queue>, lock: <Value type-bool>}}       type-dict       > -
+    - ctoken_pool       - <     ctoken-pool     values-{<label>: <ClientToken>}                                                                                 type-dict       > -
+    - stoken_pool       - <     stoken-pool     values-{<label>: <SessionToken>}                                                                                type-dict       > -
+    - cron_pool         - <     cron-pool       values-{<label>: {command: <list>, lock: <Lock>, state: <bool>}}                                                type-dict       > -
 
         _________________________________
        /    EWSC-TechDox - Chapter 4
@@ -442,11 +614,45 @@ ____/   Section 1:3 (EWSC) Action/Event controller scope
     Session Worker
 ===============================================================================
 
+     __________________________________________________________________________
+____/   Section 4:1 (Fields) Session Worker
+
+    - id                                - <     worker-id                                                                                                       type-int        > -
+    - reference                         - <     reference                                                                                                       type-str        > -
+    - create_date                       - <     create-date                 values-(<Datetime>                      | None    )                                 type-datetime   > -
+    - write_date                        - <     write-date                  values-(<Datetime>                      | None    )                                 type-datetime   > -
+    - session_worker_state_timestamp    - <     state-change-timestamp      values-(<Datetime>                      | None    )                                 type-datetime   > -
+    - session_worker_state_code         - <     worker-state                values-(0              | 1              | 2       )                                 type-int        > -
+    - session_worker_state_label        - <     worker-state                values-(vacant         | available      | occupied)                                 type-str        > -
+    - instruction_set_recv              - <     instruction-queue           values-(<multiprocessing.Queue(1)>      | None    )                                 type-object     > -
+    - instruction_set_resp              - <     response-queue              values-(<multiprocessing.Queue(1)>      | None    )                                 type-object     > -
+    - lock                              - <     process-lock                values-(<multiprocessing.Value('i', 0)> | None    )                                 type-object     > -
+    - session_limit                     - <     worker-capacity                                                                                                 type-int        > -
+    - session_pool                      - <     session-pool                values-{<session-id>: <EWallet>}                                                    type-dict       > -
+    - ctoken_pool                       - <     ctoken-pool                 values-[<ctoken-label>]                                                             type-list       > -
+    - stoken_pool                       - <     stoken-pool                 values-[<stoken-label>]                                                             type-list       > -
+    - token_session_map                 - <     token-map                   values-{<ctoken-label>: {<stoken-label>: <EWalletSession>}}                         type-dict       > -
+
         _________________________________
        /    EWSC-TechDox - Chapter 5
 ===============================================================================
     EWallet Session
 ===============================================================================
+
+     __________________________________________________________________________
+____/   Section 5:1 (Fields) EWallet Session
+
+    - id                        - <     label-id                        primary-key                                                                             type-int        > -
+    - name                      - <     label-name                                                                                                              type-str        > -
+    - create_date               - <     label-create_date               values-(<Datetime>   | None)                                                            type-datetime   > -
+    - write_date                - <     label-write_date                values-(<Datetime>   | None)                                                            type-datetime   > -
+    - expiration_date           - <     label-expiration_date           values-(<Datetime>   | None)                                                            type-datetime   > -
+    - session                   - <     label-orm_session               values-(<SqlAlchemy> | None)                                                            type-object     > -
+    - contact_list              - <     label-contact_list              relationship-ContactList                backpopulates-active_session                    type-list       > -
+    - credit_wallet             - <     label-credit_ewallet            relationship-CreditEWallet              backpopulates-active_session                    type-list       > -
+    - active_user               - <     label-user_account              relationship-ResUser                    backpopulates-active_session                    type-list       > -
+    - active_master             - <     label-master_account            relationship-ResMaster                  backpopulates-active_session                    type-list       > -
+    - user_account_archive      - <     label-user_account_archive      relationship-ResUser                    secondary-ewallet_session_user                  type-list       > -
 
         _________________________________
        /    EWSC-TechDox - Chapter 6
@@ -454,11 +660,35 @@ ____/   Section 1:3 (EWSC) Action/Event controller scope
     Client Token
 ===============================================================================
 
+     __________________________________________________________________________
+____/   Section 6:1 (Fields) Client Token
+
+    create_date         - <     label-create_date                       values-(<Datetime>      | None )                                                         type-datetime   > -
+    write_date          - <     label-write_date                        values-(<Datetime>      | None )                                                         type-datetime   > -
+    label               - <     label-label                             values-(<client-id>     | None )                                                         type-str        > -
+    active              - <     label-active                            values-(True            | False)                                                         type-boolean    > -
+    unlink_flag         - <     label-unlink_flag                       values-(True            | False)                                                         type-boolean    > -
+    valid_to            - <     label-valid_to                          values-(<Datetime>      | None )                                                         type-datetime   > -
+    stoken              - <     label-stoken                            values-(<SessionToken>  | None )                                                         type-object     > -
+    acquired_master     - <     label-acquired_master                   values-(<master-id>     | None )                                                         type-int        > -
+
         _________________________________
        /    EWSC-TechDox - Chapter 7
 ===============================================================================
     Session Token
 ===============================================================================
+
+     __________________________________________________________________________
+____/   Section 7:1 (Fields) Session Token
+
+    create_date         - <     label-create_date                       values-(<Datetime>      | None )                                                         type-datetime   > -
+    write_date          - <     label-write_date                        values-(<Datetime>      | None )                                                         type-datetime   > -
+    label               - <     label-label                             values-(<client-id>     | None )                                                         type-str        > -
+    active              - <     label-active                            values-(True            | False)                                                         type-boolean    > -
+    unlink_flag         - <     label-unlink_flag                       values-(True            | False)                                                         type-boolean    > -
+    valid_to            - <     label-valid_to                          values-(<Datetime>      | None )                                                         type-datetime   > -
+    ctoken              - <     label-ctoken                            values-(<ClientID>      | None )                                                         type-object     > -
+    worker_id           - <     label-worker_id                         values-(<worker-id>     | None )                                                         type-int        > -
 
         _________________________________
        /    EWSC-TechDox - Chapter 8
@@ -466,11 +696,66 @@ ____/   Section 1:3 (EWSC) Action/Event controller scope
     Master Accounts
 ===============================================================================
 
+     __________________________________________________________________________
+____/   Section 8:1 (Fields) Master Account
+
+    user_id                     - <     label-id                                primary-key                                                                      type-int        > -
+    user_name                   - <     label-name                                                                                                               type-str        > -
+    user_create_date            - <     label-create_date                                                                                                        type-datetime   > -
+    user_write_date             - <     label-write_date                                                                                                         type-datetime   > -
+    user_create_uid             - <                                             ForeignKey-res_user.user_id                                                      type-int        > -
+    user_write_uid              - <                                             ForeignKey-res_user.user_id                                                      type-int        > -
+    user_pass_hash              - <                                                                                                                              type-str        > -
+    user_email                  - <     label-email                                                                                                              type-str        > -
+    user_phone                  - <     label-phone                                                                                                              type-str        > -
+    user_alias                  - <     label-alias                                                                                                              type-str        > -
+    user_state_code             - <                                             values-(0 | 1)                                                                   type-int        > -
+    active_session_id           - <                                             ForeignKey-ewallet.id                                                            type-int        > -
+    active_session              - <                                             relationship-EWallet                backpopulates-active_user                    type-list       > -
+    key_code                    - <     label-key_code                                                                                                           type-str        > -
+    account_limit               - <     label-account_limit                                                                                                      type-int        > -
+    company                     - <     label-company                                                                                                            type-str        > -
+    address                     - <     label-address                                                                                                            type-str        > -
+    subordonate_pool            - <     label-subordonate_pool                  relationship-ResUser                foreignkeys-ResUser.master_account_id        type-list       > -
+    acquired_ctokens            - <     label-acquired_ctokens                                                                                                   type-int        > -
+    is_active                   - <     label-active                                                                                                             type-boolean    > -
+    to_unlink                   - <                                                                                                                              type-boolean    > -
+    to_unlink_timestamp         - <                                                                                                                              type-datetime   > -
+
         _________________________________
        /    EWSC-TechDox - Chapter 9
 ===============================================================================
     Subordonate Accounts
 ===============================================================================
+
+     __________________________________________________________________________
+____/   Section 9:1 (Fields) Subordonate Account
+
+    user_id                     - <     label-id                                primary-key                                                                      type-int        > -
+    user_name                   - <     label-name                                                                                                               type-str        > -
+    user_create_date            - <     label-create_date                                                                                                        type-datetime   > -
+    user_write_date             - <     label-write_date                                                                                                         type-datetime   > -
+    user_create_uid             - <                                             ForeignKey-res_user.user_id                                                      type-int        > -
+    user_write_uid              - <                                             ForeignKey-res_user.user_id                                                      type-int        > -
+    user_pass_hash              - <                                                                                                                              type-str        > -
+    user_email                  - <     label-email                                                                                                              type-str        > -
+    user_phone                  - <     label-phone                                                                                                              type-str        > -
+    user_alias                  - <     label-alias                                                                                                              type-str        > -
+    user_state_code             - <                                             values-(0 | 1)                                                                   type-int        > -
+    active_session_id           - <                                             ForeignKey-ewallet.id                                                            type-int        > -
+    active_session              - <                                             relationship-EWallet                    backpopulates-active_user                type-list       > -
+    user_contact_list           - <     label-contact_list                      relationship-ContactList                backpopulates-client                     type-list       > -
+    user_credit_wallet          - <     label-ewallet                           relationship-CreditEWallet              backpopulates-client                     type-list       > -
+    user_session_archive        - <                                             relationship-EWallet                    secondary-ewallet_session_user           type-list       > -
+    master_account_id           - <                                             ForeignKey-res_master.user_id                                                    type-int        > -
+    subordonate_of              - <     label-subordonate_of                    relationship-ResMaster                  backpopulates-subordonate_pool
+                                                                                                                        foreignkeys-ResUser.master_account_id    type-list       > -
+    user_pass_hash_archive      - <                                             relationship-ResUserPassHashArchive                                              type-list       > -
+    user_credit_wallet_archive  - <     label-ewallet_archive                   relationship-CreditEWallet                                                       type-list       > -
+    user_contact_list_archive   - <     label-contact_list_archive              relationship-ContactList                                                         type-list       > -
+    is_active                   - <     label-active                                                                                                             type-boolean    > -
+    to_unlink                   - <                                                                                                                              type-boolean    > -
+    to_unlink_timestamp         - <                                                                                                                              type-datetime   > -
 
         _________________________________
        /    EWSC-TechDox - Chapter 10
@@ -478,11 +763,53 @@ ____/   Section 1:3 (EWSC) Action/Event controller scope
     Credit EWallet
 ===============================================================================
 
+     __________________________________________________________________________
+____/   Section 10:1 (Fields) Credit EWallet
+
+    wallet_id                    - <    label-id                                primary_key                                                                      type-int        > -
+    client_id                    - <    label-user                              ForeignKey-res_user.user_id                                                      type-int        > -
+    active_session_id            - <                                            ForeignKey-ewallet.id                                                            type-int        > -
+    reference                    - <    label-reference                                                                                                          type-str        > -
+    create_date                  - <    label-create_date                                                                                                        type-datetime   > -
+    write_date                   - <    label-write_date                                                                                                         type-datetime   > -
+    credits                      - <    label-credits                                                                                                            type-int        > -
+    active_session               - <                                            relationship-EWallet                        backpopulates-credit_wallet          type-list       > -
+    client                       - <                                            relationship-ResUser                        backpopulates-user_credit_wallet     type-list       > -
+    credit_clock                 - <    label-clock                             relationship-CreditClock                    backpopulates-wallet                 type-list       > -
+    transfer_sheet               - <    label-transfer_sheet                    relationship-CreditTransferSheet            backpopulates-wallet                 type-list       > -
+    invoice_sheet                - <    label-invoice_sheet                     relationship-CreditInvoiceSheet             backpopulates-wallet                 type-list       > -
+    credit_clock_archive         - <    label-clock_archive                     relationship-CreditClock                                                         type-list       > -
+    transfer_sheet_archive       - <    label-transfer_sheet_archive            relationship-CreditTransferSheet                                                 type-list       > -
+    invoice_sheet_archive        - <    label-invoice_sheet_archive             relationship-CreditInvoiceSheet                                                  type-list       > -
+
         _________________________________
        /    EWSC-TechDox - Chapter 11
 ===============================================================================
     Credit Clock
 ===============================================================================
+
+     __________________________________________________________________________
+____/   Section 11:1 (Fields) Credit Clock
+
+
+    clock_id                     - <    label-id                                primary_key                                                                      type-int        > -
+    wallet_id                    - <    label-ewallet                           ForeignKey-credit_ewallet.wallet_id                                              type-int        > -
+    reference                    - <    label-reference                                                                                                          type-str        > -
+    create_date                  - <    label-create_date                                                                                                        type-datetime   > -
+    write_date                   - <    label-write_date                                                                                                         type-datetime   > -
+    credit_clock                 - <    label-credit_clock                                                                                                       type-float      > -
+    credit_clock_state           - <    label-clock_state                                                                                                        type-str        > -
+    time_spent                   - <                                                                                                                             type-float      > -
+    start_time                   - <                                                                                                                             type-float      > -
+    end_time                     - <                                                                                                                             type-float      > -
+    pending_time                 - <                                                                                                                             type-float      > -
+    pending_count                - <                                                                                                                             type-int        > -
+    wallet                       - <                                            relationship-CreditEWallet                  back_populates-credit_clock          type-list       > -
+    time_sheet                   - <    label-time_sheet                        relationship-CreditClockTimeSheet           backpopulates-clock                  type-list       > -
+    active_time_record           - <                                            relationship-TimeSheetRecord                                                     type-list       > -
+    conversion_sheet             - <    label-conversion_sheet                  relationship-CreditClockConversionSheet     backpopulates-clock                  type-list       > -
+    time_sheet_archive           - <    label-time_sheet_archive                relationship-CreditClockTimeSheet                                                type-list       > -
+    conversion_sheet_archive     - <    label-conversion_sheet_archive          relationship-CreditClockConversionSheet                                          type-list       > -
 
         _________________________________
        /    EWSC-TechDox - Chapter 12
@@ -490,7 +817,9 @@ ____/   Section 1:3 (EWSC) Action/Event controller scope
     Transfer Sheet
 ===============================================================================
 
-* Transfer Sheet (Fields)
+     __________________________________________________________________________
+____/   Section 12:1 (Fields) Transfer Sheet
+
     - transfer_sheet_id     - <    label-id                 primary-key                                                         type-int        > -
     - wallet_id             - <    label-ewallet            ForeignKey-credit_ewallet.wallet_id                                 type-int        > -
     - reference             - <    label-reference                                                                              type-str        > -
@@ -499,7 +828,9 @@ ____/   Section 1:3 (EWSC) Action/Event controller scope
     - wallet                - <                             relationship-CreditEWallet backpopulates-transfer_sheet             type-list       > -
     - records               - <    label-records            relationship-CreditTransferSheetRecord                              type-list       > -
 
-* Transfer Record (Fields)
+     __________________________________________________________________________
+____/   Section 12:2 (Fields) Transfer Record
+
     - record_id             - <    label-id                 primary-key                                                         type-int        > -
     - reference             - <    label-reference                                                                              type-str        > -
     - create_date           - <    label-create_date                                                                            type-datetime   > -
@@ -517,7 +848,9 @@ ____/   Section 1:3 (EWSC) Action/Event controller scope
     Invoice Sheet
 ===============================================================================
 
-* Invoice Sheet (Fields)
+     __________________________________________________________________________
+____/   Section 13:1 (Fields) Invoice Sheet
+
     - invoice_sheet_id      - <    label-id                 primary-key                                                         type-int        > -
     - wallet_id             - <    label-ewallet            ForeignKey-credit_ewallet.wallet_id                                 type-int        > -
     - reference             - <    label-reference                                                                              type-str        > -
@@ -526,7 +859,9 @@ ____/   Section 1:3 (EWSC) Action/Event controller scope
     - wallet                - <                             relationship-CreditEWallet backpopulates-invoice_sheet              type-list       > -
     - records               - <    label-records            relationship-CreditInvoiceSheetRecord                               type-list       > -
 
-* Invoice Record (Fields)
+     __________________________________________________________________________
+____/   Section 13:2 (Fields) Invoice Record
+
     - record_id             - <    label-id                 primary-key                                                         type-int        > -
     - invoice_sheet_id      - <    label-invoice_sheet      ForeignKey-credit_invoice_sheet.invoice_sheet_id                    type-int        > -
     - transfer_record_id    - <    label-transfer_record    ForeignKey-transfer_sheet_record.record_id                          type-int        > -
@@ -545,7 +880,9 @@ ____/   Section 1:3 (EWSC) Action/Event controller scope
     Conversion Sheet
 ===============================================================================
 
-* Conversion Sheet (Fields)
+     __________________________________________________________________________
+____/   Section 14:1 (Fields) Conversion Sheet
+
     - conversion_sheet_id   - <    label-id                 primary-key                                                         type-int        > -
     - clock_id              - <    label-clock              ForeignKey-credit_clock.clock_id                                    type-int        > -
     - reference             - <    label-reference                                                                              type-str        > -
@@ -554,7 +891,9 @@ ____/   Section 1:3 (EWSC) Action/Event controller scope
     - clock                 - <                             relationship-CreditClock backpopulates-conversion_sheet             type-list       > -
     - records               - <    label-records            relationship-CreditClockConversionSheetRecord                       type-list       > -
 
-* Conversion Record (Fields)
+     __________________________________________________________________________
+____/   Section 14:2 (Fields) Conversion Record
+
     - record_id             - <    label-id                 primary-key                                                         type-int        > -
     - conversion_sheet_id   - <    label-conversion_sheet   relationship-credit_clock_conversion_sheet.conversion_sheet_id      type-int        > -
     - reference             - <    label-reference          ForeignKey-credit_clock_conversion_sheeet.conversion_sheet_id       type-str        > -
@@ -570,7 +909,9 @@ ____/   Section 1:3 (EWSC) Action/Event controller scope
     Time Sheet
 ===============================================================================
 
-* Time Sheet (Fields)
+     __________________________________________________________________________
+____/   Section 15:1 (Fields) Time Sheet
+
     - time_sheet_id         - <    label-id                 primary-key                                                         type-int        > -
     - clock_id              - <    label-clock              ForeignKey-credit_clock.clock_id                                    type-int        > -
     - reference             - <    label-reference                                                                              type-str        > -
@@ -579,7 +920,9 @@ ____/   Section 1:3 (EWSC) Action/Event controller scope
     - clock                 - <                             relationship-CreditClock backpopulates-time_sheet                   type-list       > -
     - records               - <    label-records            relationship-TimeSheetRecord                                        type-list       > -
 
-* Time Record (Fields)
+     __________________________________________________________________________
+____/   Section 15:2 (Fields) Time Record
+
     - record_id             - <    label-id                 primary-key                                                         type-int        > -
     - reference             - <    label-reference                                                                              type-str        > -
     - create_date           - <    label-create_date                                                                            type-datetime   > -
@@ -597,6 +940,34 @@ ____/   Section 1:3 (EWSC) Action/Event controller scope
 ===============================================================================
     Contact List
 ===============================================================================
+
+     __________________________________________________________________________
+____/   Section 16:1 (Fields) Contact List
+
+    - contact_list_id       - <     label-id                primary-key                                                         type-int         > -
+    - client_id             - <     label-user              ForeignKey-res_user.user_id                                         type-int         > -
+    - reference             - <     label-reference                                                                             type-str         > -
+    - create_date           - <     label-create_date                                                                           type-datetime    > -
+    - write_date            - <     label-write_date                                                                            type-datetime    > -
+    - active_session_id     - <     label-active_session_id ForeignKey-ewallet.id                                               type-int         > -
+    - active_session        - <     label-active_session    relationship-EWallet backpopulates-contact_list                     type-list        > -
+    - client                - <     label-client            relationship-ResUser backpopulates-user_contact_list                type-list        > -
+    - records               - <     label-records           relationship-ContactListRecord                                      type-list        > -
+
+     _____________________________________________________________________________
+____/   Section 16:1 (Fields) Contact Record
+
+    - record_id             - <     label-id                primary-key                                                         type-int         > -
+    - contact_list_id       - <     label-contact_list      ForeignKey-contact_list.contact_list_id                             type-int         > -
+    - create_date           - <     label-create_date                                                                           type-datetime    > -
+    - write_date            - <     label-write_date                                                                            type-datetime    > -
+    - user_id               - <     label-user_id           ForeignKey-res_user.user_id                                         type-int         > -
+    - user_name             - <     label-name                                                                                  type-str         > -
+    - user_email            - <     label-email                                                                                 type-str         > -
+    - user_phone            - <     label-phone                                                                                 type-str         > -
+    - notes                 - <     label-notes                                                                                 type-str         > -
+    - reference             - <     label-reference                                                                             type-str         > -
+    - contact_list          - <                             relationship-ContactList backpopulates-records                      type-list        > -
 
         _________________________________
        /    EWSC-TechDox - Chapter 17
@@ -619,7 +990,6 @@ ____/   Section 17:2 (Controller) Master
 ===============================================================================
     Actions
 ===============================================================================
-
 
      __________________________________________________________________________
 ____/   Section 18:1 (Client) AcquireMaster
@@ -672,7 +1042,67 @@ ____/   Section 18:1 (Client) AcquireMaster
 ____/   Section 18:2 (Client) CreateMaster
 
     - Client action Create Master
+
+        - Label: CreateMaster
+
+        - Prerequisits:
+            - RequestClientID
+            - RequestSessionToken
+
+        - Instruction Set: {
+            'controller': 'client',
+            'ctype': 'action',
+            'action': 'new',
+            'new': 'master',
+            'master': 'account',
+            'client_id': '<session-token type-str>',
+            'session_token': '<session-token type-str>',
+            'user_name': '<account-user-name type-str>',
+            'user_pass': '<account-user-pass type-str>',
+            'user_email': '<account-user-email type-str>',
+            'user_phone': '<account-phone-number type-str>',
+            'user_alias': '<account-alias type-str>',
+            'company': '<account-company type-str>',
+            'address': '<account-address type-str>',
+        }
+
+        - Response:
+
+            - OK: {
+                'failed': '<flag type-bool value-true>',
+                'account': '<account-email-address type-str>',
+                'account_data': {
+                    'id': '<account-id type-int>',
+                    'name': '<account-user-name type-str>',
+                    'create_date': '<%d-%m-%Y %H:%M:%S type-str tz-UTC>',
+                    'write_date': '<%d-%m-%Y %H:%M:%S type-str tz-UTC>',
+                    'ewallet': '<active-ewallet-id type-int>',
+                    'contact_list': '<active-contact-list-id type-int>',
+                    'email': '<account-user-email type-str>',
+                    'phone': '<account-user-phone type-str>',
+                    'alias': '<account-user-alias type-str>',
+                    'key_code': '<master-key-code type-str>',
+                    'account_limit': '<subpool-size-limit type-int>',
+                    'company': '<account-company type-str>',
+                    'address': '<account-street-address type-str>',
+                    'subordonate_pool': {
+                        '<account-id type-int>': '<account-email type-str>',
+                    },
+                    'acquired_ctokens': '<acquired-ctoken-count type-int>',
+                    'active': '<active-flag type-bool>'
+                }
+            }
+
+            - NOK: {
+                'failed': '<flag type-bool value-true>',
+                'error': '<error-message type-str>',
+                'warning': '<warning-message type-str>',
+                'level': '<entity-level type-str>',
+                'details': '<data-set type-set>',
+            }
+
         - State Oriented Restrictions:
+
             - CToken States:
                 - Master Unlinked
                 - SToken Linked
@@ -682,7 +1112,7 @@ ____/   Section 18:3 (Client) RequestClientID
 
     - Client action Request Client ID
 
-        - Label: 'RequestClientID
+        - Label: RequestClientID
 
         - Instruction Set: {
             'controller': 'client',
@@ -2102,73 +2532,741 @@ ____/   Section 18:28 (Master) ViewLogoutRecords
                 - Sesion Plugged
 
      __________________________________________________________________________
-____/   Section 18:29 (System) NewWorker
+____/   Section 18:29 (System) CreateWorker
+
+    - System action CreateWorker
+
+        - Label: CreateWorker
+
+        - Instruction Set: {
+            'controller': 'system',
+            'ctype': 'action',
+            'action': 'new',
+            'new': 'worker',
+        }
+
+        - Response:
+
+            - OK: {
+                'failed': '<flag type-bool value-false>',
+                'worker': '<worker-id type-int>',
+                'worker_data': {
+                    '<worker-id type-int>': {
+                        'process': '<Process type-obj>',
+                        'instruction': '<Queue type-obj>',
+                        'response': '<Queue type-obj>',
+                        'lock': '<Lock type-obj>',
+                    }
+                }
+            }
+
+            - NOK: {
+                'failed': '<flag type-bool value-true>',
+                'error': '<error-message type-str>',
+                'level': '<entity-level type-str>',
+                'details': '<data-set type-set>',
+                'warning': '<warning-message type-str>'
+            }
 
      __________________________________________________________________________
-____/   Section 18:30 (System) NewSession
+____/   Section 18:30 (System) CreateSession
+
+    - System action CreateSession
+
+        - Label: CreateSession
+
+        - Prerequisits:
+            - CreateWorker
+
+        - Instruction Set: {
+            'controller': 'system',
+            'ctype': 'action',
+            'action': 'new',
+            'new': 'session',
+            'reference': '<ewallet-session-reference type-str>',
+        }
+
+        - Response:
+
+            - OK: {
+                'failed': '<flag type-bool value-false>',
+                'worker': '<worker-id type-int>',
+                'ewallet_session': '<ewallet-session-id type-int>'
+            }
+
+            - NOK: {
+                'failed': '<flag type-bool value-true>',
+                'error': '<error-message type-str>',
+                'level': '<entity-level type-str>',
+                'details': '<data-set type-set>',
+                'warning': '<warning-message type-str>'
+            }
 
      __________________________________________________________________________
 ____/   Section 18:31 (System) FreezeMaster
 
+    - System action FreezeMaster
+
+        - Label: FreezeMaster
+
+        - Prerequisits:
+            - CreateWorker
+            - RequestClientID
+            - RequestSessionToken
+            - CreateMaster
+            - AcquireMaster
+            - CreateAccount
+
+        - Instruction Set: {
+            'controller': 'system',
+            'ctype': 'action',
+            'action': 'freeze',
+            'freeze': 'master',
+            'master_id': '<account-id type-int>',
+        }
+
+        - Response:
+
+            - OK: {
+                'failed': '<flag type-bool value-false>',
+                'masters_frozen': '<accounts-frozen-count type-int>',
+                'subordonates_frozen': '<accounts-frozen-count type-int>',
+                'frozen_failures': '<freezing-failure-count type-int>',
+                'masters': '<frozen-master-account-ids type-list>',
+                'subordonates': '<frozen-subordonate-account-ids type-list>',
+                'frozen_count': '<total-frozen-count type-int>',
+            }
+
+            - NOK: {
+                'failed': '<flag type-bool value-true>',
+                'error': '<error-message type-str>',
+                'level': '<entity-level type-str>',
+                'details': '<data-set type-set>',
+                'warning': '<warning-message type-str>'
+            }
+
      __________________________________________________________________________
 ____/   Section 18:32 (System) UnfreezeMaster
+
+    - System action UnfreezeMaster
+
+        - Label: UnfreezeMaster
+
+        - Prerequisits:
+            - CreateWorker
+            - RequestClientID
+            - RequestSessionToken
+            - CreateMaster
+            - AcquireMaster
+            - CreateAccount
+            - FreezeMaster
+
+       - Instruction Set: {
+            'controller': 'system',
+            'ctype': 'action',
+            'action': 'unfreeze',
+            'unfreeze': 'master',
+            'master_id': '<account-id type-int>',
+        }
+
+        - Response:
+
+            - OK: {
+                'failed': '<flag type-bool value-false>',
+                'masters_activated': '<accounts-activated-count type-int>',
+                'subordonates_activated': '<accounts-activated-count type-int>',
+                'activation_failures': '<activation-failure-count type-int>',
+                'masters': '<activated-master-account-ids type-list>',
+                'subordonates': '<activated-subordonate-account-ids type-list>',
+                'activation_count': '<total-activated-count type-int>'
+            }
+
+            - NOK: {
+                'failed': '<flag type-bool value-true>',
+                'error': '<error-message type-str>',
+                'level': '<entity-level type-str>',
+                'details': '<data-set type-set>',
+                'warning': '<warning-message type-str>'
+            }
 
      __________________________________________________________________________
 ____/   Section 18:33 (System) IncreaseMasterSubPool
 
+    - System action IncreaseMasterSubordonatePool
+
+        - Label: IncreaseMasterSubPool
+
+        - Prerequisits:
+            - CreateWorker
+            - RequestClientID
+            - RequestSessionToken
+            - CreateMaster
+            - AcquireMaster
+            - CreateAccount
+
+        - Instruction Set: {
+            'controller': 'system',
+            'ctype': 'action',
+            'action': 'increase',
+            'increase': 'master',
+            'master': 'subpool',
+            'master_id': '<account-id type-int>',
+            'increase_by': '<subordonate-count type-int>',
+        }
+
+        - Response:
+
+            - OK: {
+                'failed': '<flag type-bool value-false>',
+                'master': '<master-id type-int>',
+                'subpool_size': '<subordonate-account-pool-size type-int>',
+                'increased_by': '<subordonate-count type-int>',
+                'master_data': {
+                    'id': '<master-id type-int>',
+                    'name': '<account-name type-str>',
+                    'create_date': '<%d-%m-%Y %H:%M:%S type-str tz-UTC>',
+                    'write_date': '<%d-%m-%Y %H:%M:%S type-str tz-UTC>',
+                    'email': '<email-address type-str>',
+                    'phone': '<phone-number type-str>',
+                    'alias': '<account-alias type-str>',
+                    'key_code': '<master-key-code type-str>',
+                    'account_limit': '<subordonate-pool-size-limit type-int>',
+                    'company': '<account-company type-str>',
+                    'address': '<account-street-address type-str>',
+                    'subordonate_pool': {
+                        '<account-id type-int>': '<account-email type-str>',
+                    },
+                    'acquired_ctokens': '<acquired-ctoken-count type-int>',
+                    'active': '<active-flag type-boolean>'
+                }
+            }
+
+            - NOK: {
+                'failed': '<flag type-bool value-true>',
+                'error': '<error-message type-str>',
+                'level': '<entity-level type-str>',
+                'details': '<data-set type-set>',
+                'warning': '<warning-message type-str>'
+            }
+
      __________________________________________________________________________
 ____/   Section 18:34 (System) DecreaseMasterSubPool
+
+    - System action DecreaseMasterSubordonatePool
+
+        - Label: DecreaseMasterSubPool
+
+        - Prerequisits:
+            - CreateWorker
+            - RequestClientID
+            - RequestSessionToken
+            - CreateMaster
+            - AcquireMaster
+            - CreateAccount
+
+        - Instruction Set: {
+            'controller': 'system',
+            'ctype': 'action',
+            'action': 'decrease',
+            'decrease': 'master',
+            'master': 'subpool',
+            'master_id': '<account-id type-int>',
+            'decrease_by': '<subordonate-count type-int>',
+        }
+
+        - Response:
+
+            - OK: {
+                'failed': '<flag type-bool value-false>',
+                'master': '<master-id type-int>',
+                'subpool_size': '<subordonate-account-pool-size type-int>',
+                'decreased_by': '<subordonate-count type-int>',
+                'master_data': {
+                    'id': '<master-id type-int>',
+                    'name': '<account-name type-str>',
+                    'create_date': '<%d-%m-%Y %H:%M:%S type-str tz-UTC>',
+                    'write_date': '<%d-%m-%Y %H:%M:%S type-str tz-UTC>',
+                    'email': '<email-address type-str>',
+                    'phone': '<phone-number type-str>',
+                    'alias': '<account-alias type-str>',
+                    'key_code': '<master-key-code type-str>',
+                    'account_limit': '<subordonate-pool-size-limit type-int>',
+                    'company': '<account-company type-str>',
+                    'address': '<account-street-address type-str>',
+                    'subordonate_pool': {
+                        '<account-id type-int>': '<account-email type-str>',
+                    },
+                    'acquired_ctokens': '<acquired-ctoken-count type-int>',
+                    'active': '<active-flag type-boolean>'
+                }
+            }
+
+            - NOK: {
+                'failed': '<flag type-bool value-true>',
+                'error': '<error-message type-str>',
+                'level': '<entity-level type-str>',
+                'details': '<data-set type-set>',
+                'warning': '<warning-message type-str>'
+            }
 
      __________________________________________________________________________
 ____/   Section 18:35 (System) InterogateSessionWorkers
 
+    - System action InterogateSessionWorkers
+
+        - Label: DecreaseMasterSubPool
+
+        - Prerequisits:
+            - CreateWorker
+
+        - Instruction Set: {
+            'controller': 'system',
+            'ctype': 'action',
+            'action': 'interogate',
+            'interogate': 'workers',
+        }
+
+        - Response:
+
+            - OK: {
+                'failed': '<flag type-bool value-false>',
+                'workers': {
+                    '<worker-id type-int>': {
+                        'failed': '<flag type-bool value-false>',
+                        'worker': '<worker-id type-int>',
+                        'worker_data': {
+                            'id': '<worker-id type-int>',
+                            'reference': '<worker-reference type-str>',
+                            'create_date': '<%d-%m-%Y %H:%M:%S type-str tz-UTC>',
+                            'state_code': '<worker-state-code values-(0 | 1 | 2) type-int>',
+                            'state_label': '<worker-state-label values-(vacant | available | occupied) type-str>',
+                            'state_timestamp': '<%d-%m-%Y %H:%M:%S type-str tz-UTC>',
+                            'session_pool': {
+                                '<ewallet-session-id type-int>': '<EWallet type-object>'
+                            },
+                            'token_session_map': {
+                                '<ctoken-label type-str>': {
+                                    '<stoken-label type-str>': '<EWallet type-object>',
+                                }
+                            },
+                            'ctoken_pool': '<ctoken-label-pool type-list>',
+                            'stoken_pool': '<stoken-label-pool type-list>',
+                            'instruction_set_recv': '<Queue type-object>',
+                            'instruction_set_resp': '<Queue type-object>',
+                            'sigterm': '<worker-SIGTERM type-str>',
+                            'lock': '<Lock type-object>',
+                        }
+                    },
+                }
+            }
+
+            - NOK: {
+                'failed': '<flag type-bool value-true>',
+                'error': '<error-message type-str>',
+                'level': '<entity-level type-str>',
+                'details': '<data-set type-set>',
+                'warning': '<warning-message type-str>'
+            }
+
      __________________________________________________________________________
 ____/   Section 18:36 (System) TargetCleanupMaster
+
+    - System action TargetCleanupMaster
+
+        - Label: TargetCleanupMaster
+
+        - Prerequisits:
+            - CreateWorker
+            - RequestClientID
+            - RequestSessionToken
+            - CreateMaster
+
+        - Instruction Set: {
+            'controller': 'system',
+            'ctype': 'action',
+            'action': 'cleanup',
+            'cleanup': 'masters',
+            'master_id': '<master-id type-int>',
+        }
+
+        - Response:
+
+            - OK: {
+                'failed': '<flag type-bool value-false>',
+                'masters_cleaned': '<account-cleanup-count type-int>',
+                'subordonates_cleaned': '<account-cleanup-count type-int>',
+                'cleanup_failures': '<account-cleanup-failure-count type-int>',
+                'masters': '<cleaned-account-ids type-list>',
+                'subordonates': '<cleaned-account-ids type-list>',
+                'cleanup_count': '<total-cleanup-count type-int>',
+            }
+
+            - NOK: {
+                'failed': '<flag type-bool value-true>',
+                'error': '<error-message type-str>',
+                'level': '<entity-level type-str>',
+                'details': '<data-set type-set>',
+                'warning': '<warning-message type-str>'
+            }
 
      __________________________________________________________________________
 ____/   Section 18:37 (System) TargetCleanupWorker
 
+    - System action TargetCleanupWorker
+
+        - Label: TargetCleanupWorker
+
+        - Prerequisits:
+            - CreateWorker
+
+        - Instruction Set: {
+            'controller': 'system',
+            'ctype': 'action',
+            'action': 'cleanup',
+            'cleanup': 'workers',
+            'worker_id': '<worker-id type-int>',
+        }
+
+        - Response:
+
+            - OK: {
+                'failed': '<flag type-bool value-false>',
+                'workers_cleaned': '<worker-cleanup-count type-int>',
+                'cleanup_failures': '<worker-cleanup-failure-count type-int>',
+                'workers': '<cleaned-worker-ids type-list>',
+                'stokens_cleaned': '<stoken-cleanup-count type-int>',
+                'stokens': '<cleaned-stoken-labels type-list>',
+                'worker_pool': {
+                    '<worker-id type-int>': {
+                        'process': '<Process type-object>',
+                        'instruction': '<Queue type-object>',
+                        'response': '<Queue type-object>',
+                        'lock': '<Lock type-object>',
+                    },
+                },
+            }
+
+            - NOK: {
+                'failed': '<flag type-bool value-true>',
+                'error': '<error-message type-str>',
+                'level': '<entity-level type-str>',
+                'details': '<data-set type-set>',
+                'warning': '<warning-message type-str>'
+            }
+
      __________________________________________________________________________
 ____/   Section 18:38 (System) TargetCleanupSession
+
+    - System action TargetCleanupSession
+
+        - Label: TargetCleanupSession
+
+        - Prerequisits:
+            - CreateWorker
+            - RequestClientID
+            - RequestSessionToken
+
+        - Instruction Set: {
+            'controller': 'system',
+            'ctype': 'action',
+            'action': 'cleanup',
+            'cleanup': 'sessions',
+            'session_id': '<session-id type-int>',
+        }
+
+        - Response:
+
+            - OK: {
+                'failed': '<flag type-bool value-false>',
+                'sessions_cleaned': '<cleaned-session-count type-int>',
+                'cleanup_failures': '<cleanup-failure-count type-int>',
+                'worker_count': '<impacted-worker-count type-int>',
+                'workers': '<impacted-worker-ids type-list>',
+                'sessions': '<cleaned-session-ids type-list>',
+                'stokens_cleaned': '<cleaned-stoken-count type-int>',
+                'stokens': '<cleaned-stoken-labels type-list>',
+            }
+
+            - NOK: {
+                'failed': '<flag type-bool value-true>',
+                'error': '<error-message type-str>',
+                'level': '<entity-level type-str>',
+                'details': '<data-set type-set>',
+                'warning': '<warning-message type-str>'
+            }
 
      __________________________________________________________________________
 ____/   Section 18:39 (System) TargetCleanupCToken
 
+    - System action TargetCleanupCToken
+
+        - Label: TargetCleanupCToken
+
+        - Prerequisits:
+            - CreateWorker
+            - RequestClientID
+
+        - Instruction Set: {
+            'controller': 'system',
+            'ctype': 'action',
+            'action': 'cleanup',
+            'cleanup': 'ctokens',
+            'client_id': '<ctoken-label type-str>',
+        }
+
+        - Response:
+
+            - OK: {
+                'failed': '<flag type-bool value-false>',
+                'sessions_cleaned': '<cleaned-session-count type-int>',
+                'cleanup_failures': '<cleanup-failure-count type-int>',
+                'worker_count': '<impacted-worker-count type-int>',
+                'workers': '<impacted-worker-ids type-list>',
+                'sessions': '<cleaned-session-ids type-list>',
+                'stokens_cleaned': '<cleaned-stoken-count type-int>',
+                'stokens': '<cleaned-stoken-labels type-list>',
+                'ctokens_cleaned': '<cleaned-ctoken-count type-int>',
+                'ctokens': '<cleaned-ctoken-labels type-list>',
+            }
+
+            - NOK: {
+                'failed': '<flag type-bool value-true>',
+                'error': '<error-message type-str>',
+                'level': '<entity-level type-str>',
+                'details': '<data-set type-set>',
+                'warning': '<warning-message type-str>'
+            }
+
      __________________________________________________________________________
 ____/   Section 18:40 (System) TargetCleanupSToken
+
+    - System action TargetCleanupSToken
+
+        - Label: TargetCleanupSToken
+
+        - Prerequisits:
+            - CreateWorker
+            - RequestClientID
+            - RequestSessionToken
+
+        - Instruction Set: {
+            'controller': 'system',
+            'ctype': 'action',
+            'action': 'cleanup',
+            'cleanup': 'stokens',
+            'session_token': '<stoken-label type-str>',
+        }
+
+        - Response:
+
+            - OK: {
+                'failed': '<flag type-bool value-false>',
+                'sessions_cleaned': '<cleaned-session-count type-int>',
+                'cleanup_failures': '<cleanup-failure-count type-int>',
+                'worker_count': '<impacted-worker-count type-int>',
+                'workers': '<impacted-worker-ids type-list>',
+                'sessions': '<cleaned-session-ids type-list>',
+                'stokens_cleaned': '<cleaned-stoken-count type-int>',
+                'stokens': '<cleaned-stoken-labels type-list>',
+            }
+
+            - NOK: {
+                'failed': '<flag type-bool value-true>',
+                'error': '<error-message type-str>',
+                'level': '<entity-level type-str>',
+                'details': '<data-set type-set>',
+                'warning': '<warning-message type-str>'
+            }
 
      __________________________________________________________________________
 ____/   Section 18:41 (System) SweepCleanupMasters
 
-    - System action Sweep Cleanup Masters
+    - System action SweepCleanupMasters
+
+        - Label: SweepCleanupMasters
+
+        - Prerequisits:
+            - CreateWorker
+            - RequestClientID
+            - RequestSessionToken
+            - CreateMaster
+
+        - Instruction Set: {
+            'controller': 'system',
+            'ctype': 'action',
+            'action': 'cleanup',
+            'cleanup': 'masters',
+        }
+
+        - Response:
+
+            - OK: {
+                'failed': '<flag type-bool value-false>',
+                'masters_cleaned': '<account-cleanup-count type-int>',
+                'subordonates_cleaned': '<account-cleanup-count type-int>',
+                'cleanup_failures': '<cleanup-failure-count type-int>',
+                'masters': '<cleaned-master-account-ids type-list>',
+                'subordonates': '<cleaned-subordonate-account-ids type-list>',
+                'cleanup_count': '<total-account-cleanup-count type-int>'
+            }
+
+            - NOK: {
+                'failed': '<flag type-bool value-true>',
+                'error': '<error-message type-str>',
+                'level': '<entity-level type-str>',
+                'details': '<data-set type-set>',
+                'warning': '<warning-message type-str>'
+            }
+
         - State Oriented Restrictions:
+
             - Master Account States:
+
                 - No master ids specified
                     - Account (Flaged for Unlink | Past Freeze Interval)
+
                 - Specific master ids
                     - Account Exists
 
      __________________________________________________________________________
 ____/   Section 18:42 (System) SweepCleanupCTokens
 
-    - System action Sweep Cleanup CTokens
+    - System action SweepCleanupCTokens
+
+        - Label: SweepCleanupCTokens
+
+        - Prerequisits:
+            - CreateWorker
+            - RequestClientID
+
+        - Instruction Set: {
+            'controller': 'system',
+            'ctype': 'action',
+            'action': 'cleanup',
+            'cleanup': 'ctokens',
+        }
+
+        - Response:
+
+            - OK: {
+                'failed': '<flag type-bool value-false>',
+                'ctokens_cleaned': '<cleaned-ctoken-count type-int>',
+                'cleanup_failures': '<cleanup-failure-count type-int>',
+                'ctokens': '<cleaned-ctoken-labels type-list>',
+                'stokens_cleaned': '<cleaned-stoken-count type-int>',
+                'stokens': '<cleaned-stoken-labels type-list>',
+                'sessions_cleaned': '<cleaned-session-count type-list>',
+                'worker_count': '<impacted-worker-count type-int>',
+                'workers': '<impacted-worker-ids type-list>',
+                'sessions': '<cleaned-session-ids type-list>'
+            }
+
+            - NOK: {
+                'failed': '<flag type-bool value-true>',
+                'error': '<error-message type-str>',
+                'level': '<entity-level type-str>',
+                'details': '<data-set type-set>',
+                'warning': '<warning-message type-str>'
+            }
+
+
         - State Oriented Restrictions:
+
             - Client Token States:
                 - Expired
 
      __________________________________________________________________________
 ____/   Section 18:43 (System) SweepCleanupSTokens
 
-    - System action Sweep Cleanup STokens
+    - System action SweepCleanupSTokens
+
+        - Label: SweepCleanupSTokens
+
+        - Prerequisits:
+            - CreateWorker
+            - RequestClientID
+            - RequestSessionToken
+
+        - Instruction Set: {
+            'controller': 'system',
+            'ctype':      'action',
+            'action':     'cleanup',
+            'cleanup':    'stokens',
+        }
+
+        - Response:
+
+            - OK: {
+                'failed':           '<    flag                      value-false     type-bool   >',
+                'stokens_cleaned':  '<    cleaned-stoken-count                      type-int    >',
+                'cleanup_failures': '<    cleanup-failure-count                     type-int    >',
+                'stokens':          '<    cleaned-stoken-labels                     type-list   >',
+                'sessions_cleaned': '<    cleaned-session-count                     type-list   >',
+                'sessions':         '<    cleaned-session-ids                       type-list   >'
+                'worker_count':     '<    impacted-worker-count                     type-int    >',
+                'workers':          '<    impacted-worker-ids                       type-list   >',
+            }
+
+            - NOK: {
+                'failed':           '<    flag                      value-true      type-bool   >',
+                'error':            '<    error-message                             type-str    >',
+                'level':            '<    entity-level                              type-str    >',
+                'details':          '<    data-set                                  type-list   >',
+                'warning':          '<    warning-message                           type-str    >'
+            }
+
         - State Oriented Restrictions:
+
             - Session Token States:
                 - Expired
 
      __________________________________________________________________________
 ____/   Section 18:44 (System) SweepCleanupWorkers
 
-    - System action Sweep Cleanup Workers
+    - System action SweepCleanupWorkers
+
+        - Label: SweepCleanupWorkers
+
+        - Prerequisits:
+            - CreateWorker
+            - RequestClientID
+            - RequestSessionToken
+
+        - Instruction Set: {
+            'controller': 'system',
+            'ctype':      'action',
+            'action':     'cleanup',
+            'cleanup':    'workers',
+        }
+
+        - Response:
+
+            - OK: {
+                'failed':           '<    flag                      value-false     type-bool       >',
+                'workers_cleaned':  '<    cleaned-worker-count                      type-int        >',,
+                'cleanup_failures': '<    cleanup-failure-count                     type-int        >',
+                'workers':          '<    cleaned-worker-ids                        type-list       >',
+                'orphaned_stokens': '<    orphaned-stoken-labels                    type-list       >',
+                'worker_reserved':  '<    worker-id                                 type-int        >',
+                'worker_pool': {
+                    '<worker-id type-int>': {
+                        'process':      '<    Process                               type-object     >',
+                        'instruction':  '<    Queue                                 type-object     >',
+                        'response':     '<    Queue                                 type-object     >',
+                        'lock':         '<    Lock                                  type-object     >',
+                    },
+                }
+
+            - NOK: {
+                'failed':           '<    flag                      value-true      type-bool       >',
+                'error':            '<    error-message                             type-str        >',
+                'level':            '<    entity-level                              type-str        >',
+                'details':          '<    data-set                                  type-list       >',
+                'warning':          '<    warning-message                           type-str        >'
+            }
+
         - State Oriented Restrictions:
+
             - Session Worker States:
                 - Vacant
 
