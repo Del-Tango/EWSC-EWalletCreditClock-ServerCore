@@ -43,7 +43,8 @@ class EWalletSessionManager():
         now = datetime.datetime.now()
         self.config = kwargs.get('config') or config
         self.res_utils = kwargs.get('res_utils') or res_utils
-        self.socket_handler = kwargs.get('socket_handler') or None # self.open_ewallet_session_manager_sockets()
+        self.socket_handler = kwargs.get('socket_handler') or \
+            self.open_ewallet_session_manager_sockets()
         self.create_date = kwargs.get('create_date') or now,
         self.write_date = kwargs.get('write_date') or now,
         self.worker_pool = kwargs.get('worker_pool') or {}
@@ -1166,6 +1167,8 @@ class EWalletSessionManager():
         '''
         log.debug('')
         try:
+            if self.socket_handler:
+                del self.socket_handler
             self.socket_handler = socket_handler
             self.update_write_date()
         except Exception as e:
@@ -4380,6 +4383,14 @@ class EWalletSessionManager():
               reduced redundancy.
     '''
 
+    # TODO
+    def handle_system_action_close_sockets(self, **kwargs):
+        '''
+        [ NOTE   ]: Desociates Ewallet Socket Handler from Session Manager.
+        '''
+        log.debug('TODO - [ RESOURCE-WARNING ]: Kill process')
+        return self.unset_socket_handler()
+
     def handle_master_action_unlink_account(self, **kwargs):
         log.debug('')
         instruction_set_validation = self.validate_instruction_set(kwargs)
@@ -4413,14 +4424,6 @@ class EWalletSessionManager():
             kwargs, unlink_account
         ) if not unlink_account or isinstance(unlink_account, dict) and \
             unlink_account.get('failed') else unlink_account
-
-    # TODO
-    def handle_system_action_close_sockets(self, **kwargs):
-        '''
-        [ NOTE   ]: Desociates Ewallet Socket Handler from Session Manager.
-        '''
-        log.debug('TODO - Kill process')
-        return self.unset_socket_handler()
 
     # TODO
 #   @pysnooper.snoop('logs/ewallet.log')

@@ -99,7 +99,7 @@ class EWalletSocketHandler():
         events = selectors.EVENT_READ | selectors.EVENT_WRITE
         self.sel.register(accept['conn'], events, data=data)
 
-    @pysnooper.snoop()
+#   @pysnooper.snoop()
     def service_connection(self, key, mask):
         log.debug('')
         sock = key.fileobj
@@ -160,7 +160,7 @@ class EWalletSocketHandler():
         encoded_data = str(reply_data).encode('utf-8')
         return self.issue_reply(reply=encoded_data)
 
-    @pysnooper.snoop()
+#   @pysnooper.snoop()
     def incomming_transmission(self, conn, **kwargs):
         log.debug('')
         try:

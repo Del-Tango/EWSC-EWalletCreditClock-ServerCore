@@ -1085,7 +1085,7 @@ class EWalletWorker():
 
     # CREATORS
 
-    @pysnooper.snoop('logs/ewallet.log')
+#   @pysnooper.snoop('logs/ewallet.log')
     def create_new_ewallet_session(self, **kwargs):
         log.debug('')
         availability_check = self.check_session_worker_available()
