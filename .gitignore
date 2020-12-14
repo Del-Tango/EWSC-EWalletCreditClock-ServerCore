@@ -1,5 +1,6 @@
 logs/ewallet.log
 data/ewallet.db
+project-management.txt
 *.log
 *.pyc
 *.db

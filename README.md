@@ -1,6 +1,4 @@
-===============================================================================
-        EWallet Credit Clock - Virtual Payment System - Server Core
-===============================================================================
+EWallet Credit Clock - Virtual Payment System - Server Core
 
 Hello there!
 
