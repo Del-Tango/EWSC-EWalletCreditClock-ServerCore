@@ -1,6 +1,4 @@
-===============================================================================
-        EWallet Credit Clock - Virtual Payment System - Server Core
-===============================================================================
+EWallet Credit Clock - Virtual Payment System - Server Core
 
 Hello there!
 
@@ -99,5 +97,5 @@ EWSC Contribuitors -
     * U:Si093pk05 - Graphic Design and Artwork
 
 
-Regards, S:Mx093pk01
+Regards, the Alveare Solutions society.
 
