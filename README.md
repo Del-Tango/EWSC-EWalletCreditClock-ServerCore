@@ -80,9 +80,6 @@ EWSC Fun Facts! -
     * The EW motto is Pay Only When You're On The Clock, and not when you're off it.
       (Still working on this one, seems kind of a mouthful to me)
 
-    * Initially was a way for a hacker with money on his mind to take it easy
-      and relax doing what he loved to do, now its all mainstream, man. (Hopefully)
-
     * The client can orphan sessions by requesting a new session token with an
       old client id. (I know, I know, but its a fun fact to me)
 
